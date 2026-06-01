@@ -49,16 +49,17 @@ export const updatePreferences = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const patch: Record<string, unknown> = {};
-    if (data.sidebarCollapsed !== undefined) patch.sidebar_collapsed = data.sidebarCollapsed;
-    if (data.defaultLandingPage !== undefined) patch.default_landing_page = data.defaultLandingPage;
-    if (data.theme !== undefined) patch.theme = data.theme;
-    if (data.itemsPerPage !== undefined) patch.items_per_page = data.itemsPerPage;
-
     const { error } = await supabase
       .from("workspace_preferences")
       .upsert(
-        { user_id: userId, tenant_id: null, ...patch },
+        {
+          user_id: userId,
+          tenant_id: null,
+          ...(data.sidebarCollapsed !== undefined ? { sidebar_collapsed: data.sidebarCollapsed } : {}),
+          ...(data.defaultLandingPage !== undefined ? { default_landing_page: data.defaultLandingPage } : {}),
+          ...(data.theme !== undefined ? { theme: data.theme } : {}),
+          ...(data.itemsPerPage !== undefined ? { items_per_page: data.itemsPerPage } : {}),
+        },
         { onConflict: "user_id,tenant_id" },
       );
     if (error) throw new Error(error.message);
