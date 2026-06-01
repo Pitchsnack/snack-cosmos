@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+
 import { UserMenu } from "@/components/user-menu";
 import { WorkspaceHeader } from "@/components/workspace-header";
 import { usePermissions } from "@/hooks/use-session-context";
@@ -149,14 +149,6 @@ function SidebarBody({
         )}
       </div>
 
-      {showLabels && (
-        <div className="border-b border-sidebar-border p-3">
-          <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-            Workspace
-          </div>
-          <WorkspaceSwitcher />
-        </div>
-      )}
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
         {visibleItems.map((item, idx) => {
