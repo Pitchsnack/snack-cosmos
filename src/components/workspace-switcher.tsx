@@ -28,7 +28,7 @@ export function getActiveTenantId(): string | null {
   return localStorage.getItem(ACTIVE_KEY);
 }
 
-export function WorkspaceSwitcher() {
+export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const { data: session } = useSessionContext();
   const qc = useQueryClient();
@@ -39,7 +39,6 @@ export function WorkspaceSwitcher() {
   const activeId = session?.activeWorkspace.tenantId ?? null;
   const active = tenants.find((t) => t.tenantId === activeId);
   const label = active ? active.tenantName : isControl ? CONTROL_LABEL : tenants[0]?.tenantName ?? "—";
-  const sublabel = active ? active.tenantCode : isControl ? CONTROL_SUB : tenants[0]?.tenantCode ?? "";
 
   async function pick(tenantId: string | null, workspaceType: string | null) {
     try {
@@ -66,21 +65,22 @@ export function WorkspaceSwitcher() {
           type="button"
           role="combobox"
           aria-expanded={open}
-          className="flex w-full items-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+          aria-label="Switch workspace"
+          className={cn(
+            "inline-flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-left text-foreground transition-colors hover:bg-muted",
+            compact ? "h-9" : "h-9",
+          )}
         >
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-sidebar-primary/15 text-sidebar-primary">
-            <Building2 className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1 leading-tight">
-            <div className="truncate text-sm font-medium">{label}</div>
-            <div className="truncate text-[11px] text-sidebar-foreground/60">
-              {sublabel}
-            </div>
-          </div>
+          <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+          {!compact && (
+            <span className="hidden max-w-[140px] truncate text-sm font-medium sm:inline">
+              {label}
+            </span>
+          )}
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-60" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[260px] p-0" align="start" sideOffset={8}>
+      <PopoverContent className="w-[280px] p-0" align="start" sideOffset={8}>
         <Command>
           <CommandInput placeholder="Search workspace…" />
           <CommandList>
