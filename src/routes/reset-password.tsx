@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,35 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // Supabase auto-processes the recovery token from the URL hash on mount.
+  // We must wait for that to finish before allowing updateUser(), otherwise
+  // it fails with "Auth session missing".
+  useEffect(() => {
+    let mounted = true;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        setReady(true);
+        setChecking(false);
+      }
+    });
+
+    // Fallback: if the session is already restored (e.g. revisited tab), check directly.
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      if (data.session) setReady(true);
+      setChecking(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,19 +76,28 @@ function ResetPasswordPage() {
           <h1 className="text-xl font-semibold">Set a new password</h1>
           <p className="mt-1 text-xs text-muted-foreground">{PASSWORD_POLICY_TEXT}</p>
         </div>
-        <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="pw" className="text-xs uppercase tracking-wide">New password</Label>
-            <Input id="pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="confirm" className="text-xs uppercase tracking-wide">Confirm</Label>
-            <Input id="confirm" type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-          </div>
-          <Button type="submit" disabled={busy} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-            {busy ? "Updating…" : "Update password"}
-          </Button>
-        </form>
+        {checking ? (
+          <p className="text-center text-sm text-muted-foreground">Verifying reset link…</p>
+        ) : !ready ? (
+          <p className="text-center text-sm text-muted-foreground">
+            This reset link is invalid or has expired. Request a new one from the
+            forgot password page.
+          </p>
+        ) : (
+          <form onSubmit={submit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="pw" className="text-xs uppercase tracking-wide">New password</Label>
+              <Input id="pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="confirm" className="text-xs uppercase tracking-wide">Confirm</Label>
+              <Input id="confirm" type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            </div>
+            <Button type="submit" disabled={busy} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+              {busy ? "Updating…" : "Update password"}
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   );
