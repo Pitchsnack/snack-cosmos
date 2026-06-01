@@ -20,9 +20,14 @@ function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
 
-  // Supabase auto-processes the recovery token from the URL hash on mount.
-  // We must wait for that to finish before allowing updateUser(), otherwise
-  // it fails with "Auth session missing".
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Establish a recovery session. Supabase may deliver the token in three shapes:
+  //   1. URL hash  (#access_token=...&type=recovery)           — implicit flow
+  //   2. ?code=... query param                                  — PKCE flow
+  //   3. ?token_hash=...&type=recovery query param              — OTP/token_hash flow
+  // Also surfaces ?error=...&error_code=... when the token was consumed by an
+  // email link scanner (the real reason for "invalid or expired").
   useEffect(() => {
     let mounted = true;
 
@@ -34,12 +39,68 @@ function ResetPasswordPage() {
       }
     });
 
-    // Fallback: if the session is already restored (e.g. revisited tab), check directly.
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      if (data.session) setReady(true);
-      setChecking(false);
-    });
+    (async () => {
+      try {
+        const url = new URL(window.location.href);
+        const hash = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+
+        // 0) Error returned from /auth/v1/verify (expired / already used).
+        const errCode = url.searchParams.get("error_code") || hash.get("error_code");
+        const errDesc = url.searchParams.get("error_description") || hash.get("error_description");
+        if (errCode) {
+          if (!mounted) return;
+          setErrorMsg(errDesc?.replace(/\+/g, " ") || "Reset link is invalid or has expired.");
+          setChecking(false);
+          return;
+        }
+
+        // 1) PKCE: ?code=...
+        const code = url.searchParams.get("code");
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!mounted) return;
+          if (error) {
+            setErrorMsg(error.message);
+            setChecking(false);
+            return;
+          }
+          window.history.replaceState({}, "", url.pathname);
+          setReady(true);
+          setChecking(false);
+          return;
+        }
+
+        // 2) token_hash flow: ?token_hash=...&type=recovery
+        const tokenHash = url.searchParams.get("token_hash");
+        const type = url.searchParams.get("type");
+        if (tokenHash && type) {
+          const { error } = await supabase.auth.verifyOtp({
+            type: type as "recovery",
+            token_hash: tokenHash,
+          });
+          if (!mounted) return;
+          if (error) {
+            setErrorMsg(error.message);
+            setChecking(false);
+            return;
+          }
+          window.history.replaceState({}, "", url.pathname);
+          setReady(true);
+          setChecking(false);
+          return;
+        }
+
+        // 3) Hash flow / already-restored session.
+        const { data } = await supabase.auth.getSession();
+        if (!mounted) return;
+        if (data.session) setReady(true);
+        setChecking(false);
+      } catch (e) {
+        if (!mounted) return;
+        setErrorMsg(e instanceof Error ? e.message : "Failed to verify reset link.");
+        setChecking(false);
+      }
+    })();
 
     return () => {
       mounted = false;
