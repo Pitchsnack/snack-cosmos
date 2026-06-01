@@ -1,0 +1,12 @@
+COMMENT ON POLICY prd1_tenants_all_anon ON public.tenants IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_tenants_all_authenticated ON public.tenants IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_tenant_settings_all_anon ON public.tenant_settings IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_tenant_settings_all_authenticated ON public.tenant_settings IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_tenant_subscription_all_anon ON public.tenant_subscription IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_tenant_subscription_all_authenticated ON public.tenant_subscription IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_tenant_features_all_anon ON public.tenant_features IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_tenant_features_all_authenticated ON public.tenant_features IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_audit_logs_select_anon ON public.audit_logs IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_audit_logs_select_authenticated ON public.audit_logs IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_audit_logs_insert_anon ON public.audit_logs IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
+COMMENT ON POLICY prd1_audit_logs_insert_authenticated ON public.audit_logs IS 'TEMPORARY - PRD 1 permissive policy. Replace with tenant-scoped Auth/RBAC policy in PRD 2.';
