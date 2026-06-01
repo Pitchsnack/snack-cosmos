@@ -8,15 +8,18 @@ import {
   type WorkspacePreferencesDTO,
   type NotificationPreferencesDTO,
 } from "@/lib/preferences.functions";
+import { useHasSession } from "@/hooks/use-has-session";
 
 export function usePreferences() {
   const fn = useServerFn(getPreferences);
   const update = useServerFn(updatePreferences);
   const qc = useQueryClient();
+  const enabled = useHasSession();
   const query = useQuery({
     queryKey: ["preferences"],
     queryFn: () => fn(),
     staleTime: 60_000,
+    enabled,
   });
   return {
     ...query,
@@ -31,10 +34,12 @@ export function useNotificationPreferences() {
   const fn = useServerFn(getNotificationPreferences);
   const update = useServerFn(updateNotificationPreferences);
   const qc = useQueryClient();
+  const enabled = useHasSession();
   const query = useQuery({
     queryKey: ["notification-preferences"],
     queryFn: () => fn(),
     staleTime: 60_000,
+    enabled,
   });
   return {
     ...query,
