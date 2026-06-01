@@ -100,13 +100,17 @@ export const updateNotificationPreferences = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const patch: Record<string, unknown> = { user_id: userId };
-    if (data.emailEnabled !== undefined) patch.email_enabled = data.emailEnabled;
-    if (data.inAppEnabled !== undefined) patch.in_app_enabled = data.inAppEnabled;
-    if (data.systemEnabled !== undefined) patch.system_enabled = data.systemEnabled;
     const { error } = await supabase
       .from("notification_preferences")
-      .upsert(patch, { onConflict: "user_id" });
+      .upsert(
+        {
+          user_id: userId,
+          ...(data.emailEnabled !== undefined ? { email_enabled: data.emailEnabled } : {}),
+          ...(data.inAppEnabled !== undefined ? { in_app_enabled: data.inAppEnabled } : {}),
+          ...(data.systemEnabled !== undefined ? { system_enabled: data.systemEnabled } : {}),
+        },
+        { onConflict: "user_id" },
+      );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
