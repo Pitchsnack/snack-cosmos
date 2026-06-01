@@ -64,7 +64,7 @@ function AcceptInvitePage() {
         <div className="text-center">
           <h1 className="text-xl font-semibold">Accept your invitation</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Set a password to activate your account.
+            Set a password to activate your account. {PASSWORD_POLICY_TEXT}
           </p>
         </div>
         {!ready ? (
