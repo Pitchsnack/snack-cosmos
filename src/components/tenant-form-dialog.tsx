@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -41,6 +40,17 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   tenant: TenantRow | null;
   onSaved: () => void;
+}
+
+function FieldLabel({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+    >
+      {children}
+    </label>
+  );
 }
 
 export function TenantFormDialog({ open, onOpenChange, tenant, onSaved }: Props) {
@@ -123,9 +133,9 @@ export function TenantFormDialog({ open, onOpenChange, tenant, onSaved }: Props)
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-5 py-5">
             <div className="grid gap-2">
-              <Label htmlFor="tenant-name">Tenant name</Label>
+              <FieldLabel htmlFor="tenant-name">Tenant name</FieldLabel>
               <Input
                 id="tenant-name"
                 value={name}
@@ -136,14 +146,14 @@ export function TenantFormDialog({ open, onOpenChange, tenant, onSaved }: Props)
             </div>
 
             <div className="grid gap-2">
-              <Label>Tenant code</Label>
-              <div className="rounded-md border border-input bg-muted/40 px-3 py-2 font-mono text-sm text-muted-foreground">
+              <FieldLabel>Tenant code</FieldLabel>
+              <div className="rounded-md border border-input bg-muted/50 px-3 py-2 font-mono text-sm text-muted-foreground">
                 {previewCode}
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label>Status</Label>
+              <FieldLabel>Status</FieldLabel>
               <Select value={status} onValueChange={(v) => setStatus(v as TenantStatus)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -168,7 +178,11 @@ export function TenantFormDialog({ open, onOpenChange, tenant, onSaved }: Props)
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button
+              type="submit"
+              disabled={saving}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
               {saving ? "Saving…" : isEdit ? "Save changes" : "Create tenant"}
             </Button>
           </DialogFooter>
