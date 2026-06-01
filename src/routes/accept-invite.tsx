@@ -2,25 +2,17 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { logSecurityEvent } from "@/lib/auth.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { passwordSchema, PASSWORD_POLICY_TEXT } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/accept-invite")({
   head: () => ({ meta: [{ title: "Accept invitation — SnackPortal2" }] }),
   component: AcceptInvitePage,
 });
-
-const passwordSchema = z
-  .string()
-  .min(12)
-  .regex(/[A-Z]/)
-  .regex(/[a-z]/)
-  .regex(/[0-9]/)
-  .regex(/[^A-Za-z0-9]/);
 
 function AcceptInvitePage() {
   const navigate = useNavigate();
@@ -36,8 +28,9 @@ function AcceptInvitePage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!passwordSchema.safeParse(password).success) {
-      toast.error("Password must be 12+ chars with upper, lower, number, symbol");
+    const parsed = passwordSchema.safeParse(password);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
     if (password !== confirm) {
@@ -71,7 +64,7 @@ function AcceptInvitePage() {
         <div className="text-center">
           <h1 className="text-xl font-semibold">Accept your invitation</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Set a password to activate your account.
+            Set a password to activate your account. {PASSWORD_POLICY_TEXT}
           </p>
         </div>
         {!ready ? (
