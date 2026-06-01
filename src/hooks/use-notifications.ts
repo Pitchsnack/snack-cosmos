@@ -5,17 +5,20 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/notifications.functions";
+import { useHasSession } from "@/hooks/use-has-session";
 
 export function useNotifications() {
   const fn = useServerFn(listNotifications);
   const qc = useQueryClient();
   const markOne = useServerFn(markNotificationRead);
   const markAll = useServerFn(markAllNotificationsRead);
+  const enabled = useHasSession();
 
   const query = useQuery({
     queryKey: ["notifications"],
     queryFn: () => fn(),
     staleTime: 30_000,
+    enabled,
   });
 
   return {
