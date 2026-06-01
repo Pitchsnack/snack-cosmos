@@ -43,7 +43,7 @@ import {
 import { logAudit } from "@/lib/tenant-utils";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Tenants — SnackPortal2" },
