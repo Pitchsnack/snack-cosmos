@@ -11,7 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -26,7 +26,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
           >
             Go home
           </Link>
@@ -58,13 +58,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
           >
             Try again
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent/10"
           >
             Go home
           </a>
@@ -79,10 +79,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SnackPortal2 — Control Admin" },
+      { title: "SnackPortal2 — Control Plane" },
       { name: "description", content: "Multi-tenant control plane for SnackPortal2." },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -104,57 +109,14 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-function AppHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-6">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold">
-            S2
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold">SnackPortal2</span>
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Control Plane
-            </span>
-          </div>
-        </Link>
-
-        <nav className="flex items-center gap-1 text-sm">
-          <Link
-            to="/"
-            activeOptions={{ exact: true }}
-            className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground [&.active]:bg-accent [&.active]:text-foreground"
-          >
-            Tenants
-          </Link>
-          <Link
-            to="/audit"
-            className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground [&.active]:bg-accent [&.active]:text-foreground"
-          >
-            Audit Logs
-          </Link>
-        </nav>
-
-        <div className="ml-auto">
-          <WorkspaceSwitcher />
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background text-foreground">
-        <AppHeader />
-        <main className="mx-auto max-w-7xl px-6 py-10">
-          <Outlet />
-        </main>
-        <Toaster richColors position="top-right" />
-      </div>
+      <AppSidebar>
+        <Outlet />
+      </AppSidebar>
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }

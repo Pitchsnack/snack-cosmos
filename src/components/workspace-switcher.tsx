@@ -14,12 +14,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 const ACTIVE_KEY = "sp2.activeTenantId";
-const CONTROL_LABEL = "Control (Platform)";
+const CONTROL_LABEL = "Control";
+const CONTROL_SUB = "Global Workspace";
 
 export function getActiveTenantId(): string | null {
   if (typeof window === "undefined") return null;
@@ -49,7 +49,7 @@ export function WorkspaceSwitcher() {
 
   const active = tenants.find((t) => t.id === activeId);
   const label = active ? active.tenant_name : CONTROL_LABEL;
-  const role = active ? "Tenant Admin (placeholder)" : "Platform Control";
+  const sublabel = active ? active.tenant_code : CONTROL_SUB;
 
   function pick(id: string | null) {
     if (id) localStorage.setItem(ACTIVE_KEY, id);
@@ -62,23 +62,25 @@ export function WorkspaceSwitcher() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <button
+          type="button"
           role="combobox"
           aria-expanded={open}
-          className="h-auto min-w-[240px] justify-between gap-2 px-3 py-2"
+          className="flex w-full items-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
         >
-          <div className="flex items-center gap-2 text-left">
-            <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-medium">{label}</span>
-              <span className="text-xs text-muted-foreground">{role}</span>
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-sidebar-primary/15 text-sidebar-primary">
+            <Building2 className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate text-sm font-medium">{label}</div>
+            <div className="truncate text-[11px] text-sidebar-foreground/60">
+              {sublabel}
             </div>
           </div>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-60" />
+        </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-0" align="start">
+      <PopoverContent className="w-[260px] p-0" align="start" sideOffset={8}>
         <Command>
           <CommandInput placeholder="Search workspace…" />
           <CommandList>
@@ -91,7 +93,12 @@ export function WorkspaceSwitcher() {
                     !activeId ? "opacity-100" : "opacity-0",
                   )}
                 />
-                {CONTROL_LABEL}
+                <div className="flex flex-col">
+                  <span className="text-sm">{CONTROL_LABEL}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {CONTROL_SUB}
+                  </span>
+                </div>
               </CommandItem>
             </CommandGroup>
             {tenants.length > 0 && (
@@ -110,7 +117,7 @@ export function WorkspaceSwitcher() {
                     />
                     <div className="flex flex-col">
                       <span className="text-sm">{t.tenant_name}</span>
-                      <span className="font-mono text-xs text-muted-foreground">
+                      <span className="font-mono text-[11px] text-muted-foreground">
                         {t.tenant_code}
                       </span>
                     </div>
