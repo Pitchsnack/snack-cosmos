@@ -1,15 +1,39 @@
 import { useState, useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Building2, ScrollText, ChevronLeft, Menu, X } from "lucide-react";
+import {
+  Building2,
+  ScrollText,
+  ChevronLeft,
+  Menu,
+  X,
+  Users as UsersIcon,
+  ShieldCheck,
+  Shield,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+import { UserMenu } from "@/components/user-menu";
+import { usePermissions } from "@/hooks/use-session-context";
+import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhiteIcon from "@/assets/pitchsnack-hat-white-icon.png";
 
-const NAV_ITEMS = [
-  { label: "Tenants", icon: Building2, path: "/" as const, exact: true },
-  { label: "Audit Logs", icon: ScrollText, path: "/audit" as const, exact: false },
+type NavItem = {
+  label: string;
+  icon: typeof Building2;
+  path: "/" | "/audit" | "/users" | "/access-management" | "/security";
+  exact: boolean;
+  perm?: Permission;
+  controlOnly?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
+  { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
+  { label: "Access Management", icon: ShieldCheck, path: "/access-management", exact: false, controlOnly: true },
+  { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
+  { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
 ];
 
 const COLLAPSED_KEY = "sp2.sidebarCollapsed";
@@ -40,6 +64,13 @@ function SidebarBody({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showLabels = !collapsed || isMobile;
+  const { has, isControl } = usePermissions();
+
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (item.controlOnly) return isControl;
+    if (!item.perm) return true;
+    return has(item.perm);
+  });
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -93,7 +124,7 @@ function SidebarBody({
       )}
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = item.exact
             ? pathname === item.path
             : pathname.startsWith(item.path);
@@ -118,14 +149,8 @@ function SidebarBody({
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border p-3">
-        {showLabels ? (
-          <div className="px-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/40">
-            SnackPortal2 · Control Plane
-          </div>
-        ) : (
-          <div className="text-center text-[10px] text-sidebar-foreground/40">S2</div>
-        )}
+      <div className="border-t border-sidebar-border p-2">
+        <UserMenu collapsed={!showLabels} />
       </div>
     </div>
   );
