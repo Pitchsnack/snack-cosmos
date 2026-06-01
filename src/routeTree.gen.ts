@@ -19,7 +19,6 @@ import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
-import { Route as ApiPublicSeedPrd2RouteImport } from './routes/api/public/seed-prd2'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -71,11 +70,6 @@ const AuthenticatedAccessManagementRoute =
     path: '/access-management',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const ApiPublicSeedPrd2Route = ApiPublicSeedPrd2RouteImport.update({
-  id: '/api/public/seed-prd2',
-  path: '/api/public/seed-prd2',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -87,7 +81,6 @@ export interface FileRoutesByFullPath {
   '/audit': typeof AuthenticatedAuditRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/users': typeof AuthenticatedUsersRoute
-  '/api/public/seed-prd2': typeof ApiPublicSeedPrd2Route
 }
 export interface FileRoutesByTo {
   '/accept-invite': typeof AcceptInviteRoute
@@ -99,7 +92,6 @@ export interface FileRoutesByTo {
   '/security': typeof AuthenticatedSecurityRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
-  '/api/public/seed-prd2': typeof ApiPublicSeedPrd2Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,7 +105,6 @@ export interface FileRoutesById {
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/api/public/seed-prd2': typeof ApiPublicSeedPrd2Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,7 +118,6 @@ export interface FileRouteTypes {
     | '/audit'
     | '/security'
     | '/users'
-    | '/api/public/seed-prd2'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/accept-invite'
@@ -139,7 +129,6 @@ export interface FileRouteTypes {
     | '/security'
     | '/users'
     | '/'
-    | '/api/public/seed-prd2'
   id:
     | '__root__'
     | '/_authenticated'
@@ -152,7 +141,6 @@ export interface FileRouteTypes {
     | '/_authenticated/security'
     | '/_authenticated/users'
     | '/_authenticated/'
-    | '/api/public/seed-prd2'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,7 +149,6 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiPublicSeedPrd2Route: typeof ApiPublicSeedPrd2Route
 }
 
 declare module '@tanstack/react-router' {
@@ -236,13 +223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccessManagementRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/public/seed-prd2': {
-      id: '/api/public/seed-prd2'
-      path: '/api/public/seed-prd2'
-      fullPath: '/api/public/seed-prd2'
-      preLoaderRoute: typeof ApiPublicSeedPrd2RouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -272,8 +252,17 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ApiPublicSeedPrd2Route: ApiPublicSeedPrd2Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
