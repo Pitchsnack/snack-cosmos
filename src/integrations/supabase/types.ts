@@ -119,6 +119,69 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          id: string
+          in_app_enabled: boolean
+          system_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          system_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          system_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          notification_type: string
+          tenant_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          notification_type: string
+          tenant_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          notification_type?: string
+          tenant_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       roles: {
         Row: {
           created_at: string
@@ -143,6 +206,33 @@ export type Database = {
           role_code?: Database["public"]["Enums"]["app_role"]
           role_name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_searches: {
+        Row: {
+          created_at: string
+          id: string
+          search_name: string
+          search_query: Json
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          search_name: string
+          search_query?: Json
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          search_name?: string
+          search_query?: Json
+          tenant_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -597,6 +687,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workspace_preferences: {
+        Row: {
+          created_at: string
+          default_landing_page: string
+          id: string
+          items_per_page: number
+          sidebar_collapsed: boolean
+          tenant_id: string | null
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_landing_page?: string
+          id?: string
+          items_per_page?: number
+          sidebar_collapsed?: boolean
+          tenant_id?: string | null
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_landing_page?: string
+          id?: string
+          items_per_page?: number
+          sidebar_collapsed?: boolean
+          tenant_id?: string | null
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
