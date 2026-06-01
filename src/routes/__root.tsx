@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,21 +79,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { title: "SnackPortal2 — Control Admin" },
+      { name: "description", content: "Multi-tenant control plane for SnackPortal2." },
     ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -113,13 +104,57 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AppHeader() {
+  return (
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-6">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold">
+            S2
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-semibold">SnackPortal2</span>
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Control Plane
+            </span>
+          </div>
+        </Link>
+
+        <nav className="flex items-center gap-1 text-sm">
+          <Link
+            to="/"
+            activeOptions={{ exact: true }}
+            className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground [&.active]:bg-accent [&.active]:text-foreground"
+          >
+            Tenants
+          </Link>
+          <Link
+            to="/audit"
+            className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground [&.active]:bg-accent [&.active]:text-foreground"
+          >
+            Audit Logs
+          </Link>
+        </nav>
+
+        <div className="ml-auto">
+          <WorkspaceSwitcher />
+        </div>
+      </div>
+    </header>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen bg-background text-foreground">
+        <AppHeader />
+        <main className="mx-auto max-w-7xl px-6 py-10">
+          <Outlet />
+        </main>
+        <Toaster richColors position="top-right" />
+      </div>
     </QueryClientProvider>
   );
 }
