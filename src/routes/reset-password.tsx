@@ -140,10 +140,16 @@ function ResetPasswordPage() {
         {checking ? (
           <p className="text-center text-sm text-muted-foreground">Verifying reset link…</p>
         ) : !ready ? (
-          <p className="text-center text-sm text-muted-foreground">
-            This reset link is invalid or has expired. Request a new one from the
-            forgot password page.
-          </p>
+          <div className="space-y-3 text-center">
+            <p className="text-sm text-destructive">
+              {errorMsg || "This reset link is invalid or has expired."}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Request a new link from the forgot password page. Open the email
+              on the same device and browser, and click the link directly
+              (don't preview it).
+            </p>
+          </div>
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1.5">
