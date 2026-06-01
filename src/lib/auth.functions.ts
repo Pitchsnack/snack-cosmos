@@ -65,7 +65,7 @@ export const logSecurityEvent = createServerFn({ method: "POST" })
       user_id: userId,
       tenant_id: data.tenantId ?? null,
       event_type: data.eventType,
-      details: data.details ?? {},
+      details: (data.details ?? {}) as never,
     });
     return { ok: true };
   });

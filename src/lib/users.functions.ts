@@ -12,17 +12,17 @@ async function requireControlOrTenantAdmin(
     .from("user_roles")
     .select("tenant_id, roles!inner(role_code)")
     .eq("user_id", userId);
-  const rows = (data ?? []) as Array<{
+  const rows = (data ?? []) as unknown as Array<{
     tenant_id: string | null;
-    roles: { role_code: string } | null;
+    roles: { role_code: string } | { role_code: string }[] | null;
   }>;
-  const isControl = rows.some((r) => r.roles?.role_code === "CONTROL");
+  const codeOf = (r: { role_code: string } | { role_code: string }[] | null) =>
+    Array.isArray(r) ? r[0]?.role_code : r?.role_code;
+  const isControl = rows.some((r) => codeOf(r.roles) === "CONTROL");
   if (isControl) return;
   const isTenantAdmin =
     tenantId &&
-    rows.some(
-      (r) => r.roles?.role_code === "TENANT_ADMIN" && r.tenant_id === tenantId,
-    );
+    rows.some((r) => codeOf(r.roles) === "TENANT_ADMIN" && r.tenant_id === tenantId);
   if (!isTenantAdmin) throw new Error("Forbidden");
 }
 
@@ -161,7 +161,12 @@ export const assignRole = createServerFn({ method: "POST" })
     z
       .object({
         targetUserId: z.string().uuid(),
-        roleCode: z.string(),
+        roleCode: z.enum([
+          "CONTROL","CONTROL_RESEARCH_AI","CONTROL_STARTUP_DISCOVERY_AI",
+          "CONTROL_INVESTOR_DISCOVERY_AI","MASTER_AGENT","MASTER_AGENT_AI",
+          "TENANT_ADMIN","TENANT_AGENT","TENANT_STARTUP_AI",
+          "TENANT_INVESTOR_AI","TENANT_DEAL_AI","STARTUP_USER","INVESTOR_USER",
+        ]),
         tenantId: z.string().uuid().nullable().optional(),
       })
       .parse(input),
