@@ -9,31 +9,65 @@ import {
   Users as UsersIcon,
   ShieldCheck,
   Shield,
+  LayoutDashboard,
+  Rocket,
+  Briefcase,
+  MessagesSquare,
+  FileText,
+  BarChart3,
+  Settings,
+  Sparkles,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { UserMenu } from "@/components/user-menu";
+import { WorkspaceHeader } from "@/components/workspace-header";
 import { usePermissions } from "@/hooks/use-session-context";
+import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhiteIcon from "@/assets/pitchsnack-hat-white-icon.png";
 
+type NavPath =
+  | "/"
+  | "/dashboard"
+  | "/audit"
+  | "/users"
+  | "/access-management"
+  | "/security"
+  | "/notifications"
+  | "/preferences";
+
 type NavItem = {
   label: string;
   icon: typeof Building2;
-  path: "/" | "/audit" | "/users" | "/access-management" | "/security";
+  path: NavPath;
   exact: boolean;
   perm?: Permission;
   controlOnly?: boolean;
+  // PRD 3 framework placeholders — modules not yet built
+  disabled?: boolean;
 };
 
+// Role-aware nav per PRD 3 §17. Items without dedicated routes are
+// rendered as disabled placeholders so each role's framework is visible.
 const NAV_ITEMS: NavItem[] = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
+  { label: "Startups", icon: Rocket, path: "/dashboard", exact: false, perm: "startups.read", disabled: true },
+  { label: "Investors", icon: Briefcase, path: "/dashboard", exact: false, perm: "investors.read", disabled: true },
+  { label: "Deals", icon: Sparkles, path: "/dashboard", exact: false, perm: "deals.read", disabled: true },
+  { label: "Communications", icon: MessagesSquare, path: "/dashboard", exact: false, disabled: true },
+  { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
+  { label: "Analytics", icon: BarChart3, path: "/dashboard", exact: false, controlOnly: true, disabled: true },
   { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
   { label: "Access Management", icon: ShieldCheck, path: "/access-management", exact: false, controlOnly: true },
+  { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
+  { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
 const COLLAPSED_KEY = "sp2.sidebarCollapsed";
@@ -80,6 +114,7 @@ function SidebarBody({
             type="button"
             onClick={onToggle}
             aria-label="Toggle sidebar"
+            title="Click the logo to expand or collapse the sidebar"
             className="flex items-center bg-transparent p-0"
           >
             <img src={logoWhite} alt="PitchSnack" className="h-9 w-auto" />
@@ -124,23 +159,46 @@ function SidebarBody({
       )}
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-        {visibleItems.map((item) => {
-          const isActive = item.exact
+        {visibleItems.map((item, idx) => {
+          const isActive = !item.disabled && (item.exact
             ? pathname === item.path
-            : pathname.startsWith(item.path);
+            : pathname.startsWith(item.path));
+          const baseClass = cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+            isActive
+              ? "bg-sidebar-accent text-sidebar-primary font-medium"
+              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            !showLabels && "justify-center px-2",
+            item.disabled && "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-sidebar-foreground/70",
+          );
+
+          if (item.disabled) {
+            return (
+              <div
+                key={`${item.label}-${idx}`}
+                title={!showLabels ? `${item.label} (coming soon)` : "Coming soon"}
+                className={baseClass}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                {showLabels && (
+                  <span className="flex flex-1 items-center justify-between">
+                    {item.label}
+                    <span className="text-[9px] uppercase tracking-wider text-sidebar-foreground/40">
+                      Soon
+                    </span>
+                  </span>
+                )}
+              </div>
+            );
+          }
+
           return (
             <Link
-              key={item.path}
+              key={`${item.label}-${idx}`}
               to={item.path}
               onClick={onNavigate}
               title={!showLabels ? item.label : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                !showLabels && "justify-center px-2",
-              )}
+              className={baseClass}
             >
               <item.icon className="h-4 w-4 shrink-0" />
               {showLabels && <span>{item.label}</span>}
@@ -160,11 +218,18 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: prefs, update: updatePrefs } = usePreferences();
 
+  // Restore sidebar state: server-stored preference wins, falls back to localStorage.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setCollapsed(localStorage.getItem(COLLAPSED_KEY) === "1");
-  }, []);
+    if (prefs) {
+      setCollapsed(prefs.sidebarCollapsed);
+      try { localStorage.setItem(COLLAPSED_KEY, prefs.sidebarCollapsed ? "1" : "0"); } catch { /* noop */ }
+    } else {
+      setCollapsed(localStorage.getItem(COLLAPSED_KEY) === "1");
+    }
+  }, [prefs]);
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
@@ -174,6 +239,8 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       } catch {
         /* noop */
       }
+      // Persist to server (best-effort; ignore failures so UI stays snappy)
+      void updatePrefs({ sidebarCollapsed: next }).catch(() => {});
       return next;
     });
   }
@@ -230,7 +297,10 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         <SidebarBody collapsed={collapsed} onToggle={toggleCollapsed} />
       </aside>
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-8 py-10">{children}</div>
+        <div className="mx-auto max-w-7xl px-8 py-10">
+          <WorkspaceHeader />
+          {children}
+        </div>
       </main>
     </div>
   );
