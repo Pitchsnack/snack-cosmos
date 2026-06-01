@@ -34,7 +34,7 @@ interface AuditRow {
   created_at: string;
 }
 
-export const Route = createFileRoute("/audit")({
+export const Route = createFileRoute("/_authenticated/audit")({
   head: () => ({
     meta: [
       { title: "Audit Logs — SnackPortal2" },
