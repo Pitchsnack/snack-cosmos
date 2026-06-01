@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
+import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -57,6 +58,12 @@ const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAccessManagementRoute =
+  AuthenticatedAccessManagementRouteImport.update({
+    id: '/access-management',
+    path: '/access-management',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/users': typeof AuthenticatedUsersRoute
 }
@@ -72,6 +80,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
@@ -83,6 +92,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/access-management'
     | '/audit'
     | '/users'
   fileRoutesByTo: FileRoutesByTo
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/access-management'
     | '/audit'
     | '/users'
     | '/'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/_authenticated/access-management'
     | '/_authenticated/audit'
     | '/_authenticated/users'
     | '/_authenticated/'
@@ -184,16 +197,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAuditRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/access-management': {
+      id: '/_authenticated/access-management'
+      path: '/access-management'
+      fullPath: '/access-management'
+      preLoaderRoute: typeof AuthenticatedAccessManagementRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
