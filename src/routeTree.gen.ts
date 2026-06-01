@@ -16,6 +16,7 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 
@@ -53,6 +54,11 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/users': typeof AuthenticatedUsersRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
 }
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
+  '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/access-management'
     | '/audit'
+    | '/security'
     | '/users'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/access-management'
     | '/audit'
+    | '/security'
     | '/users'
     | '/'
   id:
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/access-management'
     | '/_authenticated/audit'
+    | '/_authenticated/security'
     | '/_authenticated/users'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/security': {
+      id: '/_authenticated/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/audit': {
       id: '/_authenticated/audit'
       path: '/audit'
@@ -210,6 +229,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
+  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
@@ -217,6 +237,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
+  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
