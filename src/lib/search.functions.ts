@@ -2,10 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type Json = string | number | boolean | null | { [k: string]: Json } | Json[];
+
 export type SavedSearchDTO = {
   id: string;
   name: string;
-  query: Record<string, unknown>;
+  query: Json;
   tenantId: string | null;
   createdAt: string;
 };
