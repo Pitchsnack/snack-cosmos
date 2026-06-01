@@ -25,7 +25,7 @@ export const listSavedSearches = createServerFn({ method: "GET" })
     return (data ?? []).map((r) => ({
       id: r.id as string,
       name: r.search_name as string,
-      query: (r.search_query as Record<string, unknown>) ?? {},
+      query: (r.search_query as Json) ?? {},
       tenantId: (r.tenant_id as string | null) ?? null,
       createdAt: r.created_at as string,
     }));
