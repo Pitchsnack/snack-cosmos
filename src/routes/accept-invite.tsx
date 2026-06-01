@@ -28,8 +28,9 @@ function AcceptInvitePage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!passwordSchema.safeParse(password).success) {
-      toast.error("Password must be 12+ chars with upper, lower, number, symbol");
+    const parsed = passwordSchema.safeParse(password);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
     if (password !== confirm) {
