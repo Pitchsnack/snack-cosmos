@@ -58,6 +58,153 @@ export type Database = {
           },
         ]
       }
+      investor_user_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          investor_id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          investor_id: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          investor_id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_user_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_agent_tenants: {
+        Row: {
+          created_at: string
+          id: string
+          master_agent_user_id: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          master_agent_user_id: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          master_agent_user_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_agent_tenants_master_agent_user_id_fkey"
+            columns: ["master_agent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          role_code: Database["public"]["Enums"]["app_role"]
+          role_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          role_code: Database["public"]["Enums"]["app_role"]
+          role_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          role_code?: Database["public"]["Enums"]["app_role"]
+          role_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          details: Json
+          event_type: Database["public"]["Enums"]["security_event_type"]
+          id: string
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event_type: Database["public"]["Enums"]["security_event_type"]
+          id?: string
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event_type?: Database["public"]["Enums"]["security_event_type"]
+          id?: string
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      startup_user_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          role: string | null
+          startup_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string | null
+          startup_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string | null
+          startup_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_user_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_features: {
         Row: {
           created_at: string
@@ -226,15 +373,299 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role_id: string
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role_id: string
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role_id?: string
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sessions: {
+        Row: {
+          id: string
+          ip_address: string | null
+          login_time: string
+          logout_time: string | null
+          tenant_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          login_time?: string
+          logout_time?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          login_time?: string
+          logout_time?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_tenants: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean
+          tenant_id: string
+          user_id: string
+          workspace_type: Database["public"]["Enums"]["workspace_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          tenant_id: string
+          user_id: string
+          workspace_type?: Database["public"]["Enums"]["workspace_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          tenant_id?: string
+          user_id?: string
+          workspace_type?: Database["public"]["Enums"]["workspace_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tenants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          ai_agent_id: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          first_name: string | null
+          id: string
+          last_login_at: string | null
+          last_name: string | null
+          primary_role_id: string | null
+          primary_tenant_id: string | null
+          status: Database["public"]["Enums"]["user_status"]
+          updated_at: string
+          updated_by: string | null
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Insert: {
+          ai_agent_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          first_name?: string | null
+          id: string
+          last_login_at?: string | null
+          last_name?: string | null
+          primary_role_id?: string | null
+          primary_tenant_id?: string | null
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string
+          updated_by?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Update: {
+          ai_agent_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_login_at?: string | null
+          last_name?: string | null
+          primary_role_id?: string | null
+          primary_tenant_id?: string | null
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string
+          updated_by?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_primary_role_id_fkey"
+            columns: ["primary_role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_context: {
+        Row: {
+          active_role_id: string | null
+          active_tenant_id: string | null
+          active_workspace_type:
+            | Database["public"]["Enums"]["workspace_type"]
+            | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_role_id?: string | null
+          active_tenant_id?: string | null
+          active_workspace_type?:
+            | Database["public"]["Enums"]["workspace_type"]
+            | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_role_id?: string | null
+          active_tenant_id?: string | null
+          active_workspace_type?:
+            | Database["public"]["Enums"]["workspace_type"]
+            | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_context_active_role_id_fkey"
+            columns: ["active_role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_context_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      active_tenant_id: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_control: { Args: { _user_id: string }; Returns: boolean }
+      is_master_agent_of: {
+        Args: { _tenant: string; _user_id: string }
+        Returns: boolean
+      }
+      is_tenant_admin_of: {
+        Args: { _tenant: string; _user_id: string }
+        Returns: boolean
+      }
+      user_in_tenant: {
+        Args: { _tenant: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "CONTROL"
+        | "CONTROL_RESEARCH_AI"
+        | "CONTROL_STARTUP_DISCOVERY_AI"
+        | "CONTROL_INVESTOR_DISCOVERY_AI"
+        | "MASTER_AGENT"
+        | "MASTER_AGENT_AI"
+        | "TENANT_ADMIN"
+        | "TENANT_AGENT"
+        | "TENANT_STARTUP_AI"
+        | "TENANT_INVESTOR_AI"
+        | "TENANT_DEAL_AI"
+        | "STARTUP_USER"
+        | "INVESTOR_USER"
+      security_event_type:
+        | "LOGIN"
+        | "LOGOUT"
+        | "FAILED_LOGIN"
+        | "PASSWORD_RESET"
+        | "ROLE_CHANGE"
+        | "WORKSPACE_SWITCH"
+        | "USER_INVITED"
+        | "INVITE_ACCEPTED"
+        | "INVITE_EXPIRED"
+        | "ACCOUNT_LOCKED"
+        | "ACCOUNT_SUSPENDED"
+      user_status:
+        | "Pending"
+        | "Active"
+        | "Suspended"
+        | "Locked"
+        | "Archived"
+        | "Deleted"
+      user_type: "Human" | "AI" | "System"
+      workspace_type:
+        | "CONTROL"
+        | "MASTER_AGENT"
+        | "TENANT"
+        | "STARTUP"
+        | "INVESTOR"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -361,6 +792,51 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "CONTROL",
+        "CONTROL_RESEARCH_AI",
+        "CONTROL_STARTUP_DISCOVERY_AI",
+        "CONTROL_INVESTOR_DISCOVERY_AI",
+        "MASTER_AGENT",
+        "MASTER_AGENT_AI",
+        "TENANT_ADMIN",
+        "TENANT_AGENT",
+        "TENANT_STARTUP_AI",
+        "TENANT_INVESTOR_AI",
+        "TENANT_DEAL_AI",
+        "STARTUP_USER",
+        "INVESTOR_USER",
+      ],
+      security_event_type: [
+        "LOGIN",
+        "LOGOUT",
+        "FAILED_LOGIN",
+        "PASSWORD_RESET",
+        "ROLE_CHANGE",
+        "WORKSPACE_SWITCH",
+        "USER_INVITED",
+        "INVITE_ACCEPTED",
+        "INVITE_EXPIRED",
+        "ACCOUNT_LOCKED",
+        "ACCOUNT_SUSPENDED",
+      ],
+      user_status: [
+        "Pending",
+        "Active",
+        "Suspended",
+        "Locked",
+        "Archived",
+        "Deleted",
+      ],
+      user_type: ["Human", "AI", "System"],
+      workspace_type: [
+        "CONTROL",
+        "MASTER_AGENT",
+        "TENANT",
+        "STARTUP",
+        "INVESTOR",
+      ],
+    },
   },
 } as const
