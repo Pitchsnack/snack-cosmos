@@ -1,24 +1,16 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { passwordSchema, PASSWORD_POLICY_TEXT } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({ meta: [{ title: "Set new password — SnackPortal2" }] }),
   component: ResetPasswordPage,
 });
-
-const passwordSchema = z
-  .string()
-  .min(12, "Min 12 characters")
-  .regex(/[A-Z]/, "Needs an uppercase letter")
-  .regex(/[a-z]/, "Needs a lowercase letter")
-  .regex(/[0-9]/, "Needs a number")
-  .regex(/[^A-Za-z0-9]/, "Needs a special character");
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -53,9 +45,7 @@ function ResetPasswordPage() {
       <div className="w-full max-w-sm space-y-6 rounded-lg border border-border bg-card p-8 shadow-card">
         <div className="text-center">
           <h1 className="text-xl font-semibold">Set a new password</h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Min 12 characters, with upper, lower, number, and symbol.
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{PASSWORD_POLICY_TEXT}</p>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
