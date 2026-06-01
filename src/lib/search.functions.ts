@@ -48,7 +48,7 @@ export const saveSearch = createServerFn({ method: "POST" })
       user_id: userId,
       tenant_id: data.tenantId ?? null,
       search_name: data.name,
-      search_query: data.query,
+      search_query: data.query as Json,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
