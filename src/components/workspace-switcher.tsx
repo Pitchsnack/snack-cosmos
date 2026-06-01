@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, ChevronsUpDown, Building2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Popover,
   PopoverContent,
@@ -15,7 +16,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { useSessionContext } from "@/hooks/use-session-context";
+import { switchWorkspace } from "@/lib/session-context.functions";
 
 const ACTIVE_KEY = "sp2.activeTenantId";
 const CONTROL_LABEL = "Control";
@@ -28,35 +30,33 @@ export function getActiveTenantId(): string | null {
 
 export function WorkspaceSwitcher() {
   const [open, setOpen] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const { data: session } = useSessionContext();
+  const qc = useQueryClient();
+  const doSwitch = useServerFn(switchWorkspace);
 
-  useEffect(() => {
-    setActiveId(getActiveTenantId());
-  }, []);
+  const tenants = session?.tenants ?? [];
+  const isControl = (session?.roles ?? []).includes("CONTROL");
+  const activeId = session?.activeWorkspace.tenantId ?? null;
+  const active = tenants.find((t) => t.tenantId === activeId);
+  const label = active ? active.tenantName : isControl ? CONTROL_LABEL : tenants[0]?.tenantName ?? "—";
+  const sublabel = active ? active.tenantCode : isControl ? CONTROL_SUB : tenants[0]?.tenantCode ?? "";
 
-  const { data: tenants = [] } = useQuery({
-    queryKey: ["tenants", "switcher"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tenants")
-        .select("id, tenant_code, tenant_name, status")
-        .neq("status", "Deleted")
-        .order("tenant_name", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const active = tenants.find((t) => t.id === activeId);
-  const label = active ? active.tenant_name : CONTROL_LABEL;
-  const sublabel = active ? active.tenant_code : CONTROL_SUB;
-
-  function pick(id: string | null) {
-    if (id) localStorage.setItem(ACTIVE_KEY, id);
-    else localStorage.removeItem(ACTIVE_KEY);
-    setActiveId(id);
-    setOpen(false);
-    window.dispatchEvent(new CustomEvent("sp2:workspace-changed"));
+  async function pick(tenantId: string | null, workspaceType: string | null) {
+    try {
+      if (tenantId) localStorage.setItem(ACTIVE_KEY, tenantId);
+      else localStorage.removeItem(ACTIVE_KEY);
+      await doSwitch({
+        data: {
+          tenantId,
+          workspaceType: (workspaceType as never) ?? (tenantId ? "TENANT" : "CONTROL"),
+        },
+      });
+      await qc.invalidateQueries();
+      setOpen(false);
+      window.dispatchEvent(new CustomEvent("sp2:workspace-changed"));
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (
@@ -84,41 +84,31 @@ export function WorkspaceSwitcher() {
         <Command>
           <CommandInput placeholder="Search workspace…" />
           <CommandList>
-            <CommandEmpty>No tenants yet.</CommandEmpty>
-            <CommandGroup heading="Platform">
-              <CommandItem value="__control__" onSelect={() => pick(null)}>
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    !activeId ? "opacity-100" : "opacity-0",
-                  )}
-                />
-                <div className="flex flex-col">
-                  <span className="text-sm">{CONTROL_LABEL}</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {CONTROL_SUB}
-                  </span>
-                </div>
-              </CommandItem>
-            </CommandGroup>
+            <CommandEmpty>No workspaces available.</CommandEmpty>
+            {isControl && (
+              <CommandGroup heading="Platform">
+                <CommandItem value="__control__" onSelect={() => pick(null, "CONTROL")}>
+                  <Check className={cn("mr-2 h-4 w-4", !activeId ? "opacity-100" : "opacity-0")} />
+                  <div className="flex flex-col">
+                    <span className="text-sm">{CONTROL_LABEL}</span>
+                    <span className="text-[11px] text-muted-foreground">{CONTROL_SUB}</span>
+                  </div>
+                </CommandItem>
+              </CommandGroup>
+            )}
             {tenants.length > 0 && (
-              <CommandGroup heading="Tenants">
+              <CommandGroup heading="Workspaces">
                 {tenants.map((t) => (
                   <CommandItem
-                    key={t.id}
-                    value={`${t.tenant_name} ${t.tenant_code}`}
-                    onSelect={() => pick(t.id)}
+                    key={t.tenantId}
+                    value={`${t.tenantName} ${t.tenantCode}`}
+                    onSelect={() => pick(t.tenantId, t.workspaceType)}
                   >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        activeId === t.id ? "opacity-100" : "opacity-0",
-                      )}
-                    />
+                    <Check className={cn("mr-2 h-4 w-4", activeId === t.tenantId ? "opacity-100" : "opacity-0")} />
                     <div className="flex flex-col">
-                      <span className="text-sm">{t.tenant_name}</span>
+                      <span className="text-sm">{t.tenantName}</span>
                       <span className="font-mono text-[11px] text-muted-foreground">
-                        {t.tenant_code}
+                        {t.tenantCode} · {t.workspaceType}
                       </span>
                     </div>
                   </CommandItem>
