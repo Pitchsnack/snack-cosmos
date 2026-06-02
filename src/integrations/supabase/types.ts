@@ -58,6 +58,198 @@ export type Database = {
           },
         ]
       }
+      deal_activity: {
+        Row: {
+          activity_details: Json
+          activity_type: string
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          activity_details?: Json
+          activity_type: string
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          activity_details?: Json
+          activity_type?: string
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      deal_ai_ownership: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          deal_id: string
+          id: string
+          owning_ai_agent_id: string
+          tenant_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          owning_ai_agent_id: string
+          tenant_id: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          owning_ai_agent_id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      deal_documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          document_type: string | null
+          file_name: string
+          file_url: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          document_type?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          document_type?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      deal_ownership: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          deal_id: string
+          id: string
+          owning_agent_user_id: string
+          tenant_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          owning_agent_user_id: string
+          tenant_id: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          owning_agent_user_id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      deal_tags: {
+        Row: {
+          deal_id: string
+          id: string
+          tag_name: string
+          tenant_id: string
+        }
+        Insert: {
+          deal_id: string
+          id?: string
+          tag_name: string
+          tenant_id: string
+        }
+        Update: {
+          deal_id?: string
+          id?: string
+          tag_name?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      deals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deal_name: string
+          expected_close_date: string | null
+          id: string
+          investment_amount: number | null
+          investor_id: string
+          notes: string | null
+          probability: number | null
+          stage: string
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_name: string
+          expected_close_date?: string | null
+          id?: string
+          investment_amount?: number | null
+          investor_id: string
+          notes?: string | null
+          probability?: number | null
+          stage?: string
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_name?: string
+          expected_close_date?: string | null
+          id?: string
+          investment_amount?: number | null
+          investor_id?: string
+          notes?: string | null
+          probability?: number | null
+          stage?: string
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+        }
+        Relationships: []
+      }
       investor_activity: {
         Row: {
           activity_details: Json
@@ -1245,12 +1437,20 @@ export type Database = {
     }
     Functions: {
       active_tenant_id: { Args: { _user_id: string }; Returns: string }
+      can_access_deal: {
+        Args: { _deal_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_access_investor: {
         Args: { _investor_id: string; _user_id: string }
         Returns: boolean
       }
       can_access_startup: {
         Args: { _startup_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_manage_deal: {
+        Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
       can_manage_investor: {
