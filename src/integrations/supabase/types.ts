@@ -58,6 +58,171 @@ export type Database = {
           },
         ]
       }
+      investor_activity: {
+        Row: {
+          activity_details: Json
+          activity_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          investor_id: string
+          tenant_id: string
+        }
+        Insert: {
+          activity_details?: Json
+          activity_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investor_id: string
+          tenant_id: string
+        }
+        Update: {
+          activity_details?: Json
+          activity_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investor_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_activity_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_activity_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_ai_ownership: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          id: string
+          investor_id: string
+          owning_ai_agent_id: string
+          tenant_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          investor_id: string
+          owning_ai_agent_id: string
+          tenant_id: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          investor_id?: string
+          owning_ai_agent_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_ai_ownership_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: true
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_ai_ownership_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_ownership: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          id: string
+          investor_id: string
+          owning_agent_user_id: string
+          tenant_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          investor_id: string
+          owning_agent_user_id: string
+          tenant_id: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          investor_id?: string
+          owning_agent_user_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_ownership_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: true
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_ownership_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_tags: {
+        Row: {
+          id: string
+          investor_id: string
+          tag_name: string
+          tenant_id: string
+        }
+        Insert: {
+          id?: string
+          investor_id: string
+          tag_name: string
+          tenant_id: string
+        }
+        Update: {
+          id?: string
+          investor_id?: string
+          tag_name?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_tags_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_tags_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_user_assignments: {
         Row: {
           created_at: string
@@ -86,6 +251,116 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_users: {
+        Row: {
+          created_at: string
+          id: string
+          investor_id: string
+          role: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          investor_id: string
+          role?: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          investor_id?: string
+          role?: string | null
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_users_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investors: {
+        Row: {
+          aum: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          investor_name: string
+          investor_type: string | null
+          legal_name: string | null
+          long_description: string | null
+          short_description: string | null
+          status: string
+          tenant_id: string
+          ticket_size: string | null
+          updated_at: string
+          updated_by: string | null
+          visibility: string
+          website_url: string | null
+        }
+        Insert: {
+          aum?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investor_name: string
+          investor_type?: string | null
+          legal_name?: string | null
+          long_description?: string | null
+          short_description?: string | null
+          status?: string
+          tenant_id: string
+          ticket_size?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+          website_url?: string | null
+        }
+        Update: {
+          aum?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investor_name?: string
+          investor_type?: string | null
+          legal_name?: string | null
+          long_description?: string | null
+          short_description?: string | null
+          status?: string
+          tenant_id?: string
+          ticket_size?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investors_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -970,8 +1245,16 @@ export type Database = {
     }
     Functions: {
       active_tenant_id: { Args: { _user_id: string }; Returns: string }
+      can_access_investor: {
+        Args: { _investor_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_access_startup: {
         Args: { _startup_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_manage_investor: {
+        Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
       can_manage_startup: {
