@@ -34,6 +34,7 @@ type NavPath =
   | "/"
   | "/dashboard"
   | "/startups"
+  | "/investors"
   | "/audit"
   | "/users"
   | "/access-management"
@@ -58,7 +59,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
-  { label: "Investors", icon: Briefcase, path: "/dashboard", exact: false, perm: "investors.read", disabled: true },
+  { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "Deals", icon: Sparkles, path: "/dashboard", exact: false, perm: "deals.read", disabled: true },
   { label: "Communications", icon: MessagesSquare, path: "/dashboard", exact: false, disabled: true },
   { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
