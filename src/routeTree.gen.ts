@@ -27,6 +27,7 @@ import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_aut
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
+import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -122,6 +123,12 @@ const AuthenticatedInvestorsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedInvestorsRoute,
   } as any)
+const AuthenticatedInvestorsIdRoute =
+  AuthenticatedInvestorsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedInvestorsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof AuthenticatedSecurityRoute
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
+  '/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
@@ -157,6 +165,7 @@ export interface FileRoutesByTo {
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
+  '/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
@@ -178,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/startups'
     | '/users'
+    | '/investors/$id'
     | '/investors/new'
     | '/startups/$id'
     | '/startups/new'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/startups'
     | '/users'
     | '/'
+    | '/investors/$id'
     | '/investors/new'
     | '/startups/$id'
     | '/startups/new'
@@ -238,6 +250,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups'
     | '/_authenticated/users'
     | '/_authenticated/'
+    | '/_authenticated/investors/$id'
     | '/_authenticated/investors/new'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
@@ -379,15 +392,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorsNewRouteImport
       parentRoute: typeof AuthenticatedInvestorsRoute
     }
+    '/_authenticated/investors/$id': {
+      id: '/_authenticated/investors/$id'
+      path: '/$id'
+      fullPath: '/investors/$id'
+      preLoaderRoute: typeof AuthenticatedInvestorsIdRouteImport
+      parentRoute: typeof AuthenticatedInvestorsRoute
+    }
   }
 }
 
 interface AuthenticatedInvestorsRouteChildren {
+  AuthenticatedInvestorsIdRoute: typeof AuthenticatedInvestorsIdRoute
   AuthenticatedInvestorsNewRoute: typeof AuthenticatedInvestorsNewRoute
 }
 
 const AuthenticatedInvestorsRouteChildren: AuthenticatedInvestorsRouteChildren =
   {
+    AuthenticatedInvestorsIdRoute: AuthenticatedInvestorsIdRoute,
     AuthenticatedInvestorsNewRoute: AuthenticatedInvestorsNewRoute,
   }
 
