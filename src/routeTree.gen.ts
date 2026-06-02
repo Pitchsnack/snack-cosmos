@@ -21,6 +21,7 @@ import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
+import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
@@ -28,6 +29,8 @@ import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenti
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
 import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
+import { Route as AuthenticatedDealsNewRouteImport } from './routes/_authenticated/deals.new'
+import { Route as AuthenticatedDealsIdRouteImport } from './routes/_authenticated/deals.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -90,6 +93,11 @@ const AuthenticatedInvestorsRoute = AuthenticatedInvestorsRouteImport.update({
   path: '/investors',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -129,6 +137,16 @@ const AuthenticatedInvestorsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedInvestorsRoute,
   } as any)
+const AuthenticatedDealsNewRoute = AuthenticatedDealsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthenticatedDealsRoute,
+} as any)
+const AuthenticatedDealsIdRoute = AuthenticatedDealsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedDealsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -139,12 +157,15 @@ export interface FileRoutesByFullPath {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
+  '/deals/$id': typeof AuthenticatedDealsIdRoute
+  '/deals/new': typeof AuthenticatedDealsNewRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
@@ -158,6 +179,7 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
@@ -165,6 +187,8 @@ export interface FileRoutesByTo {
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
+  '/deals/$id': typeof AuthenticatedDealsIdRoute
+  '/deals/new': typeof AuthenticatedDealsNewRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
@@ -180,6 +204,7 @@ export interface FileRoutesById {
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
@@ -187,6 +212,8 @@ export interface FileRoutesById {
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/deals/$id': typeof AuthenticatedDealsIdRoute
+  '/_authenticated/deals/new': typeof AuthenticatedDealsNewRoute
   '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRoute
@@ -203,12 +230,15 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/audit'
     | '/dashboard'
+    | '/deals'
     | '/investors'
     | '/notifications'
     | '/preferences'
     | '/security'
     | '/startups'
     | '/users'
+    | '/deals/$id'
+    | '/deals/new'
     | '/investors/$id'
     | '/investors/new'
     | '/startups/$id'
@@ -222,6 +252,7 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/audit'
     | '/dashboard'
+    | '/deals'
     | '/investors'
     | '/notifications'
     | '/preferences'
@@ -229,6 +260,8 @@ export interface FileRouteTypes {
     | '/startups'
     | '/users'
     | '/'
+    | '/deals/$id'
+    | '/deals/new'
     | '/investors/$id'
     | '/investors/new'
     | '/startups/$id'
@@ -243,6 +276,7 @@ export interface FileRouteTypes {
     | '/_authenticated/access-management'
     | '/_authenticated/audit'
     | '/_authenticated/dashboard'
+    | '/_authenticated/deals'
     | '/_authenticated/investors'
     | '/_authenticated/notifications'
     | '/_authenticated/preferences'
@@ -250,6 +284,8 @@ export interface FileRouteTypes {
     | '/_authenticated/startups'
     | '/_authenticated/users'
     | '/_authenticated/'
+    | '/_authenticated/deals/$id'
+    | '/_authenticated/deals/new'
     | '/_authenticated/investors/$id'
     | '/_authenticated/investors/new'
     | '/_authenticated/startups/$id'
@@ -350,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/deals': {
+      id: '/_authenticated/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof AuthenticatedDealsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -399,8 +442,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorsIdRouteImport
       parentRoute: typeof AuthenticatedInvestorsRoute
     }
+    '/_authenticated/deals/new': {
+      id: '/_authenticated/deals/new'
+      path: '/new'
+      fullPath: '/deals/new'
+      preLoaderRoute: typeof AuthenticatedDealsNewRouteImport
+      parentRoute: typeof AuthenticatedDealsRoute
+    }
+    '/_authenticated/deals/$id': {
+      id: '/_authenticated/deals/$id'
+      path: '/$id'
+      fullPath: '/deals/$id'
+      preLoaderRoute: typeof AuthenticatedDealsIdRouteImport
+      parentRoute: typeof AuthenticatedDealsRoute
+    }
   }
 }
+
+interface AuthenticatedDealsRouteChildren {
+  AuthenticatedDealsIdRoute: typeof AuthenticatedDealsIdRoute
+  AuthenticatedDealsNewRoute: typeof AuthenticatedDealsNewRoute
+}
+
+const AuthenticatedDealsRouteChildren: AuthenticatedDealsRouteChildren = {
+  AuthenticatedDealsIdRoute: AuthenticatedDealsIdRoute,
+  AuthenticatedDealsNewRoute: AuthenticatedDealsNewRoute,
+}
+
+const AuthenticatedDealsRouteWithChildren =
+  AuthenticatedDealsRoute._addFileChildren(AuthenticatedDealsRouteChildren)
 
 interface AuthenticatedInvestorsRouteChildren {
   AuthenticatedInvestorsIdRoute: typeof AuthenticatedInvestorsIdRoute
@@ -437,6 +507,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
@@ -450,6 +521,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
@@ -473,3 +545,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
