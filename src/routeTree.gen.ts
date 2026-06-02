@@ -16,12 +16,15 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
+import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
+import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -57,6 +60,11 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedStartupsRoute = AuthenticatedStartupsRouteImport.update({
+  id: '/startups',
+  path: '/startups',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
   id: '/security',
   path: '/security',
@@ -90,6 +98,17 @@ const AuthenticatedAccessManagementRoute =
     path: '/access-management',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedStartupsNewRoute =
+  AuthenticatedStartupsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedStartupsRoute,
+  } as any)
+const AuthenticatedStartupsIdRoute = AuthenticatedStartupsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedStartupsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -103,7 +122,10 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
+  '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
+  '/startups/$id': typeof AuthenticatedStartupsIdRoute
+  '/startups/new': typeof AuthenticatedStartupsNewRoute
 }
 export interface FileRoutesByTo {
   '/accept-invite': typeof AcceptInviteRoute
@@ -116,8 +138,11 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
+  '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
+  '/startups/$id': typeof AuthenticatedStartupsIdRoute
+  '/startups/new': typeof AuthenticatedStartupsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -132,8 +157,11 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
+  '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRoute
+  '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -149,7 +177,10 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/preferences'
     | '/security'
+    | '/startups'
     | '/users'
+    | '/startups/$id'
+    | '/startups/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/accept-invite'
@@ -162,8 +193,11 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/preferences'
     | '/security'
+    | '/startups'
     | '/users'
     | '/'
+    | '/startups/$id'
+    | '/startups/new'
   id:
     | '__root__'
     | '/_authenticated'
@@ -177,8 +211,11 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/preferences'
     | '/_authenticated/security'
+    | '/_authenticated/startups'
     | '/_authenticated/users'
     | '/_authenticated/'
+    | '/_authenticated/startups/$id'
+    | '/_authenticated/startups/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/startups': {
+      id: '/_authenticated/startups'
+      path: '/startups'
+      fullPath: '/startups'
+      preLoaderRoute: typeof AuthenticatedStartupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/security': {
       id: '/_authenticated/security'
       path: '/security'
@@ -282,8 +326,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccessManagementRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/startups/new': {
+      id: '/_authenticated/startups/new'
+      path: '/new'
+      fullPath: '/startups/new'
+      preLoaderRoute: typeof AuthenticatedStartupsNewRouteImport
+      parentRoute: typeof AuthenticatedStartupsRoute
+    }
+    '/_authenticated/startups/$id': {
+      id: '/_authenticated/startups/$id'
+      path: '/$id'
+      fullPath: '/startups/$id'
+      preLoaderRoute: typeof AuthenticatedStartupsIdRouteImport
+      parentRoute: typeof AuthenticatedStartupsRoute
+    }
   }
 }
+
+interface AuthenticatedStartupsRouteChildren {
+  AuthenticatedStartupsIdRoute: typeof AuthenticatedStartupsIdRoute
+  AuthenticatedStartupsNewRoute: typeof AuthenticatedStartupsNewRoute
+}
+
+const AuthenticatedStartupsRouteChildren: AuthenticatedStartupsRouteChildren = {
+  AuthenticatedStartupsIdRoute: AuthenticatedStartupsIdRoute,
+  AuthenticatedStartupsNewRoute: AuthenticatedStartupsNewRoute,
+}
+
+const AuthenticatedStartupsRouteWithChildren =
+  AuthenticatedStartupsRoute._addFileChildren(
+    AuthenticatedStartupsRouteChildren,
+  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
@@ -292,6 +365,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
+  AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
@@ -303,6 +377,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
+  AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
@@ -321,3 +396,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
