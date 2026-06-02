@@ -34,6 +34,7 @@ type NavPath =
   | "/"
   | "/dashboard"
   | "/startups"
+  | "/investors"
   | "/audit"
   | "/users"
   | "/access-management"
