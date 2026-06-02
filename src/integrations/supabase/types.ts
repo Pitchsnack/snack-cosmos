@@ -263,6 +263,140 @@ export type Database = {
         }
         Relationships: []
       }
+      startup_activity: {
+        Row: {
+          activity_details: Json
+          activity_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          startup_id: string
+          tenant_id: string
+        }
+        Insert: {
+          activity_details?: Json
+          activity_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          startup_id: string
+          tenant_id: string
+        }
+        Update: {
+          activity_details?: Json
+          activity_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          startup_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_activity_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_ai_ownership: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          id: string
+          owning_ai_agent_id: string
+          startup_id: string
+          tenant_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          owning_ai_agent_id: string
+          startup_id: string
+          tenant_id: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          owning_ai_agent_id?: string
+          startup_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_ai_ownership_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: true
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_ownership: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          id: string
+          owning_agent_user_id: string
+          startup_id: string
+          tenant_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          owning_agent_user_id: string
+          startup_id: string
+          tenant_id: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          owning_agent_user_id?: string
+          startup_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_ownership_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: true
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_tags: {
+        Row: {
+          id: string
+          startup_id: string
+          tag_name: string
+        }
+        Insert: {
+          id?: string
+          startup_id: string
+          tag_name: string
+        }
+        Update: {
+          id?: string
+          startup_id?: string
+          tag_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_tags_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startup_user_assignments: {
         Row: {
           created_at: string
@@ -294,6 +428,92 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      startup_users: {
+        Row: {
+          created_at: string
+          id: string
+          role: string | null
+          startup_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string | null
+          startup_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string | null
+          startup_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_users_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startups: {
+        Row: {
+          country: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          industry: string | null
+          legal_name: string | null
+          long_description: string | null
+          short_description: string | null
+          startup_name: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+          visibility: string
+          website_url: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          industry?: string | null
+          legal_name?: string | null
+          long_description?: string | null
+          short_description?: string | null
+          startup_name: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+          website_url?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          industry?: string | null
+          legal_name?: string | null
+          long_description?: string | null
+          short_description?: string | null
+          startup_name?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+          website_url?: string | null
+        }
+        Relationships: []
       }
       tenant_features: {
         Row: {
@@ -730,6 +950,14 @@ export type Database = {
     }
     Functions: {
       active_tenant_id: { Args: { _user_id: string }; Returns: string }
+      can_access_startup: {
+        Args: { _startup_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_manage_startup: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
