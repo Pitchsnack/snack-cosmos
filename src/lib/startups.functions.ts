@@ -251,7 +251,7 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.status !== undefined) patch.status = data.status;
     if (data.visibility !== undefined) patch.visibility = data.visibility;
 
-    const { error } = await supabase.from("startups").update(patch).eq("id", data.id);
+    const { error } = await supabase.from("startups").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
 
     if (data.status && data.status !== existing.status) {
