@@ -86,7 +86,29 @@ export type Database = {
           id?: string
           tenant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deal_activity_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_activity_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_activity_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_ai_ownership: {
         Row: {
@@ -113,7 +135,29 @@ export type Database = {
           owning_ai_agent_id?: string
           tenant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deal_ai_ownership_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: true
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_ai_ownership_owning_ai_agent_id_fkey"
+            columns: ["owning_ai_agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_ai_ownership_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_documents: {
         Row: {
@@ -146,7 +190,29 @@ export type Database = {
           id?: string
           tenant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deal_documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_documents_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_ownership: {
         Row: {
@@ -173,7 +239,29 @@ export type Database = {
           owning_agent_user_id?: string
           tenant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deal_ownership_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: true
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_ownership_owning_agent_user_id_fkey"
+            columns: ["owning_agent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_ownership_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_tags: {
         Row: {
@@ -194,7 +282,22 @@ export type Database = {
           tag_name?: string
           tenant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deal_tags_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_tags_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deals: {
         Row: {
@@ -248,7 +351,29 @@ export type Database = {
           updated_by?: string | null
           visibility?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deals_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       investor_activity: {
         Row: {
@@ -279,6 +404,13 @@ export type Database = {
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "investor_activity_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "investor_activity_investor_id_fkey"
             columns: ["investor_id"]
@@ -329,6 +461,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "investor_ai_ownership_owning_ai_agent_id_fkey"
+            columns: ["owning_ai_agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "investor_ai_ownership_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -368,6 +507,13 @@ export type Database = {
             columns: ["investor_id"]
             isOneToOne: true
             referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_ownership_owning_agent_user_id_fkey"
+            columns: ["owning_agent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -485,6 +631,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -760,10 +913,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "startup_activity_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "startup_activity_startup_id_fkey"
             columns: ["startup_id"]
             isOneToOne: false
             referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_activity_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -795,10 +962,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "startup_ai_ownership_owning_ai_agent_id_fkey"
+            columns: ["owning_ai_agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "startup_ai_ownership_startup_id_fkey"
             columns: ["startup_id"]
             isOneToOne: true
             referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_ai_ownership_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -830,10 +1011,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "startup_ownership_owning_agent_user_id_fkey"
+            columns: ["owning_agent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "startup_ownership_startup_id_fkey"
             columns: ["startup_id"]
             isOneToOne: true
             referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_ownership_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -946,6 +1141,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "startup_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       startups: {
@@ -1000,7 +1202,15 @@ export type Database = {
           visibility?: string
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "startups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenant_features: {
         Row: {
