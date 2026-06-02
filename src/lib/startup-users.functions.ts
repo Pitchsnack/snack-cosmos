@@ -33,7 +33,7 @@ export const assignStartupUser = createServerFn({ method: "POST" })
     const { error } = await supabase
       .from("startup_users")
       .upsert(
-        { startup_id: data.startupId, user_id: data.userId, role: data.role },
+        { startup_id: data.startupId, tenant_id: s.tenant_id, user_id: data.userId, role: data.role },
         { onConflict: "startup_id,user_id" },
       );
     if (error) throw new Error(error.message);
