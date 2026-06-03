@@ -8,6 +8,7 @@ import { DealTable } from "@/components/deals/deal-table";
 import { DealPipeline } from "@/components/deals/deal-pipeline";
 import { useDeals } from "@/hooks/use-deals";
 import { usePermissions } from "@/hooks/use-session-context";
+import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/deals")({
@@ -16,6 +17,14 @@ export const Route = createFileRoute("/_authenticated/deals")({
 });
 
 function DealsPage() {
+  return (
+    <PermissionGuard permission="deals.read" message="You don't have permission to view deals.">
+      <DealsPageInner />
+    </PermissionGuard>
+  );
+}
+
+function DealsPageInner() {
   const { has } = usePermissions();
   const navigate = useNavigate();
   const { data, isLoading, isFetching, refetch } = useDeals();
@@ -34,13 +43,6 @@ function DealsPage() {
     );
   }, [data, q]);
 
-  if (!has("deals.read")) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        You don't have permission to view deals.
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

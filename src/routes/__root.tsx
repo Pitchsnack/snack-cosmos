@@ -124,9 +124,15 @@ function AuthStateSync() {
   const router = useRouter();
   const qc = useQueryClient();
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      router.invalidate();
-      qc.invalidateQueries();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // Only invalidate on real auth transitions. INITIAL_SESSION and
+      // TOKEN_REFRESHED fire on every page load / refresh and would wipe
+      // the session-context cache, causing the permission flicker
+      // documented in PRD-INV-001.
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        router.invalidate();
+        qc.invalidateQueries();
+      }
     });
     return () => subscription.unsubscribe();
   }, [router, qc]);

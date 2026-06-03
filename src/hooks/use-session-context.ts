@@ -16,12 +16,18 @@ export function useSessionContext() {
 }
 
 export function usePermissions() {
-  const { data } = useSessionContext();
+  const { data, isLoading, isFetching, isSuccess, isError } = useSessionContext();
   const perms = new Set<Permission>(data?.permissions ?? []);
+  // "Resolved" means we have an authoritative answer (success or error).
+  // Until then, callers must treat permissions as Loading, not Denied.
+  const isResolved = isSuccess || isError;
   return {
     has: (p: Permission) => perms.has(p),
     hasAny: (ps: Permission[]) => ps.some((p) => perms.has(p)),
     isControl: (data?.roles ?? []).includes("CONTROL"),
     roles: data?.roles ?? [],
+    isLoading: !isResolved || isLoading,
+    isFetching,
+    isResolved,
   };
 }
