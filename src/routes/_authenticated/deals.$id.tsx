@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { DealOwnershipCard } from "@/components/deals/deal-ownership-card";
 import { DealDocumentsCard } from "@/components/deals/deal-documents-card";
+import { ShareDialog } from "@/components/deals/share-dialog";
 import { useDeal, useDealActivity, useDealAuditLogs } from "@/hooks/use-deal";
 import { updateDeal, archiveDeal, DEAL_STAGES, DEAL_VISIBILITIES } from "@/lib/deals.functions";
 import { usePermissions } from "@/hooks/use-session-context";
