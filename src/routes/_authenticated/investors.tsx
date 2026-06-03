@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { InvestorTable } from "@/components/investors/investor-table";
 import { useInvestors } from "@/hooks/use-investors";
 import { usePermissions } from "@/hooks/use-session-context";
+import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/investors")({
@@ -14,6 +15,14 @@ export const Route = createFileRoute("/_authenticated/investors")({
 });
 
 function InvestorsPage() {
+  return (
+    <PermissionGuard permission="investors.read" message="You don't have permission to view investors.">
+      <InvestorsPageInner />
+    </PermissionGuard>
+  );
+}
+
+function InvestorsPageInner() {
   const { has } = usePermissions();
   const navigate = useNavigate();
   const { data, isLoading, isFetching, refetch } = useInvestors();
@@ -30,14 +39,6 @@ function InvestorsPage() {
       (s.tenant_name ?? "").toLowerCase().includes(needle),
     );
   }, [data, q]);
-
-  if (!has("investors.read")) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        You don't have permission to view investors.
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

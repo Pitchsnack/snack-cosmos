@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { StartupTable } from "@/components/startups/startup-table";
 import { useStartups } from "@/hooks/use-startups";
 import { usePermissions } from "@/hooks/use-session-context";
+import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/startups")({
@@ -14,6 +15,14 @@ export const Route = createFileRoute("/_authenticated/startups")({
 });
 
 function StartupsPage() {
+  return (
+    <PermissionGuard permission="startups.read" message="You don't have permission to view startups.">
+      <StartupsPageInner />
+    </PermissionGuard>
+  );
+}
+
+function StartupsPageInner() {
   const { has } = usePermissions();
   const navigate = useNavigate();
   const { data, isLoading, isFetching, refetch } = useStartups();
@@ -30,14 +39,6 @@ function StartupsPage() {
       (s.tenant_name ?? "").toLowerCase().includes(needle),
     );
   }, [data, q]);
-
-  if (!has("startups.read")) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        You don't have permission to view startups.
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
