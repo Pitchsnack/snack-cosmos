@@ -50,6 +50,7 @@ const ALL: Permission[] = [
   "startups.read","startups.write",
   "investors.read","investors.write",
   "deals.read","deals.write",
+  "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
   "ai.invoke",
 ];
 
@@ -61,6 +62,7 @@ const TENANT_ADMIN: Permission[] = [
   "startups.read","startups.write",
   "investors.read","investors.write",
   "deals.read","deals.write",
+  "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
 ];
 
 const TENANT_AGENT: Permission[] = [
@@ -68,6 +70,7 @@ const TENANT_AGENT: Permission[] = [
   "startups.read","startups.write",
   "investors.read","investors.write",
   "deals.read","deals.write",
+  "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
 ];
 
 const STARTUP_USER: Permission[] = ["workspace.switch","startups.read"];
