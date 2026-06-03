@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { listUsers, inviteUser } from "@/lib/users.functions";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
+import { PermissionGuard } from "@/components/permission-guard";
 import { ROLE_LABELS, type AppRole } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/users")({
@@ -64,6 +65,14 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function UsersPage() {
+  return (
+    <PermissionGuard permission="users.read" message="You don't have permission to view users.">
+      <UsersPageInner />
+    </PermissionGuard>
+  );
+}
+
+function UsersPageInner() {
   const { has } = usePermissions();
   const { data: session } = useSessionContext();
   const fetchUsers = useServerFn(listUsers);
@@ -73,13 +82,6 @@ function UsersPage() {
     queryFn: () => fetchUsers({ data: { tenantId } }),
   });
 
-  if (!has("users.read")) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        You don't have permission to view users.
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

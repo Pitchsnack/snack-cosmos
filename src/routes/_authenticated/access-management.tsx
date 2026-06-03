@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { usePermissions } from "@/hooks/use-session-context";
+import { PermissionGuard } from "@/components/permission-guard";
 import {
   ROLE_LABELS,
   ROLE_PERMISSIONS,
@@ -42,15 +43,20 @@ const PERMISSION_GROUPS: { label: string; perms: Permission[] }[] = [
 ];
 
 function AccessPage() {
+  return (
+    <PermissionGuard
+      permission="roles.read"
+      allowControl
+      message="You don't have permission to view access management."
+    >
+      <AccessPageInner />
+    </PermissionGuard>
+  );
+}
+
+function AccessPageInner() {
   const { has, isControl } = usePermissions();
 
-  if (!isControl && !has("roles.read")) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        You don't have permission to view access management.
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

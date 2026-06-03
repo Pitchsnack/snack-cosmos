@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { listSecurityEvents } from "@/lib/security.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+import { PermissionGuard } from "@/components/permission-guard";
 
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({ meta: [{ title: "Security — SnackPortal2" }] }),
@@ -31,21 +32,21 @@ const EVENT_TONE: Record<string, string> = {
 };
 
 function SecurityPage() {
-  const { has } = usePermissions();
+  return (
+    <PermissionGuard permission="security.read" message="You don't have permission to view the security log.">
+      <SecurityPageInner />
+    </PermissionGuard>
+  );
+}
+
+function SecurityPageInner() {
   const fetchEvents = useServerFn(listSecurityEvents);
   const { data, isLoading } = useQuery({
     queryKey: ["security-events"],
     queryFn: () => fetchEvents({ data: {} }),
-    enabled: has("security.read"),
   });
 
-  if (!has("security.read")) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        You don't have permission to view the security log.
-      </div>
-    );
-  }
+
 
   return (
     <div className="space-y-6">
