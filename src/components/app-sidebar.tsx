@@ -64,6 +64,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Startups", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
+  { label: "Shared Deals", icon: Share2, path: "/shared-deals", exact: false, perm: "deals.share.read" },
   { label: "Communications", icon: MessagesSquare, path: "/dashboard", exact: false, disabled: true },
   { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
   { label: "Analytics", icon: BarChart3, path: "/dashboard", exact: false, controlOnly: true, disabled: true },
