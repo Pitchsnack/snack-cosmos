@@ -17,6 +17,7 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  Share2,
   Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
