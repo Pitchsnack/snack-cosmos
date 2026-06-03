@@ -35,6 +35,11 @@ export type Permission =
   | "investors.write"
   | "deals.read"
   | "deals.write"
+  | "deals.share.read"
+  | "deals.share.create"
+  | "deals.share.accept"
+  | "deals.share.reject"
+  | "deals.share.introduce"
   | "ai.invoke";
 
 const ALL: Permission[] = [
