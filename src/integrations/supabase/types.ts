@@ -214,6 +214,45 @@ export type Database = {
           },
         ]
       }
+      deal_introductions: {
+        Row: {
+          created_at: string
+          deal_id: string
+          id: string
+          introduced_by_user_id: string | null
+          introduced_to_user_id: string | null
+          investor_id: string | null
+          startup_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          id?: string
+          introduced_by_user_id?: string | null
+          introduced_to_user_id?: string | null
+          investor_id?: string | null
+          startup_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          id?: string
+          introduced_by_user_id?: string | null
+          introduced_to_user_id?: string | null
+          investor_id?: string | null
+          startup_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       deal_ownership: {
         Row: {
           assigned_at: string
@@ -262,6 +301,121 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deal_share_activity: {
+        Row: {
+          activity_details: Json
+          activity_type: string
+          created_at: string
+          created_by: string | null
+          deal_share_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          activity_details?: Json
+          activity_type: string
+          created_at?: string
+          created_by?: string | null
+          deal_share_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          activity_details?: Json
+          activity_type?: string
+          created_at?: string
+          created_by?: string | null
+          deal_share_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_share_activity_deal_share_id_fkey"
+            columns: ["deal_share_id"]
+            isOneToOne: false
+            referencedRelation: "deal_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_share_targets: {
+        Row: {
+          created_at: string
+          deal_share_id: string
+          id: string
+          status: string
+          target_tenant_id: string
+          target_user_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deal_share_id: string
+          id?: string
+          status?: string
+          target_tenant_id: string
+          target_user_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deal_share_id?: string
+          id?: string
+          status?: string
+          target_tenant_id?: string
+          target_user_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_share_targets_deal_share_id_fkey"
+            columns: ["deal_share_id"]
+            isOneToOne: false
+            referencedRelation: "deal_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_shares: {
+        Row: {
+          created_at: string
+          deal_id: string
+          id: string
+          share_reason: string | null
+          shared_by_role: string | null
+          shared_by_user_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          id?: string
+          share_reason?: string | null
+          shared_by_role?: string | null
+          shared_by_user_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          id?: string
+          share_reason?: string | null
+          shared_by_role?: string | null
+          shared_by_user_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       deal_tags: {
         Row: {
@@ -1655,6 +1809,10 @@ export type Database = {
         Args: { _investor_id: string; _user_id: string }
         Returns: boolean
       }
+      can_access_shared_deal: {
+        Args: { _deal_share_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_access_startup: {
         Args: { _startup_id: string; _user_id: string }
         Returns: boolean
@@ -1665,6 +1823,10 @@ export type Database = {
       }
       can_manage_investor: {
         Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_manage_shared_deal: {
+        Args: { _deal_share_id: string; _user_id: string }
         Returns: boolean
       }
       can_manage_startup: {
