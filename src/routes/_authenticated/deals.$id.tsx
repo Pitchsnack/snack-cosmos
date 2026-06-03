@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { DealOwnershipCard } from "@/components/deals/deal-ownership-card";
 import { DealDocumentsCard } from "@/components/deals/deal-documents-card";
+import { ShareDialog } from "@/components/deals/share-dialog";
 import { useDeal, useDealActivity, useDealAuditLogs } from "@/hooks/use-deal";
 import { updateDeal, archiveDeal, DEAL_STAGES, DEAL_VISIBILITIES } from "@/lib/deals.functions";
 import { usePermissions } from "@/hooks/use-session-context";
@@ -81,6 +82,9 @@ function DealDetailPage() {
         <div className="flex items-center gap-2">
           <Badge variant="outline">{d.stage}</Badge>
           <Badge variant="outline">{d.visibility}</Badge>
+          {has("deals.share.create") && (
+            <ShareDialog dealId={id} dealName={d.deal_name} />
+          )}
           {canManage && d.visibility !== "Archived" && (
             <Button size="sm" variant="outline" onClick={() => archiveM.mutate()} disabled={archiveM.isPending}>Archive</Button>
           )}
