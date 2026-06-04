@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/table";
 import type { DealListItem } from "@/lib/deals.functions";
 import { Sparkles } from "lucide-react";
+import { OriginBadge } from "@/components/global/origin-badge";
 
 function stageTone(s: string) {
   switch (s) {
@@ -25,6 +26,7 @@ export function DealTable({ rows, isLoading }: { rows: DealListItem[]; isLoading
         <TableHeader>
           <TableRow className="bg-muted/30">
             <TableHead>Deal</TableHead>
+            <TableHead>Origin</TableHead>
             <TableHead>Startup</TableHead>
             <TableHead>Investor</TableHead>
             <TableHead>Stage</TableHead>
@@ -37,10 +39,10 @@ export function DealTable({ rows, isLoading }: { rows: DealListItem[]; isLoading
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableRow><TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+            <TableRow><TableCell colSpan={10} className="py-12 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
           ) : rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="py-14 text-center">
+              <TableCell colSpan={10} className="py-14 text-center">
                 <div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-muted-foreground">
                   <Sparkles className="h-8 w-8 opacity-60" />
                   <p className="text-sm">No deals yet. Create the first one.</p>
@@ -56,6 +58,7 @@ export function DealTable({ rows, isLoading }: { rows: DealListItem[]; isLoading
                   </Link>
                   <div className="text-xs text-muted-foreground">{d.tenant_name}</div>
                 </TableCell>
+                <TableCell><OriginBadge origin="tenant" imported={!!d.source_global_id} /></TableCell>
                 <TableCell className="text-sm">{d.startup_name || "—"}</TableCell>
                 <TableCell className="text-sm">{d.investor_name || "—"}</TableCell>
                 <TableCell><Badge variant="outline" className={stageTone(d.stage)}>{d.stage}</Badge></TableCell>
