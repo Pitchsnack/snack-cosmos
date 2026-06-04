@@ -5,7 +5,6 @@ import {
 } from "@/components/ui/table";
 import type { InvestorListItem } from "@/lib/investors.functions";
 import { Briefcase } from "lucide-react";
-import { OriginBadge } from "@/components/global/origin-badge";
 
 function statusTone(s: string) {
   switch (s) {
@@ -26,7 +25,6 @@ export function InvestorTable({ rows, isLoading }: { rows: InvestorListItem[]; i
         <TableHeader>
           <TableRow className="bg-muted/30">
             <TableHead>Investor</TableHead>
-            <TableHead>Origin</TableHead>
             <TableHead>Country</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>AUM</TableHead>
@@ -39,10 +37,10 @@ export function InvestorTable({ rows, isLoading }: { rows: InvestorListItem[]; i
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableRow><TableCell colSpan={10} className="py-12 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+            <TableRow><TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
           ) : rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="py-14 text-center">
+              <TableCell colSpan={9} className="py-14 text-center">
                 <div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-muted-foreground">
                   <Briefcase className="h-8 w-8 opacity-60" />
                   <p className="text-sm">No investors yet. Create the first one.</p>
@@ -58,7 +56,6 @@ export function InvestorTable({ rows, isLoading }: { rows: InvestorListItem[]; i
                   </Link>
                   <div className="text-xs text-muted-foreground">{s.tenant_name}</div>
                 </TableCell>
-                <TableCell><OriginBadge origin="tenant" imported={!!s.source_global_id} /></TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.country || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.investor_type || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.aum || "—"}</TableCell>

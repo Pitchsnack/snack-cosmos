@@ -31,9 +31,6 @@ import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
 import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
-import { Route as AuthenticatedGlobalStartupsRouteImport } from './routes/_authenticated/global.startups'
-import { Route as AuthenticatedGlobalInvestorsRouteImport } from './routes/_authenticated/global.investors'
-import { Route as AuthenticatedGlobalDealsRouteImport } from './routes/_authenticated/global.deals'
 import { Route as AuthenticatedDealsNewRouteImport } from './routes/_authenticated/deals.new'
 import { Route as AuthenticatedDealsIdRouteImport } from './routes/_authenticated/deals.$id'
 
@@ -154,24 +151,6 @@ const AuthenticatedInvestorsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedInvestorsRoute,
   } as any)
-const AuthenticatedGlobalStartupsRoute =
-  AuthenticatedGlobalStartupsRouteImport.update({
-    id: '/global/startups',
-    path: '/global/startups',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedGlobalInvestorsRoute =
-  AuthenticatedGlobalInvestorsRouteImport.update({
-    id: '/global/investors',
-    path: '/global/investors',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedGlobalDealsRoute =
-  AuthenticatedGlobalDealsRouteImport.update({
-    id: '/global/deals',
-    path: '/global/deals',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedDealsNewRoute = AuthenticatedDealsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -202,9 +181,6 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/deals/$id': typeof AuthenticatedDealsIdRoute
   '/deals/new': typeof AuthenticatedDealsNewRoute
-  '/global/deals': typeof AuthenticatedGlobalDealsRoute
-  '/global/investors': typeof AuthenticatedGlobalInvestorsRoute
-  '/global/startups': typeof AuthenticatedGlobalStartupsRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
@@ -230,9 +206,6 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/deals/$id': typeof AuthenticatedDealsIdRoute
   '/deals/new': typeof AuthenticatedDealsNewRoute
-  '/global/deals': typeof AuthenticatedGlobalDealsRoute
-  '/global/investors': typeof AuthenticatedGlobalInvestorsRoute
-  '/global/startups': typeof AuthenticatedGlobalStartupsRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
@@ -260,9 +233,6 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/deals/$id': typeof AuthenticatedDealsIdRoute
   '/_authenticated/deals/new': typeof AuthenticatedDealsNewRoute
-  '/_authenticated/global/deals': typeof AuthenticatedGlobalDealsRoute
-  '/_authenticated/global/investors': typeof AuthenticatedGlobalInvestorsRoute
-  '/_authenticated/global/startups': typeof AuthenticatedGlobalStartupsRoute
   '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRoute
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
@@ -290,9 +260,6 @@ export interface FileRouteTypes {
     | '/users'
     | '/deals/$id'
     | '/deals/new'
-    | '/global/deals'
-    | '/global/investors'
-    | '/global/startups'
     | '/investors/$id'
     | '/investors/new'
     | '/shared-deals/$id'
@@ -318,9 +285,6 @@ export interface FileRouteTypes {
     | '/'
     | '/deals/$id'
     | '/deals/new'
-    | '/global/deals'
-    | '/global/investors'
-    | '/global/startups'
     | '/investors/$id'
     | '/investors/new'
     | '/shared-deals/$id'
@@ -347,9 +311,6 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/deals/$id'
     | '/_authenticated/deals/new'
-    | '/_authenticated/global/deals'
-    | '/_authenticated/global/investors'
-    | '/_authenticated/global/startups'
     | '/_authenticated/investors/$id'
     | '/_authenticated/investors/new'
     | '/_authenticated/shared-deals/$id'
@@ -521,27 +482,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorsIdRouteImport
       parentRoute: typeof AuthenticatedInvestorsRoute
     }
-    '/_authenticated/global/startups': {
-      id: '/_authenticated/global/startups'
-      path: '/global/startups'
-      fullPath: '/global/startups'
-      preLoaderRoute: typeof AuthenticatedGlobalStartupsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/global/investors': {
-      id: '/_authenticated/global/investors'
-      path: '/global/investors'
-      fullPath: '/global/investors'
-      preLoaderRoute: typeof AuthenticatedGlobalInvestorsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/global/deals': {
-      id: '/_authenticated/global/deals'
-      path: '/global/deals'
-      fullPath: '/global/deals'
-      preLoaderRoute: typeof AuthenticatedGlobalDealsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/deals/new': {
       id: '/_authenticated/deals/new'
       path: '/new'
@@ -630,9 +570,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedGlobalDealsRoute: typeof AuthenticatedGlobalDealsRoute
-  AuthenticatedGlobalInvestorsRoute: typeof AuthenticatedGlobalInvestorsRoute
-  AuthenticatedGlobalStartupsRoute: typeof AuthenticatedGlobalStartupsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -648,9 +585,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedGlobalDealsRoute: AuthenticatedGlobalDealsRoute,
-  AuthenticatedGlobalInvestorsRoute: AuthenticatedGlobalInvestorsRoute,
-  AuthenticatedGlobalStartupsRoute: AuthenticatedGlobalStartupsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -667,3 +601,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

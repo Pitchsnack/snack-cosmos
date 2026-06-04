@@ -25,8 +25,6 @@ export interface DealRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  source_global_id: string | null;
-  imported_at: string | null;
 }
 
 export interface DealListItem extends DealRow {
@@ -71,7 +69,7 @@ export const listDeals = createServerFn({ method: "GET" })
       .select(`
         id, tenant_id, deal_name, startup_id, investor_id, stage, visibility,
         investment_amount, probability, expected_close_date, notes,
-        created_at, updated_at, source_global_id, imported_at,
+        created_at, updated_at,
         tenants!inner(tenant_name),
         startups!inner(startup_name),
         investors!inner(investor_name),

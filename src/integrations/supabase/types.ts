@@ -460,12 +460,10 @@ export type Database = {
           deal_name: string
           expected_close_date: string | null
           id: string
-          imported_at: string | null
           investment_amount: number | null
           investor_id: string
           notes: string | null
           probability: number | null
-          source_global_id: string | null
           stage: string
           startup_id: string
           tenant_id: string
@@ -479,12 +477,10 @@ export type Database = {
           deal_name: string
           expected_close_date?: string | null
           id?: string
-          imported_at?: string | null
           investment_amount?: number | null
           investor_id: string
           notes?: string | null
           probability?: number | null
-          source_global_id?: string | null
           stage?: string
           startup_id: string
           tenant_id: string
@@ -498,12 +494,10 @@ export type Database = {
           deal_name?: string
           expected_close_date?: string | null
           id?: string
-          imported_at?: string | null
           investment_amount?: number | null
           investor_id?: string
           notes?: string | null
           probability?: number | null
-          source_global_id?: string | null
           stage?: string
           startup_id?: string
           tenant_id?: string
@@ -809,13 +803,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
-          imported_at: string | null
           investor_name: string
           investor_type: string | null
           legal_name: string | null
           long_description: string | null
           short_description: string | null
-          source_global_id: string | null
           status: string
           tenant_id: string
           ticket_size: string | null
@@ -830,13 +822,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
-          imported_at?: string | null
           investor_name: string
           investor_type?: string | null
           legal_name?: string | null
           long_description?: string | null
           short_description?: string | null
-          source_global_id?: string | null
           status?: string
           tenant_id: string
           ticket_size?: string | null
@@ -851,13 +841,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
-          imported_at?: string | null
           investor_name?: string
           investor_type?: string | null
           legal_name?: string | null
           long_description?: string | null
           short_description?: string | null
-          source_global_id?: string | null
           status?: string
           tenant_id?: string
           ticket_size?: string | null
@@ -1322,12 +1310,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
-          imported_at: string | null
           industry: string | null
           legal_name: string | null
           long_description: string | null
           short_description: string | null
-          source_global_id: string | null
           startup_name: string
           status: string
           tenant_id: string
@@ -1341,12 +1327,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
-          imported_at?: string | null
           industry?: string | null
           legal_name?: string | null
           long_description?: string | null
           short_description?: string | null
-          source_global_id?: string | null
           startup_name: string
           status?: string
           tenant_id: string
@@ -1360,12 +1344,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
-          imported_at?: string | null
           industry?: string | null
           legal_name?: string | null
           long_description?: string | null
           short_description?: string | null
-          source_global_id?: string | null
           startup_name?: string
           status?: string
           tenant_id?: string

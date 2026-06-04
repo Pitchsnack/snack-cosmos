@@ -24,8 +24,6 @@ export interface StartupRow {
   visibility: StartupVisibility;
   created_at: string;
   updated_at: string;
-  source_global_id: string | null;
-  imported_at: string | null;
 }
 
 export interface StartupListItem extends StartupRow {
@@ -68,7 +66,6 @@ export const listStartups = createServerFn({ method: "GET" })
       .select(`
         id, tenant_id, startup_name, legal_name, website_url, country, industry,
         short_description, long_description, status, visibility, created_at, updated_at,
-        source_global_id, imported_at,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
         startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name))

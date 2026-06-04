@@ -19,7 +19,6 @@ import {
   Sparkles,
   Share2,
   Bell,
-  Globe2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -44,10 +43,7 @@ type NavPath =
   | "/access-management"
   | "/security"
   | "/notifications"
-  | "/preferences"
-  | "/global/startups"
-  | "/global/investors"
-  | "/global/deals";
+  | "/preferences";
 
 type NavItem = {
   label: string;
@@ -69,10 +65,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
   { label: "Shared Deals", icon: Share2, path: "/shared-deals", exact: false, perm: "deals.share.read" },
-  // PRD 8 — Global Directory (CONTROL only)
-  { label: "Global Startups", icon: Globe2, path: "/global/startups", exact: false, controlOnly: true },
-  { label: "Global Investors", icon: Globe2, path: "/global/investors", exact: false, controlOnly: true },
-  { label: "Global Deals", icon: Globe2, path: "/global/deals", exact: false, controlOnly: true },
   { label: "Communications", icon: MessagesSquare, path: "/dashboard", exact: false, disabled: true },
   { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
   { label: "Analytics", icon: BarChart3, path: "/dashboard", exact: false, controlOnly: true, disabled: true },
