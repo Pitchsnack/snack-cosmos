@@ -33,6 +33,7 @@ import {
   type ImportTargetDTO,
   type ImportRequest,
   type ImportResult,
+  type ImportEntity,
 } from "@/lib/global-directory.functions";
 
 export type {
@@ -42,6 +43,7 @@ export type {
   ImportTargetDTO,
   ImportRequest,
   ImportResult,
+  ImportEntity,
 };
 
 /**
