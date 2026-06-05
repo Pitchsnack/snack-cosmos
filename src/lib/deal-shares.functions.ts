@@ -232,7 +232,7 @@ export const getSharedDeal = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     if (!share) throw new Error("Shared deal not found");
 
-    const [{ data: targets, error: targetsError }, { data: deal, error: dealError }] = await Promise.all([
+    const [{ data: targetData, error: targetsError }, { data: deal, error: dealError }] = await Promise.all([
       supabaseAdmin
         .from("deal_share_targets")
         .select("id, target_tenant_id, status")
@@ -247,7 +247,7 @@ export const getSharedDeal = createServerFn({ method: "GET" })
     if (dealError) throw new Error(dealError.message);
     if (!deal) throw new Error("Shared deal source not found");
 
-    const targetRows = (targets ?? []) as Array<{ id: string; target_tenant_id: string; status: string }>;
+    const targetRows = (targetData ?? []) as Array<{ id: string; target_tenant_id: string; status: string }>;
     const tenantIds = Array.from(new Set([share.tenant_id, ...targetRows.map((t) => t.target_tenant_id)]));
     const [tenantResult, startupResult, investorResult, userResult] = await Promise.all([
       supabaseAdmin.from("tenants").select("id, tenant_name").in("id", tenantIds),
@@ -305,11 +305,11 @@ export const getSharedDeal = createServerFn({ method: "GET" })
     };
 
     // Best-effort: mark this view as Viewed for the current user's target row.
-    const targets = (row as unknown as { deal_share_targets: Array<{ id: string; target_tenant_id: string; status: string }> }).deal_share_targets ?? [];
+    const viewTargets = (row as unknown as { deal_share_targets: Array<{ id: string; target_tenant_id: string; status: string }> }).deal_share_targets ?? [];
     const { data: myTenants } = await supabase
       .from("user_tenants").select("tenant_id").eq("user_id", userId);
     const myTenantSet = new Set((myTenants ?? []).map((t) => t.tenant_id as string));
-    const mine = targets.find((t) => myTenantSet.has(t.target_tenant_id));
+    const mine = viewTargets.find((t) => myTenantSet.has(t.target_tenant_id));
     if (mine && mine.status === "Pending") {
       await supabase.from("deal_share_targets").update({ status: "Viewed" }).eq("id", mine.id);
       await logShareActivity(supabase, data.shareId,
