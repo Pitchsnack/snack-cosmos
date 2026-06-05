@@ -293,10 +293,10 @@ export const getSharedDeal = createServerFn({ method: "GET" })
         .maybeSingle(),
       share.shared_by_user_id
         ? supabaseAdmin
-          .from("users")
-          .select("id, email, first_name, last_name")
-          .eq("id", share.shared_by_user_id)
-          .maybeSingle()
+            .from("users")
+            .select("id, email, first_name, last_name")
+            .eq("id", share.shared_by_user_id)
+            .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
     ]);
     if (tenantResult.error) throw new Error(tenantResult.error.message);
@@ -304,16 +304,18 @@ export const getSharedDeal = createServerFn({ method: "GET" })
     if (investorResult.error) throw new Error(investorResult.error.message);
     if (userResult.error) throw new Error(userResult.error.message);
 
-    const tenantMap = new Map((tenantResult.data ?? []).map((t) => [t.id, t.tenant_name as string]));
+    const tenantMap = new Map(
+      (tenantResult.data ?? []).map((t) => [t.id, t.tenant_name as string]),
+    );
     const row = {
       ...share,
       tenants: { tenant_name: tenantMap.get(share.tenant_id) ?? "—" },
       users: userResult.data
         ? {
-          email: userResult.data.email,
-          first_name: userResult.data.first_name,
-          last_name: userResult.data.last_name,
-        }
+            email: userResult.data.email,
+            first_name: userResult.data.first_name,
+            last_name: userResult.data.last_name,
+          }
         : null,
       deals: {
         id: deal.id,
