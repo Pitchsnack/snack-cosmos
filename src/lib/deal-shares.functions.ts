@@ -391,9 +391,10 @@ export const respondToShare = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: target, error } = await supabase
       .from("deal_share_targets")
-      .select("id, deal_share_id, target_tenant_id, status, deal_shares:deal_share_id(tenant_id)")
+      .select("id, deal_share_id, target_tenant_id, status")
       .eq("id", data.targetId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -405,7 +406,12 @@ export const respondToShare = createServerFn({ method: "POST" })
       .eq("id", data.targetId);
     if (uErr) throw new Error(uErr.message);
 
-    const originTenant = (target.deal_shares as unknown as { tenant_id: string } | null)?.tenant_id;
+    const { data: share } = await supabaseAdmin
+      .from("deal_shares")
+      .select("tenant_id")
+      .eq("id", target.deal_share_id)
+      .maybeSingle();
+    const originTenant = share?.tenant_id;
     if (originTenant) {
       await logShareActivity(supabase, target.deal_share_id, originTenant, userId,
         data.response === "Accepted" ? "SHARE_ACCEPTED" : "SHARE_REJECTED",
