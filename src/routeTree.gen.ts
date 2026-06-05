@@ -28,6 +28,7 @@ import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authenticated/startups.index'
 import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authenticated/investors.index'
+import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
@@ -136,6 +137,11 @@ const AuthenticatedInvestorsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedInvestorsRoute,
   } as any)
+const AuthenticatedDealsIndexRoute = AuthenticatedDealsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedDealsRoute,
+} as any)
 const AuthenticatedStartupsNewRoute =
   AuthenticatedStartupsNewRouteImport.update({
     id: '/new',
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/deals/': typeof AuthenticatedDealsIndexRoute
   '/investors/': typeof AuthenticatedInvestorsIndexRoute
   '/startups/': typeof AuthenticatedStartupsIndexRoute
 }
@@ -211,7 +218,6 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
@@ -225,6 +231,7 @@ export interface FileRoutesByTo {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/deals': typeof AuthenticatedDealsIndexRoute
   '/investors': typeof AuthenticatedInvestorsIndexRoute
   '/startups': typeof AuthenticatedStartupsIndexRoute
 }
@@ -254,6 +261,7 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
   '/_authenticated/investors/': typeof AuthenticatedInvestorsIndexRoute
   '/_authenticated/startups/': typeof AuthenticatedStartupsIndexRoute
 }
@@ -283,6 +291,7 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
+    | '/deals/'
     | '/investors/'
     | '/startups/'
   fileRoutesByTo: FileRoutesByTo
@@ -294,7 +303,6 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/audit'
     | '/dashboard'
-    | '/deals'
     | '/notifications'
     | '/preferences'
     | '/security'
@@ -308,6 +316,7 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
+    | '/deals'
     | '/investors'
     | '/startups'
   id:
@@ -336,6 +345,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals/$id'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
+    | '/_authenticated/deals/'
     | '/_authenticated/investors/'
     | '/_authenticated/startups/'
   fileRoutesById: FileRoutesById
@@ -483,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorsIndexRouteImport
       parentRoute: typeof AuthenticatedInvestorsRoute
     }
+    '/_authenticated/deals/': {
+      id: '/_authenticated/deals/'
+      path: '/'
+      fullPath: '/deals/'
+      preLoaderRoute: typeof AuthenticatedDealsIndexRouteImport
+      parentRoute: typeof AuthenticatedDealsRoute
+    }
     '/_authenticated/startups/new': {
       id: '/_authenticated/startups/new'
       path: '/new'
@@ -538,11 +555,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedDealsRouteChildren {
   AuthenticatedDealsIdRoute: typeof AuthenticatedDealsIdRoute
   AuthenticatedDealsNewRoute: typeof AuthenticatedDealsNewRoute
+  AuthenticatedDealsIndexRoute: typeof AuthenticatedDealsIndexRoute
 }
 
 const AuthenticatedDealsRouteChildren: AuthenticatedDealsRouteChildren = {
   AuthenticatedDealsIdRoute: AuthenticatedDealsIdRoute,
   AuthenticatedDealsNewRoute: AuthenticatedDealsNewRoute,
+  AuthenticatedDealsIndexRoute: AuthenticatedDealsIndexRoute,
 }
 
 const AuthenticatedDealsRouteWithChildren =
@@ -641,3 +660,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
