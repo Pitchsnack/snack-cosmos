@@ -218,9 +218,12 @@ export const listSharedDeals = createServerFn({ method: "GET" })
           ...baseRow,
           targetId: t0?.id ?? null,
           targetTenantId: t0?.target_tenant_id ?? null,
-          targetTenantName: targets.length === 1
-            ? (t0?.target_tenant_id ? (tenantMap.get(t0.target_tenant_id) ?? null) : null)
-            : `${targets.length} tenant${targets.length === 1 ? "" : "s"}`,
+          targetTenantName:
+            targets.length === 1
+              ? t0?.target_tenant_id
+                ? (tenantMap.get(t0.target_tenant_id) ?? null)
+                : null
+              : `${targets.length} tenant${targets.length === 1 ? "" : "s"}`,
           targetStatus: t0?.status ?? null,
           direction: "outgoing",
         });
@@ -242,29 +245,40 @@ export const getSharedDeal = createServerFn({ method: "GET" })
 
     const { data: share, error } = await supabase
       .from("deal_shares")
-      .select("id, tenant_id, deal_id, shared_by_user_id, shared_by_role, share_reason, status, created_at, updated_at")
+      .select(
+        "id, tenant_id, deal_id, shared_by_user_id, shared_by_role, share_reason, status, created_at, updated_at",
+      )
       .eq("id", data.shareId)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!share) throw new Error("Shared deal not found");
 
-    const [{ data: targetData, error: targetsError }, { data: deal, error: dealError }] = await Promise.all([
-      supabaseAdmin
-        .from("deal_share_targets")
-        .select("id, target_tenant_id, status")
-        .eq("deal_share_id", data.shareId),
-      supabaseAdmin
-        .from("deals")
-        .select("id, tenant_id, deal_name, stage, visibility, investment_amount, probability, expected_close_date, notes, startup_id, investor_id")
-        .eq("id", share.deal_id)
-        .maybeSingle(),
-    ]);
+    const [{ data: targetData, error: targetsError }, { data: deal, error: dealError }] =
+      await Promise.all([
+        supabaseAdmin
+          .from("deal_share_targets")
+          .select("id, target_tenant_id, status")
+          .eq("deal_share_id", data.shareId),
+        supabaseAdmin
+          .from("deals")
+          .select(
+            "id, tenant_id, deal_name, stage, visibility, investment_amount, probability, expected_close_date, notes, startup_id, investor_id",
+          )
+          .eq("id", share.deal_id)
+          .maybeSingle(),
+      ]);
     if (targetsError) throw new Error(targetsError.message);
     if (dealError) throw new Error(dealError.message);
     if (!deal) throw new Error("Shared deal source not found");
 
-    const targetRows = (targetData ?? []) as Array<{ id: string; target_tenant_id: string; status: string }>;
-    const tenantIds = Array.from(new Set([share.tenant_id, ...targetRows.map((t) => t.target_tenant_id)]));
+    const targetRows = (targetData ?? []) as Array<{
+      id: string;
+      target_tenant_id: string;
+      status: string;
+    }>;
+    const tenantIds = Array.from(
+      new Set([share.tenant_id, ...targetRows.map((t) => t.target_tenant_id)]),
+    );
     const [tenantResult, startupResult, investorResult, userResult] = await Promise.all([
       supabaseAdmin.from("tenants").select("id, tenant_name").in("id", tenantIds),
       supabaseAdmin
