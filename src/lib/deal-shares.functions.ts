@@ -393,7 +393,9 @@ export const createShare = createServerFn({ method: "POST" })
 
     // Reject self-sharing onto origin tenant (no-op + confusing).
     const targets = Array.from(new Set(data.targetTenantIds)).filter((t) => t !== deal.tenant_id);
-    if (targets.length === 0) throw new Error("Pick at least one tenant other than the origin tenant");
+    if (targets.length === 0) {
+      throw new Error("Pick at least one tenant other than the origin tenant");
+    }
 
     const { data: ins, error } = await supabase
       .from("deal_shares")
