@@ -68,6 +68,7 @@ export const listSharedDeals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Caller's accessible tenants (used only to label direction).
     const { data: myTenants } = await supabase
@@ -76,25 +77,14 @@ export const listSharedDeals = createServerFn({ method: "GET" })
       .eq("user_id", userId);
     const myTenantSet = new Set((myTenants ?? []).map((t) => t.tenant_id as string));
 
-    const { data, error } = await supabase
+    const { data: shares, error } = await supabase
       .from("deal_shares")
-      .select(`
-        id, tenant_id, deal_id, shared_by_user_id, shared_by_role,
-        share_reason, status, created_at,
-        tenants:tenant_id(tenant_name),
-        deals!inner(id, deal_name, stage,
-          startups!inner(startup_name),
-          investors!inner(investor_name)
-        ),
-        users:shared_by_user_id(email),
-        deal_share_targets(id, target_tenant_id, status,
-          target_tenant:target_tenant_id(tenant_name))
-      `)
+      .select("id, tenant_id, deal_id, shared_by_user_id, shared_by_role, share_reason, status, created_at")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
 
-    const rows = (data ?? []) as unknown as Array<{
+    const rows = (shares ?? []) as Array<{
       id: string;
       tenant_id: string;
       deal_id: string;
@@ -103,21 +93,76 @@ export const listSharedDeals = createServerFn({ method: "GET" })
       share_reason: string | null;
       status: ShareStatus;
       created_at: string;
-      tenants: { tenant_name: string } | null;
-      deals: { id: string; deal_name: string; stage: string;
-        startups: { startup_name: string } | null;
-        investors: { investor_name: string } | null;
-      };
-      users: { email: string } | null;
-      deal_share_targets: Array<{
-        id: string; target_tenant_id: string; status: string;
-        target_tenant: { tenant_name: string } | null;
-      }>;
     }>;
+    if (rows.length === 0) return [];
+
+    const unique = <T,>(values: Array<T | null | undefined>) => Array.from(new Set(values.filter(Boolean) as T[]));
+    const shareIds = rows.map((r) => r.id);
+    const dealIds = unique(rows.map((r) => r.deal_id));
+    const sharedByUserIds = unique(rows.map((r) => r.shared_by_user_id));
+
+    const { data: targets, error: targetsError } = await supabaseAdmin
+      .from("deal_share_targets")
+      .select("id, deal_share_id, target_tenant_id, status")
+      .in("deal_share_id", shareIds);
+    if (targetsError) throw new Error(targetsError.message);
+
+    const { data: deals, error: dealsError } = await supabaseAdmin
+      .from("deals")
+      .select("id, deal_name, stage, startup_id, investor_id")
+      .in("id", dealIds);
+    if (dealsError) throw new Error(dealsError.message);
+
+    const dealRows = (deals ?? []) as Array<{
+      id: string;
+      deal_name: string;
+      stage: string;
+      startup_id: string;
+      investor_id: string;
+    }>;
+    const targetRows = (targets ?? []) as Array<{
+      id: string;
+      deal_share_id: string;
+      target_tenant_id: string;
+      status: string;
+    }>;
+    const startupIds = unique(dealRows.map((d) => d.startup_id));
+    const investorIds = unique(dealRows.map((d) => d.investor_id));
+    const tenantIds = unique([
+      ...rows.map((r) => r.tenant_id),
+      ...targetRows.map((t) => t.target_tenant_id),
+    ]);
+
+    const [tenantResult, startupResult, investorResult, userResult] = await Promise.all([
+      supabaseAdmin.from("tenants").select("id, tenant_name").in("id", tenantIds),
+      supabaseAdmin.from("startups").select("id, startup_name").in("id", startupIds),
+      supabaseAdmin.from("investors").select("id, investor_name").in("id", investorIds),
+      sharedByUserIds.length > 0
+        ? supabaseAdmin.from("users").select("id, email").in("id", sharedByUserIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (tenantResult.error) throw new Error(tenantResult.error.message);
+    if (startupResult.error) throw new Error(startupResult.error.message);
+    if (investorResult.error) throw new Error(investorResult.error.message);
+    if (userResult.error) throw new Error(userResult.error.message);
+
+    const tenantMap = new Map((tenantResult.data ?? []).map((t) => [t.id, t.tenant_name as string]));
+    const startupMap = new Map((startupResult.data ?? []).map((s) => [s.id, s.startup_name as string]));
+    const investorMap = new Map((investorResult.data ?? []).map((i) => [i.id, i.investor_name as string]));
+    const userMap = new Map((userResult.data ?? []).map((u) => [u.id, u.email as string]));
+    const dealMap = new Map(dealRows.map((d) => [d.id, d]));
+    const targetsByShare = new Map<string, typeof targetRows>();
+    for (const target of targetRows) {
+      const list = targetsByShare.get(target.deal_share_id) ?? [];
+      list.push(target);
+      targetsByShare.set(target.deal_share_id, list);
+    }
 
     const out: SharedDealListItem[] = [];
     for (const r of rows) {
-      const targets = r.deal_share_targets ?? [];
+      const deal = dealMap.get(r.deal_id);
+      if (!deal) continue;
+      const targets = targetsByShare.get(r.id) ?? [];
       // Prefer surfacing a row per target the caller is on (incoming view).
       const incomingTargets = targets.filter((t) => myTenantSet.has(t.target_tenant_id));
       const isOrigin = myTenantSet.has(r.tenant_id);
@@ -125,14 +170,14 @@ export const listSharedDeals = createServerFn({ method: "GET" })
       const baseRow = {
         shareId: r.id,
         dealId: r.deal_id,
-        dealName: r.deals.deal_name,
-        stage: r.deals.stage,
+        dealName: deal.deal_name,
+        stage: deal.stage,
         originTenantId: r.tenant_id,
-        originTenantName: r.tenants?.tenant_name ?? null,
-        startupName: r.deals.startups?.startup_name ?? null,
-        investorName: r.deals.investors?.investor_name ?? null,
+        originTenantName: tenantMap.get(r.tenant_id) ?? null,
+        startupName: startupMap.get(deal.startup_id) ?? null,
+        investorName: investorMap.get(deal.investor_id) ?? null,
         sharedByUserId: r.shared_by_user_id,
-        sharedByEmail: r.users?.email ?? null,
+        sharedByEmail: r.shared_by_user_id ? (userMap.get(r.shared_by_user_id) ?? null) : null,
         sharedByRole: r.shared_by_role,
         shareReason: r.share_reason,
         shareStatus: r.status,
@@ -145,7 +190,7 @@ export const listSharedDeals = createServerFn({ method: "GET" })
             ...baseRow,
             targetId: t.id,
             targetTenantId: t.target_tenant_id,
-            targetTenantName: t.target_tenant?.tenant_name ?? null,
+            targetTenantName: tenantMap.get(t.target_tenant_id) ?? null,
             targetStatus: t.status,
             direction: isOrigin ? "both" : "incoming",
           });
@@ -158,7 +203,7 @@ export const listSharedDeals = createServerFn({ method: "GET" })
           targetId: t0?.id ?? null,
           targetTenantId: t0?.target_tenant_id ?? null,
           targetTenantName: targets.length === 1
-            ? (t0?.target_tenant?.tenant_name ?? null)
+            ? (t0?.target_tenant_id ? (tenantMap.get(t0.target_tenant_id) ?? null) : null)
             : `${targets.length} tenant${targets.length === 1 ? "" : "s"}`,
           targetStatus: t0?.status ?? null,
           direction: "outgoing",
