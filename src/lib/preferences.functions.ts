@@ -49,20 +49,30 @@ export const updatePreferences = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase
+    const patch = {
+      ...(data.sidebarCollapsed !== undefined ? { sidebar_collapsed: data.sidebarCollapsed } : {}),
+      ...(data.defaultLandingPage !== undefined ? { default_landing_page: data.defaultLandingPage } : {}),
+      ...(data.theme !== undefined ? { theme: data.theme } : {}),
+      ...(data.itemsPerPage !== undefined ? { items_per_page: data.itemsPerPage } : {}),
+    };
+    const { data: existing } = await supabase
       .from("workspace_preferences")
-      .upsert(
-        {
-          user_id: userId,
-          tenant_id: null,
-          ...(data.sidebarCollapsed !== undefined ? { sidebar_collapsed: data.sidebarCollapsed } : {}),
-          ...(data.defaultLandingPage !== undefined ? { default_landing_page: data.defaultLandingPage } : {}),
-          ...(data.theme !== undefined ? { theme: data.theme } : {}),
-          ...(data.itemsPerPage !== undefined ? { items_per_page: data.itemsPerPage } : {}),
-        },
-        { onConflict: "user_id,tenant_id" },
-      );
-    if (error) throw new Error(error.message);
+      .select("id")
+      .eq("user_id", userId)
+      .is("tenant_id", null)
+      .maybeSingle();
+    if (existing?.id) {
+      const { error } = await supabase
+        .from("workspace_preferences")
+        .update(patch)
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("workspace_preferences")
+        .insert({ user_id: userId, tenant_id: null, ...patch });
+      if (error) throw new Error(error.message);
+    }
     return { ok: true };
   });
 
