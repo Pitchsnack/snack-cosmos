@@ -371,12 +371,14 @@ export const getSharedDeal = createServerFn({ method: "GET" })
 export const createShare = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z.object({
-      dealId: z.string().uuid(),
-      targetTenantIds: z.array(z.string().uuid()).min(1).max(50),
-      shareReason: z.string().max(2000).optional(),
-      sharedByRole: z.string().max(100).optional(),
-    }).parse(input),
+    z
+      .object({
+        dealId: z.string().uuid(),
+        targetTenantIds: z.array(z.string().uuid()).min(1).max(50),
+        shareReason: z.string().max(2000).optional(),
+        sharedByRole: z.string().max(100).optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -432,10 +434,12 @@ export const createShare = createServerFn({ method: "POST" })
 export const respondToShare = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z.object({
-      targetId: z.string().uuid(),
-      response: z.enum(["Accepted", "Rejected"]),
-    }).parse(input),
+    z
+      .object({
+        targetId: z.string().uuid(),
+        response: z.enum(["Accepted", "Rejected"]),
+      })
+      .parse(input),
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
