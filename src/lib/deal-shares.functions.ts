@@ -461,9 +461,14 @@ export const respondToShare = createServerFn({ method: "POST" })
       .maybeSingle();
     const originTenant = share?.tenant_id;
     if (originTenant) {
-      await logShareActivity(supabase, target.deal_share_id, originTenant, userId,
+      await logShareActivity(
+        supabase,
+        target.deal_share_id,
+        originTenant,
+        userId,
         data.response === "Accepted" ? "SHARE_ACCEPTED" : "SHARE_REJECTED",
-        { target_id: target.id });
+        { target_id: target.id },
+      );
     }
     return { ok: true };
   });
@@ -477,7 +482,10 @@ export const withdrawShare = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { data: row } = await supabase
-      .from("deal_shares").select("tenant_id").eq("id", data.shareId).maybeSingle();
+      .from("deal_shares")
+      .select("tenant_id")
+      .eq("id", data.shareId)
+      .maybeSingle();
     if (!row) throw new Error("Share not found");
     const { error } = await supabase
       .from("deal_shares")
@@ -517,7 +525,10 @@ export const listEligibleShareTenants = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase } = context;
     const { data: deal } = await supabase
-      .from("deals").select("tenant_id").eq("id", data.dealId).maybeSingle();
+      .from("deals")
+      .select("tenant_id")
+      .eq("id", data.dealId)
+      .maybeSingle();
     if (!deal) throw new Error("Deal not found");
 
     const { data: rows, error } = await supabase
