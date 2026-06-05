@@ -26,6 +26,10 @@ import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
+import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authenticated/startups.index'
+import { Route as AuthenticatedSharedDealsIndexRouteImport } from './routes/_authenticated/shared-deals.index'
+import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authenticated/investors.index'
+import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
@@ -122,6 +126,29 @@ const AuthenticatedAccessManagementRoute =
     path: '/access-management',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedStartupsIndexRoute =
+  AuthenticatedStartupsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedStartupsRoute,
+  } as any)
+const AuthenticatedSharedDealsIndexRoute =
+  AuthenticatedSharedDealsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSharedDealsRoute,
+  } as any)
+const AuthenticatedInvestorsIndexRoute =
+  AuthenticatedInvestorsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedInvestorsRoute,
+  } as any)
+const AuthenticatedDealsIndexRoute = AuthenticatedDealsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedDealsRoute,
+} as any)
 const AuthenticatedStartupsNewRoute =
   AuthenticatedStartupsNewRouteImport.update({
     id: '/new',
@@ -186,6 +213,10 @@ export interface FileRoutesByFullPath {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/deals/': typeof AuthenticatedDealsIndexRoute
+  '/investors/': typeof AuthenticatedInvestorsIndexRoute
+  '/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
+  '/startups/': typeof AuthenticatedStartupsIndexRoute
 }
 export interface FileRoutesByTo {
   '/accept-invite': typeof AcceptInviteRoute
@@ -195,13 +226,9 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/deals': typeof AuthenticatedDealsRouteWithChildren
-  '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
-  '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
-  '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
   '/deals/$id': typeof AuthenticatedDealsIdRoute
@@ -211,6 +238,10 @@ export interface FileRoutesByTo {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/deals': typeof AuthenticatedDealsIndexRoute
+  '/investors': typeof AuthenticatedInvestorsIndexRoute
+  '/shared-deals': typeof AuthenticatedSharedDealsIndexRoute
+  '/startups': typeof AuthenticatedStartupsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -238,6 +269,10 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRoute
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
+  '/_authenticated/investors/': typeof AuthenticatedInvestorsIndexRoute
+  '/_authenticated/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
+  '/_authenticated/startups/': typeof AuthenticatedStartupsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -265,6 +300,10 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
+    | '/deals/'
+    | '/investors/'
+    | '/shared-deals/'
+    | '/startups/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/accept-invite'
@@ -274,13 +313,9 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/audit'
     | '/dashboard'
-    | '/deals'
-    | '/investors'
     | '/notifications'
     | '/preferences'
     | '/security'
-    | '/shared-deals'
-    | '/startups'
     | '/users'
     | '/'
     | '/deals/$id'
@@ -290,6 +325,10 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
+    | '/deals'
+    | '/investors'
+    | '/shared-deals'
+    | '/startups'
   id:
     | '__root__'
     | '/_authenticated'
@@ -316,6 +355,10 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals/$id'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
+    | '/_authenticated/deals/'
+    | '/_authenticated/investors/'
+    | '/_authenticated/shared-deals/'
+    | '/_authenticated/startups/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -447,6 +490,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccessManagementRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/startups/': {
+      id: '/_authenticated/startups/'
+      path: '/'
+      fullPath: '/startups/'
+      preLoaderRoute: typeof AuthenticatedStartupsIndexRouteImport
+      parentRoute: typeof AuthenticatedStartupsRoute
+    }
+    '/_authenticated/shared-deals/': {
+      id: '/_authenticated/shared-deals/'
+      path: '/'
+      fullPath: '/shared-deals/'
+      preLoaderRoute: typeof AuthenticatedSharedDealsIndexRouteImport
+      parentRoute: typeof AuthenticatedSharedDealsRoute
+    }
+    '/_authenticated/investors/': {
+      id: '/_authenticated/investors/'
+      path: '/'
+      fullPath: '/investors/'
+      preLoaderRoute: typeof AuthenticatedInvestorsIndexRouteImport
+      parentRoute: typeof AuthenticatedInvestorsRoute
+    }
+    '/_authenticated/deals/': {
+      id: '/_authenticated/deals/'
+      path: '/'
+      fullPath: '/deals/'
+      preLoaderRoute: typeof AuthenticatedDealsIndexRouteImport
+      parentRoute: typeof AuthenticatedDealsRoute
+    }
     '/_authenticated/startups/new': {
       id: '/_authenticated/startups/new'
       path: '/new'
@@ -502,11 +573,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedDealsRouteChildren {
   AuthenticatedDealsIdRoute: typeof AuthenticatedDealsIdRoute
   AuthenticatedDealsNewRoute: typeof AuthenticatedDealsNewRoute
+  AuthenticatedDealsIndexRoute: typeof AuthenticatedDealsIndexRoute
 }
 
 const AuthenticatedDealsRouteChildren: AuthenticatedDealsRouteChildren = {
   AuthenticatedDealsIdRoute: AuthenticatedDealsIdRoute,
   AuthenticatedDealsNewRoute: AuthenticatedDealsNewRoute,
+  AuthenticatedDealsIndexRoute: AuthenticatedDealsIndexRoute,
 }
 
 const AuthenticatedDealsRouteWithChildren =
@@ -515,12 +588,14 @@ const AuthenticatedDealsRouteWithChildren =
 interface AuthenticatedInvestorsRouteChildren {
   AuthenticatedInvestorsIdRoute: typeof AuthenticatedInvestorsIdRoute
   AuthenticatedInvestorsNewRoute: typeof AuthenticatedInvestorsNewRoute
+  AuthenticatedInvestorsIndexRoute: typeof AuthenticatedInvestorsIndexRoute
 }
 
 const AuthenticatedInvestorsRouteChildren: AuthenticatedInvestorsRouteChildren =
   {
     AuthenticatedInvestorsIdRoute: AuthenticatedInvestorsIdRoute,
     AuthenticatedInvestorsNewRoute: AuthenticatedInvestorsNewRoute,
+    AuthenticatedInvestorsIndexRoute: AuthenticatedInvestorsIndexRoute,
   }
 
 const AuthenticatedInvestorsRouteWithChildren =
@@ -530,11 +605,13 @@ const AuthenticatedInvestorsRouteWithChildren =
 
 interface AuthenticatedSharedDealsRouteChildren {
   AuthenticatedSharedDealsIdRoute: typeof AuthenticatedSharedDealsIdRoute
+  AuthenticatedSharedDealsIndexRoute: typeof AuthenticatedSharedDealsIndexRoute
 }
 
 const AuthenticatedSharedDealsRouteChildren: AuthenticatedSharedDealsRouteChildren =
   {
     AuthenticatedSharedDealsIdRoute: AuthenticatedSharedDealsIdRoute,
+    AuthenticatedSharedDealsIndexRoute: AuthenticatedSharedDealsIndexRoute,
   }
 
 const AuthenticatedSharedDealsRouteWithChildren =
@@ -545,11 +622,13 @@ const AuthenticatedSharedDealsRouteWithChildren =
 interface AuthenticatedStartupsRouteChildren {
   AuthenticatedStartupsIdRoute: typeof AuthenticatedStartupsIdRoute
   AuthenticatedStartupsNewRoute: typeof AuthenticatedStartupsNewRoute
+  AuthenticatedStartupsIndexRoute: typeof AuthenticatedStartupsIndexRoute
 }
 
 const AuthenticatedStartupsRouteChildren: AuthenticatedStartupsRouteChildren = {
   AuthenticatedStartupsIdRoute: AuthenticatedStartupsIdRoute,
   AuthenticatedStartupsNewRoute: AuthenticatedStartupsNewRoute,
+  AuthenticatedStartupsIndexRoute: AuthenticatedStartupsIndexRoute,
 }
 
 const AuthenticatedStartupsRouteWithChildren =
