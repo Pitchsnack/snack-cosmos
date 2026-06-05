@@ -222,25 +222,87 @@ export const getSharedDeal = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ shareId: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const { data: row, error } = await supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: share, error } = await supabase
       .from("deal_shares")
-      .select(`
-        id, tenant_id, deal_id, shared_by_user_id, shared_by_role,
-        share_reason, status, created_at, updated_at,
-        tenants:tenant_id(tenant_name),
-        users:shared_by_user_id(email, first_name, last_name),
-        deals!inner(
-          id, tenant_id, deal_name, stage, visibility,
-          investment_amount, probability, expected_close_date, notes,
-          startups!inner(id, startup_name, country, industry, short_description),
-          investors!inner(id, investor_name, country, investor_type, short_description)
-        ),
-        deal_share_targets(id, target_tenant_id, status, target_tenant:target_tenant_id(tenant_name))
-      `)
+      .select("id, tenant_id, deal_id, shared_by_user_id, shared_by_role, share_reason, status, created_at, updated_at")
       .eq("id", data.shareId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!row) throw new Error("Shared deal not found");
+    if (!share) throw new Error("Shared deal not found");
+
+    const [{ data: targets, error: targetsError }, { data: deal, error: dealError }] = await Promise.all([
+      supabaseAdmin
+        .from("deal_share_targets")
+        .select("id, target_tenant_id, status")
+        .eq("deal_share_id", data.shareId),
+      supabaseAdmin
+        .from("deals")
+        .select("id, tenant_id, deal_name, stage, visibility, investment_amount, probability, expected_close_date, notes, startup_id, investor_id")
+        .eq("id", share.deal_id)
+        .maybeSingle(),
+    ]);
+    if (targetsError) throw new Error(targetsError.message);
+    if (dealError) throw new Error(dealError.message);
+    if (!deal) throw new Error("Shared deal source not found");
+
+    const targetRows = (targets ?? []) as Array<{ id: string; target_tenant_id: string; status: string }>;
+    const tenantIds = Array.from(new Set([share.tenant_id, ...targetRows.map((t) => t.target_tenant_id)]));
+    const [tenantResult, startupResult, investorResult, userResult] = await Promise.all([
+      supabaseAdmin.from("tenants").select("id, tenant_name").in("id", tenantIds),
+      supabaseAdmin
+        .from("startups")
+        .select("id, startup_name, country, industry, short_description")
+        .eq("id", deal.startup_id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("investors")
+        .select("id, investor_name, country, investor_type, short_description")
+        .eq("id", deal.investor_id)
+        .maybeSingle(),
+      share.shared_by_user_id
+        ? supabaseAdmin
+          .from("users")
+          .select("id, email, first_name, last_name")
+          .eq("id", share.shared_by_user_id)
+          .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
+    if (tenantResult.error) throw new Error(tenantResult.error.message);
+    if (startupResult.error) throw new Error(startupResult.error.message);
+    if (investorResult.error) throw new Error(investorResult.error.message);
+    if (userResult.error) throw new Error(userResult.error.message);
+
+    const tenantMap = new Map((tenantResult.data ?? []).map((t) => [t.id, t.tenant_name as string]));
+    const row = {
+      ...share,
+      tenants: { tenant_name: tenantMap.get(share.tenant_id) ?? "—" },
+      users: userResult.data
+        ? {
+          email: userResult.data.email,
+          first_name: userResult.data.first_name,
+          last_name: userResult.data.last_name,
+        }
+        : null,
+      deals: {
+        id: deal.id,
+        tenant_id: deal.tenant_id,
+        deal_name: deal.deal_name,
+        stage: deal.stage,
+        visibility: deal.visibility,
+        investment_amount: deal.investment_amount,
+        probability: deal.probability,
+        expected_close_date: deal.expected_close_date,
+        notes: deal.notes,
+        startups: startupResult.data,
+        investors: investorResult.data,
+      },
+      deal_share_targets: targetRows.map((target) => ({
+        ...target,
+        target_tenant: { tenant_name: tenantMap.get(target.target_tenant_id) ?? "—" },
+      })),
+    };
 
     // Best-effort: mark this view as Viewed for the current user's target row.
     const targets = (row as unknown as { deal_share_targets: Array<{ id: string; target_tenant_id: string; status: string }> }).deal_share_targets ?? [];
