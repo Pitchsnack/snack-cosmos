@@ -7,7 +7,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // All sharing operates through deal_shares + deal_share_targets only.
 
 export const SHARE_STATUSES = [
-  "Draft","Pending","Shared","Viewed","Accepted","Rejected","Withdrawn","Expired",
+  "Draft",
+  "Pending",
+  "Shared",
+  "Viewed",
+  "Accepted",
+  "Rejected",
+  "Withdrawn",
+  "Expired",
 ] as const;
 export type ShareStatus = (typeof SHARE_STATUSES)[number];
 
@@ -79,7 +86,9 @@ export const listSharedDeals = createServerFn({ method: "GET" })
 
     const { data: shares, error } = await supabase
       .from("deal_shares")
-      .select("id, tenant_id, deal_id, shared_by_user_id, shared_by_role, share_reason, status, created_at")
+      .select(
+        "id, tenant_id, deal_id, shared_by_user_id, shared_by_role, share_reason, status, created_at",
+      )
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
@@ -96,7 +105,8 @@ export const listSharedDeals = createServerFn({ method: "GET" })
     }>;
     if (rows.length === 0) return [];
 
-    const unique = <T,>(values: Array<T | null | undefined>) => Array.from(new Set(values.filter(Boolean) as T[]));
+    const unique = <T>(values: Array<T | null | undefined>) =>
+      Array.from(new Set(values.filter(Boolean) as T[]));
     const shareIds = rows.map((r) => r.id);
     const dealIds = unique(rows.map((r) => r.deal_id));
     const sharedByUserIds = unique(rows.map((r) => r.shared_by_user_id));
@@ -146,9 +156,15 @@ export const listSharedDeals = createServerFn({ method: "GET" })
     if (investorResult.error) throw new Error(investorResult.error.message);
     if (userResult.error) throw new Error(userResult.error.message);
 
-    const tenantMap = new Map((tenantResult.data ?? []).map((t) => [t.id, t.tenant_name as string]));
-    const startupMap = new Map((startupResult.data ?? []).map((s) => [s.id, s.startup_name as string]));
-    const investorMap = new Map((investorResult.data ?? []).map((i) => [i.id, i.investor_name as string]));
+    const tenantMap = new Map(
+      (tenantResult.data ?? []).map((t) => [t.id, t.tenant_name as string]),
+    );
+    const startupMap = new Map(
+      (startupResult.data ?? []).map((s) => [s.id, s.startup_name as string]),
+    );
+    const investorMap = new Map(
+      (investorResult.data ?? []).map((i) => [i.id, i.investor_name as string]),
+    );
     const userMap = new Map((userResult.data ?? []).map((u) => [u.id, u.email as string]));
     const dealMap = new Map(dealRows.map((d) => [d.id, d]));
     const targetsByShare = new Map<string, typeof targetRows>();
