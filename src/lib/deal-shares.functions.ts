@@ -382,7 +382,10 @@ export const createShare = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     // Look up origin deal tenant.
     const { data: deal, error: dErr } = await supabase
-      .from("deals").select("id, tenant_id").eq("id", data.dealId).maybeSingle();
+      .from("deals")
+      .select("id, tenant_id")
+      .eq("id", data.dealId)
+      .maybeSingle();
     if (dErr) throw new Error(dErr.message);
     if (!deal) throw new Error("Deal not found or you don't have access");
 
@@ -417,7 +420,8 @@ export const createShare = createServerFn({ method: "POST" })
     }
 
     await logShareActivity(supabase, ins.id, ins.tenant_id, userId, "DEAL_SHARED", {
-      deal_id: deal.id, targets,
+      deal_id: deal.id,
+      targets,
     });
     return { id: ins.id };
   });
