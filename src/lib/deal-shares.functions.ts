@@ -337,16 +337,28 @@ export const getSharedDeal = createServerFn({ method: "GET" })
     };
 
     // Best-effort: mark this view as Viewed for the current user's target row.
-    const viewTargets = (row as unknown as { deal_share_targets: Array<{ id: string; target_tenant_id: string; status: string }> }).deal_share_targets ?? [];
+    const viewTargets =
+      (
+        row as unknown as {
+          deal_share_targets: Array<{ id: string; target_tenant_id: string; status: string }>;
+        }
+      ).deal_share_targets ?? [];
     const { data: myTenants } = await supabase
-      .from("user_tenants").select("tenant_id").eq("user_id", userId);
+      .from("user_tenants")
+      .select("tenant_id")
+      .eq("user_id", userId);
     const myTenantSet = new Set((myTenants ?? []).map((t) => t.tenant_id as string));
     const mine = viewTargets.find((t) => myTenantSet.has(t.target_tenant_id));
     if (mine && mine.status === "Pending") {
       await supabase.from("deal_share_targets").update({ status: "Viewed" }).eq("id", mine.id);
-      await logShareActivity(supabase, data.shareId,
-        (row as unknown as { tenant_id: string }).tenant_id, userId, "SHARE_VIEWED",
-        { target_id: mine.id });
+      await logShareActivity(
+        supabase,
+        data.shareId,
+        (row as unknown as { tenant_id: string }).tenant_id,
+        userId,
+        "SHARE_VIEWED",
+        { target_id: mine.id },
+      );
     }
 
     return row;
