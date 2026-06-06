@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { createStartup } from "@/lib/startups.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
+import { listAssignableTenants } from "@/lib/tenants.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 
@@ -24,9 +25,24 @@ export function StartupForm() {
   const { data: session } = useSessionContext();
   const create = useServerFn(createStartup);
   const fetchUsers = useServerFn(listAssignableUsers);
+  const fetchTenants = useServerFn(listAssignableTenants);
   const enabled = useHasSession();
 
-  const tenants = useMemo(() => session?.tenants ?? [], [session]);
+  const tenantsQ = useQuery({
+    queryKey: ["assignable-tenants"],
+    queryFn: () => fetchTenants(),
+    enabled,
+  });
+  const tenants = useMemo(
+    () =>
+      (tenantsQ.data ?? []).map((t) => ({
+        tenantId: t.id,
+        tenantName: t.tenantName,
+        tenantCode: t.tenantCode,
+        workspaceType: "TENANT",
+      })),
+    [tenantsQ.data],
+  );
   const [tenantId, setTenantId] = useState<string>("");
 
   useEffect(() => {
