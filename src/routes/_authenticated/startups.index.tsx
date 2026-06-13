@@ -60,7 +60,7 @@ function StartupsPageInner() {
   const pageCount = Math.max(1, Math.ceil(total / 24));
 
   const update = (patch: Partial<typeof s>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch, page: 1 }) });
+    navigate({ search: (prev: typeof s) => ({ ...prev, ...patch, page: 1 }) });
 
   const hasFilter = !!(s.q || s.stage || s.industry || s.hq || s.ct || s.ptag || s.mtag);
 
@@ -100,7 +100,7 @@ function StartupsPageInner() {
         <FilterSelect label="Type" value={s.ct} options={COMPANY_TYPES} onChange={(v) => update({ ct: v })} />
         <Input value={s.industry ?? ""} onChange={(e) => update({ industry: e.target.value || undefined })} placeholder="Industry" className="h-9 w-36" />
         <Input value={s.hq ?? ""} onChange={(e) => update({ hq: e.target.value || undefined })} placeholder="HQ" className="h-9 w-32" />
-        <Select value={sort} onValueChange={(v) => navigate({ search: (prev) => ({ ...prev, sort: v as typeof SORT[number] }) })}>
+        <Select value={sort} onValueChange={(v) => navigate({ search: (prev: typeof s) => ({ ...prev, sort: v as typeof SORT[number] }) })}>
           <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="updated_desc">Recently updated</SelectItem>
@@ -134,9 +134,9 @@ function StartupsPageInner() {
 
       {pageCount > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => navigate({ search: (p) => ({ ...p, page: page - 1 }) })}>Previous</Button>
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => navigate({ search: (p: typeof s) => ({ ...p, page: page - 1 }) })}>Previous</Button>
           <span className="text-sm text-muted-foreground">Page {page} of {pageCount}</span>
-          <Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => navigate({ search: (p) => ({ ...p, page: page + 1 }) })}>Next</Button>
+          <Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => navigate({ search: (p: typeof s) => ({ ...p, page: page + 1 }) })}>Next</Button>
         </div>
       )}
     </div>
