@@ -1179,6 +1179,163 @@ export type Database = {
           },
         ]
       }
+      startup_founders: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_order: number
+          full_name: string
+          id: string
+          linkedin_url: string | null
+          photo_url: string | null
+          position: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          full_name: string
+          id?: string
+          linkedin_url?: string | null
+          photo_url?: string | null
+          position?: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          full_name?: string
+          id?: string
+          linkedin_url?: string | null
+          photo_url?: string | null
+          position?: string | null
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_founders_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_founders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_investors: {
+        Row: {
+          created_at: string
+          id: string
+          investor_id: string
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          investor_id: string
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          investor_id?: string
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_investors_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_investors_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_investors_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_media: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          image_url: string
+          slot: number
+          startup_id: string
+          storage_path: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          slot: number
+          startup_id: string
+          storage_path?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          slot?: number
+          startup_id?: string
+          storage_path?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_media_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_media_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startup_ownership: {
         Row: {
           assigned_at: string
@@ -1347,14 +1504,21 @@ export type Database = {
       }
       startups: {
         Row: {
+          company_type: string | null
           country: string | null
           created_at: string
           created_by: string | null
+          email: string | null
+          headquarters: string | null
           id: string
           imported_at: string | null
           industry: string | null
+          investment_stage: string | null
           legal_name: string | null
+          logo_url: string | null
           long_description: string | null
+          market_tags: string[]
+          product_tags: string[]
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -1364,16 +1528,24 @@ export type Database = {
           updated_by: string | null
           visibility: string
           website_url: string | null
+          year_founded: number | null
         }
         Insert: {
+          company_type?: string | null
           country?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
+          headquarters?: string | null
           id?: string
           imported_at?: string | null
           industry?: string | null
+          investment_stage?: string | null
           legal_name?: string | null
+          logo_url?: string | null
           long_description?: string | null
+          market_tags?: string[]
+          product_tags?: string[]
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -1383,16 +1555,24 @@ export type Database = {
           updated_by?: string | null
           visibility?: string
           website_url?: string | null
+          year_founded?: number | null
         }
         Update: {
+          company_type?: string | null
           country?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
+          headquarters?: string | null
           id?: string
           imported_at?: string | null
           industry?: string | null
+          investment_stage?: string | null
           legal_name?: string | null
+          logo_url?: string | null
           long_description?: string | null
+          market_tags?: string[]
+          product_tags?: string[]
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string
@@ -1402,6 +1582,7 @@ export type Database = {
           updated_by?: string | null
           visibility?: string
           website_url?: string | null
+          year_founded?: number | null
         }
         Relationships: [
           {
