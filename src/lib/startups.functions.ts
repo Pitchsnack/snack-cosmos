@@ -220,12 +220,22 @@ export const listStartups = createServerFn({ method: "GET" })
     return { items, total: count ?? items.length, page: data.page, pageSize: data.pageSize };
   });
 
+interface AssignmentRow {
+  users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
+  assigned_at: string;
+}
+interface UserAssignmentRow {
+  id: string;
+  user_id: string;
+  role: string | null;
+  created_at: string;
+  users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
+}
+
 export const getStartup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
-  .handler(async ({ context, data }): Promise<StartupDetail & {
-    startup_ownership: unknown; startup_ai_ownership: unknown; startup_users: unknown;
-  }> => {
+  .handler(async ({ context, data }) => {
     const { supabase } = context;
     const { data: row, error } = await supabase
       .from("startups")
