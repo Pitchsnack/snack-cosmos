@@ -300,9 +300,9 @@ export const getStartup = createServerFn({ method: "GET" })
       founders,
       investors,
       // pass-throughs used by existing ownership/users components
-      startup_ownership: (row as Record<string, unknown>).startup_ownership,
-      startup_ai_ownership: (row as Record<string, unknown>).startup_ai_ownership,
-      startup_users: (row as Record<string, unknown>).startup_users,
+      startup_ownership: ((row as Record<string, unknown>).startup_ownership ?? []) as AssignmentRow[],
+      startup_ai_ownership: ((row as Record<string, unknown>).startup_ai_ownership ?? []) as AssignmentRow[],
+      startup_users: ((row as Record<string, unknown>).startup_users ?? []) as UserAssignmentRow[],
     };
   });
 
