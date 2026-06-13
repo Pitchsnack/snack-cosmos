@@ -76,8 +76,8 @@ export function StartupForm({ startup }: Props) {
   const [investmentStage, setInvestmentStage] = useState<string>(startup?.investment_stage ?? "");
 
   // Status/visibility (create only — edit page manages elsewhere)
-  const [status, setStatus] = useState(startup?.status ?? "Draft");
-  const [visibility, setVisibility] = useState(startup?.visibility ?? "Tenant");
+  const [status, setStatus] = useState<string>(startup?.status ?? "Draft");
+  const [visibility, setVisibility] = useState<string>(startup?.visibility ?? "Tenant");
 
   // Investors
   const [investorIds, setInvestorIds] = useState<string[]>(
