@@ -11,13 +11,13 @@ export const Route = createFileRoute("/_authenticated/startups/new")({
 function NewStartupPage() {
   return (
     <PermissionGuard permission="startups.write" message="You don't have permission to create startups.">
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <Link to="/startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to startups
         </Link>
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">New startup</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Provide basic details and assign required ownership.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Build the full company profile, media, founders, and investors.</p>
         </div>
         <StartupForm />
       </div>

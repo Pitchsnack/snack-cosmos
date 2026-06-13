@@ -3,12 +3,25 @@ import { useServerFn } from "@tanstack/react-start";
 import { listStartups } from "@/lib/startups.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 
-export function useStartups() {
+export interface UseStartupsParams {
+  search?: string;
+  stage?: string;
+  industry?: string;
+  headquarters?: string;
+  companyType?: string;
+  productTag?: string;
+  marketTag?: string;
+  sort?: "updated_desc" | "created_desc" | "name_asc" | "name_desc";
+  page?: number;
+  pageSize?: number;
+}
+
+export function useStartups(params: UseStartupsParams = {}) {
   const fn = useServerFn(listStartups);
   const enabled = useHasSession();
   return useQuery({
-    queryKey: ["startups", "list"],
-    queryFn: () => fn(),
+    queryKey: ["startups", "list", params],
+    queryFn: () => fn({ data: params }),
     enabled,
   });
 }
