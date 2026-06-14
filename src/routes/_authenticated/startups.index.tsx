@@ -126,7 +126,7 @@ function StartupsPageInner() {
           </SelectContent>
         </Select>
         {hasFilter && (
-          <Button variant="ghost" size="sm" onClick={() => navigate({ search: { view } as never })} className="gap-1">
+          <Button variant="ghost" size="sm" onClick={() => navigate({ search: (p: typeof s) => ({ view: p.view }) })} className="gap-1">
             <X className="h-4 w-4" /> Clear
           </Button>
         )}
