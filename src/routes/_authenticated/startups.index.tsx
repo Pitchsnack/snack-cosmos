@@ -7,12 +7,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { StartupCard } from "@/components/startups/startup-card";
+import { StartupListItem } from "@/components/startups/startup-list-item";
+import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
+import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
+const VIEW = ["grid","split"] as const;
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other"];
 const COMPANY_TYPES = ["SaaS","FinTech","Marketplace","AI","Hardware","Consumer","Other"];
 
@@ -25,6 +29,8 @@ const searchSchema = z.object({
   ptag: z.string().optional(),
   mtag: z.string().optional(),
   sort: z.enum(SORT).optional(),
+  view: z.enum(VIEW).optional(),
+  selected: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
 });
 
@@ -48,16 +54,20 @@ function StartupsPageInner() {
   const s = Route.useSearch();
   const page = s.page ?? 1;
   const sort = s.sort ?? "updated_desc";
+  const view = s.view ?? "grid";
+  const selected = s.selected;
+
+  const pageSize = view === "split" ? 50 : 24;
 
   const { data, isLoading, isFetching, refetch } = useStartups({
     search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
     companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
-    sort, page, pageSize: 24,
+    sort, page, pageSize,
   });
 
   const items = data && "items" in data ? data.items : [];
   const total = data && "total" in data ? data.total : 0;
-  const pageCount = Math.max(1, Math.ceil(total / 24));
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
 
   const update = (patch: Partial<typeof s>) =>
     navigate({ search: (prev: typeof s) => ({ ...prev, ...patch, page: 1 }) });
@@ -76,14 +86,20 @@ function StartupsPageInner() {
             {total > 0 ? `${total} startup${total === 1 ? "" : "s"}` : "Browse and manage your portfolio."}
           </p>
         </div>
-        {has("startups.write") && (
-          <Button
-            onClick={() => navigate({ to: "/startups/new" })}
-            className="bg-accent text-accent-foreground hover:bg-accent/90"
-          >
-            <Plus className="mr-2 h-4 w-4" /> New startup
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ViewToggle
+            value={view}
+            onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
+          />
+          {has("startups.write") && (
+            <Button
+              onClick={() => navigate({ to: "/startups/new" })}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              <Plus className="mr-2 h-4 w-4" /> New startup
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -110,7 +126,7 @@ function StartupsPageInner() {
           </SelectContent>
         </Select>
         {hasFilter && (
-          <Button variant="ghost" size="sm" onClick={() => navigate({ search: {} })} className="gap-1">
+          <Button variant="ghost" size="sm" onClick={() => navigate({ search: { view } as never })} className="gap-1">
             <X className="h-4 w-4" /> Clear
           </Button>
         )}
@@ -126,13 +142,29 @@ function StartupsPageInner() {
           <Rocket className="mx-auto mb-2 h-8 w-8 opacity-50" />
           <p>No startups match your filters.</p>
         </div>
-      ) : (
+      ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((s) => <StartupCard key={s.id} s={s} />)}
+          {items.map((it) => <StartupCard key={it.id} s={it} />)}
+        </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
+          <div className="max-h-[calc(100vh-18rem)] space-y-2 overflow-y-auto pr-1">
+            {items.map((it) => (
+              <StartupListItem
+                key={it.id}
+                s={it}
+                selected={selected === it.id}
+                onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
+              />
+            ))}
+          </div>
+          <div className="min-w-0">
+            {selected ? <StartupDetailPanel id={selected} /> : <StartupDetailEmpty />}
+          </div>
         </div>
       )}
 
-      {pageCount > 1 && (
+      {view === "grid" && pageCount > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => navigate({ search: (p: typeof s) => ({ ...p, page: page - 1 }) })}>Previous</Button>
           <span className="text-sm text-muted-foreground">Page {page} of {pageCount}</span>
