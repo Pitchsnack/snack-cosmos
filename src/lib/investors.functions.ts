@@ -57,11 +57,18 @@ async function logActivity(
   });
 }
 
+const ListInput = z.object({
+  search: z.string().optional(),
+  type: z.string().optional(),
+  country: z.string().optional(),
+}).partial();
+
 export const listInvestors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input) => ListInput.parse(input ?? {}))
+  .handler(async ({ context, data }) => {
     const { supabase } = context;
-    const { data, error } = await supabase
+    let q = supabase
       .from("investors")
       .select(`
         id, tenant_id, investor_name, legal_name, website_url, country, investor_type,
@@ -70,11 +77,20 @@ export const listInvestors = createServerFn({ method: "GET" })
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
         investor_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name))
-      `)
-      .order("created_at", { ascending: false })
-      .limit(500);
+      `);
+
+    if (data.search?.trim()) {
+      const s = data.search.trim().replace(/[%_]/g, (m) => "\\" + m);
+      q = q.or(
+        `investor_name.ilike.%${s}%,short_description.ilike.%${s}%,investor_type.ilike.%${s}%,country.ilike.%${s}%`,
+      );
+    }
+    if (data.type) q = q.eq("investor_type", data.type);
+    if (data.country) q = q.eq("country", data.country);
+
+    const { data: rows, error } = await q.order("created_at", { ascending: false }).limit(500);
     if (error) throw new Error(error.message);
-    const rows = (data ?? []) as unknown as Array<
+    const list = (rows ?? []) as unknown as Array<
       InvestorRow & {
         tenants: { tenant_name: string } | null;
         investor_ownership: Array<{
@@ -87,7 +103,7 @@ export const listInvestors = createServerFn({ method: "GET" })
         }>;
       }
     >;
-    return rows.map((r): InvestorListItem => {
+    return list.map((r): InvestorListItem => {
       const own = r.investor_ownership?.[0]?.users ?? null;
       const aiOwn = r.investor_ai_ownership?.[0]?.users ?? null;
       return {
@@ -119,7 +135,35 @@ export const getInvestor = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Not found");
-    return row;
+
+    // Linked startups (reverse of startup_investors). Same-tenant enforced by trigger.
+    const { data: linkRows } = await supabase
+      .from("startup_investors")
+      .select("startups:startup_id(id, startup_name, logo_url)")
+      .eq("investor_id", data.id);
+
+    const links = ((linkRows ?? []) as unknown as Array<{
+      startups: { id: string; startup_name: string; logo_url: string | null } | null;
+    }>)
+      .map((l) => l.startups)
+      .filter((s): s is { id: string; startup_name: string; logo_url: string | null } => !!s);
+
+    const logoPaths = links.map((s) => s.logo_url).filter((p): p is string => !!p);
+    const signedMap: Record<string, string> = {};
+    if (logoPaths.length > 0) {
+      const { data: signed } = await supabase.storage
+        .from("startup-media")
+        .createSignedUrls(logoPaths, 3600);
+      (signed ?? []).forEach((d) => { if (d.path && d.signedUrl) signedMap[d.path] = d.signedUrl; });
+    }
+
+    const linked_startups = links.map((s) => ({
+      id: s.id,
+      startup_name: s.startup_name,
+      logo_signed_url: s.logo_url ? (signedMap[s.logo_url] ?? null) : null,
+    }));
+
+    return { ...row, linked_startups };
   });
 
 export const getInvestorActivity = createServerFn({ method: "GET" })
