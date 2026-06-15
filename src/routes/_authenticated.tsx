@@ -5,8 +5,11 @@ import { AppSidebar } from "@/components/app-sidebar";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
+    // Use getSession() (reads local storage, no network) instead of getUser()
+    // so sidebar navigation doesn't hit /auth/v1/user on every click.
+    // Server-side functions still validate the JWT via requireSupabaseAuth.
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session) {
       throw redirect({
         to: "/login",
         search: { redirect: location.href },
@@ -14,12 +17,23 @@ export const Route = createFileRoute("/_authenticated")({
     }
   },
   component: AuthenticatedLayout,
+  pendingMs: 0,
+  pendingMinMs: 0,
+  pendingComponent: PendingShell,
 });
 
 function AuthenticatedLayout() {
   return (
     <AppSidebar>
       <Outlet />
+    </AppSidebar>
+  );
+}
+
+function PendingShell() {
+  return (
+    <AppSidebar>
+      <div />
     </AppSidebar>
   );
 }

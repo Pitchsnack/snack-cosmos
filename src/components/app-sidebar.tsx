@@ -104,13 +104,21 @@ function SidebarBody({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showLabels = !collapsed || isMobile;
-  const { has, isControl } = usePermissions();
+  const { has, isControl, isResolved } = usePermissions();
+  const { data: sessionData } = useSessionContext();
 
-  const visibleItems = NAV_ITEMS.filter((item) => {
-    if (item.controlOnly) return isControl;
-    if (!item.perm) return true;
-    return has(item.perm);
-  });
+  // While permissions are unresolved AND we have no cached session data,
+  // render every NAV_ITEM as a non-clickable skeleton so the sidebar keeps
+  // its full height/order instead of collapsing to ungated items.
+  const showSkeleton = !isResolved && !sessionData;
+
+  const visibleItems = showSkeleton
+    ? NAV_ITEMS
+    : NAV_ITEMS.filter((item) => {
+        if (item.controlOnly) return isControl;
+        if (!item.perm) return true;
+        return has(item.perm);
+      });
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
