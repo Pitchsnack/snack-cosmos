@@ -1,84 +1,91 @@
-## Goal
 
-Bring the PitchSnack1 "Startup Intelligence" and "Investor Intelligence" UX (Grid + Split views, with view toggle) to SnackPortal2's `/startups` and `/investors`, while keeping all data access on tenant-scoped server functions (Physical Multi-Database).
+# Run PRD — Fix Sidebar Navigation Flicker
 
-Reference: PitchSnack1 `src/pages/StartupDirectory.tsx` (1540 lines) and `src/pages/InvestorDirectory.tsx` (1323 lines). We replicate the patterns, not line-for-line — PitchSnack-only features (pitch invites, swipe gestures, hover graphs, AI nodes, i18n) are out of scope.
+Scoped exactly as the PRD requires. Only 3 files touched, no schema/RLS/auth/architecture changes.
 
-## Scope
+## Fix 1 — `src/routes/_authenticated.tsx`
 
-### In scope (this PRD)
-1. `/startups`: Grid + Split view, view toggle, replicated `SnapshotCard`, replicated right-panel detail (header, media slots, description, product overview, tags, industry, stage, investors, founders), search/filter/sort row.
-2. `/investors`: Grid + Split view, view toggle, replicated investor card, replicated right-panel detail (header, focus, stages, market/industry tags, portfolio startups).
-3. View-mode persistence in URL (`?view=grid|split`) — survives refresh, tenant-safe, no cross-route leak.
-4. All data still flows through existing `listStartups` / `getStartup` / `listInvestors` / `getInvestor` server functions. No new schema, no new bucket.
-5. Investor-side reverse link (portfolio startups) — derived in server function from existing `startup_investors` join, no schema change.
+- Swap `supabase.auth.getUser()` (network → `/auth/v1/user`) for `supabase.auth.getSession()` (local storage, sync).
+- Guard becomes: `if (error || !data.session) redirect to /login`.
+- Server-side `requireSupabaseAuth` middleware still validates JWTs on every server function call — no security loss.
 
-### Out of scope
-- Pitch invites, swipe gestures, framer-motion modals, AI graph panel, i18n, "PitchSnack verified" hats, save/bookmark, deck extraction.
-- Any new DB columns, new tables, new buckets, new permissions.
-- Investor media slots (PitchSnack uses `investor_product_images` — SnackPortal2 has no equivalent table; would need a new PRD).
-- Founders/team UI on investor side beyond what's already there.
+## Fix 3 — same file: stable pending shell
 
-## Implementation
+- Add `pendingMs: 0`, `pendingMinMs: 0`, and a `pendingComponent` that renders `<AppSidebar><div /></AppSidebar>`, so the shell stays mounted during any route transition.
 
-### 1. View-toggle primitive
-- New `src/components/shared/view-toggle.tsx`: two-button segmented control `Grid | Split` using `Grid3X3` / `Columns2` icons, matches existing button styling.
-- View mode read/written through TanStack Router search param (`view: 'grid' | 'split'`, default `grid`).
+Resulting file:
 
-### 2. `/startups` rebuild — `src/routes/_authenticated/startups.index.tsx`
-- Add `view` to `searchSchema` (default `'grid'`).
-- Keep existing search/filter/sort row, append `<ViewToggle />` at the right.
-- Grid mode: existing `StartupCard` grid (already replicated last turn — tighten styling to match PitchSnack `SnapshotCard`: product-image banner at top when media[0] exists, logo+name row, badges row, short_description, product chips, divider, industry row, market chips, investors row).
-- Split mode: two-pane CSS grid `lg:grid-cols-[minmax(360px,28rem)_1fr]`, left = scrollable list of `StartupListItem` (compact card variant), right = `StartupDetailPanel` for `selectedId` (mirrors current `/startups/$id` content but inline). Empty state on right when nothing selected.
-- Below `lg`: split collapses to grid only.
+```tsx
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { AppSidebar } from "@/components/app-sidebar";
 
-### 3. `StartupDetailPanel` component (new, inline-detail extraction)
-- Extract the body of `src/routes/_authenticated/startups.$id.tsx` Overview tab into `src/components/startups/startup-detail-panel.tsx` taking `startupId`.
-- Reuses `useStartup(id)`. Shows: header (logo + name + type + website/email/HQ/year), media row (slot 1/2/3 with lightbox), short description, product overview, product tags, market tags, industry+stage badges, investors list (logo + name, clickable to `/investors/$id`), founders list.
-- Existing `/startups/$id` page continues to render this panel inside its tab.
+export const Route = createFileRoute("/_authenticated")({
+  ssr: false,
+  beforeLoad: async ({ location }) => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session) {
+      throw redirect({ to: "/login", search: { redirect: location.href } });
+    }
+  },
+  component: AuthenticatedLayout,
+  pendingMs: 0,
+  pendingMinMs: 0,
+  pendingComponent: PendingShell,
+});
 
-### 4. `/investors` rebuild
-- Replace current table-only `investors.index.tsx` with the same Grid/Split scaffold.
-- New components: `src/components/investors/investor-card.tsx`, `src/components/investors/investor-list-item.tsx`, `src/components/investors/investor-detail-panel.tsx`.
-- Card fields (from existing `investors` schema): logo, name, investor_type, country, website, short description (if present), investment-stage focus, market/industry focus tags (if columns exist — fall back gracefully).
-- Filter bar: `Type`, `Country` (free-text), search.
-- Detail panel: header + description + focus chips + linked startups (from `startup_investors`).
+function AuthenticatedLayout() {
+  return (<AppSidebar><Outlet /></AppSidebar>);
+}
+function PendingShell() {
+  return (<AppSidebar><div /></AppSidebar>);
+}
+```
 
-### 5. Server function additions
-- `getInvestor` extended to return `linked_startups: { id, name, logo_signed_url }[]` via `startup_investors` join, same tenant.
-- `listInvestors` already returns enough; add optional `type` / `country` filter params if not present.
-- No schema migration.
+## Fix 2 — `src/components/app-sidebar.tsx`
 
-### 6. URL state
-- `/startups?view=split&selected=<id>` — clicking a card in split mode sets `selected`; refresh restores selection.
-- `/investors?view=split&selected=<id>` — same.
+In `SidebarBody`, use `isResolved` from `usePermissions()` and the cached `useSessionContext().data` to decide what to render:
 
-## Out-of-the-box guardrails preserved
-- All reads via server functions; no direct Supabase from UI.
-- Tenant scoping unchanged (server functions already enforce).
-- No new env vars, secrets, or buckets.
+- **Resolved (success or error)** → real permission-filtered nav (current behavior).
+- **Unresolved but cached `data` exists** (refetch in flight) → keep the real filtered nav from the cached data — do not collapse.
+- **Unresolved and no cached data** → render every `NAV_ITEMS` row as a muted, non-clickable skeleton (`<div>` with `opacity-50 pointer-events-none`, same icon + label), preserving sidebar height/spacing.
 
-## Files
+Implementation sketch:
 
-Created:
-- `src/components/shared/view-toggle.tsx`
-- `src/components/startups/startup-list-item.tsx`
-- `src/components/startups/startup-detail-panel.tsx`
-- `src/components/investors/investor-card.tsx`
-- `src/components/investors/investor-list-item.tsx`
-- `src/components/investors/investor-detail-panel.tsx`
+```ts
+const { has, isControl, isResolved } = usePermissions();
+const { data: sessionData } = useSessionContext();
+const showSkeleton = !isResolved && !sessionData;
 
-Edited:
-- `src/routes/_authenticated/startups.index.tsx` (add view+selected param, split layout)
-- `src/routes/_authenticated/startups.$id.tsx` (delegate Overview tab to `StartupDetailPanel`)
-- `src/routes/_authenticated/investors.index.tsx` (full rebuild: grid/split)
-- `src/components/startups/startup-card.tsx` (banner image + tighter typography to match PitchSnack)
-- `src/lib/investors.functions.ts` (add `linked_startups` to `getInvestor`, optional filters to `listInvestors`)
-- `src/hooks/use-investors.ts` (pass through filter params)
+const visibleItems = showSkeleton
+  ? NAV_ITEMS                           // full list, rendered as skeleton below
+  : NAV_ITEMS.filter((item) => {
+      if (item.controlOnly) return isControl;
+      if (!item.perm) return true;
+      return has(item.perm);
+    });
+```
 
-## Acceptance check (post-build)
-- `/startups?view=grid` shows PitchSnack-style cards with banner+logo+chips.
-- `/startups?view=split` shows list-left, detail-right, selection survives refresh, empty state visible until selection.
-- `/investors?view=grid|split` mirrors the same pattern.
-- View toggle visible and active state correct; filters/search/sort unchanged in behavior.
-- No regressions to `/startups/$id` (still uses extracted detail panel).
+Skeleton rows reuse the existing `disabled`-style markup path (non-clickable `<div>`) so no unauthorized item ever becomes clickable. Once `isResolved` flips, the real filtered list replaces the skeleton without changing layout.
+
+## Fix 4 — `src/router.tsx`
+
+- `defaultPreloadStaleTime: 0` → `defaultPreloadStaleTime: 30_000`.
+
+## Files changed (exactly 3)
+
+- `src/routes/_authenticated.tsx`
+- `src/components/app-sidebar.tsx`
+- `src/router.tsx`
+
+## What is NOT touched
+
+Providers, route tree, DB, RLS, tenant/workspace logic, server auth, permission semantics, `placeholderData` on permission queries, `WorkspaceHeader`, `PermissionGuard`.
+
+## Verification after build
+
+1. Playwright: log in (using preset Supabase session env), navigate `/deals → /investors → /startups → /shared-deals`, capture network log and screenshots mid-transition. Assert:
+   - No `/auth/v1/user` request fires during sidebar clicks.
+   - Sidebar `<aside>` stays in the DOM across every transition.
+   - Nav item count never drops below the role's full set; header badge never reads `— / — TENANT`.
+2. Build passes (TS strict).

@@ -25,7 +25,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 
 import { UserMenu } from "@/components/user-menu";
 import { WorkspaceHeader } from "@/components/workspace-header";
-import { usePermissions } from "@/hooks/use-session-context";
+import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
@@ -104,13 +104,21 @@ function SidebarBody({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showLabels = !collapsed || isMobile;
-  const { has, isControl } = usePermissions();
+  const { has, isControl, isResolved } = usePermissions();
+  const { data: sessionData } = useSessionContext();
 
-  const visibleItems = NAV_ITEMS.filter((item) => {
-    if (item.controlOnly) return isControl;
-    if (!item.perm) return true;
-    return has(item.perm);
-  });
+  // While permissions are unresolved AND we have no cached session data,
+  // render every NAV_ITEM as a non-clickable skeleton so the sidebar keeps
+  // its full height/order instead of collapsing to ungated items.
+  const showSkeleton = !isResolved && !sessionData;
+
+  const visibleItems = showSkeleton
+    ? NAV_ITEMS
+    : NAV_ITEMS.filter((item) => {
+        if (item.controlOnly) return isControl;
+        if (!item.perm) return true;
+        return has(item.perm);
+      });
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -158,9 +166,10 @@ function SidebarBody({
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
         {visibleItems.map((item, idx) => {
-          const isActive = !item.disabled && (item.exact
+          const isActive = !item.disabled && !showSkeleton && (item.exact
             ? pathname === item.path
             : pathname.startsWith(item.path));
+          const renderAsStatic = item.disabled || showSkeleton;
           const baseClass = cn(
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
             isActive
@@ -168,22 +177,34 @@ function SidebarBody({
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
             !showLabels && "justify-center px-2",
             item.disabled && "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-sidebar-foreground/70",
+            showSkeleton && "cursor-default opacity-50 hover:bg-transparent hover:text-sidebar-foreground/70",
           );
 
-          if (item.disabled) {
+          if (renderAsStatic) {
             return (
               <div
                 key={`${item.label}-${idx}`}
-                title={!showLabels ? `${item.label} (coming soon)` : "Coming soon"}
+                title={
+                  !showLabels
+                    ? item.disabled
+                      ? `${item.label} (coming soon)`
+                      : item.label
+                    : item.disabled
+                      ? "Coming soon"
+                      : undefined
+                }
+                aria-hidden={showSkeleton ? "true" : undefined}
                 className={baseClass}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 {showLabels && (
                   <span className="flex flex-1 items-center justify-between">
                     {item.label}
-                    <span className="text-[9px] uppercase tracking-wider text-sidebar-foreground/40">
-                      Soon
-                    </span>
+                    {item.disabled && (
+                      <span className="text-[9px] uppercase tracking-wider text-sidebar-foreground/40">
+                        Soon
+                      </span>
+                    )}
                   </span>
                 )}
               </div>
