@@ -23,5 +23,6 @@ export function useStartups(params: UseStartupsParams = {}) {
     queryKey: ["startups", "list", params],
     queryFn: () => fn({ data: params }),
     enabled,
+    staleTime: 60_000,
   });
 }
