@@ -10,5 +10,6 @@ export function useSharedDeals() {
     queryKey: ["shared-deals", "list"],
     queryFn: () => fn(),
     enabled,
+    staleTime: 60_000,
   });
 }
