@@ -88,8 +88,17 @@ function DealsPageInner() {
           <DealTable rows={rows} isLoading={isLoading} />
         </TabsContent>
         <TabsContent value="pipeline" className="pt-4">
-          {isLoading ? (
-            <div className="rounded-lg border border-border bg-card p-12 text-center text-sm text-muted-foreground">Loading…</div>
+          {isLoading && rows.length === 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-lg border border-border bg-card p-4 shadow-card space-y-3">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-5/6" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              ))}
+            </div>
           ) : (
             <DealPipeline rows={rows} />
           )}
