@@ -4,6 +4,7 @@ import { Plus, Search, Briefcase, RefreshCw, X } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { InvestorCard } from "@/components/investors/investor-card";
 import { InvestorListItem } from "@/components/investors/investor-list-item";
 import { InvestorDetailPanel, InvestorDetailEmpty } from "@/components/investors/investor-detail-panel";
