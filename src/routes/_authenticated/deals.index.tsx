@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Plus, Search, Sparkles, RefreshCw, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DealTable } from "@/components/deals/deal-table";
 import { DealPipeline } from "@/components/deals/deal-pipeline";
