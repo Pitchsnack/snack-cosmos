@@ -1,6 +1,7 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/app-sidebar";
+import { RoutePendingSkeleton } from "@/components/skeletons/route-pending-skeleton";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -17,8 +18,8 @@ export const Route = createFileRoute("/_authenticated")({
     }
   },
   component: AuthenticatedLayout,
-  pendingMs: 0,
-  pendingMinMs: 0,
+  pendingMs: 200,
+  pendingMinMs: 150,
   pendingComponent: PendingShell,
 });
 
@@ -33,7 +34,7 @@ function AuthenticatedLayout() {
 function PendingShell() {
   return (
     <AppSidebar>
-      <div />
+      <RoutePendingSkeleton />
     </AppSidebar>
   );
 }
