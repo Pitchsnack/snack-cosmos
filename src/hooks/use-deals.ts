@@ -10,5 +10,6 @@ export function useDeals() {
     queryKey: ["deals", "list"],
     queryFn: () => fn(),
     enabled,
+    staleTime: 60_000,
   });
 }

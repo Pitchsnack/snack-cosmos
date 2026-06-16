@@ -16,5 +16,6 @@ export function useInvestors(params: UseInvestorsParams = {}) {
     queryKey: ["investors", "list", params],
     queryFn: () => fn({ data: params }),
     enabled,
+    staleTime: 60_000,
   });
 }

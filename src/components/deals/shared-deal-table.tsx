@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Share2, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import type { SharedDealListItem } from "@/lib/deal-shares.functions";
 
@@ -37,8 +38,14 @@ export function SharedDealTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {isLoading ? (
-            <TableRow><TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+          {isLoading && rows.length === 0 ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={`skeleton-${i}`} aria-hidden="true">
+                {Array.from({ length: 9 }).map((__, j) => (
+                  <TableCell key={j}><Skeleton className="h-4 w-full max-w-[10rem]" /></TableCell>
+                ))}
+              </TableRow>
+            ))
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={9} className="py-14 text-center">
