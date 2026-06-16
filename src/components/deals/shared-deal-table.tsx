@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Share2, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import type { SharedDealListItem } from "@/lib/deal-shares.functions";
 
