@@ -37,8 +37,14 @@ export function DealTable({ rows, isLoading }: { rows: DealListItem[]; isLoading
           </TableRow>
         </TableHeader>
         <TableBody>
-          {isLoading ? (
-            <TableRow><TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+          {isLoading && rows.length === 0 ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={`skeleton-${i}`} aria-hidden="true">
+                {Array.from({ length: 9 }).map((__, j) => (
+                  <TableCell key={j}><Skeleton className="h-4 w-full max-w-[10rem]" /></TableCell>
+                ))}
+              </TableRow>
+            ))
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={9} className="py-14 text-center">
