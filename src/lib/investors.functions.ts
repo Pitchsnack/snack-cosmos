@@ -237,18 +237,30 @@ export const createInvestor = createServerFn({ method: "POST" })
         tenant_id: data.tenantId,
         investor_name: data.investorName,
         legal_name: data.legalName || null,
+        firm_name: data.firmName || null,
+        email: data.email || null,
+        business_address: data.businessAddress || null,
+        year_founded: data.yearFounded ?? null,
         website_url: data.websiteUrl || null,
         country: data.country || null,
         investor_type: data.investorType || null,
         aum: data.aum || null,
         ticket_size: data.ticketSize || null,
+        min_ticket_size: data.minTicketSize || null,
+        max_ticket_size: data.maxTicketSize || null,
         short_description: data.shortDescription || null,
         long_description: data.longDescription || null,
+        bio: data.bio || null,
+        keywords: data.keywords ?? [],
+        business_model: data.businessModel ?? [],
+        preferred_stages: data.preferredStages ?? [],
+        preferred_industries: data.preferredIndustries ?? [],
+        investment_focus: data.investmentFocus ?? [],
         status: data.status,
         visibility: data.visibility,
         created_by: userId,
         updated_by: userId,
-      })
+      } as never)
       .select("id, tenant_id")
       .single();
     if (error) throw new Error(error.message);
