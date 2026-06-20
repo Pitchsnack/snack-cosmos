@@ -75,6 +75,175 @@ function Pill({
   );
 }
 
+// ── Logo upload zone (PitchSnack1 visual replica, local-only) ──
+function LogoUploadZone({
+  file, onChange,
+}: { file: File | null; onChange: (f: File | null) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  return (
+    <div className="space-y-1.5">
+      <Label>Logo</Label>
+      <div
+        className={`flex items-center gap-4 rounded-lg p-2 -m-2 transition-colors ${
+          dragging ? "bg-accent/50 ring-2 ring-primary/30" : ""
+        }`}
+        onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault(); setDragging(false);
+          const f = e.dataTransfer.files?.[0];
+          if (f && f.type.startsWith("image/")) onChange(f);
+        }}
+      >
+        {preview ? (
+          <div className="relative group cursor-pointer" onClick={() => ref.current?.click()}>
+            <img
+              src={preview}
+              alt="Logo"
+              className="w-[168px] h-[56px] rounded-lg object-contain border border-border group-hover:opacity-60 transition-opacity"
+            />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Upload className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onChange(null); }}
+              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : (
+          <div
+            className={`relative w-[168px] h-[56px] rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
+              dragging ? "bg-accent border-primary/40" : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
+            }`}
+            onClick={() => ref.current?.click()}
+          >
+            <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
+            <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
+          </div>
+        )}
+        <input
+          ref={ref}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onChange(f);
+            e.target.value = "";
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Media panel: 3 product image slots (PitchSnack1 visual replica) ──
+function MediaPanel({
+  files, onChange, maxImages = 3,
+}: { files: (File | null)[]; onChange: (next: (File | null)[]) => void; maxImages?: number }) {
+  const inputs = useRef<(HTMLInputElement | null)[]>([]);
+  const [dragSlot, setDragSlot] = useState<number | null>(null);
+  const previews = useMemo(
+    () => files.map((f) => (f ? URL.createObjectURL(f) : null)),
+    [files],
+  );
+  useEffect(() => () => { previews.forEach((u) => { if (u) URL.revokeObjectURL(u); }); }, [previews]);
+
+  const setSlot = (i: number, f: File | null) => {
+    const next = [...files];
+    next[i] = f;
+    onChange(next);
+  };
+
+  const filled = files.filter(Boolean).length;
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="flex items-center gap-1.5">
+        <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+        Media
+        <span className="text-[10px] text-muted-foreground font-normal">({filled}/{maxImages})</span>
+      </Label>
+      <div className="flex items-center gap-2">
+        {Array.from({ length: maxImages }).map((_, i) => {
+          const p = previews[i];
+          return (
+            <div key={i} className="relative">
+              {p ? (
+                <div className="group relative">
+                  <img
+                    src={p}
+                    alt={`Product ${i + 1}`}
+                    className="w-[96px] h-[64px] rounded-md object-cover border border-border"
+                  />
+                  <div className="absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => inputs.current[i]?.click()}
+                      className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
+                      title="Replace"
+                    >
+                      <Upload className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSlot(i, null)}
+                      className="p-1 rounded-full bg-background/80 hover:bg-background text-destructive"
+                      title="Remove"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={`flex flex-col items-center justify-center rounded-md border border-dashed cursor-pointer transition-colors ${
+                    dragSlot === i
+                      ? "bg-accent border-primary/40"
+                      : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
+                  }`}
+                  style={{ width: 96, height: 64 }}
+                  onClick={() => inputs.current[i]?.click()}
+                  onDragEnter={(e) => { e.preventDefault(); setDragSlot(i); }}
+                  onDragLeave={(e) => { e.preventDefault(); setDragSlot(null); }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault(); setDragSlot(null);
+                    const f = e.dataTransfer.files?.[0];
+                    if (f && f.type.startsWith("image/")) setSlot(i, f);
+                  }}
+                >
+                  <Upload className={`h-4 w-4 ${dragSlot === i ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className="text-[10px] text-muted-foreground mt-0.5">Slot {i + 1}</span>
+                </div>
+              )}
+              <input
+                ref={(el) => { inputs.current[i] = el; }}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setSlot(i, f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function InvestorForm() {
   const navigate = useNavigate();
   const qc = useQueryClient();
