@@ -288,6 +288,10 @@ export function InvestorForm() {
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
+  // Media (visual only — no backend wiring yet)
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<(File | null)[]>([null, null, null]);
+
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
