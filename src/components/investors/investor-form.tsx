@@ -387,6 +387,14 @@ export function InvestorForm() {
         </Select>
       </div>
 
+      {/* Logo + Media (PitchSnack1 replica, visual only) */}
+      <div className="flex items-start gap-10 flex-wrap">
+        <LogoUploadZone file={logoFile} onChange={setLogoFile} />
+        <MediaPanel files={mediaFiles} onChange={setMediaFiles} maxImages={3} />
+      </div>
+
+
+
       {/* Row 1: Year Founded | Display Name | Investor Classification */}
       <div className="grid grid-cols-[100px_1fr_220px] gap-4">
         <div className="space-y-1.5">
