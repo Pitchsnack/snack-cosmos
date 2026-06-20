@@ -834,15 +834,26 @@ export type Database = {
       investors: {
         Row: {
           aum: string | null
+          bio: string | null
+          business_address: string | null
+          business_model: string[] | null
           country: string | null
           created_at: string
           created_by: string | null
+          email: string | null
+          firm_name: string | null
           id: string
           imported_at: string | null
+          investment_focus: string[] | null
           investor_name: string
           investor_type: string | null
+          keywords: string[] | null
           legal_name: string | null
           long_description: string | null
+          max_ticket_size: string | null
+          min_ticket_size: string | null
+          preferred_industries: string[] | null
+          preferred_stages: string[] | null
           short_description: string | null
           source_global_id: string | null
           status: string
@@ -852,18 +863,30 @@ export type Database = {
           updated_by: string | null
           visibility: string
           website_url: string | null
+          year_founded: number | null
         }
         Insert: {
           aum?: string | null
+          bio?: string | null
+          business_address?: string | null
+          business_model?: string[] | null
           country?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
+          firm_name?: string | null
           id?: string
           imported_at?: string | null
+          investment_focus?: string[] | null
           investor_name: string
           investor_type?: string | null
+          keywords?: string[] | null
           legal_name?: string | null
           long_description?: string | null
+          max_ticket_size?: string | null
+          min_ticket_size?: string | null
+          preferred_industries?: string[] | null
+          preferred_stages?: string[] | null
           short_description?: string | null
           source_global_id?: string | null
           status?: string
@@ -873,18 +896,30 @@ export type Database = {
           updated_by?: string | null
           visibility?: string
           website_url?: string | null
+          year_founded?: number | null
         }
         Update: {
           aum?: string | null
+          bio?: string | null
+          business_address?: string | null
+          business_model?: string[] | null
           country?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
+          firm_name?: string | null
           id?: string
           imported_at?: string | null
+          investment_focus?: string[] | null
           investor_name?: string
           investor_type?: string | null
+          keywords?: string[] | null
           legal_name?: string | null
           long_description?: string | null
+          max_ticket_size?: string | null
+          min_ticket_size?: string | null
+          preferred_industries?: string[] | null
+          preferred_stages?: string[] | null
           short_description?: string | null
           source_global_id?: string | null
           status?: string
@@ -894,6 +929,7 @@ export type Database = {
           updated_by?: string | null
           visibility?: string
           website_url?: string | null
+          year_founded?: number | null
         }
         Relationships: [
           {
