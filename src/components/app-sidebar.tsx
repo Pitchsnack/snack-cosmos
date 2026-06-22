@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Building2,
@@ -76,7 +76,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
-const COLLAPSED_KEY = "sp2.sidebarCollapsed";
+
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
@@ -233,36 +233,80 @@ function SidebarBody({
   );
 }
 
+type SidebarIntent = "auto" | "open" | "closed";
+const INTENT_KEY = "sp2.sidebarIntent";
+
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
-  const [collapsed, setCollapsed] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdminRoute = pathname.startsWith("/access-management") || pathname.startsWith("/audit") || pathname.startsWith("/security");
+
+  const [intent, setIntent] = useState<SidebarIntent>("auto");
+  const [autoCollapsed, setAutoCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: prefs, update: updatePrefs } = usePreferences();
 
-  // Restore sidebar state: server-stored preference wins, falls back to localStorage.
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const lastToggleRef = useRef(0);
+  const intentRef = useRef<SidebarIntent>(intent);
+  useEffect(() => { intentRef.current = intent; }, [intent]);
+
+  // Restore intent: server preference (sidebarCollapsed) maps to pinned states; localStorage fallback.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (prefs) {
-      setCollapsed(prefs.sidebarCollapsed);
-      try { localStorage.setItem(COLLAPSED_KEY, prefs.sidebarCollapsed ? "1" : "0"); } catch { /* noop */ }
-    } else {
-      setCollapsed(localStorage.getItem(COLLAPSED_KEY) === "1");
-    }
+    try {
+      const stored = localStorage.getItem(INTENT_KEY) as SidebarIntent | null;
+      if (stored === "open" || stored === "closed" || stored === "auto") {
+        setIntent(stored);
+        return;
+      }
+    } catch { /* noop */ }
+    if (prefs) setIntent(prefs.sidebarCollapsed ? "closed" : "auto");
   }, [prefs]);
 
-  function toggleCollapsed() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(COLLAPSED_KEY, next ? "1" : "0");
-      } catch {
-        /* noop */
-      }
-      // Persist to server (best-effort; ignore failures so UI stays snappy)
-      void updatePrefs({ sidebarCollapsed: next }).catch(() => {});
-      return next;
-    });
-  }
+  const persistIntent = (next: SidebarIntent) => {
+    setIntent(next);
+    lastToggleRef.current = Date.now();
+    try { localStorage.setItem(INTENT_KEY, next); } catch { /* noop */ }
+    if (next !== "auto") {
+      void updatePrefs({ sidebarCollapsed: next === "closed" }).catch(() => {});
+    }
+  };
+
+  const collapsedByIntent =
+    intent === "open" ? false : intent === "closed" ? true : autoCollapsed;
+  const effectiveCollapsed = !isMobile && !isAdminRoute ? collapsedByIntent : false;
+
+  const toggle = () => persistIntent(effectiveCollapsed ? "open" : "closed");
+
+  // Re-expand on route change for 'auto' users; close mobile drawer.
+  useEffect(() => {
+    setAutoCollapsed(false);
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Single capture-phase click listener for auto-collapse.
+  useEffect(() => {
+    if (isMobile || isAdminRoute) return;
+    const onClickCapture = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest("[data-app-sidebar]")) return;
+      if (target.closest('[role="dialog"], [role="alertdialog"]')) return;
+      if (target.closest("[data-keep-sidebar]")) return;
+      if (window.getSelection()?.toString()) return;
+      if (intentRef.current !== "auto") return;
+      const sidebarEl = sidebarRef.current;
+      if (sidebarEl && document.activeElement && sidebarEl.contains(document.activeElement)) return;
+      const now = Date.now();
+      if (now - lastToggleRef.current < 250) return;
+      lastToggleRef.current = now;
+      setAutoCollapsed(true);
+    };
+    document.addEventListener("click", onClickCapture, true);
+    return () => document.removeEventListener("click", onClickCapture, true);
+  }, [isMobile, isAdminRoute]);
 
   if (isMobile) {
     return (
@@ -306,21 +350,30 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="relative h-screen w-full overflow-hidden bg-background">
+      {/* Content reserves the collapsed rail width and never reflows on toggle. */}
+      <div className="h-full ps-16">
+        <main className="h-full overflow-y-auto">
+          <div className="mx-auto max-w-7xl px-8 py-10">
+            <WorkspaceHeader />
+            {children}
+          </div>
+        </main>
+      </div>
+
       <aside
+        ref={sidebarRef}
+        id="app-sidebar-nav"
+        data-app-sidebar
+        aria-label="Primary"
         className={cn(
-          "shrink-0 border-r border-sidebar-border transition-[width] duration-300",
-          collapsed ? "w-16" : "w-64",
+          "fixed inset-y-0 start-0 z-40 border-r border-sidebar-border bg-sidebar shadow-lg",
+          "transition-[width] duration-300 motion-reduce:transition-none",
+          effectiveCollapsed ? "w-16" : "w-64",
         )}
       >
-        <SidebarBody collapsed={collapsed} onToggle={toggleCollapsed} />
+        <SidebarBody collapsed={effectiveCollapsed} onToggle={toggle} />
       </aside>
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-8 py-10">
-          <WorkspaceHeader />
-          {children}
-        </div>
-      </main>
     </div>
   );
 }
