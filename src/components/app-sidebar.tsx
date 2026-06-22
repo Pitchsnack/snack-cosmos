@@ -76,7 +76,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
-const COLLAPSED_KEY = "sp2.sidebarCollapsed";
+
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
