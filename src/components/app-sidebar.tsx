@@ -25,7 +25,8 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 
 import { UserMenu } from "@/components/user-menu";
 import { WorkspaceHeader } from "@/components/workspace-header";
-import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
+import { useSessionContext } from "@/hooks/use-session-context";
+import { useEffectivePermissions } from "@/hooks/use-effective-permissions";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
@@ -104,7 +105,7 @@ function SidebarBody({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showLabels = !collapsed || isMobile;
-  const { has, isControl, isResolved } = usePermissions();
+  const { has, isControl, isResolved } = useEffectivePermissions();
   const { data: sessionData } = useSessionContext();
 
   // While permissions are unresolved AND we have no cached session data,
