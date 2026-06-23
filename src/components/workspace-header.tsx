@@ -3,6 +3,8 @@ import { NotificationCenter } from "@/components/notification-center";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { Badge } from "@/components/ui/badge";
+import { ViewAsSwitcher } from "@/components/view-switcher/view-as-switcher";
+import { ViewModeBadge } from "@/components/view-switcher/view-mode-badge";
 
 const ROLE_LABELS: Record<string, string> = {
   CONTROL: "Control",
@@ -48,7 +50,9 @@ export function WorkspaceHeader() {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        <ViewModeBadge />
+        <ViewAsSwitcher />
         <GlobalSearch />
         <NotificationCenter />
       </div>
