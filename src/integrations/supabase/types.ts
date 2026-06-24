@@ -564,6 +564,75 @@ export type Database = {
           },
         ]
       }
+      global_startup_imports: {
+        Row: {
+          global_id: string
+          id: string
+          imported_at: string
+          imported_by: string
+          tenant_id: string
+          tenant_startup_id: string
+        }
+        Insert: {
+          global_id: string
+          id?: string
+          imported_at?: string
+          imported_by: string
+          tenant_id: string
+          tenant_startup_id: string
+        }
+        Update: {
+          global_id?: string
+          id?: string
+          imported_at?: string
+          imported_by?: string
+          tenant_id?: string
+          tenant_startup_id?: string
+        }
+        Relationships: []
+      }
+      global_startups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          sector: string | null
+          stage: string | null
+          status: string
+          tags: string[]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          sector?: string | null
+          stage?: string | null
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          sector?: string | null
+          stage?: string | null
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       investor_activity: {
         Row: {
           activity_details: Json
@@ -2096,6 +2165,16 @@ export type Database = {
       can_manage_startup: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
+      }
+      fn_import_global_startup: {
+        Args: {
+          _global_id: string
+          _imported_by: string
+          _owning_agent: string
+          _owning_ai_agent: string
+          _tenant_id: string
+        }
+        Returns: string
       }
       has_role: {
         Args: {

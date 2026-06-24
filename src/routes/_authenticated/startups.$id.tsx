@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { StartupOwnershipCard } from "@/components/startups/startup-ownership-card";
 import { StartupUsersCard } from "@/components/startups/startup-users-card";
+import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
 import { useStartup, useStartupActivity, useStartupAuditLogs } from "@/hooks/use-startup";
 import { updateStartup, archiveStartup, type StartupDetail } from "@/lib/startups.functions";
 import { usePermissions } from "@/hooks/use-session-context";
@@ -98,6 +99,10 @@ function StartupDetailPage() {
               {s.industry && <Badge variant="outline">{s.industry}</Badge>}
               <Badge variant="outline">{s.status}</Badge>
               <Badge variant="outline">{s.visibility}</Badge>
+              <GlobalStartupLineageBadge
+                sourceGlobalId={s.source_global_id}
+                importedAt={s.imported_at}
+              />
             </div>
           </div>
         </div>
