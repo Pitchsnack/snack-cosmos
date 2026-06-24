@@ -40,6 +40,9 @@ export type Permission =
   | "deals.share.accept"
   | "deals.share.reject"
   | "deals.share.introduce"
+  | "global_startups.read"
+  | "global_startups.write"
+  | "global_startups.import"
   | "ai.invoke";
 
 const ALL: Permission[] = [
@@ -51,6 +54,7 @@ const ALL: Permission[] = [
   "investors.read","investors.write",
   "deals.read","deals.write",
   "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
+  "global_startups.read","global_startups.write",
   "ai.invoke",
 ];
 
@@ -63,6 +67,7 @@ const TENANT_ADMIN: Permission[] = [
   "investors.read","investors.write",
   "deals.read","deals.write",
   "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
+  "global_startups.read","global_startups.import",
 ];
 
 const TENANT_AGENT: Permission[] = [
@@ -71,6 +76,7 @@ const TENANT_AGENT: Permission[] = [
   "investors.read","investors.write",
   "deals.read","deals.write",
   "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
+  "global_startups.read","global_startups.import",
 ];
 
 const STARTUP_USER: Permission[] = ["workspace.switch","startups.read"];

@@ -165,33 +165,35 @@ export const createGlobalStartupFn = createServerFn({ method: "POST" })
     return normalize(row);
   });
 
+const UpdateInput = z.object({
+  globalId: z.string().uuid(),
+  name: WriteFields.name.optional(),
+  sector: WriteFields.sector,
+  stage: WriteFields.stage,
+  description: WriteFields.description,
+  website: WriteFields.website,
+  tags: WriteFields.tags,
+  status: WriteFields.status,
+});
+
 export const updateGlobalStartupFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z
-      .object({
-        globalId: z.string().uuid(),
-        ...Object.fromEntries(
-          Object.entries(WriteFields).map(([k, v]) => [k, (v as z.ZodTypeAny).optional()]),
-        ),
-      })
-      .parse(input),
-  )
+  .inputValidator((input) => UpdateInput.parse(input))
   .handler(async ({ context, data }): Promise<GlobalStartup> => {
     const { supabase } = context;
-    const { globalId, ...patch } = data;
     const update: Record<string, unknown> = {};
-    if (patch.name !== undefined) update.name = patch.name;
-    if (patch.sector !== undefined) update.sector = patch.sector;
-    if (patch.stage !== undefined) update.stage = patch.stage;
-    if (patch.description !== undefined) update.description = patch.description;
-    if (patch.website !== undefined) update.website = patch.website;
-    if (patch.tags !== undefined) update.tags = patch.tags;
-    if (patch.status !== undefined) update.status = patch.status;
+    if (data.name !== undefined) update.name = data.name;
+    if (data.sector !== undefined) update.sector = data.sector;
+    if (data.stage !== undefined) update.stage = data.stage;
+    if (data.description !== undefined) update.description = data.description;
+    if (data.website !== undefined) update.website = data.website;
+    if (data.tags !== undefined) update.tags = data.tags;
+    if (data.status !== undefined) update.status = data.status;
     const { data: row, error } = await supabase
       .from("global_startups")
-      .update(update)
-      .eq("id", globalId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update(update as any)
+      .eq("id", data.globalId)
       .select(SELECT_COLS)
       .single();
     if (error) throw new Error(error.message);
