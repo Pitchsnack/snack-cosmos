@@ -245,7 +245,7 @@ export const getStartup = createServerFn({ method: "GET" })
         id, tenant_id, startup_name, legal_name, website_url, country, industry,
         short_description, long_description, status, visibility, created_at, updated_at,
         logo_url, company_type, year_founded, email, headquarters, investment_stage,
-        product_tags, market_tags,
+        product_tags, market_tags, source_global_id, imported_at,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         startup_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
