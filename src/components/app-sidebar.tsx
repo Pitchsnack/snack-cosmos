@@ -19,6 +19,7 @@ import {
   Sparkles,
   Share2,
   Bell,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -44,7 +45,9 @@ type NavPath =
   | "/access-management"
   | "/security"
   | "/notifications"
-  | "/preferences";
+  | "/preferences"
+  | "/global-startups"
+  | "/global-startups/browse";
 
 type NavItem = {
   label: string;
@@ -63,6 +66,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
+  { label: "Global Startups", icon: Globe, path: "/global-startups", exact: false, perm: "global_startups.write" },
+  { label: "Browse Global Catalogue", icon: Globe, path: "/global-startups/browse", exact: false, perm: "global_startups.import" },
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
   { label: "Shared Deals", icon: Share2, path: "/shared-deals", exact: false, perm: "deals.share.read" },

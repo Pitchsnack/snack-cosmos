@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
+import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
@@ -64,6 +65,10 @@ export function StartupDetailPanel({
             <div className="mt-2 flex flex-wrap gap-1.5">
               {s.investment_stage && <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent text-[10px]">{s.investment_stage}</Badge>}
               {s.industry && <Badge variant="outline" className="text-[10px]">{s.industry}</Badge>}
+              <GlobalStartupLineageBadge
+                sourceGlobalId={(s as unknown as { source_global_id: string | null }).source_global_id}
+                importedAt={(s as unknown as { imported_at: string | null }).imported_at}
+              />
             </div>
           </div>
         </div>
