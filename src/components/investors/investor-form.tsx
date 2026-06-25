@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Image as ImageIcon, Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,30 +11,29 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { createInvestor } from "@/lib/investors.functions";
+import {
+  createInvestor, updateInvestor, createInvestorMediaUploadUrl,
+} from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  EntityMediaEditor, EMPTY_MEDIA_STATE, uploadPending,
+  type EntityMediaState, type SlotState,
+} from "@/components/media/entity-media-editor";
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminInvestorManager) ──
 const INVESTOR_CLASSIFICATIONS = [
-  "Angel",
-  "Venture Capital",
-  "Private Equity",
-  "Corporate VC",
-  "Family Office",
-  "Corporate Enterprise",
-  "Sovereign Fund",
-  "Incubator/Accelerator",
+  "Angel", "Venture Capital", "Private Equity", "Corporate VC",
+  "Family Office", "Corporate Enterprise", "Sovereign Fund", "Incubator/Accelerator",
 ];
-
 const AUM_OPTIONS = [
   { value: "50M-100M", label: "50M – 100M" },
   { value: "100M-250M", label: "100M – 250M" },
   { value: "250M-500M", label: "250M – 500M" },
   { value: "500M+", label: "500M+" },
 ];
-
 const TICKET_OPTIONS = [
   { value: "50K-100K", label: "50K – 100K" },
   { value: "100K-500K", label: "100K – 500K" },
@@ -42,21 +41,17 @@ const TICKET_OPTIONS = [
   { value: "1M-5M", label: "1M – 5M" },
   { value: "5M+", label: "5M+" },
 ];
-
 const BUSINESS_MODELS = ["B2B", "B2C", "D2C", "B2B2C", "B2G"];
 const STAGES = ["Ideation", "Early Stage", "Growth Stage", "Maturity Stage"];
-
 const INDUSTRIES = [
   "FinTech", "eCommerce & Marketplace", "MarTech", "HealthTech",
   "Sustainability", "Mobility & Logistics", "DeepTech", "Defense",
   "EdTech", "Gaming", "PropTech", "AgriTech", "FMCG", "Others",
 ];
 const INVESTOR_INDUSTRIES = ["Sector Agnostic", ...INDUSTRIES];
-
 const STATUSES = ["Prospect","Active","Engaged","Investing","Inactive","Archived"];
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
 
-// Pill button style — matches PitchSnack1 exactly
 function Pill({
   active, onClick, children,
 }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -75,233 +70,122 @@ function Pill({
   );
 }
 
-// ── Logo upload zone (PitchSnack1 visual replica, local-only) ──
-function LogoUploadZone({
-  file, onChange,
-}: { file: File | null; onChange: (f: File | null) => void }) {
-  const ref = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
-
-  return (
-    <div className="space-y-1.5">
-      <Label>Logo</Label>
-      <div
-        className={`flex items-center gap-4 rounded-lg p-2 -m-2 transition-colors ${
-          dragging ? "bg-accent/50 ring-2 ring-primary/30" : ""
-        }`}
-        onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault(); setDragging(false);
-          const f = e.dataTransfer.files?.[0];
-          if (f && f.type.startsWith("image/")) onChange(f);
-        }}
-      >
-        {preview ? (
-          <div className="relative group cursor-pointer" onClick={() => ref.current?.click()}>
-            <img
-              src={preview}
-              alt="Logo"
-              className="w-[168px] h-[56px] rounded-lg object-contain border border-border group-hover:opacity-60 transition-opacity"
-            />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Upload className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onChange(null); }}
-              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ) : (
-          <div
-            className={`relative w-[168px] h-[56px] rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
-              dragging ? "bg-accent border-primary/40" : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
-            }`}
-            onClick={() => ref.current?.click()}
-          >
-            <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
-          </div>
-        )}
-        <input
-          ref={ref}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) onChange(f);
-            e.target.value = "";
-          }}
-        />
-      </div>
-    </div>
-  );
+/** Shape of the existing investor passed to the form in edit mode. Matches
+ *  the projection returned by `getInvestor`. */
+export interface InvestorEditModel {
+  id: string;
+  tenant_id: string;
+  investor_name: string;
+  firm_name: string | null;
+  email: string | null;
+  business_address: string | null;
+  year_founded: number | null;
+  website_url: string | null;
+  country: string | null;
+  investor_type: string | null;
+  aum: string | null;
+  min_ticket_size: string | null;
+  max_ticket_size: string | null;
+  bio: string | null;
+  keywords: string[] | null;
+  business_model: string[] | null;
+  preferred_stages: string[] | null;
+  preferred_industries: string[] | null;
+  investment_focus: string[] | null;
+  status: string;
+  visibility: string;
+  logo_url: string | null;
+  logo_signed_url: string | null;
+  media: Array<{ slot: 1 | 2 | 3; image_path: string; image_signed_url: string | null }>;
 }
 
-// ── Media panel: 3 product image slots (PitchSnack1 visual replica) ──
-function MediaPanel({
-  files, onChange, maxImages = 3,
-}: { files: (File | null)[]; onChange: (next: (File | null)[]) => void; maxImages?: number }) {
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
-  const [dragSlot, setDragSlot] = useState<number | null>(null);
-  const previews = useMemo(
-    () => files.map((f) => (f ? URL.createObjectURL(f) : null)),
-    [files],
-  );
-  useEffect(() => () => { previews.forEach((u) => { if (u) URL.revokeObjectURL(u); }); }, [previews]);
-
-  const setSlot = (i: number, f: File | null) => {
-    const next = [...files];
-    next[i] = f;
-    onChange(next);
+function hydrateMedia(investor?: InvestorEditModel): EntityMediaState {
+  if (!investor) return EMPTY_MEDIA_STATE;
+  const logo: SlotState = {
+    persistedPath: investor.logo_url,
+    signedUrl: investor.logo_signed_url,
+    pendingFile: null,
   };
-
-  const filled = files.filter(Boolean).length;
-
-  return (
-    <div className="space-y-1.5">
-      <Label className="flex items-center gap-1.5">
-        <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
-        Media
-        <span className="text-[10px] text-muted-foreground font-normal">({filled}/{maxImages})</span>
-      </Label>
-      <div className="flex items-center gap-2">
-        {Array.from({ length: maxImages }).map((_, i) => {
-          const p = previews[i];
-          return (
-            <div key={i} className="relative">
-              {p ? (
-                <div className="group relative">
-                  <img
-                    src={p}
-                    alt={`Product ${i + 1}`}
-                    className="w-[96px] h-[64px] rounded-md object-cover border border-border"
-                  />
-                  <div className="absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => inputs.current[i]?.click()}
-                      className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
-                      title="Replace"
-                    >
-                      <Upload className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSlot(i, null)}
-                      className="p-1 rounded-full bg-background/80 hover:bg-background text-destructive"
-                      title="Remove"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className={`flex flex-col items-center justify-center rounded-md border border-dashed cursor-pointer transition-colors ${
-                    dragSlot === i
-                      ? "bg-accent border-primary/40"
-                      : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
-                  }`}
-                  style={{ width: 96, height: 64 }}
-                  onClick={() => inputs.current[i]?.click()}
-                  onDragEnter={(e) => { e.preventDefault(); setDragSlot(i); }}
-                  onDragLeave={(e) => { e.preventDefault(); setDragSlot(null); }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault(); setDragSlot(null);
-                    const f = e.dataTransfer.files?.[0];
-                    if (f && f.type.startsWith("image/")) setSlot(i, f);
-                  }}
-                >
-                  <Upload className={`h-4 w-4 ${dragSlot === i ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className="text-[10px] text-muted-foreground mt-0.5">Slot {i + 1}</span>
-                </div>
-              )}
-              <input
-                ref={(el) => { inputs.current[i] = el; }}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setSlot(i, f);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  const slots: [SlotState, SlotState, SlotState] = [
+    { persistedPath: null, signedUrl: null, pendingFile: null },
+    { persistedPath: null, signedUrl: null, pendingFile: null },
+    { persistedPath: null, signedUrl: null, pendingFile: null },
+  ];
+  for (const m of investor.media ?? []) {
+    if (m.slot >= 1 && m.slot <= 3) {
+      slots[m.slot - 1] = {
+        persistedPath: m.image_path,
+        signedUrl: m.image_signed_url,
+        pendingFile: null,
+      };
+    }
+  }
+  return { logo, slots };
 }
 
-export function InvestorForm() {
+interface Props {
+  investor?: InvestorEditModel;
+}
+
+export function InvestorForm({ investor }: Props) {
+  const isEdit = !!investor;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
   const create = useServerFn(createInvestor);
+  const update = useServerFn(updateInvestor);
+  const getUploadUrl = useServerFn(createInvestorMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
   const enabled = useHasSession();
 
   const tenants = useMemo(() => session?.tenants ?? [], [session]);
-  const [tenantId, setTenantId] = useState<string>("");
-
+  const [tenantId, setTenantId] = useState<string>(investor?.tenant_id ?? "");
   useEffect(() => {
-    if (!tenantId && tenants.length) {
+    if (!isEdit && !tenantId && tenants.length) {
       setTenantId(session?.activeWorkspace.tenantId ?? tenants[0].tenantId);
     }
-  }, [tenants, tenantId, session]);
+  }, [tenants, tenantId, session, isEdit]);
 
-  // Core fields
-  const [displayName, setDisplayName] = useState("");
-  const [firmName, setFirmName] = useState("");
-  const [title, setTitle] = useState(""); // Investor Classification
-  const [email, setEmail] = useState("");
-  const [headquarters, setHeadquarters] = useState("");
-  const [businessAddress, setBusinessAddress] = useState("");
-  const [companyUrl, setCompanyUrl] = useState("");
-  const [yearFounded, setYearFounded] = useState<string>("");
-  const [aum, setAum] = useState("");
-  const [minTicket, setMinTicket] = useState("");
-  const [maxTicket, setMaxTicket] = useState("");
-  const [bio, setBio] = useState("");
-  const [keywords, setKeywords] = useState<string[]>([]);
+  // Core fields (hydrated from investor in edit mode)
+  const [displayName, setDisplayName] = useState(investor?.investor_name ?? "");
+  const [firmName, setFirmName] = useState(investor?.firm_name ?? "");
+  const [title, setTitle] = useState(investor?.investor_type ?? "");
+  const [email, setEmail] = useState(investor?.email ?? "");
+  const [headquarters, setHeadquarters] = useState(investor?.country ?? "");
+  const [businessAddress, setBusinessAddress] = useState(investor?.business_address ?? "");
+  const [companyUrl, setCompanyUrl] = useState(investor?.website_url ?? "");
+  const [yearFounded, setYearFounded] = useState<string>(investor?.year_founded?.toString() ?? "");
+  const [aum, setAum] = useState(investor?.aum ?? "");
+  const [minTicket, setMinTicket] = useState(investor?.min_ticket_size ?? "");
+  const [maxTicket, setMaxTicket] = useState(investor?.max_ticket_size ?? "");
+  const [bio, setBio] = useState(investor?.bio ?? "");
+  const [keywords, setKeywords] = useState<string[]>(investor?.keywords ?? []);
   const [keywordDraft, setKeywordDraft] = useState("");
-  const [businessModel, setBusinessModel] = useState<string[]>([]);
-  const [preferredStages, setPreferredStages] = useState<string[]>([]);
-  const [preferredIndustries, setPreferredIndustries] = useState<string[]>([]);
+  const [businessModel, setBusinessModel] = useState<string[]>(investor?.business_model ?? []);
+  const [preferredStages, setPreferredStages] = useState<string[]>(investor?.preferred_stages ?? []);
+  const [preferredIndustries, setPreferredIndustries] = useState<string[]>(investor?.preferred_industries ?? []);
   const [customIndustry, setCustomIndustry] = useState("");
-  const [investmentFocus, setInvestmentFocus] = useState<string[]>([]);
+  const [investmentFocus, setInvestmentFocus] = useState<string[]>(investor?.investment_focus ?? []);
   const [focusDraft, setFocusDraft] = useState("");
 
-  const [status, setStatus] = useState("Prospect");
-  const [visibility, setVisibility] = useState("Tenant");
+  const [status, setStatus] = useState(investor?.status ?? "Prospect");
+  const [visibility, setVisibility] = useState(investor?.visibility ?? "Tenant");
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
-  // Media (visual only — no backend wiring yet)
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [mediaFiles, setMediaFiles] = useState<(File | null)[]>([null, null, null]);
+  const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
-    enabled: enabled && !!tenantId,
+    enabled: enabled && !!tenantId && !isEdit,
   });
   const aisQ = useQuery({
     queryKey: ["assignable-ai", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
-    enabled: enabled && !!tenantId,
+    enabled: enabled && !!tenantId && !isEdit,
   });
+  const noAi = !aisQ.isLoading && (aisQ.data ?? []).length === 0;
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -309,120 +193,154 @@ export function InvestorForm() {
   const addKeyword = () => {
     const t = keywordDraft.trim();
     if (!t || keywords.includes(t) || keywords.length >= 5) return;
-    setKeywords([...keywords, t]);
-    setKeywordDraft("");
+    setKeywords([...keywords, t]); setKeywordDraft("");
   };
-
   const addFocus = () => {
     const t = focusDraft.trim();
     if (!t || investmentFocus.includes(t)) return;
-    setInvestmentFocus([...investmentFocus, t]);
-    setFocusDraft("");
+    setInvestmentFocus([...investmentFocus, t]); setFocusDraft("");
   };
-
   const addCustomIndustry = () => {
     const t = customIndustry.trim();
     if (!t || preferredIndustries.includes(t)) return;
-    setPreferredIndustries([...preferredIndustries, t]);
-    setCustomIndustry("");
+    setPreferredIndustries([...preferredIndustries, t]); setCustomIndustry("");
   };
 
-  const m = useMutation({
-    mutationFn: () =>
-      create({
+  async function uploadAllForInvestor(targetInvestorId: string) {
+    return uploadPending(
+      media,
+      ({ kind, ext }) =>
+        getUploadUrl({ data: { tenantId, investorId: targetInvestorId, kind, ext } }),
+      supabase.storage.from("startup-media"),
+    );
+  }
+
+  function buildProfile() {
+    return {
+      firmName: firmName || null,
+      email: email || null,
+      businessAddress: businessAddress || null,
+      yearFounded: yearFounded ? Number(yearFounded) : null,
+      aum: aum || null,
+      minTicketSize: minTicket || null,
+      maxTicketSize: maxTicket || null,
+      ticketSize:
+        minTicket && maxTicket ? `${minTicket} – ${maxTicket}` : minTicket || maxTicket || null,
+      bio: bio || null,
+      shortDescription: bio ? bio.slice(0, 500) : null,
+      keywords,
+      businessModel,
+      preferredStages,
+      preferredIndustries,
+      investmentFocus,
+    };
+  }
+
+  const createM = useMutation({
+    mutationFn: async () => {
+      // Create first so storage RLS authorizes reads under the real investor id.
+      const res = await create({
         data: {
           tenantId,
           investorName: displayName,
-          firmName: firmName || null,
-          email: email || null,
-          businessAddress: businessAddress || null,
-          yearFounded: yearFounded ? Number(yearFounded) : null,
           websiteUrl: companyUrl || null,
           country: headquarters || null,
           investorType: title || null,
-          aum: aum || null,
-          minTicketSize: minTicket || null,
-          maxTicketSize: maxTicket || null,
-          ticketSize:
-            minTicket && maxTicket ? `${minTicket} – ${maxTicket}` : minTicket || maxTicket || null,
-          bio: bio || null,
-          shortDescription: bio ? bio.slice(0, 500) : null,
-          keywords,
-          businessModel,
-          preferredStages,
-          preferredIndustries,
-          investmentFocus,
           status: status as never,
           visibility: visibility as never,
           owningAgentUserId,
           owningAiAgentId,
+          logoPath: null,
+          media: [],
+          ...buildProfile(),
         },
-      }),
+      });
+      const newId = (res as { id: string }).id;
+      const { logoPath, media: uploadedMedia } = await uploadAllForInvestor(newId);
+      if (logoPath || uploadedMedia.length > 0) {
+        await update({ data: { id: newId, logoPath, media: uploadedMedia } });
+      }
+      return { id: newId };
+    },
     onSuccess: (res) => {
       toast.success("Investor created");
       qc.invalidateQueries({ queryKey: ["investors"] });
-      navigate({ to: "/investors/$id", params: { id: (res as { id: string }).id } });
+      navigate({ to: "/investors/$id", params: { id: res.id } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit = tenantId && displayName && owningAgentUserId && owningAiAgentId;
-  const noAi = !aisQ.isLoading && (aisQ.data ?? []).length === 0;
+  const updateM = useMutation({
+    mutationFn: async () => {
+      const { logoPath, media: resolvedMedia } = await uploadAllForInvestor(investor!.id);
+      return update({
+        data: {
+          id: investor!.id,
+          investorName: displayName,
+          websiteUrl: companyUrl || null,
+          country: headquarters || null,
+          investorType: title || null,
+          logoPath,
+          media: resolvedMedia,
+          ...buildProfile(),
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("Saved");
+      qc.invalidateQueries({ queryKey: ["investor", investor!.id] });
+      qc.invalidateQueries({ queryKey: ["investors"] });
+      navigate({ to: "/investors/$id", params: { id: investor!.id } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const canSubmit = isEdit
+    ? !!displayName
+    : !!(tenantId && displayName && owningAgentUserId && owningAiAgentId);
+  const submitting = createM.isPending || updateM.isPending;
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); m.mutate(); }}
+      onSubmit={(e) => { e.preventDefault(); isEdit ? updateM.mutate() : createM.mutate(); }}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
-      {/* Tenant */}
-      <div className="space-y-1.5">
-        <Label>Tenant <span className="text-destructive">*</span></Label>
-        <Select value={tenantId} onValueChange={setTenantId}>
-          <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
-          <SelectContent>
-            {tenants.map((t) => (
-              <SelectItem key={t.tenantId} value={t.tenantId}>{t.tenantName}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Tenant (create only) */}
+      {!isEdit && (
+        <div className="space-y-1.5">
+          <Label>Tenant <span className="text-destructive">*</span></Label>
+          <Select value={tenantId} onValueChange={setTenantId}>
+            <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
+            <SelectContent>
+              {tenants.map((t) => (
+                <SelectItem key={t.tenantId} value={t.tenantId}>{t.tenantName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
-      {/* Logo + Media (PitchSnack1 replica, visual only) */}
-      <div className="flex items-start gap-10 flex-wrap">
-        <LogoUploadZone file={logoFile} onChange={setLogoFile} />
-        <MediaPanel files={mediaFiles} onChange={setMediaFiles} maxImages={3} />
-      </div>
-
-
+      {/* Logo + Media */}
+      <EntityMediaEditor value={media} onChange={setMedia} />
 
       {/* Row 1: Year Founded | Display Name | Investor Classification */}
       <div className="grid grid-cols-[100px_1fr_220px] gap-4">
         <div className="space-y-1.5">
           <Label>Year Founded</Label>
-          <Input
-            type="number"
-            min={1900}
-            max={2030}
-            value={yearFounded}
-            onChange={(e) => setYearFounded(e.target.value)}
-            placeholder="e.g. 2020"
-          />
+          <Input type="number" min={1900} max={2030} value={yearFounded}
+            onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
         </div>
         <div className="space-y-1.5">
           <Label>Display Name <span className="text-destructive">*</span></Label>
-          <Input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="e.g. Sequoia Capital"
-            maxLength={100}
-            required
-          />
+          <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="e.g. Sequoia Capital" maxLength={100} required />
         </div>
         <div className="space-y-1.5">
           <Label>Investor Classification</Label>
-          <Select value={title} onValueChange={setTitle}>
+          <Select value={title || "none"} onValueChange={(v) => setTitle(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
               {INVESTOR_CLASSIFICATIONS.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
@@ -435,30 +353,16 @@ export function InvestorForm() {
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Email Address</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="investor@example.com"
-            maxLength={255}
-          />
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="investor@example.com" maxLength={255} />
         </div>
         <div className="space-y-1.5">
           <Label>Headquarters</Label>
-          <Input
-            value={headquarters}
-            onChange={(e) => setHeadquarters(e.target.value)}
-            placeholder="Country"
-          />
+          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="Country" />
         </div>
         <div className="space-y-1.5">
           <Label>Company URL</Label>
-          <Input
-            type="url"
-            value={companyUrl}
-            onChange={(e) => setCompanyUrl(e.target.value)}
-            placeholder="https://example.com"
-          />
+          <Input type="url" value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="https://example.com" />
         </div>
       </div>
 
@@ -466,25 +370,17 @@ export function InvestorForm() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>Firm Name</Label>
-          <Input
-            value={firmName}
-            onChange={(e) => setFirmName(e.target.value)}
-            placeholder="e.g. Sequoia Capital"
-            maxLength={100}
-          />
+          <Input value={firmName} onChange={(e) => setFirmName(e.target.value)}
+            placeholder="e.g. Sequoia Capital" maxLength={100} />
         </div>
         <div className="space-y-1.5">
           <Label>Business Address</Label>
-          <Input
-            value={businessAddress}
-            onChange={(e) => setBusinessAddress(e.target.value)}
-            placeholder="123 Main St, City, Country"
-            maxLength={500}
-          />
+          <Input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)}
+            placeholder="123 Main St, City, Country" maxLength={500} />
         </div>
       </div>
 
-      {/* Row 4: Fund's AUM | Min Ticket | Max Ticket */}
+      {/* Row 4: AUM | Min Ticket | Max Ticket */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Fund's AUM</Label>
@@ -492,9 +388,7 @@ export function InvestorForm() {
             <SelectTrigger><SelectValue placeholder="Select Fund Size" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select Fund Size —</SelectItem>
-              {AUM_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
+              {AUM_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -504,9 +398,7 @@ export function InvestorForm() {
             <SelectTrigger><SelectValue placeholder="Select Min" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select Min —</SelectItem>
-              {TICKET_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
+              {TICKET_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -516,9 +408,7 @@ export function InvestorForm() {
             <SelectTrigger><SelectValue placeholder="Select Max" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select Max —</SelectItem>
-              {TICKET_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
+              {TICKET_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -527,41 +417,29 @@ export function InvestorForm() {
       {/* About */}
       <div className="space-y-1.5">
         <Label>About Company</Label>
-        <Textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          placeholder="Brief description of the company"
-          rows={3}
-          maxLength={2000}
-        />
+        <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} maxLength={2000}
+          placeholder="Brief description of the company" />
       </div>
 
-      {/* Product & Service Tags */}
+      {/* Tags */}
       <div className="space-y-1.5">
         <Label>Product &amp; Service Tags (Up to 5)</Label>
         <div className="flex flex-wrap gap-2">
           {keywords.map((k) => (
-            <button
-              key={k}
-              type="button"
+            <button key={k} type="button"
               onClick={() => setKeywords(keywords.filter((x) => x !== k))}
-              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1"
-            >
+              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
               {k} <X className="h-3 w-3" />
             </button>
           ))}
         </div>
         <div className="flex gap-2">
-          <Input
-            value={keywordDraft}
-            onChange={(e) => setKeywordDraft(e.target.value)}
-            placeholder="Example: Portfolio Management, Due Diligence, Venture Capital"
+          <Input value={keywordDraft} onChange={(e) => setKeywordDraft(e.target.value)}
+            placeholder="Example: Portfolio Management, Due Diligence"
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter") { e.preventDefault(); addKeyword(); }
             }}
-            disabled={keywords.length >= 5}
-            maxLength={50}
-          />
+            disabled={keywords.length >= 5} maxLength={50} />
           <Button type="button" variant="outline" size="sm" onClick={addKeyword} disabled={keywords.length >= 5}>
             Add
           </Button>
@@ -585,26 +463,20 @@ export function InvestorForm() {
         <Label>Geography <span className="text-xs text-muted-foreground">({investmentFocus.length}/10)</span></Label>
         <div className="flex flex-wrap gap-2">
           {investmentFocus.map((g) => (
-            <button
-              key={g}
-              type="button"
+            <button key={g} type="button"
               onClick={() => setInvestmentFocus(investmentFocus.filter((x) => x !== g))}
-              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1"
-            >
+              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
               {g} <X className="h-3 w-3" />
             </button>
           ))}
         </div>
         <div className="flex gap-2">
-          <Input
-            value={focusDraft}
-            onChange={(e) => setFocusDraft(e.target.value)}
+          <Input value={focusDraft} onChange={(e) => setFocusDraft(e.target.value)}
             placeholder="Add country..."
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter") { e.preventDefault(); addFocus(); }
             }}
-            disabled={investmentFocus.length >= 10}
-          />
+            disabled={investmentFocus.length >= 10} />
           <Button type="button" variant="outline" size="sm" onClick={addFocus} disabled={investmentFocus.length >= 10}>
             Add
           </Button>
@@ -634,95 +506,90 @@ export function InvestorForm() {
           ))}
           {preferredIndustries
             .filter((i) => !INVESTOR_INDUSTRIES.includes(i))
-            .map((custom) => (
-              <button
-                key={custom}
-                type="button"
-                onClick={() => setPreferredIndustries(preferredIndustries.filter((x) => x !== custom))}
-                className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1"
-              >
-                {custom} <X className="h-3 w-3" />
+            .map((c) => (
+              <button key={c} type="button"
+                onClick={() => setPreferredIndustries(preferredIndustries.filter((x) => x !== c))}
+                className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
+                {c} <X className="h-3 w-3" />
               </button>
             ))}
         </div>
         <div className="flex gap-2">
-          <Input
-            value={customIndustry}
-            onChange={(e) => setCustomIndustry(e.target.value)}
-            placeholder="Add custom industry..."
-            maxLength={50}
+          <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
+            placeholder="Add custom industry..." maxLength={50}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }
-            }}
-          />
-          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>
-            Add
-          </Button>
+            }} />
+          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
         </div>
       </div>
 
-      {/* Status & Visibility */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Status</Label>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
+      {/* Status & Visibility (create only — edit page has its own controls) */}
+      {!isEdit && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Visibility</Label>
+            <Select value={visibility} onValueChange={setVisibility}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{VISIBILITIES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <Label>Visibility</Label>
-          <Select value={visibility} onValueChange={setVisibility}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{VISIBILITIES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-      </div>
+      )}
 
-      {/* Ownership */}
-      <div className="border-t border-border pt-4">
-        <h3 className="text-sm font-semibold">Ownership (required)</h3>
-        <p className="mb-3 text-xs text-muted-foreground">
-          Every investor must have one human Owning Agent and one Owning AI Agent.
-        </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Owning Agent <span className="text-destructive">*</span></Label>
-            <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={!tenantId}>
-              <SelectTrigger>
-                <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
-              </SelectTrigger>
-              <SelectContent>
-                {(humansQ.data ?? []).map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
-            <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi}>
-              <SelectTrigger>
-                <SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} />
-              </SelectTrigger>
-              <SelectContent>
-                {(aisQ.data ?? []).map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {noAi && (
-              <p className="text-xs text-destructive">
-                Assign an AI user to this tenant first (Users → Invite, type AI).
-              </p>
-            )}
+      {/* Ownership (create only) */}
+      {!isEdit && (
+        <div className="border-t border-border pt-4">
+          <h3 className="text-sm font-semibold">Ownership (required)</h3>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Every investor must have one human Owning Agent and one Owning AI Agent.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Owning Agent <span className="text-destructive">*</span></Label>
+              <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={!tenantId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(humansQ.data ?? []).map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
+              <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi}>
+                <SelectTrigger>
+                  <SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(aisQ.data ?? []).map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {noAi && (
+                <p className="text-xs text-destructive">
+                  Assign an AI user to this tenant first (Users → Invite, type AI).
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={() => navigate({ to: "/investors" })}>
@@ -730,10 +597,10 @@ export function InvestorForm() {
         </Button>
         <Button
           type="submit"
-          disabled={!canSubmit || m.isPending}
+          disabled={!canSubmit || submitting}
           className="bg-accent text-accent-foreground hover:bg-accent/90"
         >
-          {m.isPending ? "Creating…" : "Create investor"}
+          {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create investor"}
         </Button>
       </div>
     </form>
