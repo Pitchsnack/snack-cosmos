@@ -918,8 +918,10 @@ export type Database = {
           investor_type: string | null
           keywords: string[] | null
           legal_name: string | null
+          logo_url: string | null
           long_description: string | null
           max_ticket_size: string | null
+          media: Json
           min_ticket_size: string | null
           preferred_industries: string[] | null
           preferred_stages: string[] | null
@@ -951,8 +953,10 @@ export type Database = {
           investor_type?: string | null
           keywords?: string[] | null
           legal_name?: string | null
+          logo_url?: string | null
           long_description?: string | null
           max_ticket_size?: string | null
+          media?: Json
           min_ticket_size?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
@@ -984,8 +988,10 @@ export type Database = {
           investor_type?: string | null
           keywords?: string[] | null
           legal_name?: string | null
+          logo_url?: string | null
           long_description?: string | null
           max_ticket_size?: string | null
+          media?: Json
           min_ticket_size?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null

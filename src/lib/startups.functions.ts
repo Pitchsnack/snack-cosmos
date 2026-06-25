@@ -432,7 +432,24 @@ async function syncMedia(
   tenantId: string,
   media: z.infer<typeof MediaInput>[],
 ) {
-  // remove rows not in incoming list
+  // Read existing slots so we can delete orphaned storage objects for
+  // removed-or-replaced slots (no rows = no orphans).
+  const { data: existing } = await supabase
+    .from("startup_media")
+    .select("slot, image_url")
+    .eq("startup_id", startupId);
+  const existingBySlot = new Map<number, string>(
+    ((existing ?? []) as Array<{ slot: number; image_url: string }>).map((r) => [r.slot, r.image_url]),
+  );
+  const incomingBySlot = new Map<number, string>(media.map((m) => [m.slot, m.image_path]));
+
+  const orphanPaths: string[] = [];
+  for (const [slot, oldPath] of existingBySlot) {
+    const newPath = incomingBySlot.get(slot);
+    if (!newPath || newPath !== oldPath) orphanPaths.push(oldPath);
+  }
+
+  // Delete DB rows not in incoming list.
   const keepSlots = media.map((m) => m.slot);
   const delQ = supabase.from("startup_media").delete().eq("startup_id", startupId);
   if (keepSlots.length > 0) {
@@ -455,6 +472,20 @@ async function syncMedia(
       );
     if (error) throw new Error("Media slot " + m.slot + ": " + error.message);
   }
+
+  // Best-effort storage cleanup. Don't fail the save if storage delete fails.
+  if (orphanPaths.length > 0) {
+    await supabase.storage.from(BUCKET).remove(orphanPaths).catch(() => {});
+  }
+}
+
+async function removeStorageObjects(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  paths: (string | null | undefined)[],
+) {
+  const list = paths.filter((p): p is string => !!p);
+  if (list.length === 0) return;
+  await supabase.storage.from(BUCKET).remove(list).catch(() => {});
 }
 
 export const createStartup = createServerFn({ method: "POST" })
@@ -528,7 +559,7 @@ export const updateStartup = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { data: existing } = await supabase
-      .from("startups").select("tenant_id, status, visibility").eq("id", data.id).maybeSingle();
+      .from("startups").select("tenant_id, status, visibility, logo_url").eq("id", data.id).maybeSingle();
     if (!existing) throw new Error("Not found");
 
     const patch: Record<string, unknown> = { updated_by: userId };
@@ -552,6 +583,15 @@ export const updateStartup = createServerFn({ method: "POST" })
 
     const { error } = await supabase.from("startups").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    // Clean up replaced/removed logo from storage (best-effort).
+    if (
+      data.logoPath !== undefined &&
+      existing.logo_url &&
+      existing.logo_url !== data.logoPath
+    ) {
+      await removeStorageObjects(supabase, [existing.logo_url]);
+    }
 
     if (data.founders !== undefined) await syncFounders(supabase, data.id, existing.tenant_id, data.founders);
     if (data.investorIds !== undefined) await syncInvestors(supabase, data.id, existing.tenant_id, data.investorIds);

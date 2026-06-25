@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Image as ImageIcon, Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,12 +14,21 @@ import {
 import {
   createStartup,
   updateStartup,
+  createStartupMediaUploadUrl,
   type StartupDetail,
 } from "@/lib/startups.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  EntityMediaEditor,
+  EMPTY_MEDIA_STATE,
+  uploadPending,
+  type EntityMediaState,
+  type SlotState,
+} from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { InvestorPicker } from "./investor-picker";
 
@@ -56,178 +65,33 @@ function Pill({
   );
 }
 
-// ── Logo upload zone (PitchSnack1 visual replica, local-only) ──
-function LogoUploadZone({
-  file, onChange,
-}: { file: File | null; onChange: (f: File | null) => void }) {
-  const ref = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
-
-  return (
-    <div className="space-y-1.5">
-      <Label>Logo</Label>
-      <div
-        className={`flex items-center gap-4 rounded-lg p-2 -m-2 transition-colors ${
-          dragging ? "bg-accent/50 ring-2 ring-primary/30" : ""
-        }`}
-        onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault(); setDragging(false);
-          const f = e.dataTransfer.files?.[0];
-          if (f && f.type.startsWith("image/")) onChange(f);
-        }}
-      >
-        {preview ? (
-          <div className="relative group cursor-pointer" onClick={() => ref.current?.click()}>
-            <img
-              src={preview}
-              alt="Logo"
-              className="w-[168px] h-[56px] rounded-lg object-contain border border-border group-hover:opacity-60 transition-opacity"
-            />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Upload className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onChange(null); }}
-              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ) : (
-          <div
-            className={`relative w-[168px] h-[56px] rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
-              dragging ? "bg-accent border-primary/40" : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
-            }`}
-            onClick={() => ref.current?.click()}
-          >
-            <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
-          </div>
-        )}
-        <input
-          ref={ref}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) onChange(f);
-            e.target.value = "";
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ── Media panel: 3 product image slots (PitchSnack1 visual replica) ──
-function MediaPanel({
-  files, onChange, maxImages = 3,
-}: { files: (File | null)[]; onChange: (next: (File | null)[]) => void; maxImages?: number }) {
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
-  const [dragSlot, setDragSlot] = useState<number | null>(null);
-  const previews = useMemo(
-    () => files.map((f) => (f ? URL.createObjectURL(f) : null)),
-    [files],
-  );
-  useEffect(() => () => { previews.forEach((u) => { if (u) URL.revokeObjectURL(u); }); }, [previews]);
-
-  const setSlot = (i: number, f: File | null) => {
-    const next = [...files];
-    next[i] = f;
-    onChange(next);
-  };
-
-  const filled = files.filter(Boolean).length;
-
-  return (
-    <div className="space-y-1.5">
-      <Label className="flex items-center gap-1.5">
-        <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
-        Media
-        <span className="text-[10px] text-muted-foreground font-normal">({filled}/{maxImages})</span>
-      </Label>
-      <div className="flex items-center gap-2">
-        {Array.from({ length: maxImages }).map((_, i) => {
-          const p = previews[i];
-          return (
-            <div key={i} className="relative">
-              {p ? (
-                <div className="group relative">
-                  <img
-                    src={p}
-                    alt={`Product ${i + 1}`}
-                    className="w-[96px] h-[64px] rounded-md object-cover border border-border"
-                  />
-                  <div className="absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => inputs.current[i]?.click()}
-                      className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
-                      title="Replace"
-                    >
-                      <Upload className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSlot(i, null)}
-                      className="p-1 rounded-full bg-background/80 hover:bg-background text-destructive"
-                      title="Remove"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className={`flex flex-col items-center justify-center rounded-md border border-dashed cursor-pointer transition-colors ${
-                    dragSlot === i
-                      ? "bg-accent border-primary/40"
-                      : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
-                  }`}
-                  style={{ width: 96, height: 64 }}
-                  onClick={() => inputs.current[i]?.click()}
-                  onDragEnter={(e) => { e.preventDefault(); setDragSlot(i); }}
-                  onDragLeave={(e) => { e.preventDefault(); setDragSlot(null); }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault(); setDragSlot(null);
-                    const f = e.dataTransfer.files?.[0];
-                    if (f && f.type.startsWith("image/")) setSlot(i, f);
-                  }}
-                >
-                  <Upload className={`h-4 w-4 ${dragSlot === i ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className="text-[10px] text-muted-foreground mt-0.5">Slot {i + 1}</span>
-                </div>
-              )}
-              <input
-                ref={(el) => { inputs.current[i] = el; }}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setSlot(i, f);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 interface Props {
   /** When provided, the form is in edit mode. */
   startup?: StartupDetail;
+}
+
+function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
+  if (!startup) return EMPTY_MEDIA_STATE;
+  const logo: SlotState = {
+    persistedPath: startup.logo_url,
+    signedUrl: startup.logo_signed_url,
+    pendingFile: null,
+  };
+  const slots: [SlotState, SlotState, SlotState] = [
+    { persistedPath: null, signedUrl: null, pendingFile: null },
+    { persistedPath: null, signedUrl: null, pendingFile: null },
+    { persistedPath: null, signedUrl: null, pendingFile: null },
+  ];
+  for (const m of startup.media) {
+    if (m.slot >= 1 && m.slot <= 3) {
+      slots[m.slot - 1] = {
+        persistedPath: m.image_path,
+        signedUrl: m.image_signed_url,
+        pendingFile: null,
+      };
+    }
+  }
+  return { logo, slots };
 }
 
 export function StartupForm({ startup }: Props) {
@@ -237,6 +101,7 @@ export function StartupForm({ startup }: Props) {
   const { data: session } = useSessionContext();
   const create = useServerFn(createStartup);
   const update = useServerFn(updateStartup);
+  const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
   const fetchTenants = useServerFn(listAssignableTenants);
   const enabled = useHasSession();
@@ -269,7 +134,6 @@ export function StartupForm({ startup }: Props) {
   const [productTagDraft, setProductTagDraft] = useState("");
   const [marketTags, setMarketTags] = useState<string[]>(startup?.market_tags ?? []);
   const [marketTagDraft, setMarketTagDraft] = useState("");
-  // Industry: stored as a single string in DB; UI multi-select joined by ", "
   const initialIndustries = (startup?.industry ?? "")
     .split(",").map((s) => s.trim()).filter(Boolean);
   const [industries, setIndustries] = useState<string[]>(initialIndustries);
@@ -292,9 +156,8 @@ export function StartupForm({ startup }: Props) {
     })) ?? [],
   );
 
-  // Logo + Media (visual replica — local-only, no backend wiring yet)
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [mediaFiles, setMediaFiles] = useState<(File | null)[]>([null, null, null]);
+  // Logo + Media — hydrated from persisted paths in edit mode.
+  const [media, setMedia] = useState<EntityMediaState>(() => hydrateMediaState(startup));
 
   // Ownership (create only — required by current API)
   const [owningAgentUserId, setOwningAgent] = useState("");
@@ -334,8 +197,19 @@ export function StartupForm({ startup }: Props) {
     setCustomIndustry("");
   };
 
-  const buildProfile = () => ({
-    logoPath: null,
+  const industryJoined = industries.join(", ") || null;
+
+  // Upload helper bound to a target startup id.
+  async function uploadAllForStartup(targetStartupId: string) {
+    return uploadPending(
+      media,
+      ({ kind, ext }) =>
+        getUploadUrl({ data: { tenantId, startupId: targetStartupId, kind, ext } }),
+      supabase.storage.from("startup-media"),
+    );
+  }
+
+  const buildProfileBase = () => ({
     companyType: companyType || null,
     yearFounded: yearFounded ? Number(yearFounded) : null,
     email: email || null,
@@ -345,14 +219,14 @@ export function StartupForm({ startup }: Props) {
     marketTags,
     investorIds,
     founders: founders.filter((f) => f.full_name.trim()),
-    media: [] as { slot: 1 | 2 | 3; image_path: string }[],
   });
 
-  const industryJoined = industries.join(", ") || null;
-
   const createM = useMutation({
-    mutationFn: () =>
-      create({
+    mutationFn: async () => {
+      // Create the row first so we have a real id for the storage path
+      // (storage SELECT RLS authorizes via folder[2] = entity id; uploads
+      // under a draft id would be unreadable on the next page load).
+      const res = await create({
         data: {
           tenantId,
           startupName,
@@ -366,20 +240,30 @@ export function StartupForm({ startup }: Props) {
           visibility: visibility as never,
           owningAgentUserId,
           owningAiAgentId,
-          ...buildProfile(),
+          logoPath: null,
+          media: [],
+          ...buildProfileBase(),
         },
-      }),
+      });
+      const newId = (res as { id: string }).id;
+      const { logoPath, media: uploadedMedia } = await uploadAllForStartup(newId);
+      if (logoPath || uploadedMedia.length > 0) {
+        await update({ data: { id: newId, logoPath, media: uploadedMedia } });
+      }
+      return { id: newId };
+    },
     onSuccess: (res) => {
       toast.success("Startup created");
       qc.invalidateQueries({ queryKey: ["startups"] });
-      navigate({ to: "/startups/$id", params: { id: (res as { id: string }).id } });
+      navigate({ to: "/startups/$id", params: { id: res.id } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const updateM = useMutation({
-    mutationFn: () =>
-      update({
+    mutationFn: async () => {
+      const { logoPath, media: resolvedMedia } = await uploadAllForStartup(startup!.id);
+      return update({
         data: {
           id: startup!.id,
           startupName,
@@ -389,9 +273,12 @@ export function StartupForm({ startup }: Props) {
           industry: industryJoined,
           shortDescription: shortDescription || null,
           longDescription: longDescription || null,
-          ...buildProfile(),
+          logoPath,
+          media: resolvedMedia,
+          ...buildProfileBase(),
         },
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["startup", startup!.id] });
@@ -427,239 +314,151 @@ export function StartupForm({ startup }: Props) {
         </div>
       )}
 
-      {/* Logo + Media (PitchSnack1 replica, visual only) */}
-      <div className="flex items-start gap-10 flex-wrap">
-        <LogoUploadZone file={logoFile} onChange={setLogoFile} />
-        <MediaPanel files={mediaFiles} onChange={setMediaFiles} maxImages={3} />
-      </div>
+      {/* Logo + Media */}
+      <EntityMediaEditor value={media} onChange={setMedia} />
 
       {/* Row 1: Year Founded | Company Name | Company Type — PitchSnack1 [120px_1fr_160px] */}
       <div className="grid grid-cols-[120px_1fr_160px] gap-4">
         <div className="space-y-1.5">
           <Label>Year Founded</Label>
-          <Input
-            type="number"
-            min={1900}
-            max={new Date().getFullYear()}
-            value={yearFounded}
-            onChange={(e) => setYearFounded(e.target.value)}
-            placeholder="e.g. 2023"
-          />
+          <Input type="number" min={1800} max={new Date().getFullYear()}
+            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
         </div>
         <div className="space-y-1.5">
           <Label>Company Name <span className="text-destructive">*</span></Label>
-          <Input
-            value={startupName}
-            onChange={(e) => setStartupName(e.target.value)}
-            placeholder="e.g. Acme Corp"
-            maxLength={100}
-            required
-          />
+          <Input value={startupName} onChange={(e) => setStartupName(e.target.value)} placeholder="Acme Inc." required maxLength={255} />
         </div>
         <div className="space-y-1.5">
           <Label>Company Type</Label>
-          <Select value={companyType} onValueChange={setCompanyType}>
-            <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+          <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
             <SelectContent>
-              {COMPANY_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              <SelectItem value="none">— Select —</SelectItem>
+              {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Row 2: Email | Headquarters | Company URL */}
+      {/* Row 2: Legal name | Headquarters | Country */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>Email Address</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="contact@company.com"
-            maxLength={255}
-          />
+          <Label>Legal Name</Label>
+          <Input value={legalName} onChange={(e) => setLegalName(e.target.value)} maxLength={255} />
         </div>
         <div className="space-y-1.5">
           <Label>Headquarters</Label>
-          <Input
-            value={headquarters}
-            onChange={(e) => setHeadquarters(e.target.value)}
-            placeholder="Country"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Company URL</Label>
-          <Input
-            type="url"
-            value={websiteUrl}
-            onChange={(e) => setWebsiteUrl(e.target.value)}
-            placeholder="https://example.com"
-          />
-        </div>
-      </div>
-
-      {/* Row 3: Legal Name | Country (extras kept from existing schema) */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Legal Name</Label>
-          <Input value={legalName} onChange={(e) => setLegalName(e.target.value)} />
+          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="City" />
         </div>
         <div className="space-y-1.5">
           <Label>Country</Label>
-          <Input value={country} onChange={(e) => setCountry(e.target.value)} />
+          <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" />
         </div>
       </div>
 
-      {/* Short Description */}
+      {/* Row 3: Email | Website | Stage */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-1.5">
+          <Label>Email</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Website</Label>
+          <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Investment Stage</Label>
+          <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Descriptions */}
       <div className="space-y-1.5">
-        <Label>Short Description (2-liner)</Label>
-        <Textarea
-          value={shortDescription}
-          onChange={(e) => setShortDescription(e.target.value)}
-          placeholder="One-line description"
-          maxLength={300}
-          rows={2}
-        />
+        <Label>Short Description</Label>
+        <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
       </div>
-
-      {/* Product Overview */}
       <div className="space-y-1.5">
-        <Label>Product Overview</Label>
-        <Textarea
-          value={longDescription}
-          onChange={(e) => setLongDescription(e.target.value)}
-          placeholder="Describe the product"
-          maxLength={2000}
-          rows={3}
-        />
+        <Label>Long Description</Label>
+        <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)} />
       </div>
 
-      {/* Product & Service Tags */}
-      <div className="space-y-1.5">
-        <Label>Product &amp; Service Tags (Up to 5)</Label>
-        <div className="flex flex-wrap gap-2">
-          {productTags.map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setProductTags(productTags.filter((x) => x !== k))}
-              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1"
-            >
-              {k} <X className="h-3 w-3" />
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            value={productTagDraft}
-            onChange={(e) => setProductTagDraft(e.target.value)}
-            placeholder="Example: LinkedIn — Networking, Recruiting, Advertising, Freemium, Database"
-            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") { e.preventDefault(); addProductTag(); }
-            }}
-            disabled={productTags.length >= 5}
-            maxLength={50}
-          />
-          <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>
-            Add
-          </Button>
-        </div>
-      </div>
-
-      {/* Market Tag */}
-      <div className="space-y-1.5">
-        <Label>Market Tag (Up to 5)</Label>
-        <div className="flex flex-wrap gap-2">
-          {marketTags.map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setMarketTags(marketTags.filter((x) => x !== k))}
-              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1"
-            >
-              {k} <X className="h-3 w-3" />
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            value={marketTagDraft}
-            onChange={(e) => setMarketTagDraft(e.target.value)}
-            placeholder="User, System, Species, Role, Vertical"
-            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") { e.preventDefault(); addMarketTag(); }
-            }}
-            disabled={marketTags.length >= 5}
-            maxLength={50}
-          />
-          <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>
-            Add
-          </Button>
-        </div>
-      </div>
-
-      {/* Industry (multi-pill) */}
+      {/* Industry pills */}
       <div className="space-y-1.5">
         <Label>Industry</Label>
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-2">
           {INDUSTRIES.map((ind) => (
             <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>
               {ind}
             </Pill>
           ))}
-          {industries
-            .filter((i) => !INDUSTRIES.includes(i))
-            .map((custom) => (
-              <button
-                key={custom}
-                type="button"
-                onClick={() => setIndustries(industries.filter((x) => x !== custom))}
-                className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1"
-              >
-                {custom} <X className="h-3 w-3" />
-              </button>
-            ))}
+          {industries.filter((i) => !INDUSTRIES.includes(i)).map((c) => (
+            <button key={c} type="button" onClick={() => setIndustries(industries.filter((x) => x !== c))}
+              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
+              {c} <X className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
+            placeholder="Add custom industry…" maxLength={50}
+            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }}} />
+          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
+        </div>
+      </div>
+
+      {/* Product tags */}
+      <div className="space-y-1.5">
+        <Label>Product & Service Tags ({productTags.length}/5)</Label>
+        <div className="flex flex-wrap gap-2">
+          {productTags.map((t) => (
+            <button key={t} type="button" onClick={() => setProductTags(productTags.filter((x) => x !== t))}
+              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
+              {t} <X className="h-3 w-3" />
+            </button>
+          ))}
         </div>
         <div className="flex gap-2">
-          <Input
-            value={customIndustry}
-            onChange={(e) => setCustomIndustry(e.target.value)}
-            placeholder="Add custom industry..."
-            maxLength={50}
-            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }
-            }}
-          />
-          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>
-            Add
-          </Button>
+          <Input value={productTagDraft} onChange={(e) => setProductTagDraft(e.target.value)} maxLength={50}
+            disabled={productTags.length >= 5}
+            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addProductTag(); }}} />
+          <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>Add</Button>
         </div>
       </div>
 
-      {/* Investment Stage */}
+      {/* Market tags */}
       <div className="space-y-1.5">
-        <Label>Investment Stage</Label>
-        <Select value={investmentStage} onValueChange={setInvestmentStage}>
-          <SelectTrigger><SelectValue placeholder="Select stage" /></SelectTrigger>
-          <SelectContent>
-            {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Investors */}
-      <div className="space-y-1.5">
-        <Label>Investors</Label>
-        <InvestorPicker tenantId={tenantId} value={investorIds} onChange={setInvestorIds} />
+        <Label>Market Tags ({marketTags.length}/5)</Label>
+        <div className="flex flex-wrap gap-2">
+          {marketTags.map((t) => (
+            <button key={t} type="button" onClick={() => setMarketTags(marketTags.filter((x) => x !== t))}
+              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
+              {t} <X className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Input value={marketTagDraft} onChange={(e) => setMarketTagDraft(e.target.value)} maxLength={50}
+            disabled={marketTags.length >= 5}
+            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addMarketTag(); }}} />
+          <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>Add</Button>
+        </div>
       </div>
 
       {/* Founders */}
-      <div className="space-y-1.5">
-        <Label>Founding &amp; Leadership Team</Label>
-        <FounderEditor value={founders} onChange={setFounders} />
-      </div>
+      <FounderEditor value={founders} onChange={setFounders} />
 
-      {/* Status & Visibility (create only) */}
+      {/* Investors */}
+      {tenantId && (
+        <InvestorPicker tenantId={tenantId} value={investorIds} onChange={setInvestorIds} />
+      )}
+
+      {/* Status / visibility (create only) */}
       {!isEdit && (
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -726,12 +525,8 @@ export function StartupForm({ startup }: Props) {
         </div>
       )}
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate({ to: isEdit ? "/startups/$id" : "/startups", params: isEdit ? { id: startup!.id } : undefined as never })}
-        >
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => navigate({ to: "/startups" })}>
           Cancel
         </Button>
         <Button
@@ -739,7 +534,7 @@ export function StartupForm({ startup }: Props) {
           disabled={!canSubmit || submitting}
           className="bg-accent text-accent-foreground hover:bg-accent/90"
         >
-          {submitting ? "Saving…" : isEdit ? "Save changes" : "Create startup"}
+          {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
         </Button>
       </div>
     </form>
