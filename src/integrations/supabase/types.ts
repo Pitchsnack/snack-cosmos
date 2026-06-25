@@ -1615,8 +1615,8 @@ export type Database = {
       }
       startups: {
         Row: {
+          city: string | null
           company_type: string | null
-          country: string | null
           created_at: string
           created_by: string | null
           email: string | null
@@ -1641,8 +1641,8 @@ export type Database = {
           year_founded: number | null
         }
         Insert: {
+          city?: string | null
           company_type?: string | null
-          country?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -1667,8 +1667,8 @@ export type Database = {
           year_founded?: number | null
         }
         Update: {
+          city?: string | null
           company_type?: string | null
-          country?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null

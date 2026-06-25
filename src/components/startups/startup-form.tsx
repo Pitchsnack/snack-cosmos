@@ -123,7 +123,7 @@ export function StartupForm({ startup }: Props) {
   const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(startup?.website_url ?? "");
   
-  const [country, setCountry] = useState(startup?.country ?? "");
+  const [city, setCity] = useState(startup?.city ?? "");
 
   // Company information
   const [shortDescription, setShortDescription] = useState(startup?.short_description ?? "");
@@ -231,7 +231,7 @@ export function StartupForm({ startup }: Props) {
           tenantId,
           startupName,
           websiteUrl: websiteUrl || null,
-          country: country || null,
+          city: city || null,
           industry: industryJoined,
           shortDescription: shortDescription || null,
           longDescription: longDescription || null,
@@ -268,7 +268,7 @@ export function StartupForm({ startup }: Props) {
           startupName,
           
           websiteUrl: websiteUrl || null,
-          country: country || null,
+          city: city || null,
           industry: industryJoined,
           shortDescription: shortDescription || null,
           longDescription: longDescription || null,
@@ -339,15 +339,15 @@ export function StartupForm({ startup }: Props) {
         </div>
       </div>
 
-      {/* Row 2: Headquarters | Country */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
+      {/* Row 2: Headquarters | City */}
+      <div className="grid grid-cols-[1fr_1fr] gap-4">
+        <div className="space-y-1">
           <Label>Headquarters</Label>
-          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="City" />
+          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="Country" />
         </div>
-        <div className="space-y-1.5">
-          <Label>Country</Label>
-          <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" />
+        <div className="space-y-1">
+          <Label>City</Label>
+          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
         </div>
       </div>
 
