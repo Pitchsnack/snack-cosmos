@@ -1,173 +1,69 @@
-# PRD P-17 V4 — Global Startups Registry (Lovable prototype)
+## Root cause (step 1)
 
-Platform-owned global startup catalogue that Control curates, tenants browse, and tenants import as independent tenant-owned copies. Built behind a strict adapter seam so the future API Gateway / multi-DB backend can replace storage without UI changes.
+Grep of every URL builder for `/startups/$id` and `/startups/$id/edit` shows all of them use the UUID `startup.id`. There is no UI code that constructs the URL from `startup.name`.
 
-## Blocking confirmations — resolved
+Confirmed call sites (all pass `id: <uuid>`):
+- `src/components/startups/startup-table.tsx:54` — `<Link to="/startups/$id" params={{ id: s.id }}>`
+- `src/components/startups/startup-detail-panel.tsx:78` — `<Link to="/startups/$id/edit" params={{ id }}>` (id is the row UUID)
+- `src/components/startups/startup-form.tsx:375,399,733` — `navigate({ to: "/startups/$id", params: { id: <uuid> } })`
+- `src/routes/_authenticated/startups.$id.tsx:111` — edit button navigates with `{ id }` (UUID from `Route.useParams()`)
+- `src/routes/_authenticated/startups.$id.edit.tsx:20` — back link uses `{ id }` (route param passthrough)
+- `src/routes/_authenticated/deals.$id.tsx:77` — `params={{ id: d.startups.id }}`
+- `src/components/investors/investor-detail-panel.tsx:113` — uses startup `id`
 
-**C-1 — Control role string:** `CONTROL` (verified in `src/lib/permissions.ts` `AppRole` union and used by `has_role` + `is_control`). Tenant roles in scope: `MASTER_AGENT`, `TENANT_ADMIN`, `TENANT_AGENT`.
+**Conclusion:** No UI path produces `/startups/<name>/edit`. The reported URL `/startups/Startup name test/edit` was hand-typed/pasted. The remaining issue is purely a missing route-boundary guard — currently the page fires `useStartup("Startup name test")`, the server function rejects/returns nothing, and the user sees a blank/`Loading…`/error string with no recovery.
 
-**C-2 — Default owner resolution at import:** `tenant_settings` has no default-owner columns today and the PRD forbids schema sprawl. Rule:
-1. The import dialog **always** requires the caller to pick `owning Agent` (defaults to the caller if they are a `MASTER_AGENT`/`TENANT_ADMIN`/`TENANT_AGENT` of the active tenant) and `owning AI Agent` (selected from active-tenant `MASTER_AGENT_AI` users).
-2. If the tenant has no AI agent user available, the dialog shows the PRD's failure message and the Import button is disabled — no row is written.
-3. Server function re-validates both ids belong to the active tenant and have the correct role before any insert.
+## Fix (step 2) — add guards at both route boundaries
 
-## What gets built
+Add a tiny shared helper and a friendly "not found" UI block, then short-circuit before calling `useStartup` when the param isn't a UUID.
 
-### 1. Migration (additive only)
+### 1. New helper: `src/lib/uuid.ts`
 
-`public.global_startups` — no `tenant_id`, no tenant fields:
-- `id`, `name not null`, `sector`, `stage`, `description`, `website`, `tags text[]`
-- `status text check in ('draft','available','recommended','archived') default 'draft'`
-- `created_by uuid`, `created_at`, `updated_at` (+ `tg_set_updated_at` trigger)
-- Grants: `SELECT, INSERT, UPDATE` to `authenticated`; `ALL` to `service_role`. No DELETE.
-- RLS:
-  - SELECT: `is_control(auth.uid())` OR `status in ('available','recommended')`
-  - INSERT/UPDATE: `is_control(auth.uid())`
-
-`public.startups` additive columns:
-- `source_global_id uuid null` (no FK — reference-only)
-- `imported_at timestamptz null`
-- `CREATE UNIQUE INDEX ux_startups_tenant_source_global ON public.startups (tenant_id, source_global_id) WHERE source_global_id IS NOT NULL;`
-
-`public.global_startup_imports` — Control-side ledger:
-- `id`, `global_id uuid not null`, `tenant_id uuid not null`, `tenant_startup_id uuid not null`, `imported_by uuid not null`, `imported_at timestamptz not null default now()`
-- Grants: `SELECT` to `authenticated`; `ALL` to `service_role`. No INSERT/UPDATE/DELETE for authenticated (writes via service_role inside server function).
-- RLS SELECT: `is_control(auth.uid())` OR `user_in_tenant(auth.uid(), tenant_id)`.
-
-No triggers syncing tables. No cascades. No RLS rewrite on `startups`.
-
-### 2. Permissions (`src/lib/permissions.ts`)
-
-Add to `Permission` union and `ROLE_PERMISSIONS`:
-- `global_startups.read` → CONTROL, MASTER_AGENT, TENANT_ADMIN, TENANT_AGENT (and MASTER_AGENT_AI inherits from TENANT_ADMIN list)
-- `global_startups.write` → CONTROL only
-- `global_startups.import` → MASTER_AGENT, TENANT_ADMIN, TENANT_AGENT
-
-`STARTUP_USER` / `INVESTOR_USER` excluded. `usePermissions`, `useEffectivePermissions`, `PermissionGuard` not modified.
-
-### 3. Server functions (`src/lib/global-startups.functions.ts`)
-
-All `requireSupabaseAuth`. Real role + real active-tenant checks via `getSessionContext` — never view-switcher state.
-
-- `listGlobalStartupsFn(filters)` — name/sector/stage/status/tags, role-gated visibility via RLS.
-- `getGlobalStartupFn(globalId)`
-- `createGlobalStartupFn(data)` — Control only.
-- `updateGlobalStartupFn(globalId, data)` — Control only.
-- `setGlobalStartupStatusFn(globalId, status)` — Control only.
-- `listImportsOfGlobalStartupFn(globalId)` — reads `global_startup_imports` ONLY. Never joins to `startups`.
-- `importGlobalStartupFn({ globalId, owningAgentUserId, owningAiAgentId })` — atomic via a Postgres function `public.fn_import_global_startup(...)` (created in the same migration) that runs in one transaction:
-  1. Verify global exists and status in ('available','recommended').
-  2. Re-check duplicate by `(tenant_id, source_global_id)` (partial unique index also enforces).
-  3. Verify owningAgent + owningAiAgent belong to active tenant with allowed roles.
-  4. Insert tenant `startups` row (copy name/sector/stage/description/website/tags), set `tenant_id`, `source_global_id`, `imported_at = now()`.
-  5. Insert `startup_ownership` + `startup_ai_ownership`.
-  6. Insert `global_startup_imports` ledger row.
-  7. Return new tenant startup id. Any failure aborts everything.
-
-Server function calls the RPC via `supabaseAdmin` (loaded inside handler) after verifying caller has `global_startups.import` and resolving the active tenant — the RPC body re-asserts role + tenant for defense in depth.
-
-### 4. Adapter seam (`src/lib/api-gateway/global-startups.ts`)
-
-The ONLY frontend-facing module for global/import operations. Today wraps the server functions; tomorrow re-points at API Gateway. Exports the seven signatures listed in PRD §10.1.
-
-### 5. Hooks (call adapter only — no Supabase imports)
-
-- `src/hooks/use-global-startups.ts` (list + filters)
-- `src/hooks/use-global-startup.ts` (detail + imports)
-- `src/hooks/use-import-global-startup.ts` (mutation + cache invalidation)
-
-### 6. Routes & components
-
-Routes:
-- `src/routes/_authenticated/global-startups.index.tsx` — Control list, search/filter, create, status change. `PermissionGuard global_startups.write`.
-- `src/routes/_authenticated/global-startups.$id.tsx` — Control detail/edit + import ledger view. `PermissionGuard global_startups.write`.
-- `src/routes/_authenticated/global-startups.browse.tsx` — Tenant browse (status `available`/`recommended` only) + Import action. `PermissionGuard global_startups.read`.
-
-Components in `src/components/global-startups/`:
-- `global-startup-table.tsx`
-- `global-startup-form.tsx`
-- `import-global-startup-dialog.tsx` — target tenant (read-only from session), owning Agent picker, owning AI Agent picker, "already imported" state, ownership-missing error, no-sync confirmation.
-- `global-startup-lineage-badge.tsx` — renders on tenant startup detail when `source_global_id != null`. Links to `/global-startups/$id` only if `usePermissions().has('global_startups.read')`.
-
-### 7. Sidebar (`src/components/app-sidebar.tsx`)
-
-Add `NAV_ITEMS` entries (filtered by `useEffectivePermissions` — already the hook in use):
-- CONTROL → "Global Startups" → `/global-startups`
-- MASTER_AGENT / TENANT_ADMIN / TENANT_AGENT → "Browse Global Catalogue" → `/global-startups/browse`
-
-Existing "Startups" entry unchanged.
-
-### 8. Minimal edits to existing files
-
-- `src/lib/permissions.ts` — add 3 permission strings to maps.
-- `src/components/app-sidebar.tsx` — add 2 nav entries + permission gating.
-- `src/components/startups/startup-detail-panel.tsx` — render lineage badge.
-- `src/routes/_authenticated/startups.$id.tsx` — ensure `source_global_id` + `imported_at` reach the detail panel (already returned by row select).
-
-### 9. Files NOT changed
-
-`usePermissions`, `useEffectivePermissions`, `PermissionGuard`, `ViewModeProvider`, route-loader pattern, RLS on existing `startups`, workspace switcher, tenant routing, `getSessionContext`, auth files, `client.ts`, `client.server.ts`.
-
-## Technical details
-
-### Adapter / data-flow
-
-```text
-UI route / component
-   ↓
-src/hooks/use-*.ts
-   ↓
-src/lib/api-gateway/global-startups.ts   ← only allowed entry
-   ↓
-src/lib/global-startups.functions.ts     ← only allowed file with from("global_startups")
-   ↓
-Supabase (today)  →  API Gateway (tomorrow — adapter re-point only)
+```ts
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const isUuid = (v: string | undefined | null): v is string =>
+  !!v && UUID_RE.test(v);
 ```
 
-### Atomic import boundary
+### 2. New component: `src/components/startups/startup-not-found.tsx`
 
-The Postgres function `public.fn_import_global_startup(global_id uuid, tenant_id uuid, owning_agent uuid, owning_ai_agent uuid, imported_by uuid)` is the transaction boundary; the server function is a thin authorization + RPC wrapper. The business contract is "atomic import", not the RPC name — the adapter can swap to a Gateway HTTP call without UI change.
+Presentational only. Renders an `ArrowLeft` back link to `/startups` and a card with:
+- Title: "Invalid link" (when `reason="invalid"`) or "Startup not found" (when `reason="missing"`)
+- Body copy explaining the URL doesn't point to a valid startup / the startup may have been removed or isn't accessible in this tenant.
+- A "Back to startups" button (`<Link to="/startups">`).
 
-### Guardrails enforced (and grep-provable)
+Props: `{ reason: "invalid" | "missing" }`.
 
-- `rg "from\\(\"global_startups"` returns only `src/lib/global-startups.functions.ts`.
-- `rg "from\\(\"global_startup_imports"` same.
-- No `select(...startups!...global_startups...)` joins anywhere.
-- No `supabase` import in `src/hooks/use-global-*.ts`, routes, or components.
-- View Switcher: server functions read role via `getSessionContext` / `requireSupabaseAuth`. The `requestedViewRole` from `ViewModeProvider` never reaches `.functions.ts` files — it only feeds `useEffectivePermissions` for sidebar rendering.
-- `listImportsOfGlobalStartupFn` reads only `global_startup_imports`.
+### 3. `src/routes/_authenticated/startups.$id.edit.tsx`
 
-### Files created
+- Read `id` from `Route.useParams()`.
+- If `!isUuid(id)` → render `<StartupNotFound reason="invalid" />` inside the existing `PermissionGuard`, and **return early before calling `useStartup`**.
+- Otherwise call `useStartup(id)` as today. When the query resolves with no data (or returns the standard not-found error), render `<StartupNotFound reason="missing" />` instead of the current red error text.
+- Keep `isLoading` skeleton/text as-is.
 
-```
-supabase/migrations/<ts>_global_startups.sql
-src/lib/global-startups.functions.ts
-src/lib/api-gateway/global-startups.ts
-src/hooks/use-global-startups.ts
-src/hooks/use-global-startup.ts
-src/hooks/use-import-global-startup.ts
-src/routes/_authenticated/global-startups.index.tsx
-src/routes/_authenticated/global-startups.$id.tsx
-src/routes/_authenticated/global-startups.browse.tsx
-src/components/global-startups/global-startup-table.tsx
-src/components/global-startups/global-startup-form.tsx
-src/components/global-startups/import-global-startup-dialog.tsx
-src/components/global-startups/global-startup-lineage-badge.tsx
-```
+### 4. `src/routes/_authenticated/startups.$id.tsx`
 
-### Files edited (minimal)
+Same guard at the top of `StartupDetailPage`:
+- If `!isUuid(id)` → return `<StartupNotFound reason="invalid" />` and skip `useStartup` and all mutation hooks setup that depends on the id being valid (mutation hook declarations are fine to keep above the guard since they don't fire on mount; we just `return` early before rendering).
+- Replace the current `if (error || !data) return <div className="text-sm text-destructive">Failed to load…</div>` with `<StartupNotFound reason="missing" />`.
 
-```
-src/lib/permissions.ts
-src/components/app-sidebar.tsx
-src/components/startups/startup-detail-panel.tsx
-src/routes/_authenticated/startups.$id.tsx
-```
+### What we do NOT do (step 3)
+- No name-based lookup fallback. Names aren't unique across tenants, aren't stable, and would create ambiguous/cross-tenant resolution. Records remain UUID-addressed. A future human-readable URL would be a separate deliberate `slug` column feature.
+- No changes to `useStartup`, server functions, RLS, permissions, or any data layer.
+- No new route, no redirect logic, no router-level `parseParams` (kept inside the component to avoid touching the route tree).
 
-## Out of scope (per PRD)
+## Acceptance mapping
+- ✅ Grep proof above shows every URL builder uses `startup.id`.
+- ✅ Non-UUID param → `StartupNotFound reason="invalid"` rendered; `useStartup` is never called (guarded with early return before the hook).
+- ✅ Valid UUID that doesn't resolve → `StartupNotFound reason="missing"` with "Back to startups" link.
+- ✅ Both `/startups/$id` and `/startups/$id/edit` covered.
+- ✅ No name-based lookup added.
 
-Global Investors mirror (P-17b), physical DB separation, API Gateway, Database Router, AI orchestration, auto-sync, PermissionGuard or auth changes.
+## Files touched
+- `src/lib/uuid.ts` (new)
+- `src/components/startups/startup-not-found.tsx` (new)
+- `src/routes/_authenticated/startups.$id.tsx` (guard + replace error block)
+- `src/routes/_authenticated/startups.$id.edit.tsx` (guard + replace error block)
 
-## Confirm before I build
-
-The C-2 resolution above (dialog always requires explicit Agent + AI Agent selection; default agent prefilled to the caller when eligible). If you want me to instead add `tenant_settings.default_owning_agent_user_id` / `default_owning_ai_agent_id` columns and auto-resolve from there, say so — it's a small additive schema change.
+## Verification
+After edits: typecheck passes, then load `/startups/Startup%20name%20test/edit` and `/startups/Startup%20name%20test` in the preview — both render the "Invalid link" card with a back link, and network panel shows no `getStartup` server-function call. Then load a valid UUID URL to confirm the normal edit form still renders.
