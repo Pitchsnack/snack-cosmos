@@ -1,0 +1,1 @@
+ALTER TABLE public.startups DROP COLUMN IF EXISTS legal_name;
