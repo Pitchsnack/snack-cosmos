@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/select";
 import { InvestorOwnershipCard } from "@/components/investors/investor-ownership-card";
 import { InvestorUsersCard } from "@/components/investors/investor-users-card";
+import { InvestorNotFound } from "@/components/investors/investor-not-found";
 import { useInvestor, useInvestorActivity, useInvestorAuditLogs } from "@/hooks/use-investor";
 import { updateInvestor, archiveInvestor } from "@/lib/investors.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+import { isUuid } from "@/lib/uuid";
 
 export const Route = createFileRoute("/_authenticated/investors/$id/")({
   head: () => ({ meta: [{ title: `Investor — SnackPortal2` }] }),
@@ -27,7 +29,8 @@ const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
 
 function InvestorDetailPage() {
   const { id } = Route.useParams();
-  const { data, isLoading, error } = useInvestor(id);
+  const validId = isUuid(id);
+  const { data, isLoading, error } = useInvestor(validId ? id : undefined);
   const { has, isControl } = usePermissions();
   const qc = useQueryClient();
   const update = useServerFn(updateInvestor);
