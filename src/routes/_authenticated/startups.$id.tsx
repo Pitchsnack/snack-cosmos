@@ -17,6 +17,8 @@ import { GlobalStartupLineageBadge } from "@/components/global-startups/global-s
 import { useStartup, useStartupActivity, useStartupAuditLogs } from "@/hooks/use-startup";
 import { updateStartup, archiveStartup, type StartupDetail } from "@/lib/startups.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+import { isUuid } from "@/lib/uuid";
+import { StartupNotFound } from "@/components/startups/startup-not-found";
 
 export const Route = createFileRoute("/_authenticated/startups/$id")({
   head: () => ({ meta: [{ title: "Startup — SnackPortal2" }] }),
@@ -33,7 +35,8 @@ function monogram(name: string) {
 function StartupDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { data, isLoading, error } = useStartup(id);
+  const validId = isUuid(id);
+  const { data, isLoading, error } = useStartup(validId ? id : "");
   const { has, isControl } = usePermissions();
   const qc = useQueryClient();
   const update = useServerFn(updateStartup);
@@ -55,8 +58,9 @@ function StartupDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  if (!validId) return <StartupNotFound reason="invalid" />;
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
-  if (error || !data) return <div className="text-sm text-destructive">Failed to load: {(error as Error)?.message ?? "Not found"}</div>;
+  if (error || !data) return <StartupNotFound reason="missing" />;
 
   const s = data as StartupDetail & {
     startup_ownership: Array<{ users: { id: string; email: string; first_name: string | null; last_name: string | null } | null }>;
