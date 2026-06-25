@@ -123,6 +123,7 @@ export function StartupForm({ startup }: Props) {
   const [email, setEmail] = useState(startup?.email ?? "");
   const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(startup?.website_url ?? "");
+  const [linkedinUrl, setLinkedinUrl] = useState(startup?.linkedin_url ?? "");
   
   const [city, setCity] = useState(startup?.city ?? "");
 
@@ -215,6 +216,7 @@ export function StartupForm({ startup }: Props) {
     yearFounded: yearFounded ? Number(yearFounded) : null,
     email: email || null,
     headquarters: headquarters || null,
+    linkedinUrl: linkedinUrl || null,
     investmentStage: (investmentStage as typeof STAGES[number]) || null,
     productTags,
     marketTags,
@@ -340,28 +342,8 @@ export function StartupForm({ startup }: Props) {
         </div>
       </div>
 
-      {/* Row 2: Headquarters | City */}
-      <div className="grid grid-cols-[1fr_1fr] gap-4">
-        <div className="space-y-1">
-          <Label>Headquarters</Label>
-          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="Country" />
-        </div>
-        <div className="space-y-1">
-          <Label>City</Label>
-          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
-        </div>
-      </div>
-
-      {/* Row 3: Email | Website | Stage */}
+      {/* Row 2: Investment Stage | Headquarters | City */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-1.5">
-          <Label>Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Website</Label>
-          <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" />
-        </div>
         <div className="space-y-1.5">
           <Label>Investment Stage</Label>
           <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
@@ -379,6 +361,30 @@ export function StartupForm({ startup }: Props) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Headquarters</Label>
+          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="Country" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>City</Label>
+          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
+        </div>
+      </div>
+
+      {/* Row 3: Email | Website | LinkedIn URL */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-1.5">
+          <Label>Email</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Website</Label>
+          <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>LinkedIn URL</Label>
+          <Input type="url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://www.linkedin.com/company/…" maxLength={2048} />
         </div>
       </div>
 
