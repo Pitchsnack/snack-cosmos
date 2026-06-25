@@ -36,14 +36,15 @@ import { InvestorPicker } from "./investor-picker";
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
 const STAGES = [
   "Pre-Seed", "Seed", "Series A", "Series B", "Series C+",
-  "Growth", "IPO", "Inactive", "Acquired",
+  "Growth", "IPO", "Acquired", "Inactive",
 ];
 const INDUSTRIES = [
   "FinTech", "eCommerce & Marketplace", "MarTech", "HealthTech",
   "Sustainability", "Mobility & Logistics", "DeepTech", "Defense",
   "EdTech", "Gaming", "PropTech", "AgriTech", "FMCG", "Others",
 ];
-const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Inactive","Archived"];
+const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Archived"];
+
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
 
 // ── Pill button (PitchSnack1 spec: px-3 py-1 rounded-full text-xs) ──
@@ -367,7 +368,15 @@ export function StartupForm({ startup }: Props) {
             <SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
-              {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              {STAGES.map((s) => (
+                <SelectItem
+                  key={s}
+                  value={s}
+                  className={s === "Inactive" ? "text-red-600 focus:text-red-600 data-[highlighted]:text-red-600" : undefined}
+                >
+                  {s}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
