@@ -17,7 +17,7 @@ import { useInvestor, useInvestorActivity, useInvestorAuditLogs } from "@/hooks/
 import { updateInvestor, archiveInvestor } from "@/lib/investors.functions";
 import { usePermissions } from "@/hooks/use-session-context";
 
-export const Route = createFileRoute("/_authenticated/investors/$id")({
+export const Route = createFileRoute("/_authenticated/investors/$id/")({
   head: () => ({ meta: [{ title: `Investor — SnackPortal2` }] }),
   component: InvestorDetailPage,
 });

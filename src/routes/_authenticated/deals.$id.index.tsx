@@ -18,7 +18,7 @@ import { useDeal, useDealActivity, useDealAuditLogs } from "@/hooks/use-deal";
 import { updateDeal, archiveDeal, DEAL_STAGES, DEAL_VISIBILITIES } from "@/lib/deals.functions";
 import { usePermissions } from "@/hooks/use-session-context";
 
-export const Route = createFileRoute("/_authenticated/deals/$id")({
+export const Route = createFileRoute("/_authenticated/deals/$id/")({
   head: () => ({ meta: [{ title: `Deal — SnackPortal2` }] }),
   component: DealDetailPage,
 });
