@@ -49,8 +49,9 @@ function InvestorDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  if (!validId) return <InvestorNotFound reason="invalid" />;
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
-  if (error || !data) return <div className="text-sm text-destructive">Failed to load: {(error as Error)?.message ?? "Not found"}</div>;
+  if (error || !data) return <InvestorNotFound reason="missing" />;
 
   const s = data as typeof data & {
     tenants: { tenant_name: string };
