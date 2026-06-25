@@ -41,7 +41,7 @@ export interface StartupRow {
   id: string;
   tenant_id: string;
   startup_name: string;
-  legal_name: string | null;
+  
   website_url: string | null;
   country: string | null;
   industry: string | null;
@@ -128,7 +128,7 @@ async function logActivity(
 }
 
 const SELECT_LIST = `
-  id, tenant_id, startup_name, legal_name, website_url, country, industry,
+  id, tenant_id, startup_name, website_url, country, industry,
   short_description, long_description, status, visibility, created_at, updated_at,
   logo_url, company_type, year_founded, email, headquarters, investment_stage,
   product_tags, market_tags, source_global_id, imported_at,
@@ -242,7 +242,7 @@ export const getStartup = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("startups")
       .select(`
-        id, tenant_id, startup_name, legal_name, website_url, country, industry,
+        id, tenant_id, startup_name, website_url, country, industry,
         short_description, long_description, status, visibility, created_at, updated_at,
         logo_url, company_type, year_founded, email, headquarters, investment_stage,
         product_tags, market_tags, source_global_id, imported_at,
@@ -372,7 +372,7 @@ const ProfileFields = {
 const CreateInput = z.object({
   tenantId: z.string().uuid(),
   startupName: z.string().min(1).max(255),
-  legalName: z.string().max(255).optional().nullable(),
+  
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
   country: z.string().max(100).optional().nullable(),
   industry: z.string().max(255).optional().nullable(),
@@ -498,7 +498,7 @@ export const createStartup = createServerFn({ method: "POST" })
       .insert({
         tenant_id: data.tenantId,
         startup_name: data.startupName,
-        legal_name: emptyToNull(data.legalName),
+        
         website_url: emptyToNull(data.websiteUrl),
         country: emptyToNull(data.country),
         industry: emptyToNull(data.industry),
@@ -542,7 +542,7 @@ export const createStartup = createServerFn({ method: "POST" })
 const UpdateInput = z.object({
   id: z.string().uuid(),
   startupName: z.string().min(1).max(255).optional(),
-  legalName: z.string().max(255).nullable().optional(),
+  
   websiteUrl: z.string().max(2048).nullable().optional(),
   country: z.string().max(100).nullable().optional(),
   industry: z.string().max(255).nullable().optional(),
@@ -564,7 +564,7 @@ export const updateStartup = createServerFn({ method: "POST" })
 
     const patch: Record<string, unknown> = { updated_by: userId };
     if (data.startupName !== undefined) patch.startup_name = data.startupName;
-    if (data.legalName !== undefined) patch.legal_name = data.legalName;
+    
     if (data.websiteUrl !== undefined) patch.website_url = data.websiteUrl;
     if (data.country !== undefined) patch.country = data.country;
     if (data.industry !== undefined) patch.industry = data.industry;
