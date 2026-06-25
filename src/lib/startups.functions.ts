@@ -3,10 +3,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const STATUSES = [
-  "Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Inactive","Archived",
+  "Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Archived",
 ] as const;
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"] as const;
-const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other"] as const;
+const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other","Inactive"] as const;
+
 
 export type StartupStatus = (typeof STATUSES)[number];
 export type StartupVisibility = (typeof VISIBILITIES)[number];
