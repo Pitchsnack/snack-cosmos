@@ -64,10 +64,6 @@ Access is gated by `PermissionGuard` requiring `startups.write`. The page render
 - **Functionality**: External marketing site.
 - **UI**: `Input type="url"`, placeholder "https://example.com".
 
-### 10. Legal Name
-- **Data**: `legalName: string | null`.
-- **Functionality**: Registered legal entity name (kept from existing schema).
-- **UI**: Plain text input. 2-col row with Country.
 
 ### 11. Country
 - **Data**: `country: string | null`.

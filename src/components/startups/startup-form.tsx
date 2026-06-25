@@ -122,7 +122,7 @@ export function StartupForm({ startup }: Props) {
   const [email, setEmail] = useState(startup?.email ?? "");
   const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(startup?.website_url ?? "");
-  const [legalName, setLegalName] = useState(startup?.legal_name ?? "");
+  
   const [country, setCountry] = useState(startup?.country ?? "");
 
   // Company information
@@ -230,7 +230,6 @@ export function StartupForm({ startup }: Props) {
         data: {
           tenantId,
           startupName,
-          legalName: legalName || null,
           websiteUrl: websiteUrl || null,
           country: country || null,
           industry: industryJoined,
@@ -267,7 +266,7 @@ export function StartupForm({ startup }: Props) {
         data: {
           id: startup!.id,
           startupName,
-          legalName: legalName || null,
+          
           websiteUrl: websiteUrl || null,
           country: country || null,
           industry: industryJoined,
@@ -340,12 +339,8 @@ export function StartupForm({ startup }: Props) {
         </div>
       </div>
 
-      {/* Row 2: Legal name | Headquarters | Country */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-1.5">
-          <Label>Legal Name</Label>
-          <Input value={legalName} onChange={(e) => setLegalName(e.target.value)} maxLength={255} />
-        </div>
+      {/* Row 2: Headquarters | Country */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>Headquarters</Label>
           <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="City" />
