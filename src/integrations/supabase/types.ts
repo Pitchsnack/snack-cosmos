@@ -1625,6 +1625,7 @@ export type Database = {
           imported_at: string | null
           industry: string | null
           investment_stage: string | null
+          linkedin_url: string | null
           logo_url: string | null
           long_description: string | null
           market_tags: string[]
@@ -1651,6 +1652,7 @@ export type Database = {
           imported_at?: string | null
           industry?: string | null
           investment_stage?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
@@ -1677,6 +1679,7 @@ export type Database = {
           imported_at?: string | null
           industry?: string | null
           investment_stage?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
