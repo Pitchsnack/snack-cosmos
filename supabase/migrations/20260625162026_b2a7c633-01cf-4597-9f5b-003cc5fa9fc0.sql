@@ -1,0 +1,1 @@
+ALTER TABLE public.startups RENAME COLUMN country TO city;
