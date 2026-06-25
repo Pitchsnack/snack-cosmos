@@ -74,18 +74,34 @@ function InvestorDetailPage() {
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.tenants.tenant_name}</div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{s.investor_name}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {s.country && <span>{s.country}</span>}
-            {s.investor_type && <><span>·</span><span>{s.investor_type}</span></>}
-            {s.website_url && <><span>·</span><a href={s.website_url} target="_blank" rel="noreferrer" className="hover:underline">{s.website_url}</a></>}
+        <div className="flex items-start gap-4">
+          {(s as unknown as { logo_signed_url: string | null }).logo_signed_url && (
+            <img
+              src={(s as unknown as { logo_signed_url: string }).logo_signed_url}
+              alt=""
+              className="h-16 w-16 rounded-lg border border-border object-contain bg-muted/30"
+            />
+          )}
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.tenants.tenant_name}</div>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight">{s.investor_name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {s.country && <span>{s.country}</span>}
+              {s.investor_type && <><span>·</span><span>{s.investor_type}</span></>}
+              {s.website_url && <><span>·</span><a href={s.website_url} target="_blank" rel="noreferrer" className="hover:underline">{s.website_url}</a></>}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{s.status}</Badge>
           <Badge variant="outline">{s.visibility}</Badge>
+          {canManage && (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/investors/$id/edit" params={{ id }}>
+                <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+              </Link>
+            </Button>
+          )}
           {canManage && s.status !== "Archived" && (
             <Button size="sm" variant="outline" onClick={() => archiveM.mutate()} disabled={archiveM.isPending}>Archive</Button>
           )}
