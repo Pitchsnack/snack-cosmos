@@ -43,7 +43,7 @@ export interface StartupRow {
   startup_name: string;
   
   website_url: string | null;
-  country: string | null;
+  city: string | null;
   industry: string | null;
   short_description: string | null;
   long_description: string | null;
@@ -128,7 +128,7 @@ async function logActivity(
 }
 
 const SELECT_LIST = `
-  id, tenant_id, startup_name, website_url, country, industry,
+  id, tenant_id, startup_name, website_url, city, industry,
   short_description, long_description, status, visibility, created_at, updated_at,
   logo_url, company_type, year_founded, email, headquarters, investment_stage,
   product_tags, market_tags, source_global_id, imported_at,
@@ -242,7 +242,7 @@ export const getStartup = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("startups")
       .select(`
-        id, tenant_id, startup_name, website_url, country, industry,
+        id, tenant_id, startup_name, website_url, city, industry,
         short_description, long_description, status, visibility, created_at, updated_at,
         logo_url, company_type, year_founded, email, headquarters, investment_stage,
         product_tags, market_tags, source_global_id, imported_at,
@@ -374,7 +374,7 @@ const CreateInput = z.object({
   startupName: z.string().min(1).max(255),
   
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
-  country: z.string().max(100).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
   industry: z.string().max(255).optional().nullable(),
   shortDescription: z.string().max(500).optional().nullable(),
   longDescription: z.string().max(5000).optional().nullable(),
@@ -500,7 +500,7 @@ export const createStartup = createServerFn({ method: "POST" })
         startup_name: data.startupName,
         
         website_url: emptyToNull(data.websiteUrl),
-        country: emptyToNull(data.country),
+        city: emptyToNull(data.city),
         industry: emptyToNull(data.industry),
         short_description: emptyToNull(data.shortDescription),
         long_description: emptyToNull(data.longDescription),
@@ -544,7 +544,7 @@ const UpdateInput = z.object({
   startupName: z.string().min(1).max(255).optional(),
   
   websiteUrl: z.string().max(2048).nullable().optional(),
-  country: z.string().max(100).nullable().optional(),
+  city: z.string().max(100).nullable().optional(),
   industry: z.string().max(255).nullable().optional(),
   shortDescription: z.string().max(500).nullable().optional(),
   longDescription: z.string().max(5000).nullable().optional(),
@@ -566,7 +566,7 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.startupName !== undefined) patch.startup_name = data.startupName;
     
     if (data.websiteUrl !== undefined) patch.website_url = data.websiteUrl;
-    if (data.country !== undefined) patch.country = data.country;
+    if (data.city !== undefined) patch.city = data.city;
     if (data.industry !== undefined) patch.industry = data.industry;
     if (data.shortDescription !== undefined) patch.short_description = data.shortDescription;
     if (data.longDescription !== undefined) patch.long_description = data.longDescription;

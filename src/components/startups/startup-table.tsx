@@ -27,7 +27,7 @@ export function StartupTable({ rows, isLoading }: { rows: StartupListItem[]; isL
         <TableHeader>
           <TableRow className="bg-muted/30">
             <TableHead>Startup</TableHead>
-            <TableHead>Country</TableHead>
+            <TableHead>City</TableHead>
             <TableHead>Industry</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Owning Agent</TableHead>
@@ -56,7 +56,7 @@ export function StartupTable({ rows, isLoading }: { rows: StartupListItem[]; isL
                   </Link>
                   <div className="text-xs text-muted-foreground">{s.tenant_name}</div>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{s.country || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{s.city || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.industry || "—"}</TableCell>
                 <TableCell><Badge variant="outline" className={statusTone(s.status)}>{s.status}</Badge></TableCell>
                 <TableCell className="text-sm">{s.owning_agent?.name || s.owning_agent?.email || <span className="text-destructive">Missing</span>}</TableCell>
