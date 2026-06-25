@@ -36,7 +36,7 @@ function StartupDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const validId = isUuid(id);
-  const { data, isLoading, error } = useStartup(validId ? id : "");
+  const { data, isLoading, error } = useStartup(validId ? id : undefined);
   const { has, isControl } = usePermissions();
   const qc = useQueryClient();
   const update = useServerFn(updateStartup);
