@@ -505,7 +505,7 @@ export const createStartup = createServerFn({ method: "POST" })
         
         website_url: emptyToNull(data.websiteUrl),
         city: emptyToNull(data.city),
-        industry: emptyToNull(data.industry),
+        industry: data.industry ?? [],
         short_description: emptyToNull(data.shortDescription),
         long_description: emptyToNull(data.longDescription),
         status: data.status,
