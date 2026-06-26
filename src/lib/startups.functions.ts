@@ -46,7 +46,7 @@ export interface StartupRow {
   website_url: string | null;
   linkedin_url: string | null;
   city: string | null;
-  industry: string | null;
+  industry: string[];
   short_description: string | null;
   long_description: string | null;
   status: StartupStatus;
@@ -61,6 +61,7 @@ export interface StartupRow {
   investment_stage: InvestmentStage | null;
   product_tags: string[];
   market_tags: string[];
+  url_key: string | null;
   source_global_id: string | null;
   imported_at: string | null;
 }
