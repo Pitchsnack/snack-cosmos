@@ -43,7 +43,7 @@ const INDUSTRIES = [
   "Sustainability", "Mobility & Logistics", "DeepTech", "Defense",
   "EdTech", "Gaming", "PropTech", "AgriTech", "FMCG", "Others",
 ];
-const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Archived"];
+const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited"];
 
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
 
