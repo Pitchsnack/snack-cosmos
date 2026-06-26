@@ -136,8 +136,7 @@ export function StartupForm({ startup }: Props) {
   const [productTagDraft, setProductTagDraft] = useState("");
   const [marketTags, setMarketTags] = useState<string[]>(startup?.market_tags ?? []);
   const [marketTagDraft, setMarketTagDraft] = useState("");
-  const initialIndustries = (startup?.industry ?? "")
-    .split(",").map((s) => s.trim()).filter(Boolean);
+  const initialIndustries = startup?.industry ?? [];
   const [industries, setIndustries] = useState<string[]>(initialIndustries);
   const [customIndustry, setCustomIndustry] = useState("");
   const [investmentStage, setInvestmentStage] = useState<string>(startup?.investment_stage ?? "");
