@@ -198,7 +198,7 @@ export function StartupForm({ startup }: Props) {
     setCustomIndustry("");
   };
 
-  const industryJoined = industries.join(", ") || null;
+  const industryArray = industries;
 
   // Upload helper bound to a target startup id.
   async function uploadAllForStartup(targetStartupId: string) {
