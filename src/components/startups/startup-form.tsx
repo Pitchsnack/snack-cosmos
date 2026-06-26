@@ -43,7 +43,7 @@ const INDUSTRIES = [
   "Sustainability", "Mobility & Logistics", "DeepTech", "Defense",
   "EdTech", "Gaming", "PropTech", "AgriTech", "FMCG", "Others",
 ];
-const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Archived"];
+const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited"];
 
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
 
@@ -136,8 +136,7 @@ export function StartupForm({ startup }: Props) {
   const [productTagDraft, setProductTagDraft] = useState("");
   const [marketTags, setMarketTags] = useState<string[]>(startup?.market_tags ?? []);
   const [marketTagDraft, setMarketTagDraft] = useState("");
-  const initialIndustries = (startup?.industry ?? "")
-    .split(",").map((s) => s.trim()).filter(Boolean);
+  const initialIndustries = startup?.industry ?? [];
   const [industries, setIndustries] = useState<string[]>(initialIndustries);
   const [customIndustry, setCustomIndustry] = useState("");
   const [investmentStage, setInvestmentStage] = useState<string>(startup?.investment_stage ?? "");
@@ -199,7 +198,7 @@ export function StartupForm({ startup }: Props) {
     setCustomIndustry("");
   };
 
-  const industryJoined = industries.join(", ") || null;
+  const industryArray = industries;
 
   // Upload helper bound to a target startup id.
   async function uploadAllForStartup(targetStartupId: string) {
@@ -235,7 +234,7 @@ export function StartupForm({ startup }: Props) {
           startupName,
           websiteUrl: websiteUrl || null,
           city: city || null,
-          industry: industryJoined,
+          industry: industryArray,
           shortDescription: shortDescription || null,
           longDescription: longDescription || null,
           status: status as never,
@@ -272,7 +271,7 @@ export function StartupForm({ startup }: Props) {
           
           websiteUrl: websiteUrl || null,
           city: city || null,
-          industry: industryJoined,
+          industry: industryArray,
           shortDescription: shortDescription || null,
           longDescription: longDescription || null,
           logoPath,

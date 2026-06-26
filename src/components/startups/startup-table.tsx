@@ -57,7 +57,7 @@ export function StartupTable({ rows, isLoading }: { rows: StartupListItem[]; isL
                   <div className="text-xs text-muted-foreground">{s.tenant_name}</div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.city || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{s.industry || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{s.industry?.length ? s.industry.join(", ") : "—"}</TableCell>
                 <TableCell><Badge variant="outline" className={statusTone(s.status)}>{s.status}</Badge></TableCell>
                 <TableCell className="text-sm">{s.owning_agent?.name || s.owning_agent?.email || <span className="text-destructive">Missing</span>}</TableCell>
                 <TableCell className="text-sm">{s.owning_ai_agent?.name || s.owning_ai_agent?.email || <span className="text-destructive">Missing</span>}</TableCell>

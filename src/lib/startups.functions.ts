@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const STATUSES = [
-  "Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Archived",
+  "Draft","Active","Fundraising","Due Diligence","Portfolio","Exited",
 ] as const;
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"] as const;
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other","Inactive"] as const;
@@ -46,7 +46,7 @@ export interface StartupRow {
   website_url: string | null;
   linkedin_url: string | null;
   city: string | null;
-  industry: string | null;
+  industry: string[];
   short_description: string | null;
   long_description: string | null;
   status: StartupStatus;
@@ -61,6 +61,7 @@ export interface StartupRow {
   investment_stage: InvestmentStage | null;
   product_tags: string[];
   market_tags: string[];
+  url_key: string | null;
   source_global_id: string | null;
   imported_at: string | null;
 }
@@ -133,7 +134,7 @@ const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, industry,
   short_description, long_description, status, visibility, created_at, updated_at,
   logo_url, company_type, year_founded, email, headquarters, investment_stage,
-  product_tags, market_tags, source_global_id, imported_at,
+  product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
   startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
   startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name))
@@ -166,11 +167,11 @@ export const listStartups = createServerFn({ method: "GET" })
     if (data.search?.trim()) {
       const s = data.search.trim().replace(/[%_]/g, (m) => "\\" + m);
       q = q.or(
-        `startup_name.ilike.%${s}%,short_description.ilike.%${s}%,industry.ilike.%${s}%,headquarters.ilike.%${s}%`,
+        `startup_name.ilike.%${s}%,short_description.ilike.%${s}%,headquarters.ilike.%${s}%`,
       );
     }
     if (data.stage) q = q.eq("investment_stage", data.stage);
-    if (data.industry) q = q.eq("industry", data.industry);
+    if (data.industry) q = q.contains("industry", [data.industry]);
     if (data.headquarters) q = q.eq("headquarters", data.headquarters);
     if (data.companyType) q = q.eq("company_type", data.companyType);
     if (data.productTag) q = q.contains("product_tags", [data.productTag]);
@@ -247,7 +248,7 @@ export const getStartup = createServerFn({ method: "GET" })
         id, tenant_id, startup_name, website_url, linkedin_url, city, industry,
         short_description, long_description, status, visibility, created_at, updated_at,
         logo_url, company_type, year_founded, email, headquarters, investment_stage,
-        product_tags, market_tags, source_global_id, imported_at,
+        product_tags, market_tags, url_key, source_global_id, imported_at,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         startup_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -378,7 +379,7 @@ const CreateInput = z.object({
   
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
   city: z.string().max(100).optional().nullable(),
-  industry: z.string().max(255).optional().nullable(),
+  industry: z.array(z.string().min(1).max(100)).max(20).optional(),
   shortDescription: z.string().max(500).optional().nullable(),
   longDescription: z.string().max(5000).optional().nullable(),
   status: z.enum(STATUSES).default("Draft"),
@@ -504,7 +505,7 @@ export const createStartup = createServerFn({ method: "POST" })
         
         website_url: emptyToNull(data.websiteUrl),
         city: emptyToNull(data.city),
-        industry: emptyToNull(data.industry),
+        industry: data.industry ?? [],
         short_description: emptyToNull(data.shortDescription),
         long_description: emptyToNull(data.longDescription),
         status: data.status,
@@ -549,7 +550,7 @@ const UpdateInput = z.object({
   
   websiteUrl: z.string().max(2048).nullable().optional(),
   city: z.string().max(100).nullable().optional(),
-  industry: z.string().max(255).nullable().optional(),
+  industry: z.array(z.string().min(1).max(100)).max(20).optional(),
   shortDescription: z.string().max(500).nullable().optional(),
   longDescription: z.string().max(5000).nullable().optional(),
   status: z.enum(STATUSES).optional(),
@@ -621,10 +622,10 @@ export const archiveStartup = createServerFn({ method: "POST" })
     if (!row) throw new Error("Not found");
     const { error } = await supabase
       .from("startups")
-      .update({ status: "Archived", visibility: "Archived", updated_by: userId })
+      .update({ visibility: "Archived", updated_by: userId })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
-    await logActivity(supabase, data.id, row.tenant_id, userId, "STATUS_CHANGED", { to: "Archived" });
+    await logActivity(supabase, data.id, row.tenant_id, userId, "VISIBILITY_CHANGED", { to: "Archived" });
     return { ok: true };
   });
 

@@ -42,9 +42,9 @@ export function StartupCard({ s }: { s: StartupListItem }) {
         {s.investment_stage && (
           <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent text-[10px]">{s.investment_stage}</Badge>
         )}
-        {s.industry && (
-          <Badge variant="outline" className="text-[10px]">{s.industry}</Badge>
-        )}
+        {s.industry?.map((ind) => (
+          <Badge key={ind} variant="outline" className="text-[10px]">{ind}</Badge>
+        ))}
       </div>
 
       {s.short_description && (

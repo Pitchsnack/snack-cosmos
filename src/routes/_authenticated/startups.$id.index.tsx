@@ -115,7 +115,7 @@ function StartupDetailPage() {
               <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
             </Button>
           )}
-          {canManage && s.status !== "Archived" && (
+          {canManage && s.visibility !== "Archived" && (
             <Button size="sm" variant="outline" onClick={() => archiveM.mutate()} disabled={archiveM.isPending}>Archive</Button>
           )}
         </div>
