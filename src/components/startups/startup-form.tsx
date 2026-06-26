@@ -234,7 +234,7 @@ export function StartupForm({ startup }: Props) {
           startupName,
           websiteUrl: websiteUrl || null,
           city: city || null,
-          industry: industryJoined,
+          industry: industryArray,
           shortDescription: shortDescription || null,
           longDescription: longDescription || null,
           status: status as never,
