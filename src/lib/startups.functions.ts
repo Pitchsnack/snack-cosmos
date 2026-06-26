@@ -167,11 +167,11 @@ export const listStartups = createServerFn({ method: "GET" })
     if (data.search?.trim()) {
       const s = data.search.trim().replace(/[%_]/g, (m) => "\\" + m);
       q = q.or(
-        `startup_name.ilike.%${s}%,short_description.ilike.%${s}%,industry.ilike.%${s}%,headquarters.ilike.%${s}%`,
+        `startup_name.ilike.%${s}%,short_description.ilike.%${s}%,headquarters.ilike.%${s}%`,
       );
     }
     if (data.stage) q = q.eq("investment_stage", data.stage);
-    if (data.industry) q = q.eq("industry", data.industry);
+    if (data.industry) q = q.contains("industry", [data.industry]);
     if (data.headquarters) q = q.eq("headquarters", data.headquarters);
     if (data.companyType) q = q.eq("company_type", data.companyType);
     if (data.productTag) q = q.contains("product_tags", [data.productTag]);
