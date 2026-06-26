@@ -622,10 +622,10 @@ export const archiveStartup = createServerFn({ method: "POST" })
     if (!row) throw new Error("Not found");
     const { error } = await supabase
       .from("startups")
-      .update({ status: "Archived", visibility: "Archived", updated_by: userId })
+      .update({ visibility: "Archived", updated_by: userId })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
-    await logActivity(supabase, data.id, row.tenant_id, userId, "STATUS_CHANGED", { to: "Archived" });
+    await logActivity(supabase, data.id, row.tenant_id, userId, "VISIBILITY_CHANGED", { to: "Archived" });
     return { ok: true };
   });
 
