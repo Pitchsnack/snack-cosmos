@@ -379,7 +379,7 @@ const CreateInput = z.object({
   
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
   city: z.string().max(100).optional().nullable(),
-  industry: z.string().max(255).optional().nullable(),
+  industry: z.array(z.string().min(1).max(100)).max(20).optional(),
   shortDescription: z.string().max(500).optional().nullable(),
   longDescription: z.string().max(5000).optional().nullable(),
   status: z.enum(STATUSES).default("Draft"),
