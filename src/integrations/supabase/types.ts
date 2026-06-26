@@ -1623,7 +1623,7 @@ export type Database = {
           headquarters: string | null
           id: string
           imported_at: string | null
-          industry: string | null
+          industry: string[]
           investment_stage: string | null
           linkedin_url: string | null
           logo_url: string | null
@@ -1637,6 +1637,7 @@ export type Database = {
           tenant_id: string
           updated_at: string
           updated_by: string | null
+          url_key: string | null
           visibility: string
           website_url: string | null
           year_founded: number | null
@@ -1650,7 +1651,7 @@ export type Database = {
           headquarters?: string | null
           id?: string
           imported_at?: string | null
-          industry?: string | null
+          industry?: string[]
           investment_stage?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
@@ -1664,6 +1665,7 @@ export type Database = {
           tenant_id: string
           updated_at?: string
           updated_by?: string | null
+          url_key?: string | null
           visibility?: string
           website_url?: string | null
           year_founded?: number | null
@@ -1677,7 +1679,7 @@ export type Database = {
           headquarters?: string | null
           id?: string
           imported_at?: string | null
-          industry?: string | null
+          industry?: string[]
           investment_stage?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
@@ -1691,6 +1693,7 @@ export type Database = {
           tenant_id?: string
           updated_at?: string
           updated_by?: string | null
+          url_key?: string | null
           visibility?: string
           website_url?: string | null
           year_founded?: number | null
@@ -2198,6 +2201,7 @@ export type Database = {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean
       }
+      normalize_url_key: { Args: { _url: string }; Returns: string }
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean
