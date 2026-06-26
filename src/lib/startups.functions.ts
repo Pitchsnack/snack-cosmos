@@ -550,7 +550,7 @@ const UpdateInput = z.object({
   
   websiteUrl: z.string().max(2048).nullable().optional(),
   city: z.string().max(100).nullable().optional(),
-  industry: z.string().max(255).nullable().optional(),
+  industry: z.array(z.string().min(1).max(100)).max(20).optional(),
   shortDescription: z.string().max(500).nullable().optional(),
   longDescription: z.string().max(5000).nullable().optional(),
   status: z.enum(STATUSES).optional(),
