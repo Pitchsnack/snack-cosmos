@@ -358,30 +358,34 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-background">
-      {/* Content reserves the collapsed rail width and never reflows on toggle. */}
-      <div className="h-full ps-16">
-        <main className="h-full overflow-y-auto">
-          <div className="mx-auto max-w-7xl px-8 py-10">
-            <WorkspaceHeader />
-            {children}
-          </div>
-        </main>
-      </div>
-
+    <div
+      className="grid h-screen w-full overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
+      style={{
+        gridTemplateColumns: "var(--sidebar-width) 1fr",
+        "--sidebar-width": effectiveCollapsed ? "4rem" : "16rem",
+      } as React.CSSProperties}
+    >
       <aside
         ref={sidebarRef}
         id="app-sidebar-nav"
         data-app-sidebar
         aria-label="Primary"
         className={cn(
-          "fixed inset-y-0 start-0 z-40 border-r border-sidebar-border bg-sidebar shadow-lg",
+          "h-screen overflow-hidden border-r border-sidebar-border bg-sidebar shadow-lg",
           "transition-[width] duration-300 motion-reduce:transition-none",
           effectiveCollapsed ? "w-16" : "w-64",
         )}
       >
         <SidebarBody collapsed={effectiveCollapsed} onToggle={toggle} />
       </aside>
+
+      <main className="h-screen min-w-0 overflow-y-auto overflow-x-hidden">
+        <div className="mx-auto max-w-7xl px-8 py-10">
+          <WorkspaceHeader />
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
+
