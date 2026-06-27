@@ -307,39 +307,48 @@ export function StartupForm({ startup }: Props) {
 
   /**
    * Empty-field-only merge of an Auto Enrich result. Never overwrites
-   * a populated field — preserves all user input.
+   * a populated field — preserves all user input. Returns what was applied
+   * vs skipped so the UI can explain "nothing happened" cases.
    */
-  function applyEnrichment(r: EnrichStartupResult) {
+  function applyEnrichment(r: EnrichStartupResult): { applied: string[]; skippedBecauseFilled: string[] } {
+    const applied: string[] = [];
+    const skipped: string[] = [];
     const isEmpty = (s: string | null | undefined) => !s || !s.trim();
-    if (isEmpty(startupName) && r.startupName) setStartupName(r.startupName);
-    if (isEmpty(companyType) && r.companyType) setCompanyType(r.companyType);
-    if (isEmpty(yearFounded) && r.yearFounded) setYearFounded(String(r.yearFounded));
-    if (isEmpty(email) && r.email) setEmail(r.email);
-    if (isEmpty(headquarters) && r.headquarters) {
-      setHeadquarters(r.headquarters);
+    const handle = (label: string, hasValue: boolean, targetEmpty: boolean, apply: () => void) => {
+      if (!hasValue) return;
+      if (targetEmpty) { apply(); applied.push(label); }
+      else { skipped.push(label); }
+    };
+    handle("Company Name", !!r.startupName, isEmpty(startupName), () => setStartupName(r.startupName!));
+    handle("Company Type", !!r.companyType, isEmpty(companyType), () => setCompanyType(r.companyType!));
+    handle("Year Founded", !!r.yearFounded, isEmpty(yearFounded), () => setYearFounded(String(r.yearFounded)));
+    handle("Email", !!r.email, isEmpty(email), () => setEmail(r.email!));
+    handle("Headquarters", !!r.headquarters, isEmpty(headquarters), () => {
+      setHeadquarters(r.headquarters!);
       if (isEmpty(region)) {
-        const suggested = regionForCountry(r.headquarters);
+        const suggested = regionForCountry(r.headquarters!);
         if (suggested) setRegion(suggested);
       }
-    }
-    if (isEmpty(city) && r.city) setCity(r.city);
-    if (isEmpty(linkedinUrl) && r.linkedinUrl) setLinkedinUrl(r.linkedinUrl);
-    if (isEmpty(shortDescription) && r.shortDescription) setShortDescription(r.shortDescription);
-    if (isEmpty(longDescription) && r.longDescription) setLongDescription(r.longDescription);
-    if (isEmpty(investmentStage) && r.investmentStage) setInvestmentStage(r.investmentStage);
-    if (industries.length === 0 && r.industries?.length) setIndustries(r.industries.slice(0, 5));
-    if (productTags.length === 0 && r.productTags?.length) setProductTags(r.productTags.slice(0, 5));
-    if (marketTags.length === 0 && r.marketTags?.length) setMarketTags(r.marketTags.slice(0, 5));
-    if (founders.length === 0 && r.founders?.length) {
+    });
+    handle("City", !!r.city, isEmpty(city), () => setCity(r.city!));
+    handle("LinkedIn URL", !!r.linkedinUrl, isEmpty(linkedinUrl), () => setLinkedinUrl(r.linkedinUrl!));
+    handle("Short Description", !!r.shortDescription, isEmpty(shortDescription), () => setShortDescription(r.shortDescription!));
+    handle("Long Description", !!r.longDescription, isEmpty(longDescription), () => setLongDescription(r.longDescription!));
+    handle("Investment Stage", !!r.investmentStage, isEmpty(investmentStage), () => setInvestmentStage(r.investmentStage!));
+    handle("Industries", !!r.industries?.length, industries.length === 0, () => setIndustries(r.industries!.slice(0, 5)));
+    handle("Product Tags", !!r.productTags?.length, productTags.length === 0, () => setProductTags(r.productTags!.slice(0, 5)));
+    handle("Market Tags", !!r.marketTags?.length, marketTags.length === 0, () => setMarketTags(r.marketTags!.slice(0, 5)));
+    handle("Founders", !!r.founders?.length, founders.length === 0, () => {
       setFounders(
-        r.founders.slice(0, 10).map((f) => ({
+        r.founders!.slice(0, 10).map((f) => ({
           full_name: f.full_name ?? "",
           position: f.position ?? "",
           linkedin_url: f.linkedin_url ?? "",
           bio: f.bio ?? "",
         })),
       );
-    }
+    });
+    return { applied, skippedBecauseFilled: skipped };
   }
 
   return (
