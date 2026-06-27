@@ -35,6 +35,8 @@ import {
 } from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { InvestorPicker } from "./investor-picker";
+import { AutoEnrichButton } from "./auto-enrich-button";
+import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
