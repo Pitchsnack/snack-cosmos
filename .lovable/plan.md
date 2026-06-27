@@ -1,31 +1,47 @@
-## Goal
-- Remove **Inactive** from the Startup **Status** field (UI + DB).
-- Add **Inactive** to the **Investment Stage** field as the last option, styled red (UI + DB).
+## Scope (this PRD, reduced)
+
+Per your answer: implement only §2.2 + §2.3 (hyperlink display + open in new tab) on Startup and Investor surfaces. Skip §2.1 duplicate check entirely — it stays deferred until P-18 backend lands.
+
+This is a frontend-only change. No DB changes, no server functions, no schema edits.
 
 ## Changes
 
-### 1. Database migration
-- Migrate any existing `startups.status = 'Inactive'` rows to `'Archived'` (safe fallback; no rows currently affected per check).
-- Drop and recreate `startups_status_chk` without `'Inactive'`:
-  `('Draft','Active','Fundraising','Due Diligence','Portfolio','Exited','Archived')`
-- Drop and recreate `startups_investment_stage_chk` adding `'Inactive'` at the end:
-  `('Pre-Seed','Seed','Series A','Series B','Series C','Growth','Other','Inactive')`
+### 1. New helper
+- `src/lib/company-url.ts`
+  - `buildCompanyUrlHref(value)` — trims; rejects `javascript:` / other unsafe schemes (returns `""`); if already `http(s)://` returns as-is, else prefixes `https://`.
+  - `CompanyUrlLink` React component (co-located or `src/components/shared/company-url-link.tsx`) that renders:
+    ```tsx
+    <a href={safeHref} target="_blank" rel="noopener noreferrer" title={value} className="…truncate underline-offset-2 hover:underline inline-flex items-center gap-1">
+      {value}<ExternalLink className="h-3 w-3" />
+    </a>
+    ```
+  - Renders nothing (or a muted "—") when value is empty / unsafe.
 
-### 2. `src/lib/startups.functions.ts`
-- `STATUSES` (line 6): remove `"Inactive"`.
-- `INVESTMENT_STAGES` constant: append `"Inactive"` at the end so the Zod enum + types stay in sync with the DB.
-- The `StartupStatus` / `InvestmentStage` types regenerate from these arrays — no other type edits needed.
+### 2. Display the saved URL as a hyperlink
 
-### 3. `src/components/startups/startup-form.tsx`
-- `STATUSES` (line 46): remove `"Inactive"`.
-- `STAGES` (lines 37–40): move `"Inactive"` to the very bottom of the array.
-- In the Investment Stage `<Select>`, render `Inactive` via a `SelectItem` with a red text class (e.g. `className="text-red-600 focus:text-red-600"`) so it is visually distinct.
-- If the loaded startup's current status is `Inactive` (legacy data), the select will simply show empty until the user picks a valid value — acceptable since DB is being cleaned.
+Replace plain-text rendering of `website_url` with `<CompanyUrlLink>` in:
+- `src/routes/_authenticated/startups.$id.index.tsx` (startup detail header / overview block)
+- `src/components/startups/startup-detail-panel.tsx`
+- `src/components/startups/startup-table.tsx` (Website column, if present)
+- `src/components/startups/startup-card.tsx` / `startup-list-item.tsx` (if they show URL)
+- `src/routes/_authenticated/investors.$id.index.tsx`
+- `src/components/investors/investor-detail-panel.tsx`
+- `src/components/investors/investor-table.tsx` / `investor-card.tsx` / `investor-list-item.tsx` (where URL is shown)
 
-### 4. Verification
-- Typecheck.
-- Load `/startups/new`: confirm Status dropdown no longer lists Inactive, and Investment Stage shows Inactive last in red.
+Only swap pure read-only renders. The edit-form `<Input>` for the URL stays an input (PRD §6.2: "If displayed outside active editing, it should be a hyperlink").
 
-## Out of scope
-- Other pre-existing mismatches between the frontend `STAGES` list (`Series C+`, `IPO`, `Acquired`) and the DB CHECK — not requested.
-- Investor / Deal status fields — request is Startups-only.
+### 3. Form inputs — leave logic alone
+- `startup-form.tsx` and `investor-form.tsx`: keep the existing `Input type="url"` for editing. No duplicate-check hook, no debounce, no warnings.
+- Trim leading/trailing whitespace on the URL value at submit time (small safety per PRD §8). Empty stays allowed.
+
+### 4. Out of scope (explicitly not built)
+- `findUrlDuplicates` server function
+- Investor `url_key` column / trigger
+- Duplicate warning / suggestion UI
+- Any debounce or async query on the URL input
+
+## Verification
+- `/startups/<id>` and `/investors/<id>`: saved URL renders as a link with external-link icon; click opens new tab; middle-click / Cmd-click still work; `rel="noopener noreferrer"` present.
+- Values like `acme.com`, `www.acme.com`, `https://acme.com`, `http://acme.com` all resolve to the correct `href` per the PRD table.
+- `javascript:alert(1)` saved as URL renders as muted text, no anchor.
+- Edit forms: URL input still editable; no new warnings; save still works.
