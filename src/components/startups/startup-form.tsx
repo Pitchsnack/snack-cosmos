@@ -305,6 +305,43 @@ export function StartupForm({ startup }: Props) {
 
   const submitting = createM.isPending || updateM.isPending;
 
+  /**
+   * Empty-field-only merge of an Auto Enrich result. Never overwrites
+   * a populated field — preserves all user input.
+   */
+  function applyEnrichment(r: EnrichStartupResult) {
+    const isEmpty = (s: string | null | undefined) => !s || !s.trim();
+    if (isEmpty(startupName) && r.startupName) setStartupName(r.startupName);
+    if (isEmpty(companyType) && r.companyType) setCompanyType(r.companyType);
+    if (isEmpty(yearFounded) && r.yearFounded) setYearFounded(String(r.yearFounded));
+    if (isEmpty(email) && r.email) setEmail(r.email);
+    if (isEmpty(headquarters) && r.headquarters) {
+      setHeadquarters(r.headquarters);
+      if (isEmpty(region)) {
+        const suggested = regionForCountry(r.headquarters);
+        if (suggested) setRegion(suggested);
+      }
+    }
+    if (isEmpty(city) && r.city) setCity(r.city);
+    if (isEmpty(linkedinUrl) && r.linkedinUrl) setLinkedinUrl(r.linkedinUrl);
+    if (isEmpty(shortDescription) && r.shortDescription) setShortDescription(r.shortDescription);
+    if (isEmpty(longDescription) && r.longDescription) setLongDescription(r.longDescription);
+    if (isEmpty(investmentStage) && r.investmentStage) setInvestmentStage(r.investmentStage);
+    if (industries.length === 0 && r.industries?.length) setIndustries(r.industries.slice(0, 5));
+    if (productTags.length === 0 && r.productTags?.length) setProductTags(r.productTags.slice(0, 5));
+    if (marketTags.length === 0 && r.marketTags?.length) setMarketTags(r.marketTags.slice(0, 5));
+    if (founders.length === 0 && r.founders?.length) {
+      setFounders(
+        r.founders.slice(0, 10).map((f) => ({
+          full_name: f.full_name ?? "",
+          position: f.position ?? "",
+          linkedin_url: f.linkedin_url ?? "",
+          bio: f.bio ?? "",
+        })),
+      );
+    }
+  }
+
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); isEdit ? updateM.mutate() : createM.mutate(); }}
