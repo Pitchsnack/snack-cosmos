@@ -53,6 +53,15 @@ export function EditableUrlField({
       : `https://${trimmed}`
     : "#";
 
+  const openInSeparateWindow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!trimmed) return;
+    const features =
+      "noopener,noreferrer,resizable=yes,scrollbars=yes,width=1200,height=800";
+    const win = window.open(href, "_blank", features);
+    win?.focus();
+  };
+
   if (!editing && trimmed) {
     return (
       <div className="space-y-1.5">
@@ -60,6 +69,7 @@ export function EditableUrlField({
         <div className="flex min-h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5">
           <a
             href={href}
+            onClick={openInSeparateWindow}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 truncate text-sm text-primary underline hover:text-primary/80"
