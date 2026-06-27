@@ -35,6 +35,8 @@ import {
 } from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { InvestorPicker } from "./investor-picker";
+import { AutoEnrichButton } from "./auto-enrich-button";
+import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
@@ -303,6 +305,43 @@ export function StartupForm({ startup }: Props) {
 
   const submitting = createM.isPending || updateM.isPending;
 
+  /**
+   * Empty-field-only merge of an Auto Enrich result. Never overwrites
+   * a populated field — preserves all user input.
+   */
+  function applyEnrichment(r: EnrichStartupResult) {
+    const isEmpty = (s: string | null | undefined) => !s || !s.trim();
+    if (isEmpty(startupName) && r.startupName) setStartupName(r.startupName);
+    if (isEmpty(companyType) && r.companyType) setCompanyType(r.companyType);
+    if (isEmpty(yearFounded) && r.yearFounded) setYearFounded(String(r.yearFounded));
+    if (isEmpty(email) && r.email) setEmail(r.email);
+    if (isEmpty(headquarters) && r.headquarters) {
+      setHeadquarters(r.headquarters);
+      if (isEmpty(region)) {
+        const suggested = regionForCountry(r.headquarters);
+        if (suggested) setRegion(suggested);
+      }
+    }
+    if (isEmpty(city) && r.city) setCity(r.city);
+    if (isEmpty(linkedinUrl) && r.linkedinUrl) setLinkedinUrl(r.linkedinUrl);
+    if (isEmpty(shortDescription) && r.shortDescription) setShortDescription(r.shortDescription);
+    if (isEmpty(longDescription) && r.longDescription) setLongDescription(r.longDescription);
+    if (isEmpty(investmentStage) && r.investmentStage) setInvestmentStage(r.investmentStage);
+    if (industries.length === 0 && r.industries?.length) setIndustries(r.industries.slice(0, 5));
+    if (productTags.length === 0 && r.productTags?.length) setProductTags(r.productTags.slice(0, 5));
+    if (marketTags.length === 0 && r.marketTags?.length) setMarketTags(r.marketTags.slice(0, 5));
+    if (founders.length === 0 && r.founders?.length) {
+      setFounders(
+        r.founders.slice(0, 10).map((f) => ({
+          full_name: f.full_name ?? "",
+          position: f.position ?? "",
+          linkedin_url: f.linkedin_url ?? "",
+          bio: f.bio ?? "",
+        })),
+      );
+    }
+  }
+
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); isEdit ? updateM.mutate() : createM.mutate(); }}
@@ -321,8 +360,19 @@ export function StartupForm({ startup }: Props) {
         </div>
       )}
 
-      {/* Logo + Media */}
-      <EntityMediaEditor value={media} onChange={setMedia} />
+      {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
+      <div className="flex items-start gap-4">
+        <div className="flex-1 min-w-0">
+          <EntityMediaEditor value={media} onChange={setMedia} />
+        </div>
+        <div className="pt-6 shrink-0">
+          <AutoEnrichButton
+            websiteUrl={websiteUrl}
+            disabled={submitting}
+            onEnriched={(r) => applyEnrichment(r)}
+          />
+        </div>
+      </div>
 
       {/* Row 1: Year Founded | Company Name | Company Type — PitchSnack1 [120px_1fr_160px] */}
       <div className="grid grid-cols-[120px_1fr_160px] gap-4">
