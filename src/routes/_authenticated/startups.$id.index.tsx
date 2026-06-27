@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ExternalLink, Mail, MapPin, Calendar, Pencil, Linkedin } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, MapPin, Calendar, Pencil, Linkedin, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -117,6 +117,11 @@ function StartupDetailPage() {
           )}
           {canManage && s.visibility !== "Archived" && (
             <Button size="sm" variant="outline" onClick={() => archiveM.mutate()} disabled={archiveM.isPending}>Archive</Button>
+          )}
+          {canManage && (
+            <Button size="sm" variant="outline" disabled aria-disabled="true" title="Delete is not available yet">
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+            </Button>
           )}
         </div>
       </div>
