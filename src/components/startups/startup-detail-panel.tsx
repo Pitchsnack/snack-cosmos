@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ExternalLink, Mail, MapPin, Calendar, Linkedin, Rocket, Pencil,
+  Mail, MapPin, Calendar, Linkedin, Rocket, Pencil,
 } from "lucide-react";
+import { CompanyUrlLink } from "@/components/shared/company-url-link";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStartup } from "@/hooks/use-startup";
