@@ -12,6 +12,7 @@ import { EditableUrlField } from "@/components/ui/editable-url-field";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { CountryCombobox } from "@/components/ui/country-combobox";
 import {
   createStartup,
   updateStartup,
@@ -364,7 +365,11 @@ export function StartupForm({ startup }: Props) {
         </div>
         <div className="space-y-1.5">
           <Label>Headquarters</Label>
-          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="Country" />
+          <CountryCombobox
+            value={headquarters}
+            onChange={setHeadquarters}
+            placeholder={isEdit && !headquarters ? "⚠ Missing: Headquarters" : "Select country..."}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>City</Label>
