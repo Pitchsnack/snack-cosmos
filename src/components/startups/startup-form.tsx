@@ -380,7 +380,7 @@ export function StartupForm({ startup }: Props) {
         </div>
         <div className="space-y-1.5">
           <Label>Website</Label>
-          <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" />
+          <Input type="text" inputMode="url" autoComplete="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="www.example.com" />
         </div>
         <div className="space-y-1.5">
           <Label>LinkedIn URL</Label>

@@ -363,7 +363,7 @@ export function InvestorForm({ investor }: Props) {
         </div>
         <div className="space-y-1.5">
           <Label>Company URL</Label>
-          <Input type="url" value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="https://example.com" />
+          <Input type="text" inputMode="url" autoComplete="url" value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="www.example.com" />
         </div>
       </div>
 
