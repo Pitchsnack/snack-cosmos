@@ -95,7 +95,7 @@ function StartupDetailPage() {
               {s.headquarters && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{s.headquarters}</span>}
               {s.year_founded && <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />Founded {s.year_founded}</span>}
               {s.email && <a href={`mailto:${s.email}`} className="inline-flex items-center gap-1 hover:text-foreground"><Mail className="h-3 w-3" />{s.email}</a>}
-              {s.website_url && <a href={s.website_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground"><ExternalLink className="h-3 w-3" />{s.website_url.replace(/^https?:\/\//,'')}</a>}
+              <CompanyUrlLink value={s.website_url} stripScheme className="gap-1" />
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {s.investment_stage && <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent">{s.investment_stage}</Badge>}
