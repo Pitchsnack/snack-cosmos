@@ -278,7 +278,7 @@ export function InvestorForm({ investor }: Props) {
         data: {
           id: investor!.id,
           investorName: displayName,
-          websiteUrl: companyUrl || null,
+          websiteUrl: companyUrl.trim() || null,
           country: headquarters || null,
           investorType: title || null,
           logoPath,
