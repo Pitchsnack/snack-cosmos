@@ -378,7 +378,23 @@ export function StartupForm({ startup }: Props) {
           <AutoEnrichButton
             websiteUrl={websiteUrl}
             disabled={submitting}
-            onEnriched={(r) => applyEnrichment(r)}
+            onEnriched={(r) => {
+              const { applied, skippedBecauseFilled } = applyEnrichment(r);
+              const fieldsReturned = Object.entries(r).filter(([k, v]) => {
+                if (k === "_debug" || v == null) return false;
+                if (Array.isArray(v)) return v.length > 0;
+                if (typeof v === "string") return v.trim().length > 0;
+                return true;
+              }).length;
+              if (fieldsReturned > 0 && applied.length === 0) {
+                const preview = skippedBecauseFilled.slice(0, 5).join(", ");
+                toast.info(
+                  `Auto Enrich returned data but all target fields were already filled` +
+                    (preview ? ` (skipped: ${preview}${skippedBecauseFilled.length > 5 ? "…" : ""})` : "") +
+                    `. Clear a field and try again to overwrite.`,
+                );
+              }
+            }}
           />
         </div>
       </div>
