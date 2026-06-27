@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { EditableUrlField } from "@/components/ui/editable-url-field";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -377,14 +378,18 @@ export function StartupForm({ startup }: Props) {
           <Label>Email</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
         </div>
-        <div className="space-y-1.5">
-          <Label>Website</Label>
-          <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>LinkedIn URL</Label>
-          <Input type="url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://www.linkedin.com/company/…" maxLength={2048} />
-        </div>
+        <EditableUrlField
+          label="Website"
+          value={websiteUrl}
+          onChange={setWebsiteUrl}
+          placeholder="https://"
+        />
+        <EditableUrlField
+          label="LinkedIn URL"
+          value={linkedinUrl}
+          onChange={setLinkedinUrl}
+          placeholder="https://www.linkedin.com/company/…"
+        />
       </div>
 
       {/* Descriptions */}
