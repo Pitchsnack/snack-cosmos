@@ -372,7 +372,9 @@ export function StartupForm({ startup }: Props) {
       {/* Row 3: Headquarters | Region | City */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>Headquarters</Label>
+          <div className="flex h-6 items-center">
+            <Label>Headquarters</Label>
+          </div>
           <CountryCombobox
             value={headquarters}
             onChange={(v) => {
@@ -389,16 +391,14 @@ export function StartupForm({ startup }: Props) {
           />
         </div>
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
+          <div className="flex h-6 items-center gap-1.5">
             <Label>Region</Label>
             <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
+                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     onClick={() => {
                       const suggested = regionForCountry(headquarters);
                       setRegion(suggested || "");
@@ -413,7 +413,7 @@ export function StartupForm({ startup }: Props) {
                     aria-label="Re-detect region from Headquarters"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
-                  </Button>
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent>Re-detect from Headquarters</TooltipContent>
               </Tooltip>
@@ -453,7 +453,9 @@ export function StartupForm({ startup }: Props) {
           </TooltipProvider>
         </div>
         <div className="space-y-1.5">
-          <Label>City</Label>
+          <div className="flex h-6 items-center">
+            <Label>City</Label>
+          </div>
           <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
         </div>
       </div>
