@@ -1630,6 +1630,7 @@ export type Database = {
           long_description: string | null
           market_tags: string[]
           product_tags: string[]
+          region: string | null
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -1658,6 +1659,7 @@ export type Database = {
           long_description?: string | null
           market_tags?: string[]
           product_tags?: string[]
+          region?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -1686,6 +1688,7 @@ export type Database = {
           long_description?: string | null
           market_tags?: string[]
           product_tags?: string[]
+          region?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string

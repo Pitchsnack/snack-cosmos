@@ -58,6 +58,7 @@ export interface StartupRow {
   year_founded: number | null;
   email: string | null;
   headquarters: string | null;
+  region: string | null;
   investment_stage: InvestmentStage | null;
   product_tags: string[];
   market_tags: string[];
@@ -133,7 +134,7 @@ async function logActivity(
 const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, industry,
   short_description, long_description, status, visibility, created_at, updated_at,
-  logo_url, company_type, year_founded, email, headquarters, investment_stage,
+  logo_url, company_type, year_founded, email, headquarters, region, investment_stage,
   product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
   startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
@@ -247,7 +248,7 @@ export const getStartup = createServerFn({ method: "GET" })
       .select(`
         id, tenant_id, startup_name, website_url, linkedin_url, city, industry,
         short_description, long_description, status, visibility, created_at, updated_at,
-        logo_url, company_type, year_founded, email, headquarters, investment_stage,
+        logo_url, company_type, year_founded, email, headquarters, region, investment_stage,
         product_tags, market_tags, url_key, source_global_id, imported_at,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
@@ -364,6 +365,7 @@ const ProfileFields = {
   yearFounded: z.number().int().min(1800).max(new Date().getFullYear()).nullable().optional(),
   email: z.string().email().max(255).nullable().optional().or(z.literal("")),
   headquarters: z.string().max(255).nullable().optional(),
+  region: z.enum(["APAC","EMEA","LATAM","NA"]).nullable().optional().or(z.literal("")),
   linkedinUrl: z.string().max(2048).nullable().optional().or(z.literal("")),
   investmentStage: z.enum(STAGES).nullable().optional(),
   productTags: TagArray.optional(),
@@ -515,6 +517,7 @@ export const createStartup = createServerFn({ method: "POST" })
         year_founded: data.yearFounded ?? null,
         email: emptyToNull(data.email),
         headquarters: emptyToNull(data.headquarters),
+        region: emptyToNull(data.region),
         linkedin_url: emptyToNull(data.linkedinUrl),
         investment_stage: data.investmentStage ?? null,
         product_tags: data.productTags ?? [],
@@ -582,6 +585,7 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.yearFounded !== undefined) patch.year_founded = data.yearFounded;
     if (data.email !== undefined) patch.email = data.email;
     if (data.headquarters !== undefined) patch.headquarters = data.headquarters;
+    if (data.region !== undefined) patch.region = emptyToNull(data.region);
     if (data.linkedinUrl !== undefined) patch.linkedin_url = emptyToNull(data.linkedinUrl);
     if (data.investmentStage !== undefined) patch.investment_stage = data.investmentStage;
     if (data.productTags !== undefined) patch.product_tags = data.productTags;

@@ -1,0 +1,1 @@
+ALTER TABLE public.startups ADD COLUMN IF NOT EXISTS region text NULL CHECK (region IS NULL OR region IN ('APAC','EMEA','LATAM','NA'));
