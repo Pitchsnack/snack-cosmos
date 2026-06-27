@@ -3,6 +3,18 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
+ * Diagnostic info attached to every enrichment result. Non-PII; safe to surface
+ * in toasts/dev tools. Lets the UI explain "nothing happened" cases.
+ */
+export interface EnrichDebug {
+  origin: string;
+  pagesTried: { path: string; status: number | "error"; bytes: number }[];
+  pagesUsed: number;
+  corpusChars: number;
+  modelOutputChars: number;
+}
+
+/**
  * Structured enrichment payload returned to the UI. All fields are optional —
  * the form merges only those whose target is currently empty.
  */
@@ -21,36 +33,56 @@ export interface EnrichResult {
   marketTags?: string[];
   investmentStage?: string;
   founders?: Array<{ full_name: string; position?: string; linkedin_url?: string; bio?: string }>;
+  _debug?: EnrichDebug;
 }
 
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C+","Growth","IPO","Acquired","Inactive"];
 const INDUSTRIES = ["FinTech","eCommerce & Marketplace","MarTech","HealthTech","Sustainability","Mobility & Logistics","DeepTech","Defense","EdTech","Gaming","PropTech","AgriTech","FMCG","Others"];
 
-async function fetchText(url: string, timeoutMs = 8000): Promise<string> {
+// Realistic desktop Chrome UA — many sites 403 anything containing "Bot".
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+interface FetchOutcome {
+  text: string;
+  status: number | "error";
+  bytes: number;
+}
+
+async function fetchText(url: string, timeoutMs = 8000): Promise<FetchOutcome> {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: ctrl.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; AutoEnrichBot/1.0)" },
+      headers: {
+        "User-Agent": BROWSER_UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
       redirect: "follow",
     });
-    if (!res.ok) return "";
+    if (!res.ok) return { text: "", status: res.status, bytes: 0 };
     const html = await res.text();
-    return html
+    const stripped = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 12000);
+    return { text: stripped, status: res.status, bytes: html.length };
   } catch {
-    return "";
+    return { text: "", status: "error", bytes: 0 };
   } finally {
     clearTimeout(id);
   }
 }
+
+const CANDIDATE_PATHS = ["", "/about", "/about-us", "/company", "/team", "/our-team"];
+const MIN_CORPUS_CHARS = 400;
+const EARLY_STOP_CHARS = 6000;
 
 export const enrichStartupFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -65,13 +97,34 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
     if (!/^https?:\/\//i.test(base)) base = "https://" + base;
     const origin = (() => { try { return new URL(base).origin; } catch { return base; } })();
 
-    const [home, about, team] = await Promise.all([
-      fetchText(origin),
-      fetchText(origin + "/about"),
-      fetchText(origin + "/team"),
-    ]);
-    const corpus = [home, about, team].filter(Boolean).join("\n\n---\n\n").slice(0, 16000);
-    if (!corpus) throw new Error("Could not fetch website content. Check the URL.");
+    // Fetch candidate pages sequentially with early stop so we can keep latency low.
+    const pagesTried: EnrichDebug["pagesTried"] = [];
+    const usedTexts: string[] = [];
+    let total = 0;
+    for (const path of CANDIDATE_PATHS) {
+      const url = origin + path;
+      const out = await fetchText(url);
+      pagesTried.push({ path: path || "/", status: out.status, bytes: out.bytes });
+      if (out.text) {
+        usedTexts.push(out.text);
+        total += out.text.length;
+        if (total >= EARLY_STOP_CHARS) break;
+      }
+    }
+
+    const corpus = usedTexts.join("\n\n---\n\n").slice(0, 16000);
+    const corpusChars = corpus.length;
+
+    if (corpusChars < MIN_CORPUS_CHARS) {
+      const summary = pagesTried
+        .map((p) => `${p.path}=${p.status}${p.bytes ? `/${p.bytes}b` : ""}`)
+        .join(", ");
+      throw new Error(
+        `Could not read enough text from ${origin} ` +
+          `(fetched ${pagesTried.length} pages, total ${corpusChars} chars; ${summary}). ` +
+          `The site may block scrapers or be JS-only.`,
+      );
+    }
 
     const system = `You extract structured company info from raw website text. Return ONLY JSON matching the schema. Use null/omit when unknown. Never invent.`;
     const user = `Source URL: ${base}\n\nAllowed companyType: ${COMPANY_TYPES.join(", ")}\nAllowed investmentStage: ${STAGES.join(", ")}\nAllowed industries (pick 1-3 best matches): ${INDUSTRIES.join(", ")}\n\nText:\n${corpus}\n\nReturn JSON with keys: startupName, companyType, yearFounded (number), email, headquarters (country), city, linkedinUrl, shortDescription (<=300 chars), longDescription (<=1500 chars), industries (string[]), productTags (string[] <=5), marketTags (string[] <=5), investmentStage, founders (array of {full_name, position, linkedin_url, bio}).`;
@@ -101,5 +154,12 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
     const content: string = json?.choices?.[0]?.message?.content ?? "{}";
     let parsed: EnrichResult = {};
     try { parsed = JSON.parse(content); } catch { parsed = {}; }
+    parsed._debug = {
+      origin,
+      pagesTried,
+      pagesUsed: usedTexts.length,
+      corpusChars,
+      modelOutputChars: content.length,
+    };
     return parsed;
   });
