@@ -35,8 +35,23 @@ export function AutoEnrichButton({ websiteUrl, onEnriched, disabled }: Props) {
     setLoading(true);
     try {
       const result = await autoEnrichAdapter.enrichStartup({ websiteUrl: url });
+      // Count non-empty top-level fields (ignore _debug).
+      const fieldsReturned = Object.entries(result).filter(([k, v]) => {
+        if (k === "_debug" || v == null) return false;
+        if (Array.isArray(v)) return v.length > 0;
+        if (typeof v === "string") return v.trim().length > 0;
+        return true;
+      }).length;
       onEnriched(result);
-      toast.success("Auto Enrich complete — empty fields populated.");
+      const dbg = result._debug;
+      if (fieldsReturned === 0) {
+        toast.warning(
+          `Auto Enrich finished but the model returned no fields.` +
+            (dbg ? ` Source: ${dbg.origin}, ~${dbg.corpusChars} chars scraped.` : ""),
+        );
+      } else {
+        toast.success(`Auto Enrich complete (${fieldsReturned} field${fieldsReturned === 1 ? "" : "s"} returned).`);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Auto Enrich failed.");
     } finally {
