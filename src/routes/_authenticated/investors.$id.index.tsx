@@ -1,7 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Pencil } from "lucide-react";
-import { CompanyUrlLink } from "@/components/shared/company-url-link";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -90,7 +88,7 @@ function InvestorDetailPage() {
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {s.country && <span>{s.country}</span>}
               {s.investor_type && <><span>·</span><span>{s.investor_type}</span></>}
-              {s.website_url && <><span>·</span><CompanyUrlLink value={s.website_url} showIcon={false} className="hover:underline" /></>}
+              {s.website_url && <><span>·</span><a href={s.website_url} target="_blank" rel="noreferrer" className="hover:underline">{s.website_url}</a></>}
             </div>
           </div>
         </div>

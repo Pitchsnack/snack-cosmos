@@ -243,8 +243,7 @@ export function InvestorForm({ investor }: Props) {
         data: {
           tenantId,
           investorName: displayName,
-          websiteUrl: companyUrl.trim() || null,
-
+          websiteUrl: companyUrl || null,
           country: headquarters || null,
           investorType: title || null,
           status: status as never,
@@ -278,7 +277,7 @@ export function InvestorForm({ investor }: Props) {
         data: {
           id: investor!.id,
           investorName: displayName,
-          websiteUrl: companyUrl.trim() || null,
+          websiteUrl: companyUrl || null,
           country: headquarters || null,
           investorType: title || null,
           logoPath,
@@ -363,7 +362,7 @@ export function InvestorForm({ investor }: Props) {
         </div>
         <div className="space-y-1.5">
           <Label>Company URL</Label>
-          <Input type="text" inputMode="url" autoComplete="url" value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="www.example.com" />
+          <Input type="url" value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="https://example.com" />
         </div>
       </div>
 

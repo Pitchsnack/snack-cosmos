@@ -232,8 +232,7 @@ export function StartupForm({ startup }: Props) {
         data: {
           tenantId,
           startupName,
-          websiteUrl: websiteUrl.trim() || null,
-
+          websiteUrl: websiteUrl || null,
           city: city || null,
           industry: industryArray,
           shortDescription: shortDescription || null,
@@ -270,7 +269,7 @@ export function StartupForm({ startup }: Props) {
           id: startup!.id,
           startupName,
           
-          websiteUrl: websiteUrl.trim() || null,
+          websiteUrl: websiteUrl || null,
           city: city || null,
           industry: industryArray,
           shortDescription: shortDescription || null,
@@ -380,7 +379,7 @@ export function StartupForm({ startup }: Props) {
         </div>
         <div className="space-y-1.5">
           <Label>Website</Label>
-          <Input type="text" inputMode="url" autoComplete="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="www.example.com" />
+          <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" />
         </div>
         <div className="space-y-1.5">
           <Label>LinkedIn URL</Label>

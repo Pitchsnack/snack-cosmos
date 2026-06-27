@@ -1,9 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import {
-  Mail, MapPin, Calendar, Linkedin, Rocket, Pencil,
+  ExternalLink, Mail, MapPin, Calendar, Linkedin, Rocket, Pencil,
 } from "lucide-react";
-import { CompanyUrlLink } from "@/components/shared/company-url-link";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStartup } from "@/hooks/use-startup";
@@ -62,7 +60,7 @@ export function StartupDetailPanel({
               {s.headquarters && <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{s.headquarters}</span>}
               {s.year_founded && <span className="inline-flex items-center gap-0.5"><Calendar className="h-3 w-3" />Founded {s.year_founded}</span>}
               {s.email && <a href={`mailto:${s.email}`} className="inline-flex items-center gap-0.5 hover:text-foreground"><Mail className="h-3 w-3" />{s.email}</a>}
-              <CompanyUrlLink value={s.website_url} stripScheme />
+              {s.website_url && <a href={s.website_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 hover:text-foreground"><ExternalLink className="h-3 w-3" />{s.website_url.replace(/^https?:\/\//,'')}</a>}
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {s.investment_stage && <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent text-[10px]">{s.investment_stage}</Badge>}

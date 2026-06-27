@@ -1,31 +1,31 @@
-## Problem (verified)
+## Goal
+- Remove **Inactive** from the Startup **Status** field (UI + DB).
+- Add **Inactive** to the **Investment Stage** field as the last option, styled red (UI + DB).
 
-The Website field in startup and investor forms uses `<Input type="url">`. Browser HTML5 validation requires a scheme, so `www.pitchsnack.com` fails native validation and the form never saves — the detail page has nothing to render as a hyperlink. `CompanyUrlLink` / `buildCompanyUrlHref` already auto-prefix `https://` at render time, so the bug is input-only.
+## Changes
 
-Evidence:
-- `src/components/startups/startup-form.tsx:383` → `<Input type="url" ... placeholder="https://" />`
-- `src/components/investors/investor-form.tsx:366` → `<Input type="url" ... placeholder="https://example.com" />`
+### 1. Database migration
+- Migrate any existing `startups.status = 'Inactive'` rows to `'Archived'` (safe fallback; no rows currently affected per check).
+- Drop and recreate `startups_status_chk` without `'Inactive'`:
+  `('Draft','Active','Fundraising','Due Diligence','Portfolio','Exited','Archived')`
+- Drop and recreate `startups_investment_stage_chk` adding `'Inactive'` at the end:
+  `('Pre-Seed','Seed','Series A','Series B','Series C','Growth','Other','Inactive')`
 
-## Fix (frontend only)
+### 2. `src/lib/startups.functions.ts`
+- `STATUSES` (line 6): remove `"Inactive"`.
+- `INVESTMENT_STAGES` constant: append `"Inactive"` at the end so the Zod enum + types stay in sync with the DB.
+- The `StartupStatus` / `InvestmentStage` types regenerate from these arrays — no other type edits needed.
 
-1. `src/components/startups/startup-form.tsx` (Website field)
-   - `type="url"` → `type="text"` + `inputMode="url"` + `autoComplete="url"`
-   - Placeholder → `www.example.com`
-2. `src/components/investors/investor-form.tsx` (Company URL field)
-   - Same change.
+### 3. `src/components/startups/startup-form.tsx`
+- `STATUSES` (line 46): remove `"Inactive"`.
+- `STAGES` (lines 37–40): move `"Inactive"` to the very bottom of the array.
+- In the Investment Stage `<Select>`, render `Inactive` via a `SelectItem` with a red text class (e.g. `className="text-red-600 focus:text-red-600"`) so it is visually distinct.
+- If the loaded startup's current status is `Inactive` (legacy data), the select will simply show empty until the user picks a valid value — acceptable since DB is being cleaned.
 
-No schema or save-logic changes. Values are still `.trim()`'d and `buildCompanyUrlHref` adds the `https://` prefix at render time.
+### 4. Verification
+- Typecheck.
+- Load `/startups/new`: confirm Status dropdown no longer lists Inactive, and Investment Stage shows Inactive last in red.
 
-## Note for PR description
-
-Removing `type="url"` also removes browser-level rejection of malformed URLs (e.g. typos, strings with spaces). Intentional — URL validation will land with the duplicate-detection PRD. For now, save accepts any non-empty string.
-
-## Verification (Playwright against running preview)
-
-1. `/startups/:id/edit`: type `www.pitchsnack.com` in Website, Save. Assert detail page renders `<a href="https://www.pitchsnack.com" target="_blank">`.
-2. `/startups/new`: fill required fields + Website `www.pitchsnack.com`, Save. Same assertion.
-3. `/investors/new` and `/investors/:id/edit`: repeat.
-4. Read the anchor's `href` via `page.get_attribute` and screenshot the rendered Website row.
-5. **Empty-Website regression**: at `/startups/new`, fill required fields but leave Website empty. Save. Assert save succeeds and the detail page does NOT render a broken `<a href="">` (CompanyUrlLink should return `null`).
-
-Artifacts under `/tmp/browser/website-hyperlink/`; report file paths and asserted `href` values as proof.
+## Out of scope
+- Other pre-existing mismatches between the frontend `STAGES` list (`Series C+`, `IPO`, `Acquired`) and the DB CHECK — not requested.
+- Investor / Deal status fields — request is Startups-only.
