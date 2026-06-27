@@ -323,8 +323,19 @@ export function StartupForm({ startup }: Props) {
         </div>
       )}
 
-      {/* Logo + Media */}
-      <EntityMediaEditor value={media} onChange={setMedia} />
+      {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
+      <div className="flex items-start gap-4">
+        <div className="flex-1 min-w-0">
+          <EntityMediaEditor value={media} onChange={setMedia} />
+        </div>
+        <div className="pt-6 shrink-0">
+          <AutoEnrichButton
+            websiteUrl={websiteUrl}
+            disabled={submitting}
+            onEnriched={(r) => applyEnrichment(r)}
+          />
+        </div>
+      </div>
 
       {/* Row 1: Year Founded | Company Name | Company Type — PitchSnack1 [120px_1fr_160px] */}
       <div className="grid grid-cols-[120px_1fr_160px] gap-4">
