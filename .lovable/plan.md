@@ -1,47 +1,31 @@
-## Scope (this PRD, reduced)
+## Problem (verified)
 
-Per your answer: implement only §2.2 + §2.3 (hyperlink display + open in new tab) on Startup and Investor surfaces. Skip §2.1 duplicate check entirely — it stays deferred until P-18 backend lands.
+The Website field in startup and investor forms uses `<Input type="url">`. Browser HTML5 validation requires a scheme, so `www.pitchsnack.com` fails native validation and the form never saves — the detail page has nothing to render as a hyperlink. `CompanyUrlLink` / `buildCompanyUrlHref` already auto-prefix `https://` at render time, so the bug is input-only.
 
-This is a frontend-only change. No DB changes, no server functions, no schema edits.
+Evidence:
+- `src/components/startups/startup-form.tsx:383` → `<Input type="url" ... placeholder="https://" />`
+- `src/components/investors/investor-form.tsx:366` → `<Input type="url" ... placeholder="https://example.com" />`
 
-## Changes
+## Fix (frontend only)
 
-### 1. New helper
-- `src/lib/company-url.ts`
-  - `buildCompanyUrlHref(value)` — trims; rejects `javascript:` / other unsafe schemes (returns `""`); if already `http(s)://` returns as-is, else prefixes `https://`.
-  - `CompanyUrlLink` React component (co-located or `src/components/shared/company-url-link.tsx`) that renders:
-    ```tsx
-    <a href={safeHref} target="_blank" rel="noopener noreferrer" title={value} className="…truncate underline-offset-2 hover:underline inline-flex items-center gap-1">
-      {value}<ExternalLink className="h-3 w-3" />
-    </a>
-    ```
-  - Renders nothing (or a muted "—") when value is empty / unsafe.
+1. `src/components/startups/startup-form.tsx` (Website field)
+   - `type="url"` → `type="text"` + `inputMode="url"` + `autoComplete="url"`
+   - Placeholder → `www.example.com`
+2. `src/components/investors/investor-form.tsx` (Company URL field)
+   - Same change.
 
-### 2. Display the saved URL as a hyperlink
+No schema or save-logic changes. Values are still `.trim()`'d and `buildCompanyUrlHref` adds the `https://` prefix at render time.
 
-Replace plain-text rendering of `website_url` with `<CompanyUrlLink>` in:
-- `src/routes/_authenticated/startups.$id.index.tsx` (startup detail header / overview block)
-- `src/components/startups/startup-detail-panel.tsx`
-- `src/components/startups/startup-table.tsx` (Website column, if present)
-- `src/components/startups/startup-card.tsx` / `startup-list-item.tsx` (if they show URL)
-- `src/routes/_authenticated/investors.$id.index.tsx`
-- `src/components/investors/investor-detail-panel.tsx`
-- `src/components/investors/investor-table.tsx` / `investor-card.tsx` / `investor-list-item.tsx` (where URL is shown)
+## Note for PR description
 
-Only swap pure read-only renders. The edit-form `<Input>` for the URL stays an input (PRD §6.2: "If displayed outside active editing, it should be a hyperlink").
+Removing `type="url"` also removes browser-level rejection of malformed URLs (e.g. typos, strings with spaces). Intentional — URL validation will land with the duplicate-detection PRD. For now, save accepts any non-empty string.
 
-### 3. Form inputs — leave logic alone
-- `startup-form.tsx` and `investor-form.tsx`: keep the existing `Input type="url"` for editing. No duplicate-check hook, no debounce, no warnings.
-- Trim leading/trailing whitespace on the URL value at submit time (small safety per PRD §8). Empty stays allowed.
+## Verification (Playwright against running preview)
 
-### 4. Out of scope (explicitly not built)
-- `findUrlDuplicates` server function
-- Investor `url_key` column / trigger
-- Duplicate warning / suggestion UI
-- Any debounce or async query on the URL input
+1. `/startups/:id/edit`: type `www.pitchsnack.com` in Website, Save. Assert detail page renders `<a href="https://www.pitchsnack.com" target="_blank">`.
+2. `/startups/new`: fill required fields + Website `www.pitchsnack.com`, Save. Same assertion.
+3. `/investors/new` and `/investors/:id/edit`: repeat.
+4. Read the anchor's `href` via `page.get_attribute` and screenshot the rendered Website row.
+5. **Empty-Website regression**: at `/startups/new`, fill required fields but leave Website empty. Save. Assert save succeeds and the detail page does NOT render a broken `<a href="">` (CompanyUrlLink should return `null`).
 
-## Verification
-- `/startups/<id>` and `/investors/<id>`: saved URL renders as a link with external-link icon; click opens new tab; middle-click / Cmd-click still work; `rel="noopener noreferrer"` present.
-- Values like `acme.com`, `www.acme.com`, `https://acme.com`, `http://acme.com` all resolve to the correct `href` per the PRD table.
-- `javascript:alert(1)` saved as URL renders as muted text, no anchor.
-- Edit forms: URL input still editable; no new warnings; save still works.
+Artifacts under `/tmp/browser/website-hyperlink/`; report file paths and asserted `href` values as proof.
