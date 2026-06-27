@@ -126,6 +126,7 @@ export function StartupForm({ startup }: Props) {
   const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? "");
   const [email, setEmail] = useState(startup?.email ?? "");
   const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? "");
+  const [region, setRegion] = useState<string>(startup?.region ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(startup?.website_url ?? "");
   const [linkedinUrl, setLinkedinUrl] = useState(startup?.linkedin_url ?? "");
   
@@ -219,6 +220,7 @@ export function StartupForm({ startup }: Props) {
     yearFounded: yearFounded ? Number(yearFounded) : null,
     email: email || null,
     headquarters: headquarters || null,
+    region: (region || null) as "APAC" | "EMEA" | "LATAM" | "NA" | null,
     linkedinUrl: linkedinUrl || null,
     investmentStage: (investmentStage as typeof STAGES[number]) || null,
     productTags,
