@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, MapPin, Briefcase, Pencil } from "lucide-react";
+import { MapPin, Briefcase, Pencil } from "lucide-react";
+import { CompanyUrlLink } from "@/components/shared/company-url-link";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useInvestor } from "@/hooks/use-investor";
