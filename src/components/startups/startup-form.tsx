@@ -347,7 +347,7 @@ export function StartupForm({ startup }: Props) {
         </div>
       </div>
 
-      {/* Row 2: Investment Stage | Headquarters | City */}
+      {/* Row 2: Investment Stage */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Investment Stage</Label>
@@ -367,13 +367,90 @@ export function StartupForm({ startup }: Props) {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* Row 3: Headquarters | Region | City */}
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Headquarters</Label>
           <CountryCombobox
             value={headquarters}
-            onChange={setHeadquarters}
+            onChange={(v) => {
+              setHeadquarters(v);
+              // Auto-suggest region when empty / when HQ cleared
+              if (!v) {
+                setRegion("");
+              } else if (!region) {
+                const suggested = regionForCountry(v);
+                if (suggested) setRegion(suggested);
+              }
+            }}
             placeholder={isEdit && !headquarters ? "⚠ Missing: Headquarters" : "Select country..."}
           />
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Label>Region</Label>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => {
+                      const suggested = regionForCountry(headquarters);
+                      setRegion(suggested || "");
+                      toast.success(
+                        suggested
+                          ? `Region set to ${suggested}`
+                          : headquarters
+                            ? "No region mapping for this country"
+                            : "Set Headquarters first",
+                      );
+                    }}
+                    aria-label="Re-detect region from Headquarters"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Re-detect from Headquarters</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <TooltipProvider delayDuration={150}>
+            <Select
+              value={region || ""}
+              onValueChange={(v) => setRegion(v === "__clear__" ? "" : v)}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Select Region" />
+              </SelectTrigger>
+              <SelectContent>
+                {region && (
+                  <SelectItem value="__clear__" className="text-muted-foreground">
+                    Clear selection
+                  </SelectItem>
+                )}
+                {REGION_OPTIONS.map((r) => (
+                  <Tooltip key={r.value}>
+                    <TooltipTrigger asChild>
+                      <SelectItem value={r.value}>
+                        <span className="font-medium">{r.label}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          — {r.description}
+                        </span>
+                      </SelectItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs">
+                      <span className="font-medium">{r.label}</span> — {r.description}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </SelectContent>
+            </Select>
+          </TooltipProvider>
         </div>
         <div className="space-y-1.5">
           <Label>City</Label>
