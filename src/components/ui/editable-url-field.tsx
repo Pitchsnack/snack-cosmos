@@ -42,8 +42,29 @@ export function EditableUrlField({
     prevValueRef.current = value;
   }, [value]);
 
+  const normalizeUrl = (raw: string): string => {
+    const t = raw.trim();
+    if (!t) return "";
+    const protoMatch = t.match(/^(https?:\/\/)(.*)$/i);
+    const proto = protoMatch ? protoMatch[1].toLowerCase() : "https://";
+    const rest = protoMatch ? protoMatch[2] : t;
+    const slashIdx = rest.indexOf("/");
+    let host = slashIdx === -1 ? rest : rest.slice(0, slashIdx);
+    const tail = slashIdx === -1 ? "" : rest.slice(slashIdx);
+    if (host && !/^www\./i.test(host)) {
+      const hostNoPort = host.split(":")[0];
+      const labels = hostNoPort.split(".").filter(Boolean);
+      if (labels.length === 2) host = `www.${host}`;
+    }
+    return `${proto}${host}${tail}`;
+  };
+
   const commit = () => {
-    if (value?.trim()) setEditing(false);
+    const t = value?.trim();
+    if (!t) return;
+    const normalized = normalizeUrl(t);
+    if (normalized !== value) onChange(normalized);
+    setEditing(false);
   };
 
   const trimmed = value?.trim() ?? "";
