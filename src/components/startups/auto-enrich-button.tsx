@@ -19,9 +19,17 @@ export function AutoEnrichButton({ websiteUrl, onEnriched, disabled }: Props) {
   const [loading, setLoading] = useState(false);
 
   const run = async () => {
-    const url = (websiteUrl ?? "").trim();
-    if (!url) {
+    const raw = (websiteUrl ?? "").trim();
+    if (!raw) {
       toast.error("Enter a Website URL first, then click Auto Enrich.");
+      return;
+    }
+    const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+      // eslint-disable-next-line no-new
+      new URL(url);
+    } catch {
+      toast.error("Website URL is not a valid URL.");
       return;
     }
     setLoading(true);
