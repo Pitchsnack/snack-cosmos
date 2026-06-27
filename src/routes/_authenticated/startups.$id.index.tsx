@@ -118,6 +118,11 @@ function StartupDetailPage() {
           {canManage && s.visibility !== "Archived" && (
             <Button size="sm" variant="outline" onClick={() => archiveM.mutate()} disabled={archiveM.isPending}>Archive</Button>
           )}
+          {canManage && (
+            <Button size="sm" variant="outline" disabled aria-disabled="true" title="Delete is not available yet">
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+            </Button>
+          )}
         </div>
       </div>
 
