@@ -232,7 +232,8 @@ export function StartupForm({ startup }: Props) {
         data: {
           tenantId,
           startupName,
-          websiteUrl: websiteUrl || null,
+          websiteUrl: websiteUrl.trim() || null,
+
           city: city || null,
           industry: industryArray,
           shortDescription: shortDescription || null,
@@ -269,7 +270,7 @@ export function StartupForm({ startup }: Props) {
           id: startup!.id,
           startupName,
           
-          websiteUrl: websiteUrl || null,
+          websiteUrl: websiteUrl.trim() || null,
           city: city || null,
           industry: industryArray,
           shortDescription: shortDescription || null,
