@@ -243,7 +243,8 @@ export function InvestorForm({ investor }: Props) {
         data: {
           tenantId,
           investorName: displayName,
-          websiteUrl: companyUrl || null,
+          websiteUrl: companyUrl.trim() || null,
+
           country: headquarters || null,
           investorType: title || null,
           status: status as never,
