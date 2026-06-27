@@ -57,11 +57,8 @@ export function InvestorDetailPanel({
             {i.investor_type && <div className="text-xs text-muted-foreground">{i.investor_type}</div>}
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               {i.country && <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{i.country}</span>}
-              {i.website_url && (
-                <a href={i.website_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 hover:text-foreground">
-                  <ExternalLink className="h-3 w-3" />{i.website_url.replace(/^https?:\/\//, "")}
-                </a>
-              )}
+              <CompanyUrlLink value={i.website_url} stripScheme />
+
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {i.status && <Badge variant="outline" className="text-[10px]">{i.status}</Badge>}
