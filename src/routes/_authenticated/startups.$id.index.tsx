@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ExternalLink, Mail, MapPin, Calendar, Pencil, Linkedin, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, MapPin, Calendar, Pencil, Linkedin, Trash2 } from "lucide-react";
+import { CompanyUrlLink } from "@/components/shared/company-url-link";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
