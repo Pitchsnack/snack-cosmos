@@ -378,14 +378,18 @@ export function StartupForm({ startup }: Props) {
           <Label>Email</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
         </div>
-        <div className="space-y-1.5">
-          <Label>Website</Label>
-          <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>LinkedIn URL</Label>
-          <Input type="url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://www.linkedin.com/company/…" maxLength={2048} />
-        </div>
+        <EditableUrlField
+          label="Website"
+          value={websiteUrl}
+          onChange={setWebsiteUrl}
+          placeholder="https://"
+        />
+        <EditableUrlField
+          label="LinkedIn URL"
+          value={linkedinUrl}
+          onChange={setLinkedinUrl}
+          placeholder="https://www.linkedin.com/company/…"
+        />
       </div>
 
       {/* Descriptions */}
