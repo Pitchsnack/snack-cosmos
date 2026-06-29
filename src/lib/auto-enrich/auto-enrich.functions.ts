@@ -123,7 +123,7 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({ websiteUrl: z.string().url() }).parse(input),
   )
-  .handler(async ({ data }): Promise<EnrichResult> => {
+  .handler(async ({ data, context }): Promise<EnrichResult> => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("Auto Enrich is not configured (missing API key).");
 
@@ -146,8 +146,37 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
       }
     }
 
-    const corpus = usedTexts.join("\n\n---\n\n").slice(0, 16000);
-    const corpusChars = corpus.length;
+    let corpus = usedTexts.join("\n\n---\n\n").slice(0, 16000);
+    let corpusChars = corpus.length;
+
+    // SPA fallback: raw HTML was a near-empty shell. Try Firecrawl's headless
+    // browser to render the page, then continue with the same extraction pipeline.
+    if (corpusChars < FIRECRAWL_FALLBACK_THRESHOLD) {
+      const rendered = await fetchViaFirecrawl(base, FIRECRAWL_MAX_CHARS);
+      if (rendered && rendered.length > 0) {
+        const claims = (context as { claims?: Record<string, unknown> } | undefined)?.claims;
+        const tenantId = (claims?.tenant_id as string | undefined) ?? null;
+        const callerType: "control" | "tenant" | "unknown" =
+          claims === undefined
+            ? "unknown"
+            : claims?.is_control
+              ? "control"
+              : "tenant";
+        console.log(
+          JSON.stringify({
+            event: "firecrawl_fallback_used",
+            tenant_id: tenantId,
+            caller_type: callerType,
+            url: base,
+            bytes_returned: rendered.length,
+          }),
+        );
+        pagesTried.push({ path: "[firecrawl]", status: 200, bytes: rendered.length });
+        usedTexts.push(rendered);
+        corpus = usedTexts.join("\n\n---\n\n").slice(0, 16000);
+        corpusChars = corpus.length;
+      }
+    }
 
     if (corpusChars < MIN_CORPUS_CHARS) {
       const summary = pagesTried
@@ -159,6 +188,7 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
           `The site may block scrapers or be JS-only.`,
       );
     }
+
 
     const system = `You extract structured company info from raw website text. Return ONLY JSON matching the schema. Use null/omit when unknown. Never invent.`;
     const user = `Source URL: ${base}\n\nAllowed companyType: ${COMPANY_TYPES.join(", ")}\nAllowed investmentStage: ${STAGES.join(", ")}\nAllowed industries (pick 1-3 best matches): ${INDUSTRIES.join(", ")}\n\nText:\n${corpus}\n\nReturn JSON with keys: startupName, companyType, yearFounded (number), email, headquarters (country), city, linkedinUrl, shortDescription (<=300 chars), longDescription (<=1500 chars), industries (string[]), productTags (string[] <=5), marketTags (string[] <=5), investmentStage, founders (array of {full_name, position, linkedin_url, bio}).`;
