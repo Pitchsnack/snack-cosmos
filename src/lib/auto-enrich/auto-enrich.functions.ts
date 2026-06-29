@@ -82,7 +82,41 @@ async function fetchText(url: string, timeoutMs = 8000): Promise<FetchOutcome> {
 
 const CANDIDATE_PATHS = ["", "/about", "/about-us", "/company", "/team", "/our-team"];
 const MIN_CORPUS_CHARS = 400;
+// Below this raw-fetch corpus size we trigger the Firecrawl fallback for SPA shells.
+const FIRECRAWL_FALLBACK_THRESHOLD = 500;
+const FIRECRAWL_MAX_CHARS = 50_000;
 const EARLY_STOP_CHARS = 6000;
+
+/**
+ * Headless-browser fallback for client-rendered (SPA) sites whose raw HTML is
+ * a near-empty shell. Never throws — returns null on any failure so the
+ * existing "Could not read enough text" guard can fire downstream.
+ */
+async function fetchViaFirecrawl(url: string, maxChars: number): Promise<string | null> {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) return null;
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), 20_000);
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ url, formats: ["markdown"] }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    const md: string = data?.data?.markdown ?? "";
+    return md ? md.slice(0, maxChars) : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(id);
+  }
+}
 
 export const enrichStartupFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
