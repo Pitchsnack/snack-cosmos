@@ -469,13 +469,12 @@ export function StartupForm({ startup }: Props) {
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
-            <Label>Headquarters</Label>
+            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>Headquarters</Label>
           </div>
           <CountryCombobox
             value={headquarters}
             onChange={(v) => {
               setHeadquarters(v);
-              // Auto-suggest region when empty / when HQ cleared
               if (!v) {
                 setRegion("");
               } else if (!region) {
@@ -483,9 +482,11 @@ export function StartupForm({ startup }: Props) {
                 if (suggested) setRegion(suggested);
               }
             }}
-            placeholder={isEdit && !headquarters ? "⚠ Missing: Headquarters" : "Select country..."}
+            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : "Select country..."}
+            className={miss(isStrEmpty(headquarters)) ? MISSING_INPUT : undefined}
           />
         </div>
+
         <div className="space-y-1.5">
           <div className="flex h-6 items-center gap-1.5">
             <Label>Region</Label>
