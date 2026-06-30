@@ -551,17 +551,21 @@ export function StartupForm({ startup }: Props) {
         </div>
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
-            <Label>City</Label>
+            <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>City</Label>
           </div>
-          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
+          <Input value={city} onChange={(e) => setCity(e.target.value)}
+            placeholder={miss(isStrEmpty(city)) ? missingPh("City") : "City"}
+            className={miss(isStrEmpty(city)) ? MISSING_INPUT : undefined} />
         </div>
       </div>
 
       {/* Row 3: Email | Website | LinkedIn URL */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
+          <Label className={miss(isStrEmpty(email)) ? MISSING_LABEL : undefined}>Email</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255}
+            placeholder={miss(isStrEmpty(email)) ? missingPh("Email") : undefined}
+            className={miss(isStrEmpty(email)) ? MISSING_INPUT : undefined} />
         </div>
         <EditableUrlField
           label="Website"
@@ -573,9 +577,12 @@ export function StartupForm({ startup }: Props) {
           label="LinkedIn URL"
           value={linkedinUrl}
           onChange={setLinkedinUrl}
-          placeholder="https://www.linkedin.com/company/…"
+          placeholder={miss(isStrEmpty(linkedinUrl)) ? missingPh("LinkedIn URL") : "https://www.linkedin.com/company/…"}
+          labelClassName={miss(isStrEmpty(linkedinUrl)) ? MISSING_LABEL : undefined}
+          inputClassName={miss(isStrEmpty(linkedinUrl)) ? MISSING_INPUT : undefined}
         />
       </div>
+
 
       {/* Descriptions */}
       <div className="space-y-1.5">
