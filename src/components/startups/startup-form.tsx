@@ -443,9 +443,11 @@ export function StartupForm({ startup }: Props) {
       {/* Row 2: Investment Stage */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>Investment Stage</Label>
+          <Label className={miss(isStrEmpty(investmentStage)) ? MISSING_LABEL : undefined}>Investment Stage</Label>
           <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger>
+            <SelectTrigger className={miss(isStrEmpty(investmentStage)) ? MISSING_INPUT : undefined}>
+              <SelectValue placeholder={miss(isStrEmpty(investmentStage)) ? missingPh("Investment Stage") : "Stage"} />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
               {STAGES.map((s) => (
@@ -460,6 +462,7 @@ export function StartupForm({ startup }: Props) {
             </SelectContent>
           </Select>
         </div>
+
       </div>
 
       {/* Row 3: Headquarters | Region | City */}
