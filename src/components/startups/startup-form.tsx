@@ -585,17 +585,24 @@ export function StartupForm({ startup }: Props) {
 
       {/* Descriptions */}
       <div className="space-y-1.5">
-        <Label>Short Description</Label>
-        <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
+        <Label className={miss(isStrEmpty(shortDescription)) ? MISSING_LABEL : undefined}>Short Description</Label>
+        <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)}
+          placeholder={miss(isStrEmpty(shortDescription)) ? missingPh("Short Description") : undefined}
+          className={miss(isStrEmpty(shortDescription)) ? MISSING_INPUT : undefined} />
       </div>
       <div className="space-y-1.5">
-        <Label>Long Description</Label>
-        <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)} />
+        <Label className={miss(isStrEmpty(longDescription)) ? MISSING_LABEL : undefined}>Long Description</Label>
+        <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)}
+          placeholder={miss(isStrEmpty(longDescription)) ? missingPh("Long Description") : undefined}
+          className={miss(isStrEmpty(longDescription)) ? MISSING_INPUT : undefined} />
       </div>
 
       {/* Industry pills */}
       <div className="space-y-1.5">
-        <Label>Industry</Label>
+        <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
+        {miss(industries.length === 0) && (
+          <p className="text-xs text-destructive">⚠ Missing: pick at least one industry</p>
+        )}
         <div className="flex flex-wrap gap-2">
           {INDUSTRIES.map((ind) => (
             <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>
@@ -619,7 +626,10 @@ export function StartupForm({ startup }: Props) {
 
       {/* Product tags */}
       <div className="space-y-1.5">
-        <Label>Product & Service Tags ({productTags.length}/5)</Label>
+        <Label className={miss(productTags.length === 0) ? MISSING_LABEL : undefined}>Product & Service Tags ({productTags.length}/5)</Label>
+        {miss(productTags.length === 0) && (
+          <p className="text-xs text-destructive">⚠ Missing: add at least one product tag</p>
+        )}
         <div className="flex flex-wrap gap-2">
           {productTags.map((t) => (
             <button key={t} type="button" onClick={() => setProductTags(productTags.filter((x) => x !== t))}
@@ -638,7 +648,10 @@ export function StartupForm({ startup }: Props) {
 
       {/* Market tags */}
       <div className="space-y-1.5">
-        <Label>Market Tags ({marketTags.length}/5)</Label>
+        <Label className={miss(marketTags.length === 0) ? MISSING_LABEL : undefined}>Market Tags ({marketTags.length}/5)</Label>
+        {miss(marketTags.length === 0) && (
+          <p className="text-xs text-destructive">⚠ Missing: add at least one market tag</p>
+        )}
         <div className="flex flex-wrap gap-2">
           {marketTags.map((t) => (
             <button key={t} type="button" onClick={() => setMarketTags(marketTags.filter((x) => x !== t))}
@@ -656,7 +669,11 @@ export function StartupForm({ startup }: Props) {
       </div>
 
       {/* Founders */}
+      {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
+        <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
+      )}
       <FounderEditor value={founders} onChange={setFounders} />
+
 
       {/* Investors */}
       {tenantId && (
