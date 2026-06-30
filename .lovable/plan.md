@@ -1,62 +1,49 @@
-## Auto Enrich — Migration-Safety Verification Report
 
-This is a **verification-only deliverable**. No code changes proposed. Approving this plan simply acknowledges the report — there is nothing to implement.
+## Why City is empty today
 
----
+In `src/lib/auto-enrich/auto-enrich.functions.ts`:
 
-### Part 1 — Static checks
+1. The prompt defines `headquarters (country)` precisely but leaves `city` undefined, so the model treats it as optional and usually returns `null`.
+2. `CANDIDATE_PATHS` is `["", "/about", "/about-us", "/company", "/team", "/our-team"]` — no `/contact*` or `/imprint`/`/impressum`, where street addresses (and therefore city names) actually live.
+3. Even the Firecrawl fallback only renders the homepage; contact-page content is rarely there.
 
-| # | Check | Result | Verdict |
-|---|---|---|---|
-| 1.1 | `firecrawl` in `src/components/` or `auto-enrich-adapter.ts` (case-insensitive) | 0 matches | PASS |
-| 1.2 | `api.firecrawl.dev` across `src/` | 1 match, only in `src/lib/auto-enrich/auto-enrich.functions.ts:101` | PASS |
-| 1.3 | `firecrawl_api_key` / `firecrawlApiKey` in `src/`, `supabase/`, `migrations/` | 1 match: `process.env.FIRECRAWL_API_KEY` at `auto-enrich.functions.ts:96`. No schema, migration, or tenant-table reference. | PASS |
-| 1.4 | Hardcoded `tenant_id` / `database_id` / `db_name` / literal `tenantId=` in `src/lib/auto-enrich/` | 0 matches | PASS |
-| 1.5 | DB writes (`supabase.`, `.insert(`, `.upsert(`, `.update(`) inside or around `fetchViaFirecrawl` | 0 matches | PASS |
-| 1.6 | Diff vs `HEAD~1` adds new fields to `EnrichResult` / `EnrichDebug` | 0 new interface/type fields. Only `+` lines are the Firecrawl helper, the log emission, and the synthetic `[firecrawl]` `pagesTried` entry — response shape byte-identical. | PASS |
+## Changes
 
-### Part 2 — Runtime checks
+### 1. `src/lib/auto-enrich/auto-enrich.functions.ts` — improve city recall
 
-**Scenario A (SPA fallback fires)** — observed log line from sandbox dev-server:
+- Append contact/legal pages to `CANDIDATE_PATHS`:
+  `"/contact", "/contact-us", "/imprint", "/impressum", "/legal"`.
+  Early-stop at 6000 chars still bounds latency for content-rich sites.
+- Tighten the prompt:
+  - `headquarters`: keep as country.
+  - `city`: explicit instruction — *"HQ city name only (e.g. 'Berlin', not 'Berlin, Germany'). Extract from address blocks in footers, contact pages, or imprint/impressum sections. Omit if not explicitly stated."*
+- No signature/response-shape changes. No new fields.
 
-```
-{"event":"firecrawl_fallback_used","tenant_id":null,"caller_type":"tenant","url":"https://www.pitchsnack.com","bytes_returned":3083}
-```
+### 2. `src/components/startups/startup-form.tsx` — red highlight for missing fields (edit mode only)
 
-- Exactly one `firecrawl_fallback_used` per invocation. PASS
-- `tenant_id` sourced from `context.claims.tenant_id` (null because this caller's JWT has no `tenant_id` claim — not from body/URL/literal). PASS
-- `caller_type` derived from `context.claims.is_control` (here: claims present, `is_control` falsy → `"tenant"`; falls back to `"unknown"` when claims absent, per code at `auto-enrich.functions.ts:74-79`). PASS
-- `url` echoes the user-supplied URL exactly — no tenant rewriting. PASS
-- `process.env.FIRECRAWL_API_KEY` read once at top of `fetchViaFirecrawl` (line 96); no tenant table or tenant-scoped config read for the key. PASS
-- Same Gemini extraction prompt (`system` + `user` at lines 154–155) is used regardless of whether the corpus came from raw fetch or Firecrawl. PASS
+Matches the existing `⚠ Missing: Headquarters` placeholder pattern, extended uniformly.
 
-**Scenario B (content-rich, no fallback)** — Not exercised in this session (no fresh log evidence). The fallback gate is `corpusChars < FIRECRAWL_FALLBACK_THRESHOLD (500)` at line 121; gate is correct by inspection. Recommend a one-off run against a Wikipedia URL to capture the negative log and confirm zero outbound to `api.firecrawl.dev`. **NOT VERIFIED at runtime — code-level PASS.**
+- Add a small `isMissing(value)` helper plus a `missingFieldClass` constant:
+  `"border-destructive text-destructive placeholder:text-destructive/70"` for inputs/textareas/triggers, and a `text-destructive` variant for the `<Label>`.
+- Gate on `isEdit` — never highlight on the create form (avoids noisy blank-form red).
+- Apply to the same set of fields Auto Enrich targets: Company Name, Company Type, Year Founded, Email, Headquarters, **City**, LinkedIn URL, Short Description, Long Description, Investment Stage, Industries, Product Tags, Market Tags, Founders.
+- For each: when `isEdit && isMissing(field)`,
+  - add `missingFieldClass` to the `<Input>`/`<Textarea>`/`<SelectTrigger>`/`CountryCombobox`,
+  - swap the `<Label>` to a destructive variant,
+  - use a `⚠ Missing: <Field>` placeholder (consistent with the existing Headquarters treatment).
+- Tag/founder collections are highlighted via a destructive-bordered empty-state line ("⚠ Missing: add at least one …").
+- Clears automatically as the user types — the highlight is purely derived from current empty state, no extra state machine, no auto-enrich-vs-manual tracking.
 
-**Scenario C (connector removed)** — Not exercised (would require unlinking Firecrawl). By inspection: `fetchViaFirecrawl` returns `null` when `apiKey` is missing (line 97) without throwing; the outer `if (rendered && rendered.length > 0)` skips, and the existing `MIN_CORPUS_CHARS` guard at line 142 throws the same `"Could not read enough text from <origin>…"` error the UI already surfaces. Response shape unchanged. **NOT VERIFIED at runtime — code-level PASS.**
+### 3. Out of scope
 
-### Part 3 — Architectural invariants
+- No adapter, server-function signature, or response-shape changes.
+- No new fields on `EnrichResult` / `EnrichDebug`.
+- Create form unchanged (no red on a fresh form).
+- No changes to required-for-submit logic (`canSubmit`).
 
-- **3.1 Session-scoped write path unchanged.** `enrichStartupFromUrl` returns `EnrichResult` and performs no DB write. Firecrawl branch only appends to `usedTexts` and feeds the same `corpus` into the same AI call (lines 124–139). No new DB read/write, no tenant/scope branching below the fetch layer. PASS
-- **3.2 Adapter seam preserved.** `src/lib/auto-enrich/auto-enrich-adapter.ts` unchanged in this PR; it calls `enrichStartupFromUrl` via the TanStack server-fn RPC (`{ data: { websiteUrl } }`), not via any direct internal import of helpers. PASS
-- **3.3 "What changes at migration" list is short.** Files that will need to change when the Database Router lands:
-  1. The framework-level adapter that resolves the DB connection from session context (one file, outside `auto-enrich/`).
-  2. Optionally server-fn deployment config — not source.
-  
-  Nothing under `src/components/`, nothing in `auto-enrich-adapter.ts`, nothing in the Firecrawl helper. PASS
-- **3.4 No new caching layer.** No in-memory cache, no Redis, no cache table introduced. Firecrawl responses are used once per invocation and discarded. PASS
+## Verification
 
-### Part 4 — Migration dry run
-
-1. **Which files in the auto-enrich path change at migration?** Only the framework-level DB connection adapter. `auto-enrich.functions.ts`, the AI extraction call, `EnrichResult` shape, `auto-enrich-adapter.ts`, and all components stay byte-identical.
-2. **Re-provision Firecrawl key per tenant?** No. Single platform-level `FIRECRAWL_API_KEY` continues to serve all tenants and Control.
-3. **Does `firecrawl_fallback_used` log still work post-migration?** Yes. `context.claims.tenant_id` is populated by `requireSupabaseAuth` middleware, independent of DB topology.
-4. **Dedicated-DB tenant vs shared-instance tenant — identical Auto Enrich behavior?** Yes. Fetch + extraction layer is DB-agnostic; only the eventual write target (in the component → server fn that persists the merge) differs, resolved by the router.
-5. **Replacing Firecrawl with another provider — what changes?** One helper function (`fetchViaFirecrawl`) in `auto-enrich.functions.ts`. No component, adapter, or migration impact.
-
-### Overall verdict
-
-**PASS** on all Part 1 static checks, Part 3 invariants, and Part 4 dry run. Part 2 Scenario A confirmed via live log; Scenarios B and C confirmed by code inspection but not exercised at runtime in this session. If runtime evidence for B and C is required before sign-off, run those two scenarios manually and attach logs — no code change needed either way.
-
-### Notes / observations (non-blocking)
-
-- In Scenario A the captured log shows `caller_type: "tenant"` with `tenant_id: null`. That is consistent with the implemented three-way categorical (claims present + `is_control` falsy ⇒ `"tenant"`), but if a `tenant`-typed caller is expected to always carry a `tenant_id`, you may want to tighten the categorization later (e.g. `claims && !is_control && !tenant_id` ⇒ `"unknown"`). Out of scope for this verification.
+- Auto Enrich `https://www.pitchsnack.com` on an existing startup with empty fields → city is populated (when present on contact/footer), and any field Auto Enrich couldn't fill stays red until the user types.
+- Auto Enrich on a startup with all fields full → no red, no overwrite.
+- Create form (`/startups/new`) → no red highlights even when fields are blank.
+- `firecrawl_fallback_used` log behavior unchanged.
