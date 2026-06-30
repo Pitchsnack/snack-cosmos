@@ -305,6 +305,16 @@ export function StartupForm({ startup }: Props) {
 
   const submitting = createM.isPending || updateM.isPending;
 
+  // Missing-field highlights (edit mode only). Derived from current state so
+  // they clear automatically as the user types. Matches the existing
+  // "⚠ Missing: Headquarters" placeholder pattern, extended uniformly.
+  const isStrEmpty = (s: string | null | undefined) => !s || !s.trim();
+  const miss = (empty: boolean) => isEdit && empty;
+  const MISSING_INPUT =
+    "border-destructive focus-visible:ring-destructive placeholder:text-destructive/70";
+  const MISSING_LABEL = "text-destructive";
+  const missingPh = (field: string) => `⚠ Missing: ${field}`;
+
   /**
    * Empty-field-only merge of an Auto Enrich result. Never overwrites
    * a populated field — preserves all user input. Returns what was applied
@@ -402,32 +412,42 @@ export function StartupForm({ startup }: Props) {
       {/* Row 1: Year Founded | Company Name | Company Type — PitchSnack1 [120px_1fr_160px] */}
       <div className="grid grid-cols-[120px_1fr_160px] gap-4">
         <div className="space-y-1.5">
-          <Label>Year Founded</Label>
+          <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
-            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
+            placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : "e.g. 2020"}
+            className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
         </div>
         <div className="space-y-1.5">
-          <Label>Company Name <span className="text-destructive">*</span></Label>
-          <Input value={startupName} onChange={(e) => setStartupName(e.target.value)} placeholder="Acme Inc." required maxLength={255} />
+          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>Company Name <span className="text-destructive">*</span></Label>
+          <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
+            placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
+            className={miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
+            required maxLength={255} />
         </div>
         <div className="space-y-1.5">
-          <Label>Company Type</Label>
+          <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
           <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
+              <SelectValue placeholder={miss(isStrEmpty(companyType)) ? missingPh("Type") : "Type"} />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
               {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
+
       </div>
 
       {/* Row 2: Investment Stage */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>Investment Stage</Label>
+          <Label className={miss(isStrEmpty(investmentStage)) ? MISSING_LABEL : undefined}>Investment Stage</Label>
           <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger>
+            <SelectTrigger className={miss(isStrEmpty(investmentStage)) ? MISSING_INPUT : undefined}>
+              <SelectValue placeholder={miss(isStrEmpty(investmentStage)) ? missingPh("Investment Stage") : "Stage"} />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
               {STAGES.map((s) => (
@@ -442,19 +462,19 @@ export function StartupForm({ startup }: Props) {
             </SelectContent>
           </Select>
         </div>
+
       </div>
 
       {/* Row 3: Headquarters | Region | City */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
-            <Label>Headquarters</Label>
+            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>Headquarters</Label>
           </div>
           <CountryCombobox
             value={headquarters}
             onChange={(v) => {
               setHeadquarters(v);
-              // Auto-suggest region when empty / when HQ cleared
               if (!v) {
                 setRegion("");
               } else if (!region) {
@@ -462,9 +482,11 @@ export function StartupForm({ startup }: Props) {
                 if (suggested) setRegion(suggested);
               }
             }}
-            placeholder={isEdit && !headquarters ? "⚠ Missing: Headquarters" : "Select country..."}
+            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : "Select country..."}
+            className={miss(isStrEmpty(headquarters)) ? MISSING_INPUT : undefined}
           />
         </div>
+
         <div className="space-y-1.5">
           <div className="flex h-6 items-center gap-1.5">
             <Label>Region</Label>
@@ -529,17 +551,21 @@ export function StartupForm({ startup }: Props) {
         </div>
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
-            <Label>City</Label>
+            <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>City</Label>
           </div>
-          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
+          <Input value={city} onChange={(e) => setCity(e.target.value)}
+            placeholder={miss(isStrEmpty(city)) ? missingPh("City") : "City"}
+            className={miss(isStrEmpty(city)) ? MISSING_INPUT : undefined} />
         </div>
       </div>
 
       {/* Row 3: Email | Website | LinkedIn URL */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
+          <Label className={miss(isStrEmpty(email)) ? MISSING_LABEL : undefined}>Email</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255}
+            placeholder={miss(isStrEmpty(email)) ? missingPh("Email") : undefined}
+            className={miss(isStrEmpty(email)) ? MISSING_INPUT : undefined} />
         </div>
         <EditableUrlField
           label="Website"
@@ -551,23 +577,32 @@ export function StartupForm({ startup }: Props) {
           label="LinkedIn URL"
           value={linkedinUrl}
           onChange={setLinkedinUrl}
-          placeholder="https://www.linkedin.com/company/…"
+          placeholder={miss(isStrEmpty(linkedinUrl)) ? missingPh("LinkedIn URL") : "https://www.linkedin.com/company/…"}
         />
+
       </div>
+
 
       {/* Descriptions */}
       <div className="space-y-1.5">
-        <Label>Short Description</Label>
-        <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
+        <Label className={miss(isStrEmpty(shortDescription)) ? MISSING_LABEL : undefined}>Short Description</Label>
+        <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)}
+          placeholder={miss(isStrEmpty(shortDescription)) ? missingPh("Short Description") : undefined}
+          className={miss(isStrEmpty(shortDescription)) ? MISSING_INPUT : undefined} />
       </div>
       <div className="space-y-1.5">
-        <Label>Long Description</Label>
-        <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)} />
+        <Label className={miss(isStrEmpty(longDescription)) ? MISSING_LABEL : undefined}>Long Description</Label>
+        <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)}
+          placeholder={miss(isStrEmpty(longDescription)) ? missingPh("Long Description") : undefined}
+          className={miss(isStrEmpty(longDescription)) ? MISSING_INPUT : undefined} />
       </div>
 
       {/* Industry pills */}
       <div className="space-y-1.5">
-        <Label>Industry</Label>
+        <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
+        {miss(industries.length === 0) && (
+          <p className="text-xs text-destructive">⚠ Missing: pick at least one industry</p>
+        )}
         <div className="flex flex-wrap gap-2">
           {INDUSTRIES.map((ind) => (
             <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>
@@ -591,7 +626,10 @@ export function StartupForm({ startup }: Props) {
 
       {/* Product tags */}
       <div className="space-y-1.5">
-        <Label>Product & Service Tags ({productTags.length}/5)</Label>
+        <Label className={miss(productTags.length === 0) ? MISSING_LABEL : undefined}>Product & Service Tags ({productTags.length}/5)</Label>
+        {miss(productTags.length === 0) && (
+          <p className="text-xs text-destructive">⚠ Missing: add at least one product tag</p>
+        )}
         <div className="flex flex-wrap gap-2">
           {productTags.map((t) => (
             <button key={t} type="button" onClick={() => setProductTags(productTags.filter((x) => x !== t))}
@@ -610,7 +648,10 @@ export function StartupForm({ startup }: Props) {
 
       {/* Market tags */}
       <div className="space-y-1.5">
-        <Label>Market Tags ({marketTags.length}/5)</Label>
+        <Label className={miss(marketTags.length === 0) ? MISSING_LABEL : undefined}>Market Tags ({marketTags.length}/5)</Label>
+        {miss(marketTags.length === 0) && (
+          <p className="text-xs text-destructive">⚠ Missing: add at least one market tag</p>
+        )}
         <div className="flex flex-wrap gap-2">
           {marketTags.map((t) => (
             <button key={t} type="button" onClick={() => setMarketTags(marketTags.filter((x) => x !== t))}
@@ -628,7 +669,11 @@ export function StartupForm({ startup }: Props) {
       </div>
 
       {/* Founders */}
+      {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
+        <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
+      )}
       <FounderEditor value={founders} onChange={setFounders} />
+
 
       {/* Investors */}
       {tenantId && (

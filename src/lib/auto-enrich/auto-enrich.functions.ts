@@ -80,7 +80,19 @@ async function fetchText(url: string, timeoutMs = 8000): Promise<FetchOutcome> {
   }
 }
 
-const CANDIDATE_PATHS = ["", "/about", "/about-us", "/company", "/team", "/our-team"];
+const CANDIDATE_PATHS = [
+  "",
+  "/about",
+  "/about-us",
+  "/company",
+  "/team",
+  "/our-team",
+  "/contact",
+  "/contact-us",
+  "/imprint",
+  "/impressum",
+  "/legal",
+];
 const MIN_CORPUS_CHARS = 400;
 // Below this raw-fetch corpus size we trigger the Firecrawl fallback for SPA shells.
 const FIRECRAWL_FALLBACK_THRESHOLD = 500;
@@ -191,7 +203,7 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
 
 
     const system = `You extract structured company info from raw website text. Return ONLY JSON matching the schema. Use null/omit when unknown. Never invent.`;
-    const user = `Source URL: ${base}\n\nAllowed companyType: ${COMPANY_TYPES.join(", ")}\nAllowed investmentStage: ${STAGES.join(", ")}\nAllowed industries (pick 1-3 best matches): ${INDUSTRIES.join(", ")}\n\nText:\n${corpus}\n\nReturn JSON with keys: startupName, companyType, yearFounded (number), email, headquarters (country), city, linkedinUrl, shortDescription (<=300 chars), longDescription (<=1500 chars), industries (string[]), productTags (string[] <=5), marketTags (string[] <=5), investmentStage, founders (array of {full_name, position, linkedin_url, bio}).`;
+    const user = `Source URL: ${base}\n\nAllowed companyType: ${COMPANY_TYPES.join(", ")}\nAllowed investmentStage: ${STAGES.join(", ")}\nAllowed industries (pick 1-3 best matches): ${INDUSTRIES.join(", ")}\n\nField rules:\n- headquarters: country only (e.g. "Germany").\n- city: HQ city name only (e.g. "Berlin", not "Berlin, Germany"). Extract from address blocks in footers, contact pages, or imprint/impressum sections. Omit if not explicitly stated.\n\nText:\n${corpus}\n\nReturn JSON with keys: startupName, companyType, yearFounded (number), email, headquarters (country), city, linkedinUrl, shortDescription (<=300 chars), longDescription (<=1500 chars), industries (string[]), productTags (string[] <=5), marketTags (string[] <=5), investmentStage, founders (array of {full_name, position, linkedin_url, bio}).`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
