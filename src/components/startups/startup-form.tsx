@@ -578,9 +578,8 @@ export function StartupForm({ startup }: Props) {
           value={linkedinUrl}
           onChange={setLinkedinUrl}
           placeholder={miss(isStrEmpty(linkedinUrl)) ? missingPh("LinkedIn URL") : "https://www.linkedin.com/company/…"}
-          labelClassName={miss(isStrEmpty(linkedinUrl)) ? MISSING_LABEL : undefined}
-          inputClassName={miss(isStrEmpty(linkedinUrl)) ? MISSING_INPUT : undefined}
         />
+
       </div>
 
 
