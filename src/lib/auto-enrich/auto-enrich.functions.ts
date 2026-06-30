@@ -80,7 +80,19 @@ async function fetchText(url: string, timeoutMs = 8000): Promise<FetchOutcome> {
   }
 }
 
-const CANDIDATE_PATHS = ["", "/about", "/about-us", "/company", "/team", "/our-team"];
+const CANDIDATE_PATHS = [
+  "",
+  "/about",
+  "/about-us",
+  "/company",
+  "/team",
+  "/our-team",
+  "/contact",
+  "/contact-us",
+  "/imprint",
+  "/impressum",
+  "/legal",
+];
 const MIN_CORPUS_CHARS = 400;
 // Below this raw-fetch corpus size we trigger the Firecrawl fallback for SPA shells.
 const FIRECRAWL_FALLBACK_THRESHOLD = 500;
