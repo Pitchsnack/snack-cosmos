@@ -305,6 +305,16 @@ export function StartupForm({ startup }: Props) {
 
   const submitting = createM.isPending || updateM.isPending;
 
+  // Missing-field highlights (edit mode only). Derived from current state so
+  // they clear automatically as the user types. Matches the existing
+  // "⚠ Missing: Headquarters" placeholder pattern, extended uniformly.
+  const isStrEmpty = (s: string | null | undefined) => !s || !s.trim();
+  const miss = (empty: boolean) => isEdit && empty;
+  const MISSING_INPUT =
+    "border-destructive focus-visible:ring-destructive placeholder:text-destructive/70";
+  const MISSING_LABEL = "text-destructive";
+  const missingPh = (field: string) => `⚠ Missing: ${field}`;
+
   /**
    * Empty-field-only merge of an Auto Enrich result. Never overwrites
    * a populated field — preserves all user input. Returns what was applied
