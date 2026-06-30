@@ -412,24 +412,32 @@ export function StartupForm({ startup }: Props) {
       {/* Row 1: Year Founded | Company Name | Company Type — PitchSnack1 [120px_1fr_160px] */}
       <div className="grid grid-cols-[120px_1fr_160px] gap-4">
         <div className="space-y-1.5">
-          <Label>Year Founded</Label>
+          <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
-            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
+            placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : "e.g. 2020"}
+            className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
         </div>
         <div className="space-y-1.5">
-          <Label>Company Name <span className="text-destructive">*</span></Label>
-          <Input value={startupName} onChange={(e) => setStartupName(e.target.value)} placeholder="Acme Inc." required maxLength={255} />
+          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>Company Name <span className="text-destructive">*</span></Label>
+          <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
+            placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
+            className={miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
+            required maxLength={255} />
         </div>
         <div className="space-y-1.5">
-          <Label>Company Type</Label>
+          <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
           <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
+              <SelectValue placeholder={miss(isStrEmpty(companyType)) ? missingPh("Type") : "Type"} />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
               {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
+
       </div>
 
       {/* Row 2: Investment Stage */}
