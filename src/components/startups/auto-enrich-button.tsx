@@ -44,13 +44,28 @@ export function AutoEnrichButton({ websiteUrl, onEnriched, disabled }: Props) {
       }).length;
       onEnriched(result);
       const dbg = result._debug;
+      const hqMsg = (() => {
+        switch (dbg?.headquartersDiagnostic) {
+          case "inferred_from_phone":
+            return `Country inferred from public contact phone country code ${dbg.headquartersPhoneCc ?? ""}.`.trim();
+          case "conflicting_signals":
+            return "Headquarters not filled: multiple conflicting country signals found.";
+          case "not_found":
+            return "Headquarters not filled: no direct country or reliable phone country code found.";
+          default:
+            return "";
+        }
+      })();
       if (fieldsReturned === 0) {
         toast.warning(
           `Auto Enrich finished but the model returned no fields.` +
             (dbg ? ` Source: ${dbg.origin}, ~${dbg.corpusChars} chars scraped.` : ""),
         );
       } else {
-        toast.success(`Auto Enrich complete (${fieldsReturned} field${fieldsReturned === 1 ? "" : "s"} returned).`);
+        toast.success(
+          `Auto Enrich complete (${fieldsReturned} field${fieldsReturned === 1 ? "" : "s"} returned).` +
+            (hqMsg ? ` ${hqMsg}` : ""),
+        );
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Auto Enrich failed.");
