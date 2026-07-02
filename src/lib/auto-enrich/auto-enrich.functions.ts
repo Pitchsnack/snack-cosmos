@@ -1,6 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** Server-side HQ diagnostic. UI/merge layer adds "skipped_already_filled" separately. */
+export type HeadquartersDiagnostic =
+  | "direct"
+  | "inferred_from_phone"
+  | "not_found"
+  | "conflicting_signals";
 
 /**
  * Diagnostic info attached to every enrichment result. Non-PII; safe to surface
@@ -12,6 +20,9 @@ export interface EnrichDebug {
   pagesUsed: number;
   corpusChars: number;
   modelOutputChars: number;
+  headquartersDiagnostic?: HeadquartersDiagnostic;
+  /** Masked country code only (e.g. "+66"). Full phone numbers are never returned. */
+  headquartersPhoneCc?: string;
 }
 
 /**
@@ -230,12 +241,53 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
     const content: string = json?.choices?.[0]?.message?.content ?? "{}";
     let parsed: EnrichResult = {};
     try { parsed = JSON.parse(content); } catch { parsed = {}; }
+
+    // HQ country diagnostic + phone country-code fallback.
+    // Empty-field-only merge happens in the UI; the server just reports what it found.
+    let hqDiagnostic: HeadquartersDiagnostic;
+    let hqPhoneCc: string | undefined;
+    const directCountry =
+      typeof parsed.headquarters === "string" ? parsed.headquarters.trim() : "";
+    if (directCountry) {
+      hqDiagnostic = "direct";
+    } else {
+      // Scan the already-collected same-origin corpus for international phone numbers.
+      // No new fetches, no off-domain requests — reuses the bounded corpus.
+      const matches = corpus.match(/\+\d[\d\s().\-]{6,}\d/g) ?? [];
+      const countries = new Set<string>();
+      for (const raw of matches.slice(0, 30)) {
+        const pn = parsePhoneNumberFromString(raw.replace(/\s+/g, " ").trim());
+        if (pn && pn.isValid() && pn.country) countries.add(pn.country);
+      }
+      if (countries.size === 1) {
+        const iso2 = [...countries][0];
+        try {
+          const name = new Intl.DisplayNames(["en"], { type: "region" }).of(iso2);
+          if (name) {
+            parsed.headquarters = name;
+            hqPhoneCc = `+${getCountryCallingCode(iso2 as Parameters<typeof getCountryCallingCode>[0])}`;
+            hqDiagnostic = "inferred_from_phone";
+          } else {
+            hqDiagnostic = "not_found";
+          }
+        } catch {
+          hqDiagnostic = "not_found";
+        }
+      } else if (countries.size > 1) {
+        hqDiagnostic = "conflicting_signals";
+      } else {
+        hqDiagnostic = "not_found";
+      }
+    }
+
     parsed._debug = {
       origin,
       pagesTried,
       pagesUsed: usedTexts.length,
       corpusChars,
       modelOutputChars: content.length,
+      headquartersDiagnostic: hqDiagnostic,
+      headquartersPhoneCc: hqPhoneCc,
     };
     return parsed;
   });
