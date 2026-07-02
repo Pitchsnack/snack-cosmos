@@ -1,6 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** Server-side HQ diagnostic. UI/merge layer adds "skipped_already_filled" separately. */
+export type HeadquartersDiagnostic =
+  | "direct"
+  | "inferred_from_phone"
+  | "not_found"
+  | "conflicting_signals";
 
 /**
  * Diagnostic info attached to every enrichment result. Non-PII; safe to surface
@@ -12,6 +20,9 @@ export interface EnrichDebug {
   pagesUsed: number;
   corpusChars: number;
   modelOutputChars: number;
+  headquartersDiagnostic?: HeadquartersDiagnostic;
+  /** Masked country code only (e.g. "+66"). Full phone numbers are never returned. */
+  headquartersPhoneCc?: string;
 }
 
 /**
