@@ -362,7 +362,13 @@ const MediaInput = z.object({
 const ProfileFields = {
   logoPath: z.string().max(1024).nullable().optional(),
   companyType: z.string().max(100).nullable().optional(),
-  yearFounded: z.number().int().min(1800).max(new Date().getFullYear()).nullable().optional(),
+  yearFounded: z
+    .number()
+    .int()
+    .min(1800)
+    .refine((y) => y <= new Date().getFullYear(), { message: "Year cannot be in the future" })
+    .nullable()
+    .optional(),
   email: z.string().email().max(255).nullable().optional().or(z.literal("")),
   headquarters: z.string().max(255).nullable().optional(),
   region: z.enum(["APAC","EMEA","LATAM","NA"]).nullable().optional().or(z.literal("")),
