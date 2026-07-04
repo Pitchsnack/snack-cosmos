@@ -382,7 +382,11 @@ export function StartupForm({ startup }: Props) {
       {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
       <div className="flex items-start gap-4">
         <div className="flex-1 min-w-0">
-          <EntityMediaEditor value={media} onChange={setMedia} />
+          <EntityMediaEditor
+            value={media}
+            onChange={setMedia}
+            screenshot={{ websiteUrl, entityId: startup?.id ?? null }}
+          />
         </div>
         <div className="pt-6 shrink-0">
           <AutoEnrichButton
