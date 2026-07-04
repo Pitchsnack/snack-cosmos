@@ -84,4 +84,4 @@ const apiGatewayAdapter: MediaCaptureAdapter = {
 };
 
 export const mediaCaptureAdapter: MediaCaptureAdapter =
-  MEDIA_CAPTURE_BACKEND === "api_gateway" ? apiGatewayAdapter : lovableAdapter;
+  (MEDIA_CAPTURE_BACKEND as MediaCaptureBackend) === "api_gateway" ? apiGatewayAdapter : lovableAdapter;
