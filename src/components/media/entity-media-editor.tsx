@@ -142,7 +142,12 @@ function fileMetaBadge(slot: SlotState): { ext: string | null; size: number | nu
 function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotState) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [snipOpen, setSnipOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const preview = usePreview(value);
+
+  const supportsSnip =
+    typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
 
   const pick = (f: File) => {
     const v = validateImageFile(f);
@@ -168,14 +173,39 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
         }}
       >
         {preview ? (
-          <div className="relative group cursor-pointer" onClick={() => ref.current?.click()}>
+          <div className="relative group">
             <img
               src={preview}
               alt="Logo"
               className="w-[168px] h-[56px] rounded-lg object-contain border border-border group-hover:opacity-60 transition-opacity"
             />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Upload className="h-4 w-4 text-muted-foreground" />
+            <div className="absolute inset-0 rounded-lg bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setPreviewUrl(preview); }}
+                className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
+                title="Preview"
+              >
+                <ZoomIn className="h-3 w-3" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); ref.current?.click(); }}
+                className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
+                title="Replace"
+              >
+                <Upload className="h-3 w-3" />
+              </button>
+              {supportsSnip && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setSnipOpen(true); }}
+                  className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
+                  title="Snip from screen"
+                >
+                  <Crop className="h-3 w-3" />
+                </button>
+              )}
             </div>
             <button
               type="button"
@@ -187,14 +217,29 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
             </button>
           </div>
         ) : (
-          <div
-            className={`relative w-[168px] h-[56px] rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
-              dragging ? "bg-accent border-primary/40" : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
-            }`}
-            onClick={() => ref.current?.click()}
-          >
-            <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
+          <div className="flex items-center gap-2">
+            <div
+              className={`relative w-[168px] h-[56px] rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                dragging ? "bg-accent border-primary/40" : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
+              }`}
+              onClick={() => ref.current?.click()}
+            >
+              <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
+              <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
+            </div>
+            {supportsSnip && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => setSnipOpen(true)}
+                title="Snip from screen"
+              >
+                <Crop className="h-3 w-3" />
+                <span className="ml-1">Snip</span>
+              </Button>
+            )}
           </div>
         )}
         <input
@@ -209,9 +254,21 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
           }}
         />
       </div>
+
+      <MediaPreviewDialog url={previewUrl} onClose={() => setPreviewUrl(null)} />
+
+      {supportsSnip && (
+        <SnippingCapture
+          open={snipOpen}
+          onCancel={() => setSnipOpen(false)}
+          onCapture={(file) => { setSnipOpen(false); pick(file); }}
+          outputName="logo"
+        />
+      )}
     </div>
   );
 }
+
 
 /* -------------------------------------------------------------------------- */
 /*  Media slots + Snip + Screenshot                                           */
