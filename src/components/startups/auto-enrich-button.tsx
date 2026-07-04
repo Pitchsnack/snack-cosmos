@@ -25,11 +25,17 @@ export function AutoEnrichButton({ websiteUrl, onEnriched, disabled }: Props) {
       return;
     }
     const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    let hostname = "";
     try {
-      // eslint-disable-next-line no-new
-      new URL(url);
+      hostname = new URL(url).hostname;
     } catch {
       toast.error("Website URL is not a valid URL.");
+      return;
+    }
+    // Reject hostnames without a TLD (e.g. "pitchsnack") — they parse as valid
+    // URLs but fail every DNS lookup, producing "0 chars scraped" errors.
+    if (!hostname.includes(".") || hostname.endsWith(".")) {
+      toast.error("Website URL must include a domain (e.g. example.com).");
       return;
     }
     setLoading(true);
