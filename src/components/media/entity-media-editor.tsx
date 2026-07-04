@@ -217,30 +217,27 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <div
-              className={`relative w-[168px] h-[56px] rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                dragging ? "bg-accent border-primary/40" : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
-              }`}
-              onClick={() => ref.current?.click()}
-            >
-              <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
-              <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
-            </div>
+          <div
+            className={`relative w-[168px] h-[56px] rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
+              dragging ? "bg-accent border-primary/40" : "bg-muted border-border hover:bg-accent/40 hover:border-primary/30"
+            }`}
+            onClick={() => ref.current?.click()}
+          >
+            <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
+            <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
             {supportsSnip && (
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-[10px]"
-                onClick={() => setSnipOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setSnipOpen(true); }}
+                className="absolute bottom-1 right-1 bg-background/95 rounded-full p-1 shadow hover:bg-background"
                 title="Snip from screen"
+                aria-label="Snip from screen"
               >
-                <Crop className="h-3 w-3" />
-                <span className="ml-1">Snip</span>
-              </Button>
+                <Crop className="h-3 w-3 text-foreground" />
+              </button>
             )}
           </div>
+
         )}
         <input
           ref={ref}
