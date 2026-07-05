@@ -310,6 +310,37 @@ export function StartupForm({ startup }: Props) {
 
   const submitting = createM.isPending || updateM.isPending;
 
+  // ── Unsaved Changes: snapshot-diff dirty detection ──
+  const currentSnapshot = buildStartupFormSnapshot({
+    isEdit,
+    tenantId, startupName, companyType, yearFounded, email, headquarters,
+    region, city, websiteUrl, linkedinUrl, shortDescription, longDescription,
+    industries, productTags, marketTags, investmentStage,
+    status, visibility, investorIds, founders,
+    owningAgentUserId, owningAiAgentId, media,
+  });
+  const [initialSnapshot, setInitialSnapshot] = useState("");
+  useEffect(() => {
+    // Capture baseline once on mount, and re-capture when a loaded startup
+    // (edit mode) first hydrates the state.
+    setInitialSnapshot(currentSnapshot);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startup?.id]);
+  const isDirty = initialSnapshot !== "" && currentSnapshot !== initialSnapshot;
+
+  const submitForm = () => {
+    if (!canSubmit || submitting) return;
+    if (isEdit) updateM.mutate();
+    else createM.mutate();
+  };
+
+  const guard = useUnsavedChangesGuard({
+    isDirty,
+    isSaving: submitting,
+    onSave: submitForm,
+    canSave: canSubmit,
+  });
+
   // Missing-field highlights (edit mode only). Derived from current state so
   // they clear automatically as the user types. Matches the existing
   // "⚠ Missing: Headquarters" placeholder pattern, extended uniformly.
