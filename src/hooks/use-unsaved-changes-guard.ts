@@ -17,26 +17,11 @@ export function useUnsavedChangesGuard(opts: {
   const { isDirty, isSaving, onSave, canSave = true } = opts;
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  // Resolver for the current router-blocked navigation, when applicable.
   const routerResolveRef = useRef<((allow: boolean) => void) | null>(null);
-  // Pending manual navigation (e.g. Cancel button).
   const manualProceedRef = useRef<(() => void) | null>(null);
-  // Bypass flag: set true immediately before an intentional programmatic
-  // navigation that should not trigger the guard (e.g. after successful save).
   const bypassRef = useRef(false);
 
-  // ── Router in-app navigation blocking (TanStack Router useBlocker) ──
-  useBlocker({
-    shouldBlockFn: () => {
-      if (bypassRef.current) return false;
-      return isDirty && !isSaving;
-    },
-    withResolver: true,
-    enableBeforeUnload: false, // we manage beforeunload ourselves below
-  }) as unknown; // resolver values consumed via the callback form below
-
-  // The hook above returns { status, proceed, reset } when withResolver:true.
-  // Re-invoke to capture the resolver — TanStack returns the same live object.
+  // TanStack Router in-app navigation blocking.
   const blocker = useBlocker({
     shouldBlockFn: () => {
       if (bypassRef.current) return false;
@@ -44,7 +29,11 @@ export function useUnsavedChangesGuard(opts: {
     },
     withResolver: true,
     enableBeforeUnload: false,
-  }) as { status: "blocked" | "idle"; proceed: () => void; reset: () => void };
+  }) as unknown as {
+    status: "blocked" | "idle";
+    proceed: () => void;
+    reset: () => void;
+  };
 
   useEffect(() => {
     if (blocker.status === "blocked") {
@@ -56,7 +45,7 @@ export function useUnsavedChangesGuard(opts: {
     }
   }, [blocker.status, blocker]);
 
-  // ── Native beforeunload — only while dirty ──
+  // Native beforeunload — only while dirty.
   useEffect(() => {
     if (!isDirty || isSaving) return;
     const handler = (e: BeforeUnloadEvent) => {
@@ -67,7 +56,6 @@ export function useUnsavedChangesGuard(opts: {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty, isSaving]);
 
-  // ── Public helpers ──
   const confirmNavigate = useCallback(
     (proceed: () => void) => {
       if (!isDirty) {
@@ -79,14 +67,6 @@ export function useUnsavedChangesGuard(opts: {
     },
     [isDirty],
   );
-
-  const bypassOnce = useCallback(() => {
-    bypassRef.current = true;
-    // Reset shortly after so subsequent edits are guarded again.
-    setTimeout(() => {
-      bypassRef.current = false;
-    }, 0);
-  }, []);
 
   const closeAndClear = () => {
     setDialogOpen(false);
@@ -100,7 +80,6 @@ export function useUnsavedChangesGuard(opts: {
   };
 
   const onDiscard = () => {
-    // Allow the pending navigation without saving.
     bypassRef.current = true;
     routerResolveRef.current?.(true);
     manualProceedRef.current?.();
@@ -111,7 +90,6 @@ export function useUnsavedChangesGuard(opts: {
   };
 
   const handleSave = () => {
-    // Kick off save; caller is responsible for closing / navigating on success.
     onSave();
   };
 
@@ -125,10 +103,15 @@ export function useUnsavedChangesGuard(opts: {
       canSave,
     },
     confirmNavigate,
-    bypassOnce,
-    /** Call after save success so router navigation is not blocked. */
+    /** Call before an intentional navigation that should skip the guard. */
+    bypassOnce: () => {
+      bypassRef.current = true;
+      setTimeout(() => {
+        bypassRef.current = false;
+      }, 0);
+    },
+    /** Call after save success — resolves any pending block and closes dialog. */
     markSaved: () => {
-      // Resolve any pending router block/manual nav that Save-Changes was answering.
       bypassRef.current = true;
       routerResolveRef.current?.(true);
       manualProceedRef.current?.();
