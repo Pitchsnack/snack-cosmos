@@ -673,15 +673,17 @@ function SlotCell({
           )}
         </div>
       )}
-      <RemoveXButton
-        disabled={!hasImage}
-        onActivate={() => setConfirmOpen(true)}
-        ariaLabel={`Remove Slot ${index + 1} image`}
-        title="Remove image"
-        iconSizeClass="h-2.5 w-2.5"
-        paddingClass="p-0.5"
-        positionClass="-top-1.5 -right-1.5 z-10"
-      />
+      {hasImage && (
+        <RemoveXButton
+          onActivate={() => setConfirmOpen(true)}
+          ariaLabel={`Remove Slot ${index + 1} image`}
+          title="Remove image"
+          iconSizeClass="h-2.5 w-2.5"
+          paddingClass="p-0.5"
+          positionClass="-top-1.5 -right-1.5 z-10"
+        />
+      )}
+
       <RemoveConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
