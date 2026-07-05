@@ -102,16 +102,29 @@ function RemoveConfirmDialog({
   title,
   body,
   onConfirm,
+  previewUrl,
+  previewAlt,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   body: string;
   onConfirm: () => void;
+  previewUrl?: string | null;
+  previewAlt?: string;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
+        {previewUrl ? (
+          <div className="flex justify-center">
+            <img
+              src={previewUrl}
+              alt={previewAlt ?? "Image to remove"}
+              className="max-w-full max-h-[220px] rounded-md border object-contain bg-muted"
+            />
+          </div>
+        ) : null}
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{body}</AlertDialogDescription>
@@ -382,6 +395,8 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
         title="Remove logo?"
         body="This will remove the logo. The change will only be saved when you click Save."
         onConfirm={() => { clear(); setConfirmOpen(false); }}
+        previewUrl={preview}
+        previewAlt="Logo to remove"
       />
 
       {supportsSnip && (
@@ -700,6 +715,8 @@ function SlotCell({
         title="Remove image?"
         body="This will remove the image from this slot. The change will only be saved when you click Save."
         onConfirm={() => { onClear(); setConfirmOpen(false); }}
+        previewUrl={preview}
+        previewAlt={`Slot ${index + 1} image to remove`}
       />
       <input
         ref={registerInput}
