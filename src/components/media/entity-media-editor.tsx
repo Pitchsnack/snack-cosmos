@@ -588,6 +588,8 @@ function SlotCell({
   const badgeParts: string[] = [];
   if (meta.ext) badgeParts.push(meta.ext);
   if (meta.size != null) badgeParts.push(formatFileSize(meta.size));
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const hasImage = !!(slot.pendingFile || slot.persistedPath || slot.signedUrl);
 
   return (
     <div className="relative">
@@ -620,14 +622,6 @@ function SlotCell({
             >
               <Upload className="h-3 w-3" />
             </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onClear(); }}
-              className="p-1 rounded-full bg-background/80 hover:bg-background text-destructive"
-              title="Remove"
-            >
-              <X className="h-3 w-3" />
-            </button>
             {snipSupported && (
               <button
                 type="button"
@@ -648,7 +642,7 @@ function SlotCell({
             </button>
           </div>
           {slot.isLocked && (
-            <div className="absolute top-0.5 right-0.5 bg-background/80 rounded-full p-0.5">
+            <div className="absolute top-0.5 left-0.5 bg-background/80 rounded-full p-0.5">
               <Lock className="h-2.5 w-2.5 text-muted-foreground" />
             </div>
           )}
@@ -691,6 +685,22 @@ function SlotCell({
           )}
         </div>
       )}
+      <RemoveXButton
+        disabled={!hasImage}
+        onActivate={() => setConfirmOpen(true)}
+        ariaLabel={`Remove Slot ${index + 1} image`}
+        title="Remove image"
+        iconSizeClass="h-2.5 w-2.5"
+        paddingClass="p-0.5"
+        positionClass="-top-1.5 -right-1.5 z-10"
+      />
+      <RemoveConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Remove image?"
+        body="This will remove the image from this slot. The change will only be saved when you click Save."
+        onConfirm={() => { onClear(); setConfirmOpen(false); }}
+      />
       <input
         ref={registerInput}
         type="file"
@@ -705,6 +715,7 @@ function SlotCell({
     </div>
   );
 }
+
 
 /* -------------------------------------------------------------------------- */
 /*  Upload orchestration (unchanged public contract)                          */
