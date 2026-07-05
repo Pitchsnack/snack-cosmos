@@ -715,6 +715,8 @@ function SlotCell({
         title="Remove image?"
         body="This will remove the image from this slot. The change will only be saved when you click Save."
         onConfirm={() => { onClear(); setConfirmOpen(false); }}
+        previewUrl={preview}
+        previewAlt={`Slot ${index + 1} image to remove`}
       />
       <input
         ref={registerInput}
