@@ -395,6 +395,8 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
         title="Remove logo?"
         body="This will remove the logo. The change will only be saved when you click Save."
         onConfirm={() => { clear(); setConfirmOpen(false); }}
+        previewUrl={preview}
+        previewAlt="Logo to remove"
       />
 
       {supportsSnip && (
