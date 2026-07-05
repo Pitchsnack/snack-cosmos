@@ -788,7 +788,11 @@ export function StartupForm({ startup }: Props) {
       )}
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={() => navigate({ to: "/startups" })}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => guard.confirmNavigate(() => navigate({ to: "/startups" }))}
+        >
           Cancel
         </Button>
         <Button
@@ -799,6 +803,7 @@ export function StartupForm({ startup }: Props) {
           {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
         </Button>
       </div>
+      <UnsavedChangesDialog {...guard.dialogProps} />
     </form>
   );
 }
