@@ -256,7 +256,7 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const preview = usePreview(value);
-  const hasImage = !!(value.pendingFile || value.persistedPath || value.signedUrl);
+
 
   const supportsSnip =
     typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
