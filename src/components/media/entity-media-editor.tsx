@@ -342,15 +342,8 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
                 <Crop className="h-3 w-3 text-foreground" />
               </button>
             )}
-            <RemoveXButton
-              disabled
-              onActivate={() => {}}
-              ariaLabel="No image to remove"
-              title="No image to remove"
-              iconSizeClass="h-3 w-3"
-              paddingClass="p-1"
-              positionClass="-top-2 -right-2"
-            />
+
+
           </div>
 
         )}
