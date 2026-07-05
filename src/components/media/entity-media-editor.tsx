@@ -30,14 +30,11 @@ import { SnippingCapture } from "@/components/media/snipping-capture";
 import { MediaPreviewDialog } from "@/components/media/media-preview-dialog";
 
 /**
- * Shared remove-X button. Always rendered so users see a consistent affordance.
- *   - disabled === true  → muted/grey, non-interactive, no dialog, no scale.
- *   - disabled === false → destructive red, keyboard focusable, scales on
- *     hover/focus-visible, opens the parent-owned confirmation dialog.
- * Sized to match the sibling Crop icon in each context.
+ * Shared remove-X button. Only rendered when the tile has an image.
+ * Destructive red, keyboard focusable, scales on hover/focus-visible,
+ * opens the parent-owned confirmation dialog.
  */
 function RemoveXButton({
-  disabled,
   onActivate,
   ariaLabel,
   title,
@@ -45,7 +42,6 @@ function RemoveXButton({
   paddingClass,
   positionClass,
 }: {
-  disabled: boolean;
   onActivate: () => void;
   ariaLabel: string;
   title: string;
@@ -53,23 +49,6 @@ function RemoveXButton({
   paddingClass: string;
   positionClass: string;
 }) {
-  if (disabled) {
-    return (
-      <button
-        type="button"
-        disabled
-        aria-label="No image to remove"
-        title="No image to remove"
-        className={cn(
-          "absolute rounded-full bg-muted text-muted-foreground/50 cursor-not-allowed",
-          paddingClass,
-          positionClass,
-        )}
-      >
-        <X className={iconSizeClass} />
-      </button>
-    );
-  }
   return (
     <button
       type="button"
@@ -94,6 +73,7 @@ function RemoveXButton({
     </button>
   );
 }
+
 
 /** Confirmation dialog shared by logo + slot tiles. */
 function RemoveConfirmDialog({
