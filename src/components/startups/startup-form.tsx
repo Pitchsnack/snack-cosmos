@@ -385,7 +385,7 @@ export function StartupForm({ startup }: Props) {
           <EntityMediaEditor
             value={media}
             onChange={setMedia}
-            screenshot={{ websiteUrl, entityId: startup?.id ?? null }}
+            screenshot={{ websiteUrl }}
           />
         </div>
         <div className="pt-6 shrink-0">
