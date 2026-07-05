@@ -8,6 +8,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { validateImageFile, formatFileSize } from "@/lib/media/image-validation";
@@ -18,6 +28,107 @@ import {
 } from "@/lib/media/media-capture-adapter";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { MediaPreviewDialog } from "@/components/media/media-preview-dialog";
+
+/**
+ * Shared remove-X button. Always rendered so users see a consistent affordance.
+ *   - disabled === true  → muted/grey, non-interactive, no dialog, no scale.
+ *   - disabled === false → destructive red, keyboard focusable, scales on
+ *     hover/focus-visible, opens the parent-owned confirmation dialog.
+ * Sized to match the sibling Crop icon in each context.
+ */
+function RemoveXButton({
+  disabled,
+  onActivate,
+  ariaLabel,
+  title,
+  iconSizeClass,
+  paddingClass,
+  positionClass,
+}: {
+  disabled: boolean;
+  onActivate: () => void;
+  ariaLabel: string;
+  title: string;
+  iconSizeClass: string;
+  paddingClass: string;
+  positionClass: string;
+}) {
+  if (disabled) {
+    return (
+      <button
+        type="button"
+        disabled
+        aria-label="No image to remove"
+        title="No image to remove"
+        className={cn(
+          "absolute rounded-full bg-muted text-muted-foreground/50 cursor-not-allowed",
+          paddingClass,
+          positionClass,
+        )}
+      >
+        <X className={iconSizeClass} />
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      title={title}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onActivate();
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      className={cn(
+        "absolute rounded-full bg-destructive text-destructive-foreground shadow",
+        "hover:bg-destructive/90 origin-center transform-gpu transition-transform",
+        "hover:scale-110 focus-visible:scale-110",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        paddingClass,
+        positionClass,
+      )}
+    >
+      <X className={iconSizeClass} />
+    </button>
+  );
+}
+
+/** Confirmation dialog shared by logo + slot tiles. */
+function RemoveConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  body,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  body: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{body}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 /**
  * Visual logo + 3-slot media editor. Reusable across entities (startups,
@@ -143,7 +254,9 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
   const [dragging, setDragging] = useState(false);
   const [snipOpen, setSnipOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const preview = usePreview(value);
+
 
   const supportsSnip =
     typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
@@ -206,14 +319,15 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
                 </button>
               )}
             </div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); clear(); }}
-              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-              aria-label="Remove logo"
-            >
-              <X className="h-3 w-3" />
-            </button>
+            <RemoveXButton
+              disabled={false}
+              onActivate={() => setConfirmOpen(true)}
+              ariaLabel="Remove logo"
+              title="Remove logo"
+              iconSizeClass="h-3 w-3"
+              paddingClass="p-1"
+              positionClass="-top-2 -right-2"
+            />
           </div>
         ) : (
           <div
@@ -235,6 +349,15 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
                 <Crop className="h-3 w-3 text-foreground" />
               </button>
             )}
+            <RemoveXButton
+              disabled
+              onActivate={() => {}}
+              ariaLabel="No image to remove"
+              title="No image to remove"
+              iconSizeClass="h-3 w-3"
+              paddingClass="p-1"
+              positionClass="-top-2 -right-2"
+            />
           </div>
 
         )}
@@ -253,6 +376,14 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
 
       <MediaPreviewDialog url={previewUrl} onClose={() => setPreviewUrl(null)} />
 
+      <RemoveConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Remove logo?"
+        body="This will remove the logo. The change will only be saved when you click Save."
+        onConfirm={() => { clear(); setConfirmOpen(false); }}
+      />
+
       {supportsSnip && (
         <SnippingCapture
           open={snipOpen}
@@ -264,6 +395,7 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
     </div>
   );
 }
+
 
 
 /* -------------------------------------------------------------------------- */
@@ -456,6 +588,8 @@ function SlotCell({
   const badgeParts: string[] = [];
   if (meta.ext) badgeParts.push(meta.ext);
   if (meta.size != null) badgeParts.push(formatFileSize(meta.size));
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const hasImage = !!(slot.pendingFile || slot.persistedPath || slot.signedUrl);
 
   return (
     <div className="relative">
@@ -488,14 +622,6 @@ function SlotCell({
             >
               <Upload className="h-3 w-3" />
             </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onClear(); }}
-              className="p-1 rounded-full bg-background/80 hover:bg-background text-destructive"
-              title="Remove"
-            >
-              <X className="h-3 w-3" />
-            </button>
             {snipSupported && (
               <button
                 type="button"
@@ -516,7 +642,7 @@ function SlotCell({
             </button>
           </div>
           {slot.isLocked && (
-            <div className="absolute top-0.5 right-0.5 bg-background/80 rounded-full p-0.5">
+            <div className="absolute top-0.5 left-0.5 bg-background/80 rounded-full p-0.5">
               <Lock className="h-2.5 w-2.5 text-muted-foreground" />
             </div>
           )}
@@ -559,6 +685,22 @@ function SlotCell({
           )}
         </div>
       )}
+      <RemoveXButton
+        disabled={!hasImage}
+        onActivate={() => setConfirmOpen(true)}
+        ariaLabel={`Remove Slot ${index + 1} image`}
+        title="Remove image"
+        iconSizeClass="h-2.5 w-2.5"
+        paddingClass="p-0.5"
+        positionClass="-top-1.5 -right-1.5 z-10"
+      />
+      <RemoveConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Remove image?"
+        body="This will remove the image from this slot. The change will only be saved when you click Save."
+        onConfirm={() => { onClear(); setConfirmOpen(false); }}
+      />
       <input
         ref={registerInput}
         type="file"
@@ -573,6 +715,7 @@ function SlotCell({
     </div>
   );
 }
+
 
 /* -------------------------------------------------------------------------- */
 /*  Upload orchestration (unchanged public contract)                          */
