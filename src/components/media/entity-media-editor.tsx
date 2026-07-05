@@ -61,7 +61,6 @@ interface Props {
    */
   screenshot?: {
     websiteUrl?: string | null;
-    entityId?: string | null;
   };
 }
 
@@ -303,29 +302,29 @@ function MediaSlots({
       toast.error("No website URL — Enter a Company URL first.");
       return;
     }
-    if (!screenshot?.entityId) {
-      // Screenshot needs a persisted entity id (matches PitchSnack1 gating).
-      toast.error("Save the record first, then capture screenshots.");
-      return;
-    }
     const availableSlots = value
       .map((s, i) => ({ s, slot: (i + 1) as SlotNumber }))
-      .filter(({ s }) => !s.isLocked)
+      .filter(({ s }) => !s.isLocked && !s.pendingFile && !s.signedUrl && !s.persistedPath)
       .map(({ slot }) => slot);
     if (availableSlots.length === 0) {
-      toast.error("All slots locked — Unlock a slot first.");
+      toast.error("No empty slot — Clear or unlock a slot first.");
       return;
     }
     setCapturing(true);
     try {
       const res = await mediaCaptureAdapter.captureWebsiteScreenshot({
         websiteUrl: screenshot.websiteUrl,
-        startupId: screenshot.entityId,
         availableSlots,
       });
       if (!res.ok) {
         if (res.error === "not_configured") {
-          toast.error("Screenshot backend is not configured yet.");
+          toast.info("Website screenshot capture is not enabled yet. You can upload an image or use Snip from screen.");
+        } else if (res.error === "invalid_url") {
+          toast.error(res.message ?? "Invalid website URL for screenshot.");
+        } else if (res.error === "too_large") {
+          toast.error("Screenshot exceeded the 10 MB limit.");
+        } else if (res.error === "timeout") {
+          toast.error("Screenshot timed out. Try again.");
         } else {
           toast.error(res.message ?? "Screenshot failed");
         }
@@ -339,20 +338,11 @@ function MediaSlots({
       for (const r of res.results as CapturedMediaResult[]) {
         const idx = r.slot - 1;
         if (next[idx].isLocked) continue;
-        if (r.file) {
-          next[idx] = { ...next[idx], pendingFile: r.file };
-        } else if (r.imagePath) {
-          next[idx] = {
-            persistedPath: r.imagePath,
-            signedUrl: r.imageUrl ?? null,
-            pendingFile: null,
-            isLocked: next[idx].isLocked ?? false,
-          };
-        }
+        next[idx] = { ...next[idx], pendingFile: r.file };
       }
       onSetAllSlots(next);
       const count = res.results.length;
-      toast.success(`${count} screenshot${count > 1 ? "s" : ""} captured`);
+      toast.success(`${count} screenshot${count > 1 ? "s" : ""} staged — click Save to persist.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Screenshot failed");
     } finally {
@@ -404,8 +394,7 @@ function MediaSlots({
                     disabled={
                       capturing ||
                       !supportsScreenshot ||
-                      !screenshot?.websiteUrl ||
-                      !screenshot?.entityId
+                      !screenshot?.websiteUrl
                     }
                     onClick={handleCaptureScreenshot}
                   >
@@ -418,8 +407,8 @@ function MediaSlots({
               </TooltipTrigger>
               <TooltipContent>
                 {supportsScreenshot
-                  ? "Capture website screenshot into empty slot"
-                  : "Screenshot backend not configured"}
+                  ? "Capture website screenshot into the next empty slot. Saved when you click Save."
+                  : "Website screenshot capture is not enabled yet. You can upload an image or use Snip from screen."}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
