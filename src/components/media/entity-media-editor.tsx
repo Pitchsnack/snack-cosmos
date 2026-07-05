@@ -254,7 +254,9 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
   const [dragging, setDragging] = useState(false);
   const [snipOpen, setSnipOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const preview = usePreview(value);
+  const hasImage = !!(value.pendingFile || value.persistedPath || value.signedUrl);
 
   const supportsSnip =
     typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
@@ -317,14 +319,15 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
                 </button>
               )}
             </div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); clear(); }}
-              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-              aria-label="Remove logo"
-            >
-              <X className="h-3 w-3" />
-            </button>
+            <RemoveXButton
+              disabled={false}
+              onActivate={() => setConfirmOpen(true)}
+              ariaLabel="Remove logo"
+              title="Remove logo"
+              iconSizeClass="h-3 w-3"
+              paddingClass="p-1"
+              positionClass="-top-2 -right-2"
+            />
           </div>
         ) : (
           <div
@@ -346,6 +349,15 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
                 <Crop className="h-3 w-3 text-foreground" />
               </button>
             )}
+            <RemoveXButton
+              disabled
+              onActivate={() => {}}
+              ariaLabel="No image to remove"
+              title="No image to remove"
+              iconSizeClass="h-3 w-3"
+              paddingClass="p-1"
+              positionClass="-top-2 -right-2"
+            />
           </div>
 
         )}
@@ -364,6 +376,14 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
 
       <MediaPreviewDialog url={previewUrl} onClose={() => setPreviewUrl(null)} />
 
+      <RemoveConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Remove logo?"
+        body="This will remove the logo. The change will only be saved when you click Save."
+        onConfirm={() => { clear(); setConfirmOpen(false); }}
+      />
+
       {supportsSnip && (
         <SnippingCapture
           open={snipOpen}
@@ -375,6 +395,7 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
     </div>
   );
 }
+
 
 
 /* -------------------------------------------------------------------------- */
