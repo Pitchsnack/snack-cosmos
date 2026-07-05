@@ -8,6 +8,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { validateImageFile, formatFileSize } from "@/lib/media/image-validation";
@@ -18,6 +28,107 @@ import {
 } from "@/lib/media/media-capture-adapter";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { MediaPreviewDialog } from "@/components/media/media-preview-dialog";
+
+/**
+ * Shared remove-X button. Always rendered so users see a consistent affordance.
+ *   - disabled === true  → muted/grey, non-interactive, no dialog, no scale.
+ *   - disabled === false → destructive red, keyboard focusable, scales on
+ *     hover/focus-visible, opens the parent-owned confirmation dialog.
+ * Sized to match the sibling Crop icon in each context.
+ */
+function RemoveXButton({
+  disabled,
+  onActivate,
+  ariaLabel,
+  title,
+  iconSizeClass,
+  paddingClass,
+  positionClass,
+}: {
+  disabled: boolean;
+  onActivate: () => void;
+  ariaLabel: string;
+  title: string;
+  iconSizeClass: string;
+  paddingClass: string;
+  positionClass: string;
+}) {
+  if (disabled) {
+    return (
+      <button
+        type="button"
+        disabled
+        aria-label="No image to remove"
+        title="No image to remove"
+        className={cn(
+          "absolute rounded-full bg-muted text-muted-foreground/50 cursor-not-allowed",
+          paddingClass,
+          positionClass,
+        )}
+      >
+        <X className={iconSizeClass} />
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      title={title}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onActivate();
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      className={cn(
+        "absolute rounded-full bg-destructive text-destructive-foreground shadow",
+        "hover:bg-destructive/90 origin-center transform-gpu transition-transform",
+        "hover:scale-110 focus-visible:scale-110",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        paddingClass,
+        positionClass,
+      )}
+    >
+      <X className={iconSizeClass} />
+    </button>
+  );
+}
+
+/** Confirmation dialog shared by logo + slot tiles. */
+function RemoveConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  body,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  body: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{body}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 /**
  * Visual logo + 3-slot media editor. Reusable across entities (startups,
