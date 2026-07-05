@@ -37,6 +37,9 @@ import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { InvestorPicker } from "./investor-picker";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
+import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
@@ -264,6 +267,7 @@ export function StartupForm({ startup }: Props) {
     onSuccess: (res) => {
       toast.success("Startup created");
       qc.invalidateQueries({ queryKey: ["startups"] });
+      guard.markSaved();
       navigate({ to: "/startups/$id", params: { id: res.id } });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -292,6 +296,7 @@ export function StartupForm({ startup }: Props) {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["startup", startup!.id] });
       qc.invalidateQueries({ queryKey: ["startups"] });
+      guard.markSaved();
       navigate({ to: "/startups/$id", params: { id: startup!.id } });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -304,6 +309,37 @@ export function StartupForm({ startup }: Props) {
   }, [isEdit, startupName, tenantId, owningAgentUserId, owningAiAgentId]);
 
   const submitting = createM.isPending || updateM.isPending;
+
+  // ── Unsaved Changes: snapshot-diff dirty detection ──
+  const currentSnapshot = buildStartupFormSnapshot({
+    isEdit,
+    tenantId, startupName, companyType, yearFounded, email, headquarters,
+    region, city, websiteUrl, linkedinUrl, shortDescription, longDescription,
+    industries, productTags, marketTags, investmentStage,
+    status, visibility, investorIds, founders,
+    owningAgentUserId, owningAiAgentId, media,
+  });
+  const [initialSnapshot, setInitialSnapshot] = useState("");
+  useEffect(() => {
+    // Capture baseline once on mount, and re-capture when a loaded startup
+    // (edit mode) first hydrates the state.
+    setInitialSnapshot(currentSnapshot);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startup?.id]);
+  const isDirty = initialSnapshot !== "" && currentSnapshot !== initialSnapshot;
+
+  const submitForm = () => {
+    if (!canSubmit || submitting) return;
+    if (isEdit) updateM.mutate();
+    else createM.mutate();
+  };
+
+  const guard = useUnsavedChangesGuard({
+    isDirty,
+    isSaving: submitting,
+    onSave: submitForm,
+    canSave: canSubmit,
+  });
 
   // Missing-field highlights (edit mode only). Derived from current state so
   // they clear automatically as the user types. Matches the existing
@@ -752,7 +788,11 @@ export function StartupForm({ startup }: Props) {
       )}
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={() => navigate({ to: "/startups" })}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => guard.confirmNavigate(() => navigate({ to: "/startups" }))}
+        >
           Cancel
         </Button>
         <Button
@@ -763,6 +803,7 @@ export function StartupForm({ startup }: Props) {
           {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
         </Button>
       </div>
+      <UnsavedChangesDialog {...guard.dialogProps} />
     </form>
   );
 }
