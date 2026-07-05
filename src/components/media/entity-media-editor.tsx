@@ -313,7 +313,6 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
               )}
             </div>
             <RemoveXButton
-              disabled={false}
               onActivate={() => setConfirmOpen(true)}
               ariaLabel="Remove logo"
               title="Remove logo"
@@ -321,6 +320,7 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
               paddingClass="p-1"
               positionClass="-top-2 -right-2"
             />
+
           </div>
         ) : (
           <div
