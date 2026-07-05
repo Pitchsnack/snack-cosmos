@@ -37,6 +37,9 @@ import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { InvestorPicker } from "./investor-picker";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
+import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
@@ -264,6 +267,7 @@ export function StartupForm({ startup }: Props) {
     onSuccess: (res) => {
       toast.success("Startup created");
       qc.invalidateQueries({ queryKey: ["startups"] });
+      guard.markSaved();
       navigate({ to: "/startups/$id", params: { id: res.id } });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -292,6 +296,7 @@ export function StartupForm({ startup }: Props) {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["startup", startup!.id] });
       qc.invalidateQueries({ queryKey: ["startups"] });
+      guard.markSaved();
       navigate({ to: "/startups/$id", params: { id: startup!.id } });
     },
     onError: (e: Error) => toast.error(e.message),
