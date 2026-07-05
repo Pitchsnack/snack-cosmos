@@ -102,16 +102,29 @@ function RemoveConfirmDialog({
   title,
   body,
   onConfirm,
+  previewUrl,
+  previewAlt,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   body: string;
   onConfirm: () => void;
+  previewUrl?: string | null;
+  previewAlt?: string;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
+        {previewUrl ? (
+          <div className="flex justify-center">
+            <img
+              src={previewUrl}
+              alt={previewAlt ?? "Image to remove"}
+              className="max-w-full max-h-[220px] rounded-md border object-contain bg-muted"
+            />
+          </div>
+        ) : null}
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{body}</AlertDialogDescription>
