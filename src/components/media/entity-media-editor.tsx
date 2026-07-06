@@ -124,6 +124,48 @@ function RemoveConfirmDialog({
 }
 
 /**
+ * Slot preview modal — shows the enlarged image with Cancel/Delete actions.
+ * No corner-X close control (per spec). ESC / overlay click = Cancel.
+ * Delete does NOT remove immediately — it hands off to a confirmation dialog.
+ */
+function SlotPreviewDialog({
+  open, onOpenChange, url, alt, onRequestDelete,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  url: string | null;
+  alt: string;
+  onRequestDelete: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="max-w-[840px]">
+        <AlertDialogHeader className="sr-only">
+          <AlertDialogTitle>Image preview</AlertDialogTitle>
+          <AlertDialogDescription>Preview the selected media image.</AlertDialogDescription>
+        </AlertDialogHeader>
+        {url && (
+          <img
+            src={url}
+            alt={alt}
+            className="w-full max-h-[520px] object-contain rounded-lg bg-muted"
+          />
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={(e) => { e.preventDefault(); onRequestDelete(); }}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+/**
  * Visual logo + 3-slot media editor. Reusable across entities (startups,
  * investors, …). Persistence stays with the parent form; this component
  * only tracks intended state per slot and stages `pendingFile` for the
