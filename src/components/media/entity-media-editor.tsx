@@ -288,7 +288,7 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
   const ref = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [snipOpen, setSnipOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const preview = usePreview(value);
 
