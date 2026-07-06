@@ -385,17 +385,24 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
         />
       </div>
 
-      <MediaPreviewDialog url={previewUrl} onClose={() => setPreviewUrl(null)} />
+      <SlotPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        url={preview}
+        alt="Logo preview"
+        onRequestDelete={() => { setPreviewOpen(false); setConfirmOpen(true); }}
+      />
 
       <RemoveConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Remove logo?"
-        body="This will remove the logo. The change will only be saved when you click Save."
+        title="Warning"
+        body="Do you wish to remove this image?"
         onConfirm={() => { clear(); setConfirmOpen(false); }}
         previewUrl={preview}
         previewAlt="Logo to remove"
       />
+
 
       {supportsSnip && (
         <SnippingCapture
