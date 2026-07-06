@@ -638,7 +638,7 @@ function SlotCell({
           <div className="absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onPreview(preview); }}
+              onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }}
               className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
               title="Preview"
             >
@@ -652,16 +652,6 @@ function SlotCell({
             >
               <Upload className="h-3 w-3" />
             </button>
-            {snipSupported && (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onSnip(); }}
-                className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
-                title="Snip from screen"
-              >
-                <Crop className="h-3 w-3" />
-              </button>
-            )}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleLock(); }}
