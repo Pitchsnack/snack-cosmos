@@ -329,7 +329,7 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
             <div className="absolute inset-0 rounded-lg bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setPreviewUrl(preview); }}
+                onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }}
                 className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
                 title="Preview"
               >
@@ -343,25 +343,8 @@ function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotSta
               >
                 <Upload className="h-3 w-3" />
               </button>
-              {supportsSnip && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setSnipOpen(true); }}
-                  className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
-                  title="Snip from screen"
-                >
-                  <Crop className="h-3 w-3" />
-                </button>
-              )}
             </div>
-            <RemoveXButton
-              onActivate={() => setConfirmOpen(true)}
-              ariaLabel="Remove logo"
-              title="Remove logo"
-              iconSizeClass="h-3 w-3"
-              paddingClass="p-1"
-              positionClass="-top-2 -right-2"
-            />
+
 
           </div>
         ) : (
