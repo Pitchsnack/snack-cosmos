@@ -706,22 +706,19 @@ function SlotCell({
           )}
         </div>
       )}
-      {hasImage && (
-        <RemoveXButton
-          onActivate={() => setConfirmOpen(true)}
-          ariaLabel={`Remove Slot ${index + 1} image`}
-          title="Remove image"
-          iconSizeClass="h-2.5 w-2.5"
-          paddingClass="p-0.5"
-          positionClass="-top-1.5 -right-1.5 z-10"
-        />
-      )}
+      <SlotPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        url={preview}
+        alt={`Slot ${index + 1} image`}
+        onRequestDelete={() => { setPreviewOpen(false); setConfirmOpen(true); }}
+      />
 
       <RemoveConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Remove image?"
-        body="This will remove the image from this slot. The change will only be saved when you click Save."
+        title="Warning"
+        body="Do you wish to remove this image?"
         onConfirm={() => { onClear(); setConfirmOpen(false); }}
         previewUrl={preview}
         previewAlt={`Slot ${index + 1} image to remove`}
