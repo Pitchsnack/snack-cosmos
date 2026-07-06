@@ -124,6 +124,48 @@ function RemoveConfirmDialog({
 }
 
 /**
+ * Slot preview modal — shows the enlarged image with Cancel/Delete actions.
+ * No corner-X close control (per spec). ESC / overlay click = Cancel.
+ * Delete does NOT remove immediately — it hands off to a confirmation dialog.
+ */
+function SlotPreviewDialog({
+  open, onOpenChange, url, alt, onRequestDelete,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  url: string | null;
+  alt: string;
+  onRequestDelete: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="max-w-[840px]">
+        <AlertDialogHeader className="sr-only">
+          <AlertDialogTitle>Image preview</AlertDialogTitle>
+          <AlertDialogDescription>Preview the selected media image.</AlertDialogDescription>
+        </AlertDialogHeader>
+        {url && (
+          <img
+            src={url}
+            alt={alt}
+            className="w-full max-h-[520px] object-contain rounded-lg bg-muted"
+          />
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={(e) => { e.preventDefault(); onRequestDelete(); }}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+/**
  * Visual logo + 3-slot media editor. Reusable across entities (startups,
  * investors, …). Persistence stays with the parent form; this component
  * only tracks intended state per slot and stages `pendingFile` for the
@@ -577,14 +619,14 @@ function SlotCell({
   if (meta.ext) badgeParts.push(meta.ext);
   if (meta.size != null) badgeParts.push(formatFileSize(meta.size));
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const hasImage = !!(slot.pendingFile || slot.persistedPath || slot.signedUrl);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   return (
     <div className="relative">
       {preview ? (
         <div
           className="group relative cursor-pointer"
-          onClick={() => onPreview(preview)}
+          onClick={() => setPreviewOpen(true)}
         >
           <ImageWithSkeleton
             src={preview}
@@ -596,7 +638,7 @@ function SlotCell({
           <div className="absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onPreview(preview); }}
+              onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }}
               className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
               title="Preview"
             >
@@ -610,16 +652,6 @@ function SlotCell({
             >
               <Upload className="h-3 w-3" />
             </button>
-            {snipSupported && (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onSnip(); }}
-                className="p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
-                title="Snip from screen"
-              >
-                <Crop className="h-3 w-3" />
-              </button>
-            )}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleLock(); }}
@@ -673,22 +705,19 @@ function SlotCell({
           )}
         </div>
       )}
-      {hasImage && (
-        <RemoveXButton
-          onActivate={() => setConfirmOpen(true)}
-          ariaLabel={`Remove Slot ${index + 1} image`}
-          title="Remove image"
-          iconSizeClass="h-2.5 w-2.5"
-          paddingClass="p-0.5"
-          positionClass="-top-1.5 -right-1.5 z-10"
-        />
-      )}
+      <SlotPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        url={preview}
+        alt={`Slot ${index + 1} image`}
+        onRequestDelete={() => { setPreviewOpen(false); setConfirmOpen(true); }}
+      />
 
       <RemoveConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Remove image?"
-        body="This will remove the image from this slot. The change will only be saved when you click Save."
+        title="Warning"
+        body="Do you wish to remove this image?"
         onConfirm={() => { onClear(); setConfirmOpen(false); }}
         previewUrl={preview}
         previewAlt={`Slot ${index + 1} image to remove`}
