@@ -620,7 +620,6 @@ function SlotCell({
   if (meta.size != null) badgeParts.push(formatFileSize(meta.size));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const hasImage = !!(slot.pendingFile || slot.persistedPath || slot.signedUrl);
 
   return (
     <div className="relative">
