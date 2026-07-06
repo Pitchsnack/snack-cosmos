@@ -627,7 +627,7 @@ function SlotCell({
       {preview ? (
         <div
           className="group relative cursor-pointer"
-          onClick={() => onPreview(preview)}
+          onClick={() => setPreviewOpen(true)}
         >
           <ImageWithSkeleton
             src={preview}
