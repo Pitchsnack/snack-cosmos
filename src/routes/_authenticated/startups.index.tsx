@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
 import { Plus, Search, Rocket, RefreshCw, X } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -8,14 +7,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-// StartupCard intentionally kept in the codebase for potential reuse; not imported here.
+import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
-import { StartupGridTile } from "@/components/startups/startup-grid-tile";
-import { StartupGridModal } from "@/components/startups/startup-grid-modal";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
-import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
@@ -141,8 +137,8 @@ function StartupsPageInner() {
       </div>
 
       {isLoading && items.length === 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="rounded-lg border border-border bg-card p-4 shadow-card space-y-3">
               <Skeleton className="h-24 w-full" />
               <Skeleton className="h-4 w-2/3" />
@@ -161,7 +157,9 @@ function StartupsPageInner() {
           <p>No startups match your filters.</p>
         </div>
       ) : view === "grid" ? (
-        <StartupsGrid items={items} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {items.map((it) => <StartupCard key={it.id} s={it} />)}
+        </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
           <div className="max-h-[calc(100vh-18rem)] space-y-2 overflow-y-auto pr-1">
@@ -200,39 +198,5 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
         {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
       </SelectContent>
     </Select>
-  );
-}
-
-function StartupsGrid({ items }: { items: StartupListItemDTO[] }) {
-  const [openId, setOpenId] = useState<string | null>(null);
-  const tileRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
-  const returnFocusRef = useRef<HTMLElement | null>(null);
-
-  const handleOpen = (id: string) => {
-    returnFocusRef.current = tileRefs.current.get(id) ?? null;
-    setOpenId(id);
-  };
-
-  return (
-    <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((it) => (
-          <StartupGridTile
-            key={it.id}
-            s={it}
-            onOpen={handleOpen}
-            ref={(el) => {
-              if (el) tileRefs.current.set(it.id, el);
-              else tileRefs.current.delete(it.id);
-            }}
-          />
-        ))}
-      </div>
-      <StartupGridModal
-        id={openId}
-        onClose={() => setOpenId(null)}
-        returnFocusRef={returnFocusRef}
-      />
-    </>
   );
 }
