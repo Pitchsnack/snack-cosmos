@@ -60,6 +60,11 @@ export function InvestorDetailPanel({
                   <ExternalLink className="h-3 w-3" />{i.website_url.replace(/^https?:\/\//, "")}
                 </a>
               )}
+              {i.linkedin_url && (
+                <a href={i.linkedin_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 hover:text-foreground">
+                  <ExternalLink className="h-3 w-3" />LinkedIn
+                </a>
+              )}
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {i.status && <Badge variant="outline" className="text-[10px]">{i.status}</Badge>}
