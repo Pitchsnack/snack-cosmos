@@ -203,7 +203,7 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
   );
 }
 
-function StartupsGrid({ items }: { items: ReturnType<typeof useStartups>["data"] extends { items: infer I } ? I : never }) {
+function StartupsGrid({ items }: { items: StartupListItemDTO[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const tileRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const returnFocusRef = useRef<HTMLElement | null>(null);
