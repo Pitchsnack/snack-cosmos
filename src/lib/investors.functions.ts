@@ -58,6 +58,7 @@ export interface InvestorRow {
   investor_name: string;
   legal_name: string | null;
   website_url: string | null;
+  linkedin_url: string | null;
   country: string | null;
   investor_type: string | null;
   aum: string | null;
