@@ -326,9 +326,9 @@ export function InvestorForm({ investor }: Props) {
       )}
 
       {/* Logo + Media */}
-      <EntityMediaEditor value={media} onChange={setMedia} />
+      <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: companyUrl }} />
 
-      {/* Row 1: Year Founded | Display Name | Investor Classification */}
+      {/* Row 1: Year Founded | Company Name | Investor Classification */}
       <div className="grid grid-cols-[100px_1fr_220px] gap-4">
         <div className="space-y-1.5">
           <Label>Year Founded</Label>
@@ -336,7 +336,7 @@ export function InvestorForm({ investor }: Props) {
             onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
         </div>
         <div className="space-y-1.5">
-          <Label>Display Name <span className="text-destructive">*</span></Label>
+          <Label>Company Name <span className="text-destructive">*</span></Label>
           <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
             placeholder="e.g. Sequoia Capital" maxLength={100} required />
         </div>
@@ -354,16 +354,102 @@ export function InvestorForm({ investor }: Props) {
         </div>
       </div>
 
-      {/* Row 2: Email | Headquarters | Company URL */}
+      {/* Row 2: Headquarters | Region | City */}
       <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-1.5">
+          <div className="flex h-6 items-center">
+            <Label>Headquarters</Label>
+          </div>
+          <CountryCombobox
+            value={headquarters}
+            onChange={(v) => {
+              setHeadquarters(v);
+              if (!v) {
+                setRegion("");
+              } else if (!region) {
+                const suggested = regionForCountry(v);
+                if (suggested) setRegion(suggested);
+              }
+            }}
+            placeholder="Select country..."
+          />
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex h-6 items-center gap-1.5">
+            <Label>Region</Label>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    onClick={() => {
+                      const suggested = regionForCountry(headquarters);
+                      setRegion(suggested || "");
+                      toast.success(
+                        suggested
+                          ? `Region set to ${suggested}`
+                          : headquarters
+                            ? "No region mapping for this country"
+                            : "Set Headquarters first",
+                      );
+                    }}
+                    aria-label="Re-detect region from Headquarters"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Re-detect from Headquarters</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <TooltipProvider delayDuration={150}>
+            <Select
+              value={region || ""}
+              onValueChange={(v) => setRegion(v === "__clear__" ? "" : v)}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Select Region" />
+              </SelectTrigger>
+              <SelectContent>
+                {region && (
+                  <SelectItem value="__clear__" className="text-muted-foreground">
+                    Clear selection
+                  </SelectItem>
+                )}
+                {REGION_OPTIONS.map((r) => (
+                  <Tooltip key={r.value}>
+                    <TooltipTrigger asChild>
+                      <SelectItem value={r.value}>
+                        <span className="font-medium">{r.label}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          — {r.description}
+                        </span>
+                      </SelectItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs">
+                      <span className="font-medium">{r.label}</span> — {r.description}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </SelectContent>
+            </Select>
+          </TooltipProvider>
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex h-6 items-center">
+            <Label>City</Label>
+          </div>
+          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
+        </div>
+      </div>
+
+      {/* Row 3: Email | Company URL */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>Email Address</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="investor@example.com" maxLength={255} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Headquarters</Label>
-          <Input value={headquarters} onChange={(e) => setHeadquarters(e.target.value)} placeholder="Country" />
         </div>
         <div className="space-y-1.5">
           <Label>Company URL</Label>
