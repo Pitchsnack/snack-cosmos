@@ -320,6 +320,7 @@ export const createInvestor = createServerFn({ method: "POST" })
         business_address: data.businessAddress || null,
         year_founded: data.yearFounded ?? null,
         website_url: data.websiteUrl || null,
+        linkedin_url: data.linkedinUrl || null,
         country: data.country || null,
         investor_type: data.investorType || null,
         aum: data.aum || null,
