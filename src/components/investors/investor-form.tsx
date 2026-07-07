@@ -44,7 +44,7 @@ const TICKET_OPTIONS = [
   { value: "1M-5M", label: "1M – 5M" },
   { value: "5M+", label: "5M+" },
 ];
-const BUSINESS_MODELS = ["B2B", "B2C", "D2C", "B2B2C", "B2G"];
+
 const STAGES = ["Ideation", "Early Stage", "Growth Stage", "Maturity Stage"];
 const INDUSTRIES = [
   "FinTech", "eCommerce & Marketplace", "MarTech", "HealthTech",
@@ -91,7 +91,7 @@ export interface InvestorEditModel {
   max_ticket_size: string | null;
   bio: string | null;
   keywords: string[] | null;
-  business_model: string[] | null;
+  
   preferred_stages: string[] | null;
   preferred_industries: string[] | null;
   investment_focus: string[] | null;
@@ -166,7 +166,7 @@ export function InvestorForm({ investor }: Props) {
   const [bio, setBio] = useState(investor?.bio ?? "");
   const [keywords, setKeywords] = useState<string[]>(investor?.keywords ?? []);
   const [keywordDraft, setKeywordDraft] = useState("");
-  const [businessModel, setBusinessModel] = useState<string[]>(investor?.business_model ?? []);
+  
   const [preferredStages, setPreferredStages] = useState<string[]>(investor?.preferred_stages ?? []);
   const [preferredIndustries, setPreferredIndustries] = useState<string[]>(investor?.preferred_industries ?? []);
   const [customIndustry, setCustomIndustry] = useState("");
@@ -234,7 +234,6 @@ export function InvestorForm({ investor }: Props) {
       bio: bio || null,
       shortDescription: bio ? bio.slice(0, 500) : null,
       keywords,
-      businessModel,
       preferredStages,
       preferredIndustries,
       investmentFocus,
@@ -537,17 +536,6 @@ export function InvestorForm({ investor }: Props) {
         </div>
       </div>
 
-      {/* Business Model */}
-      <div className="space-y-1.5">
-        <Label>Business Model</Label>
-        <div className="flex flex-wrap gap-2">
-          {BUSINESS_MODELS.map((bm) => (
-            <Pill key={bm} active={businessModel.includes(bm)} onClick={() => setBusinessModel(toggle(businessModel, bm))}>
-              {bm}
-            </Pill>
-          ))}
-        </div>
-      </div>
 
       {/* Geography */}
       <div className="space-y-1.5">

@@ -178,7 +178,7 @@ export const getInvestor = createServerFn({ method: "GET" })
         created_at, updated_at, logo_url, media,
         firm_name, email, business_address, year_founded,
         min_ticket_size, max_ticket_size, bio,
-        keywords, business_model, preferred_stages, preferred_industries, investment_focus,
+        keywords, preferred_stages, preferred_industries, investment_focus,
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         investor_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -279,7 +279,7 @@ const ProfileFields = {
   maxTicketSize: z.string().max(50).nullable().optional(),
   bio: z.string().max(2000).nullable().optional(),
   keywords: z.array(z.string()).max(20).optional(),
-  businessModel: z.array(z.string()).max(20).optional(),
+  
   preferredStages: z.array(z.string()).max(20).optional(),
   preferredIndustries: z.array(z.string()).max(50).optional(),
   investmentFocus: z.array(z.string()).max(50).optional(),
@@ -328,7 +328,7 @@ export const createInvestor = createServerFn({ method: "POST" })
         long_description: data.longDescription || null,
         bio: data.bio || null,
         keywords: data.keywords ?? [],
-        business_model: data.businessModel ?? [],
+        
         preferred_stages: data.preferredStages ?? [],
         preferred_industries: data.preferredIndustries ?? [],
         investment_focus: data.investmentFocus ?? [],
@@ -417,7 +417,7 @@ export const updateInvestor = createServerFn({ method: "POST" })
     if (data.maxTicketSize !== undefined) patch.max_ticket_size = data.maxTicketSize;
     if (data.bio !== undefined) patch.bio = data.bio;
     if (data.keywords !== undefined) patch.keywords = data.keywords;
-    if (data.businessModel !== undefined) patch.business_model = data.businessModel;
+    
     if (data.preferredStages !== undefined) patch.preferred_stages = data.preferredStages;
     if (data.preferredIndustries !== undefined) patch.preferred_industries = data.preferredIndustries;
     if (data.investmentFocus !== undefined) patch.investment_focus = data.investmentFocus;
