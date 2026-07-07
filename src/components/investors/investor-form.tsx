@@ -305,6 +305,8 @@ export function InvestorForm({ investor }: Props) {
       });
     },
     onSuccess: () => {
+      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
+      void investorStartupLinksAdapter.saveInvestorInvestmentPortfolio(investor!.id, portfolioEntries);
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["investor", investor!.id] });
       qc.invalidateQueries({ queryKey: ["investors"] });
