@@ -1,63 +1,106 @@
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { StartupListItem } from "@/lib/startups.functions";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
+/** Wraps a truncated element with a tooltip showing full text. */
+function Truncate({
+  text,
+  children,
+  className,
+}: {
+  text: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Tooltip delayDuration={200}>
+      <TooltipTrigger asChild>
+        <span className={className}>{children}</span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs break-words">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function StartupCard({ s }: { s: StartupListItem }) {
   return (
-    <Link
-      to="/startups/$id"
-      params={{ id: s.id }}
-      className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-card transition hover:border-accent/50 hover:shadow-md"
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
-          {s.logo_signed_url ? (
-            <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-base font-semibold text-muted-foreground">{monogram(s.startup_name)}</span>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-semibold leading-tight group-hover:text-accent">
-            {s.startup_name}
-          </h3>
-          {s.company_type && (
-            <div className="mt-0.5 text-xs text-muted-foreground">{s.company_type}</div>
-          )}
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
-            {s.headquarters && (
-              <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{s.headquarters}</span>
+    <TooltipProvider disableHoverableContent>
+      <Link
+        to="/startups/$id"
+        params={{ id: s.id }}
+        className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-card transition hover:border-accent/50 hover:shadow-md"
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
+            {s.logo_signed_url ? (
+              <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-base font-semibold text-muted-foreground">{monogram(s.startup_name)}</span>
             )}
-            {s.year_founded && <span>Founded {s.year_founded}</span>}
+          </div>
+          <div className="min-w-0 flex-1">
+            <Truncate text={s.startup_name} className="block">
+              <h3 className="truncate text-base font-semibold leading-tight group-hover:text-accent">
+                {s.startup_name}
+              </h3>
+            </Truncate>
+            {s.company_type && (
+              <Truncate text={s.company_type} className="block">
+                <div className="truncate text-xs text-muted-foreground">{s.company_type}</div>
+              </Truncate>
+            )}
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+              {s.headquarters && (
+                <Truncate text={s.headquarters}>
+                  <span className="inline-flex max-w-[10rem] items-center gap-0.5 truncate">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{s.headquarters}</span>
+                  </span>
+                </Truncate>
+              )}
+              {s.year_founded && <span className="shrink-0">Founded {s.year_founded}</span>}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {s.investment_stage && (
-          <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent text-[10px]">{s.investment_stage}</Badge>
-        )}
-        {s.industry?.map((ind) => (
-          <Badge key={ind} variant="outline" className="text-[10px]">{ind}</Badge>
-        ))}
-      </div>
-
-      {s.short_description && (
-        <p className="line-clamp-2 text-xs text-muted-foreground">{s.short_description}</p>
-      )}
-
-      {(s.product_tags?.length || s.market_tags?.length) ? (
-        <div className="mt-auto space-y-1.5 pt-1">
-          {s.product_tags?.length ? <ChipRow tags={s.product_tags} tone="primary" /> : null}
-          {s.market_tags?.length ? <ChipRow tags={s.market_tags} tone="muted" /> : null}
+        <div className="flex flex-wrap gap-1.5">
+          {s.investment_stage && (
+            <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent text-[10px]">
+              {s.investment_stage}
+            </Badge>
+          )}
+          {s.industry?.map((ind) => (
+            <Badge key={ind} variant="outline" className="text-[10px]">{ind}</Badge>
+          ))}
         </div>
-      ) : null}
-    </Link>
+
+        {s.short_description && (
+          <Truncate text={s.short_description} className="block">
+            <p className="line-clamp-2 text-xs text-muted-foreground">{s.short_description}</p>
+          </Truncate>
+        )}
+
+        {(s.product_tags?.length || s.market_tags?.length) ? (
+          <div className="mt-auto space-y-1.5 pt-1">
+            {s.product_tags?.length ? <ChipRow tags={s.product_tags} tone="primary" /> : null}
+            {s.market_tags?.length ? <ChipRow tags={s.market_tags} tone="muted" /> : null}
+          </div>
+        ) : null}
+      </Link>
+    </TooltipProvider>
   );
 }
 
@@ -71,9 +114,27 @@ function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) 
   return (
     <div className="flex flex-wrap gap-1">
       {shown.map((t) => (
-        <span key={t} className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${base}`}>{t}</span>
+        <Tooltip key={t} delayDuration={200}>
+          <TooltipTrigger asChild>
+            <span
+              className={`max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-medium ${base}`}
+            >
+              {t}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top">{t}</TooltipContent>
+        </Tooltip>
       ))}
-      {overflow > 0 && <span className="text-[10px] text-muted-foreground">+{overflow}</span>}
+      {overflow > 0 && (
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <span className="text-[10px] text-muted-foreground">+{overflow}</span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs break-words">
+            {tags.slice(5).join(", ")}
+          </TooltipContent>
+        </Tooltip>
+      )}
     </div>
   );
 }
