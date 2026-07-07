@@ -378,6 +378,7 @@ const UpdateInput = z.object({
   investorName: z.string().min(1).max(255).optional(),
   legalName: z.string().max(255).nullable().optional(),
   websiteUrl: z.string().max(2048).nullable().optional(),
+  linkedinUrl: z.string().max(2048).nullable().optional(),
   country: z.string().max(100).nullable().optional(),
   investorType: z.string().max(100).nullable().optional(),
   shortDescription: z.string().max(500).nullable().optional(),
