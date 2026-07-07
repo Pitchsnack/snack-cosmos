@@ -26,6 +26,9 @@ import {
   EntityMediaEditor, EMPTY_MEDIA_STATE, uploadPending,
   type EntityMediaState, type SlotState,
 } from "@/components/media/entity-media-editor";
+import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
+import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
+import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminInvestorManager) ──
 const INVESTOR_CLASSIFICATIONS = [
@@ -183,6 +186,10 @@ export function InvestorForm({ investor }: Props) {
 
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
+  // Investment Portfolio (V3) — staged in local UI state until Save. Save is
+  // a stub via investorStartupLinksAdapter (future SnackPortal2 API Gateway).
+  const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>([]);
+
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
@@ -271,6 +278,8 @@ export function InvestorForm({ investor }: Props) {
       return { id: newId };
     },
     onSuccess: (res) => {
+      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
+      void investorStartupLinksAdapter.saveInvestorInvestmentPortfolio(res.id, portfolioEntries);
       toast.success("Investor created");
       qc.invalidateQueries({ queryKey: ["investors"] });
       navigate({ to: "/investors/$id", params: { id: res.id } });
@@ -296,6 +305,8 @@ export function InvestorForm({ investor }: Props) {
       });
     },
     onSuccess: () => {
+      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
+      void investorStartupLinksAdapter.saveInvestorInvestmentPortfolio(investor!.id, portfolioEntries);
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["investor", investor!.id] });
       qc.invalidateQueries({ queryKey: ["investors"] });
@@ -616,6 +627,34 @@ export function InvestorForm({ investor }: Props) {
           <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
         </div>
       </div>
+
+      {/* Investment Portfolio (V3) — UI-staged only; backend persistence pending. */}
+      <RelationshipLinksEditor
+        mode="startups"
+        title="Investment Portfolio"
+        rows={portfolioEntries.map((e): RelationshipRow => ({
+          id: e.id,
+          refId: e.startupId,
+          name: e.companyName,
+          subtitle: e.industry,
+          industry: e.industry,
+          relationshipType: e.relationshipType,
+          status: e.status,
+        }))}
+        onChange={(next) =>
+          setPortfolioEntries(
+            next.map((r): InvestorPortfolioEntryView => ({
+              id: r.id,
+              startupId: r.refId,
+              companyName: r.name,
+              industry: r.industry,
+              relationshipType: r.relationshipType,
+              status: r.status,
+            })),
+          )
+        }
+      />
+
 
       {/* Status & Visibility (create only — edit page has its own controls) */}
       {!isEdit && (

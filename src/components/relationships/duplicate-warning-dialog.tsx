@@ -1,0 +1,76 @@
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import type { DuplicateCandidate } from "@/adapters/investor-startup-links-types";
+
+interface Props {
+  open: boolean;
+  typedName: string;
+  candidates: DuplicateCandidate[];
+  onCancel: () => void;
+  onLinkExisting: (candidate: DuplicateCandidate) => void;
+  onCreatePendingAnyway: () => void;
+}
+
+export function DuplicateWarningDialog({
+  open,
+  typedName,
+  candidates,
+  onCancel,
+  onLinkExisting,
+  onCreatePendingAnyway,
+}: Props) {
+  return (
+    <Dialog open={open} onOpenChange={(next) => { if (!next) onCancel(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Possible duplicate</DialogTitle>
+          <DialogDescription>
+            &ldquo;{typedName}&rdquo; looks similar to {candidates.length === 1 ? "an existing record" : "existing records"}.
+            Link an existing one, or create a pending entry anyway.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-64 space-y-2 overflow-y-auto">
+          {candidates.map((c, idx) => (
+            <button
+              key={(c.id ?? "pending") + idx}
+              type="button"
+              onClick={() => onLinkExisting(c)}
+              className="flex w-full items-center justify-between gap-2 rounded-md border border-border bg-card p-2 text-left hover:bg-accent hover:text-accent-foreground"
+            >
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">{c.name}</div>
+                {c.subtitle && (
+                  <div className="truncate text-xs text-muted-foreground">{c.subtitle}</div>
+                )}
+              </div>
+              <Badge variant="secondary" className="shrink-0 text-[10px]">
+                {c.matchKind}
+              </Badge>
+            </button>
+          ))}
+          {candidates.length === 0 && (
+            <p className="text-xs text-muted-foreground">No similar records found.</p>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:justify-between">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="button" variant="secondary" onClick={onCreatePendingAnyway}>
+            Create Pending Anyway
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

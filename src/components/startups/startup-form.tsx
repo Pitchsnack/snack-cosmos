@@ -34,7 +34,9 @@ import {
   type SlotState,
 } from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
-import { InvestorPicker } from "./investor-picker";
+import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
+import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
+import type { StartupInvestorLinkView } from "@/adapters/investor-startup-links-types";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
@@ -155,9 +157,28 @@ export function StartupForm({ startup }: Props) {
   const [status, setStatus] = useState<string>(startup?.status ?? "Draft");
   const [visibility, setVisibility] = useState<string>(startup?.visibility ?? "Tenant");
 
-  // Investors
-  const [investorIds, setInvestorIds] = useState<string[]>(
-    startup?.investors.map((i) => i.investor_id) ?? [],
+  // Investor Relationships (V3) — staged in local UI state until Save.
+  //
+  // The legacy `investorIds` submit path is preserved ONLY so today's
+  // linked-investor behavior does not regress. It does NOT persist
+  // Acquisition markers, pending rows, or duplicate-review state — those
+  // stay in `investorLinks` and are passed to
+  // `adapter.saveStartupInvestorRelationships(...)` (currently a stub;
+  // future SnackPortal2 API Gateway).
+  const [investorLinks, setInvestorLinks] = useState<StartupInvestorLinkView[]>(
+    startup?.investors.map((i): StartupInvestorLinkView => ({
+      id: i.investor_id,
+      investorId: i.investor_id,
+      investorName: i.investor_name,
+      investorType: null,
+      country: null,
+      relationshipType: "investment",
+      status: "linked",
+    })) ?? [],
+  );
+  const investorIds = useMemo(
+    () => investorLinks.filter((l) => l.status === "linked" && l.investorId).map((l) => l.investorId!),
+    [investorLinks],
   );
 
   // Founders
@@ -265,6 +286,8 @@ export function StartupForm({ startup }: Props) {
       return { id: newId };
     },
     onSuccess: (res) => {
+      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
+      void investorStartupLinksAdapter.saveStartupInvestorRelationships(res.id, investorLinks);
       toast.success("Startup created");
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
@@ -293,6 +316,8 @@ export function StartupForm({ startup }: Props) {
       });
     },
     onSuccess: () => {
+      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
+      void investorStartupLinksAdapter.saveStartupInvestorRelationships(startup!.id, investorLinks);
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["startup", startup!.id] });
       qc.invalidateQueries({ queryKey: ["startups"] });
@@ -715,10 +740,34 @@ export function StartupForm({ startup }: Props) {
       <FounderEditor value={founders} onChange={setFounders} />
 
 
-      {/* Investors */}
-      {tenantId && (
-        <InvestorPicker tenantId={tenantId} value={investorIds} onChange={setInvestorIds} />
-      )}
+      {/* Investor Relationships (V3) — replaces the legacy InvestorPicker */}
+      <RelationshipLinksEditor
+        mode="investors"
+        title="Investor Relationships"
+        rows={investorLinks.map((l): RelationshipRow => ({
+          id: l.id,
+          refId: l.investorId,
+          name: l.investorName,
+          subtitle: l.investorType,
+          industry: null,
+          relationshipType: l.relationshipType,
+          status: l.status,
+        }))}
+        onChange={(next) =>
+          setInvestorLinks(
+            next.map((r): StartupInvestorLinkView => ({
+              id: r.id,
+              investorId: r.refId,
+              investorName: r.name,
+              investorType: r.subtitle,
+              country: null,
+              relationshipType: r.relationshipType,
+              status: r.status,
+            })),
+          )
+        }
+      />
+
 
       {/* Status / visibility (create only) */}
       {!isEdit && (
