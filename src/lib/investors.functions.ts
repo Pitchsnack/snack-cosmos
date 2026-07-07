@@ -291,6 +291,7 @@ const CreateInput = z.object({
   investorName: z.string().min(1).max(255),
   legalName: z.string().max(255).optional().nullable(),
   websiteUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
+  linkedinUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
   country: z.string().max(100).optional().nullable(),
   investorType: z.string().max(100).optional().nullable(),
   shortDescription: z.string().max(500).optional().nullable(),
