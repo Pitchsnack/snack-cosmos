@@ -157,9 +157,28 @@ export function StartupForm({ startup }: Props) {
   const [status, setStatus] = useState<string>(startup?.status ?? "Draft");
   const [visibility, setVisibility] = useState<string>(startup?.visibility ?? "Tenant");
 
-  // Investors
-  const [investorIds, setInvestorIds] = useState<string[]>(
-    startup?.investors.map((i) => i.investor_id) ?? [],
+  // Investor Relationships (V3) — staged in local UI state until Save.
+  //
+  // The legacy `investorIds` submit path is preserved ONLY so today's
+  // linked-investor behavior does not regress. It does NOT persist
+  // Acquisition markers, pending rows, or duplicate-review state — those
+  // stay in `investorLinks` and are passed to
+  // `adapter.saveStartupInvestorRelationships(...)` (currently a stub;
+  // future SnackPortal2 API Gateway).
+  const [investorLinks, setInvestorLinks] = useState<StartupInvestorLinkView[]>(
+    startup?.investors.map((i): StartupInvestorLinkView => ({
+      id: i.investor_id,
+      investorId: i.investor_id,
+      investorName: i.investor_name,
+      investorType: null,
+      country: null,
+      relationshipType: "investment",
+      status: "linked",
+    })) ?? [],
+  );
+  const investorIds = useMemo(
+    () => investorLinks.filter((l) => l.status === "linked" && l.investorId).map((l) => l.investorId!),
+    [investorLinks],
   );
 
   // Founders
