@@ -1,0 +1,1 @@
+ALTER TABLE public.investors DROP COLUMN IF EXISTS business_model;

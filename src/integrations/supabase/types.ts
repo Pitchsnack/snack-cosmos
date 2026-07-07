@@ -905,7 +905,6 @@ export type Database = {
           aum: string | null
           bio: string | null
           business_address: string | null
-          business_model: string[] | null
           country: string | null
           created_at: string
           created_by: string | null
@@ -940,7 +939,6 @@ export type Database = {
           aum?: string | null
           bio?: string | null
           business_address?: string | null
-          business_model?: string[] | null
           country?: string | null
           created_at?: string
           created_by?: string | null
@@ -975,7 +973,6 @@ export type Database = {
           aum?: string | null
           bio?: string | null
           business_address?: string | null
-          business_model?: string[] | null
           country?: string | null
           created_at?: string
           created_by?: string | null
