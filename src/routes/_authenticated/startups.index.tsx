@@ -201,3 +201,37 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
     </Select>
   );
 }
+
+function StartupsGrid({ items }: { items: ReturnType<typeof useStartups>["data"] extends { items: infer I } ? I : never }) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const tileRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  const handleOpen = (id: string) => {
+    returnFocusRef.current = tileRefs.current.get(id) ?? null;
+    setOpenId(id);
+  };
+
+  return (
+    <>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((it) => (
+          <StartupGridTile
+            key={it.id}
+            s={it}
+            onOpen={handleOpen}
+            ref={(el) => {
+              if (el) tileRefs.current.set(it.id, el);
+              else tileRefs.current.delete(it.id);
+            }}
+          />
+        ))}
+      </div>
+      <StartupGridModal
+        id={openId}
+        onClose={() => setOpenId(null)}
+        returnFocusRef={returnFocusRef}
+      />
+    </>
+  );
+}
