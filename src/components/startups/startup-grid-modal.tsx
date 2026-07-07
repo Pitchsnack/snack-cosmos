@@ -136,6 +136,6 @@ function ModalContents({
           <StartupDetailPanel id={id} compact />
         </div>
       </div>
-    </div>,
+    </div>
   );
 }
