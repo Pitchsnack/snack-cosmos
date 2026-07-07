@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { REGION_OPTIONS, regionForCountry } from "@/lib/country-region";
 import { CountryCombobox } from "@/components/ui/country-combobox";
+import { EditableUrlField } from "@/components/ui/editable-url-field";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
