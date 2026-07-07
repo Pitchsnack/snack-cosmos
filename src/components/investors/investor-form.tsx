@@ -186,6 +186,10 @@ export function InvestorForm({ investor }: Props) {
 
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
+  // Investment Portfolio (V3) — staged in local UI state until Save. Save is
+  // a stub via investorStartupLinksAdapter (future SnackPortal2 API Gateway).
+  const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>([]);
+
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
