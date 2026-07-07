@@ -15,6 +15,7 @@ import { StartupGridModal } from "@/components/startups/startup-grid-modal";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
+import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
