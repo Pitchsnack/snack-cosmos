@@ -404,6 +404,7 @@ export const updateInvestor = createServerFn({ method: "POST" })
     if (data.investorName !== undefined) patch.investor_name = data.investorName;
     if (data.legalName !== undefined) patch.legal_name = data.legalName;
     if (data.websiteUrl !== undefined) patch.website_url = data.websiteUrl;
+    if (data.linkedinUrl !== undefined) patch.linkedin_url = data.linkedinUrl;
     if (data.country !== undefined) patch.country = data.country;
     if (data.investorType !== undefined) patch.investor_type = data.investorType;
     if (data.shortDescription !== undefined) patch.short_description = data.shortDescription;
