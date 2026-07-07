@@ -285,6 +285,7 @@ export function InvestorForm({ investor }: Props) {
           id: investor!.id,
           investorName: displayName,
           websiteUrl: companyUrl || null,
+          linkedinUrl: linkedinUrl || null,
           country: headquarters || null,
           investorType: title || null,
           logoPath,
