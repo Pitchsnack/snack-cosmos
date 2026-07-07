@@ -736,10 +736,37 @@ export function StartupForm({ startup }: Props) {
       <FounderEditor value={founders} onChange={setFounders} />
 
 
-      {/* Investors */}
-      {tenantId && (
-        <InvestorPicker tenantId={tenantId} value={investorIds} onChange={setInvestorIds} />
-      )}
+      {/* Investor Relationships (V3) — replaces the legacy InvestorPicker */}
+      <RelationshipLinksEditor
+        mode="investors"
+        title="Investor Relationships"
+        rows={investorLinks.map((l): RelationshipRow => ({
+          id: l.id,
+          refId: l.investorId,
+          name: l.investorName,
+          subtitle: l.investorType,
+          industry: null,
+          relationshipType: l.relationshipType,
+          status: l.status,
+        }))}
+        onChange={(next) =>
+          setInvestorLinks(
+            next.map((r): StartupInvestorLinkView => ({
+              id: r.id,
+              investorId: r.refId,
+              investorName: r.name,
+              investorType: r.subtitle,
+              country: null,
+              relationshipType: r.relationshipType,
+              status: r.status,
+            })),
+          )
+        }
+      />
+      {/* Save the full Investor Relationships set through the adapter
+          (stub — future SnackPortal2 API Gateway). Fire-and-forget so it
+          never blocks the legacy investorIds submit path. */}
+      {void 0 /* referenced below in mutation onSuccess */}
 
       {/* Status / visibility (create only) */}
       {!isEdit && (
