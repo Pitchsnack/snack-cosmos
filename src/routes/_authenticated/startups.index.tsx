@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StartupCard } from "@/components/startups/startup-card";
+// StartupCard intentionally kept in the codebase for potential reuse; not imported here.
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupGridTile } from "@/components/startups/startup-grid-tile";
 import { StartupGridModal } from "@/components/startups/startup-grid-modal";
