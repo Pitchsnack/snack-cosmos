@@ -448,18 +448,27 @@ export function InvestorForm({ investor }: Props) {
         </div>
       </div>
 
-      {/* Row 3: Email | Company URL */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Row 3: Email | Company URL | LinkedIn URL */}
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Email Address</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="investor@example.com" maxLength={255} />
         </div>
-        <div className="space-y-1.5">
-          <Label>Company URL</Label>
-          <Input type="url" value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="https://example.com" />
-        </div>
+        <EditableUrlField
+          label="Company URL"
+          value={companyUrl}
+          onChange={setCompanyUrl}
+          placeholder="https://example.com"
+        />
+        <EditableUrlField
+          label="LinkedIn URL"
+          value={linkedinUrl}
+          onChange={setLinkedinUrl}
+          placeholder="https://www.linkedin.com/company/…"
+        />
       </div>
+
 
       {/* Row 3: Firm Name | Business Address */}
       <div className="grid grid-cols-2 gap-4">
