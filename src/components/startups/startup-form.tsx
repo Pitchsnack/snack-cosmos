@@ -286,6 +286,8 @@ export function StartupForm({ startup }: Props) {
       return { id: newId };
     },
     onSuccess: (res) => {
+      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
+      void investorStartupLinksAdapter.saveStartupInvestorRelationships(res.id, investorLinks);
       toast.success("Startup created");
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
