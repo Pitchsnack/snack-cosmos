@@ -34,7 +34,9 @@ import {
   type SlotState,
 } from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
-import { InvestorPicker } from "./investor-picker";
+import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
+import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
+import type { StartupInvestorLinkView } from "@/adapters/investor-startup-links-types";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
