@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { Plus, Search, Rocket, RefreshCw, X } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
+import { StartupGridTile } from "@/components/startups/startup-grid-tile";
+import { StartupGridModal } from "@/components/startups/startup-grid-modal";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
