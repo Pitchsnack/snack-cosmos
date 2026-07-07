@@ -160,6 +160,7 @@ export function InvestorForm({ investor }: Props) {
   const [city, setCity] = useState("");
   const [businessAddress, setBusinessAddress] = useState(investor?.business_address ?? "");
   const [companyUrl, setCompanyUrl] = useState(investor?.website_url ?? "");
+  const [linkedinUrl, setLinkedinUrl] = useState(investor?.linkedin_url ?? "");
   const [yearFounded, setYearFounded] = useState<string>(investor?.year_founded?.toString() ?? "");
   const [aum, setAum] = useState(investor?.aum ?? "");
   const [minTicket, setMinTicket] = useState(investor?.min_ticket_size ?? "");
