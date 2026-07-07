@@ -628,6 +628,34 @@ export function InvestorForm({ investor }: Props) {
         </div>
       </div>
 
+      {/* Investment Portfolio (V3) — UI-staged only; backend persistence pending. */}
+      <RelationshipLinksEditor
+        mode="startups"
+        title="Investment Portfolio"
+        rows={portfolioEntries.map((e): RelationshipRow => ({
+          id: e.id,
+          refId: e.startupId,
+          name: e.companyName,
+          subtitle: e.industry,
+          industry: e.industry,
+          relationshipType: e.relationshipType,
+          status: e.status,
+        }))}
+        onChange={(next) =>
+          setPortfolioEntries(
+            next.map((r): InvestorPortfolioEntryView => ({
+              id: r.id,
+              startupId: r.refId,
+              companyName: r.name,
+              industry: r.industry,
+              relationshipType: r.relationshipType,
+              status: r.status,
+            })),
+          )
+        }
+      />
+
+
       {/* Status & Visibility (create only — edit page has its own controls) */}
       {!isEdit && (
         <div className="grid grid-cols-2 gap-4">
