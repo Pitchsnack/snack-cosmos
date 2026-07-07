@@ -155,6 +155,8 @@ export function InvestorForm({ investor }: Props) {
   const [title, setTitle] = useState(investor?.investor_type ?? "");
   const [email, setEmail] = useState(investor?.email ?? "");
   const [headquarters, setHeadquarters] = useState(investor?.country ?? "");
+  const [region, setRegion] = useState<string>(() => regionForCountry(investor?.country ?? "") || "");
+  const [city, setCity] = useState("");
   const [businessAddress, setBusinessAddress] = useState(investor?.business_address ?? "");
   const [companyUrl, setCompanyUrl] = useState(investor?.website_url ?? "");
   const [yearFounded, setYearFounded] = useState<string>(investor?.year_founded?.toString() ?? "");
