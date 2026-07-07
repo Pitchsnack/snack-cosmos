@@ -140,8 +140,8 @@ function StartupsPageInner() {
       </div>
 
       {isLoading && items.length === 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-lg border border-border bg-card p-4 shadow-card space-y-3">
               <Skeleton className="h-24 w-full" />
               <Skeleton className="h-4 w-2/3" />
@@ -160,9 +160,7 @@ function StartupsPageInner() {
           <p>No startups match your filters.</p>
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((it) => <StartupCard key={it.id} s={it} />)}
-        </div>
+        <StartupsGrid items={items} />
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
           <div className="max-h-[calc(100vh-18rem)] space-y-2 overflow-y-auto pr-1">
