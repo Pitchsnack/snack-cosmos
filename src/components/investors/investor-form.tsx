@@ -26,6 +26,9 @@ import {
   EntityMediaEditor, EMPTY_MEDIA_STATE, uploadPending,
   type EntityMediaState, type SlotState,
 } from "@/components/media/entity-media-editor";
+import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
+import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
+import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminInvestorManager) ──
 const INVESTOR_CLASSIFICATIONS = [
