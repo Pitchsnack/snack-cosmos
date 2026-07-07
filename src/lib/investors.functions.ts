@@ -174,7 +174,7 @@ export const getInvestor = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("investors")
       .select(`
-        id, tenant_id, investor_name, legal_name, website_url, country, investor_type,
+        id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url, media,
         firm_name, email, business_address, year_founded,
