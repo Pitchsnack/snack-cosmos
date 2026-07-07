@@ -58,6 +58,7 @@ export interface InvestorRow {
   investor_name: string;
   legal_name: string | null;
   website_url: string | null;
+  linkedin_url: string | null;
   country: string | null;
   investor_type: string | null;
   aum: string | null;
@@ -117,7 +118,7 @@ export const listInvestors = createServerFn({ method: "GET" })
     let q = supabase
       .from("investors")
       .select(`
-        id, tenant_id, investor_name, legal_name, website_url, country, investor_type,
+        id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url,
         tenants!inner(tenant_name),
@@ -173,7 +174,7 @@ export const getInvestor = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("investors")
       .select(`
-        id, tenant_id, investor_name, legal_name, website_url, country, investor_type,
+        id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url, media,
         firm_name, email, business_address, year_founded,
@@ -290,6 +291,7 @@ const CreateInput = z.object({
   investorName: z.string().min(1).max(255),
   legalName: z.string().max(255).optional().nullable(),
   websiteUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
+  linkedinUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
   country: z.string().max(100).optional().nullable(),
   investorType: z.string().max(100).optional().nullable(),
   shortDescription: z.string().max(500).optional().nullable(),
@@ -318,6 +320,7 @@ export const createInvestor = createServerFn({ method: "POST" })
         business_address: data.businessAddress || null,
         year_founded: data.yearFounded ?? null,
         website_url: data.websiteUrl || null,
+        linkedin_url: data.linkedinUrl || null,
         country: data.country || null,
         investor_type: data.investorType || null,
         aum: data.aum || null,
@@ -375,6 +378,7 @@ const UpdateInput = z.object({
   investorName: z.string().min(1).max(255).optional(),
   legalName: z.string().max(255).nullable().optional(),
   websiteUrl: z.string().max(2048).nullable().optional(),
+  linkedinUrl: z.string().max(2048).nullable().optional(),
   country: z.string().max(100).nullable().optional(),
   investorType: z.string().max(100).nullable().optional(),
   shortDescription: z.string().max(500).nullable().optional(),
@@ -400,6 +404,7 @@ export const updateInvestor = createServerFn({ method: "POST" })
     if (data.investorName !== undefined) patch.investor_name = data.investorName;
     if (data.legalName !== undefined) patch.legal_name = data.legalName;
     if (data.websiteUrl !== undefined) patch.website_url = data.websiteUrl;
+    if (data.linkedinUrl !== undefined) patch.linkedin_url = data.linkedinUrl;
     if (data.country !== undefined) patch.country = data.country;
     if (data.investorType !== undefined) patch.investor_type = data.investorType;
     if (data.shortDescription !== undefined) patch.short_description = data.shortDescription;

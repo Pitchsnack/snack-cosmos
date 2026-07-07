@@ -917,6 +917,7 @@ export type Database = {
           investor_type: string | null
           keywords: string[] | null
           legal_name: string | null
+          linkedin_url: string | null
           logo_url: string | null
           long_description: string | null
           max_ticket_size: string | null
@@ -951,6 +952,7 @@ export type Database = {
           investor_type?: string | null
           keywords?: string[] | null
           legal_name?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
           max_ticket_size?: string | null
@@ -985,6 +987,7 @@ export type Database = {
           investor_type?: string | null
           keywords?: string[] | null
           legal_name?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
           max_ticket_size?: string | null
