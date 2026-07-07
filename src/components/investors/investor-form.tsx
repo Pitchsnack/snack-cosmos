@@ -250,6 +250,7 @@ export function InvestorForm({ investor }: Props) {
           tenantId,
           investorName: displayName,
           websiteUrl: companyUrl || null,
+          linkedinUrl: linkedinUrl || null,
           country: headquarters || null,
           investorType: title || null,
           status: status as never,
