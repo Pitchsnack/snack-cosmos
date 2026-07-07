@@ -763,10 +763,7 @@ export function StartupForm({ startup }: Props) {
           )
         }
       />
-      {/* Save the full Investor Relationships set through the adapter
-          (stub — future SnackPortal2 API Gateway). Fire-and-forget so it
-          never blocks the legacy investorIds submit path. */}
-      {void 0 /* referenced below in mutation onSuccess */}
+
 
       {/* Status / visibility (create only) */}
       {!isEdit && (
