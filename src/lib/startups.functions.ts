@@ -70,6 +70,7 @@ export interface StartupRow {
 export interface StartupListItem extends StartupRow {
   tenant_name: string | null;
   logo_signed_url: string | null;
+  tile_image_signed_url: string | null;
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
 }
