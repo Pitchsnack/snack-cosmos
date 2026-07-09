@@ -41,10 +41,10 @@ export function StartupCard({ s }: { s: StartupListItem }) {
       <Link
         to="/startups/$id"
         params={{ id: s.id }}
-        className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-card transition hover:border-accent/50 hover:shadow-md"
+        className="group flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-card transition hover:border-accent/50 hover:shadow-md"
       >
         {s.tile_image_signed_url && (
-          <div className="-m-4 mb-0 overflow-hidden rounded-t-lg border-b border-border bg-muted/40 aspect-[16/9]">
+          <div className="-m-5 mb-0 overflow-hidden rounded-t-xl border-b border-border bg-muted/40 aspect-[16/9]">
             <img
               src={s.tile_image_signed_url}
               alt=""
@@ -54,29 +54,29 @@ export function StartupCard({ s }: { s: StartupListItem }) {
           </div>
         )}
         <div className="flex items-start gap-3">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
+          <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
             {s.logo_signed_url ? (
-              <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
+              <img src={s.logo_signed_url} alt="" className="h-full w-auto max-w-full object-contain" />
             ) : (
-              <span className="text-base font-semibold text-muted-foreground">{monogram(s.startup_name)}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground">{monogram(s.startup_name)}</span>
             )}
           </div>
           <div className="min-w-0 flex-1">
             <Truncate text={s.startup_name} className="block">
-              <h3 className="truncate text-base font-semibold leading-tight group-hover:text-accent">
+              <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
                 {s.startup_name}
               </h3>
             </Truncate>
             {s.company_type && (
               <Truncate text={s.company_type} className="block">
-                <div className="truncate text-xs text-muted-foreground">{s.company_type}</div>
+                <div className="truncate text-[10px] text-muted-foreground">{s.company_type}</div>
               </Truncate>
             )}
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
               {s.headquarters && (
                 <Truncate text={s.headquarters}>
                   <span className="inline-flex max-w-[10rem] items-center gap-0.5 truncate">
-                    <MapPin className="h-3 w-3 shrink-0" />
+                    <MapPin className="h-2.5 w-2.5 shrink-0" />
                     <span className="truncate">{s.headquarters}</span>
                   </span>
                 </Truncate>
@@ -99,7 +99,7 @@ export function StartupCard({ s }: { s: StartupListItem }) {
 
         {s.short_description && (
           <Truncate text={s.short_description} className="block">
-            <p className="line-clamp-2 text-xs text-muted-foreground">{s.short_description}</p>
+            <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{s.short_description}</p>
           </Truncate>
         )}
 
