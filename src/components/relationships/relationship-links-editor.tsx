@@ -52,13 +52,13 @@ interface Props {
 const PORTFOLIO_TOOLBAR_THRESHOLD = 11;
 
 const PLACEHOLDERS: Record<Mode, string> = {
-  investors: "Search investors by name…",
-  startups: "Search startups or companies by name…",
+  investors: "Search investors or type a new name...",
+  startups: "Search startups or type a new name...",
 };
 
 const EMPTY_STATE: Record<Mode, string> = {
-  investors: "No investors linked yet. Search to link one, or add a pending name below.",
-  startups: "No portfolio companies yet. Search to link one, or add a pending name below.",
+  investors: "No investors linked yet. Search to link one, or type a new name to add a pending investor.",
+  startups: "No portfolio companies yet. Search to link one, or type a new name to add a pending company.",
 };
 
 function makePendingId() {
