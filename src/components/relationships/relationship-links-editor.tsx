@@ -166,8 +166,8 @@ export function RelationshipLinksEditor({
 
   // ---- Pending creation with duplicate check ----
 
-  const tryCreatePending = () => {
-    const name = pendingDraft.trim();
+  const tryCreatePending = (rawName: string) => {
+    const name = rawName.trim();
     if (!name) return;
     const dup =
       mode === "investors"
@@ -208,7 +208,8 @@ export function RelationshipLinksEditor({
       relationshipType: "investment",
       status: "pending",
     });
-    setPendingDraft("");
+    setQuery("");
+    setDebouncedQuery("");
     setDupOpen(false);
   };
 
