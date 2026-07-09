@@ -225,7 +225,8 @@ export function RelationshipLinksEditor({
       relationshipType: "investment",
       status: "linked",
     });
-    setPendingDraft("");
+    setQuery("");
+    setDebouncedQuery("");
     setDupOpen(false);
   };
 
