@@ -76,7 +76,6 @@ export function RelationshipLinksEditor({
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pendingDraft, setPendingDraft] = useState("");
   const [dupOpen, setDupOpen] = useState(false);
   const [dupCandidates, setDupCandidates] = useState<DuplicateCandidate[]>([]);
   const [dupTypedName, setDupTypedName] = useState("");
