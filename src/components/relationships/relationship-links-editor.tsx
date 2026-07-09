@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { X, Plus, Search } from "lucide-react";
+import { X, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,13 +52,13 @@ interface Props {
 const PORTFOLIO_TOOLBAR_THRESHOLD = 11;
 
 const PLACEHOLDERS: Record<Mode, string> = {
-  investors: "Search investors by name…",
-  startups: "Search startups or companies by name…",
+  investors: "Search investors or type a new name...",
+  startups: "Search startups or type a new name...",
 };
 
 const EMPTY_STATE: Record<Mode, string> = {
-  investors: "No investors linked yet. Search to link one, or add a pending name below.",
-  startups: "No portfolio companies yet. Search to link one, or add a pending name below.",
+  investors: "No investors linked yet. Search to link one, or type a new name to add a pending investor.",
+  startups: "No portfolio companies yet. Search to link one, or type a new name to add a pending company.",
 };
 
 function makePendingId() {
@@ -76,7 +76,6 @@ export function RelationshipLinksEditor({
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pendingDraft, setPendingDraft] = useState("");
   const [dupOpen, setDupOpen] = useState(false);
   const [dupCandidates, setDupCandidates] = useState<DuplicateCandidate[]>([]);
   const [dupTypedName, setDupTypedName] = useState("");
@@ -167,8 +166,8 @@ export function RelationshipLinksEditor({
 
   // ---- Pending creation with duplicate check ----
 
-  const tryCreatePending = () => {
-    const name = pendingDraft.trim();
+  const tryCreatePending = (rawName: string) => {
+    const name = rawName.trim();
     if (!name) return;
     const dup =
       mode === "investors"
@@ -209,7 +208,8 @@ export function RelationshipLinksEditor({
       relationshipType: "investment",
       status: "pending",
     });
-    setPendingDraft("");
+    setQuery("");
+    setDebouncedQuery("");
     setDupOpen(false);
   };
 
@@ -225,7 +225,8 @@ export function RelationshipLinksEditor({
       relationshipType: "investment",
       status: "linked",
     });
-    setPendingDraft("");
+    setQuery("");
+    setDebouncedQuery("");
     setDupOpen(false);
   };
 
@@ -300,7 +301,7 @@ export function RelationshipLinksEditor({
         </div>
       )}
 
-      {/* Search combobox */}
+      {/* Search combobox with inline add-pending */}
       <div className="space-y-1.5">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -309,63 +310,68 @@ export function RelationshipLinksEditor({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={PLACEHOLDERS[mode]}
             className="pl-8"
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              const name = query.trim();
+              if (!name) return;
+              const lower = name.toLowerCase();
+              const exact =
+                suggestions.some((s) => s.name.toLowerCase() === lower) ||
+                rows.some((r) => r.name.toLowerCase() === lower);
+              if (exact) return;
+              e.preventDefault();
+              tryCreatePending(name);
+            }}
           />
         </div>
-        {debouncedQuery.length > 0 && (
-          <div className="rounded-md border border-border bg-card">
-            {isSearching && (
-              <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
-            )}
-            {!isSearching && suggestions.length === 0 && (
-              <div className="px-3 py-2 text-xs text-muted-foreground">No matches.</div>
-            )}
-            <ul className="max-h-56 overflow-y-auto">
-              {suggestions.map((s) => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => addRow(s)}
-                    className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                  >
-                    <span className="truncate">{s.name}</span>
-                    {s.subtitle && (
-                      <span className="ml-2 shrink-0 truncate text-xs text-muted-foreground">
-                        {s.subtitle}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {debouncedQuery.length > 0 && (() => {
+          const lower = debouncedQuery.toLowerCase();
+          const exactMatch =
+            suggestions.some((s) => s.name.toLowerCase() === lower) ||
+            rows.some((r) => r.name.toLowerCase() === lower);
+          const showAddPending = !exactMatch;
+          return (
+            <div className="rounded-md border border-border bg-card">
+              {isSearching && (
+                <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+              )}
+              {!isSearching && suggestions.length === 0 && !showAddPending && (
+                <div className="px-3 py-2 text-xs text-muted-foreground">No matches.</div>
+              )}
+              <ul className="max-h-56 overflow-y-auto">
+                {suggestions.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => addRow(s)}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <span className="truncate">{s.name}</span>
+                      {s.subtitle && (
+                        <span className="ml-2 shrink-0 truncate text-xs text-muted-foreground">
+                          {s.subtitle}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+                {showAddPending && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => tryCreatePending(debouncedQuery)}
+                      className="flex w-full items-center gap-2 border-t border-border px-3 py-1.5 text-left text-sm text-primary hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <span className="truncate">Add "{debouncedQuery}" as pending</span>
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          );
+        })()}
       </div>
 
-      {/* Pending free-text add */}
-      <div className="flex gap-2">
-        <Input
-          value={pendingDraft}
-          onChange={(e) => setPendingDraft(e.target.value)}
-          placeholder={
-            mode === "investors"
-              ? "Add pending investor name…"
-              : "Add pending company name…"
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter") { e.preventDefault(); tryCreatePending(); }
-          }}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={tryCreatePending}
-          disabled={!pendingDraft.trim()}
-        >
-          <Plus className="mr-1 h-3.5 w-3.5" />
-          Add Pending
-        </Button>
-      </div>
 
       {errorMessage && (
         <p className="text-xs text-destructive">{errorMessage}</p>
