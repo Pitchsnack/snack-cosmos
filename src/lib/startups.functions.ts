@@ -70,6 +70,7 @@ export interface StartupRow {
 export interface StartupListItem extends StartupRow {
   tenant_name: string | null;
   logo_signed_url: string | null;
+  tile_image_signed_url: string | null;
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
 }
@@ -207,17 +208,34 @@ export const listStartups = createServerFn({ method: "GET" })
     >;
 
     const logoPaths = list.map((r) => r.logo_url).filter((p): p is string => !!p);
-    const signed = await signMany(supabase, logoPaths);
+
+    // Fetch slot 1 media for tile hero image (additive; UI consumes only signed URL).
+    const ids = list.map((r) => r.id);
+    const tileBySid: Record<string, string> = {};
+    if (ids.length > 0) {
+      const { data: mediaRows } = await supabase
+        .from("startup_media")
+        .select("startup_id, image_url")
+        .in("startup_id", ids)
+        .eq("slot", 1);
+      for (const m of (mediaRows ?? []) as Array<{ startup_id: string; image_url: string }>) {
+        if (m.image_url && !tileBySid[m.startup_id]) tileBySid[m.startup_id] = m.image_url;
+      }
+    }
+    const tilePaths = Object.values(tileBySid);
+    const signed = await signMany(supabase, [...logoPaths, ...tilePaths]);
 
     const items: StartupListItem[] = list.map((r) => {
       const own = r.startup_ownership?.[0]?.users ?? null;
       const aiOwn = r.startup_ai_ownership?.[0]?.users ?? null;
+      const tilePath = tileBySid[r.id];
       return {
         ...r,
         product_tags: r.product_tags ?? [],
         market_tags: r.market_tags ?? [],
         tenant_name: r.tenants?.tenant_name ?? null,
         logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
+        tile_image_signed_url: tilePath ? (signed[tilePath] ?? null) : null,
         owning_agent: own ? { id: own.id, email: own.email, name: [own.first_name, own.last_name].filter(Boolean).join(" ") || null } : null,
         owning_ai_agent: aiOwn ? { id: aiOwn.id, email: aiOwn.email, name: [aiOwn.first_name, aiOwn.last_name].filter(Boolean).join(" ") || null } : null,
       };
