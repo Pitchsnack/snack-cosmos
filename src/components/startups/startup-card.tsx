@@ -43,6 +43,16 @@ export function StartupCard({ s }: { s: StartupListItem }) {
         params={{ id: s.id }}
         className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-card transition hover:border-accent/50 hover:shadow-md"
       >
+        {s.tile_image_signed_url && (
+          <div className="-m-4 mb-0 overflow-hidden rounded-t-lg border-b border-border bg-muted/40 aspect-[16/9]">
+            <img
+              src={s.tile_image_signed_url}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+            />
+          </div>
+        )}
         <div className="flex items-start gap-3">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
             {s.logo_signed_url ? (
