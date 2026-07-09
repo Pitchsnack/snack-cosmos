@@ -67,11 +67,6 @@ export function StartupCard({ s }: { s: StartupListItem }) {
                 {s.startup_name}
               </h3>
             </Truncate>
-            {s.company_type && (
-              <Truncate text={s.company_type} className="block">
-                <div className="truncate text-[10px] text-muted-foreground">{s.company_type}</div>
-              </Truncate>
-            )}
             <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
               {s.headquarters && (
                 <Truncate text={s.headquarters}>
@@ -84,6 +79,13 @@ export function StartupCard({ s }: { s: StartupListItem }) {
               {s.year_founded && <span className="shrink-0">Founded {s.year_founded}</span>}
             </div>
           </div>
+          {s.company_type && (
+            <Truncate text={s.company_type}>
+              <Badge variant="outline" className="shrink-0 rounded-full px-1.5 py-0 text-[10px]">
+                {s.company_type}
+              </Badge>
+            </Truncate>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-1.5">
