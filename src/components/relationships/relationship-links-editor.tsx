@@ -301,7 +301,7 @@ export function RelationshipLinksEditor({
         </div>
       )}
 
-      {/* Search combobox */}
+      {/* Search combobox with inline add-pending */}
       <div className="space-y-1.5">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -310,63 +310,68 @@ export function RelationshipLinksEditor({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={PLACEHOLDERS[mode]}
             className="pl-8"
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              const name = query.trim();
+              if (!name) return;
+              const lower = name.toLowerCase();
+              const exact =
+                suggestions.some((s) => s.name.toLowerCase() === lower) ||
+                rows.some((r) => r.name.toLowerCase() === lower);
+              if (exact) return;
+              e.preventDefault();
+              tryCreatePending(name);
+            }}
           />
         </div>
-        {debouncedQuery.length > 0 && (
-          <div className="rounded-md border border-border bg-card">
-            {isSearching && (
-              <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
-            )}
-            {!isSearching && suggestions.length === 0 && (
-              <div className="px-3 py-2 text-xs text-muted-foreground">No matches.</div>
-            )}
-            <ul className="max-h-56 overflow-y-auto">
-              {suggestions.map((s) => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => addRow(s)}
-                    className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                  >
-                    <span className="truncate">{s.name}</span>
-                    {s.subtitle && (
-                      <span className="ml-2 shrink-0 truncate text-xs text-muted-foreground">
-                        {s.subtitle}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {debouncedQuery.length > 0 && (() => {
+          const lower = debouncedQuery.toLowerCase();
+          const exactMatch =
+            suggestions.some((s) => s.name.toLowerCase() === lower) ||
+            rows.some((r) => r.name.toLowerCase() === lower);
+          const showAddPending = !exactMatch;
+          return (
+            <div className="rounded-md border border-border bg-card">
+              {isSearching && (
+                <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+              )}
+              {!isSearching && suggestions.length === 0 && !showAddPending && (
+                <div className="px-3 py-2 text-xs text-muted-foreground">No matches.</div>
+              )}
+              <ul className="max-h-56 overflow-y-auto">
+                {suggestions.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => addRow(s)}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <span className="truncate">{s.name}</span>
+                      {s.subtitle && (
+                        <span className="ml-2 shrink-0 truncate text-xs text-muted-foreground">
+                          {s.subtitle}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+                {showAddPending && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => tryCreatePending(debouncedQuery)}
+                      className="flex w-full items-center gap-2 border-t border-border px-3 py-1.5 text-left text-sm text-primary hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <span className="truncate">Add "{debouncedQuery}" as pending</span>
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          );
+        })()}
       </div>
 
-      {/* Pending free-text add */}
-      <div className="flex gap-2">
-        <Input
-          value={pendingDraft}
-          onChange={(e) => setPendingDraft(e.target.value)}
-          placeholder={
-            mode === "investors"
-              ? "Add pending investor name…"
-              : "Add pending company name…"
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter") { e.preventDefault(); tryCreatePending(); }
-          }}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={tryCreatePending}
-          disabled={!pendingDraft.trim()}
-        >
-          <Plus className="mr-1 h-3.5 w-3.5" />
-          Add Pending
-        </Button>
-      </div>
 
       {errorMessage && (
         <p className="text-xs text-destructive">{errorMessage}</p>
