@@ -38,7 +38,7 @@ function Truncate({
   );
 }
 
-export function StartupCard({ s }: { s: StartupListItem }) {
+export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () => void }) {
   const BROAD = ["Enterprise", "Consumers"];
   const allIndustries = s.industry ?? [];
   const displayIndustries =
@@ -46,13 +46,9 @@ export function StartupCard({ s }: { s: StartupListItem }) {
   const industryText = displayIndustries.join(", ");
   const fullIndustryText = allIndustries.join(", ");
 
-  return (
-    <TooltipProvider disableHoverableContent>
-      <Link
-        to="/startups/$id"
-        params={{ id: s.id }}
-        className="group flex h-full flex-col rounded-xl border-2 border-transparent bg-card shadow-card transition-all duration-150 hover:border-accent/40 hover:shadow-md active:scale-[0.99]"
-      >
+  const inner = (
+    <>
+
         {/* Product image banner */}
         {s.tile_image_signed_url && (
           <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
