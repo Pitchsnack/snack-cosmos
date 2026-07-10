@@ -157,7 +157,20 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             </div>
           )}
         </div>
-      </Link>
+    </>
+  );
+
+  return (
+    <TooltipProvider disableHoverableContent>
+      {onClick ? (
+        <button type="button" onClick={onClick} className={CARD_CLASS}>
+          {inner}
+        </button>
+      ) : (
+        <Link to="/startups/$id" params={{ id: s.id }} className={CARD_CLASS}>
+          {inner}
+        </Link>
+      )}
     </TooltipProvider>
   );
 }
