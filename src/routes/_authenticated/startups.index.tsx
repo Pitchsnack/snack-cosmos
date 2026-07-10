@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X } from "lucide-react";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
@@ -20,6 +22,7 @@ const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
 const VIEW = ["grid","split"] as const;
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other"];
 const COMPANY_TYPES = ["SaaS","FinTech","Marketplace","AI","Hardware","Consumer","Other"];
+
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -57,6 +60,8 @@ function StartupsPageInner() {
   const sort = s.sort ?? "updated_desc";
   const view = s.view ?? "grid";
   const selected = s.selected;
+  const [modalId, setModalId] = useState<string | null>(null);
+
 
   const pageSize = view === "split" ? 50 : 24;
 
@@ -157,8 +162,10 @@ function StartupsPageInner() {
           <p>No startups match your filters.</p>
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((it) => <StartupCard key={it.id} s={it} />)}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((it) => (
+            <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} />
+          ))}
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
@@ -185,6 +192,21 @@ function StartupsPageInner() {
           <Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => navigate({ search: (p: typeof s) => ({ ...p, page: page + 1 }) })}>Next</Button>
         </div>
       )}
+
+      <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
+        <DialogContent
+          className={cn(
+            "p-0 gap-0 flex flex-col overflow-hidden",
+            "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
+            "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
+          )}
+        >
+          <div className="flex-1 overflow-y-auto p-5">
+            {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact />}
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

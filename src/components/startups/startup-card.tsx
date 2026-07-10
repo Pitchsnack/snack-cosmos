@@ -13,6 +13,9 @@ function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
+const CARD_CLASS =
+  "group flex h-full w-full flex-col rounded-xl border-2 border-transparent bg-card text-left shadow-card transition-all duration-150 hover:border-accent/40 hover:shadow-md active:scale-[0.99]";
+
 /** Wraps a truncated element with a tooltip showing full text. */
 function Truncate({
   text,
@@ -35,7 +38,7 @@ function Truncate({
   );
 }
 
-export function StartupCard({ s }: { s: StartupListItem }) {
+export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () => void }) {
   const BROAD = ["Enterprise", "Consumers"];
   const allIndustries = s.industry ?? [];
   const displayIndustries =
@@ -43,13 +46,9 @@ export function StartupCard({ s }: { s: StartupListItem }) {
   const industryText = displayIndustries.join(", ");
   const fullIndustryText = allIndustries.join(", ");
 
-  return (
-    <TooltipProvider disableHoverableContent>
-      <Link
-        to="/startups/$id"
-        params={{ id: s.id }}
-        className="group flex h-full flex-col rounded-xl border-2 border-transparent bg-card shadow-card transition-all duration-150 hover:border-accent/40 hover:shadow-md active:scale-[0.99]"
-      >
+  const inner = (
+    <>
+
         {/* Product image banner */}
         {s.tile_image_signed_url && (
           <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
@@ -158,7 +157,20 @@ export function StartupCard({ s }: { s: StartupListItem }) {
             </div>
           )}
         </div>
-      </Link>
+    </>
+  );
+
+  return (
+    <TooltipProvider disableHoverableContent>
+      {onClick ? (
+        <button type="button" onClick={onClick} className={CARD_CLASS}>
+          {inner}
+        </button>
+      ) : (
+        <Link to="/startups/$id" params={{ id: s.id }} className={CARD_CLASS}>
+          {inner}
+        </Link>
+      )}
     </TooltipProvider>
   );
 }
