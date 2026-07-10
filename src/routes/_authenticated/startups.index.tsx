@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X } from "lucide-react";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
@@ -20,6 +22,7 @@ const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
 const VIEW = ["grid","split"] as const;
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other"];
 const COMPANY_TYPES = ["SaaS","FinTech","Marketplace","AI","Hardware","Consumer","Other"];
+
 
 const searchSchema = z.object({
   q: z.string().optional(),
