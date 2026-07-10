@@ -60,6 +60,8 @@ function StartupsPageInner() {
   const sort = s.sort ?? "updated_desc";
   const view = s.view ?? "grid";
   const selected = s.selected;
+  const [modalId, setModalId] = useState<string | null>(null);
+
 
   const pageSize = view === "split" ? 50 : 24;
 
