@@ -138,10 +138,8 @@ export function StartupDetailPanel({
       )}
 
       {/* Investors */}
-      <Section title="Investors">
-        {s.investors.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No investors linked yet.</p>
-        ) : (
+      {s.investors.length > 0 && (
+        <Section title="Investors">
           <div className="flex flex-wrap gap-2">
             {s.investors.map((i) => (
               <Link
@@ -157,14 +155,12 @@ export function StartupDetailPanel({
               </Link>
             ))}
           </div>
-        )}
-      </Section>
+        </Section>
+      )}
 
       {/* Founders */}
-      <Section title="Founding & leadership team">
-        {s.founders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No founders added yet.</p>
-        ) : (
+      {s.founders.length > 0 && (
+        <Section title="Founding & leadership team">
           <div className="grid gap-3 sm:grid-cols-2">
             {s.founders.map((f) => (
               <div key={f.id} className="rounded-md border border-border bg-background p-3">
@@ -179,8 +175,8 @@ export function StartupDetailPanel({
               </div>
             ))}
           </div>
-        )}
-      </Section>
+        </Section>
+      )}
     </div>
   );
 }
