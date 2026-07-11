@@ -88,25 +88,21 @@ export function StartupDetailPanel({
         )}
       </div>
 
-      {/* Media slots 1/2/3 */}
-      {s.media.length > 0 && (
+      {/* Media (only show slots that have images) */}
+      {s.media.some((m) => m.image_signed_url) && (
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3].map((slot) => {
-            const m = s.media.find((x) => x.slot === slot);
+            const m = s.media.find((x) => x.slot === slot && x.image_signed_url);
+            if (!m) return null;
             return (
               <a
                 key={slot}
-                href={m?.image_signed_url ?? "#"}
+                href={m.image_signed_url ?? "#"}
                 target="_blank"
                 rel="noreferrer"
-                onClick={(e) => { if (!m?.image_signed_url) e.preventDefault(); }}
                 className="block aspect-video overflow-hidden rounded-lg border border-border bg-muted/30"
               >
-                {m?.image_signed_url ? (
-                  <img src={m.image_signed_url} alt={m.caption ?? ""} className="h-full w-full object-cover transition hover:scale-105" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">Slot {slot}</div>
-                )}
+                <img src={m.image_signed_url ?? ""} alt={m.caption ?? ""} className="h-full w-full object-cover transition hover:scale-105" />
               </a>
             );
           })}
