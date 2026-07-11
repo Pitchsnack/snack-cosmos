@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ExternalLink, Mail, MapPin, Calendar, Linkedin, Rocket, Pencil,
+  ExternalLink, Mail, MapPin, Calendar, Linkedin, Rocket, Pencil, Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,12 @@ export function StartupDetailPanel({
   const canManage = isControl || has("startups.write");
 
   if (isLoading) {
-    return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="text-sm">Loading startup…</span>
+      </div>
+    );
   }
   if (error || !data) {
     return (
@@ -83,25 +88,21 @@ export function StartupDetailPanel({
         )}
       </div>
 
-      {/* Media slots 1/2/3 */}
-      {s.media.length > 0 && (
+      {/* Media (only show slots that have images) */}
+      {s.media.some((m) => m.image_signed_url) && (
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3].map((slot) => {
-            const m = s.media.find((x) => x.slot === slot);
+            const m = s.media.find((x) => x.slot === slot && x.image_signed_url);
+            if (!m) return null;
             return (
               <a
                 key={slot}
-                href={m?.image_signed_url ?? "#"}
+                href={m.image_signed_url ?? "#"}
                 target="_blank"
                 rel="noreferrer"
-                onClick={(e) => { if (!m?.image_signed_url) e.preventDefault(); }}
                 className="block aspect-video overflow-hidden rounded-lg border border-border bg-muted/30"
               >
-                {m?.image_signed_url ? (
-                  <img src={m.image_signed_url} alt={m.caption ?? ""} className="h-full w-full object-cover transition hover:scale-105" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">Slot {slot}</div>
-                )}
+                <img src={m.image_signed_url ?? ""} alt={m.caption ?? ""} className="h-full w-full object-cover transition hover:scale-105" />
               </a>
             );
           })}
@@ -133,10 +134,8 @@ export function StartupDetailPanel({
       )}
 
       {/* Investors */}
-      <Section title="Investors">
-        {s.investors.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No investors linked yet.</p>
-        ) : (
+      {s.investors.length > 0 && (
+        <Section title="Investors">
           <div className="flex flex-wrap gap-2">
             {s.investors.map((i) => (
               <Link
@@ -152,14 +151,12 @@ export function StartupDetailPanel({
               </Link>
             ))}
           </div>
-        )}
-      </Section>
+        </Section>
+      )}
 
       {/* Founders */}
-      <Section title="Founding & leadership team">
-        {s.founders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No founders added yet.</p>
-        ) : (
+      {s.founders.length > 0 && (
+        <Section title="Founding & leadership team">
           <div className="grid gap-3 sm:grid-cols-2">
             {s.founders.map((f) => (
               <div key={f.id} className="rounded-md border border-border bg-background p-3">
@@ -174,8 +171,8 @@ export function StartupDetailPanel({
               </div>
             ))}
           </div>
-        )}
-      </Section>
+        </Section>
+      )}
     </div>
   );
 }
