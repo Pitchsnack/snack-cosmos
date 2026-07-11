@@ -26,7 +26,12 @@ export function StartupDetailPanel({
   const canManage = isControl || has("startups.write");
 
   if (isLoading) {
-    return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="text-sm">Loading startup…</span>
+      </div>
+    );
   }
   if (error || !data) {
     return (
