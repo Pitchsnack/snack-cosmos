@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ExternalLink, Mail, MapPin, Calendar, Linkedin, Rocket, Pencil,
+  ExternalLink, Mail, MapPin, Calendar, Linkedin, Rocket, Pencil, Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
