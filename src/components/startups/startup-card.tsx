@@ -14,7 +14,7 @@ function monogram(name: string) {
 }
 
 const CARD_CLASS =
-  "group flex h-full w-full flex-col rounded-xl border-2 border-transparent bg-card text-left shadow-card transition-all duration-150 hover:border-accent/40 hover:shadow-md active:scale-[0.99]";
+  "group flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-card transition-all duration-150 hover:border-accent hover:shadow-elevated active:scale-[0.99]";
 
 /** Wraps a truncated element with a tooltip showing full text. */
 function Truncate({
