@@ -17,10 +17,17 @@ function monogram(name: string) {
 const CARD_CLASS =
   "group relative flex h-full w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
 
-const EXTREME_DEBUG_STYLE: CSSProperties = {
-  backgroundColor: "#ff1f1f",
-  borderColor: "#0047ff",
-  boxShadow: "0 0 0 8px #0047ff, 0 0 0 16px rgba(0, 71, 255, 0.38), 0 24px 48px rgba(0, 71, 255, 0.6)",
+const HOVER_CARD_STYLE: CSSProperties = {
+  backgroundColor: "#E0F2FE",
+  borderColor: "#0284C7",
+  boxShadow:
+    "0 0 0 6px #0284C7, 0 0 0 10px rgba(14,165,233,0.22), 0 18px 36px rgba(14,165,233,0.35)",
+};
+
+const PRESSED_CARD_STYLE: CSSProperties = {
+  backgroundColor: "#DBEAFE",
+  borderColor: "#1D4ED8",
+  boxShadow: "0 0 0 6px #1D4ED8, 0 18px 36px rgba(29,78,216,0.35)",
 };
 
 /** Wraps a truncated element with a tooltip showing full text. */
@@ -56,9 +63,9 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
   const fullIndustryText = allIndustries.join(", ");
 
   const cardStyle: CSSProperties | undefined = isPressed
-    ? EXTREME_DEBUG_STYLE
+    ? PRESSED_CARD_STYLE
     : isHovered
-      ? EXTREME_DEBUG_STYLE
+      ? HOVER_CARD_STYLE
       : undefined;
 
   const interactionHandlers = {
