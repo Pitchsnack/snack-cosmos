@@ -18,13 +18,11 @@ const CARD_CLASS =
   "group relative flex h-full w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
-  backgroundColor: "rgba(240, 249, 255, 0.45)",
   borderColor: "#38BDF8",
   boxShadow: "0 8px 20px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(56, 189, 248, 0.35)",
 };
 
 const PRESSED_CARD_STYLE: CSSProperties = {
-  backgroundColor: "rgba(240, 249, 255, 0.55)",
   borderColor: "#1D4ED8",
   boxShadow: "0 4px 12px rgba(29, 78, 216, 0.18)",
 };
