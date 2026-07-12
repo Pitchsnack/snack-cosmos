@@ -14,7 +14,7 @@ function monogram(name: string) {
 }
 
 const CARD_CLASS =
-  "group flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-card transition-all duration-150 hover:border-transparent hover:outline-2 hover:outline-sky-400 hover:outline-offset-[-2px] hover:shadow-[0_8px_24px_-8px_rgba(56,189,248,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 active:border-blue-700 active:shadow-[0_4px_12px_-4px_rgba(29,78,216,0.45)]";
+  "group flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-card transition-all duration-150 hover:border-transparent hover:outline-4 hover:outline-sky-400 hover:outline-offset-[-4px] hover:shadow-[0_8px_24px_-8px_rgba(56,189,248,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 active:border-blue-700 active:shadow-[0_4px_12px_-4px_rgba(29,78,216,0.45)]";
 
 /** Wraps a truncated element with a tooltip showing full text. */
 function Truncate({
