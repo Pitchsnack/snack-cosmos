@@ -15,7 +15,7 @@ function monogram(name: string) {
 }
 
 const CARD_CLASS =
-  "group relative flex h-[440px] w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
+  "group relative flex h-[440px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
   borderColor: "#38BDF8",
