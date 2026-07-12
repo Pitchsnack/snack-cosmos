@@ -111,7 +111,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-1.5">
                 <Truncate text={s.startup_name} className="min-w-0">
-                  <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-accent">
+                  <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-sky-500">
                     {s.startup_name}
                   </h3>
                 </Truncate>
