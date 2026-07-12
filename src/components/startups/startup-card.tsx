@@ -1,3 +1,4 @@
+import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Factory, ShoppingCart } from "lucide-react";
@@ -14,7 +15,13 @@ function monogram(name: string) {
 }
 
 const CARD_CLASS =
-  "group relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-card transition-all duration-150 hover:bg-sky-50/70 hover:shadow-[0_0_0_4px_rgba(14,165,233,0.45),0_12px_24px_rgba(14,165,233,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 active:bg-blue-50 active:shadow-[0_0_0_4px_rgba(29,78,216,0.55),0_12px_24px_rgba(29,78,216,0.25)]";
+  "group relative flex h-full w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
+
+const EXTREME_DEBUG_STYLE: CSSProperties = {
+  backgroundColor: "#ff1f1f",
+  borderColor: "#0047ff",
+  boxShadow: "0 0 0 8px #0047ff, 0 0 0 16px rgba(0, 71, 255, 0.38), 0 24px 48px rgba(0, 71, 255, 0.6)",
+};
 
 /** Wraps a truncated element with a tooltip showing full text. */
 function Truncate({
@@ -39,6 +46,8 @@ function Truncate({
 }
 
 export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () => void }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
   const BROAD = ["Enterprise", "Consumers"];
   const allIndustries = s.industry ?? [];
   const displayIndustries =
@@ -46,13 +55,29 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
   const industryText = displayIndustries.join(", ");
   const fullIndustryText = allIndustries.join(", ");
 
+  const cardStyle: CSSProperties | undefined = isPressed
+    ? EXTREME_DEBUG_STYLE
+    : isHovered
+      ? EXTREME_DEBUG_STYLE
+      : undefined;
+
+  const interactionHandlers = {
+    onMouseEnter: () => setIsHovered(true),
+    onMouseLeave: () => {
+      setIsHovered(false);
+      setIsPressed(false);
+    },
+    onMouseDown: () => setIsPressed(true),
+    onMouseUp: () => setIsPressed(false),
+    onFocus: () => setIsHovered(true),
+    onBlur: () => {
+      setIsHovered(false);
+      setIsPressed(false);
+    },
+  };
+
   const inner = (
     <>
-      {/* Hover/active overlays — sit above content, no pointer events, no layout impact */}
-      <div className="pointer-events-none absolute inset-0 z-30 rounded-xl border-4 border-sky-500 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:border-blue-700" />
-      <div className="pointer-events-none absolute inset-0 z-20 rounded-xl bg-sky-500/5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100" />
-
-
         {/* Product image banner */}
         {s.tile_image_signed_url && (
           <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
@@ -167,11 +192,11 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
   return (
     <TooltipProvider disableHoverableContent>
       {onClick ? (
-        <button type="button" onClick={onClick} className={CARD_CLASS}>
+        <button type="button" onClick={onClick} className={CARD_CLASS} style={cardStyle} {...interactionHandlers}>
           {inner}
         </button>
       ) : (
-        <Link to="/startups/$id" params={{ id: s.id }} className={CARD_CLASS}>
+        <Link to="/startups/$id" params={{ id: s.id }} className={CARD_CLASS} style={cardStyle} {...interactionHandlers}>
           {inner}
         </Link>
       )}
