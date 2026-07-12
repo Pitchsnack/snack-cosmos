@@ -15,19 +15,18 @@ function monogram(name: string) {
 }
 
 const CARD_CLASS =
-  "group relative flex h-full w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
+  "group relative flex h-full w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
-  backgroundColor: "#E0F2FE",
-  borderColor: "#0284C7",
-  boxShadow:
-    "0 0 0 6px #0284C7, 0 0 0 10px rgba(14,165,233,0.22), 0 18px 36px rgba(14,165,233,0.35)",
+  backgroundColor: "rgba(240, 249, 255, 0.45)",
+  borderColor: "#38BDF8",
+  boxShadow: "0 8px 20px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(56, 189, 248, 0.35)",
 };
 
 const PRESSED_CARD_STYLE: CSSProperties = {
-  backgroundColor: "#DBEAFE",
+  backgroundColor: "rgba(240, 249, 255, 0.55)",
   borderColor: "#1D4ED8",
-  boxShadow: "0 0 0 6px #1D4ED8, 0 18px 36px rgba(29,78,216,0.35)",
+  boxShadow: "0 4px 12px rgba(29, 78, 216, 0.18)",
 };
 
 /** Wraps a truncated element with a tooltip showing full text. */
@@ -112,7 +111,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-1.5">
                 <Truncate text={s.startup_name} className="min-w-0">
-                  <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-accent">
+                  <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-[#38BDF8]">
                     {s.startup_name}
                   </h3>
                 </Truncate>
