@@ -15,16 +15,16 @@ function monogram(name: string) {
 }
 
 const CARD_CLASS =
-  "group relative flex h-[440px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
+  "group relative flex h-[440px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
-  borderColor: "#38BDF8",
-  boxShadow: "0 8px 20px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(56, 189, 248, 0.35)",
+  borderColor: "var(--accent)",
+  boxShadow: "0 8px 20px rgba(15, 23, 42, 0.10), 0 0 0 1px color-mix(in hsl, var(--accent), transparent 65%)",
 };
 
 const PRESSED_CARD_STYLE: CSSProperties = {
-  borderColor: "#1D4ED8",
-  boxShadow: "0 4px 12px rgba(29, 78, 216, 0.18)",
+  borderColor: "color-mix(in hsl, var(--accent), black 18%)",
+  boxShadow: "0 4px 12px color-mix(in hsl, var(--accent), black 25%)",
 };
 
 /** Wraps a truncated element with a tooltip showing full text. */
