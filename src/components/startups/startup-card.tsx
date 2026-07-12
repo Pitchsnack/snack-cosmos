@@ -48,6 +48,10 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
   const inner = (
     <>
+      {/* Hover/active overlays — sit above content, no pointer events, no layout impact */}
+      <div className="pointer-events-none absolute inset-0 z-30 rounded-xl border-4 border-sky-500 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:border-blue-700" />
+      <div className="pointer-events-none absolute inset-0 z-20 rounded-xl bg-sky-500/5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100" />
+
 
         {/* Product image banner */}
         {s.tile_image_signed_url && (
