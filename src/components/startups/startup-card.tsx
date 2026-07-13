@@ -195,11 +195,6 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             </div>
           ) : null}
 
-          {s.year_founded && (
-            <div className="mt-auto pt-2 text-[10px] text-muted-foreground">
-              Founded {s.year_founded}
-            </div>
-          )}
         </div>
     </>
   );
