@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Factory, ShoppingCart } from "lucide-react";
+import anchorIcon from "@/assets/anchor.svg";
 import {
   Tooltip,
   TooltipContent,
@@ -154,6 +155,16 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             <div className="my-3 border-t border-border/40" />
           )}
 
+          {/* Est. year row */}
+          {s.year_founded && (
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs text-foreground">
+              <img src={anchorIcon} alt="" aria-hidden className="h-3 w-3 shrink-0" />
+              <span>
+                Est. <span className="text-muted-foreground">{s.year_founded}</span>
+              </span>
+            </div>
+          )}
+
           {/* Industry row */}
           {industryText && (
             <div className="mb-1.5 flex items-center gap-1.5 overflow-hidden text-xs text-foreground/80">
@@ -184,11 +195,6 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             </div>
           ) : null}
 
-          {s.year_founded && (
-            <div className="mt-auto pt-2 text-[10px] text-muted-foreground">
-              Founded {s.year_founded}
-            </div>
-          )}
         </div>
     </>
   );
