@@ -89,7 +89,7 @@ export function StartupDetailPanel({
 
       {/* Media */}
       {mediaSlots.length > 0 && (
-        <div className={`grid gap-3 ${mediaSlots.length === 1 ? "grid-cols-1" : mediaSlots.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {mediaSlots.map((m) => (
             <a
               key={m.slot}
