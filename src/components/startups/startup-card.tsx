@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Factory, ShoppingCart } from "lucide-react";
+import anchorIcon from "@/assets/anchor.svg";
 import {
   Tooltip,
   TooltipContent,
