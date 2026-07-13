@@ -8,6 +8,16 @@ function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
+const HOVER_CARD_STYLE: CSSProperties = {
+  borderColor: "var(--accent)",
+  boxShadow: "0 8px 20px rgba(15, 23, 42, 0.10), 0 0 0 1px color-mix(in hsl, var(--accent), transparent 65%)",
+};
+
+const PRESSED_CARD_STYLE: CSSProperties = {
+  borderColor: "color-mix(in hsl, var(--accent), black 18%)",
+  boxShadow: "0 4px 12px color-mix(in hsl, var(--accent), black 25%)",
+};
+
 export function StartupListItem({
   s,
   selected,
@@ -17,15 +27,36 @@ export function StartupListItem({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+
+  const cardStyle: CSSProperties | undefined = isPressed
+    ? PRESSED_CARD_STYLE
+    : isHovered
+      ? HOVER_CARD_STYLE
+      : undefined;
+
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "w-full rounded-lg border-2 bg-card p-3 text-left shadow-card transition-all",
-        "hover:border-accent/40 hover:shadow-md",
+        "group w-full rounded-lg border-2 bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
         selected ? "border-accent ring-1 ring-accent/30" : "border-transparent",
       )}
+      style={cardStyle}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setIsPressed(false);
+      }}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => {
+        setIsHovered(false);
+        setIsPressed(false);
+      }}
     >
       <div className="flex items-start gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
@@ -37,7 +68,7 @@ export function StartupListItem({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-sm font-semibold leading-tight">{s.startup_name}</h3>
+            <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">{s.startup_name}</h3>
             <div className="flex shrink-0 gap-1">
               {s.investment_stage && (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">{s.investment_stage}</Badge>
