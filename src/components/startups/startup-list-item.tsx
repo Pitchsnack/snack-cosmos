@@ -41,8 +41,8 @@ export function StartupListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group w-full rounded-lg border-2 bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
-        selected ? "border-accent ring-1 ring-accent/30" : "border-transparent",
+        "group w-full rounded-lg border border-border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
       style={cardStyle}
       onMouseEnter={() => setIsHovered(true)}
