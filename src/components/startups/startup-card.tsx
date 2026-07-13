@@ -155,6 +155,16 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             <div className="my-3 border-t border-border/40" />
           )}
 
+          {/* Est. year row */}
+          {s.year_founded && (
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs text-foreground">
+              <img src={anchorIcon} alt="" aria-hidden className="h-3 w-3 shrink-0" />
+              <span>
+                Est. <span className="text-muted-foreground">{s.year_founded}</span>
+              </span>
+            </div>
+          )}
+
           {/* Industry row */}
           {industryText && (
             <div className="mb-1.5 flex items-center gap-1.5 overflow-hidden text-xs text-foreground/80">
