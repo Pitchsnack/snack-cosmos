@@ -115,14 +115,14 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
                   </h3>
                 </Truncate>
                 <div className="flex shrink-0 gap-1">
-                  {s.company_type && (
-                    <Badge variant="outline" className="rounded-full px-1.5 py-0 text-[10px]">
-                      {s.company_type}
-                    </Badge>
-                  )}
                   {s.investment_stage && (
                     <Badge variant="secondary" className="rounded-full px-1.5 py-0 text-[10px]">
                       {s.investment_stage}
+                    </Badge>
+                  )}
+                  {s.company_type && (
+                    <Badge variant="outline" className="rounded-full px-1.5 py-0 text-[10px]">
+                      {s.company_type}
                     </Badge>
                   )}
                 </div>
