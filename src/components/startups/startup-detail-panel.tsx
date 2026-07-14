@@ -54,7 +54,7 @@ export function StartupDetailPanel({
   return (
     <div className="space-y-8 text-foreground">
       {/* Header */}
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex items-start justify-between gap-4 pt-5">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {s.logo_signed_url ? (
