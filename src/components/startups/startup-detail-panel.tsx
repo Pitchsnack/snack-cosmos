@@ -1,11 +1,30 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ExternalLink, MapPin, Calendar, Linkedin, Rocket, Pencil, Loader2,
   Globe, Building2, TrendingUp, Layers, ShoppingCart, Users, UserCircle2,
   FileText, Share2, Bookmark, MoreVertical,
+  Link2, Copy, Activity, Archive, Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
@@ -27,6 +46,13 @@ export function StartupDetailPanel({
   const { data, isLoading, error } = useStartup(id);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
+  const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard?.writeText(`${window.location.origin}/startups/${id}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -107,18 +133,102 @@ export function StartupDetailPanel({
               >
                 <Bookmark className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                aria-label="More actions"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    aria-label="More actions"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem disabled>
+                    <Link2 className="mr-2 h-4 w-4" /> Connect
+                    <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleCopyLink}>
+                    <Copy className="mr-2 h-4 w-4" /> Copy Link
+                  </DropdownMenuItem>
+                  {canManage ? (
+                    <DropdownMenuItem asChild>
+                      <Link to="/startups/$id/edit" params={{ id }}>
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem disabled>
+                    <Activity className="mr-2 h-4 w-4" /> View Activity / Audit
+                    <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={(e) => { e.preventDefault(); setConfirm("archive"); }}
+                    className="text-amber-600 focus:bg-amber-50 focus:text-amber-700 dark:focus:bg-amber-950/40"
+                  >
+                    <Archive className="mr-2 h-4 w-4" /> Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={(e) => { e.preventDefault(); setConfirm("delete"); }}
+                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>
       </header>
+
+      <AlertDialog open={confirm === "archive"} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive startup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This startup will be archived and removed from the active startup view. You can restore it later if archive restoration is supported.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled
+              className="bg-amber-600 text-white hover:bg-amber-600/90"
+              title="Backend integration pending"
+            >
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirm === "delete"} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete startup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action may permanently remove the startup record. This cannot be undone unless recovery is supported.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              title="Backend integration pending"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Media */}
       {mediaSlots.length > 0 && (
