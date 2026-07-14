@@ -1,11 +1,30 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ExternalLink, MapPin, Calendar, Linkedin, Rocket, Pencil, Loader2,
   Globe, Building2, TrendingUp, Layers, ShoppingCart, Users, UserCircle2,
   FileText, Share2, Bookmark, MoreVertical,
+  Link2, Copy, Activity, Archive, Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
