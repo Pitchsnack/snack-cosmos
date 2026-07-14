@@ -46,6 +46,13 @@ export function StartupDetailPanel({
   const { data, isLoading, error } = useStartup(id);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
+  const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard?.writeText(`${window.location.origin}/startups/${id}`);
+    }
+  };
 
   if (isLoading) {
     return (
