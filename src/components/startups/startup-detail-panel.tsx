@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   ExternalLink, MapPin, Calendar, Linkedin, Rocket, Pencil, Loader2,
   Globe, Building2, TrendingUp, Layers, ShoppingCart, Users, UserCircle2,
-  FileText,
+  FileText, Share2, Bookmark, MoreVertical,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
