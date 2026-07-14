@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
+import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
