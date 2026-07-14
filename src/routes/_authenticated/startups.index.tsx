@@ -196,6 +196,7 @@ function StartupsPageInner() {
       <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent
           className={cn(
+            "[&>button>svg]:h-5 [&>button>svg]:w-5",
             "p-0 gap-0 flex flex-col overflow-hidden",
             "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
