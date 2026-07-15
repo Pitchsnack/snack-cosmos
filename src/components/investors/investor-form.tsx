@@ -512,11 +512,21 @@ export function InvestorForm({ investor }: Props) {
               />
             </SelectTrigger>
             <SelectContent>
-              {mergedTenants.map((t) => (
-                <SelectItem key={t.tenantId} value={t.tenantId}>
-                  {t.tenantName}
-                </SelectItem>
-              ))}
+              {mergedTenants.map((t) => {
+                const fx = isFixtureTenant(t.tenantId);
+                return (
+                  <SelectItem key={t.tenantId} value={t.tenantId}>
+                    <span className="flex items-center gap-2">
+                      <span>{t.tenantName}</span>
+                      {fx && (
+                        <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+                          PREVIEW FIXTURE
+                        </span>
+                      )}
+                    </span>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           {tenantsError && (
