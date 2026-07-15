@@ -262,17 +262,34 @@ export function StartupForm({ startup }: Props) {
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
+  // Under the flag, tenant-dependent queries fire only when selected tenant
+  // equals the active workspace. Options are hidden when mismatched.
+  const ownershipEnabled =
+    enabled && !!tenantId && !isEdit && (!WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive);
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
-    enabled: enabled && !!tenantId && !isEdit,
+    enabled: ownershipEnabled,
   });
   const aisQ = useQuery({
     queryKey: ["assignable-ai", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
-    enabled: enabled && !!tenantId && !isEdit,
+    enabled: ownershipEnabled,
   });
-  const noAi = !aisQ.isLoading && (aisQ.data ?? []).length === 0;
+  const humanOptions =
+    !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive ? (humansQ.data ?? []) : [];
+  const aiOptions =
+    !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive ? (aisQ.data ?? []) : [];
+  const noAi = !aisQ.isLoading && aiOptions.length === 0;
+
+  // Clear ownership when tenant changes or active-match is lost — create
+  // mode only, flag ON only. Edit mode preserved.
+  useEffect(() => {
+    if (isEdit) return;
+    if (!WORKSPACE_ENFORCEMENT_ENABLED) return;
+    setOwningAgent("");
+    setOwningAi("");
+  }, [isEdit, tenantId, tenantMatchesActive]);
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
