@@ -1,6 +1,8 @@
 ## Decision recorded
 - **Backend:** Option A — separate PRD will extend `switchWorkspace` for MASTER_AGENT authorization and physical-tenant-database readiness. Out of scope here.
 - **This task:** frontend UX/UI preview only. Production cutover blocked until Option A merges and is independently verified.
+- **Activation:** `VITE_WORKSPACE_ENFORCEMENT=true` in the Lovable **preview** `.env` only. Production `.env` MUST keep it OFF (or omit it) — flipping ON in production requires env change + rebuild + redeploy AND Option A merged.
+- **Preview fixtures:** when the enforcement flag is ON and both the session tenant list AND `listAssignableTenants` come back empty, each of the 4 authorized files renders an inline, non-persistent fixture tenant list (id prefix `fixture-preview-`) so CONTROL principals can exercise the mismatch/switch/disabled UX. Fixtures never call `switchWorkspace`, never write session or `localStorage`, never select a physical database, never persist, never submit a create mutation (existing `tenantMatchesActive` gate already blocks). Inline switch button is disabled with a "Preview fixture — activation disabled (no backend call)" notice. Fixtures are visually tagged `PREVIEW FIXTURE` in both switcher and form dropdowns.
 - **Activation:** `VITE_WORKSPACE_ENFORCEMENT` env flag stays OFF in production. Flipping ON requires env change + rebuild + redeploy.
 
 ## Scope — 4 authorized files only
