@@ -133,16 +133,66 @@ export function StartupForm({ startup }: Props) {
   const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
   const fetchTenants = useServerFn(listAssignableTenants);
+  const doSwitch = useServerFn(switchWorkspace);
+  const [switchPending, setSwitchPending] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
   const enabled = useHasSession();
 
-  const tenantsQ = useQuery({ queryKey: ["assignable-tenants"], queryFn: () => fetchTenants(), enabled: enabled && !isEdit });
-  const tenants = tenantsQ.data ?? [];
-  const [tenantId, setTenantId] = useState<string>(startup?.tenant_id ?? "");
-  useEffect(() => {
-    if (!isEdit && !tenantId && tenants.length) {
-      setTenantId(session?.activeWorkspace.tenantId ?? tenants[0].id);
+  const principalRef = session?.user?.id ?? null;
+  const tenantsQ = useQuery({
+    queryKey: WORKSPACE_ENFORCEMENT_ENABLED
+      ? ["assignable-tenants", principalRef]
+      : ["assignable-tenants"],
+    queryFn: () => fetchTenants(),
+    enabled: enabled && !isEdit,
+    staleTime: 60_000,
+  });
+  const sessionTenants = useMemo(() => session?.tenants ?? [], [session]);
+
+  // Merged tenant list (flag ON only). Authorized-choice list; not
+  // authorization, membership, routing, or physical-database selection.
+  const mergedTenants = useMemo(() => {
+    const raw = tenantsQ.data ?? [];
+    if (!WORKSPACE_ENFORCEMENT_ENABLED) {
+      return raw.map((t) => ({ id: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode }));
     }
-  }, [tenants, tenantId, session, isEdit]);
+    const map = new Map<string, { id: string; tenantName: string; tenantCode: string }>();
+    for (const t of sessionTenants) {
+      map.set(t.tenantId, { id: t.tenantId, tenantName: t.tenantName, tenantCode: t.tenantCode });
+    }
+    for (const t of raw) {
+      if (!map.has(t.id)) map.set(t.id, { id: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode });
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
+    );
+  }, [tenantsQ.data, sessionTenants]);
+  const tenants = mergedTenants;
+
+  const activeTenantId = session?.activeWorkspace.tenantId ?? null;
+  const activeTenantName = session?.activeWorkspace.tenantName ?? null;
+
+  const [tenantId, setTenantId] = useState<string>(startup?.tenant_id ?? "");
+
+  const tenantMatchesActive =
+    !!activeTenantId && !!tenantId && activeTenantId === tenantId;
+  const selectedTenantName =
+    mergedTenants.find((t) => t.id === tenantId)?.tenantName ?? null;
+
+  useEffect(() => {
+    if (isEdit) return;
+    if (tenantId) return;
+    if (!tenants.length) return;
+    if (WORKSPACE_ENFORCEMENT_ENABLED) {
+      // Preselect active only if it's in the authorized list. Never silently
+      // pick tenants[0] under the flag.
+      if (activeTenantId && tenants.some((t) => t.id === activeTenantId)) {
+        setTenantId(activeTenantId);
+      }
+    } else {
+      setTenantId(activeTenantId ?? tenants[0].id);
+    }
+  }, [tenants, tenantId, activeTenantId, isEdit]);
 
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? "");
