@@ -38,10 +38,12 @@ export function StartupDetailPanel({
   id,
   showEdit = true,
   compact = false,
+  onClose,
 }: {
   id: string;
   showEdit?: boolean;
   compact?: boolean;
+  onClose?: () => void;
 }) {
   const { data, isLoading, error } = useStartup(id);
   const { has, isControl } = usePermissions();
@@ -154,7 +156,7 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                   {canManage ? (
                     <DropdownMenuItem asChild>
-                      <Link to="/startups/$id/edit" params={{ id }}>
+                      <Link to="/startups/$id/edit" params={{ id }} onClick={() => onClose?.()}>
                         <Pencil className="mr-2 h-4 w-4" /> Edit
                       </Link>
                     </DropdownMenuItem>
