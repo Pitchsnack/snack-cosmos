@@ -156,7 +156,7 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                   {canManage ? (
                     <DropdownMenuItem asChild>
-                      <Link to="/startups/$id/edit" params={{ id }}>
+                      <Link to="/startups/$id/edit" params={{ id }} onClick={() => onClose?.()}>
                         <Pencil className="mr-2 h-4 w-4" /> Edit
                       </Link>
                     </DropdownMenuItem>
