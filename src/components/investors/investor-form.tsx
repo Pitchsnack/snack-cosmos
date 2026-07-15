@@ -390,28 +390,139 @@ export function InvestorForm({ investor }: Props) {
 
   const canSubmit = isEdit
     ? !!displayName
-    : !!(tenantId && displayName && owningAgentUserId && owningAiAgentId);
+    : !!(
+        tenantMatchesActive &&
+        displayName &&
+        owningAgentUserId &&
+        owningAiAgentId
+      );
   const submitting = createM.isPending || updateM.isPending;
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (isEdit) {
+      updateM.mutate();
+      return;
+    }
+    // Positive-match validation BEFORE calling the mutation. Do not rely on
+    // onMutate alone; the mutation itself repeats this defensively using the
+    // explicit ids passed as variables.
+    if (!tenantMatchesActive) {
+      toast.error(
+        activeTenantId
+          ? "Selected tenant is not the active workspace. Switch workspace to continue."
+          : "No active workspace. Switch to the target tenant workspace before creating an investor.",
+      );
+      return;
+    }
+    if (!displayName || !owningAgentUserId || !owningAiAgentId) {
+      toast.error("Complete required fields.");
+      return;
+    }
+    createM.mutate({ selectedTenantId: tenantId, activeTenantId });
+  }
+
+  const tenantsLoading = assignableQ.isLoading && mergedTenants.length === 0;
+  const tenantsError = assignableQ.isError && mergedTenants.length === 0;
+  const tenantsEmpty =
+    !assignableQ.isLoading && !assignableQ.isError && mergedTenants.length === 0;
+  const canCreateTenant = perms.isResolved && perms.has("tenants.write");
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); isEdit ? updateM.mutate() : createM.mutate(); }}
+      onSubmit={handleSubmit}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
       {/* Tenant (create only) */}
       {!isEdit && (
         <div className="space-y-1.5">
-          <Label>Tenant <span className="text-destructive">*</span></Label>
-          <Select value={tenantId} onValueChange={setTenantId}>
-            <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
+          <div className="flex items-center justify-between">
+            <Label>Tenant <span className="text-destructive">*</span></Label>
+            {canCreateTenant && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setNewTenantOpen(true)}
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" /> New tenant…
+              </Button>
+            )}
+          </div>
+          <Select
+            value={tenantId}
+            onValueChange={setTenantId}
+            disabled={tenantsLoading || tenantsEmpty}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={
+                  tenantsLoading
+                    ? "Loading tenants…"
+                    : tenantsError
+                      ? "Couldn't load tenants"
+                      : tenantsEmpty
+                        ? "No tenants available"
+                        : "Select tenant"
+                }
+              />
+            </SelectTrigger>
             <SelectContent>
-              {tenants.map((t) => (
-                <SelectItem key={t.tenantId} value={t.tenantId}>{t.tenantName}</SelectItem>
+              {mergedTenants.map((t) => (
+                <SelectItem key={t.tenantId} value={t.tenantId}>
+                  {t.tenantName}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {tenantsError && (
+            <div className="flex items-center gap-2 text-xs text-destructive">
+              <span>Couldn't load tenants.</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => assignableQ.refetch()}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {tenantsEmpty && (
+            <p className="text-xs text-muted-foreground">
+              You must create or gain access to a tenant before creating an investor.
+            </p>
+          )}
+          {tenantId && !tenantMatchesActive && (
+            <div
+              role="alert"
+              className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              {activeTenantId === null
+                ? "No active workspace. Switch to the target tenant workspace before creating an investor."
+                : `This tenant is not your active workspace. Switch workspace to ${activeTenantName ?? "the active tenant"} — or activate ${selectedTenantName ?? "the selected tenant"} — before continuing.`}
+            </div>
+          )}
         </div>
       )}
+
+      <TenantFormDialog
+        open={newTenantOpen}
+        onOpenChange={setNewTenantOpen}
+        tenant={null}
+        onSaved={() => {
+          assignableQ.refetch();
+          qc.invalidateQueries({ queryKey: ["session-context"] });
+          // NOTE: AssignableTenantDTO exposes no readiness/status field, so
+          // we cannot safely auto-select a newly created tenant. Reported as
+          // an out-of-scope contract gap. User must activate the new tenant
+          // via WorkspaceSwitcher before the form will accept it.
+          toast.success("Tenant created — provisioning pending");
+        }}
+      />
+
 
       {/* Logo + Media */}
       <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: companyUrl }} />
