@@ -37,6 +37,20 @@ import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-lin
 const WORKSPACE_ENFORCEMENT_ENABLED =
   import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
 
+// Preview-only fixtures. Rendered ONLY when the enforcement flag is ON and
+// the real merged list is empty. Fixtures never call switchWorkspace, never
+// mutate session state, never select a physical database, never persist.
+// Selecting one leaves the tenant/active-workspace mismatch banner active
+// and the Create button disabled; the inline switch button is disabled with
+// a preview-only message.
+const FIXTURE_TENANT_PREFIX = "fixture-preview-";
+const FIXTURE_TENANTS = [
+  { tenantId: `${FIXTURE_TENANT_PREFIX}alpha`, tenantName: "Acme Ventures (preview fixture)", tenantCode: "ACME-FX" },
+  { tenantId: `${FIXTURE_TENANT_PREFIX}beta`, tenantName: "Nova Capital (preview fixture)", tenantCode: "NOVA-FX" },
+];
+const isFixtureTenant = (id: string | null | undefined): boolean =>
+  !!id && id.startsWith(FIXTURE_TENANT_PREFIX);
+
 function mapSwitchError(msg: string): string {
   const lower = msg.toLowerCase();
   if (lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")) {
