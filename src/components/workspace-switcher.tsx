@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown, Building2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Popover,
@@ -17,7 +17,16 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
+import { useHasSession } from "@/hooks/use-has-session";
 import { switchWorkspace } from "@/lib/session-context.functions";
+import { listAssignableTenants } from "@/lib/tenants.functions";
+
+// Preview-only feature flag. Production stays OFF until the Option A backend
+// PRD extends switchWorkspace with MASTER_AGENT authorization and physical
+// tenant-database readiness enforcement. Flag is read independently in each
+// authorized file (no shared helper module).
+const WORKSPACE_ENFORCEMENT_ENABLED =
+  import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
 
 const ACTIVE_KEY = "sp2.activeTenantId";
 const CONTROL_LABEL = "Control";
@@ -28,17 +37,75 @@ export function getActiveTenantId(): string | null {
   return localStorage.getItem(ACTIVE_KEY);
 }
 
+interface WorkspaceChoice {
+  tenantId: string;
+  tenantName: string;
+  tenantCode: string;
+  workspaceType: string | null;
+}
+
 export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const { data: session } = useSessionContext();
   const qc = useQueryClient();
   const doSwitch = useServerFn(switchWorkspace);
+  const hasSession = useHasSession();
+  const fetchAssignableTenants = useServerFn(listAssignableTenants);
 
-  const tenants = session?.tenants ?? [];
+  const sessionTenants = session?.tenants ?? [];
   const isControl = (session?.roles ?? []).includes("CONTROL");
   const activeId = session?.activeWorkspace.tenantId ?? null;
+
+  // Principal-scoped authorized-choice list. Not authorization, not
+  // membership, not routing, not physical-database selection. Query fires
+  // only when the flag is ON and a principal exists.
+  const principalRef = session?.user?.id ?? null;
+  const assignableQ = useQuery({
+    queryKey: ["assignable-tenants", principalRef],
+    queryFn: () => fetchAssignableTenants(),
+    enabled: WORKSPACE_ENFORCEMENT_ENABLED && hasSession && !!principalRef,
+    staleTime: 60_000,
+  });
+
+  const tenants: WorkspaceChoice[] = useMemo(() => {
+    if (!WORKSPACE_ENFORCEMENT_ENABLED) {
+      return sessionTenants.map((t) => ({
+        tenantId: t.tenantId,
+        tenantName: t.tenantName,
+        tenantCode: t.tenantCode,
+        workspaceType: t.workspaceType,
+      }));
+    }
+    const map = new Map<string, WorkspaceChoice>();
+    for (const t of sessionTenants) {
+      map.set(t.tenantId, {
+        tenantId: t.tenantId,
+        tenantName: t.tenantName,
+        tenantCode: t.tenantCode,
+        workspaceType: t.workspaceType,
+      });
+    }
+    for (const t of assignableQ.data ?? []) {
+      if (!map.has(t.id)) {
+        map.set(t.id, {
+          tenantId: t.id,
+          tenantName: t.tenantName,
+          tenantCode: t.tenantCode,
+          workspaceType: null,
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
+    );
+  }, [sessionTenants, assignableQ.data]);
+
   const active = tenants.find((t) => t.tenantId === activeId);
-  const label = active ? active.tenantName : isControl ? CONTROL_LABEL : tenants[0]?.tenantName ?? "—";
+  const label = active
+    ? active.tenantName
+    : isControl
+      ? CONTROL_LABEL
+      : tenants[0]?.tenantName ?? "—";
 
   async function pick(tenantId: string | null, workspaceType: string | null) {
     try {
@@ -104,11 +171,17 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
                     value={`${t.tenantName} ${t.tenantCode}`}
                     onSelect={() => pick(t.tenantId, t.workspaceType)}
                   >
-                    <Check className={cn("mr-2 h-4 w-4", activeId === t.tenantId ? "opacity-100" : "opacity-0")} />
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        activeId === t.tenantId ? "opacity-100" : "opacity-0",
+                      )}
+                    />
                     <div className="flex flex-col">
                       <span className="text-sm">{t.tenantName}</span>
                       <span className="font-mono text-[11px] text-muted-foreground">
-                        {t.tenantCode} · {t.workspaceType}
+                        {t.tenantCode}
+                        {t.workspaceType ? ` · ${t.workspaceType}` : ""}
                       </span>
                     </div>
                   </CommandItem>
