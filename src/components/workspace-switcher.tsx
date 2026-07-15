@@ -196,27 +196,38 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
             )}
             {tenants.length > 0 && (
               <CommandGroup heading="Workspaces">
-                {tenants.map((t) => (
-                  <CommandItem
-                    key={t.tenantId}
-                    value={`${t.tenantName} ${t.tenantCode}`}
-                    onSelect={() => pick(t.tenantId, t.workspaceType)}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        activeId === t.tenantId ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-sm">{t.tenantName}</span>
-                      <span className="font-mono text-[11px] text-muted-foreground">
-                        {t.tenantCode}
-                        {t.workspaceType ? ` · ${t.workspaceType}` : ""}
-                      </span>
-                    </div>
-                  </CommandItem>
-                ))}
+                {tenants.map((t) => {
+                  const fx = isFixtureTenant(t.tenantId);
+                  return (
+                    <CommandItem
+                      key={t.tenantId}
+                      value={`${t.tenantName} ${t.tenantCode}`}
+                      onSelect={() => pick(t.tenantId, t.workspaceType)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          activeId === t.tenantId ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm">
+                          {t.tenantName}
+                          {fx && (
+                            <span className="ml-2 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 align-middle text-[10px] font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+                              PREVIEW FIXTURE
+                            </span>
+                          )}
+                        </span>
+                        <span className="font-mono text-[11px] text-muted-foreground">
+                          {t.tenantCode}
+                          {t.workspaceType ? ` · ${t.workspaceType}` : ""}
+                          {fx ? " · not activatable" : ""}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
             )}
           </CommandList>
