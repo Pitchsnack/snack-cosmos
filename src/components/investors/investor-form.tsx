@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw } from "lucide-react";
+import { X, RefreshCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +19,11 @@ import {
   createInvestor, updateInvestor, createInvestorMediaUploadUrl,
 } from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
-import { useSessionContext } from "@/hooks/use-session-context";
+import { listAssignableTenants } from "@/lib/tenants.functions";
+import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 import { supabase } from "@/integrations/supabase/client";
+import { TenantFormDialog } from "@/components/tenant-form-dialog";
 import {
   EntityMediaEditor, EMPTY_MEDIA_STATE, uploadPending,
   type EntityMediaState, type SlotState,
@@ -144,15 +146,65 @@ export function InvestorForm({ investor }: Props) {
   const update = useServerFn(updateInvestor);
   const getUploadUrl = useServerFn(createInvestorMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
+  const fetchAssignableTenants = useServerFn(listAssignableTenants);
   const enabled = useHasSession();
+  const perms = usePermissions();
 
-  const tenants = useMemo(() => session?.tenants ?? [], [session]);
-  const [tenantId, setTenantId] = useState<string>(investor?.tenant_id ?? "");
-  useEffect(() => {
-    if (!isEdit && !tenantId && tenants.length) {
-      setTenantId(session?.activeWorkspace.tenantId ?? tenants[0].tenantId);
+  const sessionTenants = useMemo(() => session?.tenants ?? [], [session]);
+  // Principal-scoped cache key. Cross-principal cleanup is delegated to the
+  // existing centralized session framework (session-context invalidation +
+  // WorkspaceSwitcher.invalidateQueries). No new auth listener here.
+  const principalRef = session?.user?.id ?? null;
+  const assignableQ = useQuery({
+    queryKey: ["assignable-tenants", principalRef],
+    queryFn: () => fetchAssignableTenants(),
+    enabled: enabled && !!principalRef,
+    staleTime: 60_000,
+  });
+
+  // Merge session.tenants with listAssignableTenants; dedup by tenant id;
+  // sort by tenantName (case-insensitive). Treated as an authorized-choice
+  // list only — never as authorization or routing authority.
+  const mergedTenants = useMemo(() => {
+    const map = new Map<string, { tenantId: string; tenantName: string; tenantCode: string }>();
+    for (const t of sessionTenants) {
+      map.set(t.tenantId, { tenantId: t.tenantId, tenantName: t.tenantName, tenantCode: t.tenantCode });
     }
-  }, [tenants, tenantId, session, isEdit]);
+    for (const t of assignableQ.data ?? []) {
+      if (!map.has(t.id)) {
+        map.set(t.id, { tenantId: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
+    );
+  }, [sessionTenants, assignableQ.data]);
+
+  const activeTenantId = session?.activeWorkspace.tenantId ?? null;
+  const activeTenantName = session?.activeWorkspace.tenantName ?? null;
+
+  const [tenantId, setTenantId] = useState<string>(investor?.tenant_id ?? "");
+  const [newTenantOpen, setNewTenantOpen] = useState(false);
+
+  // Positive-match rule: missing active tenant is a mismatch; missing
+  // selection is a mismatch; only a non-null equal pair matches.
+  const tenantMatchesActive =
+    !!activeTenantId && !!tenantId && activeTenantId === tenantId;
+
+  // Preselect active workspace tenant only in create mode, only when no
+  // deliberate selection exists, and only when it is present in the merged
+  // authorized list. Never silently pick the first tenant. Never overwrite
+  // a deliberate selection after refetch.
+  useEffect(() => {
+    if (isEdit) return;
+    if (tenantId) return;
+    if (!activeTenantId) return;
+    if (!mergedTenants.some((t) => t.tenantId === activeTenantId)) return;
+    setTenantId(activeTenantId);
+  }, [isEdit, tenantId, activeTenantId, mergedTenants]);
+
+  const selectedTenantName =
+    mergedTenants.find((t) => t.tenantId === tenantId)?.tenantName ?? null;
 
   // Core fields (hydrated from investor in edit mode)
   const [displayName, setDisplayName] = useState(investor?.investor_name ?? "");
@@ -184,6 +236,14 @@ export function InvestorForm({ investor }: Props) {
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
+  // Clear ownership when the tenant changes or its active-workspace match is
+  // lost — CREATE mode only. Edit mode preserves existing ownership values.
+  useEffect(() => {
+    if (isEdit) return;
+    setOwningAgent("");
+    setOwningAi("");
+  }, [isEdit, tenantId, tenantMatchesActive]);
+
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
   // Investment Portfolio (V3) — staged in local UI state until Save. Save is
@@ -193,14 +253,16 @@ export function InvestorForm({ investor }: Props) {
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
-    enabled: enabled && !!tenantId && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
   });
   const aisQ = useQuery({
     queryKey: ["assignable-ai", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
-    enabled: enabled && !!tenantId && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
   });
-  const noAi = !aisQ.isLoading && (aisQ.data ?? []).length === 0;
+  const humanOptions = tenantMatchesActive ? (humansQ.data ?? []) : [];
+  const aiOptions = tenantMatchesActive ? (aisQ.data ?? []) : [];
+  const noAi = tenantMatchesActive && !aisQ.isLoading && aiOptions.length === 0;
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -251,11 +313,22 @@ export function InvestorForm({ investor }: Props) {
   }
 
   const createM = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (vars: { selectedTenantId: string; activeTenantId: string | null }) => {
+      // Defensive re-check inside the mutation using EXPLICIT ids captured at
+      // submit time (positive-match rule; missing active = mismatch).
+      if (
+        !vars.activeTenantId ||
+        !vars.selectedTenantId ||
+        vars.activeTenantId !== vars.selectedTenantId
+      ) {
+        throw new Error(
+          "Selected tenant is not the active workspace. Switch workspace to continue.",
+        );
+      }
       // Create first so storage RLS authorizes reads under the real investor id.
       const res = await create({
         data: {
-          tenantId,
+          tenantId: vars.selectedTenantId,
           investorName: displayName,
           websiteUrl: companyUrl || null,
           linkedinUrl: linkedinUrl || null,
@@ -317,28 +390,139 @@ export function InvestorForm({ investor }: Props) {
 
   const canSubmit = isEdit
     ? !!displayName
-    : !!(tenantId && displayName && owningAgentUserId && owningAiAgentId);
+    : !!(
+        tenantMatchesActive &&
+        displayName &&
+        owningAgentUserId &&
+        owningAiAgentId
+      );
   const submitting = createM.isPending || updateM.isPending;
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (isEdit) {
+      updateM.mutate();
+      return;
+    }
+    // Positive-match validation BEFORE calling the mutation. Do not rely on
+    // onMutate alone; the mutation itself repeats this defensively using the
+    // explicit ids passed as variables.
+    if (!tenantMatchesActive) {
+      toast.error(
+        activeTenantId
+          ? "Selected tenant is not the active workspace. Switch workspace to continue."
+          : "No active workspace. Switch to the target tenant workspace before creating an investor.",
+      );
+      return;
+    }
+    if (!displayName || !owningAgentUserId || !owningAiAgentId) {
+      toast.error("Complete required fields.");
+      return;
+    }
+    createM.mutate({ selectedTenantId: tenantId, activeTenantId });
+  }
+
+  const tenantsLoading = assignableQ.isLoading && mergedTenants.length === 0;
+  const tenantsError = assignableQ.isError && mergedTenants.length === 0;
+  const tenantsEmpty =
+    !assignableQ.isLoading && !assignableQ.isError && mergedTenants.length === 0;
+  const canCreateTenant = perms.isResolved && perms.has("tenants.write");
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); isEdit ? updateM.mutate() : createM.mutate(); }}
+      onSubmit={handleSubmit}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
       {/* Tenant (create only) */}
       {!isEdit && (
         <div className="space-y-1.5">
-          <Label>Tenant <span className="text-destructive">*</span></Label>
-          <Select value={tenantId} onValueChange={setTenantId}>
-            <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
+          <div className="flex items-center justify-between">
+            <Label>Tenant <span className="text-destructive">*</span></Label>
+            {canCreateTenant && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setNewTenantOpen(true)}
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" /> New tenant…
+              </Button>
+            )}
+          </div>
+          <Select
+            value={tenantId}
+            onValueChange={setTenantId}
+            disabled={tenantsLoading || tenantsEmpty}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={
+                  tenantsLoading
+                    ? "Loading tenants…"
+                    : tenantsError
+                      ? "Couldn't load tenants"
+                      : tenantsEmpty
+                        ? "No tenants available"
+                        : "Select tenant"
+                }
+              />
+            </SelectTrigger>
             <SelectContent>
-              {tenants.map((t) => (
-                <SelectItem key={t.tenantId} value={t.tenantId}>{t.tenantName}</SelectItem>
+              {mergedTenants.map((t) => (
+                <SelectItem key={t.tenantId} value={t.tenantId}>
+                  {t.tenantName}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {tenantsError && (
+            <div className="flex items-center gap-2 text-xs text-destructive">
+              <span>Couldn't load tenants.</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => assignableQ.refetch()}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {tenantsEmpty && (
+            <p className="text-xs text-muted-foreground">
+              You must create or gain access to a tenant before creating an investor.
+            </p>
+          )}
+          {tenantId && !tenantMatchesActive && (
+            <div
+              role="alert"
+              className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              {activeTenantId === null
+                ? "No active workspace. Switch to the target tenant workspace before creating an investor."
+                : `This tenant is not your active workspace. Switch workspace to ${activeTenantName ?? "the active tenant"} — or activate ${selectedTenantName ?? "the selected tenant"} — before continuing.`}
+            </div>
+          )}
         </div>
       )}
+
+      <TenantFormDialog
+        open={newTenantOpen}
+        onOpenChange={setNewTenantOpen}
+        tenant={null}
+        onSaved={() => {
+          assignableQ.refetch();
+          qc.invalidateQueries({ queryKey: ["session-context"] });
+          // NOTE: AssignableTenantDTO exposes no readiness/status field, so
+          // we cannot safely auto-select a newly created tenant. Reported as
+          // an out-of-scope contract gap. User must activate the new tenant
+          // via WorkspaceSwitcher before the form will accept it.
+          toast.success("Tenant created — provisioning pending");
+        }}
+      />
+
 
       {/* Logo + Media */}
       <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: companyUrl }} />
@@ -686,12 +870,24 @@ export function InvestorForm({ investor }: Props) {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Owning Agent <span className="text-destructive">*</span></Label>
-              <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={!tenantId}>
+              <Select
+                value={owningAgentUserId}
+                onValueChange={setOwningAgent}
+                disabled={!tenantMatchesActive}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
+                  <SelectValue
+                    placeholder={
+                      !tenantMatchesActive
+                        ? "Select a matching tenant first"
+                        : humansQ.isLoading
+                          ? "Loading…"
+                          : "Select an agent"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {(humansQ.data ?? []).map((u) => (
+                  {humanOptions.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
                     </SelectItem>
@@ -701,12 +897,26 @@ export function InvestorForm({ investor }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
-              <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi}>
+              <Select
+                value={owningAiAgentId}
+                onValueChange={setOwningAi}
+                disabled={!tenantMatchesActive || noAi}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} />
+                  <SelectValue
+                    placeholder={
+                      !tenantMatchesActive
+                        ? "Select a matching tenant first"
+                        : aisQ.isLoading
+                          ? "Loading…"
+                          : noAi
+                            ? "No AI users in this tenant"
+                            : "Select an AI agent"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {(aisQ.data ?? []).map((u) => (
+                  {aiOptions.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
                     </SelectItem>
@@ -720,6 +930,7 @@ export function InvestorForm({ investor }: Props) {
               )}
             </div>
           </div>
+
         </div>
       )}
 
