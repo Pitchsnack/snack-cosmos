@@ -253,14 +253,16 @@ export function InvestorForm({ investor }: Props) {
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
-    enabled: enabled && !!tenantId && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
   });
   const aisQ = useQuery({
     queryKey: ["assignable-ai", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
-    enabled: enabled && !!tenantId && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
   });
-  const noAi = !aisQ.isLoading && (aisQ.data ?? []).length === 0;
+  const humanOptions = tenantMatchesActive ? (humansQ.data ?? []) : [];
+  const aiOptions = tenantMatchesActive ? (aisQ.data ?? []) : [];
+  const noAi = tenantMatchesActive && !aisQ.isLoading && aiOptions.length === 0;
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
