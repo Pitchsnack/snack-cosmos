@@ -174,10 +174,19 @@ export function StartupForm({ startup }: Props) {
     for (const t of raw) {
       if (!map.has(t.id)) map.set(t.id, { id: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode });
     }
-    return Array.from(map.values()).sort((a, b) =>
+    const merged = Array.from(map.values()).sort((a, b) =>
       a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
     );
-  }, [tenantsQ.data, sessionTenants]);
+    if (
+      WORKSPACE_ENFORCEMENT_ENABLED &&
+      merged.length === 0 &&
+      !tenantsQ.isLoading &&
+      !tenantsQ.isError
+    ) {
+      return [...FIXTURE_TENANTS];
+    }
+    return merged;
+  }, [tenantsQ.data, tenantsQ.isLoading, tenantsQ.isError, sessionTenants]);
   const tenants = mergedTenants;
 
   const activeTenantId = session?.activeWorkspace.tenantId ?? null;
