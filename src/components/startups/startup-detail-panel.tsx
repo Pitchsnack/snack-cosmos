@@ -38,10 +38,12 @@ export function StartupDetailPanel({
   id,
   showEdit = true,
   compact = false,
+  onClose,
 }: {
   id: string;
   showEdit?: boolean;
   compact?: boolean;
+  onClose?: () => void;
 }) {
   const { data, isLoading, error } = useStartup(id);
   const { has, isControl } = usePermissions();
