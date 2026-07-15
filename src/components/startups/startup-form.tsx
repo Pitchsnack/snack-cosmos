@@ -422,14 +422,41 @@ export function StartupForm({ startup }: Props) {
     return { applied, skippedBecauseFilled: skipped };
   }
 
+  const ADVANCE_INPUT_TYPES = ["text", "email", "url", "tel", "password", "search", "number", "date", "datetime-local", "month", "time", "week"];
+
   const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    if (e.key !== "Enter" || e.defaultPrevented) return;
-    const target = e.target;
-    if (
-      target instanceof HTMLInputElement &&
-      ["text", "email", "url", "tel", "password", "search", "number"].includes(target.type)
-    ) {
-      e.preventDefault();
+    if (e.key !== "Enter" || e.defaultPrevented || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = e.target as HTMLElement;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (!ADVANCE_INPUT_TYPES.includes(target.type)) return;
+    // Prevent implicit form submission.
+    e.preventDefault();
+
+    const form = e.currentTarget;
+    const selector = [
+      "input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset])",
+      "select",
+      "textarea",
+      "button",
+      "[tabindex]",
+    ].join(",");
+    const isEligible = (el: Element): el is HTMLElement => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.hasAttribute("disabled")) return false;
+      if ((el as HTMLInputElement).readOnly) return false;
+      if (el.getAttribute("aria-hidden") === "true") return false;
+      if (el.tabIndex < 0) return false;
+      if (el.offsetParent === null && el.getClientRects().length === 0) return false;
+      return true;
+    };
+    const focusables = Array.from(form.querySelectorAll<HTMLElement>(selector)).filter(isEligible);
+    const idx = focusables.indexOf(target);
+    if (idx === -1) return;
+    const next = focusables[idx + 1];
+    if (!next) return; // last field: do nothing (no submit, no wrap)
+    next.focus();
+    if (next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement) {
+      try { next.select?.(); } catch { /* no-op */ }
     }
   };
 
