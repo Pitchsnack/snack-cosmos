@@ -20,6 +20,7 @@ import {
 } from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
+import { switchWorkspace } from "@/lib/session-context.functions";
 import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 import { supabase } from "@/integrations/supabase/client";
