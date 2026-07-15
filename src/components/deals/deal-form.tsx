@@ -25,6 +25,17 @@ import { useHasSession } from "@/hooks/use-has-session";
 const WORKSPACE_ENFORCEMENT_ENABLED =
   import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
 
+// Preview-only, non-persistent fixture tenants. Rendered ONLY when the flag
+// is ON and the merged real list is empty. Never call switchWorkspace, never
+// mutate session state, never select a physical database, never persist.
+const FIXTURE_TENANT_PREFIX = "fixture-preview-";
+const FIXTURE_TENANTS = [
+  { tenantId: `${FIXTURE_TENANT_PREFIX}alpha`, tenantName: "Acme Ventures (preview fixture)", tenantCode: "ACME-FX" },
+  { tenantId: `${FIXTURE_TENANT_PREFIX}beta`, tenantName: "Nova Capital (preview fixture)", tenantCode: "NOVA-FX" },
+];
+const isFixtureTenant = (id: string | null | undefined): boolean =>
+  !!id && id.startsWith(FIXTURE_TENANT_PREFIX);
+
 function mapSwitchError(msg: string): string {
   const lower = msg.toLowerCase();
   if (lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")) {
