@@ -236,6 +236,14 @@ export function InvestorForm({ investor }: Props) {
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
+  // Clear ownership when the tenant changes or its active-workspace match is
+  // lost — CREATE mode only. Edit mode preserves existing ownership values.
+  useEffect(() => {
+    if (isEdit) return;
+    setOwningAgent("");
+    setOwningAi("");
+  }, [isEdit, tenantId, tenantMatchesActive]);
+
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
   // Investment Portfolio (V3) — staged in local UI state until Save. Save is
