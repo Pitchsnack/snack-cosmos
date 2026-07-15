@@ -870,12 +870,24 @@ export function InvestorForm({ investor }: Props) {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Owning Agent <span className="text-destructive">*</span></Label>
-              <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={!tenantId}>
+              <Select
+                value={owningAgentUserId}
+                onValueChange={setOwningAgent}
+                disabled={!tenantMatchesActive}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
+                  <SelectValue
+                    placeholder={
+                      !tenantMatchesActive
+                        ? "Select a matching tenant first"
+                        : humansQ.isLoading
+                          ? "Loading…"
+                          : "Select an agent"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {(humansQ.data ?? []).map((u) => (
+                  {humanOptions.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
                     </SelectItem>
@@ -885,12 +897,26 @@ export function InvestorForm({ investor }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
-              <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi}>
+              <Select
+                value={owningAiAgentId}
+                onValueChange={setOwningAi}
+                disabled={!tenantMatchesActive || noAi}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} />
+                  <SelectValue
+                    placeholder={
+                      !tenantMatchesActive
+                        ? "Select a matching tenant first"
+                        : aisQ.isLoading
+                          ? "Loading…"
+                          : noAi
+                            ? "No AI users in this tenant"
+                            : "Select an AI agent"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {(aisQ.data ?? []).map((u) => (
+                  {aiOptions.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
                     </SelectItem>
@@ -904,6 +930,7 @@ export function InvestorForm({ investor }: Props) {
               )}
             </div>
           </div>
+
         </div>
       )}
 
