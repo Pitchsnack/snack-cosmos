@@ -425,7 +425,10 @@ export function StartupForm({ startup }: Props) {
   const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
     if (e.key !== "Enter" || e.defaultPrevented) return;
     const target = e.target;
-    if (target instanceof HTMLInputElement && target.type !== "submit") {
+    if (
+      target instanceof HTMLInputElement &&
+      ["text", "email", "url", "tel", "password", "search", "number"].includes(target.type)
+    ) {
       e.preventDefault();
     }
   };
