@@ -32,6 +32,19 @@ const ACTIVE_KEY = "sp2.activeTenantId";
 const CONTROL_LABEL = "Control";
 const CONTROL_SUB = "Global Workspace";
 
+// Preview-only, non-persistent fixture tenants. Rendered only when the
+// enforcement flag is ON and the real merged list is empty, so the CONTROL
+// principal can exercise the mismatch/switch/disabled UX without touching
+// backend membership. Fixtures never call switchWorkspace, never write
+// session state, never select a physical database, never persist.
+const FIXTURE_TENANT_PREFIX = "fixture-preview-";
+const FIXTURE_TENANTS: Array<{ tenantId: string; tenantName: string; tenantCode: string; workspaceType: string | null }> = [
+  { tenantId: `${FIXTURE_TENANT_PREFIX}alpha`, tenantName: "Acme Ventures (preview fixture)", tenantCode: "ACME-FX", workspaceType: "TENANT" },
+  { tenantId: `${FIXTURE_TENANT_PREFIX}beta`, tenantName: "Nova Capital (preview fixture)", tenantCode: "NOVA-FX", workspaceType: "TENANT" },
+];
+const isFixtureTenant = (id: string | null | undefined): boolean =>
+  !!id && id.startsWith(FIXTURE_TENANT_PREFIX);
+
 export function getActiveTenantId(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(ACTIVE_KEY);
@@ -95,10 +108,16 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
         });
       }
     }
-    return Array.from(map.values()).sort((a, b) =>
+    const merged = Array.from(map.values()).sort((a, b) =>
       a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
     );
-  }, [sessionTenants, assignableQ.data]);
+    // Preview-only fixture fallback: only when the real merged list is empty.
+    // Never persists, never mutates session state.
+    if (merged.length === 0 && !assignableQ.isLoading) {
+      return [...FIXTURE_TENANTS];
+    }
+    return merged;
+  }, [sessionTenants, assignableQ.data, assignableQ.isLoading]);
 
   const active = tenants.find((t) => t.tenantId === activeId);
   const label = active
@@ -108,6 +127,18 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
       : tenants[0]?.tenantName ?? "—";
 
   async function pick(tenantId: string | null, workspaceType: string | null) {
+    // Preview-only fixture: do NOT call switchWorkspace, do NOT write
+    // localStorage, do NOT invalidate session context. Close popover and
+    // surface a preview-only console notice so the UX can be demoed without
+    // touching backend membership or physical-database routing.
+    if (isFixtureTenant(tenantId)) {
+      console.info(
+        "[workspace-switcher] Preview fixture tenant selected — no switchWorkspace call, no session mutation.",
+        { tenantId },
+      );
+      setOpen(false);
+      return;
+    }
     try {
       if (tenantId) localStorage.setItem(ACTIVE_KEY, tenantId);
       else localStorage.removeItem(ACTIVE_KEY);
@@ -165,27 +196,38 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
             )}
             {tenants.length > 0 && (
               <CommandGroup heading="Workspaces">
-                {tenants.map((t) => (
-                  <CommandItem
-                    key={t.tenantId}
-                    value={`${t.tenantName} ${t.tenantCode}`}
-                    onSelect={() => pick(t.tenantId, t.workspaceType)}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        activeId === t.tenantId ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-sm">{t.tenantName}</span>
-                      <span className="font-mono text-[11px] text-muted-foreground">
-                        {t.tenantCode}
-                        {t.workspaceType ? ` · ${t.workspaceType}` : ""}
-                      </span>
-                    </div>
-                  </CommandItem>
-                ))}
+                {tenants.map((t) => {
+                  const fx = isFixtureTenant(t.tenantId);
+                  return (
+                    <CommandItem
+                      key={t.tenantId}
+                      value={`${t.tenantName} ${t.tenantCode}`}
+                      onSelect={() => pick(t.tenantId, t.workspaceType)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          activeId === t.tenantId ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm">
+                          {t.tenantName}
+                          {fx && (
+                            <span className="ml-2 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 align-middle text-[10px] font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+                              PREVIEW FIXTURE
+                            </span>
+                          )}
+                        </span>
+                        <span className="font-mono text-[11px] text-muted-foreground">
+                          {t.tenantCode}
+                          {t.workspaceType ? ` · ${t.workspaceType}` : ""}
+                          {fx ? " · not activatable" : ""}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
             )}
           </CommandList>

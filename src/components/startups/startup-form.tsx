@@ -48,6 +48,17 @@ import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog
 const WORKSPACE_ENFORCEMENT_ENABLED =
   import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
 
+// Preview-only, non-persistent fixture tenants. Rendered ONLY when the flag
+// is ON and the merged real list is empty. Never call switchWorkspace, never
+// mutate session state, never select a physical database, never persist.
+const FIXTURE_TENANT_PREFIX = "fixture-preview-";
+const FIXTURE_TENANTS = [
+  { id: `${FIXTURE_TENANT_PREFIX}alpha`, tenantName: "Acme Ventures (preview fixture)", tenantCode: "ACME-FX" },
+  { id: `${FIXTURE_TENANT_PREFIX}beta`, tenantName: "Nova Capital (preview fixture)", tenantCode: "NOVA-FX" },
+];
+const isFixtureTenant = (id: string | null | undefined): boolean =>
+  !!id && id.startsWith(FIXTURE_TENANT_PREFIX);
+
 function mapSwitchError(msg: string): string {
   const lower = msg.toLowerCase();
   if (lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")) {
@@ -163,10 +174,19 @@ export function StartupForm({ startup }: Props) {
     for (const t of raw) {
       if (!map.has(t.id)) map.set(t.id, { id: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode });
     }
-    return Array.from(map.values()).sort((a, b) =>
+    const merged = Array.from(map.values()).sort((a, b) =>
       a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
     );
-  }, [tenantsQ.data, sessionTenants]);
+    if (
+      WORKSPACE_ENFORCEMENT_ENABLED &&
+      merged.length === 0 &&
+      !tenantsQ.isLoading &&
+      !tenantsQ.isError
+    ) {
+      return [...FIXTURE_TENANTS];
+    }
+    return merged;
+  }, [tenantsQ.data, tenantsQ.isLoading, tenantsQ.isError, sessionTenants]);
   const tenants = mergedTenants;
 
   const activeTenantId = session?.activeWorkspace.tenantId ?? null;
@@ -575,7 +595,21 @@ export function StartupForm({ startup }: Props) {
           <Select value={tenantId} onValueChange={setTenantId}>
             <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
             <SelectContent>
-              {tenants.map((t) => <SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}
+              {tenants.map((t) => {
+                const fx = isFixtureTenant(t.id);
+                return (
+                  <SelectItem key={t.id} value={t.id}>
+                    <span className="flex items-center gap-2">
+                      <span>{t.tenantName}</span>
+                      {fx && (
+                        <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+                          PREVIEW FIXTURE
+                        </span>
+                      )}
+                    </span>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           {WORKSPACE_ENFORCEMENT_ENABLED && tenantId && !tenantMatchesActive && (
@@ -588,31 +622,42 @@ export function StartupForm({ startup }: Props) {
                   ? "No active workspace. Switch to the target tenant workspace before creating a startup."
                   : `This tenant is not your active workspace. Switch workspace to ${activeTenantName ?? "the active tenant"} — or activate ${selectedTenantName ?? "the selected tenant"} — before continuing.`}
               </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 px-2 text-xs"
-                  disabled={switchPending || !tenantId}
-                  onClick={async () => {
-                    setSwitchError(null);
-                    setSwitchPending(true);
-                    try {
-                      await doSwitch({ data: { tenantId, workspaceType: "TENANT" } });
-                      await qc.invalidateQueries({ queryKey: ["session-context"] });
-                      await qc.invalidateQueries({ queryKey: ["assignable-tenants", principalRef] });
-                    } catch (e) {
-                      setSwitchError(mapSwitchError((e as Error).message ?? ""));
-                    } finally {
-                      setSwitchPending(false);
-                    }
-                  }}
-                >
-                  {switchPending ? "Switching workspace…" : "Switch to this tenant"}
-                </Button>
-                {switchError && <span className="text-destructive">{switchError}</span>}
-              </div>
+              {isFixtureTenant(tenantId) ? (
+                <div className="flex items-center gap-2">
+                  <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs" disabled>
+                    Switch to this tenant
+                  </Button>
+                  <span className="text-[11px] font-medium text-amber-800 dark:text-amber-200">
+                    Preview fixture — activation disabled (no backend call).
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    disabled={switchPending || !tenantId}
+                    onClick={async () => {
+                      setSwitchError(null);
+                      setSwitchPending(true);
+                      try {
+                        await doSwitch({ data: { tenantId, workspaceType: "TENANT" } });
+                        await qc.invalidateQueries({ queryKey: ["session-context"] });
+                        await qc.invalidateQueries({ queryKey: ["assignable-tenants", principalRef] });
+                      } catch (e) {
+                        setSwitchError(mapSwitchError((e as Error).message ?? ""));
+                      } finally {
+                        setSwitchPending(false);
+                      }
+                    }}
+                  >
+                    {switchPending ? "Switching workspace…" : "Switch to this tenant"}
+                  </Button>
+                  {switchError && <span className="text-destructive">{switchError}</span>}
+                </div>
+              )}
             </div>
           )}
         </div>
