@@ -313,11 +313,22 @@ export function InvestorForm({ investor }: Props) {
   }
 
   const createM = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (vars: { selectedTenantId: string; activeTenantId: string | null }) => {
+      // Defensive re-check inside the mutation using EXPLICIT ids captured at
+      // submit time (positive-match rule; missing active = mismatch).
+      if (
+        !vars.activeTenantId ||
+        !vars.selectedTenantId ||
+        vars.activeTenantId !== vars.selectedTenantId
+      ) {
+        throw new Error(
+          "Selected tenant is not the active workspace. Switch workspace to continue.",
+        );
+      }
       // Create first so storage RLS authorizes reads under the real investor id.
       const res = await create({
         data: {
-          tenantId,
+          tenantId: vars.selectedTenantId,
           investorName: displayName,
           websiteUrl: companyUrl || null,
           linkedinUrl: linkedinUrl || null,
