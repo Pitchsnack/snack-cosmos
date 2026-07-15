@@ -88,10 +88,19 @@ export function DealForm() {
         map.set(t.id, { tenantId: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode });
       }
     }
-    return Array.from(map.values()).sort((a, b) =>
+    const merged = Array.from(map.values()).sort((a, b) =>
       a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
     );
-  }, [sessionTenants, assignableQ.data]);
+    if (
+      WORKSPACE_ENFORCEMENT_ENABLED &&
+      merged.length === 0 &&
+      !assignableQ.isLoading &&
+      !assignableQ.isError
+    ) {
+      return [...FIXTURE_TENANTS];
+    }
+    return merged;
+  }, [sessionTenants, assignableQ.data, assignableQ.isLoading, assignableQ.isError]);
   const tenants = mergedTenants;
 
   const activeTenantId = session?.activeWorkspace.tenantId ?? null;
