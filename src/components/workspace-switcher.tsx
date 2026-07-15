@@ -127,6 +127,18 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
       : tenants[0]?.tenantName ?? "—";
 
   async function pick(tenantId: string | null, workspaceType: string | null) {
+    // Preview-only fixture: do NOT call switchWorkspace, do NOT write
+    // localStorage, do NOT invalidate session context. Close popover and
+    // surface a preview-only console notice so the UX can be demoed without
+    // touching backend membership or physical-database routing.
+    if (isFixtureTenant(tenantId)) {
+      console.info(
+        "[workspace-switcher] Preview fixture tenant selected — no switchWorkspace call, no session mutation.",
+        { tenantId },
+      );
+      setOpen(false);
+      return;
+    }
     try {
       if (tenantId) localStorage.setItem(ACTIVE_KEY, tenantId);
       else localStorage.removeItem(ACTIVE_KEY);
