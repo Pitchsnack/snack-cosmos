@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw } from "lucide-react";
+import { X, RefreshCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +19,11 @@ import {
   createInvestor, updateInvestor, createInvestorMediaUploadUrl,
 } from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
-import { useSessionContext } from "@/hooks/use-session-context";
+import { listAssignableTenants } from "@/lib/tenants.functions";
+import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 import { supabase } from "@/integrations/supabase/client";
+import { TenantFormDialog } from "@/components/tenant-form-dialog";
 import {
   EntityMediaEditor, EMPTY_MEDIA_STATE, uploadPending,
   type EntityMediaState, type SlotState,
