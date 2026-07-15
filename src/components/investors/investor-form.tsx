@@ -164,6 +164,9 @@ export function InvestorForm({ investor }: Props) {
   const getUploadUrl = useServerFn(createInvestorMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
   const fetchAssignableTenants = useServerFn(listAssignableTenants);
+  const doSwitch = useServerFn(switchWorkspace);
+  const [switchPending, setSwitchPending] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
   const enabled = useHasSession();
   const perms = usePermissions();
 
