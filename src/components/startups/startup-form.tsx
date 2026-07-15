@@ -340,13 +340,23 @@ export function StartupForm({ startup }: Props) {
   });
 
   const createM = useMutation({
-    mutationFn: async () => {
-      // Create the row first so we have a real id for the storage path
-      // (storage SELECT RLS authorizes via folder[2] = entity id; uploads
-      // under a draft id would be unreadable on the next page load).
+    mutationFn: async (vars: { selectedTenantId: string; activeTenantId: string | null }) => {
+      // Defensive re-check under the flag using EXPLICIT ids captured at
+      // submit time (positive-match rule; missing active = mismatch).
+      if (WORKSPACE_ENFORCEMENT_ENABLED) {
+        if (
+          !vars.activeTenantId ||
+          !vars.selectedTenantId ||
+          vars.activeTenantId !== vars.selectedTenantId
+        ) {
+          throw new Error(
+            "Selected tenant is not the active workspace. Switch workspace to continue.",
+          );
+        }
+      }
       const res = await create({
         data: {
-          tenantId,
+          tenantId: vars.selectedTenantId,
           startupName,
           websiteUrl: websiteUrl || null,
           city: city || null,
