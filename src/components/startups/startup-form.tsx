@@ -424,8 +424,9 @@ export function StartupForm({ startup }: Props) {
   const canSubmit = useMemo(() => {
     if (!startupName) return false;
     if (isEdit) return true;
-    return !!(tenantId && owningAgentUserId && owningAiAgentId);
-  }, [isEdit, startupName, tenantId, owningAgentUserId, owningAiAgentId]);
+    const matchOk = !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive;
+    return !!(tenantId && owningAgentUserId && owningAiAgentId && matchOk);
+  }, [isEdit, startupName, tenantId, owningAgentUserId, owningAiAgentId, tenantMatchesActive]);
 
   const submitting = createM.isPending || updateM.isPending;
 
