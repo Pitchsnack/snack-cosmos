@@ -451,7 +451,7 @@ export function StartupForm({ startup }: Props) {
   const submitForm = () => {
     if (!canSubmit || submitting) return;
     if (isEdit) updateM.mutate();
-    else createM.mutate();
+    else createM.mutate({ selectedTenantId: tenantId, activeTenantId });
   };
 
   const guard = useUnsavedChangesGuard({
