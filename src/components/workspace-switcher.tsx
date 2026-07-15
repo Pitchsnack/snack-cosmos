@@ -108,10 +108,16 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
         });
       }
     }
-    return Array.from(map.values()).sort((a, b) =>
+    const merged = Array.from(map.values()).sort((a, b) =>
       a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
     );
-  }, [sessionTenants, assignableQ.data]);
+    // Preview-only fixture fallback: only when the real merged list is empty.
+    // Never persists, never mutates session state.
+    if (merged.length === 0 && !assignableQ.isLoading) {
+      return [...FIXTURE_TENANTS];
+    }
+    return merged;
+  }, [sessionTenants, assignableQ.data, assignableQ.isLoading]);
 
   const active = tenants.find((t) => t.tenantId === activeId);
   const label = active
