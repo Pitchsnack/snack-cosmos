@@ -146,15 +146,65 @@ export function InvestorForm({ investor }: Props) {
   const update = useServerFn(updateInvestor);
   const getUploadUrl = useServerFn(createInvestorMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
+  const fetchAssignableTenants = useServerFn(listAssignableTenants);
   const enabled = useHasSession();
+  const perms = usePermissions();
 
-  const tenants = useMemo(() => session?.tenants ?? [], [session]);
-  const [tenantId, setTenantId] = useState<string>(investor?.tenant_id ?? "");
-  useEffect(() => {
-    if (!isEdit && !tenantId && tenants.length) {
-      setTenantId(session?.activeWorkspace.tenantId ?? tenants[0].tenantId);
+  const sessionTenants = useMemo(() => session?.tenants ?? [], [session]);
+  // Principal-scoped cache key. Cross-principal cleanup is delegated to the
+  // existing centralized session framework (session-context invalidation +
+  // WorkspaceSwitcher.invalidateQueries). No new auth listener here.
+  const principalRef = session?.user?.id ?? null;
+  const assignableQ = useQuery({
+    queryKey: ["assignable-tenants", principalRef],
+    queryFn: () => fetchAssignableTenants(),
+    enabled: enabled && !!principalRef,
+    staleTime: 60_000,
+  });
+
+  // Merge session.tenants with listAssignableTenants; dedup by tenant id;
+  // sort by tenantName (case-insensitive). Treated as an authorized-choice
+  // list only — never as authorization or routing authority.
+  const mergedTenants = useMemo(() => {
+    const map = new Map<string, { tenantId: string; tenantName: string; tenantCode: string }>();
+    for (const t of sessionTenants) {
+      map.set(t.tenantId, { tenantId: t.tenantId, tenantName: t.tenantName, tenantCode: t.tenantCode });
     }
-  }, [tenants, tenantId, session, isEdit]);
+    for (const t of assignableQ.data ?? []) {
+      if (!map.has(t.id)) {
+        map.set(t.id, { tenantId: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
+    );
+  }, [sessionTenants, assignableQ.data]);
+
+  const activeTenantId = session?.activeWorkspace.tenantId ?? null;
+  const activeTenantName = session?.activeWorkspace.tenantName ?? null;
+
+  const [tenantId, setTenantId] = useState<string>(investor?.tenant_id ?? "");
+  const [newTenantOpen, setNewTenantOpen] = useState(false);
+
+  // Positive-match rule: missing active tenant is a mismatch; missing
+  // selection is a mismatch; only a non-null equal pair matches.
+  const tenantMatchesActive =
+    !!activeTenantId && !!tenantId && activeTenantId === tenantId;
+
+  // Preselect active workspace tenant only in create mode, only when no
+  // deliberate selection exists, and only when it is present in the merged
+  // authorized list. Never silently pick the first tenant. Never overwrite
+  // a deliberate selection after refetch.
+  useEffect(() => {
+    if (isEdit) return;
+    if (tenantId) return;
+    if (!activeTenantId) return;
+    if (!mergedTenants.some((t) => t.tenantId === activeTenantId)) return;
+    setTenantId(activeTenantId);
+  }, [isEdit, tenantId, activeTenantId, mergedTenants]);
+
+  const selectedTenantName =
+    mergedTenants.find((t) => t.tenantId === tenantId)?.tenantName ?? null;
 
   // Core fields (hydrated from investor in edit mode)
   const [displayName, setDisplayName] = useState(investor?.investor_name ?? "");
