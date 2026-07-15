@@ -43,6 +43,22 @@ import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter"
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
+// Preview-only feature flag. Production stays OFF pending Option A backend
+// PRD (MASTER_AGENT authorization + physical tenant-database readiness).
+const WORKSPACE_ENFORCEMENT_ENABLED =
+  import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
+
+function mapSwitchError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")) {
+    return "You do not have access to this tenant workspace.";
+  }
+  if (lower.includes("not ready") || lower.includes("provision") || lower.includes("readiness")) {
+    return "This tenant workspace is still being prepared.";
+  }
+  return "Unable to switch workspace. Please try again.";
+}
+
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
