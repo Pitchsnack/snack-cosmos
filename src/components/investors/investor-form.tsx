@@ -32,6 +32,22 @@ import {
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
+// Preview-only feature flag. Production stays OFF pending Option A backend
+// PRD (MASTER_AGENT authorization + physical tenant-database readiness).
+const WORKSPACE_ENFORCEMENT_ENABLED =
+  import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
+
+function mapSwitchError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")) {
+    return "You do not have access to this tenant workspace.";
+  }
+  if (lower.includes("not ready") || lower.includes("provision") || lower.includes("readiness")) {
+    return "This tenant workspace is still being prepared.";
+  }
+  return "Unable to switch workspace. Please try again.";
+}
+
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminInvestorManager) ──
 const INVESTOR_CLASSIFICATIONS = [
