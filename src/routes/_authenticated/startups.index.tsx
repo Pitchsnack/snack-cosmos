@@ -203,7 +203,7 @@ function StartupsPageInner() {
           )}
         >
           <div className="flex-1 overflow-y-auto p-5">
-            {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact />}
+            {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact onClose={() => setModalId(null)} />}
           </div>
         </DialogContent>
       </Dialog>
