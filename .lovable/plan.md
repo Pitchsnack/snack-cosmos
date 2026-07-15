@@ -1,79 +1,78 @@
-## Plan: Make startup card hover clearly visible in `/startups/grid`
+## Decision recorded
+- **Backend:** Option A — separate PRD will extend `switchWorkspace` for MASTER_AGENT authorization and physical-tenant-database readiness. Out of scope here.
+- **This task:** frontend UX/UI preview only. Production cutover blocked until Option A merges and is independently verified.
+- **Activation:** `VITE_WORKSPACE_ENFORCEMENT` env flag stays OFF in production. Flipping ON requires env change + rebuild + redeploy.
 
-### Confirmation before editing
-- Confirm `src/routes/_authenticated/startups.index.tsx` renders the grid branch with `StartupCard`.
-- Confirm `StartupCard` renders the outer clickable wrapper as the actual `<button>` when `onClick` is provided in grid mode.
+## Scope — 4 authorized files only
+1. `src/components/workspace-switcher.tsx`
+2. `src/components/investors/investor-form.tsx`
+3. `src/components/startups/startup-form.tsx`
+4. `src/components/deals/deal-form.tsx`
 
-### File scope
-Only modify:
-- `src/components/startups/startup-card.tsx`
+No 5th file. No shared helper module. Flag read independently in each file:
+```ts
+const WORKSPACE_ENFORCEMENT_ENABLED =
+  import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
+```
 
-No backend, database, migrations, RLS, grants, server functions, tenant routing, ownership, audit, lineage, API Gateway, Database Router, Physical Multi-Database architecture, or persistence code changes.
+## Flag-OFF behavior (preserved exactly)
+- **Switcher:** current `session.tenants`-only list; no `listAssignableTenants` query fires.
+- **Investor:** existing `tenantMatchesActive` gate and banner remain unchanged — safeguards not weakened, no inline switch button rendered.
+- **Startup / Deal:** current behavior identical to today — existing query keys, no gate, no banner, no ownership-clear effect.
 
-### Implementation
-1. Add explicit local React state inside `StartupCard`:
-   - `isHovered`
-   - `isPressed`
+## Flag-ON behavior
 
-2. Attach handlers directly to the outermost clickable card wrapper:
-   - `onMouseEnter`
-   - `onMouseLeave`
-   - `onMouseDown`
-   - `onMouseUp`
-   - `onFocus`
-   - `onBlur`
+### Shared standardized rule (all 3 create forms)
+- `tenantMatchesActive = Boolean(activeTenantId) && Boolean(selectedTenantId) && activeTenantId === selectedTenantId`
+- Tenant dropdown source = merged (`session.tenants` ∪ `listAssignableTenants`), de-duplicated by tenant id, sorted by `tenantName` case-insensitive. Authorized-choice list only — not authorization, membership, routing, or physical-DB selection.
+- Preselect in create mode only, only when `activeTenantId` is in the merged list, only when no deliberate selection. Never silently pick `tenants[0]`. Never overwrite a deliberate selection on refetch.
+- On mismatch: amber banner + inline **Switch to this tenant** button; disable tenant-dependent queries; hide stale options; clear tenant-dependent selections in create mode only (edit mode preserved); `canSubmit = false`; block mutation.
+- `mutationFn` accepts explicit `{ selectedTenantId, activeTenantId }` and re-checks equality defensively before create.
 
-3. Apply inline styles directly on the root clickable wrapper.
+### Inline **Switch to this tenant**
+- Calls only existing `switchWorkspace` server fn with `{ tenantId: selectedTenantId, workspaceType: "TENANT" }`.
+- Pending label: `Switching workspace…`. Save stays disabled during and after.
+- On success: invalidate exactly `["session-context"]` and `["assignable-tenants", session.user.id]`; await refetch. No local session mutation. Save re-enables only after refreshed session confirms `tenantMatchesActive === true`.
+- On failure: banner remains, Save stays disabled, mapped error shown.
 
-   Hover state:
-   - `backgroundColor: "#E0F2FE"`
-   - `borderColor: "#0284C7"`
-   - `boxShadow: "0 0 0 6px #0284C7, 0 0 0 10px rgba(14,165,233,0.22), 0 18px 36px rgba(14,165,233,0.35)"`
+### Error mapping (no raw server errors)
+```
+lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")
+  → "You do not have access to this tenant workspace."
+lower.includes("not ready") || lower.includes("provision") || lower.includes("readiness")
+  → "This tenant workspace is still being prepared."
+otherwise
+  → "Unable to switch workspace. Please try again."
+```
 
-   Pressed state:
-   - `borderColor: "#1D4ED8"`
-   - `boxShadow: "0 0 0 6px #1D4ED8, 0 18px 36px rgba(29,78,216,0.35)"`
+### Workspace Switcher (flag ON)
+Adds principal-scoped `["assignable-tenants", session.user.id]` query calling existing `listAssignableTenants`; merges with `session.tenants`; renders one "Workspaces" group so CONTROL / MASTER-AGENT principals without `user_tenants` rows see selectable tenants. `pick()` unchanged — still calls existing `switchWorkspace`.
 
-   Default state:
-   - no inline override, preserving the existing class-based default card styling.
+## Per-file changes
+- **`workspace-switcher.tsx`** — full rewrite with flag, `useHasSession`, `useQuery`, `useServerFn(listAssignableTenants)`, conditional merged list. `pick()` unchanged.
+- **`investor-form.tsx`** — surgical. Add flag constant, `useState` for switch pending/error, `useServerFn(switchWorkspace)`. Existing OFF-path banner preserved verbatim; extend banner block to render inline switch + mapped error only when flag ON.
+- **`startup-form.tsx`** — surgical. Add flag, switch pending/error state, `switchWorkspace`. Query key becomes `WORKSPACE_ENFORCEMENT_ENABLED ? ["assignable-tenants", session?.user?.id ?? null] : ["assignable-tenants"]`. Compute `mergedTenants`, `activeTenantId`, `tenantMatchesActive`. Gate `humansQ`/`aisQ` enabled + hide stale options + add ownership-clear effect + banner + inline switch — all only when flag ON. `canSubmit` gains `(!WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive)` clause. `createM.mutationFn` accepts `{ selectedTenantId, activeTenantId }` and re-checks equality when flag ON.
+- **`deal-form.tsx`** — surgical. Same pattern applied to `deal-startups`, `deal-investors`, `assignable-humans`, `assignable-ai`. Add `listAssignableTenants` query (flag-gated), merged list, active/match state, banner + inline switch (flag ON), ownership + startup + investor clear effect (flag ON, create mode), `canSubmit` gains match clause when flag ON, `mutationFn` accepts explicit ids + defensive re-check when flag ON.
 
-4. Remove `overflow-hidden` from the root card class so the outer glow/ring is not clipped.
+## Known preview-only limitations
+- **MASTER_AGENT-only principal:** current `switchWorkspace` rejects. UI shows mapped "You do not have access to this tenant workspace." Save stays disabled. Resolved by Option A.
+- **Non-ready tenant physical DB:** current backend does not verify readiness. Switch appears to succeed; downstream ops may fail. Classified as **known preview-only backend contract gap**, not a fail-closed production result. Not a PASS. Flag must not flip in production until backend readiness contract is implemented and verified.
 
-5. Keep image clipping on the image banner container only, so images still respect the card shape.
+## Architecture safeguards preserved
+Physical Control DB + independent Physical Tenant DBs untouched. One Request → One Active Tenant → One Database untouched. No migrations, schema, RLS, membership rows, direct Supabase calls, auth listeners, API Gateway, or Database Router changes. No frontend role authorization. No frontend readiness assumption. No physical-database selection. No routing hints derived from dropdown state.
 
-6. Remove the previous internal hover/tint overlay divs to avoid z-index, clipping, and opacity issues.
+## Verification (preview, evidence to `/mnt/documents/`)
+1. `rg` output confirming no new `supabase.*` imports, no new server fns, no new migration files.
+2. Investor / Startup / Deal — CONTROL, MASTER_AGENT, normal tenant-member scenarios with flag ON.
+3. Inline switch — loading, success, mapped-failure evidence.
+4. Edit-mode value preservation on all three entities.
+5. Flag-OFF re-run confirming all three forms and switcher behave exactly as before.
+6. Explicit note: MASTER_AGENT-only and non-ready-tenant paths are known contract gaps.
 
-7. Preserve existing behavior:
-   - `onClick={onClick}` still opens the startup detail modal
-   - no card dimension changes
-   - no neighboring card movement
-   - no grid layout shift
-   - split view, filters, and pagination untouched
-
-### Debug verification before final styling
-1. Temporarily apply an extreme hover style:
-   - bright red background
-   - 8px bright blue ring
-   - strong glow
-2. Verify in `/startups` grid that the hovered card visibly changes.
-3. If the extreme style does not appear, stop and inspect whether the wrong component or wrapper is being edited.
-4. After confirming the correct wrapper, tune back to the approved light-blue/dark-blue style.
-
-### Final screenshot proof
-Save these files to `/mnt/documents/`:
-- `startup-card-hover-default.png` — default state
-- `startup-card-hover-active.png` — mouse hovering over one card
-- `startup-card-hover-pressed.png` — mouse down / pressed state
-
-Surface the screenshots with `<presentation-artifact>` tags.
-
-### Completion checks
-Before marking complete, verify:
-- hovered card is clearly distinguishable from neighboring cards
-- light-blue background is visible
-- blue outer ring/glow is visible around the full card, including image cards
-- pressed state turns dark blue
-- card size does not change
-- neighboring cards do not shift
-- clicking still opens the startup detail modal
-- no backend, migration, Supabase, server function, or direct database-call changes were made
+## Completion classification
+Only acceptable success verdict:
+```
+UX/UI STANDARDIZATION COMPLETE
+PREVIEW FLAG VERIFIED
+PRODUCTION CUTOVER BLOCKED PENDING OPTION A
+```

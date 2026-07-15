@@ -20,6 +20,7 @@ import {
 } from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
+import { switchWorkspace } from "@/lib/session-context.functions";
 import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,22 @@ import {
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
+// Preview-only feature flag. Production stays OFF pending Option A backend
+// PRD (MASTER_AGENT authorization + physical tenant-database readiness).
+const WORKSPACE_ENFORCEMENT_ENABLED =
+  import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
+
+function mapSwitchError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")) {
+    return "You do not have access to this tenant workspace.";
+  }
+  if (lower.includes("not ready") || lower.includes("provision") || lower.includes("readiness")) {
+    return "This tenant workspace is still being prepared.";
+  }
+  return "Unable to switch workspace. Please try again.";
+}
+
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminInvestorManager) ──
 const INVESTOR_CLASSIFICATIONS = [
@@ -147,6 +164,9 @@ export function InvestorForm({ investor }: Props) {
   const getUploadUrl = useServerFn(createInvestorMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
   const fetchAssignableTenants = useServerFn(listAssignableTenants);
+  const doSwitch = useServerFn(switchWorkspace);
+  const [switchPending, setSwitchPending] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
   const enabled = useHasSession();
   const perms = usePermissions();
 
@@ -498,11 +518,44 @@ export function InvestorForm({ investor }: Props) {
           {tenantId && !tenantMatchesActive && (
             <div
               role="alert"
-              className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200"
+              className="space-y-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200"
             >
-              {activeTenantId === null
-                ? "No active workspace. Switch to the target tenant workspace before creating an investor."
-                : `This tenant is not your active workspace. Switch workspace to ${activeTenantName ?? "the active tenant"} — or activate ${selectedTenantName ?? "the selected tenant"} — before continuing.`}
+              <p>
+                {activeTenantId === null
+                  ? "No active workspace. Switch to the target tenant workspace before creating an investor."
+                  : `This tenant is not your active workspace. Switch workspace to ${activeTenantName ?? "the active tenant"} — or activate ${selectedTenantName ?? "the selected tenant"} — before continuing.`}
+              </p>
+              {WORKSPACE_ENFORCEMENT_ENABLED && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    disabled={switchPending || !tenantId}
+                    onClick={async () => {
+                      setSwitchError(null);
+                      setSwitchPending(true);
+                      try {
+                        await doSwitch({
+                          data: { tenantId, workspaceType: "TENANT" },
+                        });
+                        await qc.invalidateQueries({ queryKey: ["session-context"] });
+                        await qc.invalidateQueries({
+                          queryKey: ["assignable-tenants", principalRef],
+                        });
+                      } catch (e) {
+                        setSwitchError(mapSwitchError((e as Error).message ?? ""));
+                      } finally {
+                        setSwitchPending(false);
+                      }
+                    }}
+                  >
+                    {switchPending ? "Switching workspace…" : "Switch to this tenant"}
+                  </Button>
+                  {switchError && <span className="text-destructive">{switchError}</span>}
+                </div>
+              )}
             </div>
           )}
         </div>

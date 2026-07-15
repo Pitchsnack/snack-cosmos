@@ -15,8 +15,26 @@ import {
   DEAL_STAGES, DEAL_VISIBILITIES,
 } from "@/lib/deals.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
+import { listAssignableTenants } from "@/lib/tenants.functions";
+import { switchWorkspace } from "@/lib/session-context.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
+
+// Preview-only feature flag. Production stays OFF pending Option A backend
+// PRD (MASTER_AGENT authorization + physical tenant-database readiness).
+const WORKSPACE_ENFORCEMENT_ENABLED =
+  import.meta.env.VITE_WORKSPACE_ENFORCEMENT === "true";
+
+function mapSwitchError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes("forbidden") || lower.includes("not a member") || lower.includes("access")) {
+    return "You do not have access to this tenant workspace.";
+  }
+  if (lower.includes("not ready") || lower.includes("provision") || lower.includes("readiness")) {
+    return "This tenant workspace is still being prepared.";
+  }
+  return "Unable to switch workspace. Please try again.";
+}
 
 export function DealForm() {
   const navigate = useNavigate();
@@ -26,14 +44,66 @@ export function DealForm() {
   const fetchUsers = useServerFn(listAssignableUsers);
   const fetchStartups = useServerFn(listStartupOptions);
   const fetchInvestors = useServerFn(listInvestorOptions);
+  const fetchAssignableTenants = useServerFn(listAssignableTenants);
+  const doSwitch = useServerFn(switchWorkspace);
+  const [switchPending, setSwitchPending] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
   const enabled = useHasSession();
 
-  const tenants = useMemo(() => session?.tenants ?? [], [session]);
+  const sessionTenants = useMemo(() => session?.tenants ?? [], [session]);
+  const principalRef = session?.user?.id ?? null;
+
+  // Authorized-choice list only (flag ON). Not authorization, membership,
+  // routing, or physical-database selection.
+  const assignableQ = useQuery({
+    queryKey: ["assignable-tenants", principalRef],
+    queryFn: () => fetchAssignableTenants(),
+    enabled: WORKSPACE_ENFORCEMENT_ENABLED && enabled && !!principalRef,
+    staleTime: 60_000,
+  });
+
+  const mergedTenants = useMemo(() => {
+    if (!WORKSPACE_ENFORCEMENT_ENABLED) {
+      return sessionTenants.map((t) => ({
+        tenantId: t.tenantId, tenantName: t.tenantName, tenantCode: t.tenantCode,
+      }));
+    }
+    const map = new Map<string, { tenantId: string; tenantName: string; tenantCode: string }>();
+    for (const t of sessionTenants) {
+      map.set(t.tenantId, { tenantId: t.tenantId, tenantName: t.tenantName, tenantCode: t.tenantCode });
+    }
+    for (const t of assignableQ.data ?? []) {
+      if (!map.has(t.id)) {
+        map.set(t.id, { tenantId: t.id, tenantName: t.tenantName, tenantCode: t.tenantCode });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.tenantName.localeCompare(b.tenantName, undefined, { sensitivity: "base" }),
+    );
+  }, [sessionTenants, assignableQ.data]);
+  const tenants = mergedTenants;
+
+  const activeTenantId = session?.activeWorkspace.tenantId ?? null;
+  const activeTenantName = session?.activeWorkspace.tenantName ?? null;
+
   const [tenantId, setTenantId] = useState<string>("");
 
+  const tenantMatchesActive =
+    !!activeTenantId && !!tenantId && activeTenantId === tenantId;
+  const selectedTenantName =
+    mergedTenants.find((t) => t.tenantId === tenantId)?.tenantName ?? null;
+
   useEffect(() => {
-    if (!tenantId && tenants.length) setTenantId(session?.activeWorkspace.tenantId ?? tenants[0].tenantId);
-  }, [tenants, tenantId, session]);
+    if (tenantId) return;
+    if (!tenants.length) return;
+    if (WORKSPACE_ENFORCEMENT_ENABLED) {
+      if (activeTenantId && tenants.some((t) => t.tenantId === activeTenantId)) {
+        setTenantId(activeTenantId);
+      }
+    } else {
+      setTenantId(activeTenantId ?? tenants[0].tenantId);
+    }
+  }, [tenants, tenantId, activeTenantId]);
 
   const [dealName, setDealName] = useState("");
   const [startupId, setStartupId] = useState("");
@@ -47,32 +117,62 @@ export function DealForm() {
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
+  // Clear tenant-dependent selections when tenant changes or active-match is
+  // lost — flag ON only. Deal form is create-only, so no edit-mode branch.
+  useEffect(() => {
+    if (!WORKSPACE_ENFORCEMENT_ENABLED) return;
+    setStartupId("");
+    setInvestorId("");
+    setOwningAgent("");
+    setOwningAi("");
+  }, [tenantId, tenantMatchesActive]);
+
+  const depsEnabled =
+    enabled && !!tenantId && (!WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive);
+
   const startupsQ = useQuery({
     queryKey: ["deal-startups", tenantId],
     queryFn: () => fetchStartups({ data: { tenantId } }),
-    enabled: enabled && !!tenantId,
+    enabled: depsEnabled,
   });
   const investorsQ = useQuery({
     queryKey: ["deal-investors", tenantId],
     queryFn: () => fetchInvestors({ data: { tenantId } }),
-    enabled: enabled && !!tenantId,
+    enabled: depsEnabled,
   });
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
-    enabled: enabled && !!tenantId,
+    enabled: depsEnabled,
   });
   const aisQ = useQuery({
     queryKey: ["assignable-ai", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
-    enabled: enabled && !!tenantId,
+    enabled: depsEnabled,
   });
 
+  const gate = !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive;
+  const startupOptions = gate ? (startupsQ.data ?? []) : [];
+  const investorOptions = gate ? (investorsQ.data ?? []) : [];
+  const humanOptions = gate ? (humansQ.data ?? []) : [];
+  const aiOptions = gate ? (aisQ.data ?? []) : [];
+
   const m = useMutation({
-    mutationFn: () =>
-      create({
+    mutationFn: async (vars: { selectedTenantId: string; activeTenantId: string | null }) => {
+      if (WORKSPACE_ENFORCEMENT_ENABLED) {
+        if (
+          !vars.activeTenantId ||
+          !vars.selectedTenantId ||
+          vars.activeTenantId !== vars.selectedTenantId
+        ) {
+          throw new Error(
+            "Selected tenant is not the active workspace. Switch workspace to continue.",
+          );
+        }
+      }
+      return create({
         data: {
-          tenantId,
+          tenantId: vars.selectedTenantId,
           dealName,
           startupId,
           investorId,
@@ -85,7 +185,8 @@ export function DealForm() {
           owningAgentUserId,
           owningAiAgentId,
         },
-      }),
+      });
+    },
     onSuccess: (res) => {
       toast.success("Deal created");
       qc.invalidateQueries({ queryKey: ["deals"] });
@@ -94,14 +195,21 @@ export function DealForm() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit = tenantId && dealName && startupId && investorId && owningAgentUserId && owningAiAgentId;
-  const noStartups = !startupsQ.isLoading && (startupsQ.data ?? []).length === 0;
-  const noInvestors = !investorsQ.isLoading && (investorsQ.data ?? []).length === 0;
-  const noAi = !aisQ.isLoading && (aisQ.data ?? []).length === 0;
+  const matchOk = !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive;
+  const canSubmit = !!(
+    tenantId && dealName && startupId && investorId && owningAgentUserId && owningAiAgentId && matchOk
+  );
+  const noStartups = gate && !startupsQ.isLoading && startupOptions.length === 0;
+  const noInvestors = gate && !investorsQ.isLoading && investorOptions.length === 0;
+  const noAi = gate && !aisQ.isLoading && aiOptions.length === 0;
+  const depsDisabled = !tenantId || (WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive);
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); m.mutate(); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        m.mutate({ selectedTenantId: tenantId, activeTenantId });
+      }}
       className="space-y-6 rounded-lg border border-border bg-card p-6 shadow-card"
     >
       <div className="grid gap-4 md:grid-cols-2">
@@ -113,6 +221,43 @@ export function DealForm() {
               {tenants.map((t) => <SelectItem key={t.tenantId} value={t.tenantId}>{t.tenantName}</SelectItem>)}
             </SelectContent>
           </Select>
+          {WORKSPACE_ENFORCEMENT_ENABLED && tenantId && !tenantMatchesActive && (
+            <div
+              role="alert"
+              className="space-y-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              <p>
+                {activeTenantId === null
+                  ? "No active workspace. Switch to the target tenant workspace before creating a deal."
+                  : `This tenant is not your active workspace. Switch workspace to ${activeTenantName ?? "the active tenant"} — or activate ${selectedTenantName ?? "the selected tenant"} — before continuing.`}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={switchPending || !tenantId}
+                  onClick={async () => {
+                    setSwitchError(null);
+                    setSwitchPending(true);
+                    try {
+                      await doSwitch({ data: { tenantId, workspaceType: "TENANT" } });
+                      await qc.invalidateQueries({ queryKey: ["session-context"] });
+                      await qc.invalidateQueries({ queryKey: ["assignable-tenants", principalRef] });
+                    } catch (e) {
+                      setSwitchError(mapSwitchError((e as Error).message ?? ""));
+                    } finally {
+                      setSwitchPending(false);
+                    }
+                  }}
+                >
+                  {switchPending ? "Switching workspace…" : "Switch to this tenant"}
+                </Button>
+                {switchError && <span className="text-destructive">{switchError}</span>}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-1.5 md:col-span-2">
@@ -122,10 +267,10 @@ export function DealForm() {
 
         <div className="space-y-1.5">
           <Label className="text-xs uppercase tracking-wide">Startup *</Label>
-          <Select value={startupId} onValueChange={setStartupId} disabled={!tenantId || noStartups}>
+          <Select value={startupId} onValueChange={setStartupId} disabled={depsDisabled || noStartups}>
             <SelectTrigger><SelectValue placeholder={startupsQ.isLoading ? "Loading…" : noStartups ? "No startups in this tenant" : "Select a startup"} /></SelectTrigger>
             <SelectContent>
-              {(startupsQ.data ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.startup_name}</SelectItem>)}
+              {startupOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.startup_name}</SelectItem>)}
             </SelectContent>
           </Select>
           {noStartups && <p className="text-xs text-destructive">Create a startup in this tenant first.</p>}
@@ -133,10 +278,10 @@ export function DealForm() {
 
         <div className="space-y-1.5">
           <Label className="text-xs uppercase tracking-wide">Investor *</Label>
-          <Select value={investorId} onValueChange={setInvestorId} disabled={!tenantId || noInvestors}>
+          <Select value={investorId} onValueChange={setInvestorId} disabled={depsDisabled || noInvestors}>
             <SelectTrigger><SelectValue placeholder={investorsQ.isLoading ? "Loading…" : noInvestors ? "No investors in this tenant" : "Select an investor"} /></SelectTrigger>
             <SelectContent>
-              {(investorsQ.data ?? []).map((i) => <SelectItem key={i.id} value={i.id}>{i.investor_name}</SelectItem>)}
+              {investorOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.investor_name}</SelectItem>)}
             </SelectContent>
           </Select>
           {noInvestors && <p className="text-xs text-destructive">Create an investor in this tenant first.</p>}
@@ -183,10 +328,10 @@ export function DealForm() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wide">Owning Agent *</Label>
-            <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={!tenantId}>
+            <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={depsDisabled}>
               <SelectTrigger><SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} /></SelectTrigger>
               <SelectContent>
-                {(humansQ.data ?? []).map((u) => (
+                {humanOptions.map((u) => (
                   <SelectItem key={u.id} value={u.id}>{[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}</SelectItem>
                 ))}
               </SelectContent>
@@ -194,10 +339,10 @@ export function DealForm() {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wide">Owning AI Agent *</Label>
-            <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi}>
+            <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={depsDisabled || noAi}>
               <SelectTrigger><SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} /></SelectTrigger>
               <SelectContent>
-                {(aisQ.data ?? []).map((u) => (
+                {aiOptions.map((u) => (
                   <SelectItem key={u.id} value={u.id}>{[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}</SelectItem>
                 ))}
               </SelectContent>
