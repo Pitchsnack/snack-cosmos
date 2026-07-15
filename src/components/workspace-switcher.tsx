@@ -32,6 +32,19 @@ const ACTIVE_KEY = "sp2.activeTenantId";
 const CONTROL_LABEL = "Control";
 const CONTROL_SUB = "Global Workspace";
 
+// Preview-only, non-persistent fixture tenants. Rendered only when the
+// enforcement flag is ON and the real merged list is empty, so the CONTROL
+// principal can exercise the mismatch/switch/disabled UX without touching
+// backend membership. Fixtures never call switchWorkspace, never write
+// session state, never select a physical database, never persist.
+const FIXTURE_TENANT_PREFIX = "fixture-preview-";
+const FIXTURE_TENANTS: Array<{ tenantId: string; tenantName: string; tenantCode: string; workspaceType: string | null }> = [
+  { tenantId: `${FIXTURE_TENANT_PREFIX}alpha`, tenantName: "Acme Ventures (preview fixture)", tenantCode: "ACME-FX", workspaceType: "TENANT" },
+  { tenantId: `${FIXTURE_TENANT_PREFIX}beta`, tenantName: "Nova Capital (preview fixture)", tenantCode: "NOVA-FX", workspaceType: "TENANT" },
+];
+const isFixtureTenant = (id: string | null | undefined): boolean =>
+  !!id && id.startsWith(FIXTURE_TENANT_PREFIX);
+
 export function getActiveTenantId(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(ACTIVE_KEY);
