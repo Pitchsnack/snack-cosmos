@@ -557,7 +557,14 @@ export function StartupForm({ startup }: Props) {
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); isEdit ? updateM.mutate() : createM.mutate(); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (isEdit) {
+          updateM.mutate();
+        } else {
+          createM.mutate({ selectedTenantId: tenantId, activeTenantId });
+        }
+      }}
       onKeyDown={handleFormKeyDown}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
@@ -571,6 +578,43 @@ export function StartupForm({ startup }: Props) {
               {tenants.map((t) => <SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}
             </SelectContent>
           </Select>
+          {WORKSPACE_ENFORCEMENT_ENABLED && tenantId && !tenantMatchesActive && (
+            <div
+              role="alert"
+              className="space-y-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              <p>
+                {activeTenantId === null
+                  ? "No active workspace. Switch to the target tenant workspace before creating a startup."
+                  : `This tenant is not your active workspace. Switch workspace to ${activeTenantName ?? "the active tenant"} — or activate ${selectedTenantName ?? "the selected tenant"} — before continuing.`}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={switchPending || !tenantId}
+                  onClick={async () => {
+                    setSwitchError(null);
+                    setSwitchPending(true);
+                    try {
+                      await doSwitch({ data: { tenantId, workspaceType: "TENANT" } });
+                      await qc.invalidateQueries({ queryKey: ["session-context"] });
+                      await qc.invalidateQueries({ queryKey: ["assignable-tenants", principalRef] });
+                    } catch (e) {
+                      setSwitchError(mapSwitchError((e as Error).message ?? ""));
+                    } finally {
+                      setSwitchPending(false);
+                    }
+                  }}
+                >
+                  {switchPending ? "Switching workspace…" : "Switch to this tenant"}
+                </Button>
+                {switchError && <span className="text-destructive">{switchError}</span>}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
