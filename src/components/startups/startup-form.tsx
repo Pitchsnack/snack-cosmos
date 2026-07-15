@@ -422,9 +422,21 @@ export function StartupForm({ startup }: Props) {
     return { applied, skippedBecauseFilled: skipped };
   }
 
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== "Enter" || e.defaultPrevented) return;
+    const target = e.target;
+    if (
+      target instanceof HTMLInputElement &&
+      ["text", "email", "url", "tel", "password", "search", "number"].includes(target.type)
+    ) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); isEdit ? updateM.mutate() : createM.mutate(); }}
+      onKeyDown={handleFormKeyDown}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
       {/* Tenant (create only) */}
