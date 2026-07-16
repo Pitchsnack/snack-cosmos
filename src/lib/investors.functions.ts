@@ -124,7 +124,8 @@ export const listInvestors = createServerFn({ method: "GET" })
         created_at, updated_at, logo_url,
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
-        investor_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name))
+        investor_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name)),
+        startup_investors(id, startups:startup_id(id, startup_name))
       `);
 
     if (data.search?.trim()) {
@@ -149,6 +150,10 @@ export const listInvestors = createServerFn({ method: "GET" })
           owning_ai_agent_id: string;
           users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
         }>;
+        startup_investors: Array<{
+          id: string;
+          startups: { id: string; startup_name: string } | null;
+        }>;
       }
     >;
     const logoPaths = list.map((r) => r.logo_url).filter((p): p is string => !!p);
@@ -157,12 +162,17 @@ export const listInvestors = createServerFn({ method: "GET" })
     return list.map((r): InvestorListItem => {
       const own = r.investor_ownership?.[0]?.users ?? null;
       const aiOwn = r.investor_ai_ownership?.[0]?.users ?? null;
+      const related_startups = (r.startup_investors ?? [])
+        .map((l) => l.startups)
+        .filter((v): v is { id: string; startup_name: string } => !!v)
+        .map((v) => ({ id: v.id, name: v.startup_name }));
       return {
         ...r,
         tenant_name: r.tenants?.tenant_name ?? null,
         logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
         owning_agent: own ? { id: own.id, email: own.email, name: [own.first_name, own.last_name].filter(Boolean).join(" ") || null } : null,
         owning_ai_agent: aiOwn ? { id: aiOwn.id, email: aiOwn.email, name: [aiOwn.first_name, aiOwn.last_name].filter(Boolean).join(" ") || null } : null,
+        related_startups,
       };
     });
   });
