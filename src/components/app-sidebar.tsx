@@ -20,6 +20,8 @@ import {
   Share2,
   Bell,
   Globe,
+  Inbox,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -32,6 +34,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhiteIcon from "@/assets/pitchsnack-hat-white-icon.png";
+import { DEFAULT_INTAKE_PREVIEW_ENABLED } from "@/lib/preview/default-intake-preview-adapter";
 
 type NavPath =
   | "/"
@@ -47,7 +50,9 @@ type NavPath =
   | "/notifications"
   | "/preferences"
   | "/global-startups"
-  | "/global-startups/browse";
+  | "/global-startups/browse"
+  | "/settings/default-intake"
+  | "/intake-queue";
 
 type NavItem = {
   label: string;
@@ -58,6 +63,8 @@ type NavItem = {
   controlOnly?: boolean;
   // PRD 3 framework placeholders — modules not yet built
   disabled?: boolean;
+  /** Default Intake preview surfaces — hidden when the flag is OFF. */
+  previewOnly?: boolean;
 };
 
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
@@ -66,23 +73,72 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
-  { label: "Global Startups", icon: Globe, path: "/global-startups", exact: false, perm: "global_startups.write" },
-  { label: "Browse Global Catalogue", icon: Globe, path: "/global-startups/browse", exact: false, perm: "global_startups.import" },
+  {
+    label: "Global Startups",
+    icon: Globe,
+    path: "/global-startups",
+    exact: false,
+    perm: "global_startups.write",
+  },
+  {
+    label: "Browse Global Catalogue",
+    icon: Globe,
+    path: "/global-startups/browse",
+    exact: false,
+    perm: "global_startups.import",
+  },
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
-  { label: "Shared Deals", icon: Share2, path: "/shared-deals", exact: false, perm: "deals.share.read" },
-  { label: "Communications", icon: MessagesSquare, path: "/dashboard", exact: false, disabled: true },
+  {
+    label: "Shared Deals",
+    icon: Share2,
+    path: "/shared-deals",
+    exact: false,
+    perm: "deals.share.read",
+  },
+  {
+    label: "Default Intake Queue",
+    icon: Inbox,
+    path: "/intake-queue",
+    exact: false,
+    previewOnly: true,
+  },
+  {
+    label: "Communications",
+    icon: MessagesSquare,
+    path: "/dashboard",
+    exact: false,
+    disabled: true,
+  },
   { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
-  { label: "Analytics", icon: BarChart3, path: "/dashboard", exact: false, controlOnly: true, disabled: true },
+  {
+    label: "Analytics",
+    icon: BarChart3,
+    path: "/dashboard",
+    exact: false,
+    controlOnly: true,
+    disabled: true,
+  },
   { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
-  { label: "Access Management", icon: ShieldCheck, path: "/access-management", exact: false, controlOnly: true },
+  {
+    label: "Access Management",
+    icon: ShieldCheck,
+    path: "/access-management",
+    exact: false,
+    controlOnly: true,
+  },
   { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
+  {
+    label: "Default Intake Settings",
+    icon: SlidersHorizontal,
+    path: "/settings/default-intake",
+    exact: false,
+    previewOnly: true,
+  },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
-
-
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
@@ -119,8 +175,9 @@ function SidebarBody({
   const showSkeleton = !isResolved && !sessionData;
 
   const visibleItems = showSkeleton
-    ? NAV_ITEMS
+    ? NAV_ITEMS.filter((item) => !item.previewOnly || DEFAULT_INTAKE_PREVIEW_ENABLED)
     : NAV_ITEMS.filter((item) => {
+        if (item.previewOnly && !DEFAULT_INTAKE_PREVIEW_ENABLED) return false;
         if (item.controlOnly) return isControl;
         if (!item.perm) return true;
         return has(item.perm);
@@ -171,12 +228,12 @@ function SidebarBody({
         )}
       </div>
 
-
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
         {visibleItems.map((item, idx) => {
-          const isActive = !item.disabled && !showSkeleton && (item.exact
-            ? pathname === item.path
-            : pathname.startsWith(item.path));
+          const isActive =
+            !item.disabled &&
+            !showSkeleton &&
+            (item.exact ? pathname === item.path : pathname.startsWith(item.path));
           const renderAsStatic = item.disabled || showSkeleton;
           const baseClass = cn(
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
@@ -184,8 +241,10 @@ function SidebarBody({
               ? "bg-sidebar-accent text-sidebar-primary font-medium"
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
             !showLabels && "justify-center px-2",
-            item.disabled && "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-sidebar-foreground/70",
-            showSkeleton && "cursor-default opacity-50 hover:bg-transparent hover:text-sidebar-foreground/70",
+            item.disabled &&
+              "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-sidebar-foreground/70",
+            showSkeleton &&
+              "cursor-default opacity-50 hover:bg-transparent hover:text-sidebar-foreground/70",
           );
 
           if (renderAsStatic) {
@@ -247,7 +306,10 @@ const INTENT_KEY = "sp2.sidebarIntent";
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAdminRoute = pathname.startsWith("/access-management") || pathname.startsWith("/audit") || pathname.startsWith("/security");
+  const isAdminRoute =
+    pathname.startsWith("/access-management") ||
+    pathname.startsWith("/audit") ||
+    pathname.startsWith("/security");
 
   const [intent, setIntent] = useState<SidebarIntent>("auto");
   const [autoCollapsed, setAutoCollapsed] = useState(false);
@@ -257,7 +319,9 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   const sidebarRef = useRef<HTMLElement | null>(null);
   const lastToggleRef = useRef(0);
   const intentRef = useRef<SidebarIntent>(intent);
-  useEffect(() => { intentRef.current = intent; }, [intent]);
+  useEffect(() => {
+    intentRef.current = intent;
+  }, [intent]);
 
   // Restore intent: server preference (sidebarCollapsed) maps to pinned states; localStorage fallback.
   useEffect(() => {
@@ -268,21 +332,26 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         setIntent(stored);
         return;
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     if (prefs) setIntent(prefs.sidebarCollapsed ? "closed" : "auto");
   }, [prefs]);
 
   const persistIntent = (next: SidebarIntent) => {
     setIntent(next);
     lastToggleRef.current = Date.now();
-    try { localStorage.setItem(INTENT_KEY, next); } catch { /* noop */ }
+    try {
+      localStorage.setItem(INTENT_KEY, next);
+    } catch {
+      /* noop */
+    }
     if (next !== "auto") {
       void updatePrefs({ sidebarCollapsed: next === "closed" }).catch(() => {});
     }
   };
 
-  const collapsedByIntent =
-    intent === "open" ? false : intent === "closed" ? true : autoCollapsed;
+  const collapsedByIntent = intent === "open" ? false : intent === "closed" ? true : autoCollapsed;
   const effectiveCollapsed = !isMobile && !isAdminRoute ? collapsedByIntent : false;
 
   const toggle = () => persistIntent(effectiveCollapsed ? "open" : "closed");
@@ -360,10 +429,12 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="grid h-screen w-full overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
-      style={{
-        gridTemplateColumns: "var(--sidebar-width) 1fr",
-        "--sidebar-width": effectiveCollapsed ? "4rem" : "16rem",
-      } as React.CSSProperties}
+      style={
+        {
+          gridTemplateColumns: "var(--sidebar-width) 1fr",
+          "--sidebar-width": effectiveCollapsed ? "4rem" : "16rem",
+        } as React.CSSProperties
+      }
     >
       <aside
         ref={sidebarRef}
@@ -388,4 +459,3 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

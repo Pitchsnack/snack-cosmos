@@ -23,6 +23,12 @@ import {
 import { createInvestor } from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useHasSession } from "@/hooks/use-has-session";
+import {
+  DEFAULT_INTAKE_PREVIEW_ENABLED,
+  assertNoDefaultIntakePreviewIds,
+} from "@/lib/preview/default-intake-preview-adapter";
+import { DefaultIntakeOwnershipPreview } from "@/components/intake/default-intake-ownership-preview";
+import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
 
 interface Props {
   open: boolean;
@@ -36,11 +42,7 @@ interface Props {
   onCreated: (result: { id: string; name: string }) => void;
 }
 
-function displayName(u: {
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-}) {
+function displayName(u: { first_name: string | null; last_name: string | null; email: string }) {
   const nm = [u.first_name, u.last_name].filter(Boolean).join(" ").trim();
   return nm || u.email;
 }
@@ -95,6 +97,9 @@ export function CreateInvestorDialog({
 
   const createM = useMutation({
     mutationFn: async () => {
+      // Fixture-ID safety: never allow a Default Intake preview ID to
+      // reach the relationship-sync mutation path.
+      assertNoDefaultIntakePreviewIds([tenantId, agentId, aiAgentId]);
       const res = await create({
         data: {
           tenantId,
@@ -114,8 +119,7 @@ export function CreateInvestorDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit =
-    !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending;
+  const canSubmit = !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,10 +127,22 @@ export function CreateInvestorDialog({
         <DialogHeader>
           <DialogTitle>Create investor</DialogTitle>
           <DialogDescription>
-            Create a new investor record in this workspace and link it to the
-            startup. You can edit the full profile later.
+            Create a new investor record in this workspace and link it to the startup. You can edit
+            the full profile later.
           </DialogDescription>
         </DialogHeader>
+        {DEFAULT_INTAKE_PREVIEW_ENABLED && (
+          <div className="space-y-2 py-1">
+            <DefaultIntakePreviewNotice variant="compact" />
+            <DefaultIntakeOwnershipPreview
+              domain="investor"
+              helperText="Creating the Investor and saving the relationship are separate actions. Startup owners are shown only as suggestions — Startup human and AI ownership are never silently copied to this Investor."
+            />
+            <p className="rounded-md border border-dashed border-border p-2 text-[11px] text-muted-foreground">
+              Suggested based on Startup relationship — you may still pick different owners below.
+            </p>
+          </div>
+        )}
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label htmlFor="create-investor-name">Investor name</Label>
@@ -141,11 +157,7 @@ export function CreateInvestorDialog({
             <Label>Owning Agent</Label>
             <Select value={agentId} onValueChange={setAgentId}>
               <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    humansQ.isLoading ? "Loading…" : "Select an agent"
-                  }
-                />
+                <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
               </SelectTrigger>
               <SelectContent>
                 {humans.map((u) => (
@@ -156,20 +168,14 @@ export function CreateInvestorDialog({
               </SelectContent>
             </Select>
             {!humansQ.isLoading && humans.length === 0 && (
-              <p className="text-xs text-destructive">
-                No assignable agents in this workspace.
-              </p>
+              <p className="text-xs text-destructive">No assignable agents in this workspace.</p>
             )}
           </div>
           <div className="space-y-1.5">
             <Label>Owning AI Agent</Label>
             <Select value={aiAgentId} onValueChange={setAiAgentId}>
               <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    aisQ.isLoading ? "Loading…" : "Select an AI agent"
-                  }
-                />
+                <SelectValue placeholder={aisQ.isLoading ? "Loading…" : "Select an AI agent"} />
               </SelectTrigger>
               <SelectContent>
                 {ais.map((u) => (
@@ -180,9 +186,7 @@ export function CreateInvestorDialog({
               </SelectContent>
             </Select>
             {!aisQ.isLoading && ais.length === 0 && (
-              <p className="text-xs text-destructive">
-                No assignable AI agents in this workspace.
-              </p>
+              <p className="text-xs text-destructive">No assignable AI agents in this workspace.</p>
             )}
           </div>
         </div>
@@ -195,11 +199,7 @@ export function CreateInvestorDialog({
           >
             Cancel
           </Button>
-          <Button
-            type="button"
-            onClick={() => createM.mutate()}
-            disabled={!canSubmit}
-          >
+          <Button type="button" onClick={() => createM.mutate()} disabled={!canSubmit}>
             {createM.isPending ? "Creating…" : "Create investor"}
           </Button>
         </DialogFooter>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -968,6 +969,11 @@ export function InvestorForm({ investor }: Props) {
       {/* Ownership (create only) */}
       {!isEdit && (
         <div className="border-t border-border pt-4">
+          <DefaultIntakeOwnershipModeSection
+            domain="investor"
+            className="mb-4"
+            helperText="This Investor will be assigned temporarily to the Investor Intake team and added to the Default Intake Queue."
+          />
           <h3 className="text-sm font-semibold">Ownership (required)</h3>
           <p className="mb-3 text-xs text-muted-foreground">
             Every investor must have one human Owning Agent and one Owning AI Agent.
