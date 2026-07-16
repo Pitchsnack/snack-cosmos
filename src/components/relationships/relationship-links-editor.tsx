@@ -47,6 +47,16 @@ interface Props {
   onChange: (rows: RelationshipRow[]) => void;
   /** Optional inline error surface — never causes local edits to be discarded. */
   errorMessage?: string | null;
+  /**
+   * Optional promotion handler for pending rows. When provided, pending rows
+   * render a "Create …" action that invokes this callback with the row's
+   * typed name. The host is responsible for opening any confirmation UI and
+   * returning the persisted record; the editor then replaces the pending row
+   * with a linked one.
+   */
+  onPromotePending?: (row: RelationshipRow) => void;
+  /** Label for the promote action on pending rows (e.g. "Create investor"). */
+  promoteLabel?: string;
 }
 
 const PORTFOLIO_TOOLBAR_THRESHOLD = 11;
