@@ -192,9 +192,7 @@ const FIXTURE_QUEUE: readonly DefaultIntakePreviewQueueRecord[] = deepFreeze([
 // Public API
 // ---------------------------------------------------------------------------
 
-export function isDefaultIntakePreviewId(
-  value: string | null | undefined,
-): boolean {
+export function isDefaultIntakePreviewId(value: string | null | undefined): boolean {
   return typeof value === "string" && value.startsWith(DEFAULT_INTAKE_FIXTURE_PREFIX);
 }
 
@@ -204,9 +202,7 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
-export function getDefaultIntakePreviewConfiguration():
-  | DefaultIntakePreviewConfiguration
-  | null {
+export function getDefaultIntakePreviewConfiguration(): DefaultIntakePreviewConfiguration | null {
   if (!DEFAULT_INTAKE_PREVIEW_ENABLED) return null;
   return clone(FIXTURE_CONFIGURATION);
 }
@@ -221,14 +217,10 @@ export function listDefaultIntakePreviewQueue(): DefaultIntakePreviewQueueRecord
  * Call at every future server-boundary crossing (create/update/reassign/etc.)
  * BEFORE dispatching to `createServerFn` handlers. Never logs payloads.
  */
-export function assertNoDefaultIntakePreviewIds(
-  values: Array<string | null | undefined>,
-): void {
+export function assertNoDefaultIntakePreviewIds(values: Array<string | null | undefined>): void {
   for (const v of values) {
     if (isDefaultIntakePreviewId(v)) {
-      throw new Error(
-        "Default Intake preview fixture IDs must not be sent to server functions.",
-      );
+      throw new Error("Default Intake preview fixture IDs must not be sent to server functions.");
     }
   }
 }

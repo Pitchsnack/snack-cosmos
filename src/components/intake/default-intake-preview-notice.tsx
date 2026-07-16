@@ -32,12 +32,11 @@ export function DefaultIntakePreviewNotice({
           className,
         )}
       >
-        <span
-          className="h-1.5 w-1.5 rounded-full bg-amber-500"
-          aria-hidden="true"
-        />
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
         <span className="uppercase tracking-wide">Preview fixture</span>
-        <span aria-hidden="true" className="text-amber-700/60 dark:text-amber-400/60">·</span>
+        <span aria-hidden="true" className="text-amber-700/60 dark:text-amber-400/60">
+          ·
+        </span>
         <span>No backend changes</span>
       </div>
     );
@@ -58,9 +57,7 @@ export function DefaultIntakePreviewNotice({
       />
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-sm font-semibold leading-none">
-            Default Intake Preview
-          </h3>
+          <h3 className="text-sm font-semibold leading-none">Default Intake Preview</h3>
           <Badge
             variant="outline"
             className="h-5 border-amber-500/50 bg-transparent px-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300"
@@ -69,8 +66,8 @@ export function DefaultIntakePreviewNotice({
           </Badge>
         </div>
         <p className="text-xs leading-relaxed text-amber-800/90 dark:text-amber-200/90">
-          This screen uses preview fixture data and is not connected to backend
-          ownership, audit, permission, or reassignment services.
+          This screen uses preview fixture data and is not connected to backend ownership, audit,
+          permission, or reassignment services.
         </p>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
           Not connected to backend
