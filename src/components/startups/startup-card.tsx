@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Factory, ShoppingCart } from "lucide-react";
+import { MapPin, Factory, ShoppingCart, Users } from "lucide-react";
 import anchorIcon from "@/assets/anchor.svg";
 import {
   Tooltip,
@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { StartupListItem } from "@/lib/startups.functions";
+import { RelationshipChips } from "@/components/relationships/relationship-chips";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
