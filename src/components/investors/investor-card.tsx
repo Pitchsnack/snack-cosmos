@@ -34,6 +34,7 @@ export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: b
       </div>
 
       <div className="flex flex-wrap gap-1.5">
+        <PreviewNeedsReassignmentBadge name={i.investor_name} domain="investor" size="xs" />
         {i.investor_type && (
           <Badge variant="outline" className="text-[10px]">{i.investor_type}</Badge>
         )}
