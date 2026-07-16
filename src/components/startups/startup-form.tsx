@@ -1121,6 +1121,11 @@ export function StartupForm({ startup }: Props) {
       {/* Ownership (create only) */}
       {!isEdit && (
         <div className="border-t border-border pt-4">
+          <DefaultIntakeOwnershipModeSection
+            domain="startup"
+            className="mb-4"
+            helperText="This Startup will be assigned temporarily to the Startup Intake team and added to the Default Intake Queue."
+          />
           <h3 className="text-sm font-semibold">Ownership (required)</h3>
           <p className="mb-3 text-xs text-muted-foreground">
             Every startup must have one human Owning Agent and one Owning AI Agent.
