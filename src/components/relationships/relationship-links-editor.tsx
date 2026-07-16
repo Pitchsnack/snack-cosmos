@@ -47,6 +47,16 @@ interface Props {
   onChange: (rows: RelationshipRow[]) => void;
   /** Optional inline error surface — never causes local edits to be discarded. */
   errorMessage?: string | null;
+  /**
+   * Optional promotion handler for pending rows. When provided, pending rows
+   * render a "Create …" action that invokes this callback with the row's
+   * typed name. The host is responsible for opening any confirmation UI and
+   * returning the persisted record; the editor then replaces the pending row
+   * with a linked one.
+   */
+  onPromotePending?: (row: RelationshipRow) => void;
+  /** Label for the promote action on pending rows (e.g. "Create investor"). */
+  promoteLabel?: string;
 }
 
 const PORTFOLIO_TOOLBAR_THRESHOLD = 11;
@@ -71,6 +81,8 @@ export function RelationshipLinksEditor({
   rows,
   onChange,
   errorMessage,
+  onPromotePending,
+  promoteLabel,
 }: Props) {
   const enabled = useHasSession();
   const [query, setQuery] = useState("");
@@ -393,7 +405,12 @@ export function RelationshipLinksEditor({
                 {group.items.map((r) => (
                   <div
                     key={r.id}
-                    className="flex items-center gap-2 rounded-lg border border-border bg-card p-2 pl-3 shadow-sm"
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border p-2 pl-3 shadow-sm",
+                      r.status === "pending"
+                        ? "border-amber-500/60 bg-amber-500/5"
+                        : "border-border bg-card",
+                    )}
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
@@ -404,11 +421,15 @@ export function RelationshipLinksEditor({
                           </Badge>
                         )}
                       </div>
-                      {r.subtitle && (
+                      {r.status === "pending" ? (
+                        <div className="truncate text-[11px] text-amber-700 dark:text-amber-500">
+                          Not saved — needs a record.
+                        </div>
+                      ) : r.subtitle ? (
                         <div className="truncate text-[11px] text-muted-foreground">
                           {r.subtitle}
                         </div>
-                      )}
+                      ) : null}
                     </div>
                     <Select
                       value={r.relationshipType}
@@ -422,6 +443,17 @@ export function RelationshipLinksEditor({
                         <SelectItem value="acquisition">Acquisition</SelectItem>
                       </SelectContent>
                     </Select>
+                    {r.status === "pending" && onPromotePending && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => onPromotePending(r)}
+                      >
+                        {promoteLabel ?? "Create"}
+                      </Button>
+                    )}
                     <button
                       type="button"
                       onClick={() => removeRow(r.id)}

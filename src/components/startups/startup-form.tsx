@@ -36,8 +36,19 @@ import {
 } from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
+import { CreateInvestorDialog } from "@/components/relationships/create-investor-dialog";
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { StartupInvestorLinkView } from "@/adapters/investor-startup-links-types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
@@ -267,6 +278,26 @@ export function StartupForm({ startup }: Props) {
     () => investorLinks.filter((l) => l.status === "linked" && l.investorId).map((l) => l.investorId!),
     [investorLinks],
   );
+  const pendingInvestorCount = useMemo(
+    () => investorLinks.filter((l) => l.status === "pending").length,
+    [investorLinks],
+  );
+
+  // "Create investor" inline promotion dialog — replaces the pending row
+  // with a linked row carrying the newly-persisted investor id.
+  const [createInvestorRowId, setCreateInvestorRowId] = useState<string | null>(null);
+  const [createInvestorName, setCreateInvestorName] = useState("");
+  const [pendingSaveOpen, setPendingSaveOpen] = useState(false);
+
+  // Defaults for the create-investor dialog: reuse the startup's own
+  // ownership so the new investor lands with matching agents. StartupDetail
+  // carries these as pass-through rows typed at query time.
+  const startupOwn = startup as unknown as {
+    startup_ownership?: Array<{ owning_agent_user_id: string }>;
+    startup_ai_ownership?: Array<{ owning_ai_agent_id: string }>;
+  } | undefined;
+  const startupAgentDefault = startupOwn?.startup_ownership?.[0]?.owning_agent_user_id ?? null;
+  const startupAiAgentDefault = startupOwn?.startup_ai_ownership?.[0]?.owning_ai_agent_id ?? null;
 
   // Founders
   const [founders, setFounders] = useState<FounderDraft[]>(
@@ -468,10 +499,21 @@ export function StartupForm({ startup }: Props) {
   }, [startup?.id]);
   const isDirty = initialSnapshot !== "" && currentSnapshot !== initialSnapshot;
 
-  const submitForm = () => {
-    if (!canSubmit || submitting) return;
+  const performSave = () => {
     if (isEdit) updateM.mutate();
     else createM.mutate({ selectedTenantId: tenantId, activeTenantId });
+  };
+
+  const submitForm = () => {
+    if (!canSubmit || submitting) return;
+    // Pending investor rows never persist — block save so the user can
+    // either create real records or remove them, rather than losing them
+    // silently after the toast.
+    if (pendingInvestorCount > 0) {
+      setPendingSaveOpen(true);
+      return;
+    }
+    performSave();
   };
 
   const guard = useUnsavedChangesGuard({
@@ -989,7 +1031,71 @@ export function StartupForm({ startup }: Props) {
             })),
           )
         }
+        onPromotePending={(row) => {
+          setCreateInvestorRowId(row.id);
+          setCreateInvestorName(row.name);
+        }}
+        promoteLabel="Create investor"
       />
+
+      {tenantId && (
+        <CreateInvestorDialog
+          open={createInvestorRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setCreateInvestorRowId(null);
+          }}
+          tenantId={tenantId}
+          initialName={createInvestorName}
+          defaultAgentUserId={startupAgentDefault ?? owningAgentUserId ?? null}
+          defaultAiAgentId={startupAiAgentDefault ?? owningAiAgentId ?? null}
+          onCreated={({ id, name }) => {
+            setInvestorLinks((prev) =>
+              prev.map((l) =>
+                l.id === createInvestorRowId
+                  ? {
+                      ...l,
+                      id,
+                      investorId: id,
+                      investorName: name,
+                      status: "linked",
+                    }
+                  : l,
+              ),
+            );
+            setCreateInvestorRowId(null);
+          }}
+        />
+      )}
+
+      <AlertDialog open={pendingSaveOpen} onOpenChange={setPendingSaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingInvestorCount} pending investor
+              {pendingInvestorCount === 1 ? "" : "s"} won't be saved
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Pending investors are typed names, not real records. Use
+              "Create investor" on each pending row to persist it, or remove
+              them and save. Removing pending rows only clears them from this
+              form — no existing investors are affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back to edit</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setInvestorLinks((prev) => prev.filter((l) => l.status !== "pending"));
+                setPendingSaveOpen(false);
+                // Defer save one tick so the state update applies first.
+                setTimeout(performSave, 0);
+              }}
+            >
+              Remove pending and save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
 
       {/* Status / visibility (create only) */}
