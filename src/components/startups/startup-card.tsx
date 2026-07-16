@@ -117,6 +117,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
                   </h3>
                 </Truncate>
                 <div className="flex shrink-0 gap-1">
+                  <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
                   {s.investment_stage && (
                     <Badge variant="secondary" className="rounded-full px-1.5 py-0 text-[10px]">
                       {s.investment_stage}
