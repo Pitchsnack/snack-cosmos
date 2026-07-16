@@ -278,6 +278,23 @@ export function StartupForm({ startup }: Props) {
     () => investorLinks.filter((l) => l.status === "linked" && l.investorId).map((l) => l.investorId!),
     [investorLinks],
   );
+  const pendingInvestorCount = useMemo(
+    () => investorLinks.filter((l) => l.status === "pending").length,
+    [investorLinks],
+  );
+
+  // "Create investor" inline promotion dialog — replaces the pending row
+  // with a linked row carrying the newly-persisted investor id.
+  const [createInvestorRowId, setCreateInvestorRowId] = useState<string | null>(null);
+  const [createInvestorName, setCreateInvestorName] = useState("");
+  const [pendingSaveOpen, setPendingSaveOpen] = useState(false);
+
+  // Defaults for the create-investor dialog: reuse the startup's own
+  // ownership so the new investor lands with matching agents.
+  const startupAgentDefault =
+    startup?.startup_ownership?.[0]?.owning_agent_user_id ?? null;
+  const startupAiAgentDefault =
+    startup?.startup_ai_ownership?.[0]?.owning_ai_agent_id ?? null;
 
   // Founders
   const [founders, setFounders] = useState<FounderDraft[]>(
