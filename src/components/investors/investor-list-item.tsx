@@ -34,9 +34,12 @@ export function InvestorListItem({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="truncate text-sm font-semibold leading-tight">{i.investor_name}</h3>
-            {i.investor_type && (
-              <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[10px]">{i.investor_type}</Badge>
-            )}
+            <div className="flex shrink-0 items-center gap-1">
+              <PreviewNeedsReassignmentBadge name={i.investor_name} domain="investor" size="xs" />
+              {i.investor_type && (
+                <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[10px]">{i.investor_type}</Badge>
+              )}
+            </div>
           </div>
           {i.country && (
             <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
