@@ -1031,7 +1031,71 @@ export function StartupForm({ startup }: Props) {
             })),
           )
         }
+        onPromotePending={(row) => {
+          setCreateInvestorRowId(row.id);
+          setCreateInvestorName(row.name);
+        }}
+        promoteLabel="Create investor"
       />
+
+      {tenantId && (
+        <CreateInvestorDialog
+          open={createInvestorRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setCreateInvestorRowId(null);
+          }}
+          tenantId={tenantId}
+          initialName={createInvestorName}
+          defaultAgentUserId={startupAgentDefault ?? owningAgentUserId ?? null}
+          defaultAiAgentId={startupAiAgentDefault ?? owningAiAgentId ?? null}
+          onCreated={({ id, name }) => {
+            setInvestorLinks((prev) =>
+              prev.map((l) =>
+                l.id === createInvestorRowId
+                  ? {
+                      ...l,
+                      id,
+                      investorId: id,
+                      investorName: name,
+                      status: "linked",
+                    }
+                  : l,
+              ),
+            );
+            setCreateInvestorRowId(null);
+          }}
+        />
+      )}
+
+      <AlertDialog open={pendingSaveOpen} onOpenChange={setPendingSaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingInvestorCount} pending investor
+              {pendingInvestorCount === 1 ? "" : "s"} won't be saved
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Pending investors are typed names, not real records. Use
+              "Create investor" on each pending row to persist it, or remove
+              them and save. Removing pending rows only clears them from this
+              form — no existing investors are affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back to edit</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setInvestorLinks((prev) => prev.filter((l) => l.status !== "pending"));
+                setPendingSaveOpen(false);
+                // Defer save one tick so the state update applies first.
+                setTimeout(performSave, 0);
+              }}
+            >
+              Remove pending and save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
 
       {/* Status / visibility (create only) */}
