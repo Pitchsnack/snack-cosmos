@@ -52,7 +52,14 @@ export function InvestorDetailPanel({
             {!compact && i.tenants?.tenant_name && (
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{i.tenants.tenant_name}</div>
             )}
-            <h2 className="text-xl font-semibold tracking-tight">{i.investor_name}</h2>
+            <h2 className="text-xl font-semibold tracking-tight">
+              {i.investor_name}
+              <PreviewNeedsReassignmentBadge
+                name={i.investor_name}
+                domain="investor"
+                className="ml-2 align-middle"
+              />
+            </h2>
             {i.investor_type && <div className="text-xs text-muted-foreground">{i.investor_type}</div>}
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               {i.country && <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{i.country}</span>}
