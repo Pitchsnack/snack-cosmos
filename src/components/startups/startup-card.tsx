@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { StartupListItem } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
+import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
