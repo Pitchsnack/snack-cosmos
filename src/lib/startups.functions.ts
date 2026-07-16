@@ -73,6 +73,7 @@ export interface StartupListItem extends StartupRow {
   tile_image_signed_url: string | null;
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
+  related_investors: Array<{ id: string; name: string }>;
 }
 
 export interface StartupFounder {
