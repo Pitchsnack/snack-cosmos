@@ -94,7 +94,14 @@ export function StartupDetailPanel({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-semibold tracking-tight leading-tight">{s.startup_name}</h2>
+            <h2 className="text-2xl font-semibold tracking-tight leading-tight">
+              {s.startup_name}
+              <PreviewNeedsReassignmentBadge
+                name={s.startup_name}
+                domain="startup"
+                className="ml-2 align-middle"
+              />
+            </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
               {!compact && s.tenant_name && <span>{s.tenant_name}</span>}
               {!compact && s.tenant_name && (s.headquarters || s.industry?.length) && <span aria-hidden>·</span>}
