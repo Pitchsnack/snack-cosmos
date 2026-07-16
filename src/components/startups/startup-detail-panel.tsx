@@ -28,6 +28,7 @@ import {
 import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
+import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
