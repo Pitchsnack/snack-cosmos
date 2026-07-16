@@ -62,7 +62,11 @@ function StatusBadge({ status }: { status: string }) {
         : status === "Suspended" || status === "Locked"
           ? "bg-status-suspended/15 text-status-suspended border-status-suspended/30"
           : "bg-muted text-muted-foreground border-border";
-  return <Badge variant="outline" className={tone}>{status}</Badge>;
+  return (
+    <Badge variant="outline" className={tone}>
+      {status}
+    </Badge>
+  );
 }
 
 function UsersPage() {
@@ -82,7 +86,6 @@ function UsersPageInner() {
     queryKey: ["users", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId } }),
   });
-
 
   return (
     <div className="space-y-6">
@@ -115,9 +118,17 @@ function UsersPageInner() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                  Loading…
+                </TableCell>
+              </TableRow>
             ) : (data ?? []).length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">No users yet.</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                  No users yet.
+                </TableCell>
+              </TableRow>
             ) : (
               (data ?? []).map((u: any) => (
                 <TableRow key={u.id}>
@@ -126,9 +137,13 @@ function UsersPageInner() {
                     {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs">{u.user_type}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {u.user_type}
+                    </Badge>
                   </TableCell>
-                  <TableCell><StatusBadge status={u.status} /></TableCell>
+                  <TableCell>
+                    <StatusBadge status={u.status} />
+                  </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "Never"}
                   </TableCell>
@@ -170,7 +185,9 @@ function InviteDialog({ onInvited }: { onInvited: () => void }) {
       });
       toast.success(`Invitation sent to ${email}`);
       setOpen(false);
-      setEmail(""); setFirstName(""); setLastName("");
+      setEmail("");
+      setFirstName("");
+      setLastName("");
       onInvited();
     } catch (err: any) {
       toast.error(err?.message ?? "Invite failed");
@@ -196,36 +213,59 @@ function InviteDialog({ onInvited }: { onInvited: () => void }) {
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="invite-email" className="text-xs uppercase tracking-wide">Email</Label>
+            <Label htmlFor="invite-email" className="text-xs uppercase tracking-wide">
+              Email
+            </Label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="invite-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" />
+              <Input
+                id="invite-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-9"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fn" className="text-xs uppercase tracking-wide">First name</Label>
+              <Label htmlFor="fn" className="text-xs uppercase tracking-wide">
+                First name
+              </Label>
               <Input id="fn" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ln" className="text-xs uppercase tracking-wide">Last name</Label>
+              <Label htmlFor="ln" className="text-xs uppercase tracking-wide">
+                Last name
+              </Label>
               <Input id="ln" value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wide">Role</Label>
             <Select value={roleCode} onValueChange={(v) => setRoleCode(v as AppRole)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {INVITE_ROLES.map((r) => (
-                  <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                  <SelectItem key={r} value={r}>
+                    {ROLE_LABELS[r]}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={busy || !email} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={busy || !email}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
               {busy ? "Sending…" : "Send invite"}
             </Button>
           </DialogFooter>

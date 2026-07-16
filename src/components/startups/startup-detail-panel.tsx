@@ -1,10 +1,29 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  ExternalLink, MapPin, Calendar, Linkedin, Rocket, Pencil, Loader2,
-  Globe, Building2, TrendingUp, Layers, ShoppingCart, Users, UserCircle2,
-  FileText, Share2, Bookmark, MoreVertical,
-  Link2, Copy, Activity, Archive, Trash2,
+  ExternalLink,
+  MapPin,
+  Calendar,
+  Linkedin,
+  Rocket,
+  Pencil,
+  Loader2,
+  Globe,
+  Building2,
+  TrendingUp,
+  Layers,
+  ShoppingCart,
+  Users,
+  UserCircle2,
+  FileText,
+  Share2,
+  Bookmark,
+  MoreVertical,
+  Link2,
+  Copy,
+  Activity,
+  Archive,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,7 +51,11 @@ import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassig
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
-  return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export function StartupDetailPanel({
@@ -90,7 +113,9 @@ export function StartupDetailPanel({
             {s.logo_signed_url ? (
               <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
             ) : (
-              <span className="text-sm font-semibold text-muted-foreground">{monogram(s.startup_name)}</span>
+              <span className="text-sm font-semibold text-muted-foreground">
+                {monogram(s.startup_name)}
+              </span>
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -104,14 +129,18 @@ export function StartupDetailPanel({
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
               {!compact && s.tenant_name && <span>{s.tenant_name}</span>}
-              {!compact && s.tenant_name && (s.headquarters || s.industry?.length) && <span aria-hidden>·</span>}
+              {!compact && s.tenant_name && (s.headquarters || s.industry?.length) && (
+                <span aria-hidden>·</span>
+              )}
               {s.headquarters && <span>{s.headquarters}</span>}
               {s.headquarters && s.industry?.length ? <span aria-hidden>·</span> : null}
               {s.industry?.length ? <span>{s.industry.join(" · ")}</span> : null}
             </div>
             <div className="mt-2">
               <GlobalStartupLineageBadge
-                sourceGlobalId={(s as unknown as { source_global_id: string | null }).source_global_id}
+                sourceGlobalId={
+                  (s as unknown as { source_global_id: string | null }).source_global_id
+                }
                 importedAt={(s as unknown as { imported_at: string | null }).imported_at}
               />
             </div>
@@ -120,7 +149,12 @@ export function StartupDetailPanel({
 
         <div className="flex flex-col items-end gap-2">
           {showEdit && canManage && !compact && (
-            <Button asChild size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground">
+            <Button
+              asChild
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <Link to="/startups/$id/edit" params={{ id }}>
                 <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
               </Link>
@@ -179,13 +213,19 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onSelect={(e) => { e.preventDefault(); setConfirm("archive"); }}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setConfirm("archive");
+                    }}
                     className="text-amber-600 focus:bg-amber-50 focus:text-amber-700 dark:focus:bg-amber-950/40"
                   >
                     <Archive className="mr-2 h-4 w-4" /> Archive
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => { e.preventDefault(); setConfirm("delete"); }}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setConfirm("delete");
+                    }}
                     className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                   >
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -202,7 +242,8 @@ export function StartupDetailPanel({
           <AlertDialogHeader>
             <AlertDialogTitle>Archive startup?</AlertDialogTitle>
             <AlertDialogDescription>
-              This startup will be archived and removed from the active startup view. You can restore it later if archive restoration is supported.
+              This startup will be archived and removed from the active startup view. You can
+              restore it later if archive restoration is supported.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -223,7 +264,8 @@ export function StartupDetailPanel({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete startup?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action may permanently remove the startup record. This cannot be undone unless recovery is supported.
+              This action may permanently remove the startup record. This cannot be undone unless
+              recovery is supported.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -238,7 +280,6 @@ export function StartupDetailPanel({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
 
       {/* Media */}
       {mediaSlots.length > 0 && (
@@ -286,7 +327,9 @@ export function StartupDetailPanel({
               className="flex items-center gap-2 text-accent hover:underline"
             >
               <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              <span className="truncate">Company URL <span aria-hidden>→</span></span>
+              <span className="truncate">
+                Company URL <span aria-hidden>→</span>
+              </span>
             </a>
           )}
           {s.email && (
@@ -326,7 +369,10 @@ export function StartupDetailPanel({
 
       {/* Founders */}
       {s.founders.length > 0 && (
-        <Section icon={UserCircle2} title={`Founder${s.founders.length > 1 ? `s (${s.founders.length})` : ""}`}>
+        <Section
+          icon={UserCircle2}
+          title={`Founder${s.founders.length > 1 ? `s (${s.founders.length})` : ""}`}
+        >
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
             {s.founders.map((f) => (
               <div key={f.id} className="flex items-start gap-3">
@@ -338,7 +384,9 @@ export function StartupDetailPanel({
                   {f.position && (
                     <div className="text-xs text-muted-foreground mt-0.5">{f.position}</div>
                   )}
-                  {f.bio && <p className="mt-1 text-xs text-foreground/75 leading-relaxed">{f.bio}</p>}
+                  {f.bio && (
+                    <p className="mt-1 text-xs text-foreground/75 leading-relaxed">{f.bio}</p>
+                  )}
                   {f.linkedin_url && (
                     <a
                       href={f.linkedin_url}
@@ -358,7 +406,10 @@ export function StartupDetailPanel({
 
       {/* Investors */}
       {s.investors.length > 0 && (
-        <Section icon={Users} title={`Investor${s.investors.length > 1 ? `s (${s.investors.length})` : ""}`}>
+        <Section
+          icon={Users}
+          title={`Investor${s.investors.length > 1 ? `s (${s.investors.length})` : ""}`}
+        >
           <div className="flex flex-wrap gap-2">
             {s.investors.map((i) => (
               <Link
@@ -382,7 +433,9 @@ export function StartupDetailEmpty() {
     <div className="flex h-full min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card/40 p-10 text-center">
       <Rocket className="mb-2 h-8 w-8 text-muted-foreground/60" />
       <p className="text-sm font-medium">Select a startup</p>
-      <p className="mt-1 text-xs text-muted-foreground">Pick a card on the left to see its intelligence here.</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Pick a card on the left to see its intelligence here.
+      </p>
     </div>
   );
 }
@@ -408,13 +461,16 @@ function Section({
 }
 
 function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
-  const base = tone === "primary"
-    ? "bg-primary/5 text-foreground/85 border-primary/20"
-    : "bg-muted/50 text-muted-foreground border-transparent";
+  const base =
+    tone === "primary"
+      ? "bg-primary/5 text-foreground/85 border-primary/20"
+      : "bg-muted/50 text-muted-foreground border-transparent";
   return (
     <div className="flex flex-wrap gap-1.5">
       {tags.map((t) => (
-        <span key={t} className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${base}`}>{t}</span>
+        <span key={t} className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${base}`}>
+          {t}
+        </span>
       ))}
     </div>
   );

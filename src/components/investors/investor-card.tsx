@@ -7,7 +7,11 @@ import { RelationshipChips } from "@/components/relationships/relationship-chips
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 
 function monogram(name: string) {
-  return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: boolean }) {
@@ -15,7 +19,9 @@ export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: b
     <>
       <div className="flex items-start gap-3">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
-          <span className="text-base font-semibold text-muted-foreground">{monogram(i.investor_name)}</span>
+          <span className="text-base font-semibold text-muted-foreground">
+            {monogram(i.investor_name)}
+          </span>
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-semibold leading-tight">{i.investor_name}</h3>
@@ -24,10 +30,16 @@ export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: b
           )}
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
             {i.country && (
-              <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{i.country}</span>
+              <span className="inline-flex items-center gap-0.5">
+                <MapPin className="h-3 w-3" />
+                {i.country}
+              </span>
             )}
             {i.website_url && (
-              <span className="inline-flex items-center gap-0.5 truncate"><ExternalLink className="h-3 w-3" />{i.website_url.replace(/^https?:\/\//, "").slice(0, 28)}</span>
+              <span className="inline-flex items-center gap-0.5 truncate">
+                <ExternalLink className="h-3 w-3" />
+                {i.website_url.replace(/^https?:\/\//, "").slice(0, 28)}
+              </span>
             )}
           </div>
         </div>
@@ -36,10 +48,17 @@ export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: b
       <div className="flex flex-wrap gap-1.5">
         <PreviewNeedsReassignmentBadge name={i.investor_name} domain="investor" size="xs" />
         {i.investor_type && (
-          <Badge variant="outline" className="text-[10px]">{i.investor_type}</Badge>
+          <Badge variant="outline" className="text-[10px]">
+            {i.investor_type}
+          </Badge>
         )}
         {i.status && i.status !== "Prospect" && (
-          <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent text-[10px]">{i.status}</Badge>
+          <Badge
+            variant="outline"
+            className="border-accent/40 bg-accent/10 text-accent text-[10px]"
+          >
+            {i.status}
+          </Badge>
         )}
       </div>
 
@@ -49,8 +68,16 @@ export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: b
 
       <div className="mt-auto flex flex-col gap-1.5 pt-1">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
-          {i.aum && <span><span className="font-medium text-foreground">AUM:</span> {i.aum}</span>}
-          {i.ticket_size && <span><span className="font-medium text-foreground">Ticket:</span> {i.ticket_size}</span>}
+          {i.aum && (
+            <span>
+              <span className="font-medium text-foreground">AUM:</span> {i.aum}
+            </span>
+          )}
+          {i.ticket_size && (
+            <span>
+              <span className="font-medium text-foreground">Ticket:</span> {i.ticket_size}
+            </span>
+          )}
         </div>
         {i.related_startups?.length ? (
           <RelationshipChips
