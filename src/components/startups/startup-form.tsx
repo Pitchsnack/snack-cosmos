@@ -290,11 +290,14 @@ export function StartupForm({ startup }: Props) {
   const [pendingSaveOpen, setPendingSaveOpen] = useState(false);
 
   // Defaults for the create-investor dialog: reuse the startup's own
-  // ownership so the new investor lands with matching agents.
-  const startupAgentDefault =
-    startup?.startup_ownership?.[0]?.owning_agent_user_id ?? null;
-  const startupAiAgentDefault =
-    startup?.startup_ai_ownership?.[0]?.owning_ai_agent_id ?? null;
+  // ownership so the new investor lands with matching agents. StartupDetail
+  // carries these as pass-through rows typed at query time.
+  const startupOwn = startup as unknown as {
+    startup_ownership?: Array<{ owning_agent_user_id: string }>;
+    startup_ai_ownership?: Array<{ owning_ai_agent_id: string }>;
+  } | undefined;
+  const startupAgentDefault = startupOwn?.startup_ownership?.[0]?.owning_agent_user_id ?? null;
+  const startupAiAgentDefault = startupOwn?.startup_ai_ownership?.[0]?.owning_ai_agent_id ?? null;
 
   // Founders
   const [founders, setFounders] = useState<FounderDraft[]>(
