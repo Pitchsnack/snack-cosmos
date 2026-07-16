@@ -136,6 +136,18 @@ export function CreateInvestorDialog({
             startup. You can edit the full profile later.
           </DialogDescription>
         </DialogHeader>
+        {DEFAULT_INTAKE_PREVIEW_ENABLED && (
+          <div className="space-y-2 py-1">
+            <DefaultIntakePreviewNotice variant="compact" />
+            <DefaultIntakeOwnershipPreview
+              domain="investor"
+              helperText="Creating the Investor and saving the relationship are separate actions. Startup owners are shown only as suggestions — Startup human and AI ownership are never silently copied to this Investor."
+            />
+            <p className="rounded-md border border-dashed border-border p-2 text-[11px] text-muted-foreground">
+              Suggested based on Startup relationship — you may still pick different owners below.
+            </p>
+          </div>
+        )}
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label htmlFor="create-investor-name">Investor name</Label>
