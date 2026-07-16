@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { InvestorListItem as InvestorListItemDTO } from "@/lib/investors.functions";
+import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
