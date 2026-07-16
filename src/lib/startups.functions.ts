@@ -140,7 +140,8 @@ const SELECT_LIST = `
   product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
   startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
-  startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name))
+  startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name)),
+  startup_investors(id, investors:investor_id(id, investor_name))
 `;
 
 const ListInput = z.object({
