@@ -81,6 +81,8 @@ export function RelationshipLinksEditor({
   rows,
   onChange,
   errorMessage,
+  onPromotePending,
+  promoteLabel,
 }: Props) {
   const enabled = useHasSession();
   const [query, setQuery] = useState("");
