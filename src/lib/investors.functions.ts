@@ -77,6 +77,7 @@ export interface InvestorListItem extends InvestorRow {
   logo_signed_url: string | null;
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
+  related_startups: Array<{ id: string; name: string }>;
 }
 
 async function logActivity(
