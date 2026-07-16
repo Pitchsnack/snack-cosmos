@@ -101,6 +101,9 @@ export function CreateInvestorDialog({
 
   const createM = useMutation({
     mutationFn: async () => {
+      // Fixture-ID safety: never allow a Default Intake preview ID to
+      // reach the relationship-sync mutation path.
+      assertNoDefaultIntakePreviewIds([tenantId, agentId, aiAgentId]);
       const res = await create({
         data: {
           tenantId,
