@@ -196,9 +196,22 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             </div>
           ) : null}
 
+          {/* Investor relationships row (display-only) */}
+          {s.related_investors?.length ? (
+            <div className="mt-auto pt-1">
+              <RelationshipChips
+                icon={<Users className="h-3 w-3" />}
+                label="Investors:"
+                items={s.related_investors}
+                popoverTitle="All Investors"
+                maxVisible={3}
+              />
+            </div>
+          ) : null}
+
         </div>
-    </>
-  );
+      </>
+    );
 
   return (
     <TooltipProvider disableHoverableContent>
