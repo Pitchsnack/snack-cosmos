@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useInvestor } from "@/hooks/use-investor";
 import { usePermissions } from "@/hooks/use-session-context";
+import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
