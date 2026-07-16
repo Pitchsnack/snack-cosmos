@@ -169,9 +169,10 @@ export const listStartups = createServerFn({ method: "GET" })
     let q = supabase.from("startups").select(SELECT_LIST, { count: "exact" });
 
     if (data.search?.trim()) {
-      const s = data.search.trim().replace(/[%_]/g, (m) => "\\" + m);
+      const s = data.search.trim().replace(/[%_\\]/g, (m) => "\\" + m).replace(/"/g, '\\"');
+      const p = `"%${s}%"`;
       q = q.or(
-        `startup_name.ilike.%${s}%,short_description.ilike.%${s}%,headquarters.ilike.%${s}%`,
+        `startup_name.ilike.${p},short_description.ilike.${p},headquarters.ilike.${p}`,
       );
     }
     if (data.stage) q = q.eq("investment_stage", data.stage);
