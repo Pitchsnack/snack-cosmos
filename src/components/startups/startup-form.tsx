@@ -36,8 +36,19 @@ import {
 } from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
+import { CreateInvestorDialog } from "@/components/relationships/create-investor-dialog";
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { StartupInvestorLinkView } from "@/adapters/investor-startup-links-types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
