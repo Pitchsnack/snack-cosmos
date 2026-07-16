@@ -45,10 +45,7 @@ export function DefaultIntakeOwnershipModeSection({
       className={cn("space-y-3 rounded-lg border border-border bg-card p-4", className)}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3
-          id="default-intake-mode-heading"
-          className="text-sm font-semibold text-foreground"
-        >
+        <h3 id="default-intake-mode-heading" className="text-sm font-semibold text-foreground">
           Ownership Assignment
         </h3>
         <DefaultIntakePreviewNotice variant="compact" />

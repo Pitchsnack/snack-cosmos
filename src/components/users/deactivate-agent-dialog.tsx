@@ -139,9 +139,7 @@ export function DeactivateAgentDialog({
 
           {actorType === "human" && (
             <div className="space-y-1.5">
-              <Label className="text-xs">
-                Transfer existing {domainLabel} ownership to
-              </Label>
+              <Label className="text-xs">Transfer existing {domainLabel} ownership to</Label>
               <Select value={transferTo} onValueChange={setTransferTo}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select destination owner" />

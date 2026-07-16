@@ -31,9 +31,7 @@ export function AgentImpactPanel({ className }: { className?: string }) {
   const cfg = getDefaultIntakePreviewConfiguration();
   if (!cfg) return null;
 
-  const rows: Array<
-    Target & { roleLabel: string; icon: typeof UserCircle2 }
-  > = [
+  const rows: Array<Target & { roleLabel: string; icon: typeof UserCircle2 }> = [
     {
       agentName: cfg.startup.humanAgent.name,
       actorType: "human",

@@ -43,7 +43,10 @@ export interface BulkReassignDialogProps {
 
 export function BulkReassignDialog({ open, onOpenChange, selected }: BulkReassignDialogProps) {
   const startupRecords = useMemo(() => selected.filter((r) => r.domain === "startup"), [selected]);
-  const investorRecords = useMemo(() => selected.filter((r) => r.domain === "investor"), [selected]);
+  const investorRecords = useMemo(
+    () => selected.filter((r) => r.domain === "investor"),
+    [selected],
+  );
 
   const [startupHuman, setStartupHuman] = useState("");
   const [startupAi, setStartupAi] = useState("");
@@ -63,10 +66,8 @@ export function BulkReassignDialog({ open, onOpenChange, selected }: BulkReassig
     }
   }, [open]);
 
-  const startupReady =
-    startupRecords.length === 0 || (!!startupHuman && !!startupAi);
-  const investorReady =
-    investorRecords.length === 0 || (!!investorHuman && !!investorAi);
+  const startupReady = startupRecords.length === 0 || (!!startupHuman && !!startupAi);
+  const investorReady = investorRecords.length === 0 || (!!investorHuman && !!investorAi);
   const canConfirm = selected.length > 0 && startupReady && investorReady && !saving;
 
   const handleConfirm = () => {

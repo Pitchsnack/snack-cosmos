@@ -37,9 +37,7 @@ export function BulkReassignToolbar({
       data-keep-sidebar
     >
       <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-        <span className="font-semibold">
-          {selectedCount} selected
-        </span>
+        <span className="font-semibold">{selectedCount} selected</span>
         <span className="text-xs text-muted-foreground">
           ({startupCount} Startup{startupCount === 1 ? "" : "s"} · {investorCount} Investor
           {investorCount === 1 ? "" : "s"})

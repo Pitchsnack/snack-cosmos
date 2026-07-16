@@ -44,10 +44,7 @@ export function NeedsReassignmentBadge({
       )}
       title="Preview fixture — needs reassignment"
     >
-      <AlertTriangle
-        className={size === "xs" ? "h-2.5 w-2.5" : "h-3 w-3"}
-        aria-hidden="true"
-      />
+      <AlertTriangle className={size === "xs" ? "h-2.5 w-2.5" : "h-3 w-3"} aria-hidden="true" />
       Needs reassignment
     </Badge>
   );

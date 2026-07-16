@@ -106,7 +106,11 @@ export function DefaultIntakeForm() {
               Unsaved changes — preview only, will not persist.
             </>
           ) : savedMessage ? (
-            <span role="status" aria-live="polite" className="font-medium text-amber-700 dark:text-amber-300">
+            <span
+              role="status"
+              aria-live="polite"
+              className="font-medium text-amber-700 dark:text-amber-300"
+            >
               {savedMessage}
             </span>
           ) : (

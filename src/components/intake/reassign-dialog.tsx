@@ -182,9 +182,7 @@ function ReadOnlyRow({ label, value }: { label: string; value: string }) {
       <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
-      <div className="rounded-md border border-border bg-muted/30 px-2 py-1.5 text-sm">
-        {value}
-      </div>
+      <div className="rounded-md border border-border bg-muted/30 px-2 py-1.5 text-sm">{value}</div>
     </div>
   );
 }

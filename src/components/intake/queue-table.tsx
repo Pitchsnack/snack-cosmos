@@ -26,12 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   listDefaultIntakePreviewQueue,
@@ -178,10 +173,7 @@ export function QueueTable() {
               </TableRow>
             ) : (
               visible.map((r) => (
-                <TableRow
-                  key={r.id}
-                  data-state={selectedIds.has(r.id) ? "selected" : undefined}
-                >
+                <TableRow key={r.id} data-state={selectedIds.has(r.id) ? "selected" : undefined}>
                   <TableCell>
                     <Checkbox
                       aria-label={`Select ${r.name}`}
@@ -194,10 +186,7 @@ export function QueueTable() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span className="inline-flex items-center gap-1.5">
-                            <AlertTriangle
-                              className="h-3 w-3 text-amber-500"
-                              aria-hidden="true"
-                            />
+                            <AlertTriangle className="h-3 w-3 text-amber-500" aria-hidden="true" />
                             {r.name}
                           </span>
                         </TooltipTrigger>
@@ -299,11 +288,7 @@ export function QueueTable() {
         onOpenChange={(v) => !v && setSingleTarget(null)}
         record={singleTarget}
       />
-      <BulkReassignDialog
-        open={bulkOpen}
-        onOpenChange={setBulkOpen}
-        selected={selected}
-      />
+      <BulkReassignDialog open={bulkOpen} onOpenChange={setBulkOpen} selected={selected} />
     </div>
   );
 }

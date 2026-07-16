@@ -38,10 +38,7 @@ export function DefaultIntakeOwnershipPreview({
 
   return (
     <div
-      className={cn(
-        "rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm",
-        className,
-      )}
+      className={cn("rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm", className)}
       data-preview="default-intake-ownership"
     >
       <div className="grid gap-3 sm:grid-cols-2">
