@@ -70,7 +70,8 @@ export function StartupListItem({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">{s.startup_name}</h3>
-            <div className="flex shrink-0 gap-1">
+            <div className="flex shrink-0 items-center gap-1">
+              <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
               {s.investment_stage && (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">{s.investment_stage}</Badge>
               )}
