@@ -22,6 +22,7 @@ import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
+import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
@@ -34,6 +35,7 @@ import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
+import { Route as AuthenticatedSettingsDefaultIntakeRouteImport } from './routes/_authenticated/settings.default-intake'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
 import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
 import { Route as AuthenticatedGlobalStartupsBrowseRouteImport } from './routes/_authenticated/global-startups.browse'
@@ -113,6 +115,12 @@ const AuthenticatedInvestorsRoute = AuthenticatedInvestorsRouteImport.update({
   path: '/investors',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedIntakeQueueRoute =
+  AuthenticatedIntakeQueueRouteImport.update({
+    id: '/intake-queue',
+    path: '/intake-queue',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
   id: '/deals',
   path: '/deals',
@@ -179,6 +187,12 @@ const AuthenticatedSharedDealsIdRoute =
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AuthenticatedSharedDealsRoute,
+  } as any)
+const AuthenticatedSettingsDefaultIntakeRoute =
+  AuthenticatedSettingsDefaultIntakeRouteImport.update({
+    id: '/settings/default-intake',
+    path: '/settings/default-intake',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedInvestorsNewRoute =
   AuthenticatedInvestorsNewRouteImport.update({
@@ -255,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
@@ -268,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/startups/new': typeof AuthenticatedStartupsNewRoute
@@ -290,6 +306,7 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
@@ -299,6 +316,7 @@ export interface FileRoutesByTo {
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
   '/deals': typeof AuthenticatedDealsIndexRoute
@@ -323,6 +341,7 @@ export interface FileRoutesById {
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
@@ -337,6 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/_authenticated/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
@@ -363,6 +383,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/dashboard'
     | '/deals'
+    | '/intake-queue'
     | '/investors'
     | '/notifications'
     | '/preferences'
@@ -376,6 +397,7 @@ export interface FileRouteTypes {
     | '/global-startups/browse'
     | '/investors/$id'
     | '/investors/new'
+    | '/settings/default-intake'
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
@@ -398,6 +420,7 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/audit'
     | '/dashboard'
+    | '/intake-queue'
     | '/notifications'
     | '/preferences'
     | '/security'
@@ -407,6 +430,7 @@ export interface FileRouteTypes {
     | '/global-startups/$id'
     | '/global-startups/browse'
     | '/investors/new'
+    | '/settings/default-intake'
     | '/shared-deals/$id'
     | '/startups/new'
     | '/deals'
@@ -430,6 +454,7 @@ export interface FileRouteTypes {
     | '/_authenticated/audit'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
+    | '/_authenticated/intake-queue'
     | '/_authenticated/investors'
     | '/_authenticated/notifications'
     | '/_authenticated/preferences'
@@ -444,6 +469,7 @@ export interface FileRouteTypes {
     | '/_authenticated/global-startups/browse'
     | '/_authenticated/investors/$id'
     | '/_authenticated/investors/new'
+    | '/_authenticated/settings/default-intake'
     | '/_authenticated/shared-deals/$id'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
@@ -560,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/intake-queue': {
+      id: '/_authenticated/intake-queue'
+      path: '/intake-queue'
+      fullPath: '/intake-queue'
+      preLoaderRoute: typeof AuthenticatedIntakeQueueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/deals': {
       id: '/_authenticated/deals'
       path: '/deals'
@@ -643,6 +676,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/shared-deals/$id'
       preLoaderRoute: typeof AuthenticatedSharedDealsIdRouteImport
       parentRoute: typeof AuthenticatedSharedDealsRoute
+    }
+    '/_authenticated/settings/default-intake': {
+      id: '/_authenticated/settings/default-intake'
+      path: '/settings/default-intake'
+      fullPath: '/settings/default-intake'
+      preLoaderRoute: typeof AuthenticatedSettingsDefaultIntakeRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/investors/new': {
       id: '/_authenticated/investors/new'
@@ -838,6 +878,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
+  AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
@@ -848,6 +889,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedGlobalStartupsIdRoute: typeof AuthenticatedGlobalStartupsIdRoute
   AuthenticatedGlobalStartupsBrowseRoute: typeof AuthenticatedGlobalStartupsBrowseRoute
+  AuthenticatedSettingsDefaultIntakeRoute: typeof AuthenticatedSettingsDefaultIntakeRoute
   AuthenticatedGlobalStartupsIndexRoute: typeof AuthenticatedGlobalStartupsIndexRoute
 }
 
@@ -856,6 +898,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
+  AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
@@ -867,6 +910,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedGlobalStartupsIdRoute: AuthenticatedGlobalStartupsIdRoute,
   AuthenticatedGlobalStartupsBrowseRoute:
     AuthenticatedGlobalStartupsBrowseRoute,
+  AuthenticatedSettingsDefaultIntakeRoute:
+    AuthenticatedSettingsDefaultIntakeRoute,
   AuthenticatedGlobalStartupsIndexRoute: AuthenticatedGlobalStartupsIndexRoute,
 }
 

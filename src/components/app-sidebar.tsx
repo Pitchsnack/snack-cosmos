@@ -20,6 +20,8 @@ import {
   Share2,
   Bell,
   Globe,
+  Inbox,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -32,6 +34,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhiteIcon from "@/assets/pitchsnack-hat-white-icon.png";
+import { DEFAULT_INTAKE_PREVIEW_ENABLED } from "@/lib/preview/default-intake-preview-adapter";
 
 type NavPath =
   | "/"
@@ -47,7 +50,9 @@ type NavPath =
   | "/notifications"
   | "/preferences"
   | "/global-startups"
-  | "/global-startups/browse";
+  | "/global-startups/browse"
+  | "/settings/default-intake"
+  | "/intake-queue";
 
 type NavItem = {
   label: string;
@@ -58,6 +63,8 @@ type NavItem = {
   controlOnly?: boolean;
   // PRD 3 framework placeholders — modules not yet built
   disabled?: boolean;
+  /** Default Intake preview surfaces — hidden when the flag is OFF. */
+  previewOnly?: boolean;
 };
 
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
@@ -71,6 +78,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
   { label: "Shared Deals", icon: Share2, path: "/shared-deals", exact: false, perm: "deals.share.read" },
+  { label: "Default Intake Queue", icon: Inbox, path: "/intake-queue", exact: false, previewOnly: true },
   { label: "Communications", icon: MessagesSquare, path: "/dashboard", exact: false, disabled: true },
   { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
   { label: "Analytics", icon: BarChart3, path: "/dashboard", exact: false, controlOnly: true, disabled: true },
@@ -79,6 +87,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
+  { label: "Default Intake Settings", icon: SlidersHorizontal, path: "/settings/default-intake", exact: false, previewOnly: true },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
@@ -119,8 +128,9 @@ function SidebarBody({
   const showSkeleton = !isResolved && !sessionData;
 
   const visibleItems = showSkeleton
-    ? NAV_ITEMS
+    ? NAV_ITEMS.filter((item) => !item.previewOnly || DEFAULT_INTAKE_PREVIEW_ENABLED)
     : NAV_ITEMS.filter((item) => {
+        if (item.previewOnly && !DEFAULT_INTAKE_PREVIEW_ENABLED) return false;
         if (item.controlOnly) return isControl;
         if (!item.perm) return true;
         return has(item.perm);

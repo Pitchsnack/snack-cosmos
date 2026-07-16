@@ -37,6 +37,7 @@ import { listUsers, inviteUser } from "@/lib/users.functions";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { ROLE_LABELS, type AppRole } from "@/lib/permissions";
+import { AgentImpactPanel } from "@/components/users/agent-impact-panel";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Users — SnackPortal2" }] }),
@@ -137,6 +138,8 @@ function UsersPageInner() {
           </TableBody>
         </Table>
       </div>
+
+      <AgentImpactPanel />
     </div>
   );
 }
