@@ -499,10 +499,21 @@ export function StartupForm({ startup }: Props) {
   }, [startup?.id]);
   const isDirty = initialSnapshot !== "" && currentSnapshot !== initialSnapshot;
 
-  const submitForm = () => {
-    if (!canSubmit || submitting) return;
+  const performSave = () => {
     if (isEdit) updateM.mutate();
     else createM.mutate({ selectedTenantId: tenantId, activeTenantId });
+  };
+
+  const submitForm = () => {
+    if (!canSubmit || submitting) return;
+    // Pending investor rows never persist — block save so the user can
+    // either create real records or remove them, rather than losing them
+    // silently after the toast.
+    if (pendingInvestorCount > 0) {
+      setPendingSaveOpen(true);
+      return;
+    }
+    performSave();
   };
 
   const guard = useUnsavedChangesGuard({
