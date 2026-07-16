@@ -129,9 +129,10 @@ export const listInvestors = createServerFn({ method: "GET" })
       `);
 
     if (data.search?.trim()) {
-      const s = data.search.trim().replace(/[%_]/g, (m) => "\\" + m);
+      const s = data.search.trim().replace(/[%_\\]/g, (m) => "\\" + m).replace(/"/g, '\\"');
+      const p = `"%${s}%"`;
       q = q.or(
-        `investor_name.ilike.%${s}%,short_description.ilike.%${s}%,investor_type.ilike.%${s}%,country.ilike.%${s}%`,
+        `investor_name.ilike.${p},short_description.ilike.${p},investor_type.ilike.${p},country.ilike.${p}`,
       );
     }
     if (data.type) q = q.eq("investor_type", data.type);
