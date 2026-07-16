@@ -4,6 +4,7 @@ import { MapPin, ExternalLink, Building2 } from "lucide-react";
 import type { InvestorListItem } from "@/lib/investors.functions";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
+import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
