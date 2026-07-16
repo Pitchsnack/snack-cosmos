@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Factory, ShoppingCart } from "lucide-react";
+import { MapPin, Factory, ShoppingCart, Users } from "lucide-react";
 import anchorIcon from "@/assets/anchor.svg";
 import {
   Tooltip,
@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { StartupListItem } from "@/lib/startups.functions";
+import { RelationshipChips } from "@/components/relationships/relationship-chips";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
@@ -195,9 +196,22 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
             </div>
           ) : null}
 
+          {/* Investor relationships row (display-only) */}
+          {s.related_investors?.length ? (
+            <div className="mt-auto pt-1">
+              <RelationshipChips
+                icon={<Users className="h-3 w-3" />}
+                label="Investors:"
+                items={s.related_investors}
+                popoverTitle="All Investors"
+                maxVisible={3}
+              />
+            </div>
+          ) : null}
+
         </div>
-    </>
-  );
+      </>
+    );
 
   return (
     <TooltipProvider disableHoverableContent>

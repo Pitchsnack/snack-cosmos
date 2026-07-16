@@ -73,6 +73,7 @@ export interface StartupListItem extends StartupRow {
   tile_image_signed_url: string | null;
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
+  related_investors: Array<{ id: string; name: string }>;
 }
 
 export interface StartupFounder {
@@ -139,7 +140,8 @@ const SELECT_LIST = `
   product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
   startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
-  startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name))
+  startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name)),
+  startup_investors(id, investors:investor_id(id, investor_name))
 `;
 
 const ListInput = z.object({
@@ -204,6 +206,10 @@ export const listStartups = createServerFn({ method: "GET" })
           owning_ai_agent_id: string;
           users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
         }>;
+        startup_investors: Array<{
+          id: string;
+          investors: { id: string; investor_name: string } | null;
+        }>;
       }
     >;
 
@@ -229,6 +235,10 @@ export const listStartups = createServerFn({ method: "GET" })
       const own = r.startup_ownership?.[0]?.users ?? null;
       const aiOwn = r.startup_ai_ownership?.[0]?.users ?? null;
       const tilePath = tileBySid[r.id];
+      const related_investors = (r.startup_investors ?? [])
+        .map((l) => l.investors)
+        .filter((v): v is { id: string; investor_name: string } => !!v)
+        .map((v) => ({ id: v.id, name: v.investor_name }));
       return {
         ...r,
         product_tags: r.product_tags ?? [],
@@ -238,6 +248,7 @@ export const listStartups = createServerFn({ method: "GET" })
         tile_image_signed_url: tilePath ? (signed[tilePath] ?? null) : null,
         owning_agent: own ? { id: own.id, email: own.email, name: [own.first_name, own.last_name].filter(Boolean).join(" ") || null } : null,
         owning_ai_agent: aiOwn ? { id: aiOwn.id, email: aiOwn.email, name: [aiOwn.first_name, aiOwn.last_name].filter(Boolean).join(" ") || null } : null,
+        related_investors,
       };
     });
 

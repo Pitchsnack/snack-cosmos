@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink } from "lucide-react";
+import { MapPin, ExternalLink, Building2 } from "lucide-react";
 import type { InvestorListItem } from "@/lib/investors.functions";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { RelationshipChips } from "@/components/relationships/relationship-chips";
 
 function monogram(name: string) {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
@@ -43,9 +45,20 @@ export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: b
         <p className="line-clamp-2 text-xs text-muted-foreground">{i.short_description}</p>
       )}
 
-      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[10px] text-muted-foreground">
-        {i.aum && <span><span className="font-medium text-foreground">AUM:</span> {i.aum}</span>}
-        {i.ticket_size && <span><span className="font-medium text-foreground">Ticket:</span> {i.ticket_size}</span>}
+      <div className="mt-auto flex flex-col gap-1.5 pt-1">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+          {i.aum && <span><span className="font-medium text-foreground">AUM:</span> {i.aum}</span>}
+          {i.ticket_size && <span><span className="font-medium text-foreground">Ticket:</span> {i.ticket_size}</span>}
+        </div>
+        {i.related_startups?.length ? (
+          <RelationshipChips
+            icon={<Building2 className="h-3 w-3" />}
+            label="Startups:"
+            items={i.related_startups}
+            popoverTitle="All Startups"
+            maxVisible={3}
+          />
+        ) : null}
       </div>
     </>
   );
@@ -55,10 +68,16 @@ export function InvestorCard({ i, href = true }: { i: InvestorListItem; href?: b
 
   if (href) {
     return (
-      <Link to="/investors/$id" params={{ id: i.id }} className={className}>
-        {inner}
-      </Link>
+      <TooltipProvider disableHoverableContent>
+        <Link to="/investors/$id" params={{ id: i.id }} className={className}>
+          {inner}
+        </Link>
+      </TooltipProvider>
     );
   }
-  return <div className={className}>{inner}</div>;
+  return (
+    <TooltipProvider disableHoverableContent>
+      <div className={className}>{inner}</div>
+    </TooltipProvider>
+  );
 }
