@@ -5,6 +5,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { Badge } from "@/components/ui/badge";
 import { ViewAsSwitcher } from "@/components/view-switcher/view-as-switcher";
 import { ViewModeBadge } from "@/components/view-switcher/view-mode-badge";
+import { DefaultIntakeFlagToggle } from "@/components/intake/default-intake-flag-toggle";
 
 const ROLE_LABELS: Record<string, string> = {
   CONTROL: "Control",
@@ -51,6 +52,7 @@ export function WorkspaceHeader() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <DefaultIntakeFlagToggle />
         <ViewModeBadge />
         <ViewAsSwitcher />
         <GlobalSearch />
