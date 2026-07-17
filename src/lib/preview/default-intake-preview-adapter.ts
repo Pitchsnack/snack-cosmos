@@ -15,8 +15,49 @@
  *    `assertNoDefaultIntakePreviewIds`.
  */
 
+/**
+ * Runtime override key. Temporary CONTROL-only toggle button writes here so
+ * the design phase can flip the flag without an environment redeploy. This
+ * override is client-only, module-load evaluated, and reload-based — it does
+ * NOT change any backend behavior and will be removed once design is done.
+ */
+export const DEFAULT_INTAKE_PREVIEW_OVERRIDE_KEY =
+  "lovable.defaultIntakePreview.override" as const;
+
+function readOverride(): boolean | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = window.localStorage.getItem(DEFAULT_INTAKE_PREVIEW_OVERRIDE_KEY);
+    if (v === "true") return true;
+    if (v === "false") return false;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+const ENV_ENABLED = import.meta.env.VITE_DEFAULT_INTAKE_PREVIEW === "true";
+const OVERRIDE = readOverride();
+
 export const DEFAULT_INTAKE_PREVIEW_ENABLED: boolean =
-  import.meta.env.VITE_DEFAULT_INTAKE_PREVIEW === "true";
+  OVERRIDE === null ? ENV_ENABLED : OVERRIDE;
+
+export function setDefaultIntakePreviewOverride(enabled: boolean | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (enabled === null) {
+      window.localStorage.removeItem(DEFAULT_INTAKE_PREVIEW_OVERRIDE_KEY);
+    } else {
+      window.localStorage.setItem(
+        DEFAULT_INTAKE_PREVIEW_OVERRIDE_KEY,
+        enabled ? "true" : "false",
+      );
+    }
+    window.location.reload();
+  } catch {
+    /* noop */
+  }
+}
 
 export const DEFAULT_INTAKE_FIXTURE_PREFIX = "fixture-default-intake-" as const;
 
