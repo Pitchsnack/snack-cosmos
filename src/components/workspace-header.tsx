@@ -52,6 +52,7 @@ export function WorkspaceHeader() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <DefaultIntakeFlagToggle />
         <ViewModeBadge />
         <ViewAsSwitcher />
         <GlobalSearch />
