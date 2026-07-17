@@ -152,19 +152,19 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
         {/* Product tags */}
         {s.product_tags?.length ? (
-          <div className="mb-1">
+          <div className="mb-0.5">
             <ChipRow tags={s.product_tags} tone="primary" />
           </div>
         ) : null}
 
         {/* Divider */}
         {(s.product_tags?.length || s.short_description) && (
-          <div className="my-3 border-t border-border/40" />
+          <div className="my-2 border-t border-border/40" />
         )}
 
         {/* Est. year row */}
         {s.year_founded && (
-          <div className="mb-1.5 flex items-center gap-1.5 text-xs text-foreground">
+          <div className="mb-1 flex items-center gap-1.5 text-xs text-foreground">
             <img src={anchorIcon} alt="" aria-hidden className="h-3 w-3 shrink-0" />
             <span>
               Est. <span className="text-muted-foreground">{s.year_founded}</span>
@@ -174,7 +174,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
         {/* Industry row */}
         {industryText && (
-          <div className="mb-1.5 flex items-center gap-1.5 overflow-hidden text-xs text-foreground/80">
+          <div className="mb-1 flex items-center gap-1.5 overflow-hidden text-xs text-foreground/80">
             <Factory className="h-3 w-3 shrink-0" />
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
@@ -191,7 +191,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
         {/* Market tags row */}
         {s.market_tags?.length ? (
-          <div className="mb-2 flex items-start gap-1.5 overflow-hidden">
+          <div className="mb-1 flex items-start gap-1.5 overflow-hidden">
             <span className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground">
               <ShoppingCart className="h-3 w-3 shrink-0" />
               <span>Market:</span>
@@ -204,7 +204,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
         {/* Investor relationships row (display-only) */}
         {s.related_investors?.length ? (
-          <div className="mt-auto pt-1">
+          <div className="mt-1">
             <RelationshipChips
               icon={<Users className="h-3 w-3" />}
               label="Investors:"

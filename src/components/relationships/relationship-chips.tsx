@@ -1,14 +1,6 @@
 import { useMemo, type MouseEvent } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export interface RelationshipChipItem {
@@ -38,7 +30,7 @@ function sortForDisplay(items: RelationshipChipItem[]): RelationshipChipItem[] {
 }
 
 const CHIP_BASE =
-  "inline-block max-w-[9rem] truncate rounded-full border border-border/70 bg-background px-2 py-0.5 text-[10px] font-medium text-foreground/80";
+  "inline-block max-w-[10rem] truncate rounded-full border border-border/70 bg-background px-1.5 py-0 text-[10px] font-medium text-foreground/80";
 
 /** Stop card-level Link/button navigation when interacting with a chip control. */
 function stop(e: MouseEvent) {
@@ -63,14 +55,12 @@ export function RelationshipChips({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-1.5 overflow-hidden text-[10px] text-muted-foreground",
+        "flex min-w-0 items-start gap-1.5 overflow-hidden text-[10px] text-muted-foreground",
         className,
       )}
     >
-      <span className="inline-flex shrink-0 items-center gap-1">
-        <span className="inline-flex h-3 w-3 items-center justify-center text-muted-foreground">
-          {icon}
-        </span>
+      <span className="mt-0.5 inline-flex shrink-0 items-center gap-1.5">
+        {icon}
         <span>{label}</span>
       </span>
       <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
@@ -91,7 +81,7 @@ export function RelationshipChips({
                 type="button"
                 onClick={stop}
                 onMouseDown={stop}
-                className="shrink-0 rounded-full border border-border/70 bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                className="shrink-0 rounded-full border border-border/70 bg-background px-1.5 py-0 text-[10px] font-medium text-muted-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                 aria-label={`Show ${overflow.length} more`}
               >
                 +{overflow.length}
