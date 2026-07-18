@@ -1,70 +1,63 @@
 /**
- * Default Intake — Backend Adapter (STUB).
+ * Default Intake — Backend Adapter (CONTRACT STUB).
  *
- * Placeholder implementation that satisfies `DefaultIntakeAdapter` typewise
- * but is intentionally not wired to any server function, database, storage,
- * or session code. It will be replaced when backend contracts (ownership,
- * settings, permissions, audit, queue, migration, Database Router) are
- * approved.
- *
- * Selecting this adapter requires:
- *   - VITE_DEFAULT_INTAKE_MODE=backend
- *   - approved backend contracts
- *   - the API Gateway + Database Router as routing authorities
- *
- * DO NOT call the stub methods from UI. The mode switch defaults to
- * `preview`; the backend adapter is exported here only so the boundary is
- * real and reviewable.
+ * Contract-compatible with the transitional adapter. When the API Gateway
+ * + Database Router integration is approved, this module is replaced.
+ * Until then every read returns a controlled unavailability envelope and
+ * every write throws `FEATURE_NOT_AVAILABLE`. The canonical UI treats both
+ * paths identically — only the adapter changes.
  */
+import { assertNoFixtureIds, isFixtureId } from "./guards";
 import type {
   BulkReassignInput,
+  CreateTenantAiAgentInput,
   DefaultIntakeAdapter,
+  DefaultIntakeCapability,
   DefaultIntakeConfiguration,
-  DefaultIntakeQueueRecord,
+  DefaultIntakeQueueItem,
+  EligibleDefaultIntakeAgent,
+  EligibleDefaultIntakeAgents,
   ReassignInput,
+  UpsertDefaultIntakeSettingsInput,
 } from "./types";
+import { DefaultIntakeError } from "./types";
 
-function notImplemented(op: string): never {
-  throw new Error(
-    `Default Intake backend adapter is not implemented yet (${op}). ` +
-      "Backend contracts have not been approved. Keep VITE_DEFAULT_INTAKE_MODE=preview.",
-  );
+const UNAVAILABLE: DefaultIntakeCapability<never> = Object.freeze({
+  available: false,
+  reason:
+    "The Backend Adapter (API Gateway + Database Router) is not yet approved. Keep VITE_DEFAULT_INTAKE_MODE=transitional.",
+  code: "FEATURE_NOT_AVAILABLE",
+}) as DefaultIntakeCapability<never>;
+
+function unavailable(): never {
+  throw new DefaultIntakeError("FEATURE_NOT_AVAILABLE", UNAVAILABLE.available === false ? UNAVAILABLE.reason : "");
 }
 
-export function createBackendAdapter(enabled: boolean): DefaultIntakeAdapter {
+export function createBackendAdapter(): DefaultIntakeAdapter {
   return {
     mode: "backend",
-    enabled,
-
-    // Fixture-id guard is still useful defensively — even in backend mode
-    // no fixture id should ever cross a server boundary.
-    isFixtureId(value) {
-      return typeof value === "string" && value.startsWith("fixture-default-intake-");
+    isFixtureId,
+    assertNoFixtureIds,
+    async getConfiguration(): Promise<DefaultIntakeConfiguration | null> {
+      return null;
     },
-    assertNoFixtureIds(values) {
-      for (const v of values) {
-        if (typeof v === "string" && v.startsWith("fixture-default-intake-")) {
-          throw new Error(
-            "Default Intake preview fixture IDs must not be sent to server functions.",
-          );
-        }
-      }
+    async listEligibleAgents(): Promise<EligibleDefaultIntakeAgents> {
+      return { startupHumans: [], startupAis: [], investorHumans: [], investorAis: [] };
     },
-
-    getConfiguration(): DefaultIntakeConfiguration | null {
-      return notImplemented("getConfiguration");
+    async upsertConfiguration(_input: UpsertDefaultIntakeSettingsInput) {
+      unavailable();
     },
-    listQueue(): DefaultIntakeQueueRecord[] {
-      return notImplemented("listQueue");
+    async createTenantAiAgent(_input: CreateTenantAiAgentInput): Promise<EligibleDefaultIntakeAgent> {
+      unavailable();
     },
-    async reassign(_input: ReassignInput): Promise<void> {
-      notImplemented("reassign");
+    async listQueue(): Promise<DefaultIntakeCapability<DefaultIntakeQueueItem[]>> {
+      return UNAVAILABLE;
     },
-    async bulkReassign(_input: BulkReassignInput): Promise<void> {
-      notImplemented("bulkReassign");
+    async reassign(_input: ReassignInput) {
+      return UNAVAILABLE;
     },
-    subscribe(_listener: () => void): () => void {
-      return () => {};
+    async bulkReassign(_input: BulkReassignInput) {
+      return UNAVAILABLE;
     },
   };
 }
