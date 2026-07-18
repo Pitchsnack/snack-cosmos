@@ -112,6 +112,7 @@ export function CreateInvestorDialog({
 
   const agentIsFixture = isDefaultIntakePreviewId(agentId);
   const aiAgentIsFixture = isDefaultIntakePreviewId(aiAgentId);
+  const hasPreviewFixtureSelection = agentIsFixture || aiAgentIsFixture;
 
   const createM = useMutation({
     mutationFn: async () => {
@@ -137,7 +138,8 @@ export function CreateInvestorDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit = !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending;
+  const canSubmit =
+    !!name.trim() && !!agentId && !!aiAgentId && !hasPreviewFixtureSelection && !createM.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -227,6 +229,12 @@ export function CreateInvestorDialog({
               <p className="text-xs text-destructive">No assignable AI agents in this workspace.</p>
             )}
           </div>
+          {hasPreviewFixtureSelection && (
+            <p className="rounded-md border border-dashed border-border p-2 text-[11px] text-muted-foreground">
+              Default Intake preview owners are fixture values only. Select real Owning Agent and
+              Owning AI Agent records to create this investor.
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button
@@ -238,7 +246,11 @@ export function CreateInvestorDialog({
             Cancel
           </Button>
           <Button type="button" onClick={() => createM.mutate()} disabled={!canSubmit}>
-            {createM.isPending ? "Creating…" : "Create investor"}
+            {createM.isPending
+              ? "Creating…"
+              : hasPreviewFixtureSelection
+                ? "Select real owners"
+                : "Create investor"}
           </Button>
         </DialogFooter>
       </DialogContent>
