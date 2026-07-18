@@ -4,7 +4,7 @@
  * PRESENTATION ONLY. Reads from the preview adapter's fixture queue.
  * No server calls, no cache mutation, no persistence.
  */
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, ArrowUpRight, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +29,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
-  listDefaultIntakePreviewQueue,
-  type DefaultIntakePreviewQueueRecord,
-} from "@/lib/preview/default-intake-preview-adapter";
+  useDefaultIntakeQueue,
+  type DefaultIntakeQueueRecord,
+} from "@/lib/default-intake";
 import { NeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { ReassignDialog } from "@/components/intake/reassign-dialog";
 import { BulkReassignToolbar } from "@/components/intake/bulk-reassign-toolbar";
@@ -39,7 +39,7 @@ import { BulkReassignDialog } from "@/components/intake/bulk-reassign-dialog";
 
 type TabKey = "all" | "startup" | "investor";
 
-const SOURCE_LABEL: Record<DefaultIntakePreviewQueueRecord["source"], string> = {
+const SOURCE_LABEL: Record<DefaultIntakeQueueRecord["source"], string> = {
   manual_entry: "Manual entry",
   bulk_import: "Bulk import",
   relationship_created: "Relationship created",
@@ -53,7 +53,8 @@ function ageInDays(iso: string) {
 }
 
 export function QueueTable() {
-  const all = useMemo(() => listDefaultIntakePreviewQueue(), []);
+  // Subscribes to adapter mutations so reassignments update the table.
+  const all = useDefaultIntakeQueue();
   const [tab, setTab] = useState<TabKey>("all");
   const [search, setSearch] = useState("");
   const [source, setSource] = useState<string>("all");
