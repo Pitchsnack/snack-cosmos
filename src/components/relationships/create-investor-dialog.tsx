@@ -178,6 +178,11 @@ export function CreateInvestorDialog({
                 <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
               </SelectTrigger>
               <SelectContent>
+                {previewHuman && (
+                  <SelectItem value={previewHuman.id}>
+                    {previewHuman.name} — Default Investor Intake Agent (preview)
+                  </SelectItem>
+                )}
                 {humans.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {displayName(u)}
@@ -185,7 +190,12 @@ export function CreateInvestorDialog({
                 ))}
               </SelectContent>
             </Select>
-            {!humansQ.isLoading && humans.length === 0 && (
+            {agentIsFixture && (
+              <p className="text-[11px] text-muted-foreground">
+                Preview default selected — swap to a real agent to enable a live create.
+              </p>
+            )}
+            {!humansQ.isLoading && humans.length === 0 && !previewHuman && (
               <p className="text-xs text-destructive">No assignable agents in this workspace.</p>
             )}
           </div>
@@ -196,6 +206,11 @@ export function CreateInvestorDialog({
                 <SelectValue placeholder={aisQ.isLoading ? "Loading…" : "Select an AI agent"} />
               </SelectTrigger>
               <SelectContent>
+                {previewAi && (
+                  <SelectItem value={previewAi.id}>
+                    {previewAi.name} — Default Investor Intake AI Agent (preview)
+                  </SelectItem>
+                )}
                 {ais.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {displayName(u)}
@@ -203,7 +218,12 @@ export function CreateInvestorDialog({
                 ))}
               </SelectContent>
             </Select>
-            {!aisQ.isLoading && ais.length === 0 && (
+            {aiAgentIsFixture && (
+              <p className="text-[11px] text-muted-foreground">
+                Preview default selected — swap to a real AI agent to enable a live create.
+              </p>
+            )}
+            {!aisQ.isLoading && ais.length === 0 && !previewAi && (
               <p className="text-xs text-destructive">No assignable AI agents in this workspace.</p>
             )}
           </div>
