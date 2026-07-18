@@ -1,40 +1,93 @@
 /**
  * Default Intake — canonical types shared by every adapter implementation.
  *
- * These types are the ONLY contract the UI depends on. Preview and Backend
- * adapters must satisfy `DefaultIntakeAdapter`. Do not embed fixture
- * constants in UI components; consume typed adapter results instead.
+ * The UI depends ONLY on this contract. Mock, Transitional, and Backend
+ * adapters MUST all satisfy `DefaultIntakeAdapter`. Fixture constants
+ * must never leak into UI components; consume adapter results only.
  */
 
-export type DefaultIntakeMode = "preview" | "backend";
+export type DefaultIntakeMode = "mock" | "transitional" | "backend";
 
 export type DefaultIntakeDomain = "startup" | "investor";
 export type DefaultIntakeActorType = "human" | "ai";
 
-export interface DefaultIntakeAgent {
+/** Application-level error codes — vendor-neutral. */
+export type DefaultIntakeErrorCode =
+  | "UNAUTHENTICATED"
+  | "FORBIDDEN"
+  | "ACTIVE_TENANT_REQUIRED"
+  | "TENANT_MISMATCH"
+  | "INELIGIBLE_HUMAN_AGENT"
+  | "INELIGIBLE_STARTUP_AI_AGENT"
+  | "INELIGIBLE_INVESTOR_AI_AGENT"
+  | "FIXTURE_ID_REJECTED"
+  | "QUEUE_NOT_AVAILABLE"
+  | "FEATURE_NOT_AVAILABLE"
+  | "UNKNOWN";
+
+export class DefaultIntakeError extends Error {
+  code: DefaultIntakeErrorCode;
+  constructor(code: DefaultIntakeErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "DefaultIntakeError";
+  }
+}
+
+export interface EligibleDefaultIntakeAgent {
   id: string;
   name: string;
   actorType: DefaultIntakeActorType;
   domain: DefaultIntakeDomain;
   tenantId: string;
   active: boolean;
-  /** True only for preview fixtures. Backend rows must set this to false. */
-  preview: boolean;
+  /** True only for mock fixtures. Real transitional/backend rows: false. */
+  fixture: boolean;
+  /** Optional secondary label for the dropdown, e.g. "Tenant Agent". */
+  roleLabel?: string | null;
 }
 
 export interface DefaultIntakeConfiguration {
   tenantId: string;
+  tenantName: string | null;
   startup: {
-    humanAgent: DefaultIntakeAgent;
-    aiAgent: DefaultIntakeAgent;
+    humanAgent: EligibleDefaultIntakeAgent;
+    aiAgent: EligibleDefaultIntakeAgent;
   };
   investor: {
-    humanAgent: DefaultIntakeAgent;
-    aiAgent: DefaultIntakeAgent;
+    humanAgent: EligibleDefaultIntakeAgent;
+    aiAgent: EligibleDefaultIntakeAgent;
   };
-  /** True only for preview fixtures. */
-  preview: boolean;
+  fixture: boolean;
+  updatedAt: string | null;
 }
+
+export interface EligibleDefaultIntakeAgents {
+  startupHumans: EligibleDefaultIntakeAgent[];
+  startupAis: EligibleDefaultIntakeAgent[];
+  investorHumans: EligibleDefaultIntakeAgent[];
+  investorAis: EligibleDefaultIntakeAgent[];
+}
+
+export interface UpsertDefaultIntakeSettingsInput {
+  startupHumanId: string;
+  startupAiId: string;
+  investorHumanId: string;
+  investorAiId: string;
+}
+
+export interface DefaultIntakeSaveResult {
+  ok: true;
+  tenantId: string;
+  tenantName: string | null;
+}
+
+export interface CreateTenantAiAgentInput {
+  displayName: string;
+  domain: DefaultIntakeDomain;
+}
+
+// --- Queue (kept as controlled unavailability in the transitional slice) ---
 
 export type DefaultIntakeQueueSource =
   | "manual_entry"
@@ -42,28 +95,29 @@ export type DefaultIntakeQueueSource =
   | "relationship_created"
   | "auto_enrich";
 
-export interface DefaultIntakeQueueRecord {
+export interface DefaultIntakeQueueItem {
   id: string;
   tenantId: string;
   domain: DefaultIntakeDomain;
   name: string;
-  humanOwner: DefaultIntakeAgent;
-  aiOwner: DefaultIntakeAgent;
+  humanOwner: EligibleDefaultIntakeAgent;
+  aiOwner: EligibleDefaultIntakeAgent;
   source: DefaultIntakeQueueSource;
   createdAt: string;
   needsReassignment: boolean;
-  /** True only for preview fixtures. */
-  preview: boolean;
+  fixture: boolean;
 }
+
+/** Discriminated capability envelope for adapter reads. */
+export type DefaultIntakeCapability<T> =
+  | { available: true; data: T }
+  | { available: false; reason: string; code: DefaultIntakeErrorCode };
 
 export interface ReassignInput {
   recordId: string;
   domain: DefaultIntakeDomain;
   newHumanOwnerName: string;
-  /**
-   * Domain-scoped AI. Startup records may only receive Startup AI; Investor
-   * records may only receive Investor AI. Adapters MUST enforce this.
-   */
+  /** Domain-scoped AI: Startup→Startup AI only, Investor→Investor AI only. */
   newAiOwnerName: string;
   reason?: string;
 }
@@ -75,7 +129,6 @@ export interface BulkReassignItem {
 
 export interface BulkReassignInput {
   items: BulkReassignItem[];
-  /** Applied per-domain by the adapter. */
   startup?: { newHumanOwnerName: string; newAiOwnerName: string };
   investor?: { newHumanOwnerName: string; newAiOwnerName: string };
   reason?: string;
@@ -83,28 +136,21 @@ export interface BulkReassignInput {
 
 /**
  * The single contract every Default Intake adapter must satisfy.
- * Switching between Preview and Backend implementations MUST NOT require
- * any UI/UX change.
+ * Switching Mock ↔ Transitional ↔ Backend adapters MUST NOT require any
+ * UI/UX change.
  */
 export interface DefaultIntakeAdapter {
   readonly mode: DefaultIntakeMode;
-  /** Whether the feature is enabled in the current environment. */
-  readonly enabled: boolean;
 
   isFixtureId(value: string | null | undefined): boolean;
-  /**
-   * Throws if any provided value is a preview fixture id. Adapters that
-   * write to a real backend MUST call this before any mutation payload
-   * crosses the server boundary.
-   */
   assertNoFixtureIds(values: Array<string | null | undefined>): void;
 
-  getConfiguration(): DefaultIntakeConfiguration | null;
-  listQueue(): DefaultIntakeQueueRecord[];
+  getConfiguration(): Promise<DefaultIntakeConfiguration | null>;
+  listEligibleAgents(): Promise<EligibleDefaultIntakeAgents>;
+  upsertConfiguration(input: UpsertDefaultIntakeSettingsInput): Promise<DefaultIntakeSaveResult>;
+  createTenantAiAgent(input: CreateTenantAiAgentInput): Promise<EligibleDefaultIntakeAgent>;
 
-  reassign(input: ReassignInput): Promise<void>;
-  bulkReassign(input: BulkReassignInput): Promise<void>;
-
-  /** Subscribe to adapter state changes (queue mutations, config updates). */
-  subscribe(listener: () => void): () => void;
+  listQueue(): Promise<DefaultIntakeCapability<DefaultIntakeQueueItem[]>>;
+  reassign(input: ReassignInput): Promise<DefaultIntakeCapability<{ ok: true }>>;
+  bulkReassign(input: BulkReassignInput): Promise<DefaultIntakeCapability<{ ok: true }>>;
 }

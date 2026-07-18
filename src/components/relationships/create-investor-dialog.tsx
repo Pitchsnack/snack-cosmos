@@ -1,3 +1,14 @@
+/**
+ * Create a real Investor record and link it to the current Startup.
+ *
+ * Adapter-driven default preselection: if the active tenant has Default
+ * Intake settings, the Investor's Human + AI owner selectors start at the
+ * *investor-domain* defaults (never the Startup's AI). The user may
+ * change either owner before create.
+ *
+ * Defence in depth: `assertNoFixtureIds` blocks any mock-adapter ID from
+ * reaching the create mutation.
+ */
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -23,14 +34,7 @@ import {
 import { createInvestor } from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useHasSession } from "@/hooks/use-has-session";
-import {
-  DEFAULT_INTAKE_PREVIEW_ENABLED,
-  assertNoDefaultIntakePreviewIds,
-  getDefaultIntakePreviewConfiguration,
-  isDefaultIntakePreviewId,
-} from "@/lib/preview/default-intake-preview-adapter";
-import { DefaultIntakeOwnershipPreview } from "@/components/intake/default-intake-ownership-preview";
-import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
+import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
 
 interface Props {
   open: boolean;
@@ -40,7 +44,6 @@ interface Props {
   /** Optional defaults inferred from parent form (e.g. startup ownership). */
   defaultAgentUserId?: string | null;
   defaultAiAgentId?: string | null;
-  /** Called after the investor is created; parent replaces the pending row. */
   onCreated: (result: { id: string; name: string }) => void;
 }
 
@@ -63,16 +66,17 @@ export function CreateInvestorDialog({
   const create = useServerFn(createInvestor);
   const qc = useQueryClient();
 
-  // Preview-only defaults from the Default Intake fixture configuration.
-  // These fixture IDs are visually preselected so the Owning Agent / AI Agent
-  // fields are populated when the preview panel is displayed. They are never
-  // sent to the server — `assertNoDefaultIntakePreviewIds` blocks the mutation
-  // and the user must swap to a real assignable user before a real create.
-  const previewConfig = DEFAULT_INTAKE_PREVIEW_ENABLED
-    ? getDefaultIntakePreviewConfiguration()
+  // Investor-domain Default Intake settings for the active tenant.
+  const configQ = useQuery({
+    queryKey: ["default-intake", tenantId],
+    queryFn: () => defaultIntakeAdapter.getConfiguration(),
+    enabled: enabled && open && !!tenantId,
+    staleTime: 60_000,
+  });
+  const cfg = configQ.data ?? null;
+  const investorDefaults = cfg
+    ? { humanId: cfg.investor.humanAgent.id, aiId: cfg.investor.aiAgent.id }
     : null;
-  const previewHuman = previewConfig?.investor.humanAgent ?? null;
-  const previewAi = previewConfig?.investor.aiAgent ?? null;
 
   const [name, setName] = useState(initialName);
   const [agentId, setAgentId] = useState<string>("");
@@ -81,12 +85,12 @@ export function CreateInvestorDialog({
   useEffect(() => {
     if (open) {
       setName(initialName);
-      // Investor-specific defaults only; Startup owners are never silently copied.
-      setAgentId(defaultAgentUserId ?? previewHuman?.id ?? "");
-      setAiAgentId(defaultAiAgentId ?? previewAi?.id ?? "");
+      // Preselect Investor Default Intake owners (never Startup's AI).
+      setAgentId(defaultAgentUserId ?? investorDefaults?.humanId ?? "");
+      setAiAgentId(defaultAiAgentId ?? investorDefaults?.aiId ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialName, defaultAgentUserId, defaultAiAgentId]);
+  }, [open, initialName, defaultAgentUserId, defaultAiAgentId, investorDefaults?.humanId, investorDefaults?.aiId]);
 
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
@@ -102,7 +106,6 @@ export function CreateInvestorDialog({
   const humans = humansQ.data ?? [];
   const ais = aisQ.data ?? [];
 
-  // Auto-select the sole option when there is exactly one and no preview default already fills it.
   useEffect(() => {
     if (!agentId && humans.length === 1) setAgentId(humans[0].id);
   }, [humans, agentId]);
@@ -110,15 +113,9 @@ export function CreateInvestorDialog({
     if (!aiAgentId && ais.length === 1) setAiAgentId(ais[0].id);
   }, [ais, aiAgentId]);
 
-  const agentIsFixture = isDefaultIntakePreviewId(agentId);
-  const aiAgentIsFixture = isDefaultIntakePreviewId(aiAgentId);
-  const hasPreviewFixtureSelection = agentIsFixture || aiAgentIsFixture;
-
   const createM = useMutation({
     mutationFn: async () => {
-      // Fixture-ID safety: never allow a Default Intake preview ID to
-      // reach the relationship-sync mutation path.
-      assertNoDefaultIntakePreviewIds([tenantId, agentId, aiAgentId]);
+      assertNoFixtureIds([tenantId, agentId, aiAgentId]);
       const res = await create({
         data: {
           tenantId,
@@ -138,8 +135,7 @@ export function CreateInvestorDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit =
-    !!name.trim() && !!agentId && !!aiAgentId && !hasPreviewFixtureSelection && !createM.isPending;
+  const canSubmit = !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,22 +143,10 @@ export function CreateInvestorDialog({
         <DialogHeader>
           <DialogTitle>Create investor</DialogTitle>
           <DialogDescription>
-            Create a new investor record in this workspace and link it to the startup. You can edit
-            the full profile later.
+            Create a new investor record in this workspace and link it to the startup. You can
+            edit the full profile later.
           </DialogDescription>
         </DialogHeader>
-        {DEFAULT_INTAKE_PREVIEW_ENABLED && (
-          <div className="space-y-2 py-1">
-            <DefaultIntakePreviewNotice variant="compact" />
-            <DefaultIntakeOwnershipPreview
-              domain="investor"
-              helperText="Creating the Investor and saving the relationship are separate actions. Startup owners are shown only as suggestions — Startup human and AI ownership are never silently copied to this Investor."
-            />
-            <p className="rounded-md border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-              Suggested based on Startup relationship — you may still pick different owners below.
-            </p>
-          </div>
-        )}
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label htmlFor="create-investor-name">Investor name</Label>
@@ -180,11 +164,6 @@ export function CreateInvestorDialog({
                 <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
               </SelectTrigger>
               <SelectContent>
-                {previewHuman && (
-                  <SelectItem value={previewHuman.id}>
-                    {previewHuman.name} — Default Investor Intake Agent (preview)
-                  </SelectItem>
-                )}
                 {humans.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {displayName(u)}
@@ -192,12 +171,7 @@ export function CreateInvestorDialog({
                 ))}
               </SelectContent>
             </Select>
-            {agentIsFixture && (
-              <p className="text-[11px] text-muted-foreground">
-                Preview default selected — swap to a real agent to enable a live create.
-              </p>
-            )}
-            {!humansQ.isLoading && humans.length === 0 && !previewHuman && (
+            {!humansQ.isLoading && humans.length === 0 && (
               <p className="text-xs text-destructive">No assignable agents in this workspace.</p>
             )}
           </div>
@@ -208,11 +182,6 @@ export function CreateInvestorDialog({
                 <SelectValue placeholder={aisQ.isLoading ? "Loading…" : "Select an AI agent"} />
               </SelectTrigger>
               <SelectContent>
-                {previewAi && (
-                  <SelectItem value={previewAi.id}>
-                    {previewAi.name} — Default Investor Intake AI Agent (preview)
-                  </SelectItem>
-                )}
                 {ais.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {displayName(u)}
@@ -220,19 +189,16 @@ export function CreateInvestorDialog({
                 ))}
               </SelectContent>
             </Select>
-            {aiAgentIsFixture && (
-              <p className="text-[11px] text-muted-foreground">
-                Preview default selected — swap to a real AI agent to enable a live create.
+            {!aisQ.isLoading && ais.length === 0 && (
+              <p className="text-xs text-destructive">
+                No assignable AI agents in this workspace.
               </p>
             )}
-            {!aisQ.isLoading && ais.length === 0 && !previewAi && (
-              <p className="text-xs text-destructive">No assignable AI agents in this workspace.</p>
-            )}
           </div>
-          {hasPreviewFixtureSelection && (
+          {cfg && (
             <p className="rounded-md border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-              Default Intake preview owners are fixture values only. Select real Owning Agent and
-              Owning AI Agent records to create this investor.
+              Preselected from Default Intake for this tenant. Startup owners are never silently
+              copied — pick different owners here if you want them.
             </p>
           )}
         </div>
@@ -246,11 +212,7 @@ export function CreateInvestorDialog({
             Cancel
           </Button>
           <Button type="button" onClick={() => createM.mutate()} disabled={!canSubmit}>
-            {createM.isPending
-              ? "Creating…"
-              : hasPreviewFixtureSelection
-                ? "Select real owners"
-                : "Create investor"}
+            {createM.isPending ? "Creating…" : "Create investor"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,12 +1,17 @@
 /**
- * Default Intake Settings — preview form.
+ * Default Intake — canonical settings form.
  *
- * Presentation-only. Reads fixture defaults from the preview adapter and
- * allows local, non-persistent selection changes. Save produces a visual
- * success message only — NO server call, NO cache mutation.
+ * Single component tree used in every environment. Consumes only the
+ * adapter façade. The adapter's mode (mock / transitional / backend)
+ * determines the data source; the UI is identical.
+ *
+ * Guard chain: authentication (managed layout) → `default_intake.read`
+ * on the page route → active-tenant enforcement inside the server fn.
  */
 import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Info, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -18,131 +23,186 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import {
-  DEFAULT_INTAKE_PREVIEW_ENABLED,
-  getDefaultIntakePreviewConfiguration,
-} from "@/lib/preview/default-intake-preview-adapter";
-import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
-
-const HUMAN_OPTIONS_STARTUP = ["Sarah Chen", "Aliyah Ross", "Marco Bianchi"];
-const AI_OPTIONS_STARTUP = ["Startup Analysis AI", "Startup Enrichment AI (beta)"];
-const HUMAN_OPTIONS_INVESTOR = ["David Lim", "Priya Nair", "Jonas Weber"];
-const AI_OPTIONS_INVESTOR = ["Investor Mandate AI", "Investor Portfolio AI (beta)"];
+import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
+import { defaultIntakeAdapter, type EligibleDefaultIntakeAgent } from "@/lib/default-intake";
+import { CreateTenantAiAgentDialog } from "@/components/intake/create-tenant-ai-agent-dialog";
 
 export function DefaultIntakeForm() {
-  const cfg = useMemo(() => getDefaultIntakePreviewConfiguration(), []);
+  const { data: session } = useSessionContext();
+  const { has } = usePermissions();
+  const qc = useQueryClient();
 
-  const [startupHuman, setStartupHuman] = useState(cfg?.startup.humanAgent.name ?? "");
-  const [startupAi, setStartupAi] = useState(cfg?.startup.aiAgent.name ?? "");
-  const [investorHuman, setInvestorHuman] = useState(cfg?.investor.humanAgent.name ?? "");
-  const [investorAi, setInvestorAi] = useState(cfg?.investor.aiAgent.name ?? "");
-  const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const tenantId = session?.activeWorkspace.tenantId ?? null;
+  const tenantName = session?.activeWorkspace.tenantName ?? null;
+  const wsType = session?.activeWorkspace.workspaceType ?? null;
 
-  if (!DEFAULT_INTAKE_PREVIEW_ENABLED) {
+  const configQ = useQuery({
+    queryKey: ["default-intake", tenantId],
+    queryFn: () => defaultIntakeAdapter.getConfiguration(),
+    enabled: !!tenantId && wsType !== "CONTROL",
+  });
+  const agentsQ = useQuery({
+    queryKey: ["default-intake-agents", tenantId],
+    queryFn: () => defaultIntakeAdapter.listEligibleAgents(),
+    enabled: !!tenantId && wsType !== "CONTROL",
+  });
+
+  const cfg = configQ.data ?? null;
+  const agents = agentsQ.data ?? {
+    startupHumans: [],
+    startupAis: [],
+    investorHumans: [],
+    investorAis: [],
+  };
+
+  const [startupHuman, setStartupHuman] = useState<string>("");
+  const [startupAi, setStartupAi] = useState<string>("");
+  const [investorHuman, setInvestorHuman] = useState<string>("");
+  const [investorAi, setInvestorAi] = useState<string>("");
+  const [aiDialog, setAiDialog] = useState<null | "startup" | "investor">(null);
+
+  // Initialise selectors once config resolves (each field independently).
+  useMemo(() => {
+    if (cfg) {
+      setStartupHuman((v) => v || cfg.startup.humanAgent.id);
+      setStartupAi((v) => v || cfg.startup.aiAgent.id);
+      setInvestorHuman((v) => v || cfg.investor.humanAgent.id);
+      setInvestorAi((v) => v || cfg.investor.aiAgent.id);
+    }
+  }, [cfg]);
+
+  const canWrite = has("default_intake.write");
+  const canCreateAi = has("default_intake.agent.create");
+
+  const saveM = useMutation({
+    mutationFn: () =>
+      defaultIntakeAdapter.upsertConfiguration({
+        startupHumanId: startupHuman,
+        startupAiId: startupAi,
+        investorHumanId: investorHuman,
+        investorAiId: investorAi,
+      }),
+    onSuccess: (res) => {
+      toast.success(
+        `Default Intake configuration saved for ${res.tenantName ?? "this tenant"}.`,
+      );
+      qc.invalidateQueries({ queryKey: ["default-intake"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // -- Active-tenant enforcement (CONTROL global has no tenant scope). -------
+  if (!tenantId || wsType === "CONTROL") {
     return (
-      <div className="rounded-lg border border-border bg-muted/20 p-6 text-sm text-muted-foreground">
-        Default Intake preview is disabled. Set{" "}
-        <code className="rounded bg-muted px-1">VITE_DEFAULT_INTAKE_PREVIEW=true</code> to enable
-        this screen.
-      </div>
+      <Card className="flex items-start gap-3 border-amber-500/40 bg-amber-500/5 p-5 text-sm">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+        <div>
+          <div className="font-medium text-foreground">Select a tenant workspace</div>
+          <p className="mt-1 text-muted-foreground">
+            Default Intake is scoped per tenant. Use the workspace switcher in the top bar to
+            select a tenant (e.g. ACME) before configuring Default Intake.
+          </p>
+        </div>
+      </Card>
     );
   }
-  if (!cfg) return null;
 
-  const setField = (setter: (v: string) => void) => (v: string) => {
-    setter(v);
-    setDirty(true);
-    setSavedMessage(null);
-  };
-
-  const handleSave = () => {
-    // PREVIEW ONLY — no server call, no cache write, no persistence.
-    setSaving(true);
-    window.setTimeout(() => {
-      setSaving(false);
-      setDirty(false);
-      setSavedMessage("Preview only — configuration was not persisted.");
-    }, 400);
-  };
+  const dirty =
+    (cfg &&
+      (startupHuman !== cfg.startup.humanAgent.id ||
+        startupAi !== cfg.startup.aiAgent.id ||
+        investorHuman !== cfg.investor.humanAgent.id ||
+        investorAi !== cfg.investor.aiAgent.id)) ||
+    (!cfg && (!!startupHuman || !!startupAi || !!investorHuman || !!investorAi));
+  const complete = !!startupHuman && !!startupAi && !!investorHuman && !!investorAi;
 
   return (
     <div className="space-y-6">
-      <DefaultIntakePreviewNotice variant="full" />
-
       <div className="grid gap-4 lg:grid-cols-2">
         <IntakeCard
           title="Startup Intake"
-          helper="Startup Analysis AI supports enrichment, classification, missing-data review, investment-stage analysis, and matching preparation."
+          helper="Human owner and Startup AI Agent used when a new Startup is created without final ownership."
           humanLabel="Default Startup Intake Agent"
           aiLabel="Default Startup Intake AI Agent"
+          humans={agents.startupHumans}
+          ais={agents.startupAis}
           humanValue={startupHuman}
           aiValue={startupAi}
-          humanOptions={HUMAN_OPTIONS_STARTUP}
-          aiOptions={AI_OPTIONS_STARTUP}
-          onHumanChange={setField(setStartupHuman)}
-          onAiChange={setField(setStartupAi)}
+          onHumanChange={setStartupHuman}
+          onAiChange={setStartupAi}
+          domain="startup"
+          onCreateAi={canCreateAi ? () => setAiDialog("startup") : undefined}
+          loading={agentsQ.isLoading}
         />
         <IntakeCard
           title="Investor Intake"
-          helper="Investor Mandate AI supports mandate, sector, geography, ticket-size, portfolio-fit, and matching preparation."
+          helper="Human owner and Investor AI Agent used when a new Investor is created without final ownership."
           humanLabel="Default Investor Intake Agent"
           aiLabel="Default Investor Intake AI Agent"
+          humans={agents.investorHumans}
+          ais={agents.investorAis}
           humanValue={investorHuman}
           aiValue={investorAi}
-          humanOptions={HUMAN_OPTIONS_INVESTOR}
-          aiOptions={AI_OPTIONS_INVESTOR}
-          onHumanChange={setField(setInvestorHuman)}
-          onAiChange={setField(setInvestorAi)}
+          onHumanChange={setInvestorHuman}
+          onAiChange={setInvestorAi}
+          domain="investor"
+          onCreateAi={canCreateAi ? () => setAiDialog("investor") : undefined}
+          loading={agentsQ.isLoading}
         />
       </div>
 
       <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card/95 p-3 shadow-card backdrop-blur">
         <div className="flex min-h-[1.5rem] items-center gap-2 text-xs text-muted-foreground">
-          {dirty ? (
+          {saveM.isPending ? (
             <>
-              <Info className="h-3.5 w-3.5" aria-hidden="true" />
-              Unsaved changes — preview only, will not persist.
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
             </>
-          ) : savedMessage ? (
-            <span
-              role="status"
-              aria-live="polite"
-              className="font-medium text-amber-700 dark:text-amber-300"
-            >
-              {savedMessage}
-            </span>
+          ) : dirty ? (
+            <>
+              <Info className="h-3.5 w-3.5" aria-hidden="true" /> Unsaved changes for{" "}
+              {tenantName ?? "this tenant"}.
+            </>
+          ) : cfg ? (
+            <span>All fields saved for {tenantName ?? "this tenant"}.</span>
           ) : (
-            <span>All fields populated from fixture defaults.</span>
+            <span>Choose default owners to save the first configuration for this tenant.</span>
           )}
         </div>
         <div className="flex gap-2">
+          {cfg && (
+            <Button
+              variant="outline"
+              disabled={!dirty || saveM.isPending}
+              onClick={() => {
+                setStartupHuman(cfg.startup.humanAgent.id);
+                setStartupAi(cfg.startup.aiAgent.id);
+                setInvestorHuman(cfg.investor.humanAgent.id);
+                setInvestorAi(cfg.investor.aiAgent.id);
+              }}
+            >
+              Reset
+            </Button>
+          )}
           <Button
-            variant="outline"
-            disabled={!dirty || saving}
-            onClick={() => {
-              setStartupHuman(cfg.startup.humanAgent.name);
-              setStartupAi(cfg.startup.aiAgent.name);
-              setInvestorHuman(cfg.investor.humanAgent.name);
-              setInvestorAi(cfg.investor.aiAgent.name);
-              setDirty(false);
-              setSavedMessage(null);
-            }}
+            onClick={() => saveM.mutate()}
+            disabled={!canWrite || !complete || !dirty || saveM.isPending}
           >
-            Reset
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> Saving…
-              </>
-            ) : (
-              "Save (preview)"
-            )}
+            Save configuration
           </Button>
         </div>
       </div>
+
+      {aiDialog && (
+        <CreateTenantAiAgentDialog
+          open={!!aiDialog}
+          onOpenChange={(o) => !o && setAiDialog(null)}
+          domain={aiDialog}
+          onCreated={() => {
+            qc.invalidateQueries({ queryKey: ["default-intake-agents"] });
+            setAiDialog(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -152,23 +212,29 @@ function IntakeCard({
   helper,
   humanLabel,
   aiLabel,
+  humans,
+  ais,
   humanValue,
   aiValue,
-  humanOptions,
-  aiOptions,
   onHumanChange,
   onAiChange,
+  domain,
+  onCreateAi,
+  loading,
 }: {
   title: string;
   helper: string;
   humanLabel: string;
   aiLabel: string;
+  humans: EligibleDefaultIntakeAgent[];
+  ais: EligibleDefaultIntakeAgent[];
   humanValue: string;
   aiValue: string;
-  humanOptions: string[];
-  aiOptions: string[];
   onHumanChange: (v: string) => void;
   onAiChange: (v: string) => void;
+  domain: "startup" | "investor";
+  onCreateAi?: () => void;
+  loading: boolean;
 }) {
   return (
     <Card className={cn("space-y-4 p-5")}>
@@ -178,35 +244,63 @@ function IntakeCard({
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
       </div>
+
       <div className="space-y-2">
         <Label className="text-xs font-medium">{humanLabel}</Label>
-        <Select value={humanValue} onValueChange={onHumanChange}>
+        <Select value={humanValue} onValueChange={onHumanChange} disabled={humans.length === 0}>
           <SelectTrigger>
-            <SelectValue placeholder="Select a human agent" />
+            <SelectValue placeholder={loading ? "Loading…" : "Select a human agent"} />
           </SelectTrigger>
           <SelectContent>
-            {humanOptions.map((o) => (
-              <SelectItem key={o} value={o}>
-                {o}
+            {humans.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {!loading && humans.length === 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            No active human members in this tenant.{" "}
+            <a href="/users" className="underline underline-offset-2">
+              Invite a user in Users
+            </a>
+            .
+          </p>
+        )}
       </div>
+
       <div className="space-y-2">
-        <Label className="text-xs font-medium">{aiLabel}</Label>
-        <Select value={aiValue} onValueChange={onAiChange}>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-medium">{aiLabel}</Label>
+          {onCreateAi && (
+            <button
+              type="button"
+              onClick={onCreateAi}
+              className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Create AI Agent
+            </button>
+          )}
+        </div>
+        <Select value={aiValue} onValueChange={onAiChange} disabled={ais.length === 0}>
           <SelectTrigger>
-            <SelectValue placeholder="Select an AI agent" />
+            <SelectValue placeholder={loading ? "Loading…" : "Select an AI agent"} />
           </SelectTrigger>
           <SelectContent>
-            {aiOptions.map((o) => (
-              <SelectItem key={o} value={o}>
-                {o}
+            {ais.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {!loading && ais.length === 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            No {domain === "startup" ? "TENANT_STARTUP_AI" : "TENANT_INVESTOR_AI"} agent in this
+            tenant. Use “Create AI Agent” to add one.
+          </p>
+        )}
       </div>
     </Card>
   );

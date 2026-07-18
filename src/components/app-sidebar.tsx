@@ -34,7 +34,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhiteIcon from "@/assets/pitchsnack-hat-white-icon.png";
-import { DEFAULT_INTAKE_PREVIEW_ENABLED } from "@/lib/preview/default-intake-preview-adapter";
+
 
 type NavPath =
   | "/"
@@ -63,8 +63,6 @@ type NavItem = {
   controlOnly?: boolean;
   // PRD 3 framework placeholders — modules not yet built
   disabled?: boolean;
-  /** Default Intake preview surfaces — hidden when the flag is OFF. */
-  previewOnly?: boolean;
 };
 
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
@@ -101,7 +99,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Inbox,
     path: "/intake-queue",
     exact: false,
-    previewOnly: true,
+    perm: "default_intake.read",
   },
   {
     label: "Communications",
@@ -135,7 +133,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: SlidersHorizontal,
     path: "/settings/default-intake",
     exact: false,
-    previewOnly: true,
+    perm: "default_intake.read",
   },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
@@ -175,9 +173,8 @@ function SidebarBody({
   const showSkeleton = !isResolved && !sessionData;
 
   const visibleItems = showSkeleton
-    ? NAV_ITEMS.filter((item) => !item.previewOnly || DEFAULT_INTAKE_PREVIEW_ENABLED)
+    ? NAV_ITEMS
     : NAV_ITEMS.filter((item) => {
-        if (item.previewOnly && !DEFAULT_INTAKE_PREVIEW_ENABLED) return false;
         if (item.controlOnly) return isControl;
         if (!item.perm) return true;
         return has(item.perm);

@@ -1,36 +1,31 @@
 /**
  * BACKWARDS-COMPAT SHIM.
  *
- * The canonical Default Intake adapter now lives at
- * `@/lib/default-intake`. This file re-exports the public surface under
- * the historical names so existing imports keep compiling. New code should
- * import from `@/lib/default-intake` directly.
+ * The canonical Default Intake surface lives at `@/lib/default-intake`.
+ * Preview-flag exports have been removed. This file forwards the remaining
+ * public types + safety guards so any lingering import compiles cleanly.
+ * New code MUST import from `@/lib/default-intake` directly.
  */
 export {
-  DEFAULT_INTAKE_ENABLED,
-  DEFAULT_INTAKE_PREVIEW_ENABLED,
-  DEFAULT_INTAKE_PREVIEW_OVERRIDE_KEY,
-  DEFAULT_INTAKE_FIXTURE_PREFIX,
   DEFAULT_INTAKE_MODE,
   defaultIntakeAdapter,
-  setDefaultIntakePreviewOverride,
-  isDefaultIntakePreviewId,
-  assertNoDefaultIntakePreviewIds,
-  getDefaultIntakePreviewConfiguration,
-  listDefaultIntakePreviewQueue,
-  useDefaultIntakeQueue,
-  useDefaultIntakeConfiguration,
+  FIXTURE_ID_PREFIX,
+  isFixtureId,
+  assertNoFixtureIds,
 } from "@/lib/default-intake";
 
 export type {
   DefaultIntakeAdapter,
   DefaultIntakeMode,
-  DefaultIntakeAgent as DefaultIntakePreviewAgent,
-  DefaultIntakeConfiguration as DefaultIntakePreviewConfiguration,
-  DefaultIntakeQueueRecord as DefaultIntakePreviewQueueRecord,
-  DefaultIntakeQueueSource as DefaultIntakePreviewQueueSource,
   DefaultIntakeDomain,
   DefaultIntakeActorType,
+  DefaultIntakeCapability,
+  DefaultIntakeConfiguration,
+  DefaultIntakeErrorCode,
+  DefaultIntakeQueueItem,
+  DefaultIntakeSaveResult,
+  EligibleDefaultIntakeAgent,
+  EligibleDefaultIntakeAgents,
   ReassignInput,
   BulkReassignInput,
   BulkReassignItem,

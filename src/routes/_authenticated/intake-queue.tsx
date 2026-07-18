@@ -1,16 +1,15 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { DEFAULT_INTAKE_PREVIEW_ENABLED } from "@/lib/preview/default-intake-preview-adapter";
-import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
+import { createFileRoute } from "@tanstack/react-router";
+import { PermissionGuard } from "@/components/permission-guard";
 import { QueueTable } from "@/components/intake/queue-table";
 
 export const Route = createFileRoute("/_authenticated/intake-queue")({
   head: () => ({
     meta: [
-      { title: "Default Intake Queue — Preview" },
+      { title: "Default Intake Queue — SnackPortal" },
       {
         name: "description",
         content:
-          "Preview queue of Startups and Investors awaiting reassignment from Default Intake ownership.",
+          "Queue of Startups and Investors temporarily assigned to Default Intake ownership, awaiting reassignment.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -19,20 +18,20 @@ export const Route = createFileRoute("/_authenticated/intake-queue")({
 });
 
 function IntakeQueuePage() {
-  if (!DEFAULT_INTAKE_PREVIEW_ENABLED) {
-    return <Navigate to="/dashboard" replace />;
-  }
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Default Intake Queue</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Startups and Investors temporarily assigned to Default Intake owners, awaiting
-          reassignment.
-        </p>
-      </header>
-      <DefaultIntakePreviewNotice variant="full" />
-      <QueueTable />
-    </div>
+    <PermissionGuard
+      permission="default_intake.read"
+      message="You don't have permission to view the Intake Queue."
+    >
+      <div className="space-y-6">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight">Default Intake Queue</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Records temporarily assigned to Default Intake owners, awaiting reassignment.
+          </p>
+        </header>
+        <QueueTable />
+      </div>
+    </PermissionGuard>
   );
 }
