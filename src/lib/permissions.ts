@@ -43,7 +43,12 @@ export type Permission =
   | "global_startups.read"
   | "global_startups.write"
   | "global_startups.import"
-  | "ai.invoke";
+  | "ai.invoke"
+  | "default_intake.read"
+  | "default_intake.write"
+  | "default_intake.reassign"
+  | "default_intake.agent.create";
+
 
 const ALL: Permission[] = [
   "tenants.read","tenants.write","tenants.delete",
