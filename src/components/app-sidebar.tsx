@@ -128,13 +128,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
-  {
-    label: "Default Intake Settings",
-    icon: SlidersHorizontal,
-    path: "/settings/default-intake",
-    exact: false,
-    perm: "default_intake.read",
-  },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
