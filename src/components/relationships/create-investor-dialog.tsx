@@ -26,6 +26,8 @@ import { useHasSession } from "@/hooks/use-has-session";
 import {
   DEFAULT_INTAKE_PREVIEW_ENABLED,
   assertNoDefaultIntakePreviewIds,
+  getDefaultIntakePreviewConfiguration,
+  isDefaultIntakePreviewId,
 } from "@/lib/preview/default-intake-preview-adapter";
 import { DefaultIntakeOwnershipPreview } from "@/components/intake/default-intake-ownership-preview";
 import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
@@ -61,6 +63,17 @@ export function CreateInvestorDialog({
   const create = useServerFn(createInvestor);
   const qc = useQueryClient();
 
+  // Preview-only defaults from the Default Intake fixture configuration.
+  // These fixture IDs are visually preselected so the Owning Agent / AI Agent
+  // fields are populated when the preview panel is displayed. They are never
+  // sent to the server — `assertNoDefaultIntakePreviewIds` blocks the mutation
+  // and the user must swap to a real assignable user before a real create.
+  const previewConfig = DEFAULT_INTAKE_PREVIEW_ENABLED
+    ? getDefaultIntakePreviewConfiguration()
+    : null;
+  const previewHuman = previewConfig?.investor.humanAgent ?? null;
+  const previewAi = previewConfig?.investor.aiAgent ?? null;
+
   const [name, setName] = useState(initialName);
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
@@ -68,9 +81,11 @@ export function CreateInvestorDialog({
   useEffect(() => {
     if (open) {
       setName(initialName);
-      setAgentId(defaultAgentUserId ?? "");
-      setAiAgentId(defaultAiAgentId ?? "");
+      // Investor-specific defaults only; Startup owners are never silently copied.
+      setAgentId(defaultAgentUserId ?? previewHuman?.id ?? "");
+      setAiAgentId(defaultAiAgentId ?? previewAi?.id ?? "");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialName, defaultAgentUserId, defaultAiAgentId]);
 
   const humansQ = useQuery({
@@ -87,13 +102,16 @@ export function CreateInvestorDialog({
   const humans = humansQ.data ?? [];
   const ais = aisQ.data ?? [];
 
-  // Auto-select the sole option when there is exactly one.
+  // Auto-select the sole option when there is exactly one and no preview default already fills it.
   useEffect(() => {
     if (!agentId && humans.length === 1) setAgentId(humans[0].id);
   }, [humans, agentId]);
   useEffect(() => {
     if (!aiAgentId && ais.length === 1) setAiAgentId(ais[0].id);
   }, [ais, aiAgentId]);
+
+  const agentIsFixture = isDefaultIntakePreviewId(agentId);
+  const aiAgentIsFixture = isDefaultIntakePreviewId(aiAgentId);
 
   const createM = useMutation({
     mutationFn: async () => {
@@ -160,6 +178,11 @@ export function CreateInvestorDialog({
                 <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
               </SelectTrigger>
               <SelectContent>
+                {previewHuman && (
+                  <SelectItem value={previewHuman.id}>
+                    {previewHuman.name} — Default Investor Intake Agent (preview)
+                  </SelectItem>
+                )}
                 {humans.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {displayName(u)}
@@ -167,7 +190,12 @@ export function CreateInvestorDialog({
                 ))}
               </SelectContent>
             </Select>
-            {!humansQ.isLoading && humans.length === 0 && (
+            {agentIsFixture && (
+              <p className="text-[11px] text-muted-foreground">
+                Preview default selected — swap to a real agent to enable a live create.
+              </p>
+            )}
+            {!humansQ.isLoading && humans.length === 0 && !previewHuman && (
               <p className="text-xs text-destructive">No assignable agents in this workspace.</p>
             )}
           </div>
@@ -178,6 +206,11 @@ export function CreateInvestorDialog({
                 <SelectValue placeholder={aisQ.isLoading ? "Loading…" : "Select an AI agent"} />
               </SelectTrigger>
               <SelectContent>
+                {previewAi && (
+                  <SelectItem value={previewAi.id}>
+                    {previewAi.name} — Default Investor Intake AI Agent (preview)
+                  </SelectItem>
+                )}
                 {ais.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {displayName(u)}
@@ -185,7 +218,12 @@ export function CreateInvestorDialog({
                 ))}
               </SelectContent>
             </Select>
-            {!aisQ.isLoading && ais.length === 0 && (
+            {aiAgentIsFixture && (
+              <p className="text-[11px] text-muted-foreground">
+                Preview default selected — swap to a real AI agent to enable a live create.
+              </p>
+            )}
+            {!aisQ.isLoading && ais.length === 0 && !previewAi && (
               <p className="text-xs text-destructive">No assignable AI agents in this workspace.</p>
             )}
           </div>
