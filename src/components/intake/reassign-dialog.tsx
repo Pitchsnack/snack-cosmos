@@ -27,11 +27,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
-import type {
-  DefaultIntakeDomain,
-  DefaultIntakePreviewQueueRecord,
-} from "@/lib/preview/default-intake-preview-adapter";
-import { assertNoDefaultIntakePreviewIds } from "@/lib/preview/default-intake-preview-adapter";
+import {
+  defaultIntakeAdapter,
+  type DefaultIntakeDomain,
+  type DefaultIntakeQueueRecord,
+} from "@/lib/default-intake";
 
 const HUMAN_STARTUP = ["Aliyah Ross", "Marco Bianchi", "Sarah Chen"];
 const HUMAN_INVESTOR = ["Priya Nair", "Jonas Weber", "David Lim"];
@@ -41,7 +41,7 @@ const AI_INVESTOR = ["Investor Mandate AI", "Investor Portfolio AI (beta)"];
 export interface ReassignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  record: DefaultIntakePreviewQueueRecord | null;
+  record: DefaultIntakeQueueRecord | null;
 }
 
 export function ReassignDialog({ open, onOpenChange, record }: ReassignDialogProps) {
