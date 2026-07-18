@@ -38,6 +38,8 @@ import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { ROLE_LABELS, type AppRole } from "@/lib/permissions";
 import { AgentImpactPanel } from "@/components/users/agent-impact-panel";
+import { DefaultIntakeForm } from "@/components/settings/default-intake-form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Users — SnackPortal2" }] }),
