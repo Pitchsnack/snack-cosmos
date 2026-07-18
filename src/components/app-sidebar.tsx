@@ -51,7 +51,7 @@ type NavPath =
   | "/preferences"
   | "/global-startups"
   | "/global-startups/browse"
-  | "/settings/default-intake"
+  
   | "/intake-queue";
 
 type NavItem = {
