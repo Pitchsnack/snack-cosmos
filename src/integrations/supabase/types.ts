@@ -564,6 +564,85 @@ export type Database = {
           },
         ]
       }
+      default_intake_settings: {
+        Row: {
+          created_at: string
+          default_investor_intake_agent_id: string
+          default_investor_intake_ai_agent_id: string
+          default_startup_intake_agent_id: string
+          default_startup_intake_ai_agent_id: string
+          id: string
+          tenant_id: string
+          updated_at: string
+          updated_by_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          default_investor_intake_agent_id: string
+          default_investor_intake_ai_agent_id: string
+          default_startup_intake_agent_id: string
+          default_startup_intake_ai_agent_id: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+          updated_by_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          default_investor_intake_agent_id?: string
+          default_investor_intake_ai_agent_id?: string
+          default_startup_intake_agent_id?: string
+          default_startup_intake_ai_agent_id?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+          updated_by_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "default_intake_settings_default_investor_intake_agent_id_fkey"
+            columns: ["default_investor_intake_agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "default_intake_settings_default_investor_intake_ai_agent_i_fkey"
+            columns: ["default_investor_intake_ai_agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "default_intake_settings_default_startup_intake_agent_id_fkey"
+            columns: ["default_startup_intake_agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "default_intake_settings_default_startup_intake_ai_agent_id_fkey"
+            columns: ["default_startup_intake_ai_agent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "default_intake_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "default_intake_settings_updated_by_user_id_fkey"
+            columns: ["updated_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       global_startup_imports: {
         Row: {
           global_id: string
