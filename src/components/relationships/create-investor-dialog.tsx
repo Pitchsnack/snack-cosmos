@@ -63,6 +63,17 @@ export function CreateInvestorDialog({
   const create = useServerFn(createInvestor);
   const qc = useQueryClient();
 
+  // Preview-only defaults from the Default Intake fixture configuration.
+  // These fixture IDs are visually preselected so the Owning Agent / AI Agent
+  // fields are populated when the preview panel is displayed. They are never
+  // sent to the server — `assertNoDefaultIntakePreviewIds` blocks the mutation
+  // and the user must swap to a real assignable user before a real create.
+  const previewConfig = DEFAULT_INTAKE_PREVIEW_ENABLED
+    ? getDefaultIntakePreviewConfiguration()
+    : null;
+  const previewHuman = previewConfig?.investor.humanAgent ?? null;
+  const previewAi = previewConfig?.investor.aiAgent ?? null;
+
   const [name, setName] = useState(initialName);
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
@@ -70,9 +81,11 @@ export function CreateInvestorDialog({
   useEffect(() => {
     if (open) {
       setName(initialName);
-      setAgentId(defaultAgentUserId ?? "");
-      setAiAgentId(defaultAiAgentId ?? "");
+      // Investor-specific defaults only; Startup owners are never silently copied.
+      setAgentId(defaultAgentUserId ?? previewHuman?.id ?? "");
+      setAiAgentId(defaultAiAgentId ?? previewAi?.id ?? "");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialName, defaultAgentUserId, defaultAiAgentId]);
 
   const humansQ = useQuery({
@@ -89,13 +102,16 @@ export function CreateInvestorDialog({
   const humans = humansQ.data ?? [];
   const ais = aisQ.data ?? [];
 
-  // Auto-select the sole option when there is exactly one.
+  // Auto-select the sole option when there is exactly one and no preview default already fills it.
   useEffect(() => {
     if (!agentId && humans.length === 1) setAgentId(humans[0].id);
   }, [humans, agentId]);
   useEffect(() => {
     if (!aiAgentId && ais.length === 1) setAiAgentId(ais[0].id);
   }, [ais, aiAgentId]);
+
+  const agentIsFixture = isDefaultIntakePreviewId(agentId);
+  const aiAgentIsFixture = isDefaultIntakePreviewId(aiAgentId);
 
   const createM = useMutation({
     mutationFn: async () => {
