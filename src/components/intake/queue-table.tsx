@@ -59,7 +59,7 @@ export function QueueTable() {
   const [search, setSearch] = useState("");
   const [source, setSource] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [singleTarget, setSingleTarget] = useState<DefaultIntakePreviewQueueRecord | null>(null);
+  const [singleTarget, setSingleTarget] = useState<DefaultIntakeQueueRecord | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
 
   const visible = all.filter((r) => {
