@@ -374,6 +374,7 @@ export const createTenantAiAgent = createServerFn({ method: "POST" })
     const { data: created, error: userErr } = await supabaseAdmin
       .from("users")
       .insert({
+        id: crypto.randomUUID(),
         email,
         first_name: data.displayName,
         last_name: null,
@@ -383,6 +384,7 @@ export const createTenantAiAgent = createServerFn({ method: "POST" })
       .select("id, email, first_name, last_name")
       .single();
     if (userErr || !created) throw new DefaultIntakeError("UNKNOWN", userErr?.message ?? "AI user insert failed");
+
 
     const { error: memErr } = await supabaseAdmin.from("user_tenants").insert({
       user_id: created.id,
