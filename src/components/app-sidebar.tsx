@@ -21,7 +21,6 @@ import {
   Bell,
   Globe,
   Inbox,
-  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -51,7 +50,7 @@ type NavPath =
   | "/preferences"
   | "/global-startups"
   | "/global-startups/browse"
-  | "/settings/default-intake"
+  
   | "/intake-queue";
 
 type NavItem = {
@@ -128,13 +127,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
-  {
-    label: "Default Intake Settings",
-    icon: SlidersHorizontal,
-    path: "/settings/default-intake",
-    exact: false,
-    perm: "default_intake.read",
-  },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
