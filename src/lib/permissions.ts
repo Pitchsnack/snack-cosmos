@@ -75,6 +75,7 @@ const TENANT_ADMIN: Permission[] = [
   "deals.read","deals.write",
   "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
   "global_startups.read","global_startups.import",
+  "default_intake.read","default_intake.write","default_intake.reassign","default_intake.agent.create",
 ];
 
 const TENANT_AGENT: Permission[] = [
@@ -84,7 +85,9 @@ const TENANT_AGENT: Permission[] = [
   "deals.read","deals.write",
   "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
   "global_startups.read","global_startups.import",
+  "default_intake.read",
 ];
+
 
 const STARTUP_USER: Permission[] = ["workspace.switch","startups.read"];
 const INVESTOR_USER: Permission[] = ["workspace.switch","investors.read"];
