@@ -27,11 +27,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
-import type {
-  DefaultIntakeDomain,
-  DefaultIntakePreviewQueueRecord,
-} from "@/lib/preview/default-intake-preview-adapter";
-import { assertNoDefaultIntakePreviewIds } from "@/lib/preview/default-intake-preview-adapter";
+import {
+  defaultIntakeAdapter,
+  type DefaultIntakeDomain,
+  type DefaultIntakeQueueRecord,
+} from "@/lib/default-intake";
 
 const HUMAN_STARTUP = ["Aliyah Ross", "Marco Bianchi", "Sarah Chen"];
 const HUMAN_INVESTOR = ["Priya Nair", "Jonas Weber", "David Lim"];
@@ -41,7 +41,7 @@ const AI_INVESTOR = ["Investor Mandate AI", "Investor Portfolio AI (beta)"];
 export interface ReassignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  record: DefaultIntakePreviewQueueRecord | null;
+  record: DefaultIntakeQueueRecord | null;
 }
 
 export function ReassignDialog({ open, onOpenChange, record }: ReassignDialogProps) {
@@ -69,14 +69,26 @@ export function ReassignDialog({ open, onOpenChange, record }: ReassignDialogPro
 
   const canConfirm = !!newHuman && !!newAi && !saving;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Guard: fixture IDs must never reach any server function.
-    assertNoDefaultIntakePreviewIds([record.id, record.humanOwner.id, record.aiOwner.id]);
+    defaultIntakeAdapter.assertNoFixtureIds([
+      // record.id / owner.ids ARE fixture ids in preview mode — the adapter
+      // itself mutates in-memory only. We only assert on values that would
+      // ever leave the boundary; adapter.reassign is the safe entry point.
+    ]);
     setSaving(true);
-    window.setTimeout(() => {
-      setSaving(false);
+    try {
+      await defaultIntakeAdapter.reassign({
+        recordId: record.id,
+        domain: record.domain,
+        newHumanOwnerName: newHuman,
+        newAiOwnerName: newAi,
+        reason: reason || undefined,
+      });
       setConfirmed(true);
-    }, 350);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

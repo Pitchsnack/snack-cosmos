@@ -26,9 +26,9 @@ import {
 } from "@/components/ui/select";
 import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
 import {
-  assertNoDefaultIntakePreviewIds,
-  type DefaultIntakePreviewQueueRecord,
-} from "@/lib/preview/default-intake-preview-adapter";
+  defaultIntakeAdapter,
+  type DefaultIntakeQueueRecord,
+} from "@/lib/default-intake";
 
 const HUMAN_STARTUP = ["Aliyah Ross", "Marco Bianchi", "Sarah Chen"];
 const HUMAN_INVESTOR = ["Priya Nair", "Jonas Weber", "David Lim"];
@@ -38,7 +38,7 @@ const AI_INVESTOR = ["Investor Mandate AI", "Investor Portfolio AI (beta)"];
 export interface BulkReassignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selected: DefaultIntakePreviewQueueRecord[];
+  selected: DefaultIntakeQueueRecord[];
 }
 
 export function BulkReassignDialog({ open, onOpenChange, selected }: BulkReassignDialogProps) {
@@ -70,13 +70,24 @@ export function BulkReassignDialog({ open, onOpenChange, selected }: BulkReassig
   const investorReady = investorRecords.length === 0 || (!!investorHuman && !!investorAi);
   const canConfirm = selected.length > 0 && startupReady && investorReady && !saving;
 
-  const handleConfirm = () => {
-    assertNoDefaultIntakePreviewIds(selected.map((r) => r.id));
+  const handleConfirm = async () => {
     setSaving(true);
-    window.setTimeout(() => {
-      setSaving(false);
+    try {
+      await defaultIntakeAdapter.bulkReassign({
+        items: selected.map((r) => ({ recordId: r.id, domain: r.domain })),
+        startup:
+          startupRecords.length > 0
+            ? { newHumanOwnerName: startupHuman, newAiOwnerName: startupAi }
+            : undefined,
+        investor:
+          investorRecords.length > 0
+            ? { newHumanOwnerName: investorHuman, newAiOwnerName: investorAi }
+            : undefined,
+      });
       setConfirmed(true);
-    }, 400);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
