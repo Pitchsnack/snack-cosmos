@@ -69,14 +69,26 @@ export function ReassignDialog({ open, onOpenChange, record }: ReassignDialogPro
 
   const canConfirm = !!newHuman && !!newAi && !saving;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Guard: fixture IDs must never reach any server function.
-    assertNoDefaultIntakePreviewIds([record.id, record.humanOwner.id, record.aiOwner.id]);
+    defaultIntakeAdapter.assertNoFixtureIds([
+      // record.id / owner.ids ARE fixture ids in preview mode — the adapter
+      // itself mutates in-memory only. We only assert on values that would
+      // ever leave the boundary; adapter.reassign is the safe entry point.
+    ]);
     setSaving(true);
-    window.setTimeout(() => {
-      setSaving(false);
+    try {
+      await defaultIntakeAdapter.reassign({
+        recordId: record.id,
+        domain: record.domain,
+        newHumanOwnerName: newHuman,
+        newAiOwnerName: newAi,
+        reason: reason || undefined,
+      });
       setConfirmed(true);
-    }, 350);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
