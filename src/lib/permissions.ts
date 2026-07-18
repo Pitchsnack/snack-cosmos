@@ -61,7 +61,9 @@ const ALL: Permission[] = [
   "deals.share.read","deals.share.create","deals.share.accept","deals.share.reject","deals.share.introduce",
   "global_startups.read","global_startups.write",
   "ai.invoke",
+  "default_intake.read","default_intake.write","default_intake.reassign","default_intake.agent.create",
 ];
+
 
 const TENANT_ADMIN: Permission[] = [
   "tenants.read",
