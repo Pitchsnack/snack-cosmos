@@ -107,56 +107,80 @@ function UsersPageInner() {
         {has("users.invite") && <InviteDialog onInvited={() => refetch()} />}
       </div>
 
-      <div className="rounded-lg border border-border bg-card shadow-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last login</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            ) : (data ?? []).length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
-                  No users yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              (data ?? []).map((u: any) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.email}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {u.user_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={u.status} />
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "Never"}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Tabs defaultValue="users" className="w-full">
+        <TabsList>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          {has("default_intake.read") && (
+            <TabsTrigger value="default-intake">Default Intake</TabsTrigger>
+          )}
+        </TabsList>
 
-      <AgentImpactPanel />
+        <TabsContent value="users" className="space-y-6">
+          <div className="rounded-lg border border-border bg-card shadow-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last login</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                      Loading…
+                    </TableCell>
+                  </TableRow>
+                ) : (data ?? []).length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                      No users yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  (data ?? []).map((u: any) => (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{u.email}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {u.user_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={u.status} />
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "Never"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <AgentImpactPanel />
+        </TabsContent>
+
+        {has("default_intake.read") && (
+          <TabsContent value="default-intake" className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Default Intake Assignment</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Choose the default human and AI owners used when a Startup or Investor is created
+                without final ownership. Scoped to the active tenant workspace.
+              </p>
+            </div>
+            <DefaultIntakeForm />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }
