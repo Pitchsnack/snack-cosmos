@@ -26,9 +26,9 @@ import {
 } from "@/components/ui/select";
 import { DefaultIntakePreviewNotice } from "@/components/intake/default-intake-preview-notice";
 import {
-  assertNoDefaultIntakePreviewIds,
-  type DefaultIntakePreviewQueueRecord,
-} from "@/lib/preview/default-intake-preview-adapter";
+  defaultIntakeAdapter,
+  type DefaultIntakeQueueRecord,
+} from "@/lib/default-intake";
 
 const HUMAN_STARTUP = ["Aliyah Ross", "Marco Bianchi", "Sarah Chen"];
 const HUMAN_INVESTOR = ["Priya Nair", "Jonas Weber", "David Lim"];
@@ -38,7 +38,7 @@ const AI_INVESTOR = ["Investor Mandate AI", "Investor Portfolio AI (beta)"];
 export interface BulkReassignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selected: DefaultIntakePreviewQueueRecord[];
+  selected: DefaultIntakeQueueRecord[];
 }
 
 export function BulkReassignDialog({ open, onOpenChange, selected }: BulkReassignDialogProps) {
