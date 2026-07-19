@@ -317,6 +317,7 @@ export function StartupDetailPanel({
       {lightbox && typeof document !== "undefined" && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6"
+          style={{ pointerEvents: "auto" }}
           onClick={() => setLightbox(null)}
           role="dialog"
           aria-modal="true"
@@ -328,7 +329,7 @@ export function StartupDetailPanel({
             <img
               src={lightbox}
               alt=""
-              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+              className="max-h-[67vh] max-w-[67vw] rounded-lg object-contain"
             />
             <button
               type="button"
