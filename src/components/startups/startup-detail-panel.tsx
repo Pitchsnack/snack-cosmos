@@ -73,6 +73,7 @@ export function StartupDetailPanel({
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const handleCopyLink = () => {
     if (typeof window !== "undefined") {
