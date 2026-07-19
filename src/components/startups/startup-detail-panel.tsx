@@ -283,24 +283,14 @@ export function StartupDetailPanel({
 
       {/* Media */}
       {mediaSlots.length > 0 && (
-        <div
-          className={cn(
-            "gap-3",
-            mediaSlots.length === 1
-              ? "flex justify-center"
-              : "grid grid-cols-2 sm:grid-cols-3"
-          )}
-        >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {mediaSlots.map((m) => (
             <a
               key={m.slot}
               href={m.image_signed_url ?? "#"}
               target="_blank"
               rel="noreferrer"
-              className={cn(
-                "block overflow-hidden rounded-lg bg-muted/40",
-                mediaSlots.length === 1 ? "w-2/3 aspect-video" : "aspect-video"
-              )}
+              className="block aspect-video overflow-hidden rounded-lg bg-muted/40"
             >
               <img
                 src={m.image_signed_url ?? ""}
