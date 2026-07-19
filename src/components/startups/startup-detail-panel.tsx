@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
   ExternalLink,
@@ -313,9 +314,9 @@ export function StartupDetailPanel({
         </div>
       )}
 
-      {lightbox && (
+      {lightbox && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6"
           onClick={() => setLightbox(null)}
           role="dialog"
           aria-modal="true"
@@ -338,7 +339,8 @@ export function StartupDetailPanel({
               <X className="h-4 w-4" />
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
 
