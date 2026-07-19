@@ -160,9 +160,41 @@ export function CreateInvestorDialog({
               autoFocus
             />
           </div>
+          {investorDefaults && (
+            <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-2.5">
+              <Checkbox
+                id="use-default-intake"
+                checked={useDefaultIntake}
+                onCheckedChange={(v) => {
+                  const checked = v === true;
+                  setUseDefaultIntake(checked);
+                  if (checked) {
+                    setAgentId(investorDefaults.humanId);
+                    setAiAgentId(investorDefaults.aiId);
+                  } else {
+                    setAgentId("");
+                    setAiAgentId("");
+                  }
+                }}
+                className="mt-0.5"
+              />
+              <Label htmlFor="use-default-intake" className="cursor-pointer text-sm font-normal leading-snug">
+                Use Default Intake Assignment
+                <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                  Auto-fill Owning Agent and Owning AI Agent with this tenant's configured Default Investor Intake owners. Untick to pick manually.
+                </span>
+              </Label>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Owning Agent</Label>
-            <Select value={agentId} onValueChange={setAgentId}>
+            <Select
+              value={agentId}
+              onValueChange={(v) => {
+                setAgentId(v);
+                if (useDefaultIntake && v !== investorDefaults?.humanId) setUseDefaultIntake(false);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
               </SelectTrigger>
@@ -180,7 +212,13 @@ export function CreateInvestorDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Owning AI Agent</Label>
-            <Select value={aiAgentId} onValueChange={setAiAgentId}>
+            <Select
+              value={aiAgentId}
+              onValueChange={(v) => {
+                setAiAgentId(v);
+                if (useDefaultIntake && v !== investorDefaults?.aiId) setUseDefaultIntake(false);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder={aisQ.isLoading ? "Loading…" : "Select an AI agent"} />
               </SelectTrigger>
@@ -198,12 +236,6 @@ export function CreateInvestorDialog({
               </p>
             )}
           </div>
-          {cfg && (
-            <p className="rounded-md border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-              Preselected from Default Intake for this tenant. Startup owners are never silently
-              copied — pick different owners here if you want them.
-            </p>
-          )}
         </div>
         <DialogFooter>
           <Button
