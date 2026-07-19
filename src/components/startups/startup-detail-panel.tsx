@@ -285,23 +285,61 @@ export function StartupDetailPanel({
       {/* Media */}
       {mediaSlots.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {mediaSlots.map((m) => (
-            <a
-              key={m.slot}
-              href={m.image_signed_url ?? "#"}
-              target="_blank"
-              rel="noreferrer"
-              className="block aspect-video overflow-hidden rounded-lg bg-muted/40"
-            >
-              <img
-                src={m.image_signed_url ?? ""}
-                alt={m.caption ?? ""}
-                className="h-full w-full object-cover transition duration-300 hover:scale-105"
-              />
-            </a>
-          ))}
+          {mediaSlots.map((m) => {
+            const single = mediaSlots.length === 1;
+            return (
+              <button
+                key={m.slot}
+                type="button"
+                onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
+                className={cn(
+                  "block overflow-hidden rounded-lg bg-muted/40 text-left",
+                  single ? "sm:col-span-2" : "aspect-video",
+                )}
+                style={single ? { aspectRatio: "32 / 9" } : undefined}
+              >
+                <img
+                  src={m.image_signed_url ?? ""}
+                  alt={m.caption ?? ""}
+                  className={cn(
+                    "h-full transition duration-300 hover:scale-105",
+                    single ? "w-auto max-w-full object-contain object-left" : "w-full object-cover",
+                  )}
+                />
+              </button>
+            );
+          })}
         </div>
       )}
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="group relative max-h-full max-w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightbox}
+              alt=""
+              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+            />
+            <button
+              type="button"
+              onClick={() => setLightbox(null)}
+              aria-label="Close"
+              className="absolute right-2 top-2 hidden h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md hover:bg-background group-hover:flex"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* Short description */}
       {s.short_description && (
