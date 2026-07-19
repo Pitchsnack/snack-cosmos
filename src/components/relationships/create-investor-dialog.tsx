@@ -190,13 +190,14 @@ export function CreateInvestorDialog({
             <Label>Owning Agent</Label>
             <Select
               value={agentId}
+              disabled={useDefaultIntake}
               onValueChange={(v) => {
                 setAgentId(v);
                 if (useDefaultIntake && v !== investorDefaults?.humanId) setUseDefaultIntake(false);
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
+                <SelectValue placeholder={useDefaultIntake ? "Using default intake agent" : humansQ.isLoading ? "Loading…" : "Select an agent"} />
               </SelectTrigger>
               <SelectContent>
                 {humans.map((u) => (
@@ -214,13 +215,14 @@ export function CreateInvestorDialog({
             <Label>Owning AI Agent</Label>
             <Select
               value={aiAgentId}
+              disabled={useDefaultIntake}
               onValueChange={(v) => {
                 setAiAgentId(v);
                 if (useDefaultIntake && v !== investorDefaults?.aiId) setUseDefaultIntake(false);
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder={aisQ.isLoading ? "Loading…" : "Select an AI agent"} />
+                <SelectValue placeholder={useDefaultIntake ? "Using default intake AI agent" : aisQ.isLoading ? "Loading…" : "Select an AI agent"} />
               </SelectTrigger>
               <SelectContent>
                 {ais.map((u) => (
