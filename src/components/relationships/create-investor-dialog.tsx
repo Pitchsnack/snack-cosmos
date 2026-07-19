@@ -82,13 +82,15 @@ export function CreateInvestorDialog({
   const [name, setName] = useState(initialName);
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
+  const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
 
   useEffect(() => {
     if (open) {
       setName(initialName);
-      // Preselect Investor Default Intake owners (never Startup's AI).
-      setAgentId(defaultAgentUserId ?? investorDefaults?.humanId ?? "");
-      setAiAgentId(defaultAiAgentId ?? investorDefaults?.aiId ?? "");
+      const useIt = !!investorDefaults;
+      setUseDefaultIntake(useIt);
+      setAgentId(useIt ? investorDefaults!.humanId : defaultAgentUserId ?? "");
+      setAiAgentId(useIt ? investorDefaults!.aiId : defaultAiAgentId ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialName, defaultAgentUserId, defaultAiAgentId, investorDefaults?.humanId, investorDefaults?.aiId]);
