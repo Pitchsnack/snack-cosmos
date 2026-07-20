@@ -221,7 +221,7 @@ function StartupPanelModalBody({ modalId, onClose }: { modalId: string | null; o
       onMouseLeave={() => setHovered(false)}
     >
       {/* Dedicated close zone above the header action row */}
-      <div className="relative shrink-0 h-14">
+      <div className="relative shrink-0 h-10">
         <DialogClose
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -234,9 +234,10 @@ function StartupPanelModalBody({ modalId, onClose }: { modalId: string | null; o
           <X className="h-4 w-4" />
         </DialogClose>
       </div>
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
         {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact onClose={onClose} />}
       </div>
+
     </div>
   );
 }

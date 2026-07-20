@@ -108,9 +108,10 @@ export function StartupDetailPanel({
   if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
 
   return (
-    <div className="space-y-8 text-foreground">
+    <div className="space-y-5 text-foreground">
       {/* Header */}
-      <header className={cn("flex items-start justify-between gap-4", compact && "pt-5")}>
+      <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
+
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {s.logo_signed_url ? (
@@ -468,13 +469,14 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-border/50 pt-5">
-      <h3 className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <section className="border-t border-border/50 pt-4">
+      <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
         {title}
       </h3>
       <div>{children}</div>
     </section>
+
   );
 }
 
