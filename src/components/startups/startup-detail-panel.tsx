@@ -108,9 +108,10 @@ export function StartupDetailPanel({
   if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
 
   return (
-    <div className="space-y-8 text-foreground">
+    <div className="space-y-5 text-foreground">
       {/* Header */}
-      <header className={cn("flex items-start justify-between gap-4", compact && "pt-5")}>
+      <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
+
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {s.logo_signed_url ? (
