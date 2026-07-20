@@ -315,33 +315,7 @@ export function StartupDetailPanel({
       )}
 
       {lightbox && typeof document !== "undefined" && createPortal(
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6"
-          style={{ pointerEvents: "auto" }}
-          onClick={() => setLightbox(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="group relative inline-block"
-            onClick={(e) => e.stopPropagation()}
-            data-testid="lightbox-hover-area"
-          >
-            <img
-              src={lightbox}
-              alt=""
-              className="block max-h-[67vh] max-w-[67vw] rounded-lg object-contain"
-            />
-            <button
-              type="button"
-              onClick={() => setLightbox(null)}
-              aria-label="Close image"
-              className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 shadow-md transition-opacity duration-150 hover:bg-background focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100 group-focus-within:opacity-100"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>,
+        <LightboxOverlay url={lightbox} onClose={() => setLightbox(null)} />,
         document.body,
       )}
 
