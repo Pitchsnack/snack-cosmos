@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
@@ -196,18 +196,44 @@ function StartupsPageInner() {
       <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent
           className={cn(
-            "[&>button>svg]:h-5 [&>button>svg]:w-5",
+            "[&>button]:hidden",
             "p-0 gap-0 flex flex-col overflow-hidden",
             "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
           )}
         >
-          <div className="flex-1 overflow-y-auto p-5">
-            {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact onClose={() => setModalId(null)} />}
-          </div>
+          <StartupPanelModalBody modalId={modalId} onClose={() => setModalId(null)} />
         </DialogContent>
       </Dialog>
 
+    </div>
+  );
+}
+
+function StartupPanelModalBody({ modalId, onClose }: { modalId: string | null; onClose: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const visible = hovered || focused;
+  return (
+    <div
+      className="relative flex-1 overflow-y-auto"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <DialogClose
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        aria-label="Close"
+        className={cn(
+          "absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          visible ? "opacity-100" : "opacity-0 pointer-events-none",
+        )}
+      >
+        <X className="h-4 w-4" />
+      </DialogClose>
+      <div className="p-5">
+        {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact onClose={onClose} />}
+      </div>
     </div>
   );
 }
