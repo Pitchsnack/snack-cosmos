@@ -493,3 +493,48 @@ function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) 
     </div>
   );
 }
+
+function LightboxOverlay({ url, onClose }: { url: string; onClose: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const visible = hovered || focused;
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6"
+      style={{ pointerEvents: "auto" }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="relative inline-block"
+        onClick={(e) => e.stopPropagation()}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        data-testid="lightbox-hover-area"
+      >
+        <img
+          src={url}
+          alt=""
+          className="block max-h-[67vh] max-w-[67vw] rounded-lg object-contain"
+        />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          aria-label="Close image"
+          className={cn(
+            "absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            visible ? "opacity-100" : "opacity-0 pointer-events-none",
+          )}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
