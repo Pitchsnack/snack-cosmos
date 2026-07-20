@@ -323,19 +323,20 @@ export function StartupDetailPanel({
           aria-modal="true"
         >
           <div
-            className="group relative max-h-full max-w-full"
+            className="group relative inline-block"
             onClick={(e) => e.stopPropagation()}
+            data-testid="lightbox-hover-area"
           >
             <img
               src={lightbox}
               alt=""
-              className="max-h-[67vh] max-w-[67vw] rounded-lg object-contain"
+              className="block max-h-[67vh] max-w-[67vw] rounded-lg object-contain"
             />
             <button
               type="button"
               onClick={() => setLightbox(null)}
-              aria-label="Close"
-              className="absolute right-2 top-2 hidden h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md hover:bg-background group-hover:flex"
+              aria-label="Close image"
+              className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 shadow-md transition-opacity duration-150 hover:bg-background focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100 group-focus-within:opacity-100"
             >
               <X className="h-4 w-4" />
             </button>
