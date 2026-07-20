@@ -216,22 +216,25 @@ function StartupPanelModalBody({ modalId, onClose }: { modalId: string | null; o
   const visible = hovered || focused;
   return (
     <div
-      className="relative flex-1 overflow-y-auto"
+      className="relative flex flex-1 flex-col overflow-hidden"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <DialogClose
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        aria-label="Close"
-        className={cn(
-          "absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          visible ? "opacity-100" : "opacity-0 pointer-events-none",
-        )}
-      >
-        <X className="h-4 w-4" />
-      </DialogClose>
-      <div className="p-5">
+      {/* Dedicated close zone above the header action row */}
+      <div className="relative shrink-0 h-14">
+        <DialogClose
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          aria-label="Close"
+          className={cn(
+            "absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            visible ? "opacity-100" : "opacity-0 pointer-events-none",
+          )}
+        >
+          <X className="h-4 w-4" />
+        </DialogClose>
+      </div>
+      <div className="flex-1 overflow-y-auto p-5">
         {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact onClose={onClose} />}
       </div>
     </div>
