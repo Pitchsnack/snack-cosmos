@@ -111,7 +111,6 @@ export function StartupDetailPanel({
     <div className="space-y-5 text-foreground">
       {/* Header */}
       <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
-
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {s.logo_signed_url ? (
@@ -287,7 +286,12 @@ export function StartupDetailPanel({
 
       {/* Media */}
       {mediaSlots.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div
+          className={cn(
+            "grid gap-3",
+            mediaSlots.length === 1 ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-3",
+          )}
+        >
           {mediaSlots.map((m) => {
             const single = mediaSlots.length === 1;
             return (
@@ -297,9 +301,9 @@ export function StartupDetailPanel({
                 onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
                 className={cn(
                   "block overflow-hidden rounded-lg bg-muted/40 text-left",
-                  single ? "sm:col-span-2" : "aspect-video",
+                  single ? "sm:col-span-4" : "aspect-video",
                 )}
-                style={single ? { aspectRatio: "32 / 9" } : undefined}
+                style={single ? { aspectRatio: "128 / 30" } : undefined}
               >
                 <img
                   src={m.image_signed_url ?? ""}
@@ -315,11 +319,12 @@ export function StartupDetailPanel({
         </div>
       )}
 
-      {lightbox && typeof document !== "undefined" && createPortal(
-        <LightboxOverlay url={lightbox} onClose={() => setLightbox(null)} />,
-        document.body,
-      )}
-
+      {lightbox &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <LightboxOverlay url={lightbox} onClose={() => setLightbox(null)} />,
+          document.body,
+        )}
 
       {/* Short description */}
       {s.short_description && (
@@ -476,7 +481,6 @@ function Section({
       </h3>
       <div>{children}</div>
     </section>
-
   );
 }
 
