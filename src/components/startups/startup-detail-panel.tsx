@@ -310,10 +310,11 @@ export function StartupDetailPanel({
                   src={m.image_signed_url ?? ""}
                   alt={m.caption ?? ""}
                   className={cn(
-                    "h-full transition duration-300 hover:scale-105",
-                    single ? "w-auto max-w-full object-contain object-left" : "w-full object-cover",
+                    "h-full w-full transition duration-300 hover:scale-105",
+                    single ? "object-cover object-center" : "object-cover",
                   )}
                 />
+
               </button>
             );
           })}
