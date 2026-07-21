@@ -116,15 +116,8 @@ export function StartupDetailPanel({
   }
 
   const s = data;
-  const [descExpanded, setDescExpanded] = useState(false);
-  const [descClamped, setDescClamped] = useState(false);
-  const descRef = useRef<HTMLParagraphElement>(null);
 
-  useEffect(() => {
-    if (descRef.current) {
-      setDescClamped(descRef.current.scrollHeight > descRef.current.clientHeight);
-    }
-  }, [s.long_description]);
+
 
   const mediaSlots = s.media.filter((m) => m.image_signed_url);
 
