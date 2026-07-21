@@ -76,6 +76,20 @@ export function StartupDetailPanel({
   const canManage = isControl || has("startups.write");
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descClamped, setDescClamped] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    // Measure natural (unclamped) height against clamped height
+    const prev = el.style.webkitLineClamp;
+    el.style.webkitLineClamp = "unset";
+    const full = el.scrollHeight;
+    el.style.webkitLineClamp = prev;
+    setDescClamped(full > el.clientHeight + 1);
+  }, [data?.long_description]);
 
 
 
@@ -102,15 +116,8 @@ export function StartupDetailPanel({
   }
 
   const s = data;
-  const [descExpanded, setDescExpanded] = useState(false);
-  const [descClamped, setDescClamped] = useState(false);
-  const descRef = useRef<HTMLParagraphElement>(null);
 
-  useEffect(() => {
-    if (descRef.current) {
-      setDescClamped(descRef.current.scrollHeight > descRef.current.clientHeight);
-    }
-  }, [s.long_description]);
+
 
   const mediaSlots = s.media.filter((m) => m.image_signed_url);
 
@@ -385,9 +392,24 @@ export function StartupDetailPanel({
       {/* Long description */}
       {s.long_description && (
         <Section icon={FileText} title="Product overview">
-          <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/85">
+          <p
+            ref={descRef}
+            className={cn(
+              "whitespace-pre-line text-[14px] leading-relaxed text-foreground/85",
+              !descExpanded && "line-clamp-4",
+            )}
+          >
             {s.long_description}
           </p>
+          {(descClamped || descExpanded) && (
+            <button
+              type="button"
+              onClick={() => setDescExpanded((v) => !v)}
+              className="mt-1 text-[13px] font-medium text-primary hover:underline"
+            >
+              {descExpanded ? "Less" : "More…"}
+            </button>
+          )}
         </Section>
       )}
 
