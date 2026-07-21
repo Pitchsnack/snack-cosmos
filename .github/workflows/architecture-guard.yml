@@ -2,9 +2,11 @@ name: Architecture Guard
 
 # Read-only static guard for the B5-BLK-5 zero-direct-Supabase ratchet.
 # It parses TypeScript with the TypeScript compiler API and reconciles the
-# direct @supabase/supabase-js call sites against the frozen allowlist baseline.
-# It never contacts Supabase, a database, or the Gateway, uses no secrets, no
-# service containers, and performs no deployment.
+# direct @supabase/supabase-js call sites (and the surrounding Supabase
+# dependency surface) against the frozen allowlist baseline, then enforces a
+# shrink-only ratchet against the pull-request base / first parent. It never
+# contacts Supabase, a database, or the Gateway, uses no secrets, no service
+# containers, and performs no deployment.
 
 on:
   pull_request:
@@ -33,8 +35,25 @@ jobs:
       - name: Install dependencies (frozen lockfile)
         run: bun install --frozen-lockfile
 
-      - name: Run zero-direct-Supabase guard
+      - name: Zero-direct-Supabase guard (current == active baseline)
         run: bun scripts/check-no-direct-supabase.ts
 
-      - name: Run architecture tests
+      - name: Ratchet — no allowlist growth vs base
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BASE="$PR_BASE_SHA"
+          else
+            BASE="$(git rev-parse HEAD^ 2>/dev/null || echo "")"
+          fi
+          if [ -n "$BASE" ]; then
+            echo "Ratchet base: $BASE"
+            bun scripts/check-no-direct-supabase.ts --ratchet-base "$BASE"
+          else
+            echo "No base commit available; skipping ratchet comparison (root commit)."
+          fi
+
+      - name: Architecture tests
         run: bun run test:arch
