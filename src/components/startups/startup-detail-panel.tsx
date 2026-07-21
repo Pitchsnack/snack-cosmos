@@ -302,9 +302,9 @@ export function StartupDetailPanel({
                 onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
                 className={cn(
                   "block overflow-hidden rounded-lg bg-muted/40 text-left",
-                  single ? "w-2/5 max-w-[50%]" : "aspect-video",
+                  single ? "w-[48%] max-w-[50%]" : "aspect-video",
                 )}
-                style={single ? { aspectRatio: "32 / 15" } : undefined}
+                style={single ? { aspectRatio: "64 / 25" } : undefined}
               >
                 <img
                   src={m.image_signed_url ?? ""}
