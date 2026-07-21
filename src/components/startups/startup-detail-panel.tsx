@@ -392,9 +392,24 @@ export function StartupDetailPanel({
       {/* Long description */}
       {s.long_description && (
         <Section icon={FileText} title="Product overview">
-          <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/85">
+          <p
+            ref={descRef}
+            className={cn(
+              "whitespace-pre-line text-[14px] leading-relaxed text-foreground/85",
+              !descExpanded && "line-clamp-4",
+            )}
+          >
             {s.long_description}
           </p>
+          {(descClamped || descExpanded) && (
+            <button
+              type="button"
+              onClick={() => setDescExpanded((v) => !v)}
+              className="mt-1 text-[13px] font-medium text-primary hover:underline"
+            >
+              {descExpanded ? "Less" : "More…"}
+            </button>
+          )}
         </Section>
       )}
 
