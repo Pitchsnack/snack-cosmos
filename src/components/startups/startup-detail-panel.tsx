@@ -287,7 +287,12 @@ export function StartupDetailPanel({
 
       {/* Media */}
       {mediaSlots.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div
+          className={cn(
+            "grid gap-3",
+            mediaSlots.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3",
+          )}
+        >
           {mediaSlots.map((m) => {
             const single = mediaSlots.length === 1;
             return (
@@ -297,9 +302,9 @@ export function StartupDetailPanel({
                 onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
                 className={cn(
                   "block overflow-hidden rounded-lg bg-muted/40 text-left",
-                  single ? "sm:col-span-2" : "aspect-video",
+                  single ? "w-2/5 max-w-[50%]" : "aspect-video",
                 )}
-                style={single ? { aspectRatio: "32 / 9" } : undefined}
+                style={single ? { aspectRatio: "32 / 15" } : undefined}
               >
                 <img
                   src={m.image_signed_url ?? ""}
