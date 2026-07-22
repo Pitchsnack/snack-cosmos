@@ -121,13 +121,22 @@ function StartupsPageInner() {
               navigate({ search: (p: typeof s) => ({ ...p, fav: favOnly ? undefined : true, page: 1 }) })
             }
             className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors",
+              "inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
               favOnly
-                ? "border-accent/40 bg-accent/10 text-accent"
+                ? "border-accent/50 bg-accent/10 text-accent"
                 : "border-input bg-background text-muted-foreground hover:text-foreground",
             )}
           >
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
+            <span>Favorites</span>
+            <span
+              className={cn(
+                "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                favOnly ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground",
+              )}
+            >
+              {favIds.size}
+            </span>
           </button>
           <ViewToggle
             value={view}
