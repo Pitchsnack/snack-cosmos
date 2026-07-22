@@ -66,7 +66,7 @@ export function StartupListItem({
         setIsPressed(false);
       }}
     >
-    <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3">
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {s.logo_signed_url ? (
             <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
@@ -99,36 +99,38 @@ export function StartupListItem({
               {s.headquarters}
             </div>
           )}
-          {s.short_description && (
-            <p className="mt-1.5 w-full text-left line-clamp-2 text-[11px] text-foreground/80">
-              {s.short_description}
-            </p>
-          )}
-          {s.product_tags?.length ? (
-            <div className="mt-1.5 w-full text-left">
-              <ChipRow tags={s.product_tags} tone="primary" />
-            </div>
-          ) : null}
-          {s.market_tags?.length ? (
-            <div className="mt-1.5 w-full text-left">
-              <ChipRow tags={s.market_tags} tone="muted" />
-            </div>
-          ) : null}
-          {s.related_investors?.length ? (
-            <div className="mt-1.5 w-full text-left">
-              <RelationshipChips
-                className="w-full justify-start"
-                icon={<Users className="h-3 w-3" />}
-                label="Investors:"
-                items={s.related_investors}
-                popoverTitle="All Investors"
-                maxVisible={3}
-              />
-            </div>
-          ) : null}
         </div>
       </div>
 
+      <div className="mt-2 w-full text-left">
+        {s.short_description && (
+          <p className="w-full text-left line-clamp-2 text-[11px] text-foreground/80">
+            {s.short_description}
+          </p>
+        )}
+        {s.product_tags?.length ? (
+          <div className="mt-1.5 w-full text-left">
+            <ChipRow tags={s.product_tags} tone="primary" />
+          </div>
+        ) : null}
+        {s.market_tags?.length ? (
+          <div className="mt-1.5 w-full text-left">
+            <ChipRow tags={s.market_tags} tone="muted" />
+          </div>
+        ) : null}
+        {s.related_investors?.length ? (
+          <div className="mt-1.5 w-full text-left">
+            <RelationshipChips
+              className="w-full justify-start"
+              icon={<Users className="h-3 w-3" />}
+              label="Investors:"
+              items={s.related_investors}
+              popoverTitle="All Investors"
+              maxVisible={3}
+            />
+          </div>
+        ) : null}
+      </div>
     </button>
   );
 }
