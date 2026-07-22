@@ -151,10 +151,12 @@ function GatewayJourney({
   baseUrl,
   fetchImpl,
   isMock,
+  demoStartupRef,
 }: {
   baseUrl: string;
   fetchImpl: typeof fetch | undefined;
   isMock: boolean;
+  demoStartupRef: string;
 }) {
   const { signedIn, signIn, signOut, adapter } = useSP2Auth();
   const gw = useMemo(
