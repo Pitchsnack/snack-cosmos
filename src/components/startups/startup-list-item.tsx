@@ -49,7 +49,7 @@ export function StartupListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group h-[152px] w-full overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        "group h-[200px] w-full overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
         selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
       style={cardStyle}
