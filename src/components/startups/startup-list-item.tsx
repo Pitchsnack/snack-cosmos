@@ -109,17 +109,17 @@ export function StartupListItem({
           </p>
         )}
         {s.product_tags?.length ? (
-          <div className="mt-1.5 w-full text-left">
+          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
             <ChipRow tags={s.product_tags} tone="primary" />
           </div>
         ) : null}
         {s.market_tags?.length ? (
-          <div className="mt-1.5 w-full text-left">
+          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
             <ChipRow tags={s.market_tags} tone="muted" />
           </div>
         ) : null}
         {s.related_investors?.length ? (
-          <div className="mt-1.5 w-full text-left">
+          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
             <RelationshipChips
               className="w-full justify-start"
               icon={<Users className="h-3 w-3" />}
