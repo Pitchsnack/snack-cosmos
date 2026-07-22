@@ -151,7 +151,15 @@ export function StartupListItem({
       </div>
 
       <div className="mt-auto flex w-full justify-end pt-1">
-        <span className="text-xs font-medium text-accent group-hover:underline">View details</span>
+        <span
+          className="cursor-pointer text-xs font-medium text-accent group-hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+        >
+          {expanded ? "Less" : "View details"}
+        </span>
       </div>
     </button>
   );
