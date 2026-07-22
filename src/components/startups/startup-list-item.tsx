@@ -1,9 +1,11 @@
 import { useState, type CSSProperties } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
+import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+
 
 function monogram(name: string) {
   return name
