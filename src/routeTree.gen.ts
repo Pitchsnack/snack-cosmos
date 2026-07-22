@@ -24,6 +24,7 @@ import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
+import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
@@ -127,6 +128,11 @@ const AuthenticatedIntakeQueueRoute =
     path: '/intake-queue',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
   id: '/deals',
   path: '/deals',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/favorites': typeof AuthenticatedFavoritesRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/favorites': typeof AuthenticatedFavoritesRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
@@ -349,6 +357,7 @@ export interface FileRoutesById {
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -392,6 +401,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/dashboard'
     | '/deals'
+    | '/favorites'
     | '/intake-queue'
     | '/investors'
     | '/notifications'
@@ -430,6 +440,7 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/audit'
     | '/dashboard'
+    | '/favorites'
     | '/intake-queue'
     | '/notifications'
     | '/preferences'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/_authenticated/audit'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
+    | '/_authenticated/favorites'
     | '/_authenticated/intake-queue'
     | '/_authenticated/investors'
     | '/_authenticated/notifications'
@@ -611,6 +623,13 @@ declare module '@tanstack/react-router' {
       path: '/intake-queue'
       fullPath: '/intake-queue'
       preLoaderRoute: typeof AuthenticatedIntakeQueueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/favorites': {
+      id: '/_authenticated/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof AuthenticatedFavoritesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/deals': {
@@ -898,6 +917,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
+  AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -918,6 +938,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
+  AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,

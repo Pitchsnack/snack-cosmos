@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+import { useFavoriteStartups } from "@/hooks/use-favorites";
+
 
 function monogram(name: string) {
   return name
@@ -28,7 +30,9 @@ export function StartupRow({
   onSelect: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const { isFavorite, toggle } = useFavoriteStartups();
+  const bookmarked = isFavorite(s.id);
+
 
   return (
     <button
@@ -50,8 +54,9 @@ export function StartupRow({
         className="absolute right-3 top-3 z-10 rounded-full p-1 hover:bg-muted/50"
         onClick={(e) => {
           e.stopPropagation();
-          setBookmarked((b) => !b);
+          toggle(s.id);
         }}
+
       >
         <Bookmark
           className={cn(
