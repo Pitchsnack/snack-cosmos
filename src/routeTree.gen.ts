@@ -16,6 +16,7 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as Sp2GatewayCallbackRouteImport } from './routes/sp2-gateway/callback'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
 import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
@@ -82,6 +83,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const Sp2GatewayCallbackRoute = Sp2GatewayCallbackRouteImport.update({
+  id: '/sp2-gateway/callback',
+  path: '/sp2-gateway/callback',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
+  '/sp2-gateway/callback': typeof Sp2GatewayCallbackRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/deals/$id': typeof AuthenticatedDealsIdRouteWithChildren
   '/deals/new': typeof AuthenticatedDealsNewRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/sp2-gateway/callback': typeof Sp2GatewayCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
   '/deals/new': typeof AuthenticatedDealsNewRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/sp2-gateway/callback': typeof Sp2GatewayCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/_authenticated/deals/$id': typeof AuthenticatedDealsIdRouteWithChildren
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/shared-deals'
     | '/startups'
     | '/users'
+    | '/sp2-gateway/callback'
     | '/sp2-gateway/'
     | '/deals/$id'
     | '/deals/new'
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/preferences'
     | '/security'
     | '/users'
+    | '/sp2-gateway/callback'
     | '/'
     | '/sp2-gateway'
     | '/deals/new'
@@ -473,6 +484,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals'
     | '/_authenticated/startups'
     | '/_authenticated/users'
+    | '/sp2-gateway/callback'
     | '/_authenticated/'
     | '/sp2-gateway/'
     | '/_authenticated/deals/$id'
@@ -503,6 +515,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  Sp2GatewayCallbackRoute: typeof Sp2GatewayCallbackRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
 }
 
@@ -556,6 +569,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/sp2-gateway/callback': {
+      id: '/sp2-gateway/callback'
+      path: '/sp2-gateway/callback'
+      fullPath: '/sp2-gateway/callback'
+      preLoaderRoute: typeof Sp2GatewayCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users': {
       id: '/_authenticated/users'
@@ -945,8 +965,19 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  Sp2GatewayCallbackRoute: Sp2GatewayCallbackRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

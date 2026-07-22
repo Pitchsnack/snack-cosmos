@@ -35,6 +35,13 @@ export class MockSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
     this.state.signedIn = true;
   }
 
+  async beginPrincipalAuthentication(): Promise<void> {
+    // Mechanical parity with the additive interface member: the mock
+    // "authenticates" by flipping its in-memory flag. No redirect, no
+    // network, no storage — the development-only safety posture is unchanged.
+    this.state.signedIn = true;
+  }
+
   async getPrincipalAccessToken(): Promise<string | null> {
     if (!this.state.signedIn || this.state.principalUnavailable) return null;
     return MOCK_PRINCIPAL_MARKER;
