@@ -168,6 +168,12 @@ function StartupsPageInner() {
             <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} />
           ))}
         </div>
+      ) : view === "list" ? (
+        <div className="space-y-2">
+          {items.map((it) => (
+            <StartupRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
+          ))}
+        </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
           <div className="max-h-[calc(100vh-18rem)] space-y-2 overflow-y-auto pr-1">
@@ -186,7 +192,7 @@ function StartupsPageInner() {
         </div>
       )}
 
-      {view === "grid" && pageCount > 1 && (
+      {(view === "grid" || view === "list") && pageCount > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => navigate({ search: (p: typeof s) => ({ ...p, page: page - 1 }) })}>Previous</Button>
           <span className="text-sm text-muted-foreground">Page {page} of {pageCount}</span>
