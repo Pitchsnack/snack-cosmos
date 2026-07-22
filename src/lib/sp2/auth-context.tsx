@@ -1,10 +1,13 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { SnackPortalAuthAdapter } from "./auth-adapter";
-import { MockSnackPortalAuthAdapter } from "./mock-auth-adapter";
 
+/**
+ * SP2AuthProvider requires an explicit adapter. Production never selects a
+ * mock implicitly — callers must inject a real (or explicitly-chosen dev)
+ * adapter. Missing adapter fails closed at the route level.
+ */
 type Ctx = {
   adapter: SnackPortalAuthAdapter;
-  /** Test-visible flag; the real adapter would track its own session. */
   signedIn: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -12,24 +15,21 @@ type Ctx = {
 
 const SP2AuthContext = createContext<Ctx | null>(null);
 
-export function SP2AuthProvider({ children }: { children: ReactNode }) {
-  // Preview build uses the mock adapter. Real Keycloak wiring is a later gate.
-  const adapter = useMemo(
-    () =>
-      new MockSnackPortalAuthAdapter({
-        // Pre-authorize ACME so the mock end-to-end preview works without a
-        // real IdP redirect. In production the IdP mints tenant tokens.
-        authorizedTenants: new Set(["acme"]),
-      }),
-    [],
-  );
+export function SP2AuthProvider({
+  adapter,
+  children,
+}: {
+  adapter: SnackPortalAuthAdapter;
+  children: ReactNode;
+}) {
   const [signedIn, setSignedIn] = useState(false);
 
   const value: Ctx = {
     adapter,
     signedIn,
     signIn: async () => {
-      await (adapter as MockSnackPortalAuthAdapter).signIn();
+      const maybeSignIn = (adapter as SnackPortalAuthAdapter & { signIn?: () => Promise<void> }).signIn;
+      if (typeof maybeSignIn === "function") await maybeSignIn.call(adapter);
       setSignedIn(true);
     },
     signOut: async () => {
