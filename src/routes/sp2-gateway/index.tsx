@@ -79,7 +79,7 @@ function RouteEntry() {
       // Development preview only: explicitly opt in to the mock adapter and
       // mock Gateway via dynamic import so bundlers can tree-shake them out
       // of production output.
-      const [{ MockSnackPortalAuthAdapter }, { mockGatewayFetch }] = await Promise.all([
+      const [{ MockSnackPortalAuthAdapter }, mockGw] = await Promise.all([
         import("@/lib/sp2/mock-auth-adapter"),
         import("@/lib/sp2/mock-gateway"),
       ]);
@@ -89,9 +89,10 @@ function RouteEntry() {
         adapter: new MockSnackPortalAuthAdapter({
           authorizedTenants: new Set(["acme"]),
         }),
-        fetchImpl: mockGatewayFetch,
+        fetchImpl: mockGw.mockGatewayFetch,
         baseUrl: "/sp2-gateway-dev",
         isMock: true,
+        demoStartupRef: mockGw.MOCK_DEMO_STARTUP_REF,
       });
     })();
     return () => {
