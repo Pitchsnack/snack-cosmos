@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+import { useFavoriteStartups } from "@/hooks/use-favorites";
+
 
 
 function monogram(name: string) {
@@ -37,8 +39,10 @@ export function StartupListItem({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const { isFavorite, toggle } = useFavoriteStartups();
+  const bookmarked = isFavorite(s.id);
   const [expanded, setExpanded] = useState(false);
+
 
   const cardStyle: CSSProperties | undefined = isPressed
     ? PRESSED_CARD_STYLE
@@ -73,9 +77,10 @@ export function StartupListItem({
         className="absolute right-3 top-3 z-10 rounded-full p-1 hover:bg-muted/50"
         onClick={(e) => {
           e.stopPropagation();
-          setBookmarked((b) => !b);
+          toggle(s.id);
         }}
       >
+
         <Bookmark
           className={cn(
             "h-4 w-4 transition-colors",

@@ -1,12 +1,15 @@
 import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Factory, ShoppingCart, Users } from "lucide-react";
+import { MapPin, Factory, ShoppingCart, Users, Bookmark } from "lucide-react";
 import anchorIcon from "@/assets/anchor.svg";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { StartupListItem } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+import { useFavoriteStartups } from "@/hooks/use-favorites";
+import { cn } from "@/lib/utils";
+
 
 function monogram(name: string) {
   return name
@@ -54,6 +57,9 @@ function Truncate({
 
 export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () => void }) {
   const [isHovered, setIsHovered] = useState(false);
+  const { isFavorite, toggle } = useFavoriteStartups();
+  const bookmarked = isFavorite(s.id);
+
   const [isPressed, setIsPressed] = useState(false);
   const BROAD = ["Enterprise", "Consumers"];
   const allIndustries = s.industry ?? [];
@@ -85,7 +91,28 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
   const inner = (
     <>
+      {/* Bookmark toggle */}
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={bookmarked ? "Remove bookmark" : "Add bookmark"}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggle(s.id);
+        }}
+        className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 shadow-sm hover:bg-background"
+      >
+        <Bookmark
+          className={cn(
+            "h-4 w-4 transition-colors",
+            bookmarked ? "fill-accent text-accent" : "text-muted-foreground",
+          )}
+        />
+      </span>
+
       {/* Product image banner */}
+
       {s.tile_image_signed_url && (
         <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
           <img
