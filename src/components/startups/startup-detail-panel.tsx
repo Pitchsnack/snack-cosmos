@@ -133,7 +133,7 @@ export function StartupDetailPanel({
       <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
 
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
+          <div className="flex aspect-[1/3] w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {s.logo_signed_url ? (
               <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
             ) : (
