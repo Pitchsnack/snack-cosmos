@@ -49,6 +49,7 @@ type Bootstrap =
       fetchImpl: typeof fetch | undefined;
       baseUrl: string;
       isMock: boolean;
+      demoStartupRef: string;
     };
 
 function RouteEntry() {
