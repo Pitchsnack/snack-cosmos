@@ -123,7 +123,12 @@ export class SnackPortalGatewayClient {
   }
 }
 
-export function getGatewayBaseUrl(): string {
+/**
+ * Returns the configured Gateway base URL, or null when unset/blank.
+ * Callers must fail closed in production when this returns null.
+ */
+export function getGatewayBaseUrl(): string | null {
   const v = import.meta.env.VITE_SP2_GATEWAY_BASE_URL as string | undefined;
-  return (v && v.trim()) || "/sp2-gateway-mock";
+  const trimmed = v?.trim();
+  return trimmed ? trimmed : null;
 }
