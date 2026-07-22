@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
+import { StartupRow } from "@/components/startups/startup-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
@@ -19,7 +20,7 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
-const VIEW = ["grid","split"] as const;
+const VIEW = ["grid","split","list"] as const;
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other"];
 const COMPANY_TYPES = ["SaaS","FinTech","Marketplace","AI","Hardware","Consumer","Other"];
 
