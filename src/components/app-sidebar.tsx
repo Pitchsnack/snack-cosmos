@@ -21,7 +21,6 @@ import {
   Bell,
   Globe,
   Inbox,
-  Star,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
