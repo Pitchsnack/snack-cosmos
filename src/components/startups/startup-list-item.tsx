@@ -38,6 +38,7 @@ export function StartupListItem({
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const cardStyle: CSSProperties | undefined = isPressed
     ? PRESSED_CARD_STYLE
@@ -50,7 +51,8 @@ export function StartupListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group relative flex h-[220px] w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        "group relative flex w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        expanded ? "h-[290px]" : "h-[220px]",
         selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
       style={cardStyle}
@@ -149,7 +151,15 @@ export function StartupListItem({
       </div>
 
       <div className="mt-auto flex w-full justify-end pt-1">
-        <span className="text-xs font-medium text-accent group-hover:underline">View details</span>
+        <span
+          className="cursor-pointer text-xs font-medium text-accent group-hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+        >
+          {expanded ? "Less" : "View details"}
+        </span>
       </div>
     </button>
   );
