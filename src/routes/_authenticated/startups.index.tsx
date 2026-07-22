@@ -16,9 +16,11 @@ import { StartupRow } from "@/components/startups/startup-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
+import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { cn } from "@/lib/utils";
+
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
 const VIEW = ["grid","split","list"] as const;
