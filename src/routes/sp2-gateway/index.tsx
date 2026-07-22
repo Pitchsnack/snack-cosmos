@@ -38,7 +38,7 @@ export const Route = createFileRoute("/sp2-gateway/")({
   component: RouteEntry,
 });
 
-const DEMO_STARTUP_REF = "stp_demo_001";
+
 
 type Bootstrap =
   | { kind: "loading" }
