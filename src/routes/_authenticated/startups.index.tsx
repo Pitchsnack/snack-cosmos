@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
+import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
+import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favorite-list-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
@@ -119,13 +121,22 @@ function StartupsPageInner() {
               navigate({ search: (p: typeof s) => ({ ...p, fav: favOnly ? undefined : true, page: 1 }) })
             }
             className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors",
+              "inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
               favOnly
-                ? "border-accent/40 bg-accent/10 text-accent"
+                ? "border-accent/50 bg-accent/10 text-accent"
                 : "border-input bg-background text-muted-foreground hover:text-foreground",
             )}
           >
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
+            <span>Favorites</span>
+            <span
+              className={cn(
+                "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                favOnly ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground",
+              )}
+            >
+              {favIds.size}
+            </span>
           </button>
           <ViewToggle
             value={view}
@@ -197,28 +208,64 @@ function StartupsPageInner() {
           <p>No startups match your filters.</p>
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={cn(
+            "grid gap-4",
+            favOnly
+              ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+              : "sm:grid-cols-2 lg:grid-cols-3",
+          )}
+        >
           {items.map((it) => (
             <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} />
           ))}
         </div>
       ) : view === "list" ? (
-        <div className="space-y-2">
-          {items.map((it) => (
-            <StartupRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
-          <div className="max-h-[calc(100vh-18rem)] space-y-2 overflow-y-auto pr-1">
+        favOnly ? (
+          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
+            <FavoriteListHeader />
             {items.map((it) => (
-              <StartupListItem
-                key={it.id}
-                s={it}
-                selected={selected === it.id}
-                onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
-              />
+              <FavoriteListRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
             ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {items.map((it) => (
+              <StartupRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
+            ))}
+          </div>
+        )
+      ) : (
+        <div
+          className={cn(
+            "grid gap-4",
+            favOnly
+              ? "lg:grid-cols-[minmax(260px,20rem)_1fr]"
+              : "lg:grid-cols-[minmax(320px,26rem)_1fr]",
+          )}
+        >
+          <div className="max-h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
+            {favOnly
+              ? items.map((it) => (
+                  <FavoriteSplitRow
+                    key={it.id}
+                    s={it}
+                    selected={selected === it.id}
+                    onSelect={() =>
+                      navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })
+                    }
+                  />
+                ))
+              : items.map((it) => (
+                  <StartupListItem
+                    key={it.id}
+                    s={it}
+                    selected={selected === it.id}
+                    onSelect={() =>
+                      navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })
+                    }
+                  />
+                ))}
           </div>
           <div className="min-w-0">
             {selected ? <StartupDetailPanel id={selected} /> : <StartupDetailEmpty />}
