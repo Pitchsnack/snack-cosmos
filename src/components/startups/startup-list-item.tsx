@@ -49,7 +49,7 @@ export function StartupListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group w-full rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        "group h-[152px] w-full overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
         selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
       style={cardStyle}
@@ -109,17 +109,17 @@ export function StartupListItem({
           </p>
         )}
         {s.product_tags?.length ? (
-          <div className="mt-1.5 w-full text-left">
+          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
             <ChipRow tags={s.product_tags} tone="primary" />
           </div>
         ) : null}
         {s.market_tags?.length ? (
-          <div className="mt-1.5 w-full text-left">
+          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
             <ChipRow tags={s.market_tags} tone="muted" />
           </div>
         ) : null}
         {s.related_investors?.length ? (
-          <div className="mt-1.5 w-full text-left">
+          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
             <RelationshipChips
               className="w-full justify-start"
               icon={<Users className="h-3 w-3" />}
