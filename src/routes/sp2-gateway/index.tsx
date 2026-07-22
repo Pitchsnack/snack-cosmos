@@ -120,6 +120,7 @@ function RouteEntry() {
         baseUrl={boot.baseUrl}
         fetchImpl={boot.fetchImpl}
         isMock={boot.isMock}
+        demoStartupRef={boot.demoStartupRef}
       />
     </SP2AuthProvider>
   );
