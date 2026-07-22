@@ -68,7 +68,7 @@ function StartupsPageInner() {
   const selected = s.selected;
   const favOnly = !!s.fav;
   const [modalId, setModalId] = useState<string | null>(null);
-  const { ids: favIds, isFavorite } = useFavoriteStartups();
+  const { ids: favIds } = useFavoriteStartups();
 
 
   const pageSize = favOnly ? 100 : view === "split" ? 50 : view === "list" ? 25 : 24;
