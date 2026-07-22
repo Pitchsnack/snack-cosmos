@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { SP2AuthProvider, useSP2Auth } from "@/lib/sp2/auth-context";
+import type { SnackPortalAuthAdapter } from "@/lib/sp2/auth-adapter";
 import {
   SnackPortalGatewayClient,
   getGatewayBaseUrl,
 } from "@/lib/sp2/gateway-client";
-import { mockGatewayFetch } from "@/lib/sp2/mock-gateway";
 import {
   SHORT_DESCRIPTION_MAX,
   type GatewayOutcome,
@@ -35,52 +35,129 @@ export const Route = createFileRoute("/sp2-gateway/")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => (
-    <SP2AuthProvider>
-      <GatewayJourney />
-    </SP2AuthProvider>
-  ),
+  component: RouteEntry,
 });
 
 const DEMO_STARTUP_REF = "stp_demo_001";
 
-function useGateway() {
-  return useMemo(() => {
-    const base = getGatewayBaseUrl();
-    const isMock = base === "/sp2-gateway-mock";
-    return new SnackPortalGatewayClient({
-      baseUrl: base,
-      fetchImpl: isMock ? mockGatewayFetch : undefined,
-    });
-  }, []);
-}
+type Bootstrap =
+  | { kind: "loading" }
+  | { kind: "fail_closed" }
+  | {
+      kind: "ready";
+      adapter: SnackPortalAuthAdapter;
+      fetchImpl: typeof fetch | undefined;
+      baseUrl: string;
+      isMock: boolean;
+    };
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function RouteEntry() {
+  const [boot, setBoot] = useState<Bootstrap>({ kind: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const configured = getGatewayBaseUrl();
+      const isProd = import.meta.env.PROD;
+
+      if (configured) {
+        // Real Gateway configured — never touch mock modules.
+        // A real IdP-backed adapter is not wired yet, so fail closed until it
+        // is provided. This keeps production from silently using the mock.
+        if (!cancelled) setBoot({ kind: "fail_closed" });
+        return;
+      }
+
+      if (isProd) {
+        // Production + no Gateway configured => fail closed. Do NOT import
+        // any mock module; keep them out of the production bundle.
+        if (!cancelled) setBoot({ kind: "fail_closed" });
+        return;
+      }
+
+      // Development preview only: explicitly opt in to the mock adapter and
+      // mock Gateway via dynamic import so bundlers can tree-shake them out
+      // of production output.
+      const [{ MockSnackPortalAuthAdapter }, { mockGatewayFetch }] = await Promise.all([
+        import("@/lib/sp2/mock-auth-adapter"),
+        import("@/lib/sp2/mock-gateway"),
+      ]);
+      if (cancelled) return;
+      setBoot({
+        kind: "ready",
+        adapter: new MockSnackPortalAuthAdapter({
+          authorizedTenants: new Set(["acme"]),
+        }),
+        fetchImpl: mockGatewayFetch,
+        baseUrl: "/sp2-gateway-dev",
+        isMock: true,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (boot.kind === "loading") {
+    return (
+      <div className="min-h-screen bg-muted/30 px-4 py-10">
+        <div className="mx-auto max-w-2xl text-sm text-muted-foreground">
+          Loading…
+        </div>
+      </div>
+    );
+  }
+
+  if (boot.kind === "fail_closed") {
+    return <FailClosed />;
+  }
+
   return (
-    <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h2>
-      {children}
-    </section>
+    <SP2AuthProvider adapter={boot.adapter}>
+      <GatewayJourney
+        baseUrl={boot.baseUrl}
+        fetchImpl={boot.fetchImpl}
+        isMock={boot.isMock}
+      />
+    </SP2AuthProvider>
   );
 }
 
-function StatusNote({ tone = "neutral", children }: { tone?: "neutral" | "warn" | "error" | "ok"; children: React.ReactNode }) {
-  const cls =
-    tone === "error"
-      ? "border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200"
-      : tone === "warn"
-        ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
-        : tone === "ok"
-          ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
-          : "border-border bg-muted text-muted-foreground";
-  return <div className={`rounded-md border p-3 text-sm ${cls}`}>{children}</div>;
+function FailClosed() {
+  return (
+    <div className="min-h-screen bg-muted/30 px-4 py-10">
+      <div className="mx-auto flex max-w-2xl flex-col gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          SnackPortal2 Gateway
+        </h1>
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+          <div className="font-medium">Configuration unavailable</div>
+          <p className="mt-1">
+            The Gateway is not configured for this environment and no real
+            authentication adapter has been provided. This journey is
+            unavailable until the controlled-local Keycloak and Gateway are
+            wired.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function GatewayJourney() {
+function GatewayJourney({
+  baseUrl,
+  fetchImpl,
+  isMock,
+}: {
+  baseUrl: string;
+  fetchImpl: typeof fetch | undefined;
+  isMock: boolean;
+}) {
   const { signedIn, signIn, signOut, adapter } = useSP2Auth();
-  const gw = useGateway();
+  const gw = useMemo(
+    () => new SnackPortalGatewayClient({ baseUrl, fetchImpl }),
+    [baseUrl, fetchImpl],
+  );
 
   const [membershipsState, setMembershipsState] = useState<
     | { kind: "idle" }
@@ -193,7 +270,7 @@ function GatewayJourney() {
               SnackPortal2 Gateway
             </h1>
             <p className="text-xs text-muted-foreground">
-              Controlled MVP · preview build · not production
+              Controlled MVP · {isMock ? "development mock" : "gateway"} · not production
             </p>
           </div>
           {signedIn && (
@@ -336,16 +413,34 @@ function GatewayJourney() {
         )}
 
         <p className="text-center text-[11px] text-muted-foreground">
-          Gateway base:{" "}
-          <span className="font-mono">
-            {getGatewayBaseUrl() === "/sp2-gateway-mock"
-              ? "in-memory mock (VITE_SP2_GATEWAY_BASE_URL unset)"
-              : getGatewayBaseUrl()}
-          </span>
+          Mode: <span className="font-mono">{isMock ? "development mock (explicit)" : "gateway"}</span>
         </p>
       </div>
     </div>
   );
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function StatusNote({ tone = "neutral", children }: { tone?: "neutral" | "warn" | "error" | "ok"; children: React.ReactNode }) {
+  const cls =
+    tone === "error"
+      ? "border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200"
+      : tone === "warn"
+        ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+        : tone === "ok"
+          ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+          : "border-border bg-muted text-muted-foreground";
+  return <div className={`rounded-md border p-3 text-sm ${cls}`}>{children}</div>;
 }
 
 function MembershipError({
@@ -422,5 +517,4 @@ function SaveError({ outcome }: { outcome: GatewayOutcome<unknown>["kind"] }) {
   return <StatusNote tone="error">{msg}</StatusNote>;
 }
 
-// Unused Input import guard (keep for future forms without triggering tree-shake noise)
 void Input;
