@@ -131,3 +131,23 @@ export function StartupListItem({
     </button>
   );
 }
+
+function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
+  const shown = tags.slice(0, 5);
+  const overflow = tags.length - shown.length;
+  const base =
+    tone === "primary"
+      ? "bg-primary/10 text-primary border-primary/30"
+      : "bg-muted/50 text-muted-foreground border-transparent";
+  return (
+    <div className="flex flex-wrap gap-1">
+      {shown.map((t) => (
+        <span key={t} className={`max-w-[10rem] truncate rounded-full border px-1.5 py-0 text-[9px] font-medium ${base}`}>
+          {t}
+        </span>
+      ))}
+      {overflow > 0 && <span className="text-[9px] text-muted-foreground">+{overflow}</span>}
+    </div>
+  );
+}
+
