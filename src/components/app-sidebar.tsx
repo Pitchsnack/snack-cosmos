@@ -40,7 +40,6 @@ type NavPath =
   | "/"
   | "/dashboard"
   | "/startups"
-  | "/favorites"
   | "/investors"
   | "/deals"
   | "/shared-deals"
@@ -54,6 +53,7 @@ type NavPath =
   | "/global-startups/browse"
   
   | "/intake-queue";
+
 
 
 type NavItem = {
