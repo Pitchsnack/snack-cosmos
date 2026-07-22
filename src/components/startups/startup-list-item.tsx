@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import { MapPin, Users } from "lucide-react";
+import { MapPin, Users, Bookmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
@@ -37,6 +37,7 @@ export function StartupListItem({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
 
   const cardStyle: CSSProperties | undefined = isPressed
     ? PRESSED_CARD_STYLE
@@ -49,7 +50,7 @@ export function StartupListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group flex h-[260px] w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        "group relative flex h-[220px] w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
         selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
       style={cardStyle}
@@ -66,7 +67,22 @@ export function StartupListItem({
         setIsPressed(false);
       }}
     >
-      <div className="flex items-start gap-3">
+      <span
+        className="absolute right-3 top-3 z-10 rounded-full p-1 hover:bg-muted/50"
+        onClick={(e) => {
+          e.stopPropagation();
+          setBookmarked((b) => !b);
+        }}
+      >
+        <Bookmark
+          className={cn(
+            "h-4 w-4 transition-colors",
+            bookmarked ? "fill-accent text-accent" : "text-muted-foreground",
+          )}
+        />
+      </span>
+
+      <div className="flex w-full items-start gap-3 pr-8">
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {s.logo_signed_url ? (
             <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
@@ -102,7 +118,7 @@ export function StartupListItem({
         </div>
       </div>
 
-      <div className="mt-2 w-full text-left">
+      <div className="mt-2 w-full flex-1 min-h-0 overflow-hidden text-left">
         {s.short_description && (
           <p className="w-full text-left line-clamp-2 text-[11px] text-foreground/80">
             {s.short_description}
@@ -130,6 +146,10 @@ export function StartupListItem({
             />
           </div>
         ) : null}
+      </div>
+
+      <div className="mt-auto flex w-full justify-end pt-1">
+        <span className="text-xs font-medium text-accent group-hover:underline">View details</span>
       </div>
     </button>
   );
