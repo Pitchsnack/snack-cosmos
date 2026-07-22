@@ -128,7 +128,7 @@ export function StartupDetailPanel({
   if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
 
   return (
-    <div className="space-y-5 text-foreground">
+    <div className="space-y-[14px] text-foreground">
       {/* Header */}
       <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
 
@@ -510,7 +510,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-border/50 pt-4">
+    <section className="border-t border-border/50 pt-[11.2px]">
       <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
         {title}
