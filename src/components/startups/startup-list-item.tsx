@@ -67,9 +67,9 @@ export function StartupListItem({
       }}
     >
     <div className="flex items-start gap-3">
-        <div className="flex h-24 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
+        <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {s.logo_signed_url ? (
-            <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
+            <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
           ) : (
             <span className="text-xs font-semibold text-muted-foreground">
               {monogram(s.startup_name)}
