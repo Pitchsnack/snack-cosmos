@@ -17,6 +17,15 @@ describe("MockSnackPortalAuthAdapter", () => {
     expect(tok!.split(".").length).toBe(1);
   });
 
+  it("beginPrincipalAuthentication flips the in-memory flag (no redirect, no storage)", async () => {
+    const a = new MockSnackPortalAuthAdapter();
+    expect(await a.getPrincipalAccessToken()).toBeNull();
+    await a.beginPrincipalAuthentication();
+    const tok = await a.getPrincipalAccessToken();
+    expect(tok).toBeTruthy();
+    expect(tok!.split(".").length).toBe(1);
+  });
+
   it("does not mint a tenant token until beginWorkspaceAuthentication", async () => {
     const a = new MockSnackPortalAuthAdapter();
     await a.signIn();
@@ -38,9 +47,15 @@ describe("MockSnackPortalAuthAdapter", () => {
     const g = globalThis as unknown as { localStorage?: Storage };
     g.localStorage = {
       getItem: (k: string) => store[k] ?? null,
-      setItem: (k: string, v: string) => { store[k] = v; },
-      removeItem: (k: string) => { delete store[k]; },
-      clear: () => { for (const k of Object.keys(store)) delete store[k]; },
+      setItem: (k: string, v: string) => {
+        store[k] = v;
+      },
+      removeItem: (k: string) => {
+        delete store[k];
+      },
+      clear: () => {
+        for (const k of Object.keys(store)) delete store[k];
+      },
       key: () => null,
       length: 0,
     } as Storage;

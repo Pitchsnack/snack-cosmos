@@ -3,9 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SP2AuthProvider, useSP2Auth } from "@/lib/sp2/auth-context";
 import type { SnackPortalAuthAdapter } from "@/lib/sp2/auth-adapter";
 import {
-  SnackPortalGatewayClient,
-  getGatewayBaseUrl,
-} from "@/lib/sp2/gateway-client";
+  KeycloakSnackPortalAuthAdapter,
+  TenantAuthenticationUnsupportedError,
+  resolveSp2BootstrapPosture,
+  type Sp2RealIntegrationEnv,
+} from "@/lib/sp2/keycloak-auth-adapter";
+import { SnackPortalGatewayClient } from "@/lib/sp2/gateway-client";
 import {
   SHORT_DESCRIPTION_MAX,
   type GatewayOutcome,
@@ -38,8 +41,6 @@ export const Route = createFileRoute("/sp2-gateway/")({
   component: RouteEntry,
 });
 
-
-
 type Bootstrap =
   | { kind: "loading" }
   | { kind: "fail_closed" }
@@ -58,20 +59,54 @@ function RouteEntry() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const configured = getGatewayBaseUrl();
-      const isProd = import.meta.env.PROD;
+      const env: Sp2RealIntegrationEnv = {
+        gatewayBaseUrl: import.meta.env.VITE_SP2_GATEWAY_BASE_URL as string | undefined,
+        issuer: import.meta.env.VITE_SP2_OIDC_ISSUER as string | undefined,
+        clientId: import.meta.env.VITE_SP2_OIDC_CLIENT_ID as string | undefined,
+        redirectUri: import.meta.env.VITE_SP2_OIDC_REDIRECT_URI as string | undefined,
+        postLogoutRedirectUri: import.meta.env.VITE_SP2_OIDC_POST_LOGOUT_REDIRECT_URI as
+          | string
+          | undefined,
+      };
+      const posture = resolveSp2BootstrapPosture(env, import.meta.env.PROD);
 
-      if (configured) {
-        // Real Gateway configured — never touch mock modules.
-        // A real IdP-backed adapter is not wired yet, so fail closed until it
-        // is provided. This keeps production from silently using the mock.
+      if (posture.kind === "real") {
+        // Complete real configuration — construct the real Keycloak adapter
+        // and the real Gateway client (global fetch). Never import mock
+        // modules on this path. Tenant-scoped auth remains unsupported, so
+        // there is no demo startup ref; the tenant journey fails closed
+        // before any startup load.
+        if (!cancelled)
+          setBoot({
+            kind: "ready",
+            adapter: new KeycloakSnackPortalAuthAdapter(posture.adapterConfig),
+            // Receiver-safe wrapper around the real global fetch. The client
+            // invokes fetchImpl as a method (`this.fetchImpl(...)`); native
+            // window.fetch is brand-checked and throws "Illegal invocation"
+            // when called with a foreign receiver, so never hand it over
+            // unbound.
+            fetchImpl: (input, init) => fetch(input, init),
+            baseUrl: posture.gatewayBaseUrl,
+            isMock: false,
+            demoStartupRef: "",
+          });
+        return;
+      }
+
+      if (posture.kind === "fail_closed") {
+        // Partial/invalid real configuration, or production without real
+        // configuration => fail closed. Do NOT import any mock module; keep
+        // them out of the production bundle. Production never falls back to
+        // the mock; mixed mock/real configuration is forbidden.
         if (!cancelled) setBoot({ kind: "fail_closed" });
         return;
       }
 
-      if (isProd) {
-        // Production + no Gateway configured => fail closed. Do NOT import
-        // any mock module; keep them out of the production bundle.
+      // posture is "dev_mock", which resolveSp2BootstrapPosture never returns
+      // in production. Keep this additional STATIC guard so bundlers can
+      // prove the mock imports below are unreachable and exclude the mock
+      // modules from every production artifact (client and SSR).
+      if (import.meta.env.PROD) {
         if (!cancelled) setBoot({ kind: "fail_closed" });
         return;
       }
@@ -103,9 +138,7 @@ function RouteEntry() {
   if (boot.kind === "loading") {
     return (
       <div className="min-h-screen bg-muted/30 px-4 py-10">
-        <div className="mx-auto max-w-2xl text-sm text-muted-foreground">
-          Loading…
-        </div>
+        <div className="mx-auto max-w-2xl text-sm text-muted-foreground">Loading…</div>
       </div>
     );
   }
@@ -130,16 +163,13 @@ function FailClosed() {
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-10">
       <div className="mx-auto flex max-w-2xl flex-col gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          SnackPortal2 Gateway
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">SnackPortal2 Gateway</h1>
         <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
           <div className="font-medium">Configuration unavailable</div>
           <p className="mt-1">
-            The Gateway is not configured for this environment and no real
-            authentication adapter has been provided. This journey is
-            unavailable until the controlled-local Keycloak and Gateway are
-            wired.
+            The Gateway is not configured for this environment and no real authentication adapter
+            has been provided. This journey is unavailable until the controlled-local Keycloak and
+            Gateway are wired.
           </p>
         </div>
       </div>
@@ -189,6 +219,35 @@ function GatewayJourney({
     | { kind: "error"; outcome: GatewayOutcome<unknown>["kind"] }
   >({ kind: "idle" });
 
+  const [signInKickoffFailed, setSignInKickoffFailed] = useState(false);
+  const [tenantAuthUnsupported, setTenantAuthUnsupported] = useState(false);
+
+  // After the PKCE callback SPA-navigates back here, the principal token is
+  // already in adapter memory — resume the signed-in journey without another
+  // kickoff. (The token is never read out of any storage; memory only.)
+  useEffect(() => {
+    if (signedIn) return;
+    let cancelled = false;
+    void adapter.getPrincipalAccessToken().then((token) => {
+      if (!cancelled && token) void signIn();
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedIn]);
+
+  async function beginRealSignIn() {
+    setSignInKickoffFailed(false);
+    try {
+      // Redirects to the Keycloak authorization endpoint; does not resolve
+      // into a signed-in state in-page.
+      await adapter.beginPrincipalAuthentication();
+    } catch {
+      setSignInKickoffFailed(true);
+    }
+  }
+
   async function loadMemberships() {
     setMembershipsState({ kind: "loading" });
     const token = await adapter.getPrincipalAccessToken();
@@ -219,7 +278,20 @@ function GatewayJourney({
   }, [signedIn]);
 
   async function selectWorkspace(tenantId: string) {
-    await adapter.beginWorkspaceAuthentication(tenantId);
+    setTenantAuthUnsupported(false);
+    try {
+      await adapter.beginWorkspaceAuthentication(tenantId);
+    } catch (err) {
+      if (err instanceof TenantAuthenticationUnsupportedError) {
+        // Real adapter: tenant-scoped authentication is explicitly out of
+        // this slice. Fail closed — no tenant token, no startup load.
+        setTenantAuthUnsupported(true);
+        setActiveTenant(null);
+        setStartupState({ kind: "idle" });
+        return;
+      }
+      throw err;
+    }
     setActiveTenant(tenantId);
     await loadStartup(tenantId);
   }
@@ -271,9 +343,7 @@ function GatewayJourney({
       <div className="mx-auto flex max-w-2xl flex-col gap-6">
         <header className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              SnackPortal2 Gateway
-            </h1>
+            <h1 className="text-2xl font-semibold tracking-tight">SnackPortal2 Gateway</h1>
             <p className="text-xs text-muted-foreground">
               Controlled MVP · {isMock ? "development mock" : "gateway"} · not production
             </p>
@@ -287,18 +357,35 @@ function GatewayJourney({
 
         {!signedIn ? (
           <Panel title="Sign in">
-            <p className="mb-4 text-sm text-muted-foreground">
-              Continue to sign in. Real controlled-local Keycloak is not wired
-              in this preview.
-            </p>
-            <Button onClick={() => void signIn()}>Continue</Button>
+            {isMock ? (
+              <>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Continue to sign in. Development mock only — the real controlled-local Keycloak
+                  adapter is selected when the real configuration is present.
+                </p>
+                <Button onClick={() => void signIn()}>Continue</Button>
+              </>
+            ) : (
+              <>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Sign in with the controlled-local identity provider (Authorization Code with
+                  PKCE).
+                </p>
+                <Button onClick={() => void beginRealSignIn()}>Sign in</Button>
+                {signInKickoffFailed && (
+                  <div className="mt-3">
+                    <StatusNote tone="error">
+                      Sign-in could not be started. Please try again.
+                    </StatusNote>
+                  </div>
+                )}
+              </>
+            )}
           </Panel>
         ) : (
           <>
             <Panel title="Memberships">
-              {membershipsState.kind === "loading" && (
-                <StatusNote>Loading memberships…</StatusNote>
-              )}
+              {membershipsState.kind === "loading" && <StatusNote>Loading memberships…</StatusNote>}
               {membershipsState.kind === "empty" && (
                 <StatusNote tone="warn">No workspace available.</StatusNote>
               )}
@@ -316,9 +403,7 @@ function GatewayJourney({
                       >
                         <div>
                           <div className="text-sm font-medium">{m.tenant_id}</div>
-                          <div className="text-[11px] text-muted-foreground">
-                            role: {m.role}
-                          </div>
+                          <div className="text-[11px] text-muted-foreground">role: {m.role}</div>
                         </div>
                         <Button
                           size="sm"
@@ -334,11 +419,16 @@ function GatewayJourney({
               )}
             </Panel>
 
+            {tenantAuthUnsupported && (
+              <StatusNote tone="warn">
+                Tenant workspace authentication is not yet supported in this slice. Principal
+                sign-in and memberships only.
+              </StatusNote>
+            )}
+
             {activeTenant && (
               <Panel title={`Startup — ${activeTenant}`}>
-                {startupState.kind === "loading" && (
-                  <StatusNote>Loading startup…</StatusNote>
-                )}
+                {startupState.kind === "loading" && <StatusNote>Loading startup…</StatusNote>}
                 {startupState.kind === "error" && (
                   <StartupError
                     outcome={startupState.outcome}
@@ -349,21 +439,15 @@ function GatewayJourney({
                   <div className="space-y-4">
                     <div>
                       <Label className="text-xs uppercase tracking-wide">Name</Label>
-                      <div className="text-base font-medium">
-                        {startupState.data.display_name}
-                      </div>
+                      <div className="text-base font-medium">{startupState.data.display_name}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <div className="uppercase tracking-wide text-muted-foreground">
-                          Stage
-                        </div>
+                        <div className="uppercase tracking-wide text-muted-foreground">Stage</div>
                         <div>{startupState.data.investment_stage ?? "—"}</div>
                       </div>
                       <div>
-                        <div className="uppercase tracking-wide text-muted-foreground">
-                          Ref
-                        </div>
+                        <div className="uppercase tracking-wide text-muted-foreground">Ref</div>
                         <div className="font-mono">{startupState.data.record_ref}</div>
                       </div>
                     </div>
@@ -403,12 +487,8 @@ function GatewayJourney({
                           Clear
                         </Button>
                       </div>
-                      {saveState.kind === "ok" && (
-                        <StatusNote tone="ok">Saved.</StatusNote>
-                      )}
-                      {saveState.kind === "error" && (
-                        <SaveError outcome={saveState.outcome} />
-                      )}
+                      {saveState.kind === "ok" && <StatusNote tone="ok">Saved.</StatusNote>}
+                      {saveState.kind === "error" && <SaveError outcome={saveState.outcome} />}
                     </div>
                   </div>
                 )}
@@ -418,7 +498,8 @@ function GatewayJourney({
         )}
 
         <p className="text-center text-[11px] text-muted-foreground">
-          Mode: <span className="font-mono">{isMock ? "development mock (explicit)" : "gateway"}</span>
+          Mode:{" "}
+          <span className="font-mono">{isMock ? "development mock (explicit)" : "gateway"}</span>
         </p>
       </div>
     </div>
@@ -436,7 +517,13 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function StatusNote({ tone = "neutral", children }: { tone?: "neutral" | "warn" | "error" | "ok"; children: React.ReactNode }) {
+function StatusNote({
+  tone = "neutral",
+  children,
+}: {
+  tone?: "neutral" | "warn" | "error" | "ok";
+  children: React.ReactNode;
+}) {
   const cls =
     tone === "error"
       ? "border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200"

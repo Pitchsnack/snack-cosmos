@@ -11,6 +11,13 @@
  *  - X-Tenant-Id alone is NEVER authorization.
  */
 export interface SnackPortalAuthAdapter {
+  /**
+   * Kicks off principal (IdP) authentication. The real implementation
+   * redirects the browser to the Keycloak authorization endpoint
+   * (Authorization Code + PKCE S256) and therefore does not complete
+   * in-page; the mock flips its in-memory flag.
+   */
+  beginPrincipalAuthentication(): Promise<void>;
   /** Principal-only OIDC access token for GET /memberships. */
   getPrincipalAccessToken(): Promise<string | null>;
   /** Kicks off IdP redirect that mints a tenant-scoped token. */
