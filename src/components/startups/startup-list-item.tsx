@@ -1,9 +1,11 @@
 import { useState, type CSSProperties } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
+import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+
 
 function monogram(name: string) {
   return name
@@ -64,8 +66,8 @@ export function StartupListItem({
         setIsPressed(false);
       }}
     >
-      <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
+    <div className="flex items-start gap-3">
+        <div className="flex h-24 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {s.logo_signed_url ? (
             <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -98,32 +100,54 @@ export function StartupListItem({
             </div>
           )}
           {s.short_description && (
-            <p className="mt-1.5 line-clamp-2 text-[11px] text-foreground/80">
+            <p className="mt-1.5 line-clamp-2 text-left text-[11px] text-foreground/80">
               {s.short_description}
             </p>
           )}
-          {s.product_tags?.length || s.market_tags?.length ? (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {(s.product_tags ?? []).slice(0, 3).map((t) => (
-                <span
-                  key={`p-${t}`}
-                  className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0 text-[9px] font-medium text-primary"
-                >
-                  {t}
-                </span>
-              ))}
-              {(s.market_tags ?? []).slice(0, 2).map((t) => (
-                <span
-                  key={`m-${t}`}
-                  className="rounded-full border border-transparent bg-muted/50 px-1.5 py-0 text-[9px] font-medium text-muted-foreground"
-                >
-                  {t}
-                </span>
-              ))}
+          {s.product_tags?.length ? (
+            <div className="mt-1.5 text-left">
+              <ChipRow tags={s.product_tags} tone="primary" />
+            </div>
+          ) : null}
+          {s.market_tags?.length ? (
+            <div className="mt-1.5 text-left">
+              <ChipRow tags={s.market_tags} tone="muted" />
+            </div>
+          ) : null}
+          {s.related_investors?.length ? (
+            <div className="mt-1.5 text-left">
+              <RelationshipChips
+                icon={<Users className="h-3 w-3" />}
+                label="Investors:"
+                items={s.related_investors}
+                popoverTitle="All Investors"
+                maxVisible={3}
+              />
             </div>
           ) : null}
         </div>
       </div>
+
     </button>
   );
 }
+
+function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
+  const shown = tags.slice(0, 5);
+  const overflow = tags.length - shown.length;
+  const base =
+    tone === "primary"
+      ? "bg-primary/10 text-primary border-primary/30"
+      : "bg-muted/50 text-muted-foreground border-transparent";
+  return (
+    <div className="flex flex-wrap gap-1">
+      {shown.map((t) => (
+        <span key={t} className={`max-w-[10rem] truncate rounded-full border px-1.5 py-0 text-[9px] font-medium ${base}`}>
+          {t}
+        </span>
+      ))}
+      {overflow > 0 && <span className="text-[9px] text-muted-foreground">+{overflow}</span>}
+    </div>
+  );
+}
+
