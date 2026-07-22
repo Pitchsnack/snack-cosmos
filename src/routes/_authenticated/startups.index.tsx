@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
+import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
+import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favorite-list-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
