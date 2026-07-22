@@ -78,7 +78,7 @@ export function StartupListItem({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
+            <h3 className="truncate text-left text-sm font-semibold leading-tight group-hover:text-accent">
               {s.startup_name}
             </h3>
             <div className="flex shrink-0 items-center gap-1">
@@ -91,32 +91,33 @@ export function StartupListItem({
             </div>
           </div>
           {s.company_type && (
-            <div className="mt-0.5 text-[11px] text-muted-foreground">{s.company_type}</div>
+            <div className="mt-0.5 text-left text-[11px] text-muted-foreground">{s.company_type}</div>
           )}
           {s.headquarters && (
-            <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <div className="mt-0.5 inline-flex items-center gap-1 text-left text-[11px] text-muted-foreground">
               <MapPin className="h-2.5 w-2.5" />
               {s.headquarters}
             </div>
           )}
           {s.short_description && (
-            <p className="mt-1.5 line-clamp-2 text-left text-[11px] text-foreground/80">
+            <p className="mt-1.5 w-full text-left line-clamp-2 text-[11px] text-foreground/80">
               {s.short_description}
             </p>
           )}
           {s.product_tags?.length ? (
-            <div className="mt-1.5 text-left">
+            <div className="mt-1.5 w-full text-left">
               <ChipRow tags={s.product_tags} tone="primary" />
             </div>
           ) : null}
           {s.market_tags?.length ? (
-            <div className="mt-1.5 text-left">
+            <div className="mt-1.5 w-full text-left">
               <ChipRow tags={s.market_tags} tone="muted" />
             </div>
           ) : null}
           {s.related_investors?.length ? (
-            <div className="mt-1.5 text-left">
+            <div className="mt-1.5 w-full text-left">
               <RelationshipChips
+                className="w-full justify-start"
                 icon={<Users className="h-3 w-3" />}
                 label="Investors:"
                 items={s.related_investors}
@@ -140,7 +141,7 @@ function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) 
       ? "bg-primary/10 text-primary border-primary/30"
       : "bg-muted/50 text-muted-foreground border-transparent";
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap justify-start gap-1">
       {shown.map((t) => (
         <span key={t} className={`max-w-[10rem] truncate rounded-full border px-1.5 py-0 text-[9px] font-medium ${base}`}>
           {t}
