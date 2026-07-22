@@ -141,7 +141,7 @@ function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) 
       ? "bg-primary/10 text-primary border-primary/30"
       : "bg-muted/50 text-muted-foreground border-transparent";
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap justify-start gap-1">
       {shown.map((t) => (
         <span key={t} className={`max-w-[10rem] truncate rounded-full border px-1.5 py-0 text-[9px] font-medium ${base}`}>
           {t}
