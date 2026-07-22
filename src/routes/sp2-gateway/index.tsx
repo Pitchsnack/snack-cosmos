@@ -231,7 +231,7 @@ function GatewayJourney({
       setStartupState({ kind: "error", outcome: "unauthorized" });
       return;
     }
-    const outcome = await gw.getTenantStartup(token, tenantId, DEMO_STARTUP_REF);
+    const outcome = await gw.getTenantStartup(token, tenantId, demoStartupRef);
     if (outcome.kind !== "ok") {
       setStartupState({ kind: "error", outcome: outcome.kind });
       return;
