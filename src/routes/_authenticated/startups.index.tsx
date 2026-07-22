@@ -40,7 +40,9 @@ const searchSchema = z.object({
   view: z.enum(VIEW).optional(),
   selected: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
+  fav: z.coerce.boolean().optional(),
 });
+
 
 export const Route = createFileRoute("/_authenticated/startups/")({
   head: () => ({ meta: [{ title: "Startups — SnackPortal2" }] }),
