@@ -64,7 +64,7 @@ function StartupsPageInner() {
   const [modalId, setModalId] = useState<string | null>(null);
 
 
-  const pageSize = view === "split" ? 50 : 24;
+  const pageSize = view === "split" ? 50 : view === "list" ? 25 : 24;
 
   const { data, isLoading, isFetching, refetch } = useStartups({
     search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
