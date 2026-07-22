@@ -66,20 +66,26 @@ function StartupsPageInner() {
   const sort = s.sort ?? "updated_desc";
   const view = s.view ?? "grid";
   const selected = s.selected;
+  const favOnly = !!s.fav;
   const [modalId, setModalId] = useState<string | null>(null);
+  const { ids: favIds, isFavorite } = useFavoriteStartups();
 
 
-  const pageSize = view === "split" ? 50 : view === "list" ? 25 : 24;
+  const pageSize = favOnly ? 100 : view === "split" ? 50 : view === "list" ? 25 : 24;
 
   const { data, isLoading, isFetching, refetch } = useStartups({
     search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
     companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
-    sort, page, pageSize,
+    sort, page: favOnly ? 1 : page, pageSize,
   });
 
-  const items = data && "items" in data ? data.items : [];
-  const total = data && "total" in data ? data.total : 0;
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const rawItems = data && "items" in data ? data.items : [];
+  const items = useMemo(
+    () => (favOnly ? rawItems.filter((it) => favIds.has(it.id)) : rawItems),
+    [rawItems, favOnly, favIds],
+  );
+  const total = favOnly ? items.length : data && "total" in data ? data.total : 0;
+  const pageCount = favOnly ? 1 : Math.max(1, Math.ceil(total / pageSize));
 
   const update = (patch: Partial<typeof s>) =>
     navigate({ search: (prev: typeof s) => ({ ...prev, ...patch, page: 1 }) });
@@ -91,14 +97,36 @@ function StartupsPageInner() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Rocket className="h-3.5 w-3.5" /> Startup Directory
+            <Rocket className="h-3.5 w-3.5" /> Startup Directory{favOnly ? " · Favorites" : ""}
           </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Startups</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {total > 0 ? `${total} startup${total === 1 ? "" : "s"}` : "Browse and manage your portfolio."}
+            {favOnly
+              ? `${total} bookmarked startup${total === 1 ? "" : "s"}`
+              : total > 0
+                ? `${total} startup${total === 1 ? "" : "s"}`
+                : "Browse and manage your portfolio."}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={favOnly}
+            aria-label={favOnly ? "Show all startups" : "Show only favorites"}
+            title={favOnly ? "Show all startups" : "Show only favorites"}
+            onClick={() =>
+              navigate({ search: (p: typeof s) => ({ ...p, fav: favOnly ? undefined : true, page: 1 }) })
+            }
+            className={cn(
+              "inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors",
+              favOnly
+                ? "border-accent/40 bg-accent/10 text-accent"
+                : "border-input bg-background text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
+          </button>
           <ViewToggle
             value={view}
             onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
@@ -113,6 +141,7 @@ function StartupsPageInner() {
           )}
         </div>
       </div>
+
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-1 min-w-[16rem] items-center gap-2 rounded-md bg-muted/60 px-3">
