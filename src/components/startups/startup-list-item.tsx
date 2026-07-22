@@ -109,7 +109,7 @@ export function StartupListItem({
           </p>
         )}
         {s.product_tags?.length ? (
-          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
+          <div className="mt-1.5 w-full max-h-[2.8rem] overflow-hidden text-left">
             <ChipRow tags={s.product_tags} tone="primary" />
           </div>
         ) : null}
