@@ -65,9 +65,9 @@ export function StartupListItem({
       }}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
+        <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {s.logo_signed_url ? (
-            <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
+            <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
           ) : (
             <span className="text-xs font-semibold text-muted-foreground">
               {monogram(s.startup_name)}
@@ -76,9 +76,20 @@ export function StartupListItem({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
-              {s.startup_name}
-            </h3>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
+                {s.startup_name}
+              </h3>
+              {s.company_type && (
+                <div className="mt-0.5 text-[11px] text-muted-foreground">{s.company_type}</div>
+              )}
+              {s.headquarters && (
+                <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <MapPin className="h-2.5 w-2.5" />
+                  {s.headquarters}
+                </div>
+              )}
+            </div>
             <div className="flex shrink-0 items-center gap-1">
               <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
               {s.investment_stage && (
@@ -88,15 +99,6 @@ export function StartupListItem({
               )}
             </div>
           </div>
-          {s.company_type && (
-            <div className="mt-0.5 text-[11px] text-muted-foreground">{s.company_type}</div>
-          )}
-          {s.headquarters && (
-            <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-              <MapPin className="h-2.5 w-2.5" />
-              {s.headquarters}
-            </div>
-          )}
           {s.short_description && (
             <p className="mt-1.5 line-clamp-2 text-[11px] text-foreground/80">
               {s.short_description}
