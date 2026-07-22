@@ -50,7 +50,7 @@ function FavoritesInner() {
   const { ids } = useFavoriteStartups();
 
   // Fetch a large page and filter client-side by favorite ids.
-  const { data, isLoading } = useStartups({ sort: "updated_desc", page: 1, pageSize: 200 });
+  const { data, isLoading } = useStartups({ sort: "updated_desc", page: 1, pageSize: 100 });
   const allItems = data && "items" in data ? data.items : [];
 
   const items = useMemo(
