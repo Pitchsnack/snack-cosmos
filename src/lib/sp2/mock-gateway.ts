@@ -6,6 +6,8 @@
 import type { TenantStartupDetailDTO, WorkspaceMembershipDTO } from "./dto";
 import { MOCK_MARKERS } from "./mock-auth-adapter";
 
+export const MOCK_DEMO_STARTUP_REF = "stp_demo_001";
+
 const memberships: WorkspaceMembershipDTO[] = [
   { tenant_id: "acme", role: "workspace_editor" },
 ];
