@@ -1,7 +1,7 @@
-import { Grid3X3, Columns2 } from "lucide-react";
+import { Grid3X3, Columns2, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type ViewMode = "grid" | "split";
+export type ViewMode = "grid" | "split" | "list";
 
 export function ViewToggle({
   value,
@@ -28,6 +28,10 @@ export function ViewToggle({
       <Btn active={value === "split"} onClick={() => onChange("split")} label="Split view">
         <Columns2 className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Split</span>
+      </Btn>
+      <Btn active={value === "list"} onClick={() => onChange("list")} label="List view">
+        <List className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">List</span>
       </Btn>
     </div>
   );
