@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
@@ -70,6 +71,11 @@ const AcceptInviteRoute = AcceptInviteRouteImport.update({
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Sp2GatewayIndexRoute = Sp2GatewayIndexRouteImport.update({
+  id: '/sp2-gateway/',
+  path: '/sp2-gateway/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
+  '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/deals/$id': typeof AuthenticatedDealsIdRouteWithChildren
   '/deals/new': typeof AuthenticatedDealsNewRoute
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
@@ -312,6 +319,7 @@ export interface FileRoutesByTo {
   '/security': typeof AuthenticatedSecurityRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
+  '/sp2-gateway': typeof Sp2GatewayIndexRoute
   '/deals/new': typeof AuthenticatedDealsNewRoute
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/_authenticated/deals/$id': typeof AuthenticatedDealsIdRouteWithChildren
   '/_authenticated/deals/new': typeof AuthenticatedDealsNewRoute
   '/_authenticated/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/shared-deals'
     | '/startups'
     | '/users'
+    | '/sp2-gateway/'
     | '/deals/$id'
     | '/deals/new'
     | '/global-startups/$id'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/users'
     | '/'
+    | '/sp2-gateway'
     | '/deals/new'
     | '/global-startups/$id'
     | '/global-startups/browse'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups'
     | '/_authenticated/users'
     | '/_authenticated/'
+    | '/sp2-gateway/'
     | '/_authenticated/deals/$id'
     | '/_authenticated/deals/new'
     | '/_authenticated/global-startups/$id'
@@ -491,6 +503,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -528,6 +541,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sp2-gateway/': {
+      id: '/sp2-gateway/'
+      path: '/sp2-gateway'
+      fullPath: '/sp2-gateway/'
+      preLoaderRoute: typeof Sp2GatewayIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -925,6 +945,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
