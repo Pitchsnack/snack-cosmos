@@ -208,28 +208,64 @@ function StartupsPageInner() {
           <p>No startups match your filters.</p>
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={cn(
+            "grid gap-4",
+            favOnly
+              ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+              : "sm:grid-cols-2 lg:grid-cols-3",
+          )}
+        >
           {items.map((it) => (
             <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} />
           ))}
         </div>
       ) : view === "list" ? (
-        <div className="space-y-2">
-          {items.map((it) => (
-            <StartupRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
-          <div className="max-h-[calc(100vh-18rem)] space-y-2 overflow-y-auto pr-1">
+        favOnly ? (
+          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
+            <FavoriteListHeader />
             {items.map((it) => (
-              <StartupListItem
-                key={it.id}
-                s={it}
-                selected={selected === it.id}
-                onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
-              />
+              <FavoriteListRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
             ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {items.map((it) => (
+              <StartupRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
+            ))}
+          </div>
+        )
+      ) : (
+        <div
+          className={cn(
+            "grid gap-4",
+            favOnly
+              ? "lg:grid-cols-[minmax(260px,20rem)_1fr]"
+              : "lg:grid-cols-[minmax(320px,26rem)_1fr]",
+          )}
+        >
+          <div className="max-h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
+            {favOnly
+              ? items.map((it) => (
+                  <FavoriteSplitRow
+                    key={it.id}
+                    s={it}
+                    selected={selected === it.id}
+                    onSelect={() =>
+                      navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })
+                    }
+                  />
+                ))
+              : items.map((it) => (
+                  <StartupListItem
+                    key={it.id}
+                    s={it}
+                    selected={selected === it.id}
+                    onSelect={() =>
+                      navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })
+                    }
+                  />
+                ))}
           </div>
           <div className="min-w-0">
             {selected ? <StartupDetailPanel id={selected} /> : <StartupDetailEmpty />}
