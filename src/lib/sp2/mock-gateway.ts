@@ -8,13 +8,11 @@ import { MOCK_MARKERS } from "./mock-auth-adapter";
 
 export const MOCK_DEMO_STARTUP_REF = "stp_demo_001";
 
-const memberships: WorkspaceMembershipDTO[] = [
-  { tenant_id: "acme", role: "workspace_editor" },
-];
+const memberships: WorkspaceMembershipDTO[] = [{ tenant_id: "acme", role: "workspace_editor" }];
 
 const startups: Record<string, Record<string, TenantStartupDetailDTO>> = {
   acme: {
-    "stp_demo_001": {
+    stp_demo_001: {
       record_ref: "stp_demo_001",
       display_name: "Northwind Robotics",
       short_description: "Autonomous last-mile logistics for cold-chain deliveries.",
@@ -45,7 +43,8 @@ export async function mockGatewayFetch(
 
   if (url.pathname.endsWith("/memberships") && method === "GET") {
     if (auth !== `Bearer ${MOCK_MARKERS.principal}`) return json(401, {});
-    return json(200, memberships);
+    // Lawful wire contract: envelope, never a bare array.
+    return json(200, { memberships });
   }
 
   const startupMatch = url.pathname.match(/\/tenant\/startups\/([^/]+)$/);

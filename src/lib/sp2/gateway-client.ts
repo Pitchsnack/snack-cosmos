@@ -30,14 +30,16 @@ export class SnackPortalGatewayClient {
     this.fetchImpl = opts.fetchImpl ?? fetch;
   }
 
-  async listMemberships(
-    principalToken: string,
-  ): Promise<GatewayOutcome<WorkspaceMembershipDTO[]>> {
-    return this.request<WorkspaceMembershipDTO[]>({
+  async listMemberships(principalToken: string): Promise<GatewayOutcome<WorkspaceMembershipDTO[]>> {
+    const outcome = await this.request<unknown>({
       method: "GET",
       path: "/memberships",
       token: principalToken,
     });
+    if (outcome.kind !== "ok") return outcome;
+    const memberships = decodeMembershipsEnvelope(outcome.data);
+    if (memberships === null) return { kind: "unavailable" };
+    return { kind: "ok", data: memberships };
   }
 
   async getTenantStartup(
@@ -121,6 +123,30 @@ export class SnackPortalGatewayClient {
       return { kind: "unavailable" };
     }
   }
+}
+
+/**
+ * Decodes the lawful GET /memberships wire contract:
+ * `{ "memberships": WorkspaceMembershipDTO[] }`. A bare array is not a
+ * lawful production body. Returns null on any invalid envelope so the
+ * caller fails closed.
+ */
+function decodeMembershipsEnvelope(body: unknown): WorkspaceMembershipDTO[] | null {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return null;
+  }
+  const memberships = (body as { memberships?: unknown }).memberships;
+  if (!Array.isArray(memberships)) return null;
+  for (const entry of memberships) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      return null;
+    }
+    const m = entry as { tenant_id?: unknown; role?: unknown };
+    if (typeof m.tenant_id !== "string" || typeof m.role !== "string") {
+      return null;
+    }
+  }
+  return memberships as WorkspaceMembershipDTO[];
 }
 
 /**
