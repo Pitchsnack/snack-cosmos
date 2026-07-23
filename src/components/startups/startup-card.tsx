@@ -91,25 +91,35 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
   const inner = (
     <>
-      {/* Bookmark toggle */}
-      <span
-        role="button"
-        tabIndex={0}
-        aria-label={bookmarked ? "Remove bookmark" : "Add bookmark"}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggle(s.id);
-        }}
-        className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 shadow-sm hover:bg-background"
-      >
-        <Bookmark
-          className={cn(
-            "h-4 w-4 transition-colors",
-            bookmarked ? "fill-accent text-accent" : "text-muted-foreground",
-          )}
-        />
-      </span>
+      {/* Bookmark toggle - shown when favorited or card hovered/focused */}
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <span
+            role="button"
+            tabIndex={0}
+            aria-label={bookmarked ? "Remove from Favorites" : "Add to Favorites"}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggle(s.id);
+            }}
+            className={cn(
+              "absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 shadow-sm transition-opacity duration-150 hover:bg-background focus-visible:opacity-100",
+              bookmarked || isHovered ? "opacity-100" : "opacity-0 pointer-events-none",
+            )}
+          >
+            <Bookmark
+              className={cn(
+                "h-4 w-4 transition-colors",
+                bookmarked ? "fill-accent text-accent" : "text-muted-foreground",
+              )}
+            />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          {bookmarked ? "Remove from Favorites" : "Add to Favorites"}
+        </TooltipContent>
+      </Tooltip>
 
       {/* Product image banner */}
 
