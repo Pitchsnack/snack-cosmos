@@ -49,6 +49,12 @@ function EditStartupPage() {
                 Edit Startup
               </TabsTrigger>
               <TabsTrigger
+                value="basic-restrictions"
+                className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none gap-1.5"
+              >
+                Basic Information Restrictions <Lock className="h-3.5 w-3.5" />
+              </TabsTrigger>
+              <TabsTrigger
                 value="private"
                 className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none gap-1.5"
               >
@@ -59,6 +65,9 @@ function EditStartupPage() {
               <div className="mx-auto max-w-4xl">
                 <StartupForm startup={data as unknown as StartupDetail} />
               </div>
+            </TabsContent>
+            <TabsContent value="basic-restrictions" className="mt-6">
+              <BasicInformationRestrictionsTab startup={data as unknown as StartupDetail} />
             </TabsContent>
             <TabsContent value="private" className="mt-6">
               <PrivateInformationTab startup={data as unknown as StartupDetail} />
