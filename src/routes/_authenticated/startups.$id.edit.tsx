@@ -3,6 +3,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import { StartupForm } from "@/components/startups/startup-form";
 import { PermissionGuard } from "@/components/permission-guard";
 import { PrivateInformationTab } from "@/components/startups/private-information-tab";
+import { BasicInformationRestrictionsTab } from "@/components/startups/basic-information-restrictions-tab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStartup } from "@/hooks/use-startup";
 import type { StartupDetail } from "@/lib/startups.functions";
