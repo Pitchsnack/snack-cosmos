@@ -22,7 +22,9 @@ import {
   Globe,
   Inbox,
   Network,
+  UserCircle,
 } from "lucide-react";
+
 
 
 import { cn } from "@/lib/utils";
