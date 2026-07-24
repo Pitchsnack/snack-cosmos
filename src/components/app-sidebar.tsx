@@ -56,7 +56,9 @@ type NavPath =
   | "/global-startups"
   | "/global-startups/browse"
   | "/connections"
-  | "/intake-queue";
+  | "/intake-queue"
+  | "/my-page";
+
 
 
 
@@ -140,8 +142,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
+  { label: "My Page", icon: UserCircle, path: "/my-page", exact: false },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
+
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
