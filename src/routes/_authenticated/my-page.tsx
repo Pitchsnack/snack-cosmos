@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  User,
   Mail,
-  Phone,
   Building2,
   MapPin,
   Calendar,
@@ -13,6 +11,7 @@ import {
   Bell,
   Lock,
 } from "lucide-react";
+
 
 import { useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences, useNotificationPreferences } from "@/hooks/use-preferences";
