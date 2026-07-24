@@ -112,7 +112,8 @@ function MyPage() {
                 <div>
                   <div className="text-xs text-purple-600/80">Current Workspace</div>
                   <div className="text-sm font-semibold text-purple-900">{company}</div>
-                  <div className="text-xs text-purple-600/70">Startup Portfolio</div>
+                  <div className="text-xs text-purple-600/70">{workspaceTypeLabel}</div>
+
                 </div>
               </div>
             </div>
