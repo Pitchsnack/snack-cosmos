@@ -46,7 +46,15 @@ function MyPage() {
     (user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "") ||
     (user?.email?.[0]?.toUpperCase() ?? "?");
   const roleLabel = session?.roles[0] ? ROLE_LABELS[session.roles[0]] : "Startup User";
-  const company = session?.activeWorkspace.tenantName ?? "—";
+  const company =
+    session?.activeWorkspace.tenantName ??
+    session?.tenants[0]?.tenantName ??
+    (session?.roles.includes("CONTROL") ? "Control" : "—");
+  const workspaceTypeLabel =
+    session?.activeWorkspace.workspaceType === "CONTROL"
+      ? "Control Platform"
+      : "Startup Portfolio";
+
 
   return (
     <div className="-mx-8 -mt-10 -mb-10 min-h-screen bg-white px-8 pt-10 pb-10">
