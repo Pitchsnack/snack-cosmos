@@ -54,7 +54,8 @@ type NavPath =
   | "/global-startups/browse"
   | "/connections"
   | "/intake-queue"
-  | "/my-page";
+  | "/my-page"
+  | "/startup-activity";
 
 type NavItem = {
   label: string;
@@ -133,6 +134,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
+  { label: "Startup Activity", icon: BarChart3, path: "/startup-activity", exact: false },
   { label: "My Page", icon: UserCircle, path: "/my-page", exact: false },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];

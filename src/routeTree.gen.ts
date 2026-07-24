@@ -18,6 +18,7 @@ import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
+import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_authenticated/startup-activity'
 import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
@@ -95,6 +96,12 @@ const AuthenticatedStartupsRoute = AuthenticatedStartupsRouteImport.update({
   path: '/startups',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedStartupActivityRoute =
+  AuthenticatedStartupActivityRouteImport.update({
+    id: '/startup-activity',
+    path: '/startup-activity',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSharedDealsRoute =
   AuthenticatedSharedDealsRouteImport.update({
     id: '/shared-deals',
@@ -296,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
+  '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
@@ -334,6 +342,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
+  '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
@@ -374,6 +383,7 @@ export interface FileRoutesById {
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
+  '/_authenticated/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/preferences'
     | '/security'
     | '/shared-deals'
+    | '/startup-activity'
     | '/startups'
     | '/users'
     | '/sp2-gateway/'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/preferences'
     | '/security'
+    | '/startup-activity'
     | '/users'
     | '/'
     | '/sp2-gateway'
@@ -496,6 +508,7 @@ export interface FileRouteTypes {
     | '/_authenticated/preferences'
     | '/_authenticated/security'
     | '/_authenticated/shared-deals'
+    | '/_authenticated/startup-activity'
     | '/_authenticated/startups'
     | '/_authenticated/users'
     | '/_authenticated/'
@@ -594,6 +607,13 @@ declare module '@tanstack/react-router' {
       path: '/startups'
       fullPath: '/startups'
       preLoaderRoute: typeof AuthenticatedStartupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/startup-activity': {
+      id: '/_authenticated/startup-activity'
+      path: '/startup-activity'
+      fullPath: '/startup-activity'
+      preLoaderRoute: typeof AuthenticatedStartupActivityRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/shared-deals': {
@@ -945,6 +965,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedSharedDealsRoute: typeof AuthenticatedSharedDealsRouteWithChildren
+  AuthenticatedStartupActivityRoute: typeof AuthenticatedStartupActivityRoute
   AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -967,6 +988,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedSharedDealsRoute: AuthenticatedSharedDealsRouteWithChildren,
+  AuthenticatedStartupActivityRoute: AuthenticatedStartupActivityRoute,
   AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
