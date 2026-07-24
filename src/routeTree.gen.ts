@@ -26,6 +26,7 @@ import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authenticated/startups.index'
@@ -137,6 +138,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedConnectionsRoute =
+  AuthenticatedConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -273,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
+  '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -312,6 +320,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
+  '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -347,6 +356,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
+  '/_authenticated/connections': typeof AuthenticatedConnectionsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -390,6 +400,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/access-management'
     | '/audit'
+    | '/connections'
     | '/dashboard'
     | '/deals'
     | '/intake-queue'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/access-management'
     | '/audit'
+    | '/connections'
     | '/dashboard'
     | '/intake-queue'
     | '/notifications'
@@ -463,6 +475,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/access-management'
     | '/_authenticated/audit'
+    | '/_authenticated/connections'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
     | '/_authenticated/intake-queue'
@@ -625,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/connections': {
+      id: '/_authenticated/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof AuthenticatedConnectionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/audit': {
@@ -896,6 +916,7 @@ const AuthenticatedStartupsRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
+  AuthenticatedConnectionsRoute: typeof AuthenticatedConnectionsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
@@ -916,6 +937,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
+  AuthenticatedConnectionsRoute: AuthenticatedConnectionsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,

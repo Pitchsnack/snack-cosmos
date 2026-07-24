@@ -21,7 +21,9 @@ import {
   Bell,
   Globe,
   Inbox,
+  Network,
 } from "lucide-react";
+
 
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -51,8 +53,9 @@ type NavPath =
   | "/preferences"
   | "/global-startups"
   | "/global-startups/browse"
-  
+  | "/connections"
   | "/intake-queue";
+
 
 
 
@@ -91,7 +94,9 @@ const NAV_ITEMS: NavItem[] = [
     perm: "global_startups.import",
   },
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
+  { label: "Connections", icon: Network, path: "/connections", exact: false },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
+
   {
     label: "Shared Deals",
     icon: Share2,
