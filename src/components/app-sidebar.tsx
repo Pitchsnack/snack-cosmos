@@ -53,8 +53,9 @@ type NavPath =
   | "/preferences"
   | "/global-startups"
   | "/global-startups/browse"
-  
+  | "/connections"
   | "/intake-queue";
+
 
 
 
