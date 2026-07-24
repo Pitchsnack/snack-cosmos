@@ -54,7 +54,8 @@ type NavPath =
   | "/global-startups/browse"
   | "/connections"
   | "/intake-queue"
-  | "/my-page";
+  | "/my-page"
+  | "/startup-activity";
 
 type NavItem = {
   label: string;
