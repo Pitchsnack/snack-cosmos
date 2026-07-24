@@ -22,6 +22,7 @@ import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
@@ -117,6 +118,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMyPageRoute = AuthenticatedMyPageRouteImport.update({
+  id: '/my-page',
+  path: '/my-page',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedInvestorsRoute = AuthenticatedInvestorsRouteImport.update({
   id: '/investors',
   path: '/investors',
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
+  '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
+  '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
+  '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/intake-queue'
     | '/investors'
+    | '/my-page'
     | '/notifications'
     | '/preferences'
     | '/security'
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/connections'
     | '/dashboard'
     | '/intake-queue'
+    | '/my-page'
     | '/notifications'
     | '/preferences'
     | '/security'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/_authenticated/deals'
     | '/_authenticated/intake-queue'
     | '/_authenticated/investors'
+    | '/_authenticated/my-page'
     | '/_authenticated/notifications'
     | '/_authenticated/preferences'
     | '/_authenticated/security'
@@ -610,6 +622,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-page': {
+      id: '/_authenticated/my-page'
+      path: '/my-page'
+      fullPath: '/my-page'
+      preLoaderRoute: typeof AuthenticatedMyPageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/investors': {
@@ -921,6 +940,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
+  AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
@@ -942,6 +962,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
+  AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
