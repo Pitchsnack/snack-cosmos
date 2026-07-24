@@ -25,8 +25,6 @@ import {
   UserCircle,
 } from "lucide-react";
 
-
-
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
@@ -38,7 +36,6 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhiteIcon from "@/assets/pitchsnack-hat-white-icon.png";
-
 
 type NavPath =
   | "/"
@@ -59,10 +56,6 @@ type NavPath =
   | "/intake-queue"
   | "/my-page";
 
-
-
-
-
 type NavItem = {
   label: string;
   icon: typeof Building2;
@@ -80,8 +73,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
-
-
 
   {
     label: "Global Startups",
@@ -145,7 +136,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "My Page", icon: UserCircle, path: "/my-page", exact: false },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
-
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);

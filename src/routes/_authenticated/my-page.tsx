@@ -108,23 +108,16 @@ function MyPage() {
 
       {/* Circular summary indicators */}
       <div className="flex flex-wrap items-center gap-6">
-        <CircleSummary
-          icon={Users}
-          value={24}
-          label="Total Connections"
-          tone="primary"
-        />
-        <CircleSummary
-          icon={Inbox}
-          value={5}
-          label="Requests"
-          tone="accent"
-        />
+        <CircleSummary icon={Users} value={24} label="Total Connections" tone="primary" />
+        <CircleSummary icon={Inbox} value={5} label="Requests" tone="accent" />
       </div>
 
       {/* Accordion sections */}
       <Accordion type="multiple" defaultValue={[]} className="space-y-4">
-        <AccordionItem value="personal" className="rounded-xl border border-border bg-card shadow-card">
+        <AccordionItem
+          value="personal"
+          className="rounded-xl border border-border bg-card shadow-card"
+        >
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 data-[state=open]:rounded-t-xl [&[data-state=open]]:bg-muted/20">
             <div className="flex items-center gap-3 text-left">
               <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary">
@@ -152,7 +145,10 @@ function MyPage() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="preferences" className="rounded-xl border border-border bg-card shadow-card">
+        <AccordionItem
+          value="preferences"
+          className="rounded-xl border border-border bg-card shadow-card"
+        >
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 data-[state=open]:rounded-t-xl [&[data-state=open]]:bg-muted/20">
             <div className="flex items-center gap-3 text-left">
               <div className="grid h-8 w-8 place-items-center rounded-full bg-info/10 text-info">
@@ -160,7 +156,9 @@ function MyPage() {
               </div>
               <div>
                 <div className="text-sm font-semibold">Preferences</div>
-                <div className="text-xs text-muted-foreground">Notification and display settings</div>
+                <div className="text-xs text-muted-foreground">
+                  Notification and display settings
+                </div>
               </div>
             </div>
           </AccordionTrigger>
@@ -204,7 +202,10 @@ function MyPage() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="account" className="rounded-xl border border-border bg-card shadow-card">
+        <AccordionItem
+          value="account"
+          className="rounded-xl border border-border bg-card shadow-card"
+        >
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 data-[state=open]:rounded-t-xl [&[data-state=open]]:bg-muted/20">
             <div className="flex items-center gap-3 text-left">
               <div className="grid h-8 w-8 place-items-center rounded-full bg-success/10 text-success">
@@ -212,7 +213,9 @@ function MyPage() {
               </div>
               <div>
                 <div className="text-sm font-semibold">Account Settings</div>
-                <div className="text-xs text-muted-foreground">Security, password, and linked accounts</div>
+                <div className="text-xs text-muted-foreground">
+                  Security, password, and linked accounts
+                </div>
               </div>
             </div>
           </AccordionTrigger>
@@ -273,7 +276,10 @@ function MyPage() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="activity" className="rounded-xl border border-border bg-card shadow-card">
+        <AccordionItem
+          value="activity"
+          className="rounded-xl border border-border bg-card shadow-card"
+        >
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 data-[state=open]:rounded-t-xl [&[data-state=open]]:bg-muted/20">
             <div className="flex items-center gap-3 text-left">
               <div className="grid h-8 w-8 place-items-center rounded-full bg-accent/10 text-accent-foreground">
@@ -281,7 +287,9 @@ function MyPage() {
               </div>
               <div>
                 <div className="text-sm font-semibold">Activity</div>
-                <div className="text-xs text-muted-foreground">Recent updates, saved items, and requests</div>
+                <div className="text-xs text-muted-foreground">
+                  Recent updates, saved items, and requests
+                </div>
               </div>
             </div>
           </AccordionTrigger>
