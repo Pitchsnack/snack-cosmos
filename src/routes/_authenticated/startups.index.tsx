@@ -267,7 +267,7 @@ function StartupsPageInner() {
                   />
                 ))}
           </div>
-          <div className="min-w-0 rounded-lg border border-border bg-background p-6 shadow-sm">
+          <div className="min-w-0 rounded-lg border border-border bg-card p-6 shadow-sm">
             {selected ? <StartupDetailPanel id={selected} /> : <StartupDetailEmpty />}
           </div>
         </div>
