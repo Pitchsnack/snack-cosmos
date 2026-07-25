@@ -373,7 +373,7 @@ function SummaryCard({
   );
 }
 
-export function ContactsPage() {
+function ContactsPage() {
   const [tab, setTab] = useState<TabKey>("All");
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>("all");
