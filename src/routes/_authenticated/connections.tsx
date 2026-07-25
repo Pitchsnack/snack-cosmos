@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ContactsPage } from "./contacts";
 
 export const Route = createFileRoute("/_authenticated/connections")({
   head: () => ({
