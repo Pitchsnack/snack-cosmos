@@ -56,7 +56,8 @@ type NavPath =
   | "/connections"
   | "/intake-queue"
   | "/my-page"
-  | "/startup-activity";
+  | "/startup-activity"
+  | "/contacts";
 
 type NavItem = {
   label: string;
