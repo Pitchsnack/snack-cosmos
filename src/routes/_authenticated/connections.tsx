@@ -56,7 +56,7 @@ function ConnectionsTabsPage() {
   const [tab, setTab] = useState<"connections" | "contacts">("connections");
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 border-b border-border">
+      <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
         {([
           { key: "connections", label: "Connections" },
           { key: "contacts", label: "Contacts" },
@@ -68,10 +68,10 @@ function ConnectionsTabsPage() {
               type="button"
               onClick={() => setTab(t.key)}
               className={cn(
-                "-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+                "rounded-lg px-4 py-2 text-sm font-medium transition-all",
                 active
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t.label}
