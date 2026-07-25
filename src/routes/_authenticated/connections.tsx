@@ -459,6 +459,9 @@ function ConnectionsPage() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
+
   );
 }
