@@ -49,8 +49,40 @@ export const Route = createFileRoute("/_authenticated/connections")({
       },
     ],
   }),
-  component: ConnectionsPage,
+  component: ConnectionsTabsPage,
 });
+
+function ConnectionsTabsPage() {
+  const [tab, setTab] = useState<"connections" | "contacts">("connections");
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 border-b border-border">
+        {([
+          { key: "connections", label: "Connections" },
+          { key: "contacts", label: "Contacts" },
+        ] as const).map((t) => {
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+                active
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+      {tab === "connections" ? <ConnectionsPage /> : <ContactsPage />}
+    </div>
+  );
+}
 
 type ConnType = "Investor" | "Master Agent" | "Partner";
 type ConnStatus = "Connected" | "Pending";
