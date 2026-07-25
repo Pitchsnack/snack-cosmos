@@ -23,7 +23,6 @@ import {
   Inbox,
   Network,
   UserCircle,
-  Contact as ContactIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -56,8 +55,7 @@ type NavPath =
   | "/connections"
   | "/intake-queue"
   | "/my-page"
-  | "/startup-activity"
-  | "/contacts";
+  | "/startup-activity";
 
 type NavItem = {
   label: string;
@@ -93,7 +91,6 @@ const NAV_ITEMS: NavItem[] = [
   },
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "Connections", icon: Network, path: "/connections", exact: false },
-  { label: "Contacts", icon: ContactIcon, path: "/contacts", exact: false },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
 
   {

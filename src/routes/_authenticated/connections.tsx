@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ContactsPage } from "./contacts";
 
 export const Route = createFileRoute("/_authenticated/connections")({
   head: () => ({
@@ -166,8 +167,8 @@ const CONNECTIONS: Connection[] = [
   },
 ];
 
-type TabKey = "All" | "Investors" | "Master Agents" | "Partners" | "Pending";
-const TABS: TabKey[] = ["All", "Investors", "Master Agents", "Partners", "Pending"];
+type TabKey = "All" | "Investors" | "Master Agents" | "Partners" | "Pending" | "Contacts";
+const TABS: TabKey[] = ["All", "Investors", "Master Agents", "Partners", "Pending", "Contacts"];
 
 function typeBadgeClass(type: ConnType) {
   switch (type) {
@@ -293,28 +294,36 @@ function ConnectionsPage() {
             );
           })}
         </div>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search connections..."
-              className="h-9 w-64 pl-8"
-            />
+        {tab !== "Contacts" && (
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search connections..."
+                className="h-9 w-64 pl-8"
+              />
+            </div>
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="h-9 w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Sort by: Recently Added</SelectItem>
+                <SelectItem value="name">Sort by: Name</SelectItem>
+                <SelectItem value="mutual">Sort by: Mutual</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="h-9 w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Sort by: Recently Added</SelectItem>
-              <SelectItem value="name">Sort by: Name</SelectItem>
-              <SelectItem value="mutual">Sort by: Mutual</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        )}
       </div>
+
+      {tab === "Contacts" ? (
+        <ContactsPage />
+      ) : (
+        <>
+
 
       <div className="rounded-xl border border-border bg-card shadow-sm">
         <Table>
@@ -450,6 +459,9 @@ function ConnectionsPage() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
+
   );
 }
