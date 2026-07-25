@@ -414,7 +414,7 @@ function ContactsPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="min-h-screen space-y-5 bg-white">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
