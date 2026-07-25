@@ -23,6 +23,7 @@ import {
   Inbox,
   Network,
   UserCircle,
+  Contact as ContactIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
