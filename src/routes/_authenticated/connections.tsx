@@ -166,8 +166,8 @@ const CONNECTIONS: Connection[] = [
   },
 ];
 
-type TabKey = "All" | "Investors" | "Master Agents" | "Partners" | "Pending";
-const TABS: TabKey[] = ["All", "Investors", "Master Agents", "Partners", "Pending"];
+type TabKey = "All" | "Investors" | "Master Agents" | "Partners" | "Pending" | "Contacts";
+const TABS: TabKey[] = ["All", "Investors", "Master Agents", "Partners", "Pending", "Contacts"];
 
 function typeBadgeClass(type: ConnType) {
   switch (type) {
