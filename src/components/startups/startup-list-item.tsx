@@ -56,7 +56,7 @@ export function StartupListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group relative flex w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        "group relative flex w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-2.5 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
         expanded ? "h-auto" : "h-[220px]",
         selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
@@ -128,14 +128,14 @@ export function StartupListItem({
 
       <div
         className={cn(
-          "mt-2 w-full flex-1 text-left",
+          "mt-1.5 w-full flex-1 text-left",
           expanded ? "overflow-visible" : "min-h-0 overflow-hidden",
         )}
       >
         {s.short_description && (
           <p
             className={cn(
-              "w-full text-left text-[11px] text-foreground/80",
+              "w-full text-left text-[11px] leading-snug text-foreground/80",
               expanded ? "" : "line-clamp-2",
             )}
           >
@@ -145,15 +145,15 @@ export function StartupListItem({
         {s.product_tags?.length ? (
           <div
             className={cn(
-              "mt-1.5 w-full text-left",
-              expanded ? "" : "max-h-[2.8rem] overflow-hidden",
+              "mt-1 w-full text-left",
+              expanded ? "" : "max-h-[1.4rem] overflow-hidden",
             )}
           >
             <ChipRow tags={s.product_tags} tone="primary" showAll={expanded} />
           </div>
         ) : null}
         {s.market_tags?.length ? (
-          <div className="mt-1.5 flex w-full items-start gap-1.5 overflow-hidden text-left">
+          <div className="mt-1 flex w-full items-start gap-1.5 overflow-hidden text-left">
             <span className="mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
               <ShoppingCart className="h-3 w-3 shrink-0" />
             </span>
@@ -188,8 +188,8 @@ export function StartupListItem({
         {s.related_investors?.length ? (
           <div
             className={cn(
-              "mt-1.5 w-full text-left",
-              expanded ? "" : "max-h-[1.5rem] overflow-hidden",
+              "mt-1 w-full text-left",
+              expanded ? "" : "max-h-[1.4rem] overflow-hidden",
             )}
           >
             {expanded ? (
@@ -221,7 +221,7 @@ export function StartupListItem({
         ) : null}
       </div>
 
-      <div className="mt-auto flex w-full justify-end pt-1">
+      <div className="mt-auto flex w-full justify-end pt-0.5">
         <span
           className="cursor-pointer text-xs font-medium text-accent group-hover:underline"
           onClick={(e) => {
