@@ -289,7 +289,7 @@ function QuickAddContactPage() {
           </Button>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-base font-semibold sm:text-lg">
-              Quick Add Contact
+              Add Name Card Contact
             </h1>
             <p className="hidden text-xs text-muted-foreground sm:block">
               Capture business cards. Extract details instantly. Save contacts
