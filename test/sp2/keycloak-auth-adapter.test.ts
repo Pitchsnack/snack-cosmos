@@ -8,8 +8,11 @@ import {
   KeycloakSnackPortalAuthAdapter,
   PKCE_TRANSACTION_MAX_AGE_MS,
   PKCE_TRANSACTION_STORAGE_KEY,
-  TenantAuthenticationUnsupportedError,
+  TENANT_CLAIM,
+  TENANT_SCOPE_PREFIX,
   createInMemoryPrincipalTokenStore,
+  createInMemoryTenantTokenStore,
+  getResidentTenantId,
   resolveSp2BootstrapPosture,
   type KeycloakAdapterConfig,
   type Sp2RealIntegrationEnv,
@@ -64,6 +67,7 @@ function makeHarness(init?: {
   const responses = init?.responses ?? [];
   const clock = { value: T0 };
   const tokenStore = createInMemoryPrincipalTokenStore();
+  const tenantStore = createInMemoryTenantTokenStore();
   const adapter = new KeycloakSnackPortalAuthAdapter(init?.config ?? CONFIG, {
     fetchImpl:
       init?.fetchImpl ??
@@ -85,8 +89,19 @@ function makeHarness(init?: {
     ...(init?.randomBytes ? { randomBytes: init.randomBytes } : {}),
     currentPath: () => "/sp2-gateway",
     tokenStore,
+    tenantTokenStore: tenantStore,
   });
-  return { adapter, map, events, redirects, historyPaths, fetchCalls, clock, tokenStore };
+  return {
+    adapter,
+    map,
+    events,
+    redirects,
+    historyPaths,
+    fetchCalls,
+    clock,
+    tokenStore,
+    tenantStore,
+  };
 }
 
 function byteQueue(...arrays: number[][]) {
@@ -99,6 +114,8 @@ function byteQueue(...arrays: number[][]) {
 }
 
 function storedTxn(h: ReturnType<typeof makeHarness>): {
+  kind: "principal" | "tenant";
+  tenantId?: string;
   state: string;
   verifier: string;
   createdAt: number;
@@ -127,6 +144,35 @@ function tokenResponse(overrides?: Record<string, unknown>): Response {
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
+}
+
+/** base64url without padding, for structural JWT doubles. */
+function b64url(text: string): string {
+  return btoa(text).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/**
+ * Test-only STRUCTURAL JWT double (START-GATE §8.1): three segments with a
+ * JSON payload and a placeholder signature. It is not a real token, is not
+ * signed, and is never accepted by any real service. No JWT dependency and
+ * no frontend signature verification are involved.
+ */
+function jwtDouble(payload: unknown): string {
+  return `${b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }))}.${b64url(
+    JSON.stringify(payload),
+  )}.SIGNATURE_TEST_DOUBLE`;
+}
+
+const ACME_TENANT_JWT = jwtDouble({ [TENANT_CLAIM]: "acme" });
+
+/** Begins the tenant flow and completes its callback with the given token. */
+async function tenantCallback(
+  h: ReturnType<typeof makeHarness>,
+  tenantId: string,
+): Promise<ReturnType<KeycloakSnackPortalAuthAdapter["completeAuthorizationCallback"]>> {
+  await h.adapter.beginWorkspaceAuthentication(tenantId);
+  const txn = storedTxn(h);
+  return h.adapter.completeAuthorizationCallback(callbackUrl(txn.state));
 }
 
 /** Records any localStorage write attempted while `fn` runs. */
@@ -229,9 +275,21 @@ describe("KeycloakSnackPortalAuthAdapter — PKCE kickoff", () => {
     await h.adapter.beginPrincipalAuthentication();
     expect([...h.map.keys()]).toEqual([PKCE_TRANSACTION_STORAGE_KEY]);
     const txn = storedTxn(h);
-    expect(Object.keys(txn).sort()).toEqual(["createdAt", "returnPath", "state", "verifier"]);
+    expect(Object.keys(txn).sort()).toEqual([
+      "createdAt",
+      "kind",
+      "returnPath",
+      "state",
+      "verifier",
+    ]);
     expect(txn.createdAt).toBe(T0);
     expect(txn.returnPath).toBe("/sp2-gateway");
+  });
+
+  it('principal transaction is discriminated with kind:"principal"', async () => {
+    const h = makeHarness();
+    await h.adapter.beginPrincipalAuthentication();
+    expect(storedTxn(h).kind).toBe("principal");
   });
 });
 
@@ -498,24 +556,385 @@ describe("KeycloakSnackPortalAuthAdapter — token memory, expiry, logout, tenan
     ]);
   });
 
-  it("beginWorkspaceAuthentication fails closed with the typed unsupported error", async () => {
-    const h = await signedInHarness();
-    let caught: unknown = null;
-    try {
-      await h.adapter.beginWorkspaceAuthentication("acme");
-    } catch (err) {
-      caught = err;
-    }
-    expect(caught).toBeInstanceOf(TenantAuthenticationUnsupportedError);
-    expect((caught as TenantAuthenticationUnsupportedError).code).toBe(
-      "SP2_TENANT_AUTHENTICATION_UNSUPPORTED",
-    );
-  });
-
-  it("getTenantAccessToken returns null even after principal sign-in", async () => {
+  it("getTenantAccessToken returns null after principal sign-in alone", async () => {
     const h = await signedInHarness();
     expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
     expect(await h.adapter.getTenantAccessToken("zeta")).toBeNull();
+  });
+});
+
+describe("KeycloakSnackPortalAuthAdapter — tenant kickoff (§5.1)", () => {
+  it("rejects an empty tenant id without any redirect or storage write", async () => {
+    const h = makeHarness();
+    await expect(h.adapter.beginWorkspaceAuthentication("")).rejects.toThrow(
+      "tenantId must be a non-empty string",
+    );
+    expect(h.redirects).toHaveLength(0);
+    expect(h.map.size).toBe(0);
+  });
+
+  it("tenant request has the same accepted parameter set with exactly one tenant scope", async () => {
+    const h = makeHarness({ randomBytes: byteQueue(RFC7636_VERIFIER_OCTETS, STATE_OCTETS) });
+    await h.adapter.beginWorkspaceAuthentication("acme");
+    expect(h.redirects).toHaveLength(1);
+    const url = new URL(h.redirects[0]);
+    expect(`${url.origin}${url.pathname}`).toBe(
+      "http://127.0.0.1:8814/realms/sp2-local/protocol/openid-connect/auth",
+    );
+    expect([...url.searchParams.keys()].sort()).toEqual([
+      "client_id",
+      "code_challenge",
+      "code_challenge_method",
+      "redirect_uri",
+      "response_type",
+      "scope",
+      "state",
+    ]);
+    expect(url.searchParams.get("scope")).toBe("openid sp2:tenant:acme");
+    expect(url.searchParams.get("scope")).toBe(`openid ${TENANT_SCOPE_PREFIX}acme`);
+    expect(url.searchParams.get("response_type")).toBe("code");
+    expect(url.searchParams.get("client_id")).toBe(CONFIG.clientId);
+    expect(url.searchParams.get("redirect_uri")).toBe(CONFIG.redirectUri);
+    expect(url.searchParams.get("code_challenge")).toBe(RFC7636_CHALLENGE);
+    expect(url.searchParams.get("code_challenge_method")).toBe("S256");
+    expect(url.searchParams.get("state")).toBe(storedTxn(h).state);
+    // §5.1: nothing beyond the principal parameter set — no prompt, max_age,
+    // or custom tenant query parameter; the scope is the ONLY difference.
+    expect(url.searchParams.get("prompt")).toBeNull();
+    expect(url.searchParams.get("max_age")).toBeNull();
+    expect(h.redirects[0].toLowerCase()).not.toContain("secret");
+  });
+
+  it("uses the tenant id verbatim — no trimming, case-folding, or aliasing", async () => {
+    const h = makeHarness();
+    await h.adapter.beginWorkspaceAuthentication("AcMe");
+    const url = new URL(h.redirects[0]);
+    expect(url.searchParams.get("scope")).toBe("openid sp2:tenant:AcMe");
+    expect(storedTxn(h).tenantId).toBe("AcMe");
+  });
+
+  it('tenant transaction is discriminated with kind:"tenant" and the exact tenant id', async () => {
+    const h = makeHarness();
+    await h.adapter.beginWorkspaceAuthentication("acme");
+    const txn = storedTxn(h);
+    expect(txn.kind).toBe("tenant");
+    expect(txn.tenantId).toBe("acme");
+    expect(Object.keys(txn).sort()).toEqual([
+      "createdAt",
+      "kind",
+      "returnPath",
+      "state",
+      "tenantId",
+      "verifier",
+    ]);
+  });
+
+  it("selector kickoff alone writes no tenant token", async () => {
+    const h = makeHarness();
+    await h.adapter.beginWorkspaceAuthentication("acme");
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+    expect(h.tenantStore.tenantId).toBeNull();
+    expect(h.tenantStore.accessToken).toBeNull();
+  });
+
+  it("keeps one pending transaction per tab — last write wins across flows", async () => {
+    const h = makeHarness();
+    await h.adapter.beginPrincipalAuthentication();
+    const principalState = storedTxn(h).state;
+    await h.adapter.beginWorkspaceAuthentication("acme");
+    expect([...h.map.keys()]).toEqual([PKCE_TRANSACTION_STORAGE_KEY]);
+    const txn = storedTxn(h);
+    expect(txn.kind).toBe("tenant");
+    expect(txn.state).not.toBe(principalState);
+    // The overwritten principal transaction can never complete.
+    const result = await h.adapter.completeAuthorizationCallback(callbackUrl(principalState));
+    expect(result).toEqual({ ok: false, reason: "state_mismatch" });
+  });
+});
+
+describe("KeycloakSnackPortalAuthAdapter — tenant callback claim binding (§5.4)", () => {
+  it("stores the token under the returned claim when it exactly matches the request", async () => {
+    const h = makeHarness({ responses: [tokenResponse({ access_token: ACME_TENANT_JWT })] });
+    const result = await tenantCallback(h, "acme");
+    expect(result).toEqual({ ok: true, returnPath: "/sp2-gateway" });
+    expect(h.tenantStore.tenantId).toBe("acme");
+    expect(h.tenantStore.expiresAtEpochMs).toBe(T0 + 300 * 1000);
+    expect(await h.adapter.getTenantAccessToken("acme")).toBe(ACME_TENANT_JWT);
+    expect(h.map.size).toBe(0); // transaction consumed on success
+  });
+
+  it("another tenant key returns null (exact-key lookup, no normalization)", async () => {
+    const h = makeHarness({ responses: [tokenResponse({ access_token: ACME_TENANT_JWT })] });
+    await tenantCallback(h, "acme");
+    expect(await h.adapter.getTenantAccessToken("zeta")).toBeNull();
+    expect(await h.adapter.getTenantAccessToken("ACME")).toBeNull();
+    expect(await h.adapter.getTenantAccessToken(" acme")).toBeNull();
+  });
+
+  it("tenant callback performs exactly one fetch — the issuer token exchange, never the Gateway", async () => {
+    const h = makeHarness({ responses: [tokenResponse({ access_token: ACME_TENANT_JWT })] });
+    await tenantCallback(h, "acme");
+    expect(h.fetchCalls).toHaveLength(1);
+    expect(h.fetchCalls[0].url).toBe(
+      "http://127.0.0.1:8814/realms/sp2-local/protocol/openid-connect/token",
+    );
+    expect(h.fetchCalls[0].url).not.toContain("8815");
+  });
+
+  it("missing tenant claim fails tenant_claim_missing and stores nothing", async () => {
+    const h = makeHarness({
+      responses: [tokenResponse({ access_token: jwtDouble({ sub: "user-1" }) })],
+    });
+    const result = await tenantCallback(h, "acme");
+    expect(result).toEqual({ ok: false, reason: "tenant_claim_missing" });
+    expect(h.tenantStore.accessToken).toBeNull();
+    expect(h.tokenStore.accessToken).toBeNull();
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+  });
+
+  it("malformed two-segment token fails closed", async () => {
+    const h = makeHarness({ responses: [tokenResponse({ access_token: "opaque.twosegment" })] });
+    expect(await tenantCallback(h, "acme")).toEqual({
+      ok: false,
+      reason: "tenant_claim_missing",
+    });
+    expect(h.tenantStore.accessToken).toBeNull();
+  });
+
+  it("undecodable base64 or non-JSON payloads fail closed", async () => {
+    for (const accessToken of [
+      "aaa.!!!not-base64url!!!.ccc",
+      `aaa.${b64url("this is not json")}.ccc`,
+      `aaa.${b64url("[1,2]")}.ccc`,
+      `aaa.${b64url("null")}.ccc`,
+      `aaa.${b64url('"just-a-string"')}.ccc`,
+      "aaa..ccc",
+    ]) {
+      const h = makeHarness({ responses: [tokenResponse({ access_token: accessToken })] });
+      const result = await tenantCallback(h, "acme");
+      expect(result).toEqual({ ok: false, reason: "tenant_claim_missing" });
+      expect(h.tenantStore.accessToken).toBeNull();
+    }
+  });
+
+  it("empty or non-string tenant claims fail closed", async () => {
+    for (const payload of [
+      { [TENANT_CLAIM]: "" },
+      { [TENANT_CLAIM]: 42 },
+      { [TENANT_CLAIM]: null },
+      { [TENANT_CLAIM]: ["acme"] },
+      { [TENANT_CLAIM]: { value: "acme" } },
+    ]) {
+      const h = makeHarness({ responses: [tokenResponse({ access_token: jwtDouble(payload) })] });
+      const result = await tenantCallback(h, "acme");
+      expect(result).toEqual({ ok: false, reason: "tenant_claim_missing" });
+      expect(h.tenantStore.accessToken).toBeNull();
+    }
+  });
+
+  it("mismatched tenant claim fails tenant_claim_mismatch and stores under NO key", async () => {
+    const h = makeHarness({
+      responses: [tokenResponse({ access_token: jwtDouble({ [TENANT_CLAIM]: "zeta" }) })],
+    });
+    const result = await tenantCallback(h, "acme");
+    expect(result).toEqual({ ok: false, reason: "tenant_claim_mismatch" });
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+    expect(await h.adapter.getTenantAccessToken("zeta")).toBeNull();
+    expect(h.tenantStore.tenantId).toBeNull();
+    expect(h.tokenStore.accessToken).toBeNull(); // ALL token memory cleared
+  });
+
+  it("a mismatch consumes the transaction — replay finds nothing", async () => {
+    const h = makeHarness({
+      responses: [tokenResponse({ access_token: jwtDouble({ [TENANT_CLAIM]: "zeta" }) })],
+    });
+    await h.adapter.beginWorkspaceAuthentication("acme");
+    const txn = storedTxn(h);
+    const first = await h.adapter.completeAuthorizationCallback(callbackUrl(txn.state));
+    expect(first).toEqual({ ok: false, reason: "tenant_claim_mismatch" });
+    expect(h.map.size).toBe(0);
+    const replay = await h.adapter.completeAuthorizationCallback(callbackUrl(txn.state));
+    expect(replay).toEqual({ ok: false, reason: "missing_transaction" });
+  });
+
+  it("a successful tenant callback cannot be replayed", async () => {
+    const h = makeHarness({ responses: [tokenResponse({ access_token: ACME_TENANT_JWT })] });
+    await h.adapter.beginWorkspaceAuthentication("acme");
+    const txn = storedTxn(h);
+    expect((await h.adapter.completeAuthorizationCallback(callbackUrl(txn.state))).ok).toBe(true);
+    const replay = await h.adapter.completeAuthorizationCallback(callbackUrl(txn.state));
+    expect(replay).toEqual({ ok: false, reason: "missing_transaction" });
+    // The failure model clears all token memory — fail closed, never partial.
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+  });
+
+  it("stale and negative-age tenant transactions fail closed", async () => {
+    const h1 = makeHarness();
+    await h1.adapter.beginWorkspaceAuthentication("acme");
+    const txn1 = storedTxn(h1);
+    h1.clock.value = T0 + PKCE_TRANSACTION_MAX_AGE_MS + 1;
+    expect(await h1.adapter.completeAuthorizationCallback(callbackUrl(txn1.state))).toEqual({
+      ok: false,
+      reason: "expired_transaction",
+    });
+    expect(h1.fetchCalls).toHaveLength(0);
+
+    const h2 = makeHarness();
+    await h2.adapter.beginWorkspaceAuthentication("acme");
+    const txn2 = storedTxn(h2);
+    h2.clock.value = T0 - 1; // transaction "from the future" — negative age
+    expect(await h2.adapter.completeAuthorizationCallback(callbackUrl(txn2.state))).toEqual({
+      ok: false,
+      reason: "expired_transaction",
+    });
+    expect(h2.fetchCalls).toHaveLength(0);
+  });
+
+  it("cross-flow substitution fails closed", async () => {
+    // A tenantless (principal-shaped) token arriving on a tenant transaction
+    // can never establish tenant state.
+    const h = makeHarness({ responses: [tokenResponse()] });
+    const result = await tenantCallback(h, "acme");
+    expect(result).toEqual({ ok: false, reason: "tenant_claim_missing" });
+    expect(h.tenantStore.accessToken).toBeNull();
+
+    // A state from a different, overwritten flow fails state_mismatch.
+    const h2 = makeHarness();
+    await h2.adapter.beginWorkspaceAuthentication("acme");
+    const tenantState = storedTxn(h2).state;
+    await h2.adapter.beginPrincipalAuthentication(); // overwrites (last write wins)
+    const result2 = await h2.adapter.completeAuthorizationCallback(callbackUrl(tenantState));
+    expect(result2).toEqual({ ok: false, reason: "state_mismatch" });
+  });
+
+  it("a kindless (legacy-shape) transaction fails closed as invalid", async () => {
+    const h = makeHarness();
+    h.map.set(
+      PKCE_TRANSACTION_STORAGE_KEY,
+      JSON.stringify({ state: "s1", verifier: "v1", createdAt: T0, returnPath: "/sp2-gateway" }),
+    );
+    expect(await h.adapter.completeAuthorizationCallback(callbackUrl("s1"))).toEqual({
+      ok: false,
+      reason: "invalid_transaction",
+    });
+  });
+
+  it("a tenant transaction without a tenant id fails closed as invalid", async () => {
+    const h = makeHarness();
+    h.map.set(
+      PKCE_TRANSACTION_STORAGE_KEY,
+      JSON.stringify({
+        kind: "tenant",
+        state: "s1",
+        verifier: "v1",
+        createdAt: T0,
+        returnPath: "/sp2-gateway",
+      }),
+    );
+    expect(await h.adapter.completeAuthorizationCallback(callbackUrl("s1"))).toEqual({
+      ok: false,
+      reason: "invalid_transaction",
+    });
+  });
+});
+
+describe("KeycloakSnackPortalAuthAdapter — sequential flows, expiry, logout (§5.3–§5.6)", () => {
+  async function tenantResidentHarness() {
+    const h = makeHarness({
+      responses: [tokenResponse({ access_token: ACME_TENANT_JWT }), tokenResponse()],
+    });
+    const result = await tenantCallback(h, "acme");
+    expect(result.ok).toBe(true);
+    return h;
+  }
+
+  it("a successful tenant callback clears principal state (sequential, memory-only)", async () => {
+    const h = makeHarness({
+      responses: [tokenResponse(), tokenResponse({ access_token: ACME_TENANT_JWT })],
+    });
+    await h.adapter.beginPrincipalAuthentication();
+    let txn = storedTxn(h);
+    expect((await h.adapter.completeAuthorizationCallback(callbackUrl(txn.state))).ok).toBe(true);
+    expect(await h.adapter.getPrincipalAccessToken()).toBe("ATK_test_access_token");
+    await h.adapter.beginWorkspaceAuthentication("acme");
+    txn = storedTxn(h);
+    expect((await h.adapter.completeAuthorizationCallback(callbackUrl(txn.state))).ok).toBe(true);
+    expect(await h.adapter.getPrincipalAccessToken()).toBeNull();
+    expect(await h.adapter.getTenantAccessToken("acme")).toBe(ACME_TENANT_JWT);
+  });
+
+  it("a successful principal callback clears resident tenant state", async () => {
+    const h = await tenantResidentHarness();
+    await h.adapter.beginPrincipalAuthentication();
+    const txn = storedTxn(h);
+    expect((await h.adapter.completeAuthorizationCallback(callbackUrl(txn.state))).ok).toBe(true);
+    expect(await h.adapter.getPrincipalAccessToken()).toBe("ATK_test_access_token");
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+    expect(h.tenantStore.tenantId).toBeNull();
+  });
+
+  it("evicts the tenant token exactly at the expiry boundary", async () => {
+    const h = await tenantResidentHarness();
+    h.clock.value = T0 + 300 * 1000 - 1;
+    expect(await h.adapter.getTenantAccessToken("acme")).toBe(ACME_TENANT_JWT);
+    h.clock.value = T0 + 300 * 1000;
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+    expect(h.tenantStore.accessToken).toBeNull(); // evicted, not retained
+  });
+
+  it("a callback failure clears principal, tenant, and transaction state", async () => {
+    const h = await tenantResidentHarness();
+    const bogus = await h.adapter.completeAuthorizationCallback(callbackUrl("no-such-state"));
+    expect(bogus.ok).toBe(false);
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+    expect(await h.adapter.getPrincipalAccessToken()).toBeNull();
+    expect(h.map.size).toBe(0);
+  });
+
+  it("logout clears principal token, tenant token, and the pending transaction", async () => {
+    const h = await tenantResidentHarness();
+    await h.adapter.beginWorkspaceAuthentication("acme"); // leave a txn behind
+    expect(h.map.size).toBe(1);
+    await h.adapter.logout();
+    expect(await h.adapter.getPrincipalAccessToken()).toBeNull();
+    expect(await h.adapter.getTenantAccessToken("acme")).toBeNull();
+    expect(h.tenantStore.tenantId).toBeNull();
+    expect(h.map.size).toBe(0);
+  });
+
+  it("logout after tenant authentication keeps the end-session URL token-free", async () => {
+    const h = await tenantResidentHarness();
+    await h.adapter.logout();
+    const logoutUrl = h.redirects[h.redirects.length - 1];
+    const url = new URL(logoutUrl);
+    expect(`${url.origin}${url.pathname}`).toBe(
+      "http://127.0.0.1:8814/realms/sp2-local/protocol/openid-connect/logout",
+    );
+    expect([...url.searchParams.keys()].sort()).toEqual(["client_id", "post_logout_redirect_uri"]);
+    expect(logoutUrl).not.toContain(ACME_TENANT_JWT);
+    expect(logoutUrl).not.toContain("SIGNATURE_TEST_DOUBLE");
+  });
+
+  it("getResidentTenantId reads the sole resident id with exact boundary eviction", async () => {
+    const h = await tenantResidentHarness();
+    expect(getResidentTenantId(T0, h.tenantStore)).toBe("acme");
+    expect(getResidentTenantId(T0 + 300 * 1000 - 1, h.tenantStore)).toBe("acme");
+    expect(getResidentTenantId(T0 + 300 * 1000, h.tenantStore)).toBeNull();
+    expect(h.tenantStore.accessToken).toBeNull(); // evicted
+    expect(getResidentTenantId(T0, h.tenantStore)).toBeNull();
+  });
+
+  it("getResidentTenantId returns null when no tenant authentication is resident", () => {
+    expect(getResidentTenantId(T0, createInMemoryTenantTokenStore())).toBeNull();
+  });
+
+  it("keeps tenant tokens out of local/session storage (memory only)", async () => {
+    const h = makeHarness({ responses: [tokenResponse({ access_token: ACME_TENANT_JWT })] });
+    const { writes } = await withRecordingLocalStorage(async () => tenantCallback(h, "acme"));
+    expect(writes).toHaveLength(0);
+    for (const value of h.map.values()) {
+      expect(value).not.toContain(ACME_TENANT_JWT);
+    }
   });
 });
 

@@ -16,10 +16,14 @@
  *    random `state` doubles as the one-time transaction identifier.
  *  - ID tokens and refresh tokens returned by Keycloak are IGNORED — never
  *    read into adapter state, never persisted. No refresh flow exists.
- *  - Tenant-scoped authentication is explicitly UNSUPPORTED in this slice
- *    (IC-005 R1 principal-only bootstrap): beginWorkspaceAuthentication()
- *    fails closed with a typed error and getTenantAccessToken() returns null.
- *    No tenant token is fabricated; X-Tenant-Id is never authorization.
+ *  - Tenant-scoped authentication (TA-1) reuses the SAME Authorization Code +
+ *    PKCE S256 machinery with exactly one additional OPTIONAL tenant client
+ *    scope (`openid sp2:tenant:<tenantId>`). The returned signed tenant claim
+ *    is match-or-rejected against the requested tenant BEFORE any storage;
+ *    missing/malformed claims fail `tenant_claim_missing`, mismatches fail
+ *    `tenant_claim_mismatch`, and both clear all token memory. The decoded
+ *    claim is never authorization — the SnackPortal2 Gateway and Auth Router
+ *    remain the only authorities; X-Tenant-Id is never authorization.
  *  - The browser never treats decoded token claims as authorization. The
  *    SnackPortal2 Gateway remains the token-validation authority; Keycloak
  *    performs the browser code exchange (the Gateway never mints/exchanges).
@@ -28,17 +32,12 @@
  */
 import type { SnackPortalAuthAdapter } from "./auth-adapter";
 
-/** Typed, explicit fail-closed error for the unsupported tenant flow. */
-export class TenantAuthenticationUnsupportedError extends Error {
-  readonly code = "SP2_TENANT_AUTHENTICATION_UNSUPPORTED" as const;
+/** Exact scope prefix of the OPTIONAL per-tenant client scope (§5.1). */
+export const TENANT_SCOPE_PREFIX = "sp2:tenant:";
 
-  constructor() {
-    super(
-      "Tenant-scoped authentication is not supported in this slice (principal-only IC-005 R1 bootstrap).",
-    );
-    this.name = "TenantAuthenticationUnsupportedError";
-  }
-}
+/** Name of the signed tenant claim minted by the IdP mapper (IC-005 §E
+ *  `tenant_claim` — byte-equal to the Auth Router's configured claim). */
+export const TENANT_CLAIM = "tenant";
 
 /** Exact namespaced sessionStorage key for the transient PKCE transaction. */
 export const PKCE_TRANSACTION_STORAGE_KEY = "sp2.oidc.pkce.txn.v1";
@@ -46,13 +45,28 @@ export const PKCE_TRANSACTION_STORAGE_KEY = "sp2.oidc.pkce.txn.v1";
 /** Maximum transient PKCE transaction lifetime (START-GATE §8): 10 minutes. */
 export const PKCE_TRANSACTION_MAX_AGE_MS = 10 * 60 * 1000;
 
-/** The ONLY values authorized to enter sessionStorage (START-GATE §8). */
-interface PkceTransaction {
-  state: string;
-  verifier: string;
-  createdAt: number;
-  returnPath: string;
-}
+/**
+ * The ONLY values authorized to enter sessionStorage (START-GATE §8),
+ * discriminated by flow (§5.2). The tenant arm's `tenantId` is ONLY a
+ * rejection expectation for the returned signed claim — it is never routing
+ * authority and is never sent to SnackPortal2 as authorization.
+ */
+type PkceTransaction =
+  | {
+      kind: "principal";
+      state: string;
+      verifier: string;
+      createdAt: number;
+      returnPath: string;
+    }
+  | {
+      kind: "tenant";
+      tenantId: string;
+      state: string;
+      verifier: string;
+      createdAt: number;
+      returnPath: string;
+    };
 
 /** Minimal storage surface so tests can inject a deterministic double. */
 export interface TransientTransactionStorage {
@@ -77,6 +91,36 @@ const sharedPrincipalTokenStore: PrincipalTokenStore = {
 
 export function createInMemoryPrincipalTokenStore(): PrincipalTokenStore {
   return { accessToken: null, expiresAtEpochMs: null };
+}
+
+/**
+ * In-memory tenant token holder (§5.4/§5.5). Never serialized, never
+ * persisted. Holds AT MOST ONE resident tenant authentication, keyed by the
+ * verified returned claim value — never by the browser selection.
+ */
+export interface TenantTokenStore {
+  tenantId: string | null;
+  accessToken: string | null;
+  expiresAtEpochMs: number | null;
+}
+
+/** Module-memory tenant store shared between the callback route's adapter
+ *  instance and the journey route's presentation read. Memory only — a full
+ *  page reload clears it by construction. */
+const sharedTenantTokenStore: TenantTokenStore = {
+  tenantId: null,
+  accessToken: null,
+  expiresAtEpochMs: null,
+};
+
+export function createInMemoryTenantTokenStore(): TenantTokenStore {
+  return { tenantId: null, accessToken: null, expiresAtEpochMs: null };
+}
+
+function clearTenantTokenStore(store: TenantTokenStore): void {
+  store.tenantId = null;
+  store.accessToken = null;
+  store.expiresAtEpochMs = null;
 }
 
 export interface KeycloakAdapterConfig {
@@ -105,6 +149,7 @@ export interface KeycloakAdapterDeps {
   sha256?: (bytes: Uint8Array) => Promise<ArrayBuffer>;
   currentPath?: () => string;
   tokenStore?: PrincipalTokenStore;
+  tenantTokenStore?: TenantTokenStore;
 }
 
 export type CallbackFailureReason =
@@ -116,7 +161,9 @@ export type CallbackFailureReason =
   | "state_mismatch"
   | "missing_code"
   | "exchange_failed"
-  | "invalid_token_response";
+  | "invalid_token_response"
+  | "tenant_claim_missing"
+  | "tenant_claim_mismatch";
 
 export type CallbackResult =
   | { ok: true; returnPath: string }
@@ -137,15 +184,56 @@ function sanitizeReturnPath(candidate: unknown): string {
   return "/sp2-gateway";
 }
 
+/** base64url (RFC 4648 §5) → UTF-8 text; throws on undecodable input. */
+function base64UrlDecodeUtf8(value: string): string {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+/**
+ * Structural, UNVERIFIED read of the signed tenant claim from an access
+ * token (§5.4): three JWT segments → base64url payload decode → JSON parse →
+ * read the `tenant` claim. Signatures are never verified in the browser; the
+ * result is permitted ONLY for fail-closed claim binding and presentation
+ * state. Returns null for every missing, empty, non-string, malformed, or
+ * undecodable form.
+ */
+function readTenantClaim(accessToken: string): string | null {
+  const segments = accessToken.split(".");
+  if (segments.length !== 3) return null;
+  let payloadText: string;
+  try {
+    payloadText = base64UrlDecodeUtf8(segments[1]);
+  } catch {
+    return null;
+  }
+  let payload: unknown;
+  try {
+    payload = JSON.parse(payloadText);
+  } catch {
+    return null;
+  }
+  if (typeof payload !== "object" || payload === null) return null;
+  const claim = (payload as Record<string, unknown>)[TENANT_CLAIM];
+  if (typeof claim !== "string" || claim.length === 0) return null;
+  return claim;
+}
+
 export class KeycloakSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
   private readonly config: KeycloakAdapterConfig;
   private readonly deps: KeycloakAdapterDeps;
   private readonly tokenStore: PrincipalTokenStore;
+  private readonly tenantTokenStore: TenantTokenStore;
 
   constructor(config: KeycloakAdapterConfig, deps: KeycloakAdapterDeps = {}) {
     this.config = { ...config, issuer: config.issuer.replace(/\/+$/, "") };
     this.deps = deps;
     this.tokenStore = deps.tokenStore ?? sharedPrincipalTokenStore;
+    this.tenantTokenStore = deps.tenantTokenStore ?? sharedTenantTokenStore;
   }
 
   // -- default seams (resolved lazily so SSR never touches window) ----------
@@ -198,6 +286,44 @@ export class KeycloakSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
    * Keycloak authorization endpoint. Sends no client secret.
    */
   async beginPrincipalAuthentication(): Promise<void> {
+    await this.startAuthorization("openid", (base) => ({ kind: "principal", ...base }));
+  }
+
+  /**
+   * Tenant kickoff (§5.1): the SAME Authorization Code + PKCE S256 machinery
+   * and parameter set as the principal flow — the ONLY difference is exactly
+   * one additional OPTIONAL tenant scope value. The tenantId is used
+   * verbatim: no trimming, case-folding, aliasing, or tenant lookup. The
+   * frontend requests a tenant; it never decides whether that tenant is
+   * lawful.
+   */
+  async beginWorkspaceAuthentication(tenantId: string): Promise<void> {
+    if (typeof tenantId !== "string" || tenantId.length === 0) {
+      throw new Error("tenantId must be a non-empty string");
+    }
+    await this.startAuthorization(`openid ${TENANT_SCOPE_PREFIX}${tenantId}`, (base) => ({
+      kind: "tenant",
+      tenantId,
+      ...base,
+    }));
+  }
+
+  /**
+   * Shared kickoff so the tenant flow cannot drift from the principal flow:
+   * one pending transaction per tab (last write wins), and an authorization
+   * request with exactly the same accepted parameters — no `prompt`,
+   * `max_age`, iframe, refresh grant, token exchange, custom query
+   * parameter, Gateway endpoint, or second client.
+   */
+  private async startAuthorization(
+    scope: string,
+    makeTransaction: (base: {
+      state: string;
+      verifier: string;
+      createdAt: number;
+      returnPath: string;
+    }) => PkceTransaction,
+  ): Promise<void> {
     const verifier = base64UrlEncode(this.randomBytes(32));
     const challengeDigest = await this.sha256(new TextEncoder().encode(verifier));
     const challenge = base64UrlEncode(new Uint8Array(challengeDigest));
@@ -205,19 +331,19 @@ export class KeycloakSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
     // one-time transaction identifier required by §8.
     const state = base64UrlEncode(this.randomBytes(32));
 
-    const transaction: PkceTransaction = {
+    const transaction = makeTransaction({
       state,
       verifier,
       createdAt: this.now(),
       returnPath: sanitizeReturnPath(this.currentPath()),
-    };
+    });
     this.storage.setItem(PKCE_TRANSACTION_STORAGE_KEY, JSON.stringify(transaction));
 
     const params = new URLSearchParams({
       response_type: "code",
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
-      scope: "openid",
+      scope,
       code_challenge: challenge,
       code_challenge_method: "S256",
       state,
@@ -260,19 +386,33 @@ export class KeycloakSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
     let transaction: PkceTransaction;
     try {
       const parsed: unknown = JSON.parse(raw);
-      if (
-        typeof parsed !== "object" ||
-        parsed === null ||
-        typeof (parsed as PkceTransaction).state !== "string" ||
-        (parsed as PkceTransaction).state.length === 0 ||
-        typeof (parsed as PkceTransaction).verifier !== "string" ||
-        (parsed as PkceTransaction).verifier.length === 0 ||
-        typeof (parsed as PkceTransaction).createdAt !== "number" ||
-        !Number.isFinite((parsed as PkceTransaction).createdAt)
-      ) {
+      if (typeof parsed !== "object" || parsed === null) {
         return this.failCallback("invalid_transaction");
       }
-      transaction = parsed as PkceTransaction;
+      const candidate = parsed as {
+        kind?: unknown;
+        tenantId?: unknown;
+        state?: unknown;
+        verifier?: unknown;
+        createdAt?: unknown;
+      };
+      // §5.2: a malformed `kind` or a tenant transaction without a tenant id
+      // fails closed through the existing invalid-transaction model.
+      const kindValid = candidate.kind === "principal" || candidate.kind === "tenant";
+      const coreValid =
+        typeof candidate.state === "string" &&
+        candidate.state.length > 0 &&
+        typeof candidate.verifier === "string" &&
+        candidate.verifier.length > 0 &&
+        typeof candidate.createdAt === "number" &&
+        Number.isFinite(candidate.createdAt);
+      const tenantIdValid =
+        candidate.kind !== "tenant" ||
+        (typeof candidate.tenantId === "string" && candidate.tenantId.length > 0);
+      if (!kindValid || !coreValid || !tenantIdValid) {
+        return this.failCallback("invalid_transaction");
+      }
+      transaction = candidate as PkceTransaction;
     } catch {
       return this.failCallback("invalid_transaction");
     }
@@ -340,8 +480,32 @@ export class KeycloakSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
       return this.failCallback("invalid_token_response");
     }
 
-    // 12. Memory only. Any id_token / refresh_token in the payload is
-    // deliberately ignored — never read into state, never persisted.
+    if (transaction.kind === "tenant") {
+      // §5.4 fail-closed claim binding: after the shape checks above pass,
+      // structurally decode ONLY the access-token payload (no signature
+      // verification in the browser) and match-or-reject the returned
+      // signed tenant claim against the transaction expectation.
+      const claim = readTenantClaim(accessToken);
+      if (claim === null) return this.failCallback("tenant_claim_missing");
+      if (claim !== transaction.tenantId) return this.failCallback("tenant_claim_mismatch");
+
+      // Sequential controlled-MVP model: clear principal token memory and
+      // any prior tenant entry, then store under the RETURNED claim (only
+      // proven equal to the request). The browser selection is never the
+      // storage authority. Memory only; id_token/refresh_token ignored.
+      this.clearTokenMemory();
+      this.tenantTokenStore.tenantId = claim;
+      this.tenantTokenStore.accessToken = accessToken;
+      this.tenantTokenStore.expiresAtEpochMs = this.now() + expiresIn * 1000;
+
+      return { ok: true, returnPath: sanitizeReturnPath(transaction.returnPath) };
+    }
+
+    // 12. Principal success (§5.3): clear any resident tenant authentication
+    // and store ONLY the principal access token. Memory only. Any id_token /
+    // refresh_token in the payload is deliberately ignored — never read into
+    // state, never persisted. No tenant claim decoding occurs on this flow.
+    this.clearTokenMemory();
     this.tokenStore.accessToken = accessToken;
     this.tokenStore.expiresAtEpochMs = this.now() + expiresIn * 1000;
 
@@ -359,18 +523,26 @@ export class KeycloakSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
     return accessToken;
   }
 
-  /** Tenant auth is NOT in this slice — fail closed, typed, explicit (§6). */
-  async beginWorkspaceAuthentication(_tenantId: string): Promise<void> {
-    throw new TenantAuthenticationUnsupportedError();
-  }
-
-  /** No tenant token exists in this slice; never fabricated (§6). */
-  async getTenantAccessToken(_tenantId: string): Promise<string | null> {
-    return null;
+  /**
+   * Tenant token from memory (§5.5): exact-key lookup only, no
+   * normalization; null when absent; evicted at `now >= expiresAtEpochMs`.
+   */
+  async getTenantAccessToken(tenantId: string): Promise<string | null> {
+    const store = this.tenantTokenStore;
+    if (store.tenantId === null || store.accessToken === null || store.expiresAtEpochMs === null) {
+      return null;
+    }
+    if (this.now() >= store.expiresAtEpochMs) {
+      clearTenantTokenStore(store);
+      return null;
+    }
+    if (store.tenantId !== tenantId) return null;
+    return store.accessToken;
   }
 
   /**
-   * Logout (§11): clear in-memory token state and the transient transaction,
+   * Logout (§11/§5.6): clear ALL in-memory token state — principal and
+   * tenant — plus the transient transaction,
    * then redirect to the Keycloak end-session endpoint. No client secret and
    * no token ever appears in the URL (no ID token is retained, so no
    * id_token_hint is available by construction; the public client_id
@@ -394,16 +566,42 @@ export class KeycloakSnackPortalAuthAdapter implements SnackPortalAuthAdapter {
 
   // -- internals ------------------------------------------------------------
 
+  /** §5.6: clears ALL authentication memory — principal AND tenant. */
   private clearTokenMemory(): void {
     this.tokenStore.accessToken = null;
     this.tokenStore.expiresAtEpochMs = null;
+    clearTenantTokenStore(this.tenantTokenStore);
   }
 
   private failCallback(reason: CallbackFailureReason): CallbackResult {
-    // §10: clear the token on callback error — fail closed, never partial.
+    // §10/§5.6: clear principal token state, tenant token state, and the
+    // PKCE transaction on callback error — fail closed, never partial. (The
+    // callback flow has already consumed the transaction; this remove is a
+    // belt-and-braces guarantee.)
     this.clearTokenMemory();
+    this.storage.removeItem(PKCE_TRANSACTION_STORAGE_KEY);
     return { ok: false, reason };
   }
+}
+
+/**
+ * Presentation-only read for the journey route (§5.5): returns the sole
+ * resident, non-expired tenant id (evicting an expired entry), or null. It
+ * never decodes a token and never re-derives authorization — route rendering
+ * only. Deliberately a module export, NOT a SnackPortalAuthAdapter member.
+ */
+export function getResidentTenantId(
+  nowEpochMs: number = Date.now(),
+  store: TenantTokenStore = sharedTenantTokenStore,
+): string | null {
+  if (store.tenantId === null || store.accessToken === null || store.expiresAtEpochMs === null) {
+    return null;
+  }
+  if (nowEpochMs >= store.expiresAtEpochMs) {
+    clearTenantTokenStore(store);
+    return null;
+  }
+  return store.tenantId;
 }
 
 // ===========================================================================
