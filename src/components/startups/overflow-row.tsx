@@ -128,31 +128,33 @@ export function OverflowRow({
         style={{ gap: gapPx }}
       >
         {leading}
-        {shown.map((t) => (
-          <Tooltip key={t} delayDuration={200}>
-            <TooltipTrigger asChild>
-              <span className={chipClass}>{t}</span>
-            </TooltipTrigger>
-            <TooltipContent side="top">{t}</TooltipContent>
-          </Tooltip>
-        ))}
-        {hidden.length > 0 && (
-          <Tooltip delayDuration={200}>
-            <TooltipTrigger asChild>
-              <span
-                className={cn(
-                  "cursor-default text-[10px] text-muted-foreground",
-                  overflowClassName,
-                )}
-              >
-                +{hidden.length}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs break-words">
-              {hidden.join(", ")}
-            </TooltipContent>
-          </Tooltip>
-        )}
+        <TooltipProvider delayDuration={200}>
+          {shown.map((t) => (
+            <Tooltip key={t}>
+              <TooltipTrigger asChild>
+                <span className={chipClass}>{t}</span>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t}</TooltipContent>
+            </Tooltip>
+          ))}
+          {hidden.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className={cn(
+                    "cursor-default text-[10px] text-muted-foreground",
+                    overflowClassName,
+                  )}
+                >
+                  +{hidden.length}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs break-words">
+                {hidden.join(", ")}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </TooltipProvider>
       </div>
     </div>
   );
