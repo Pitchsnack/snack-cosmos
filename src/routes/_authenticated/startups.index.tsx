@@ -244,7 +244,7 @@ function StartupsPageInner() {
               : "lg:grid-cols-[minmax(320px,26rem)_1fr]",
           )}
         >
-          <div className="max-h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
+          <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1 lg:h-auto lg:max-h-none lg:self-stretch">
             {favOnly
               ? items.map((it) => (
                   <FavoriteSplitRow
