@@ -228,14 +228,16 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
 
         {/* Market tags row */}
         {s.market_tags?.length ? (
-          <div className="mb-1 overflow-hidden">
+          <div className="mb-1 flex items-start gap-1.5 overflow-hidden">
+            <span className="mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
+              <ShoppingCart className="h-3 w-3 shrink-0" />
+            </span>
             <OverflowRow
               items={s.market_tags}
               maxRows={2}
               itemClassName="bg-muted/50 text-muted-foreground border-transparent"
               leading={
-                <span className="mr-0.5 mt-0.5 inline-flex shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <ShoppingCart className="h-3 w-3 shrink-0" />
+                <span className="mr-0.5 mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
                   <span>Market:</span>
                 </span>
               }
