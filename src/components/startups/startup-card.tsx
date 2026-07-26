@@ -234,21 +234,36 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
               <span>Market:</span>
             </span>
             <div className="min-w-0 flex-1">
-              <ChipRow tags={s.market_tags} tone="muted" />
+              <OverflowRow
+                items={s.market_tags}
+                maxRows={2}
+                itemClassName="bg-muted/50 text-muted-foreground border-transparent"
+              />
             </div>
           </div>
         ) : null}
 
         {/* Investor relationships row (display-only) */}
         {s.related_investors?.length ? (
-          <div className="mt-1">
-            <RelationshipChips
-              icon={<Users className="h-3 w-3" />}
-              label="Investors:"
-              items={s.related_investors}
-              popoverTitle="All Investors"
-              maxVisible={3}
-            />
+          <div className="mt-1 flex items-start gap-1.5 overflow-hidden">
+            <span className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Users className="h-3 w-3 shrink-0" />
+              <span>Investors:</span>
+            </span>
+            <div className="min-w-0 flex-1">
+              <OverflowRow
+                items={[...s.related_investors]
+                  .sort((a, b) => {
+                    const d = a.name.length - b.name.length;
+                    return d !== 0
+                      ? d
+                      : a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+                  })
+                  .map((i) => i.name)}
+                maxRows={1}
+                itemClassName="bg-background text-foreground/80 border-border/70"
+              />
+            </div>
           </div>
         ) : null}
       </div>
