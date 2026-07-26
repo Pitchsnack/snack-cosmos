@@ -56,7 +56,7 @@ export function StartupListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group relative flex w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
+        "group relative flex w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-2.5 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
         expanded ? "h-auto" : "h-[220px]",
         selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
