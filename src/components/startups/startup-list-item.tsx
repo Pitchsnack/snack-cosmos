@@ -57,7 +57,7 @@ export function StartupListItem({
       onClick={onSelect}
       className={cn(
         "group relative flex w-full flex-col items-start overflow-hidden rounded-lg border bg-card p-3 text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
-        expanded ? "h-[290px]" : "h-[220px]",
+        expanded ? "h-auto" : "h-[220px]",
         selected ? "border-accent ring-1 ring-accent/30" : "border-border",
       )}
       style={cardStyle}
@@ -126,15 +126,30 @@ export function StartupListItem({
         </div>
       </div>
 
-      <div className="mt-2 w-full flex-1 min-h-0 overflow-hidden text-left">
+      <div
+        className={cn(
+          "mt-2 w-full flex-1 text-left",
+          expanded ? "overflow-visible" : "min-h-0 overflow-hidden",
+        )}
+      >
         {s.short_description && (
-          <p className="w-full text-left line-clamp-2 text-[11px] text-foreground/80">
+          <p
+            className={cn(
+              "w-full text-left text-[11px] text-foreground/80",
+              expanded ? "" : "line-clamp-2",
+            )}
+          >
             {s.short_description}
           </p>
         )}
         {s.product_tags?.length ? (
-          <div className="mt-1.5 w-full max-h-[2.8rem] overflow-hidden text-left">
-            <ChipRow tags={s.product_tags} tone="primary" />
+          <div
+            className={cn(
+              "mt-1.5 w-full text-left",
+              expanded ? "" : "max-h-[2.8rem] overflow-hidden",
+            )}
+          >
+            <ChipRow tags={s.product_tags} tone="primary" showAll={expanded} />
           </div>
         ) : null}
         {s.market_tags?.length ? (
@@ -142,27 +157,48 @@ export function StartupListItem({
             <span className="mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
               <ShoppingCart className="h-3 w-3 shrink-0" />
             </span>
-            <OverflowRow
-              items={s.market_tags}
-              maxRows={1}
-              itemClassName="bg-muted/50 text-muted-foreground border-transparent"
-              leading={
+            {expanded ? (
+              <div className="flex w-full flex-wrap items-start gap-1">
                 <span className="mr-0.5 mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
-                  <span>Market:</span>
+                  Market:
                 </span>
-              }
-            />
+                {s.market_tags.map((t) => (
+                  <span
+                    key={t}
+                    className="max-w-[10rem] truncate rounded-full border border-transparent bg-muted/50 px-1.5 py-0 text-[9px] font-medium text-muted-foreground"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <OverflowRow
+                items={s.market_tags}
+                maxRows={1}
+                itemClassName="bg-muted/50 text-muted-foreground border-transparent"
+                leading={
+                  <span className="mr-0.5 mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
+                    <span>Market:</span>
+                  </span>
+                }
+              />
+            )}
           </div>
         ) : null}
         {s.related_investors?.length ? (
-          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
+          <div
+            className={cn(
+              "mt-1.5 w-full text-left",
+              expanded ? "" : "max-h-[1.5rem] overflow-hidden",
+            )}
+          >
             <RelationshipChips
               className="w-full justify-start"
               icon={<Users className="h-3 w-3" />}
               label="Investors:"
               items={s.related_investors}
               popoverTitle="All Investors"
-              maxVisible={3}
+              maxVisible={expanded ? s.related_investors.length : 3}
             />
           </div>
         ) : null}
@@ -176,16 +212,16 @@ export function StartupListItem({
             setExpanded((v) => !v);
           }}
         >
-          {expanded ? "Less" : "View details"}
+          {expanded ? "Show less" : "View details"}
         </span>
       </div>
     </button>
   );
 }
 
-function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
-  const shown = tags.slice(0, 5);
-  const overflow = tags.length - shown.length;
+function ChipRow({ tags, tone, showAll = false }: { tags: string[]; tone: "primary" | "muted"; showAll?: boolean }) {
+  const shown = showAll ? tags : tags.slice(0, 5);
+  const overflow = showAll ? 0 : tags.length - shown.length;
   const base =
     tone === "primary"
       ? "bg-primary/10 text-primary border-primary/30"
