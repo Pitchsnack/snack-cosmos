@@ -37,6 +37,7 @@ import { Route as AuthenticatedSharedDealsIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authenticated/investors.index'
 import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
 import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
+import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts.index'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
@@ -47,6 +48,7 @@ import { Route as AuthenticatedGlobalStartupsBrowseRouteImport } from './routes/
 import { Route as AuthenticatedGlobalStartupsIdRouteImport } from './routes/_authenticated/global-startups.$id'
 import { Route as AuthenticatedDealsNewRouteImport } from './routes/_authenticated/deals.new'
 import { Route as AuthenticatedDealsIdRouteImport } from './routes/_authenticated/deals.$id'
+import { Route as AuthenticatedContactsQuickAddRouteImport } from './routes/_authenticated/contacts.quick-add'
 import { Route as AuthenticatedStartupsIdIndexRouteImport } from './routes/_authenticated/startups.$id.index'
 import { Route as AuthenticatedInvestorsIdIndexRouteImport } from './routes/_authenticated/investors.$id.index'
 import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
@@ -203,6 +205,12 @@ const AuthenticatedDealsIndexRoute = AuthenticatedDealsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedDealsRoute,
 } as any)
+const AuthenticatedContactsIndexRoute =
+  AuthenticatedContactsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedContactsRoute,
+  } as any)
 const AuthenticatedStartupsNewRoute =
   AuthenticatedStartupsNewRouteImport.update({
     id: '/new',
@@ -260,6 +268,12 @@ const AuthenticatedDealsIdRoute = AuthenticatedDealsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedDealsRoute,
 } as any)
+const AuthenticatedContactsQuickAddRoute =
+  AuthenticatedContactsQuickAddRouteImport.update({
+    id: '/quick-add',
+    path: '/quick-add',
+    getParentRoute: () => AuthenticatedContactsRoute,
+  } as any)
 const AuthenticatedStartupsIdIndexRoute =
   AuthenticatedStartupsIdIndexRouteImport.update({
     id: '/',
@@ -300,7 +314,7 @@ export interface FileRoutesByFullPath {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/connections': typeof AuthenticatedConnectionsRoute
-  '/contacts': typeof AuthenticatedContactsRoute
+  '/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -314,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
+  '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
   '/deals/$id': typeof AuthenticatedDealsIdRouteWithChildren
   '/deals/new': typeof AuthenticatedDealsNewRoute
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
@@ -324,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/contacts/': typeof AuthenticatedContactsIndexRoute
   '/deals/': typeof AuthenticatedDealsIndexRoute
   '/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
   '/investors/': typeof AuthenticatedInvestorsIndexRoute
@@ -343,7 +359,6 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/connections': typeof AuthenticatedConnectionsRoute
-  '/contacts': typeof AuthenticatedContactsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/my-page': typeof AuthenticatedMyPageRoute
@@ -354,6 +369,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
+  '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
   '/deals/new': typeof AuthenticatedDealsNewRoute
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
@@ -361,6 +377,7 @@ export interface FileRoutesByTo {
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/contacts': typeof AuthenticatedContactsIndexRoute
   '/deals': typeof AuthenticatedDealsIndexRoute
   '/global-startups': typeof AuthenticatedGlobalStartupsIndexRoute
   '/investors': typeof AuthenticatedInvestorsIndexRoute
@@ -382,7 +399,7 @@ export interface FileRoutesById {
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/connections': typeof AuthenticatedConnectionsRoute
-  '/_authenticated/contacts': typeof AuthenticatedContactsRoute
+  '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -397,6 +414,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
+  '/_authenticated/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
   '/_authenticated/deals/$id': typeof AuthenticatedDealsIdRouteWithChildren
   '/_authenticated/deals/new': typeof AuthenticatedDealsNewRoute
   '/_authenticated/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
@@ -407,6 +425,7 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
   '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
   '/_authenticated/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
   '/_authenticated/investors/': typeof AuthenticatedInvestorsIndexRoute
@@ -443,6 +462,7 @@ export interface FileRouteTypes {
     | '/startups'
     | '/users'
     | '/sp2-gateway/'
+    | '/contacts/quick-add'
     | '/deals/$id'
     | '/deals/new'
     | '/global-startups/$id'
@@ -453,6 +473,7 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
+    | '/contacts/'
     | '/deals/'
     | '/global-startups/'
     | '/investors/'
@@ -472,7 +493,6 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/audit'
     | '/connections'
-    | '/contacts'
     | '/dashboard'
     | '/intake-queue'
     | '/my-page'
@@ -483,6 +503,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/'
     | '/sp2-gateway'
+    | '/contacts/quick-add'
     | '/deals/new'
     | '/global-startups/$id'
     | '/global-startups/browse'
@@ -490,6 +511,7 @@ export interface FileRouteTypes {
     | '/settings/default-intake'
     | '/shared-deals/$id'
     | '/startups/new'
+    | '/contacts'
     | '/deals'
     | '/global-startups'
     | '/investors'
@@ -525,6 +547,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/_authenticated/'
     | '/sp2-gateway/'
+    | '/_authenticated/contacts/quick-add'
     | '/_authenticated/deals/$id'
     | '/_authenticated/deals/new'
     | '/_authenticated/global-startups/$id'
@@ -535,6 +558,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals/$id'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
+    | '/_authenticated/contacts/'
     | '/_authenticated/deals/'
     | '/_authenticated/global-startups/'
     | '/_authenticated/investors/'
@@ -754,6 +778,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDealsIndexRouteImport
       parentRoute: typeof AuthenticatedDealsRoute
     }
+    '/_authenticated/contacts/': {
+      id: '/_authenticated/contacts/'
+      path: '/'
+      fullPath: '/contacts/'
+      preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
+      parentRoute: typeof AuthenticatedContactsRoute
+    }
     '/_authenticated/startups/new': {
       id: '/_authenticated/startups/new'
       path: '/new'
@@ -824,6 +855,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDealsIdRouteImport
       parentRoute: typeof AuthenticatedDealsRoute
     }
+    '/_authenticated/contacts/quick-add': {
+      id: '/_authenticated/contacts/quick-add'
+      path: '/quick-add'
+      fullPath: '/contacts/quick-add'
+      preLoaderRoute: typeof AuthenticatedContactsQuickAddRouteImport
+      parentRoute: typeof AuthenticatedContactsRoute
+    }
     '/_authenticated/startups/$id/': {
       id: '/_authenticated/startups/$id/'
       path: '/'
@@ -861,6 +899,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedContactsRouteChildren {
+  AuthenticatedContactsQuickAddRoute: typeof AuthenticatedContactsQuickAddRoute
+  AuthenticatedContactsIndexRoute: typeof AuthenticatedContactsIndexRoute
+}
+
+const AuthenticatedContactsRouteChildren: AuthenticatedContactsRouteChildren = {
+  AuthenticatedContactsQuickAddRoute: AuthenticatedContactsQuickAddRoute,
+  AuthenticatedContactsIndexRoute: AuthenticatedContactsIndexRoute,
+}
+
+const AuthenticatedContactsRouteWithChildren =
+  AuthenticatedContactsRoute._addFileChildren(
+    AuthenticatedContactsRouteChildren,
+  )
 
 interface AuthenticatedDealsIdRouteChildren {
   AuthenticatedDealsIdIndexRoute: typeof AuthenticatedDealsIdIndexRoute
@@ -975,7 +1028,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedConnectionsRoute: typeof AuthenticatedConnectionsRoute
-  AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
+  AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
@@ -999,7 +1052,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedConnectionsRoute: AuthenticatedConnectionsRoute,
-  AuthenticatedContactsRoute: AuthenticatedContactsRoute,
+  AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
