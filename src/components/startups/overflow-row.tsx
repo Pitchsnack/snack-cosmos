@@ -95,7 +95,7 @@ export function OverflowRow({
   const shown = items.slice(0, visibleCount);
 
   const chipClass = cn(
-    "inline-block max-w-[10rem] truncate rounded-full border px-1.5 py-0 text-[10px] font-medium",
+    "inline-flex items-center max-w-[10rem] truncate rounded-full border px-1.5 py-0 text-[10px] font-medium",
     itemClassName,
   );
 
