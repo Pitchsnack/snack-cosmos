@@ -143,13 +143,16 @@ export function StartupListItem({
           </p>
         )}
         {s.product_tags?.length ? (
-          <div
-            className={cn(
-              "mt-1 w-full text-left",
-              expanded ? "" : "max-h-[1.4rem] overflow-hidden",
+          <div className="mt-1 w-full text-left">
+            {expanded ? (
+              <ChipRow tags={s.product_tags} tone="primary" showAll />
+            ) : (
+              <OverflowRow
+                items={s.product_tags}
+                maxRows={2}
+                itemClassName="bg-primary/10 text-primary border-primary/30"
+              />
             )}
-          >
-            <ChipRow tags={s.product_tags} tone="primary" showAll={expanded} />
           </div>
         ) : null}
         {s.market_tags?.length ? (
