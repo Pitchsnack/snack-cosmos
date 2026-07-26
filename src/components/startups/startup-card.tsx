@@ -5,7 +5,7 @@ import { MapPin, Factory, ShoppingCart, Users, Bookmark } from "lucide-react";
 import anchorIcon from "@/assets/anchor.svg";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { StartupListItem } from "@/lib/startups.functions";
-import { RelationshipChips } from "@/components/relationships/relationship-chips";
+import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { cn } from "@/lib/utils";
