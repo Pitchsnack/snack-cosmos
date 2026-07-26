@@ -4,10 +4,11 @@ import { SP2AuthProvider, useSP2Auth } from "@/lib/sp2/auth-context";
 import type { SnackPortalAuthAdapter } from "@/lib/sp2/auth-adapter";
 import {
   KeycloakSnackPortalAuthAdapter,
-  TenantAuthenticationUnsupportedError,
+  getResidentTenantId,
   resolveSp2BootstrapPosture,
   type Sp2RealIntegrationEnv,
 } from "@/lib/sp2/keycloak-auth-adapter";
+import { decideTenantJourney } from "@/lib/sp2/tenant-journey";
 import { SnackPortalGatewayClient } from "@/lib/sp2/gateway-client";
 import {
   SHORT_DESCRIPTION_MAX,
@@ -220,7 +221,16 @@ function GatewayJourney({
   >({ kind: "idle" });
 
   const [signInKickoffFailed, setSignInKickoffFailed] = useState(false);
-  const [tenantAuthUnsupported, setTenantAuthUnsupported] = useState(false);
+
+  // §6.5: presentation-only "active tenant ready" state, derived EXCLUSIVELY
+  // from the resident (claim-verified) tenant authentication on route mount
+  // after the tenant callback — never from a selector click. It is not
+  // server-confirmed authorization; the Gateway has not been called.
+  const [residentTenant, setResidentTenant] = useState<string | null>(null);
+
+  useEffect(() => {
+    setResidentTenant(getResidentTenantId());
+  }, []);
 
   // After the PKCE callback SPA-navigates back here, the principal token is
   // already in adapter memory — resume the signed-in journey without another
@@ -273,37 +283,42 @@ function GatewayJourney({
       setMembershipsState({ kind: "idle" });
       setActiveTenant(null);
       setStartupState({ kind: "idle" });
+      // §6.6: deliberately does NOT touch residentTenant — the principal
+      // signed-out reset never erases a valid resident tenant presentation.
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn]);
 
   async function selectWorkspace(tenantId: string) {
-    setTenantAuthUnsupported(false);
-    try {
-      await adapter.beginWorkspaceAuthentication(tenantId);
-    } catch (err) {
-      if (err instanceof TenantAuthenticationUnsupportedError) {
-        // Real adapter: tenant-scoped authentication is explicitly out of
-        // this slice. Fail closed — no tenant token, no startup load.
-        setTenantAuthUnsupported(true);
-        setActiveTenant(null);
-        setStartupState({ kind: "idle" });
-        return;
-      }
-      throw err;
-    }
+    // §6.3: a selector click may only START authentication — it never
+    // establishes the active tenant. The real adapter performs the same
+    // top-level visible redirect as principal sign-in and does not resolve
+    // into tenant state in-page.
+    await adapter.beginWorkspaceAuthentication(tenantId);
+    // §6.4: activation requires an actual resident tenant token. The dev
+    // mock completes synchronously so a token exists here; the real posture
+    // has navigated away and returns null, so no active state is ever set
+    // before the claim-verified callback.
+    const token = await adapter.getTenantAccessToken(tenantId);
+    if (!token) return;
     setActiveTenant(tenantId);
     await loadStartup(tenantId);
   }
 
   async function loadStartup(tenantId: string) {
+    // §7 no-Startup boundary: every Startup request decision flows through
+    // decideTenantJourney. The real TA-1 posture keeps demoStartupRef = ""
+    // and therefore never constructs a /tenant/startups request; only the
+    // dev mock's configured synthetic reference reaches load_startup.
+    const journey = decideTenantJourney(demoStartupRef);
+    if (!journey.loadStartup) return;
     setStartupState({ kind: "loading" });
     const token = await adapter.getTenantAccessToken(tenantId);
     if (!token) {
       setStartupState({ kind: "error", outcome: "unauthorized" });
       return;
     }
-    const outcome = await gw.getTenantStartup(token, tenantId, demoStartupRef);
+    const outcome = await gw.getTenantStartup(token, tenantId, journey.startupRef);
     if (outcome.kind !== "ok") {
       setStartupState({ kind: "error", outcome: outcome.kind });
       return;
@@ -336,6 +351,13 @@ function GatewayJourney({
     setSaveState({ kind: "ok" });
   }
 
+  async function handleSignOut() {
+    // §5.6: logout clears principal token, tenant token, and transaction
+    // memory; the local presentation state is dropped with it.
+    setResidentTenant(null);
+    await signOut();
+  }
+
   const over = draft.length > SHORT_DESCRIPTION_MAX;
 
   return (
@@ -348,14 +370,21 @@ function GatewayJourney({
               Controlled MVP · {isMock ? "development mock" : "gateway"} · not production
             </p>
           </div>
-          {signedIn && (
-            <Button variant="outline" size="sm" onClick={() => void signOut()}>
+          {(signedIn || residentTenant !== null) && (
+            <Button variant="outline" size="sm" onClick={() => void handleSignOut()}>
               Sign out
             </Button>
           )}
         </header>
 
-        {!signedIn ? (
+        {!signedIn && residentTenant !== null ? (
+          <Panel title={`Workspace — ${residentTenant}`}>
+            <StatusNote tone="ok">
+              Tenant workspace <span className="font-mono">{residentTenant}</span> is authenticated
+              and ready — awaiting Gateway confirmation. No tenant data has been requested.
+            </StatusNote>
+          </Panel>
+        ) : !signedIn ? (
           <Panel title="Sign in">
             {isMock ? (
               <>
@@ -418,13 +447,6 @@ function GatewayJourney({
                 </ul>
               )}
             </Panel>
-
-            {tenantAuthUnsupported && (
-              <StatusNote tone="warn">
-                Tenant workspace authentication is not yet supported in this slice. Principal
-                sign-in and memberships only.
-              </StatusNote>
-            )}
 
             {activeTenant && (
               <Panel title={`Startup — ${activeTenant}`}>
