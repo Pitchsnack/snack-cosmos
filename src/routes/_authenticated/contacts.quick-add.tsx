@@ -1162,8 +1162,8 @@ function SavedPanel({
       </div>
       <h2 className="mt-4 text-xl font-semibold">Contact saved</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        {contact.fullName ??
-          [contact.firstName, contact.lastName].filter(Boolean).join(" ") ||
+        {(contact.fullName ??
+          [contact.firstName, contact.lastName].filter(Boolean).join(" ")) ||
           "New contact"}{" "}
         has been added to your contacts.
       </p>
