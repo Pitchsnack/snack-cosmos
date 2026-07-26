@@ -58,7 +58,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/contacts")({
+export const Route = createFileRoute("/_authenticated/contacts/")({
   head: () => ({
     meta: [
       { title: "Contacts — SnackPortal2" },
