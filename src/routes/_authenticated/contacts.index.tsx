@@ -429,7 +429,7 @@ export function ContactsPage() {
           <Button asChild variant="outline">
             <Link to="/contacts/quick-add">
               <ScanLine className="mr-1 h-4 w-4" />
-              Quick Add Contact
+              &nbsp;Add Name Card
             </Link>
           </Button>
           <div className="flex">
