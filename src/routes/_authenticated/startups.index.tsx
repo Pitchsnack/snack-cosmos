@@ -244,7 +244,7 @@ function StartupsPageInner() {
               : "lg:grid-cols-[minmax(320px,26rem)_1fr]",
           )}
         >
-          <div className="max-h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1 lg:h-full lg:max-h-none lg:min-h-0">
+          <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
             {favOnly
               ? items.map((it) => (
                   <FavoriteSplitRow
@@ -267,7 +267,7 @@ function StartupsPageInner() {
                   />
                 ))}
           </div>
-          <div className="min-w-0 rounded-lg border border-border bg-card p-6 shadow-sm">
+          <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
             {selected ? <StartupDetailPanel id={selected} /> : <StartupDetailEmpty />}
           </div>
         </div>
