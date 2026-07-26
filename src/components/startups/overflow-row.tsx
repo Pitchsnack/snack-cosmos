@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +39,12 @@ export function OverflowRow({
       const containerWidth = container.clientWidth;
       if (containerWidth <= 0) return;
 
+      const hasLeading = Boolean(leading);
       const children = Array.from(measure.children) as HTMLElement[];
-      // Last child is the reserved "+N" measurement chip.
-      const itemNodes = children.slice(0, items.length);
+      const leadingNode = hasLeading ? children[0] : null;
+      const itemStart = hasLeading ? 1 : 0;
+      // Items are children[itemStart .. itemStart + items.length - 1]; last child is the "+N" chip.
+      const itemNodes = children.slice(itemStart, itemStart + items.length);
       const overflowNode = children[children.length - 1];
 
       if (itemNodes.length === 0) {
@@ -59,8 +62,11 @@ export function OverflowRow({
         return;
       }
 
-      // Binary/linear search: find largest k such that first k items + "+N" fits.
-      const overflowWidth = overflowNode?.offsetWidth ?? 0;
+      // Binary/linear search: find largest k such that leading + first k items + "+N" fits.
+      const overflowWidth =
+        (overflowNode?.offsetWidth ?? 0) +
+        (leadingNode?.offsetWidth ?? 0) +
+        (hasLeading ? gapPx : 0);
       let count = 0;
       for (let k = items.length - 1; k >= 0; k--) {
         // Temporarily hide items beyond k.
@@ -81,15 +87,12 @@ export function OverflowRow({
       setVisibleCount(count);
     };
 
+    setVisibleCount(items.length);
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(container);
     return () => ro.disconnect();
   }, [items, maxRows, gapPx]);
-
-  useEffect(() => {
-    setVisibleCount(items.length);
-  }, [items]);
 
   const hidden = items.slice(visibleCount);
   const shown = items.slice(0, visibleCount);
@@ -101,13 +104,14 @@ export function OverflowRow({
 
   return (
     <div ref={containerRef} className={cn("relative w-full min-w-0", className)}>
-      {/* Hidden measurement layer: renders all items + overflow chip. */}
+      {/* Hidden measurement layer: renders leading + all items + overflow chip. */}
       <div
         ref={measureRef}
         aria-hidden
         className="pointer-events-none invisible absolute inset-0 flex flex-wrap content-start items-start justify-start"
         style={{ gap: gapPx }}
       >
+        {leading}
         {items.map((t) => (
           <span key={`m-${t}`} className={chipClass}>
             {t}
