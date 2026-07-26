@@ -1,9 +1,10 @@
 import { useState, type CSSProperties } from "react";
-import { MapPin, Users, Bookmark } from "lucide-react";
+import { MapPin, Users, Bookmark, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
+import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 
@@ -137,8 +138,20 @@ export function StartupListItem({
           </div>
         ) : null}
         {s.market_tags?.length ? (
-          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
-            <ChipRow tags={s.market_tags} tone="muted" />
+          <div className="mt-1.5 flex w-full items-start gap-1.5 overflow-hidden text-left">
+            <span className="mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
+              <ShoppingCart className="h-3 w-3 shrink-0" />
+            </span>
+            <OverflowRow
+              items={s.market_tags}
+              maxRows={1}
+              itemClassName="bg-muted/50 text-muted-foreground border-transparent"
+              leading={
+                <span className="mr-0.5 mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
+                  <span>Market:</span>
+                </span>
+              }
+            />
           </div>
         ) : null}
         {s.related_investors?.length ? (
