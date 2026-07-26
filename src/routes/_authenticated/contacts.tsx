@@ -423,23 +423,34 @@ export function ContactsPage() {
             Manage your network and relationships.
           </p>
         </div>
-        <div className="flex">
-          <Button className="rounded-r-none">
-            <Plus className="mr-1 h-4 w-4" />
-            Add Contact
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline">
+            <Link to="/contacts/quick-add">
+              <ScanLine className="mr-1 h-4 w-4" />
+              Quick Add Contact
+            </Link>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="rounded-l-none border-l border-primary-foreground/20 px-2">
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Add contact manually</DropdownMenuItem>
-              <DropdownMenuItem>Import contacts</DropdownMenuItem>
-              <DropdownMenuItem>Create contact list</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex">
+            <Button className="rounded-r-none">
+              <Plus className="mr-1 h-4 w-4" />
+              Add Contact
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="rounded-l-none border-l border-primary-foreground/20 px-2">
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/contacts/quick-add">Quick Add (scan business card)</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>Add contact manually</DropdownMenuItem>
+                <DropdownMenuItem>Import contacts</DropdownMenuItem>
+                <DropdownMenuItem>Create contact list</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
