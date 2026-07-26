@@ -39,9 +39,12 @@ export function OverflowRow({
       const containerWidth = container.clientWidth;
       if (containerWidth <= 0) return;
 
+      const hasLeading = Boolean(leading);
       const children = Array.from(measure.children) as HTMLElement[];
-      // Last child is the reserved "+N" measurement chip.
-      const itemNodes = children.slice(0, items.length);
+      const leadingNode = hasLeading ? children[0] : null;
+      const itemStart = hasLeading ? 1 : 0;
+      // Items are children[itemStart .. itemStart + items.length - 1]; last child is the "+N" chip.
+      const itemNodes = children.slice(itemStart, itemStart + items.length);
       const overflowNode = children[children.length - 1];
 
       if (itemNodes.length === 0) {
@@ -59,8 +62,11 @@ export function OverflowRow({
         return;
       }
 
-      // Binary/linear search: find largest k such that first k items + "+N" fits.
-      const overflowWidth = overflowNode?.offsetWidth ?? 0;
+      // Binary/linear search: find largest k such that leading + first k items + "+N" fits.
+      const overflowWidth =
+        (overflowNode?.offsetWidth ?? 0) +
+        (leadingNode?.offsetWidth ?? 0) +
+        (hasLeading ? gapPx : 0);
       let count = 0;
       for (let k = items.length - 1; k >= 0; k--) {
         // Temporarily hide items beyond k.
