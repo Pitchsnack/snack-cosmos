@@ -125,54 +125,84 @@ export function StartupListItem({
         </div>
       </div>
 
-      <div className="mt-2 w-full flex-1 min-h-0 overflow-hidden text-left">
+      <div
+        className={cn(
+          "mt-2 w-full min-h-0 text-left",
+          expanded ? "overflow-visible" : "flex-1 overflow-hidden",
+        )}
+      >
         {s.short_description && (
-          <p className="w-full text-left line-clamp-2 text-[11px] text-foreground/80">
+          <p
+            className={cn(
+              "w-full text-left text-[11px] text-foreground/80",
+              expanded ? "" : "line-clamp-2",
+            )}
+          >
             {s.short_description}
           </p>
         )}
         {s.product_tags?.length ? (
-          <div className="mt-1.5 w-full max-h-[2.8rem] overflow-hidden text-left">
-            <ChipRow tags={s.product_tags} tone="primary" />
+          <div
+            className={cn(
+              "mt-1.5 w-full text-left",
+              expanded ? "" : "max-h-[2.8rem] overflow-hidden",
+            )}
+          >
+            <ChipRow tags={s.product_tags} tone="primary" expanded={expanded} />
           </div>
         ) : null}
         {s.market_tags?.length ? (
-          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
-            <ChipRow tags={s.market_tags} tone="muted" />
-          </div>
-        ) : null}
-        {s.related_investors?.length ? (
-          <div className="mt-1.5 w-full max-h-[1.5rem] overflow-hidden text-left">
-            <RelationshipChips
-              className="w-full justify-start"
-              icon={<Users className="h-3 w-3" />}
-              label="Investors:"
-              items={s.related_investors}
-              popoverTitle="All Investors"
-              maxVisible={3}
-            />
+          <div
+            className={cn(
+              "mt-1.5 w-full text-left",
+              expanded ? "" : "max-h-[1.5rem] overflow-hidden",
+            )}
+          >
+            <ChipRow tags={s.market_tags} tone="muted" expanded={expanded} />
           </div>
         ) : null}
       </div>
 
-      <div className="mt-auto flex w-full justify-end pt-1">
+      {s.related_investors?.length ? (
+        <div className="mt-1.5 w-full text-left">
+          <RelationshipChips
+            className="w-full justify-start"
+            icon={<Users className="h-3 w-3" />}
+            label="Investors:"
+            items={s.related_investors}
+            popoverTitle="All Investors"
+            maxVisible={3}
+          />
+        </div>
+      ) : null}
+
+      <div className="mt-auto flex w-full items-center justify-between pt-1">
         <span
-          className="cursor-pointer text-xs font-medium text-accent group-hover:underline"
+          className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-accent"
           onClick={(e) => {
             e.stopPropagation();
             setExpanded((v) => !v);
           }}
         >
-          {expanded ? "Less" : "View details"}
+          {expanded ? "Less" : "More"}
+        </span>
+        <span
+          className="cursor-pointer text-xs font-medium text-accent group-hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect();
+          }}
+        >
+          View details
         </span>
       </div>
     </button>
   );
 }
 
-function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
-  const shown = tags.slice(0, 5);
-  const overflow = tags.length - shown.length;
+function ChipRow({ tags, tone, expanded }: { tags: string[]; tone: "primary" | "muted"; expanded?: boolean }) {
+  const shown = expanded ? tags : tags.slice(0, 5);
+  const overflow = expanded ? 0 : tags.length - shown.length;
   const base =
     tone === "primary"
       ? "bg-primary/10 text-primary border-primary/30"
