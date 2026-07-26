@@ -120,7 +120,7 @@ export function OverflowRow({
 
       {/* Visible layer */}
       <div
-        className="flex flex-wrap content-start items-start justify-start"
+        className="flex w-full flex-wrap content-start items-start justify-start"
         style={{ gap: gapPx }}
       >
         {leading}
