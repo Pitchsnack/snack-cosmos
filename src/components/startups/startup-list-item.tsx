@@ -192,14 +192,31 @@ export function StartupListItem({
               expanded ? "" : "max-h-[1.5rem] overflow-hidden",
             )}
           >
-            <RelationshipChips
-              className="w-full justify-start"
-              icon={<Users className="h-3 w-3" />}
-              label="Investors:"
-              items={s.related_investors}
-              popoverTitle="All Investors"
-              maxVisible={expanded ? s.related_investors.length : 3}
-            />
+            {expanded ? (
+              <div className="flex w-full flex-wrap items-start gap-1">
+                <span className="mr-0.5 mt-0.5 inline-flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
+                  <Users className="h-3 w-3" />
+                  <span>Investors:</span>
+                </span>
+                {s.related_investors.map((inv) => (
+                  <span
+                    key={inv.id}
+                    className="inline-block rounded-full border border-border/70 bg-background px-1.5 py-0 text-[10px] font-medium text-foreground/80"
+                  >
+                    {inv.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <RelationshipChips
+                className="w-full justify-start"
+                icon={<Users className="h-3 w-3" />}
+                label="Investors:"
+                items={s.related_investors}
+                popoverTitle="All Investors"
+                maxVisible={3}
+              />
+            )}
           </div>
         ) : null}
       </div>
