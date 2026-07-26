@@ -1,9 +1,10 @@
 import { useState, type CSSProperties } from "react";
-import { MapPin, Users, Bookmark } from "lucide-react";
+import { MapPin, Users, Bookmark, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
+import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 
