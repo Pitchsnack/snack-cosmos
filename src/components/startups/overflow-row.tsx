@@ -87,15 +87,12 @@ export function OverflowRow({
       setVisibleCount(count);
     };
 
+    setVisibleCount(items.length);
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(container);
     return () => ro.disconnect();
   }, [items, maxRows, gapPx]);
-
-  useEffect(() => {
-    setVisibleCount(items.length);
-  }, [items]);
 
   const hidden = items.slice(visibleCount);
   const shown = items.slice(0, visibleCount);
