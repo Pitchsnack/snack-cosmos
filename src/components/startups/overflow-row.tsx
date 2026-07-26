@@ -101,13 +101,14 @@ export function OverflowRow({
 
   return (
     <div ref={containerRef} className={cn("relative w-full min-w-0", className)}>
-      {/* Hidden measurement layer: renders all items + overflow chip. */}
+      {/* Hidden measurement layer: renders leading + all items + overflow chip. */}
       <div
         ref={measureRef}
         aria-hidden
         className="pointer-events-none invisible absolute inset-0 flex flex-wrap content-start items-start justify-start"
         style={{ gap: gapPx }}
       >
+        {leading}
         {items.map((t) => (
           <span key={`m-${t}`} className={chipClass}>
             {t}
