@@ -1003,7 +1003,7 @@ export function StartupForm({ startup }: Props) {
       {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
         <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
       )}
-      <FounderEditor value={founders} onChange={setFounders} />
+      <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} />
 
 
       {/* Investor Relationships (V3) — replaces the legacy InvestorPicker */}
