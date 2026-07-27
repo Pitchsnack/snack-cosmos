@@ -191,14 +191,14 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
         )}
 
         {/* Product tags */}
-        {s.product_tags?.length ? (
+        {!compact && s.product_tags?.length ? (
           <div className="mb-0.5">
             <ChipRow tags={s.product_tags} tone="primary" />
           </div>
         ) : null}
 
         {/* Divider */}
-        {(s.product_tags?.length || s.short_description) && (
+        {(!compact && s.product_tags?.length || s.short_description) && (
           <div className="my-2 border-t border-border/40" />
         )}
 
