@@ -695,7 +695,7 @@ export const createStartupMediaUploadUrl = createServerFn({ method: "POST" })
     z.object({
       tenantId: z.string().uuid(),
       startupId: z.string().uuid().optional(),
-      kind: z.enum(["logo", "slot-1", "slot-2", "slot-3"]),
+      kind: z.enum(["logo", "slot-1", "slot-2", "slot-3", "founder"]),
       ext: z.string().regex(/^[a-z0-9]{2,5}$/i),
     }).parse(input),
   )
