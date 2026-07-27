@@ -217,7 +217,7 @@ function StartupsPageInner() {
           )}
         >
           {items.map((it) => (
-            <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} />
+            <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} compact={favOnly} />
           ))}
         </div>
       ) : view === "list" ? (

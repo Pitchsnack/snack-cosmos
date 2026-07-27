@@ -22,6 +22,9 @@ function monogram(name: string) {
 const CARD_CLASS =
   "group relative flex h-[440px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
+const COMPACT_CARD_CLASS =
+  "group relative flex h-[380px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
+
 const HOVER_CARD_STYLE: CSSProperties = {
   borderColor: "var(--accent)",
   boxShadow:
@@ -55,7 +58,7 @@ function Truncate({
   );
 }
 
-export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () => void }) {
+export function StartupCard({ s, onClick, compact = false }: { s: StartupListItem; onClick?: () => void; compact?: boolean }) {
   const [isHovered, setIsHovered] = useState(false);
   const { isFavorite, toggle } = useFavoriteStartups();
   const bookmarked = isFavorite(s.id);
@@ -188,14 +191,14 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
         )}
 
         {/* Product tags */}
-        {s.product_tags?.length ? (
+        {!compact && s.product_tags?.length ? (
           <div className="mb-0.5">
             <ChipRow tags={s.product_tags} tone="primary" />
           </div>
         ) : null}
 
         {/* Divider */}
-        {(s.product_tags?.length || s.short_description) && (
+        {(!compact && s.product_tags?.length || s.short_description) && (
           <div className="my-2 border-t border-border/40" />
         )}
 
@@ -278,7 +281,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
         <button
           type="button"
           onClick={onClick}
-          className={CARD_CLASS}
+          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
           style={cardStyle}
           {...interactionHandlers}
         >
@@ -288,7 +291,7 @@ export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () =
         <Link
           to="/startups/$id"
           params={{ id: s.id }}
-          className={CARD_CLASS}
+          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
           style={cardStyle}
           {...interactionHandlers}
         >
