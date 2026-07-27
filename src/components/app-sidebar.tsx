@@ -71,6 +71,21 @@ type NavItem = {
   disabled?: boolean;
 };
 
+// Startup-user menu order (PRD 3 sidebar §19). Items are reordered for users
+// whose effective role set includes STARTUP_USER.
+const STARTUP_MENU_ORDER = [
+  "Dashboard",
+  "My Page",
+  "Startup Activity",
+  "Startups",
+  "Connections",
+  "Contacts",
+  "Communications",
+  "Documents",
+  "Notifications",
+  "Preferences",
+];
+
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
 // rendered as disabled placeholders so each role's framework is visible.
 const NAV_ITEMS: NavItem[] = [
