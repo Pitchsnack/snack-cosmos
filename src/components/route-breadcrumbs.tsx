@@ -43,7 +43,7 @@ const PATH_LABELS: Record<string, string> = {
 };
 
 const HOME_ROUTE = "/dashboard";
-const HIDDEN_ROUTE_IDS = new Set(["/", "/_authenticated"]);
+const HIDDEN_ROUTE_IDS = new Set(["/", "/_authenticated", "__root__"]);
 
 function getPathTemplate(routeId: string) {
   return routeId.replace(/^\/_authenticated/, "").replace(/\/$/, "") || "/";
