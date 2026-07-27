@@ -423,7 +423,10 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
           </Sheet>
           <img src={logoWhite} alt="PitchSnack" className="h-7 w-auto" />
         </header>
-        <main className="flex-1 overflow-y-auto p-4">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4">
+          <RouteBreadcrumbs className="mb-3" />
+          {children}
+        </main>
       </div>
     );
   }
