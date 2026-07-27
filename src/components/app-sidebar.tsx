@@ -458,6 +458,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       <main className="h-screen min-w-0 overflow-y-auto overflow-x-hidden">
         <div className="mx-auto max-w-7xl px-8 py-10">
           <WorkspaceHeader />
+          <RouteBreadcrumbs className="mb-4" />
           {children}
         </div>
       </main>
