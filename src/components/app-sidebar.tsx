@@ -31,6 +31,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 
 import { UserMenu } from "@/components/user-menu";
 import { WorkspaceHeader } from "@/components/workspace-header";
+import { RouteBreadcrumbs } from "@/components/route-breadcrumbs";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useEffectivePermissions } from "@/hooks/use-effective-permissions";
 import { usePreferences } from "@/hooks/use-preferences";
