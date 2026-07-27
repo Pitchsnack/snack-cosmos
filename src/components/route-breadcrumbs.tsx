@@ -66,13 +66,15 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
   const matches = useRouterState({ select: (s) => s.matches as AnyRouteMatch[] });
 
   const items = useMemo(() => {
-    // Deduplicate by resolved pathname, keeping the deepest (leaf) match
-    // for each URL so layout routes do not produce duplicate crumbs.
-    const byPathname = new Map<string, AnyRouteMatch>();
+    // Deduplicate by path template, keeping the deepest (leaf) match for each
+    // template so layout routes and their index leaves do not produce
+    // duplicate crumbs. The leaf is always the last match in the array.
+    const byTemplate = new Map<string, AnyRouteMatch>();
     for (const m of matches) {
-      byPathname.set(m.pathname, m);
+      const pathTemplate = getPathTemplate(m.routeId);
+      byTemplate.set(pathTemplate, m);
     }
-    const unique = Array.from(byPathname.values());
+    const unique = Array.from(byTemplate.values());
 
     return unique
       .filter((m) => !HIDDEN_ROUTE_IDS.has(m.routeId))
