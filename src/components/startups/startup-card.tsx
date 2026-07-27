@@ -58,7 +58,7 @@ function Truncate({
   );
 }
 
-export function StartupCard({ s, onClick }: { s: StartupListItem; onClick?: () => void }) {
+export function StartupCard({ s, onClick, compact = false }: { s: StartupListItem; onClick?: () => void; compact?: boolean }) {
   const [isHovered, setIsHovered] = useState(false);
   const { isFavorite, toggle } = useFavoriteStartups();
   const bookmarked = isFavorite(s.id);
