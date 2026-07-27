@@ -71,6 +71,21 @@ type NavItem = {
   disabled?: boolean;
 };
 
+// Startup-user menu order (PRD 3 sidebar §19). Items are reordered for users
+// whose effective role set includes STARTUP_USER.
+const STARTUP_MENU_ORDER = [
+  "Dashboard",
+  "My Page",
+  "Startup Activity",
+  "Startups",
+  "Connections",
+  "Contacts",
+  "Communications",
+  "Documents",
+  "Notifications",
+  "Preferences",
+];
+
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
 // rendered as disabled placeholders so each role's framework is visible.
 const NAV_ITEMS: NavItem[] = [
@@ -169,7 +184,7 @@ function SidebarBody({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showLabels = !collapsed || isMobile;
-  const { has, isControl, isResolved } = useEffectivePermissions();
+  const { has, isControl, isResolved, roles } = useEffectivePermissions();
   const { data: sessionData } = useSessionContext();
 
   // While permissions are unresolved AND we have no cached session data,
@@ -177,13 +192,29 @@ function SidebarBody({
   // its full height/order instead of collapsing to ungated items.
   const showSkeleton = !isResolved && !sessionData;
 
-  const visibleItems = showSkeleton
-    ? NAV_ITEMS
-    : NAV_ITEMS.filter((item) => {
-        if (item.controlOnly) return isControl;
-        if (!item.perm) return true;
-        return has(item.perm);
-      });
+  const isStartupUser = roles.includes("STARTUP_USER");
+
+  const visibleItems = (() => {
+    const filtered = showSkeleton
+      ? NAV_ITEMS
+      : NAV_ITEMS.filter((item) => {
+          if (item.controlOnly) return isControl;
+          if (!item.perm) return true;
+          return has(item.perm);
+        });
+
+    if (!isStartupUser || showSkeleton) return filtered;
+
+    const orderIndex = new Map(STARTUP_MENU_ORDER.map((label, i) => [label, i]));
+    return [...filtered].sort((a, b) => {
+      const aIdx = orderIndex.get(a.label);
+      const bIdx = orderIndex.get(b.label);
+      if (aIdx === undefined && bIdx === undefined) return 0;
+      if (aIdx === undefined) return 1;
+      if (bIdx === undefined) return -1;
+      return aIdx - bIdx;
+    });
+  })();
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
