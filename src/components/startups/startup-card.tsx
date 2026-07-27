@@ -281,7 +281,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
         <button
           type="button"
           onClick={onClick}
-          className={CARD_CLASS}
+          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
           style={cardStyle}
           {...interactionHandlers}
         >
@@ -291,7 +291,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
         <Link
           to="/startups/$id"
           params={{ id: s.id }}
-          className={CARD_CLASS}
+          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
           style={cardStyle}
           {...interactionHandlers}
         >
