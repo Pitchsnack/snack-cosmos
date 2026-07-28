@@ -57,6 +57,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { AddContactDialog } from "@/components/contacts/add-contact-dialog";
 
 export const Route = createFileRoute("/_authenticated/contacts/")({
   head: () => ({
