@@ -120,7 +120,10 @@ function Pill({
 interface Props {
   /** When provided, the form is in edit mode. */
   startup?: StartupDetail;
+  /** Where to navigate after a successful create. Defaults to the new startup's detail page. */
+  redirectAfterCreate?: "detail" | "my-startups";
 }
+
 
 function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
   if (!startup) return EMPTY_MEDIA_STATE;
