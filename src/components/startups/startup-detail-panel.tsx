@@ -50,6 +50,7 @@ import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+import { PublicationActions } from "@/components/startups/publication-actions";
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
@@ -64,11 +65,14 @@ export function StartupDetailPanel({
   id,
   showEdit = true,
   compact = false,
+  showPublication = false,
   onClose,
 }: {
   id: string;
   showEdit?: boolean;
   compact?: boolean;
+  /** My Startups surfaces only: shows Publish / Unpublish to Startup Directory. */
+  showPublication?: boolean;
   onClose?: () => void;
 }) {
   const { data, isLoading, error } = useStartup(id);
