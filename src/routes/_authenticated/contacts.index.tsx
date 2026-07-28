@@ -449,7 +449,7 @@ export function ContactsPage() {
                 <DropdownMenuItem asChild>
                   <Link to="/contacts/quick-add">Quick Add (scan business card)</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>Add contact manually</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setAddOpen(true)}>Add contact manually</DropdownMenuItem>
                 <DropdownMenuItem>Import contacts</DropdownMenuItem>
                 <DropdownMenuItem>Create contact list</DropdownMenuItem>
               </DropdownMenuContent>
