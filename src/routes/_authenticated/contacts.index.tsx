@@ -966,6 +966,7 @@ export function ContactsPage() {
           )}
         </div>
       </div>
+      <AddContactDialog open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );
 }
