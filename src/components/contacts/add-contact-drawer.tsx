@@ -110,20 +110,10 @@ export function AddContactDrawer({ open, onOpenChange, existingEmails = [], onSa
         side="right"
         className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl sm:rounded-l-2xl"
       >
-        {/* Header */}
-        <div className="flex items-start justify-between border-b border-border bg-card px-6 py-5">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">Add Contact</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Add a new contact to your network.</p>
-          </div>
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={() => handleOpenChange(false)}
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        {/* Header (Sheet provides the close X in the top-right) */}
+        <div className="border-b border-border bg-card px-6 py-5 pr-14">
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">Add Contact</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Add a new contact to your network.</p>
         </div>
 
         {/* Body */}
