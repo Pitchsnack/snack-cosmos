@@ -83,9 +83,18 @@ function StartupsPageInner() {
   });
 
   const rawItems = data && "items" in data ? data.items : [];
+  // Preview-only, opt-in simulation. Never authoritative for the real directory:
+  // it is off by default, available only in preview mode, and never persists.
+  const [previewDirectoryFilter, setPreviewDirectoryFilter] = useState(false);
+  const baseItems = useMemo(() => {
+    if (!isPublicationPreview || !previewDirectoryFilter) return rawItems;
+    return rawItems.filter(
+      (it) => readPreviewPublication(it.id).status === "published",
+    );
+  }, [rawItems, previewDirectoryFilter]);
   const items = useMemo(
-    () => (favOnly ? rawItems.filter((it) => favIds.has(it.id)) : rawItems),
-    [rawItems, favOnly, favIds],
+    () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems),
+    [baseItems, favOnly, favIds],
   );
   const total = favOnly ? items.length : data && "total" in data ? data.total : 0;
   const pageCount = favOnly ? 1 : Math.max(1, Math.ceil(total / pageSize));
