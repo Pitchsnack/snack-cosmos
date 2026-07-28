@@ -91,7 +91,10 @@ function MyStartupsPageInner() {
     // Startup users are already scoped by RLS to their startups.
     if (isStartupUser) return rawItems;
     return rawItems.filter(
-      (it) => it.owning_agent?.id === meId || it.owning_ai_agent?.id === meId,
+      (it) =>
+        it.owning_agent?.id === meId ||
+        it.owning_ai_agent?.id === meId ||
+        it.created_by === meId,
     );
   }, [rawItems, meId, isStartupUser]);
 

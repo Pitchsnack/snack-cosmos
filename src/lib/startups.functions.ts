@@ -68,6 +68,7 @@ export interface StartupRow {
 }
 
 export interface StartupListItem extends StartupRow {
+  created_by: string | null;
   tenant_name: string | null;
   logo_signed_url: string | null;
   tile_image_signed_url: string | null;
@@ -137,7 +138,7 @@ const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, industry,
   short_description, long_description, status, visibility, created_at, updated_at,
   logo_url, company_type, year_founded, email, headquarters, region, investment_stage,
-  product_tags, market_tags, url_key, source_global_id, imported_at,
+  product_tags, market_tags, url_key, source_global_id, imported_at, created_by,
   tenants!inner(tenant_name),
   startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
   startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -198,6 +199,7 @@ export const listStartups = createServerFn({ method: "GET" })
 
     const list = (rows ?? []) as unknown as Array<
       StartupRow & {
+        created_by: string | null;
         tenants: { tenant_name: string } | null;
         startup_ownership: Array<{
           owning_agent_user_id: string;
