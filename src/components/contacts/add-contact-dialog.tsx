@@ -82,6 +82,10 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
           </DialogHeader>
 
           <div className="space-y-5 px-6 py-5">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Contact Details
+            </h3>
+
             {/* Row 1: Full Name / Work Email */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
