@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Globe, EyeOff, Loader2, Info } from "lucide-react";
+import { Globe, EyeOff, Loader2, Info, FlaskConical } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +13,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { PublicationBadge } from "@/components/startups/publication-badge";
 import { usePublication } from "@/hooks/use-publication";
-import { toDirectoryProjection } from "@/lib/publication";
+import {
+  toDirectoryProjection,
+  isPublicationPreview,
+  PREVIEW_DISCLAIMER,
+} from "@/lib/publication";
 
 type StartupLike = Parameters<typeof toDirectoryProjection>[0] & {
   tenant_id?: string | null;
