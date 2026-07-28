@@ -21,7 +21,12 @@ import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
-import { isPublicationPreview, readPreviewPublication } from "@/lib/publication";
+import {
+  isPublicationPreview,
+  readPreviewPublication,
+  PREVIEW_DISCLAIMER,
+} from "@/lib/publication";
+import { usePreviewPublicationVersion } from "@/hooks/use-publication";
 import { cn } from "@/lib/utils";
 
 
@@ -86,12 +91,14 @@ function StartupsPageInner() {
   // Preview-only, opt-in simulation. Never authoritative for the real directory:
   // it is off by default, available only in preview mode, and never persists.
   const [previewDirectoryFilter, setPreviewDirectoryFilter] = useState(false);
+  const previewVersion = usePreviewPublicationVersion();
   const baseItems = useMemo(() => {
     if (!isPublicationPreview || !previewDirectoryFilter) return rawItems;
+    void previewVersion; // re-evaluate when session preview state changes
     return rawItems.filter(
       (it) => readPreviewPublication(it.id).status === "published",
     );
-  }, [rawItems, previewDirectoryFilter]);
+  }, [rawItems, previewDirectoryFilter, previewVersion]);
   const items = useMemo(
     () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems),
     [baseItems, favOnly, favIds],
