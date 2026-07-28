@@ -346,6 +346,15 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
     setOwningAi("");
   }, [isEdit, tenantId, tenantMatchesActive]);
 
+  // My Startups flow: default the human Owning Agent to the current user so the
+  // created startup immediately appears in /my-startups (which filters on ownership).
+  useEffect(() => {
+    if (isEdit || redirectAfterCreate !== "my-startups") return;
+    if (!principalRef || owningAgentUserId) return;
+    if (humanOptions.some((u) => u.id === principalRef)) setOwningAgent(principalRef);
+  }, [isEdit, redirectAfterCreate, principalRef, owningAgentUserId, humanOptions]);
+
+
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
