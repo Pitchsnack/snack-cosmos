@@ -966,6 +966,11 @@ export function ContactsPage() {
           )}
         </div>
       </div>
+      <AddContactDrawer
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        existingEmails={CONTACTS.map((c) => c.email)}
+      />
     </div>
   );
 }
