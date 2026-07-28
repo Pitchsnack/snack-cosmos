@@ -239,7 +239,13 @@ function MyStartupsPageInner() {
           )}
         >
           {items.map((it) => (
-            <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} compact={favOnly} />
+            <div key={it.id} className="relative">
+              <PublicationStatusBadge
+                startupRef={it.id}
+                className="absolute left-3 top-3 z-10 bg-background/95"
+              />
+              <StartupCard s={it} onClick={() => setModalId(it.id)} compact={favOnly} />
+            </div>
           ))}
         </div>
       ) : view === "list" ? (
@@ -290,7 +296,7 @@ function MyStartupsPageInner() {
                 ))}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
-            {selected ? <StartupDetailPanel id={selected} /> : <StartupDetailEmpty />}
+            {selected ? <StartupDetailPanel id={selected} showPublication /> : <StartupDetailEmpty />}
           </div>
         </div>
       )}
