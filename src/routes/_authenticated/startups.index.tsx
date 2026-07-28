@@ -21,6 +21,7 @@ import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
+import { isPublicationPreview, readPreviewPublication } from "@/lib/publication";
 import { cn } from "@/lib/utils";
 
 
@@ -82,9 +83,18 @@ function StartupsPageInner() {
   });
 
   const rawItems = data && "items" in data ? data.items : [];
+  // Preview-only, opt-in simulation. Never authoritative for the real directory:
+  // it is off by default, available only in preview mode, and never persists.
+  const [previewDirectoryFilter, setPreviewDirectoryFilter] = useState(false);
+  const baseItems = useMemo(() => {
+    if (!isPublicationPreview || !previewDirectoryFilter) return rawItems;
+    return rawItems.filter(
+      (it) => readPreviewPublication(it.id).status === "published",
+    );
+  }, [rawItems, previewDirectoryFilter]);
   const items = useMemo(
-    () => (favOnly ? rawItems.filter((it) => favIds.has(it.id)) : rawItems),
-    [rawItems, favOnly, favIds],
+    () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems),
+    [baseItems, favOnly, favIds],
   );
   const total = favOnly ? items.length : data && "total" in data ? data.total : 0;
   const pageCount = favOnly ? 1 : Math.max(1, Math.ceil(total / pageSize));
@@ -186,6 +196,27 @@ function StartupsPageInner() {
           <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
         </Button>
       </div>
+
+      {isPublicationPreview && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground">
+          <span>
+            <strong className="text-amber-700 dark:text-amber-400">Preview simulation</strong> —
+            non-persistent demonstration of directory publication. It does not change what the
+            real Startup Directory shows for anyone.
+          </span>
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={previewDirectoryFilter}
+              onChange={(e) => setPreviewDirectoryFilter(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            Show only preview-published startups
+          </label>
+        </div>
+      )}
+
+
 
       {isLoading && items.length === 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
