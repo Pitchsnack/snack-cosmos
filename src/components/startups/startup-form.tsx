@@ -120,7 +120,10 @@ function Pill({
 interface Props {
   /** When provided, the form is in edit mode. */
   startup?: StartupDetail;
+  /** Where to navigate after a successful create. Defaults to the new startup's detail page. */
+  redirectAfterCreate?: "detail" | "my-startups";
 }
+
 
 function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
   if (!startup) return EMPTY_MEDIA_STATE;
@@ -146,7 +149,7 @@ function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
   return { logo, slots };
 }
 
-export function StartupForm({ startup }: Props) {
+export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) {
   const isEdit = !!startup;
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -437,7 +440,12 @@ export function StartupForm({ startup }: Props) {
       toast.success("Startup created");
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
-      navigate({ to: "/startups/$id", params: { id: res.id } });
+      if (redirectAfterCreate === "my-startups") {
+        navigate({ to: "/my-startups" });
+      } else {
+        navigate({ to: "/startups/$id", params: { id: res.id } });
+      }
+
     },
     onError: (e: Error) => toast.error(e.message),
   });
