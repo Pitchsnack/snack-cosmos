@@ -149,7 +149,7 @@ function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
   return { logo, slots };
 }
 
-export function StartupForm({ startup }: Props) {
+export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) {
   const isEdit = !!startup;
   const navigate = useNavigate();
   const qc = useQueryClient();
