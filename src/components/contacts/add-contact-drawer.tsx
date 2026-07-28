@@ -108,22 +108,22 @@ export function AddContactDrawer({ open, onOpenChange, existingEmails = [], onSa
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className="flex w-full max-w-[640px] flex-col gap-0 p-0 sm:!max-w-[640px] sm:rounded-l-2xl"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl sm:rounded-l-2xl"
       >
         {/* Header (Sheet provides the close X in the top-right) */}
-        <div className="border-b border-border bg-card px-5 py-4 pr-14">
+        <div className="border-b border-border bg-card px-6 py-5 pr-14">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">Add Contact</h2>
           <p className="mt-1 text-sm text-muted-foreground">Add a new contact to your network.</p>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-5">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
             Contact Details
           </div>
 
-          <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field
               label="Full Name"
               required
@@ -189,7 +189,7 @@ export function AddContactDrawer({ open, onOpenChange, existingEmails = [], onSa
           </div>
 
           {/* Tags */}
-          <div className="mt-4">
+          <div className="mt-5">
             <Label className="mb-1.5 block text-sm font-medium text-foreground">Tags</Label>
             <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-md border border-input bg-background px-2 py-1.5 focus-within:ring-2 focus-within:ring-ring">
               {form.tags.map((t) => (
@@ -220,7 +220,7 @@ export function AddContactDrawer({ open, onOpenChange, existingEmails = [], onSa
           </div>
 
           {/* Notes */}
-          <div className="mt-4">
+          <div className="mt-5">
             <Label className="mb-1.5 block text-sm font-medium text-foreground">Notes</Label>
             <Textarea
               rows={4}
@@ -233,7 +233,7 @@ export function AddContactDrawer({ open, onOpenChange, existingEmails = [], onSa
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-border bg-card px-5 py-4">
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-card px-6 py-4">
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
