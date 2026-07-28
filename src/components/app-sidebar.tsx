@@ -43,6 +43,7 @@ type NavPath =
   | "/"
   | "/dashboard"
   | "/startups"
+  | "/my-startups"
   | "/investors"
   | "/deals"
   | "/shared-deals"
@@ -59,6 +60,7 @@ type NavPath =
   | "/my-page"
   | "/startup-activity"
   | "/contacts";
+
 
 type NavItem = {
   label: string;
@@ -77,6 +79,7 @@ const STARTUP_MENU_ORDER = [
   "Dashboard",
   "My Page",
   "Startup Activity",
+  "My Startups",
   "Startups Directory",
   "Connections",
   "Contacts",
@@ -86,12 +89,15 @@ const STARTUP_MENU_ORDER = [
   "Preferences",
 ];
 
+
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
 // rendered as disabled placeholders so each role's framework is visible.
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
+  { label: "My Startups", icon: Building2, path: "/my-startups", exact: false, perm: "startups.read" },
+
 
   {
     label: "Global Startups",
