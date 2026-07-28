@@ -43,7 +43,7 @@ const searchSchema = z.object({
   fav: z.coerce.boolean().optional(),
 });
 
-export const Route = createFileRoute("/_authenticated/my-startups")({
+export const Route = createFileRoute("/_authenticated/my-startups/")({
   head: () => ({
     meta: [
       { title: "My Startups — SnackPortal2" },
