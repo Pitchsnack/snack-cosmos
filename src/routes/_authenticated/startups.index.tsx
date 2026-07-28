@@ -197,6 +197,27 @@ function StartupsPageInner() {
         </Button>
       </div>
 
+      {isPublicationPreview && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground">
+          <span>
+            <strong className="text-amber-700 dark:text-amber-400">Preview simulation</strong> —
+            non-persistent demonstration of directory publication. It does not change what the
+            real Startup Directory shows for anyone.
+          </span>
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={previewDirectoryFilter}
+              onChange={(e) => setPreviewDirectoryFilter(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            Show only preview-published startups
+          </label>
+        </div>
+      )}
+
+
+
       {isLoading && items.length === 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
           {Array.from({ length: 8 }).map((_, i) => (
