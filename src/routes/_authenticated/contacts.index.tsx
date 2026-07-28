@@ -384,6 +384,7 @@ export function ContactsPage() {
   const [sort, setSort] = useState("recent");
   const [selectedId, setSelectedId] = useState<string | null>("c1");
   const [copied, setCopied] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
