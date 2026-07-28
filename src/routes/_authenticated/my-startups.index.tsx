@@ -259,7 +259,13 @@ function MyStartupsPageInner() {
         ) : (
           <div className="space-y-2">
             {items.map((it) => (
-              <StartupRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
+              <div key={it.id} className="relative">
+                <PublicationStatusBadge
+                  startupRef={it.id}
+                  className="absolute right-3 top-3 z-10 bg-background/95"
+                />
+                <StartupRow s={it} onSelect={() => setModalId(it.id)} />
+              </div>
             ))}
           </div>
         )
@@ -343,7 +349,7 @@ function MyStartupModalBody({ modalId, onClose }: { modalId: string | null; onCl
         </DialogClose>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
-        {modalId && <StartupDetailPanel id={modalId} showEdit compact onClose={onClose} />}
+        {modalId && <StartupDetailPanel id={modalId} showEdit compact showPublication onClose={onClose} />}
       </div>
     </div>
   );
