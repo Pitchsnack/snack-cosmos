@@ -151,6 +151,7 @@ function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
 
 export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) {
   const isEdit = !!startup;
+  const isMyStartupsCreate = !isEdit && redirectAfterCreate === "my-startups";
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
@@ -257,7 +258,7 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
 
   // Status/visibility (create only)
   const [status, setStatus] = useState<string>(startup?.status ?? "Draft");
-  const [visibility, setVisibility] = useState<string>(startup?.visibility ?? "Tenant");
+  const [visibility, setVisibility] = useState<string>(startup?.visibility ?? (isMyStartupsCreate ? "Private" : "Tenant"));
 
   // Investor Relationships (V3) — staged in local UI state until Save.
   //
@@ -331,8 +332,20 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
     enabled: ownershipEnabled,
   });
-  const humanOptions =
+  const baseHumanOptions =
     !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive ? (humansQ.data ?? []) : [];
+  const currentHumanOption = principalRef
+    ? {
+        id: principalRef,
+        email: session?.user?.email ?? "Current user",
+        first_name: session?.user?.firstName ?? null,
+        last_name: session?.user?.lastName ?? null,
+      }
+    : null;
+  const humanOptions =
+    isMyStartupsCreate && currentHumanOption && !baseHumanOptions.some((u) => u.id === principalRef)
+      ? [currentHumanOption, ...baseHumanOptions]
+      : baseHumanOptions;
   const aiOptions =
     !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive ? (aisQ.data ?? []) : [];
   const noAi = !aisQ.isLoading && aiOptions.length === 0;
@@ -346,13 +359,13 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
     setOwningAi("");
   }, [isEdit, tenantId, tenantMatchesActive]);
 
-  // My Startups flow: default the human Owning Agent to the current user so the
-  // created startup immediately appears in /my-startups (which filters on ownership).
+  // My Startups flow: force the human Owning Agent to the current user so the
+  // created startup immediately remains visible in /my-startups. This does not
+  // rely on created_by and does not change backend ownership/RLS contracts.
   useEffect(() => {
-    if (isEdit || redirectAfterCreate !== "my-startups") return;
-    if (!principalRef || owningAgentUserId) return;
-    if (humanOptions.some((u) => u.id === principalRef)) setOwningAgent(principalRef);
-  }, [isEdit, redirectAfterCreate, principalRef, owningAgentUserId, humanOptions]);
+    if (!isMyStartupsCreate || !principalRef) return;
+    if (owningAgentUserId !== principalRef) setOwningAgent(principalRef);
+  }, [isMyStartupsCreate, principalRef, owningAgentUserId]);
 
 
   const toggle = (arr: string[], v: string) =>
@@ -429,7 +442,7 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
           longDescription: longDescription || null,
           status: status as never,
           visibility: visibility as never,
-          owningAgentUserId,
+          owningAgentUserId: isMyStartupsCreate && principalRef ? principalRef : owningAgentUserId,
           owningAiAgentId,
           logoPath: null,
           media: [],
@@ -1142,7 +1155,11 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
           <DefaultIntakeOwnershipModeSection
             domain="startup"
             className="mb-4"
-            helperText="This Startup will be assigned temporarily to the Startup Intake team and added to the Default Intake Queue."
+            helperText={
+              isMyStartupsCreate
+                ? "My Startups keeps you as the Owning Agent so this private profile remains visible in My Startups."
+                : "This Startup will be assigned temporarily to the Startup Intake team and added to the Default Intake Queue."
+            }
           />
           <h3 className="text-sm font-semibold">Ownership (required)</h3>
           <p className="mb-3 text-xs text-muted-foreground">
@@ -1151,7 +1168,7 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Owning Agent <span className="text-destructive">*</span></Label>
-              <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={!tenantId || (WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
+              <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={isMyStartupsCreate || !tenantId || (WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
                 <SelectTrigger>
                   <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
                 </SelectTrigger>
@@ -1163,6 +1180,11 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
                   ))}
                 </SelectContent>
               </Select>
+              {isMyStartupsCreate && (
+                <p className="text-xs text-muted-foreground">
+                  Locked to your account for My Startups visibility.
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
