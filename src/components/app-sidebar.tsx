@@ -79,6 +79,7 @@ const STARTUP_MENU_ORDER = [
   "Dashboard",
   "My Page",
   "Startup Activity",
+  "My Startups",
   "Startups Directory",
   "Connections",
   "Contacts",
@@ -87,6 +88,7 @@ const STARTUP_MENU_ORDER = [
   "Notifications",
   "Preferences",
 ];
+
 
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
 // rendered as disabled placeholders so each role's framework is visible.
