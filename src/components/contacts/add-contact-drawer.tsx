@@ -108,7 +108,7 @@ export function AddContactDrawer({ open, onOpenChange, existingEmails = [], onSa
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-[640px] sm:rounded-l-2xl"
+        className="flex w-full max-w-[640px] flex-col gap-0 p-0 sm:!max-w-[640px] sm:rounded-l-2xl"
       >
         {/* Header (Sheet provides the close X in the top-right) */}
         <div className="border-b border-border bg-card px-5 py-4 pr-14">
