@@ -23,7 +23,6 @@ import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
-import { Route as AuthenticatedMyStartupsRouteImport } from './routes/_authenticated/my-startups'
 import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
@@ -35,6 +34,7 @@ import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authenticated/startups.index'
 import { Route as AuthenticatedSharedDealsIndexRouteImport } from './routes/_authenticated/shared-deals.index'
+import { Route as AuthenticatedMyStartupsIndexRouteImport } from './routes/_authenticated/my-startups.index'
 import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authenticated/investors.index'
 import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
 import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
@@ -130,11 +130,6 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedMyStartupsRoute = AuthenticatedMyStartupsRouteImport.update({
-  id: '/my-startups',
-  path: '/my-startups',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedMyPageRoute = AuthenticatedMyPageRouteImport.update({
   id: '/my-page',
   path: '/my-page',
@@ -195,6 +190,12 @@ const AuthenticatedSharedDealsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedSharedDealsRoute,
   } as any)
+const AuthenticatedMyStartupsIndexRoute =
+  AuthenticatedMyStartupsIndexRouteImport.update({
+    id: '/my-startups/',
+    path: '/my-startups/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedInvestorsIndexRoute =
   AuthenticatedInvestorsIndexRouteImport.update({
     id: '/',
@@ -243,9 +244,9 @@ const AuthenticatedSettingsDefaultIntakeRoute =
   } as any)
 const AuthenticatedMyStartupsNewRoute =
   AuthenticatedMyStartupsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedMyStartupsRoute,
+    id: '/my-startups/new',
+    path: '/my-startups/new',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedInvestorsNewRoute =
   AuthenticatedInvestorsNewRouteImport.update({
@@ -333,7 +334,6 @@ export interface FileRoutesByFullPath {
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/my-page': typeof AuthenticatedMyPageRoute
-  '/my-startups': typeof AuthenticatedMyStartupsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
@@ -358,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/deals/': typeof AuthenticatedDealsIndexRoute
   '/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
   '/investors/': typeof AuthenticatedInvestorsIndexRoute
+  '/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/startups/': typeof AuthenticatedStartupsIndexRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
@@ -377,7 +378,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/my-page': typeof AuthenticatedMyPageRoute
-  '/my-startups': typeof AuthenticatedMyStartupsRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
@@ -398,6 +398,7 @@ export interface FileRoutesByTo {
   '/deals': typeof AuthenticatedDealsIndexRoute
   '/global-startups': typeof AuthenticatedGlobalStartupsIndexRoute
   '/investors': typeof AuthenticatedInvestorsIndexRoute
+  '/my-startups': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals': typeof AuthenticatedSharedDealsIndexRoute
   '/startups': typeof AuthenticatedStartupsIndexRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
@@ -422,7 +423,6 @@ export interface FileRoutesById {
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
-  '/_authenticated/my-startups': typeof AuthenticatedMyStartupsRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
@@ -448,6 +448,7 @@ export interface FileRoutesById {
   '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
   '/_authenticated/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
   '/_authenticated/investors/': typeof AuthenticatedInvestorsIndexRoute
+  '/_authenticated/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/_authenticated/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/_authenticated/startups/': typeof AuthenticatedStartupsIndexRoute
   '/_authenticated/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
@@ -473,7 +474,6 @@ export interface FileRouteTypes {
     | '/intake-queue'
     | '/investors'
     | '/my-page'
-    | '/my-startups'
     | '/notifications'
     | '/preferences'
     | '/security'
@@ -498,6 +498,7 @@ export interface FileRouteTypes {
     | '/deals/'
     | '/global-startups/'
     | '/investors/'
+    | '/my-startups/'
     | '/shared-deals/'
     | '/startups/'
     | '/investors/$id/edit'
@@ -517,7 +518,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/intake-queue'
     | '/my-page'
-    | '/my-startups'
     | '/notifications'
     | '/preferences'
     | '/security'
@@ -538,6 +538,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/global-startups'
     | '/investors'
+    | '/my-startups'
     | '/shared-deals'
     | '/startups'
     | '/investors/$id/edit'
@@ -561,7 +562,6 @@ export interface FileRouteTypes {
     | '/_authenticated/intake-queue'
     | '/_authenticated/investors'
     | '/_authenticated/my-page'
-    | '/_authenticated/my-startups'
     | '/_authenticated/notifications'
     | '/_authenticated/preferences'
     | '/_authenticated/security'
@@ -587,6 +587,7 @@ export interface FileRouteTypes {
     | '/_authenticated/deals/'
     | '/_authenticated/global-startups/'
     | '/_authenticated/investors/'
+    | '/_authenticated/my-startups/'
     | '/_authenticated/shared-deals/'
     | '/_authenticated/startups/'
     | '/_authenticated/investors/$id/edit'
@@ -705,13 +706,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/my-startups': {
-      id: '/_authenticated/my-startups'
-      path: '/my-startups'
-      fullPath: '/my-startups'
-      preLoaderRoute: typeof AuthenticatedMyStartupsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/my-page': {
       id: '/_authenticated/my-page'
       path: '/my-page'
@@ -789,6 +783,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSharedDealsIndexRouteImport
       parentRoute: typeof AuthenticatedSharedDealsRoute
     }
+    '/_authenticated/my-startups/': {
+      id: '/_authenticated/my-startups/'
+      path: '/my-startups'
+      fullPath: '/my-startups/'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/investors/': {
       id: '/_authenticated/investors/'
       path: '/'
@@ -847,10 +848,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/my-startups/new': {
       id: '/_authenticated/my-startups/new'
-      path: '/new'
+      path: '/my-startups/new'
       fullPath: '/my-startups/new'
       preLoaderRoute: typeof AuthenticatedMyStartupsNewRouteImport
-      parentRoute: typeof AuthenticatedMyStartupsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/investors/new': {
       id: '/_authenticated/investors/new'
@@ -1014,20 +1015,6 @@ const AuthenticatedInvestorsRouteWithChildren =
     AuthenticatedInvestorsRouteChildren,
   )
 
-interface AuthenticatedMyStartupsRouteChildren {
-  AuthenticatedMyStartupsNewRoute: typeof AuthenticatedMyStartupsNewRoute
-}
-
-const AuthenticatedMyStartupsRouteChildren: AuthenticatedMyStartupsRouteChildren =
-  {
-    AuthenticatedMyStartupsNewRoute: AuthenticatedMyStartupsNewRoute,
-  }
-
-const AuthenticatedMyStartupsRouteWithChildren =
-  AuthenticatedMyStartupsRoute._addFileChildren(
-    AuthenticatedMyStartupsRouteChildren,
-  )
-
 interface AuthenticatedSharedDealsRouteChildren {
   AuthenticatedSharedDealsIdRoute: typeof AuthenticatedSharedDealsIdRoute
   AuthenticatedSharedDealsIndexRoute: typeof AuthenticatedSharedDealsIndexRoute
@@ -1087,7 +1074,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
-  AuthenticatedMyStartupsRoute: typeof AuthenticatedMyStartupsRouteWithChildren
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
@@ -1098,8 +1084,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedGlobalStartupsIdRoute: typeof AuthenticatedGlobalStartupsIdRoute
   AuthenticatedGlobalStartupsBrowseRoute: typeof AuthenticatedGlobalStartupsBrowseRoute
+  AuthenticatedMyStartupsNewRoute: typeof AuthenticatedMyStartupsNewRoute
   AuthenticatedSettingsDefaultIntakeRoute: typeof AuthenticatedSettingsDefaultIntakeRoute
   AuthenticatedGlobalStartupsIndexRoute: typeof AuthenticatedGlobalStartupsIndexRoute
+  AuthenticatedMyStartupsIndexRoute: typeof AuthenticatedMyStartupsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1112,7 +1100,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
-  AuthenticatedMyStartupsRoute: AuthenticatedMyStartupsRouteWithChildren,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
@@ -1124,9 +1111,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedGlobalStartupsIdRoute: AuthenticatedGlobalStartupsIdRoute,
   AuthenticatedGlobalStartupsBrowseRoute:
     AuthenticatedGlobalStartupsBrowseRoute,
+  AuthenticatedMyStartupsNewRoute: AuthenticatedMyStartupsNewRoute,
   AuthenticatedSettingsDefaultIntakeRoute:
     AuthenticatedSettingsDefaultIntakeRoute,
   AuthenticatedGlobalStartupsIndexRoute: AuthenticatedGlobalStartupsIndexRoute,
+  AuthenticatedMyStartupsIndexRoute: AuthenticatedMyStartupsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -1144,3 +1133,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
