@@ -82,6 +82,10 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
           </DialogHeader>
 
           <div className="space-y-5 px-6 py-5">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Contact Details
+            </h3>
+
             {/* Row 1: Full Name / Work Email */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -139,15 +143,23 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
               </div>
             </div>
 
-            {/* Row 3: Role/Dept / Organisation */}
+            {/* Row 3: Role/Dept */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="ac-role">Role or Department</Label>
                 <div className="relative">
                   <FieldIcon Icon={UsersIcon} />
                   <Input id="ac-role" placeholder="Enter role or department" className="pl-9" maxLength={120} />
                 </div>
               </div>
+            </div>
+
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Organisation Details
+            </h3>
+
+            {/* Row 4: Organisation / Website */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="ac-org">Organisation Name</Label>
                 <div className="relative">
@@ -155,10 +167,6 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                   <Input id="ac-org" placeholder="Enter organisation name" className="pl-9" maxLength={160} />
                 </div>
               </div>
-            </div>
-
-            {/* Row 4: Website / Location */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="ac-website">Website</Label>
                 <div className="relative">
@@ -166,7 +174,11 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                   <Input id="ac-website" placeholder="Enter website URL" className="pl-9" maxLength={255} />
                 </div>
               </div>
-              <div className="space-y-1.5">
+            </div>
+
+            {/* Row 5: Location */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="ac-location">Location</Label>
                 <div className="relative">
                   <FieldIcon Icon={MapPin} />
