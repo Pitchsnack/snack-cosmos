@@ -435,7 +435,7 @@ export function ContactsPage() {
             </Link>
           </Button>
           <div className="flex">
-            <Button className="rounded-r-none">
+            <Button className="rounded-r-none" onClick={() => setAddOpen(true)}>
               <Plus className="mr-1 h-4 w-4" />
               Add Contact
             </Button>
