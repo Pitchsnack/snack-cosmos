@@ -440,7 +440,12 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
       toast.success("Startup created");
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
-      navigate({ to: "/startups/$id", params: { id: res.id } });
+      if (redirectAfterCreate === "my-startups") {
+        navigate({ to: "/my-startups" });
+      } else {
+        navigate({ to: "/startups/$id", params: { id: res.id } });
+      }
+
     },
     onError: (e: Error) => toast.error(e.message),
   });
