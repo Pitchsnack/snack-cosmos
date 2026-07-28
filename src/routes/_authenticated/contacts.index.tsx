@@ -57,7 +57,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { AddContactDrawer } from "@/components/contacts/add-contact-drawer";
 
 export const Route = createFileRoute("/_authenticated/contacts/")({
   head: () => ({
@@ -384,7 +383,6 @@ export function ContactsPage() {
   const [sort, setSort] = useState("recent");
   const [selectedId, setSelectedId] = useState<string | null>("c1");
   const [copied, setCopied] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -435,7 +433,7 @@ export function ContactsPage() {
             </Link>
           </Button>
           <div className="flex">
-            <Button className="rounded-r-none" onClick={() => setAddOpen(true)}>
+            <Button className="rounded-r-none">
               <Plus className="mr-1 h-4 w-4" />
               Add Contact
             </Button>
@@ -449,7 +447,7 @@ export function ContactsPage() {
                 <DropdownMenuItem asChild>
                   <Link to="/contacts/quick-add">Quick Add (scan business card)</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setAddOpen(true)}>Add contact manually</DropdownMenuItem>
+                <DropdownMenuItem>Add contact manually</DropdownMenuItem>
                 <DropdownMenuItem>Import contacts</DropdownMenuItem>
                 <DropdownMenuItem>Create contact list</DropdownMenuItem>
               </DropdownMenuContent>
@@ -966,11 +964,6 @@ export function ContactsPage() {
           )}
         </div>
       </div>
-      <AddContactDrawer
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        existingEmails={CONTACTS.map((c) => c.email)}
-      />
     </div>
   );
 }
