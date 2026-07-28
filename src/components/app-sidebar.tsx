@@ -43,6 +43,7 @@ type NavPath =
   | "/"
   | "/dashboard"
   | "/startups"
+  | "/my-startups"
   | "/investors"
   | "/deals"
   | "/shared-deals"
@@ -59,6 +60,7 @@ type NavPath =
   | "/my-page"
   | "/startup-activity"
   | "/contacts";
+
 
 type NavItem = {
   label: string;
