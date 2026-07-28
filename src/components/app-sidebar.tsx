@@ -77,7 +77,7 @@ const STARTUP_MENU_ORDER = [
   "Dashboard",
   "My Page",
   "Startup Activity",
-  "Startups",
+  "Startups Directory",
   "Connections",
   "Contacts",
   "Communications",
@@ -91,7 +91,7 @@ const STARTUP_MENU_ORDER = [
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
-  { label: "Startups", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
+  { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
 
   {
     label: "Global Startups",
