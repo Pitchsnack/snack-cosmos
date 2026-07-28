@@ -154,7 +154,8 @@ function MyStartupsPageInner() {
           />
           {has("startups.write") && (
             <Button
-              onClick={() => navigate({ to: "/startups/new" })}
+              onClick={() => navigate({ to: "/my-startups/new" })}
+
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               <Plus className="mr-2 h-4 w-4" /> Add my startup
@@ -218,7 +219,7 @@ function MyStartupsPageInner() {
           {has("startups.write") && (
             <Button
               size="sm"
-              onClick={() => navigate({ to: "/startups/new" })}
+              onClick={() => navigate({ to: "/my-startups/new" })}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               <Plus className="mr-2 h-4 w-4" /> Add my startup
