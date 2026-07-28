@@ -1,12 +1,38 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import {
   publicationAdapter,
   isPublicationPreview,
   subscribePreviewPublications,
+  readPreviewPublication,
   type DirectoryProjection,
   type PublicationStatus,
   type StartupPublication,
 } from "@/lib/publication";
+
+/**
+ * Re-renders whenever session-scoped preview publication state changes.
+ * Returns a monotonic version token; preview-only, never persistent.
+ */
+export function usePreviewPublicationVersion(): number {
+  return useSyncExternalStore(
+    (cb) => (isPublicationPreview ? subscribePreviewPublications(cb) : () => {}),
+    () => previewVersion,
+    () => 0,
+  );
+}
+
+let previewVersion = 0;
+if (isPublicationPreview) {
+  subscribePreviewPublications(() => {
+    previewVersion += 1;
+  });
+}
+
+/** Preview-only directory visibility check. */
+export function isPreviewPublished(startupRef: string): boolean {
+  return isPublicationPreview && readPreviewPublication(startupRef).status === "published";
+}
+
 
 export interface UsePublicationResult {
   status: PublicationStatus;

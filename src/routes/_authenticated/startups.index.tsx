@@ -21,7 +21,12 @@ import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
-import { isPublicationPreview, readPreviewPublication } from "@/lib/publication";
+import {
+  isPublicationPreview,
+  readPreviewPublication,
+  PREVIEW_DISCLAIMER,
+} from "@/lib/publication";
+import { usePreviewPublicationVersion } from "@/hooks/use-publication";
 import { cn } from "@/lib/utils";
 
 
@@ -86,12 +91,14 @@ function StartupsPageInner() {
   // Preview-only, opt-in simulation. Never authoritative for the real directory:
   // it is off by default, available only in preview mode, and never persists.
   const [previewDirectoryFilter, setPreviewDirectoryFilter] = useState(false);
+  const previewVersion = usePreviewPublicationVersion();
   const baseItems = useMemo(() => {
     if (!isPublicationPreview || !previewDirectoryFilter) return rawItems;
+    void previewVersion; // re-evaluate when session preview state changes
     return rawItems.filter(
       (it) => readPreviewPublication(it.id).status === "published",
     );
-  }, [rawItems, previewDirectoryFilter]);
+  }, [rawItems, previewDirectoryFilter, previewVersion]);
   const items = useMemo(
     () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems),
     [baseItems, favOnly, favIds],
@@ -198,18 +205,21 @@ function StartupsPageInner() {
       </div>
 
       {isPublicationPreview && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground">
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground"
+        >
           <span>
-            <strong className="text-amber-700 dark:text-amber-400">Preview simulation</strong> —
-            non-persistent demonstration of directory publication. It does not change what the
-            real Startup Directory shows for anyone.
+            <strong className="text-amber-700 dark:text-amber-400">Preview mode</strong> —{" "}
+            {PREVIEW_DISCLAIMER} It does not change what the real Startup Directory shows for
+            anyone.
           </span>
-          <label className="inline-flex items-center gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-2">
             <input
               type="checkbox"
               checked={previewDirectoryFilter}
               onChange={(e) => setPreviewDirectoryFilter(e.target.checked)}
-              className="h-3.5 w-3.5"
+              className="h-3.5 w-3.5 cursor-pointer accent-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             Show only preview-published startups
           </label>

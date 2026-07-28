@@ -17,6 +17,10 @@ import type {
   StartupRef,
 } from "./types";
 
+/** Required, user-visible disclosure for preview-mode publication. */
+export const PREVIEW_DISCLAIMER =
+  "Preview mode: publication changes are temporary and apply only to this session. Persistent publication will be enabled after the backend publication service is connected.";
+
 const store = new Map<StartupRef, StartupPublication>();
 const listeners = new Set<() => void>();
 
@@ -52,8 +56,7 @@ export function readPreviewPublication(startupRef: StartupRef): StartupPublicati
 export const previewPublicationAdapter: PublicationAdapter = {
   mode: "preview",
   canMutate: true,
-  previewNotice:
-    "Preview mode — publication is a non-persistent demonstration. Nothing is saved, shared with other users, or written to the directory.",
+  previewNotice: PREVIEW_DISCLAIMER,
 
   async getStatus(startupRef) {
     return { kind: "ok", data: read(startupRef) };

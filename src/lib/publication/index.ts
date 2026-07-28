@@ -37,5 +37,9 @@ export const isPublicationPreview = PUBLICATION_MODE === "preview";
 
 export * from "./types";
 export { toDirectoryProjection, DIRECTORY_PROJECTION_ALLOWLIST } from "./projection";
-export { subscribePreviewPublications, readPreviewPublication } from "./preview-adapter";
+export {
+  subscribePreviewPublications,
+  readPreviewPublication,
+  PREVIEW_DISCLAIMER,
+} from "./preview-adapter";
 export { PUBLICATION_CAPABILITY_UNAVAILABLE } from "./gateway-adapter";
