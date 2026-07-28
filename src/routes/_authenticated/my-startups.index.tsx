@@ -21,6 +21,8 @@ import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
+import { PublicationStatusBadge } from "@/components/startups/publication-actions";
+import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { cn } from "@/lib/utils";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
@@ -86,14 +88,15 @@ function MyStartupsPageInner() {
   });
 
   const rawItems = data && "items" in data ? data.items : [];
-  const mineItems = useMemo(() => {
-    if (!meId) return rawItems;
-    // Startup users are already scoped by RLS to their startups.
-    if (isStartupUser) return rawItems;
-    return rawItems.filter(
-      (it) => it.owning_agent?.id === meId || it.owning_ai_agent?.id === meId,
-    );
-  }, [rawItems, meId, isStartupUser]);
+  // Membership uses approved ownership relationships ONLY.
+  // `created_by` is audit metadata and is never part of this predicate.
+  // Publication status never affects membership (private/published/unpublished
+  // founder-owned startups all stay here). See src/lib/publication/my-startups-membership.ts
+  // for the documented missing founder-relationship and creation-origin contracts.
+  const mineItems = useMemo(
+    () => selectMyStartups(rawItems, meId, isStartupUser),
+    [rawItems, meId, isStartupUser],
+  );
 
   const items = useMemo(
     () => (favOnly ? mineItems.filter((it) => favIds.has(it.id)) : mineItems),
