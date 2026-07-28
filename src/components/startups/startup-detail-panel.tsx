@@ -261,6 +261,15 @@ export function StartupDetailPanel({
         </div>
       </header>
 
+      {showPublication && (
+        <PublicationActions
+          startup={s as unknown as Parameters<typeof PublicationActions>[0]["startup"]}
+          canPublish={canManage}
+        />
+      )}
+
+
+
       <AlertDialog open={confirm === "archive"} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
