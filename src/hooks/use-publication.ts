@@ -42,7 +42,10 @@ export function usePublication(startupRef: string | undefined): UsePublicationRe
   useEffect(() => {
     void load();
     if (!isPublicationPreview) return;
-    return subscribePreviewPublications(() => void load());
+    const unsub = subscribePreviewPublications(() => void load());
+    return () => {
+      unsub();
+    };
   }, [load]);
 
   const run = useCallback(
