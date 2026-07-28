@@ -135,3 +135,15 @@ export function PublicationActions({
     </div>
   );
 }
+
+/** Small status-only badge bound to the publication adapter. */
+export function PublicationStatusBadge({
+  startupRef,
+  className,
+}: {
+  startupRef: string;
+  className?: string;
+}) {
+  const pub = usePublication(startupRef);
+  return <PublicationBadge status={pub.status} className={className} />;
+}
