@@ -133,6 +133,11 @@ export function PublicationActions({
                 </ul>
               )}
             </AlertDialogDescription>
+            {isPublicationPreview && (
+              <p className="rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+                {PREVIEW_DISCLAIMER}
+              </p>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pub.isPending}>Cancel</AlertDialogCancel>
