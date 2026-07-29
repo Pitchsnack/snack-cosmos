@@ -114,7 +114,7 @@ const NAV_ITEMS: NavItem[] = [
     perm: "global_startups.import",
   },
   { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
-  { label: "Connections", icon: Network, path: "/connections", exact: false },
+  { label: "My Connections", icon: Network, path: "/connections", exact: false },
   { label: "Contacts", icon: ContactIcon, path: "/contacts", exact: false },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
 
