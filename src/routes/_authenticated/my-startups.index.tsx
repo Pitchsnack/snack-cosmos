@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X, Star, Building2 } from "lucide-react";
 import { z } from "zod";
