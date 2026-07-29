@@ -81,17 +81,28 @@ function StartupsPageInner() {
 
   const pageSize = favOnly ? 100 : view === "split" ? 50 : view === "list" ? 25 : 24;
 
-  const { data, isLoading, isFetching, refetch } = useStartups({
-    search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
-    companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
-    sort, page: favOnly ? 1 : page, pageSize,
-  });
-
-  const rawItems = data && "items" in data ? data.items : [];
   // Preview-only, opt-in simulation. Never authoritative for the real directory:
   // it is off by default, available only in preview mode, and never persists.
   const [previewDirectoryFilter, setPreviewDirectoryFilter] = useState(false);
   const previewVersion = usePreviewPublicationVersion();
+  // Session-scoped preview publications are the ONLY way a Private founder-owned
+  // startup may enter this list, and only in explicitly labelled preview mode.
+  const allowPrivateRefs = useMemo(() => {
+    void previewVersion;
+    return isPublicationPreview ? listPreviewPublishedRefs() : [];
+  }, [previewVersion]);
+
+  const { data, isLoading, isFetching, refetch } = useStartups({
+    search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
+    companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
+    sort, page: favOnly ? 1 : page, pageSize,
+    // Directory read model: Private records are excluded by the query itself,
+    // not hidden after rendering.
+    scope: "directory",
+    allowPrivateRefs,
+  });
+
+  const rawItems = data && "items" in data ? data.items : [];
   const baseItems = useMemo(() => {
     if (!isPublicationPreview || !previewDirectoryFilter) return rawItems;
     void previewVersion; // re-evaluate when session preview state changes
