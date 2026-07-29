@@ -197,14 +197,8 @@ export function StartupDetailPanel({
               >
                 <Share2 className="h-3.5 w-3.5" /> Share Info
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                aria-label="Add to watchlist"
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
+              <FavoriteToggle id={id} size="md" className="h-8 w-8" />
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
