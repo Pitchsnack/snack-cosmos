@@ -30,8 +30,6 @@ export function StartupRow({
   onSelect: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const { isFavorite, toggle } = useFavoriteStartups();
-  const bookmarked = isFavorite(s.id);
 
 
   return (

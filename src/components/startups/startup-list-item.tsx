@@ -40,8 +40,6 @@ export function StartupListItem({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
-  const { isFavorite, toggle } = useFavoriteStartups();
-  const bookmarked = isFavorite(s.id);
   const [expanded, setExpanded] = useState(false);
 
 
