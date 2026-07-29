@@ -40,6 +40,7 @@ export { toDirectoryProjection, DIRECTORY_PROJECTION_ALLOWLIST } from "./project
 export {
   subscribePreviewPublications,
   readPreviewPublication,
+  listPreviewPublishedRefs,
   PREVIEW_DISCLAIMER,
 } from "./preview-adapter";
 export { PUBLICATION_CAPABILITY_UNAVAILABLE } from "./gateway-adapter";
