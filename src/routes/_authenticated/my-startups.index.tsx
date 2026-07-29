@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X, Star, Building2 } from "lucide-react";
 import { z } from "zod";
@@ -9,7 +9,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
@@ -76,8 +75,10 @@ function MyStartupsPageInner() {
   const view = s.view ?? "grid";
   const selected = s.selected;
   const favOnly = !!s.fav;
-  const [modalId, setModalId] = useState<string | null>(null);
   const { ids: favIds } = useFavoriteStartups();
+
+  const openStartup = (id: string) =>
+    navigate({ to: "/my-startups/$id", params: { id } });
 
   const pageSize = 100; // fetch enough to filter client-side to mine
 
@@ -245,7 +246,7 @@ function MyStartupsPageInner() {
                 startupRef={it.id}
                 className="absolute left-3 top-3 z-10 bg-background/95"
               />
-              <StartupCard s={it} onClick={() => setModalId(it.id)} compact={favOnly} />
+              <StartupCard s={it} onClick={() => openStartup(it.id)} compact={favOnly} />
             </div>
           ))}
         </div>
@@ -254,7 +255,7 @@ function MyStartupsPageInner() {
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
             <FavoriteListHeader />
             {items.map((it) => (
-              <FavoriteListRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
+              <FavoriteListRow key={it.id} s={it} onSelect={() => openStartup(it.id)} />
             ))}
           </div>
         ) : (
@@ -265,7 +266,7 @@ function MyStartupsPageInner() {
                   startupRef={it.id}
                   className="absolute right-3 top-3 z-10 bg-background/95"
                 />
-                <StartupRow s={it} onSelect={() => setModalId(it.id)} />
+                <StartupRow s={it} onSelect={() => openStartup(it.id)} />
               </div>
             ))}
           </div>
@@ -303,55 +304,13 @@ function MyStartupsPageInner() {
                 ))}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
-            {selected ? <StartupDetailPanel id={selected} showPublication /> : <StartupDetailEmpty />}
+            {selected ? <StartupDetailPanel id={selected} showPublication workspace="my-startups" /> : <StartupDetailEmpty />}
           </div>
         </div>
       )}
 
-      <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
-        <DialogContent
-          className={cn(
-            "[&>button]:hidden",
-            "p-0 gap-0 flex flex-col overflow-hidden",
-            "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
-            "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
-          )}
-        >
-          <MyStartupModalBody modalId={modalId} onClose={() => setModalId(null)} />
-        </DialogContent>
-      </Dialog>
       {/* Keep unused paging variable silenced */}
       <span className="hidden">{page}</span>
-    </div>
-  );
-}
-
-function MyStartupModalBody({ modalId, onClose }: { modalId: string | null; onClose: () => void }) {
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const visible = hovered || focused;
-  return (
-    <div
-      className="relative flex flex-1 flex-col overflow-hidden"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="relative shrink-0 h-10">
-        <DialogClose
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          aria-label="Close"
-          className={cn(
-            "absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            visible ? "opacity-100" : "opacity-0 pointer-events-none",
-          )}
-        >
-          <X className="h-4 w-4" />
-        </DialogClose>
-      </div>
-      <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
-        {modalId && <StartupDetailPanel id={modalId} showEdit compact showPublication onClose={onClose} />}
-      </div>
     </div>
   );
 }

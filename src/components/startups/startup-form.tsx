@@ -123,6 +123,8 @@ interface Props {
   startup?: StartupDetail;
   /** Where to navigate after a successful create. Defaults to the new startup's detail page. */
   redirectAfterCreate?: "detail" | "my-startups";
+  /** Which module owns this form — keeps post-save navigation inside that module. */
+  workspace?: "startups" | "my-startups";
 }
 
 
@@ -150,8 +152,9 @@ function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
   return { logo, slots };
 }
 
-export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) {
+export function StartupForm({ startup, redirectAfterCreate = "detail", workspace = "startups" }: Props) {
   const isEdit = !!startup;
+  const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
   const isMyStartupsCreate = !isEdit && redirectAfterCreate === "my-startups";
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -464,7 +467,7 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
       if (redirectAfterCreate === "my-startups") {
-        navigate({ to: "/my-startups" });
+        navigate({ to: "/my-startups/$id", params: { id: res.id } });
       } else {
         navigate({ to: "/startups/$id", params: { id: res.id } });
       }
@@ -499,7 +502,11 @@ export function StartupForm({ startup, redirectAfterCreate = "detail" }: Props) 
       qc.invalidateQueries({ queryKey: ["startup", startup!.id] });
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
-      navigate({ to: "/startups/$id", params: { id: startup!.id } });
+      if (isMyWorkspace) {
+        navigate({ to: "/my-startups/$id", params: { id: startup!.id } });
+      } else {
+        navigate({ to: "/startups/$id", params: { id: startup!.id } });
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
