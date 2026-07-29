@@ -97,15 +97,6 @@ function MyStartupsPageInner() {
     () => selectMyStartups(rawItems, meId, isStartupUser),
     [rawItems, meId, isStartupUser],
   );
-  if (typeof window !== "undefined") {
-    (window as unknown as Record<string, unknown>).__MY_STARTUPS_DEBUG = {
-      meId,
-      isStartupUser,
-      raw: rawItems.length,
-      mine: mineItems.length,
-      owners: rawItems.slice(0, 5).map((r) => ({ n: r.startup_name, o: r.owning_agent?.id ?? null })),
-    };
-  }
 
 
   const items = useMemo(
