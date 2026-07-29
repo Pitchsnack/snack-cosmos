@@ -236,8 +236,9 @@ export const listStartups = createServerFn({ method: "GET" })
     const signed = await signMany(supabase, [...logoPaths, ...tilePaths]);
 
     const items: StartupListItem[] = list.map((r) => {
-      const own = r.startup_ownership?.[0]?.users ?? null;
-      const aiOwn = r.startup_ai_ownership?.[0]?.users ?? null;
+      const own = firstEmbed(r.startup_ownership)?.users ?? null;
+      const aiOwn = firstEmbed(r.startup_ai_ownership)?.users ?? null;
+
       const tilePath = tileBySid[r.id];
       const related_investors = (r.startup_investors ?? [])
         .map((l) => l.investors)
