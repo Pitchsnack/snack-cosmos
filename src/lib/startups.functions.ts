@@ -196,23 +196,26 @@ export const listStartups = createServerFn({ method: "GET" })
     const { data: rows, error, count } = await q;
     if (error) throw new Error(error.message);
 
+    type EmbeddedUser = { id: string; email: string; first_name: string | null; last_name: string | null } | null;
+    type OwnEmbed = { owning_agent_user_id: string; users: EmbeddedUser };
+    type AiOwnEmbed = { owning_ai_agent_id: string; users: EmbeddedUser };
+
+    /** PostgREST returns to-one embeds as an object and to-many as an array. Accept both. */
+    const firstEmbed = <E,>(v: E | E[] | null | undefined): E | null =>
+      Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
+
     const list = (rows ?? []) as unknown as Array<
       StartupRow & {
         tenants: { tenant_name: string } | null;
-        startup_ownership: Array<{
-          owning_agent_user_id: string;
-          users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
-        }>;
-        startup_ai_ownership: Array<{
-          owning_ai_agent_id: string;
-          users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
-        }>;
+        startup_ownership: OwnEmbed | OwnEmbed[] | null;
+        startup_ai_ownership: AiOwnEmbed | AiOwnEmbed[] | null;
         startup_investors: Array<{
           id: string;
           investors: { id: string; investor_name: string } | null;
         }>;
       }
     >;
+
 
     const logoPaths = list.map((r) => r.logo_url).filter((p): p is string => !!p);
 
