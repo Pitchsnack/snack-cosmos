@@ -467,7 +467,7 @@ export function StartupForm({ startup, redirectAfterCreate = "detail", workspace
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
       if (redirectAfterCreate === "my-startups") {
-        navigate({ to: "/my-startups" });
+        navigate({ to: "/my-startups/$id", params: { id: res.id } });
       } else {
         navigate({ to: "/startups/$id", params: { id: res.id } });
       }
@@ -502,7 +502,11 @@ export function StartupForm({ startup, redirectAfterCreate = "detail", workspace
       qc.invalidateQueries({ queryKey: ["startup", startup!.id] });
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
-      navigate({ to: "/startups/$id", params: { id: startup!.id } });
+      if (isMyWorkspace) {
+        navigate({ to: "/my-startups/$id", params: { id: startup!.id } });
+      } else {
+        navigate({ to: "/startups/$id", params: { id: startup!.id } });
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
