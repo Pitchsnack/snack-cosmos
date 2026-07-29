@@ -30,7 +30,7 @@ function EditMyStartupPage() {
     <PermissionGuard permission="startups.write" message="You don't have permission to edit startups.">
       <div className="mx-auto max-w-4xl space-y-6">
         {!validId ? (
-          <StartupNotFound reason="invalid" />
+          <StartupNotFound reason="invalid" workspace="my-startups" />
         ) : (
           <>
             <div>
@@ -51,7 +51,7 @@ function EditMyStartupPage() {
               </p>
             </div>
             {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
-            {!isLoading && (error || !data) && <StartupNotFound reason="missing" />}
+            {!isLoading && (error || !data) && <StartupNotFound reason="missing" workspace="my-startups" />}
             {data && (
               <StartupForm startup={data as unknown as StartupDetail} workspace="my-startups" />
             )}

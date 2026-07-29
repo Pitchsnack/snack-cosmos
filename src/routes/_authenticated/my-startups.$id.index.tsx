@@ -29,7 +29,7 @@ function MyStartupDetailPage() {
   if (!isUuid(id)) {
     return (
       <PermissionGuard permission="startups.read" message="You don't have permission to view startups.">
-        <StartupNotFound reason="invalid" />
+        <StartupNotFound reason="invalid" workspace="my-startups" />
       </PermissionGuard>
     );
   }
