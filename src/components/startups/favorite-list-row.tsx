@@ -1,6 +1,5 @@
-import { Star } from "lucide-react";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
-import { useFavoriteStartups } from "@/hooks/use-favorites";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
