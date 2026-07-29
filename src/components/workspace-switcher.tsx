@@ -125,6 +125,9 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
     : isControl
       ? CONTROL_LABEL
       : tenants[0]?.tenantName ?? "—";
+  const roleCode = session?.activeWorkspace.roleCode ?? session?.roles?.[0] ?? null;
+  const roleLabel = roleCode ? ROLE_LABELS[roleCode] ?? roleCode : "No role";
+
 
   async function pick(tenantId: string | null, workspaceType: string | null) {
     // Preview-only fixture: do NOT call switchWorkspace, do NOT write
