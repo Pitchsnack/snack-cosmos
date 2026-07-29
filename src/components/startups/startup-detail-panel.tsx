@@ -18,7 +18,6 @@ import {
   UserCircle2,
   FileText,
   Share2,
-  Bookmark,
   MoreVertical,
   Link2,
   Copy,
@@ -46,6 +45,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
