@@ -20,6 +20,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 import { switchWorkspace } from "@/lib/session-context.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
+import { ROLE_LABELS } from "@/lib/permissions";
 
 // Preview-only feature flag. Production stays OFF until the Option A backend
 // PRD extends switchWorkspace with MASTER_AGENT authorization and physical
