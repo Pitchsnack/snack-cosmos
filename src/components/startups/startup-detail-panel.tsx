@@ -187,7 +187,7 @@ export function StartupDetailPanel({
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
             >
-              <Link to="/startups/$id/edit" params={{ id }}>
+              <Link to={isMyWorkspace ? "/my-startups/$id/edit" : "/startups/$id/edit"} params={{ id }}>
                 <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
               </Link>
             </Button>
@@ -224,7 +224,7 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                   {canManage ? (
                     <DropdownMenuItem asChild>
-                      <Link to="/startups/$id/edit" params={{ id }} onClick={() => onClose?.()}>
+                      <Link to={isMyWorkspace ? "/my-startups/$id/edit" : "/startups/$id/edit"} params={{ id }} onClick={() => onClose?.()}>
                         <Pencil className="mr-2 h-4 w-4" /> Edit
                       </Link>
                     </DropdownMenuItem>

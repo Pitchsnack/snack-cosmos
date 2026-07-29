@@ -123,6 +123,8 @@ interface Props {
   startup?: StartupDetail;
   /** Where to navigate after a successful create. Defaults to the new startup's detail page. */
   redirectAfterCreate?: "detail" | "my-startups";
+  /** Which module owns this form — keeps post-save navigation inside that module. */
+  workspace?: "startups" | "my-startups";
 }
 
 
