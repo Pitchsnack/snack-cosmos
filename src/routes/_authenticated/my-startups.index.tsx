@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X, Star, Building2 } from "lucide-react";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
 import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favorite-list-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
@@ -311,6 +312,57 @@ function MyStartupsPageInner() {
 
       {/* Keep unused paging variable silenced */}
       <span className="hidden">{page}</span>
+
+      <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
+        <DialogContent
+          className={cn(
+            "[&>button]:hidden",
+            "p-0 gap-0 flex flex-col overflow-hidden",
+            "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
+            "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
+          )}
+        >
+          <MyStartupPanelModalBody modalId={modalId} onClose={() => setModalId(null)} />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function MyStartupPanelModalBody({ modalId, onClose }: { modalId: string | null; onClose: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const visible = hovered || focused;
+  return (
+    <div
+      className="relative flex flex-1 flex-col overflow-hidden"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className="relative shrink-0 h-10">
+        <DialogClose
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          aria-label="Close"
+          className={cn(
+            "absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            visible ? "opacity-100" : "opacity-0 pointer-events-none",
+          )}
+        >
+          <X className="h-4 w-4" />
+        </DialogClose>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
+        {modalId && (
+          <StartupDetailPanel
+            id={modalId}
+            compact
+            showPublication
+            workspace="my-startups"
+            onClose={onClose}
+          />
+        )}
+      </div>
     </div>
   );
 }
