@@ -38,6 +38,7 @@ import {
 import { FounderEditor, type FounderDraft } from "./founder-editor";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { CreateInvestorDialog } from "@/components/relationships/create-investor-dialog";
+import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { StartupInvestorLinkView } from "@/adapters/investor-startup-links-types";
 import {
