@@ -66,6 +66,7 @@ export function StartupDetailPanel({
   showEdit = true,
   compact = false,
   showPublication = false,
+  workspace = "startups",
   onClose,
 }: {
   id: string;
@@ -73,8 +74,11 @@ export function StartupDetailPanel({
   compact?: boolean;
   /** My Startups surfaces only: shows Publish / Unpublish to Startup Directory. */
   showPublication?: boolean;
+  /** Which module owns this surface — keeps edit navigation inside that module. */
+  workspace?: "startups" | "my-startups";
   onClose?: () => void;
 }) {
+  const isMyWorkspace = workspace === "my-startups";
   const { data, isLoading, error } = useStartup(id);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
