@@ -58,8 +58,8 @@ function ConnectionsTabsPage() {
     <div className="space-y-4">
       <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
         {([
-          { key: "connections", label: "Connections" },
-          { key: "contacts", label: "Contacts" },
+          { key: "connections", label: "My Connections" },
+          { key: "contacts", label: "My Contacts" },
         ] as const).map((t) => {
           const active = tab === t.key;
           return (
