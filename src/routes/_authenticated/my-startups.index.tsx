@@ -98,6 +98,7 @@ function MyStartupsPageInner() {
     [rawItems, meId, isStartupUser],
   );
 
+
   const items = useMemo(
     () => (favOnly ? mineItems.filter((it) => favIds.has(it.id)) : mineItems),
     [mineItems, favOnly, favIds],
