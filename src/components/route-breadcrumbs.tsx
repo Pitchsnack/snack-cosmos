@@ -30,7 +30,7 @@ const PATH_LABELS: Record<string, string> = {
   "/shared-deals/$id": "Shared Deal",
   "/contacts": "Contacts",
   "/contacts/quick-add": "Add Name Card",
-  "/connections": "Connections",
+  "/connections": "My Connections",
   "/global-startups": "Global Startups",
   "/global-startups/$id": "Global Startup",
   "/global-startups/browse": "Browse Catalogue",
