@@ -1,6 +1,5 @@
-import { Star } from "lucide-react";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
-import { useFavoriteStartups } from "@/hooks/use-favorites";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
@@ -20,7 +19,6 @@ export function FavoriteSplitRow({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const { toggle } = useFavoriteStartups();
   return (
     <button
       type="button"
@@ -49,18 +47,8 @@ export function FavoriteSplitRow({
           {[s.investment_stage, s.company_type, s.headquarters].filter(Boolean).join(" · ")}
         </div>
       </div>
-      <span
-        role="button"
-        tabIndex={0}
-        aria-label="Remove from favorites"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggle(s.id);
-        }}
-        className="shrink-0 rounded-full p-1 hover:bg-muted/60"
-      >
-        <Star className="h-3.5 w-3.5 fill-accent text-accent" />
-      </span>
+      <FavoriteToggle id={s.id} />
+
     </button>
   );
 }

@@ -18,7 +18,6 @@ import {
   UserCircle2,
   FileText,
   Share2,
-  Bookmark,
   MoreVertical,
   Link2,
   Copy,
@@ -46,6 +45,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useStartup } from "@/hooks/use-startup";
 import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
@@ -197,14 +197,8 @@ export function StartupDetailPanel({
               >
                 <Share2 className="h-3.5 w-3.5" /> Share Info
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                aria-label="Add to watchlist"
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
+              <FavoriteToggle id={id} size="md" className="h-8 w-8" />
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

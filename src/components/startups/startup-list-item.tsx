@@ -1,12 +1,12 @@
 import { useState, type CSSProperties } from "react";
-import { MapPin, Users, Bookmark, ShoppingCart } from "lucide-react";
+import { MapPin, Users, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
-import { useFavoriteStartups } from "@/hooks/use-favorites";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 
 
 
@@ -40,8 +40,6 @@ export function StartupListItem({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
-  const { isFavorite, toggle } = useFavoriteStartups();
-  const bookmarked = isFavorite(s.id);
   const [expanded, setExpanded] = useState(false);
 
 
@@ -74,21 +72,8 @@ export function StartupListItem({
         setIsPressed(false);
       }}
     >
-      <span
-        className="absolute right-3 top-3 z-10 rounded-full p-1 hover:bg-muted/50"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggle(s.id);
-        }}
-      >
+      <FavoriteToggle id={s.id} size="md" className="absolute right-3 top-3" />
 
-        <Bookmark
-          className={cn(
-            "h-4 w-4 transition-colors",
-            bookmarked ? "fill-accent text-accent" : "text-muted-foreground",
-          )}
-        />
-      </span>
 
       <div className="flex w-full items-start gap-3 pr-8">
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">

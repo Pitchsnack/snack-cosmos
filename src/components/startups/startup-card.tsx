@@ -1,12 +1,13 @@
 import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Factory, ShoppingCart, Users, Bookmark } from "lucide-react";
+import { MapPin, Factory, ShoppingCart, Users } from "lucide-react";
 import anchorIcon from "@/assets/anchor.svg";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { StartupListItem } from "@/lib/startups.functions";
 import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +61,7 @@ function Truncate({
 
 export function StartupCard({ s, onClick, compact = false }: { s: StartupListItem; onClick?: () => void; compact?: boolean }) {
   const [isHovered, setIsHovered] = useState(false);
-  const { isFavorite, toggle } = useFavoriteStartups();
+  const { isFavorite } = useFavoriteStartups();
   const bookmarked = isFavorite(s.id);
 
   const [isPressed, setIsPressed] = useState(false);
@@ -94,35 +95,17 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
 
   const inner = (
     <>
-      {/* Bookmark toggle - shown when favorited or card hovered/focused */}
-      <Tooltip delayDuration={200}>
-        <TooltipTrigger asChild>
-          <span
-            role="button"
-            tabIndex={0}
-            aria-label={bookmarked ? "Remove from Favorites" : "Add to Favorites"}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggle(s.id);
-            }}
-            className={cn(
-              "absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 shadow-sm transition-opacity duration-150 hover:bg-background focus-visible:opacity-100",
-              bookmarked || isHovered ? "opacity-100" : "opacity-0 pointer-events-none",
-            )}
-          >
-            <Bookmark
-              className={cn(
-                "h-4 w-4 transition-colors",
-                bookmarked ? "fill-accent text-accent" : "text-muted-foreground",
-              )}
-            />
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="left">
-          {bookmarked ? "Remove from Favorites" : "Add to Favorites"}
-        </TooltipContent>
-      </Tooltip>
+      {/* Favorite toggle - shown when favorited or card hovered/focused */}
+      <FavoriteToggle
+        id={s.id}
+        withProvider={false}
+        size="md"
+        className={cn(
+          "absolute right-2 top-2 h-7 w-7 bg-background/90 shadow-sm hover:bg-background",
+          bookmarked || isHovered ? "opacity-100" : "opacity-0",
+        )}
+      />
+
 
       {/* Product image banner */}
 

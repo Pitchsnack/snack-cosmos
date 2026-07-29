@@ -1,11 +1,11 @@
 import { useState, type CSSProperties } from "react";
-import { MapPin, Users, Bookmark, Calendar, ArrowRight } from "lucide-react";
+import { MapPin, Users, Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
-import { useFavoriteStartups } from "@/hooks/use-favorites";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 
 
 function monogram(name: string) {
@@ -30,8 +30,6 @@ export function StartupRow({
   onSelect: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const { isFavorite, toggle } = useFavoriteStartups();
-  const bookmarked = isFavorite(s.id);
 
 
   return (
@@ -46,25 +44,9 @@ export function StartupRow({
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
       )}
     >
-      {/* Bookmark */}
-      <span
-        role="button"
-        tabIndex={0}
-        aria-label={bookmarked ? "Remove bookmark" : "Add bookmark"}
-        className="absolute right-3 top-3 z-10 rounded-full p-1 hover:bg-muted/50"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggle(s.id);
-        }}
+      {/* Favorite */}
+      <FavoriteToggle id={s.id} size="md" className="absolute right-3 top-3" />
 
-      >
-        <Bookmark
-          className={cn(
-            "h-4 w-4 transition-colors",
-            bookmarked ? "fill-accent text-accent" : "text-muted-foreground",
-          )}
-        />
-      </span>
 
       {/* Logo */}
       <div className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
