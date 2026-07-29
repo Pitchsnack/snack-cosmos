@@ -3,6 +3,7 @@ import { Link, useRouterState, type AnyRouteMatch } from "@tanstack/react-router
 import { ChevronRight, Home } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useSessionContext } from "@/hooks/use-session-context";
 
 /**
  * Maps route path templates to human-readable breadcrumb labels.
@@ -66,6 +67,12 @@ function resolveLabel(pathTemplate: string) {
 
 export function RouteBreadcrumbs({ className }: { className?: string }) {
   const matches = useRouterState({ select: (s) => s.matches as AnyRouteMatch[] });
+  // Active workspace comes from the approved session/workspace context only —
+  // never inferred from the current route or page content.
+  const { data: session } = useSessionContext();
+  const isControl = (session?.roles ?? []).includes("CONTROL");
+  const workspaceLabel =
+    session?.activeWorkspace.tenantName ?? (isControl ? "Control" : null);
 
   const items = useMemo(() => {
     // Deduplicate by path template, keeping the deepest (leaf) match for each
@@ -100,6 +107,17 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
   return (
     <nav aria-label="Breadcrumb" className={cn("text-sm", className)}>
       <ol className="flex flex-wrap items-center gap-1.5 text-muted-foreground">
+        {workspaceLabel && (
+          <li className="inline-flex items-center gap-1.5">
+            <span
+              className="max-w-[180px] truncate font-medium text-foreground"
+              title={`Active workspace: ${workspaceLabel}`}
+            >
+              {workspaceLabel}
+            </span>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
+          </li>
+        )}
         {showHome && (
           <li className="inline-flex items-center gap-1.5">
             <Link

@@ -20,6 +20,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 import { switchWorkspace } from "@/lib/session-context.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
+import { ROLE_LABELS } from "@/lib/permissions";
 
 // Preview-only feature flag. Production stays OFF until the Option A backend
 // PRD extends switchWorkspace with MASTER_AGENT authorization and physical
@@ -125,6 +126,9 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
     : isControl
       ? CONTROL_LABEL
       : tenants[0]?.tenantName ?? "—";
+  const roleCode = session?.activeWorkspace.roleCode ?? session?.roles?.[0] ?? null;
+  const roleLabel = roleCode ? ROLE_LABELS[roleCode] ?? roleCode : "No role";
+
 
   async function pick(tenantId: string | null, workspaceType: string | null) {
     // Preview-only fixture: do NOT call switchWorkspace, do NOT write
@@ -163,23 +167,35 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
           type="button"
           role="combobox"
           aria-expanded={open}
-          aria-label="Switch workspace"
+          aria-label={`Active workspace: ${label}${roleLabel ? `, role ${roleLabel}` : ""}. Switch workspace`}
           className={cn(
             "inline-flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-left text-foreground transition-colors hover:bg-muted",
-            compact ? "h-9" : "h-9",
+            compact ? "h-9" : "h-10",
           )}
         >
           <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
           {!compact && (
-            <span className="hidden max-w-[140px] truncate text-sm font-medium sm:inline">
-              {label}
+            <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+              <span className="max-w-[160px] truncate text-sm font-medium">{label}</span>
+              <span className="max-w-[160px] truncate text-[11px] text-muted-foreground">
+                {roleLabel}
+              </span>
             </span>
           )}
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-60" />
         </button>
       </PopoverTrigger>
+
       <PopoverContent className="w-[280px] p-0" align="start" sideOffset={8}>
+        <div className="border-b border-border px-3 py-2">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Active workspace
+          </div>
+          <div className="truncate text-sm font-medium text-foreground">{label}</div>
+          <div className="truncate text-[11px] text-muted-foreground">{roleLabel}</div>
+        </div>
         <Command>
+
           <CommandInput placeholder="Search workspace…" />
           <CommandList>
             <CommandEmpty>No workspaces available.</CommandEmpty>
