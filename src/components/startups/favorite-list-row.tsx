@@ -42,7 +42,6 @@ export function FavoriteListRow({
   s: StartupListItemDTO;
   onSelect: () => void;
 }) {
-  const { toggle } = useFavoriteStartups();
   return (
     <div
       className={cn(
@@ -103,18 +102,9 @@ export function FavoriteListRow({
 
       {/* Save */}
       <div className="flex justify-center">
-        <button
-          type="button"
-          aria-label="Remove from favorites"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggle(s.id);
-          }}
-          className="rounded-full p-1 hover:bg-muted/60"
-        >
-          <Star className="h-4 w-4 fill-accent text-accent" />
-        </button>
+        <FavoriteToggle id={s.id} size="md" />
       </div>
+
 
       {/* Action */}
       <div className="text-right">
