@@ -14,6 +14,10 @@ export interface UseStartupsParams {
   sort?: "updated_desc" | "created_desc" | "name_asc" | "name_desc";
   page?: number;
   pageSize?: number;
+  /** "directory" excludes Private founder-owned records at query level. */
+  scope?: "workspace" | "directory";
+  /** Preview-only, session-scoped refs allowed into the preview Directory. */
+  allowPrivateRefs?: string[];
 }
 
 export function useStartups(params: UseStartupsParams = {}) {

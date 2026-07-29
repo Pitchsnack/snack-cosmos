@@ -159,6 +159,20 @@ const ListInput = z.object({
   sort: z.enum(["updated_desc","created_desc","name_asc","name_desc"]).default("updated_desc"),
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(24),
+  /**
+   * "directory" = Startup Directory read model. Private (founder-owned,
+   * unpublished) records are excluded at query level, never merely hidden
+   * after render. "workspace" = My Startups / internal reads, unfiltered.
+   * The creation-origin contract does not exist, so directory reads fail
+   * closed on every Private record.
+   */
+  scope: z.enum(["workspace", "directory"]).default("workspace"),
+  /**
+   * Preview-only allowlist of logical startup refs that a non-persistent,
+   * session-scoped preview publication has activated. Empty in production
+   * modes; never treated as persistent publication.
+   */
+  allowPrivateRefs: z.array(z.string().uuid()).max(200).default([]),
 });
 
 export const listStartups = createServerFn({ method: "GET" })
@@ -167,6 +181,15 @@ export const listStartups = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     const { supabase } = context;
     let q = supabase.from("startups").select(SELECT_LIST, { count: "exact" });
+
+    if (data.scope === "directory") {
+      const allowed = data.allowPrivateRefs ?? [];
+      if (allowed.length > 0) {
+        q = q.or(`visibility.neq.Private,id.in.(${allowed.join(",")})`);
+      } else {
+        q = q.neq("visibility", "Private");
+      }
+    }
 
     if (data.search?.trim()) {
       const s = data.search.trim().replace(/[%_\\]/g, (m) => "\\" + m).replace(/"/g, '\\"');
