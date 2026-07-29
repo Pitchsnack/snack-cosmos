@@ -115,7 +115,7 @@ function MyStartupsPageInner() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5" /> My Startups{favOnly ? " · Favorites" : ""}
+            <Building2 className="h-3.5 w-3.5" /> MY WORKSPACE{favOnly ? " · Favorites" : ""}
           </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">My Startups</h1>
           <p className="mt-1 text-sm text-muted-foreground">
