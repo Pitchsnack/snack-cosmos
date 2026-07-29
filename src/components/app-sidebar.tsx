@@ -81,7 +81,7 @@ const STARTUP_MENU_ORDER = [
   "Startup Activity",
   "My Startups",
   "Startups Directory",
-  "Connections",
+  "My Connections",
   "Contacts",
   "Communications",
   "Documents",
