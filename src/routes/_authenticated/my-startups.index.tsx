@@ -78,8 +78,8 @@ function MyStartupsPageInner() {
   const favOnly = !!s.fav;
   const { ids: favIds } = useFavoriteStartups();
 
-  const openStartup = (id: string) =>
-    navigate({ to: "/my-startups/$id", params: { id } });
+  const [modalId, setModalId] = useState<string | null>(null);
+  const openStartup = (id: string) => setModalId(id);
 
   const pageSize = 100; // fetch enough to filter client-side to mine
 
