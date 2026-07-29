@@ -187,7 +187,15 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
       </PopoverTrigger>
 
       <PopoverContent className="w-[280px] p-0" align="start" sideOffset={8}>
+        <div className="border-b border-border px-3 py-2">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Active workspace
+          </div>
+          <div className="truncate text-sm font-medium text-foreground">{label}</div>
+          <div className="truncate text-[11px] text-muted-foreground">{roleLabel}</div>
+        </div>
         <Command>
+
           <CommandInput placeholder="Search workspace…" />
           <CommandList>
             <CommandEmpty>No workspaces available.</CommandEmpty>
