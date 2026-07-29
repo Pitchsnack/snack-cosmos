@@ -24,6 +24,7 @@ import { PermissionGuard } from "@/components/permission-guard";
 import {
   isPublicationPreview,
   readPreviewPublication,
+  listPreviewPublishedRefs,
   PREVIEW_DISCLAIMER,
 } from "@/lib/publication";
 import { usePreviewPublicationVersion } from "@/hooks/use-publication";
