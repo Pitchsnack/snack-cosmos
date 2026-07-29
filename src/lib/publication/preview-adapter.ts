@@ -93,3 +93,13 @@ export const previewPublicationAdapter: PublicationAdapter = {
     return { kind: "ok", data: next };
   },
 };
+
+/**
+ * Session-scoped list of preview-published startup refs.
+ * Preview-only. Never persistent, never cross-user, never authoritative.
+ */
+export function listPreviewPublishedRefs(): string[] {
+  return [...store.values()]
+    .filter((p) => p.status === "published")
+    .map((p) => p.startup_ref);
+}
