@@ -186,8 +186,12 @@ export function BasicInformationRestrictionsTab({
   const clearAll = () => setRestrictions({});
 
   const handleSave = () => {
-    saveRestrictionsToStorage(startup.id, restrictions);
-    toast.success("Restrictions saved");
+    saveRestrictionsToStorage(scope, startup.id, restrictions);
+    toast.success(
+      scope === "my-startups"
+        ? "My Startups restrictions saved"
+        : "Restrictions saved",
+    );
   };
 
   return (
