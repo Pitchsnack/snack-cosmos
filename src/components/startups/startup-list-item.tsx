@@ -42,6 +42,8 @@ export function StartupListItem({
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const restricted = restrictedSet(s);
+
 
 
   const cardStyle: CSSProperties | undefined = isPressed
