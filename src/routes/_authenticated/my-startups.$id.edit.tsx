@@ -86,9 +86,6 @@ function EditMyStartupPage() {
           </>
         )}
       </div>
-          </>
-        )}
-      </div>
     </PermissionGuard>
   );
 }
