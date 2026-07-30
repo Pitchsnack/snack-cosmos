@@ -109,7 +109,7 @@ export function maskRestricted<T extends object>(
   const restrictedKeys = Object.keys(restrictions).filter((k) => restrictions[k]);
   if (restrictedKeys.length === 0) return { ...item, restricted_fields: [] };
 
-  const next: Record<string, unknown> = { ...item };
+  const next: Record<string, unknown> = { ...(item as Record<string, unknown>) };
   for (const key of restrictedKeys) {
     for (const field of FIELD_MAP[key] ?? [key]) {
       if (!(field in next)) continue;
