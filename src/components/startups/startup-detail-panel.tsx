@@ -52,6 +52,7 @@ import { GlobalStartupLineageBadge } from "@/components/global-startups/global-s
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { PublicationActions } from "@/components/startups/publication-actions";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
+import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
@@ -127,6 +128,7 @@ export function StartupDetailPanel({
   }
 
   const s = mask(data);
+  const restricted = restrictedSet(s);
 
 
 
@@ -134,7 +136,8 @@ export function StartupDetailPanel({
 
   const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
   if (s.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${s.year_founded}` });
-  if (s.company_type) metaItems.push({ icon: Building2, label: s.company_type });
+  if (!restricted.has("company_type") && s.company_type)
+    metaItems.push({ icon: Building2, label: s.company_type });
   if (s.headquarters) metaItems.push({ icon: MapPin, label: s.headquarters });
   if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
 
@@ -145,7 +148,9 @@ export function StartupDetailPanel({
 
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
-            {s.logo_signed_url ? (
+            {restricted.has("logo") ? (
+              <RestrictedBlock />
+            ) : s.logo_signed_url ? (
               <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
             ) : (
               <span className="text-sm font-semibold text-muted-foreground">
@@ -155,7 +160,7 @@ export function StartupDetailPanel({
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-semibold tracking-tight leading-tight">
-              {s.startup_name}
+              {restricted.has("startup_name") ? <RestrictedPill className="text-xs" /> : s.startup_name}
               <PreviewNeedsReassignmentBadge
                 name={s.startup_name}
                 domain="startup"
