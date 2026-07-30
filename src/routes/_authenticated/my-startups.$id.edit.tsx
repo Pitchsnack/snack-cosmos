@@ -30,7 +30,7 @@ function EditMyStartupPage() {
 
   return (
     <PermissionGuard permission="startups.write" message="You don't have permission to edit startups.">
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         {!validId ? (
           <StartupNotFound reason="invalid" workspace="my-startups" />
         ) : (
@@ -55,8 +55,37 @@ function EditMyStartupPage() {
             {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
             {!isLoading && (error || !data) && <StartupNotFound reason="missing" workspace="my-startups" />}
             {data && (
-              <StartupForm startup={data as unknown as StartupDetail} workspace="my-startups" />
+              <Tabs defaultValue="edit" className="w-full">
+                <TabsList className="bg-transparent p-0 h-auto border-b border-border/60 rounded-none w-full justify-start gap-6 overflow-x-auto">
+                  <TabsTrigger
+                    value="edit"
+                    className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                  >
+                    Edit My Startup
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="basic-restrictions"
+                    className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none gap-1.5"
+                  >
+                    Basic Information Restrictions <Lock className="h-3.5 w-3.5" />
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="edit" className="mt-6">
+                  <div className="mx-auto max-w-4xl">
+                    <StartupForm startup={data as unknown as StartupDetail} workspace="my-startups" />
+                  </div>
+                </TabsContent>
+                <TabsContent value="basic-restrictions" className="mt-6">
+                  <BasicInformationRestrictionsTab
+                    startup={data as unknown as StartupDetail}
+                    scope="my-startups"
+                  />
+                </TabsContent>
+              </Tabs>
             )}
+          </>
+        )}
+      </div>
           </>
         )}
       </div>
