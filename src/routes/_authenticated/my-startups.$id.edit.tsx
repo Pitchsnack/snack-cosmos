@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Building2 } from "lucide-react";
+import { ArrowLeft, Building2, Lock } from "lucide-react";
 
 import { StartupForm } from "@/components/startups/startup-form";
 import { PermissionGuard } from "@/components/permission-guard";
 import { StartupNotFound } from "@/components/startups/startup-not-found";
+import { BasicInformationRestrictionsTab } from "@/components/startups/basic-information-restrictions-tab";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStartup } from "@/hooks/use-startup";
 import type { StartupDetail } from "@/lib/startups.functions";
 import { isUuid } from "@/lib/uuid";
