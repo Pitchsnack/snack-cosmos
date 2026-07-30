@@ -67,13 +67,20 @@ function joinOrDash(v: string[] | null | undefined): string {
 
 const INITIAL_COUNT = 10;
 
-export function BasicInformationRestrictionsTab({ startup }: { startup: StartupDetail }) {
+export function BasicInformationRestrictionsTab({
+  startup,
+  scope = "startups",
+}: {
+  startup: StartupDetail;
+  /** Restriction settings are stored independently per module. */
+  scope?: RestrictionsScope;
+}) {
   const [restrictions, setRestrictions] = useState<Record<string, boolean>>({});
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    setRestrictions(loadRestrictions(startup.id));
-  }, [startup.id]);
+    setRestrictions(loadRestrictions(scope, startup.id));
+  }, [startup.id, scope]);
 
   const fields = useMemo<FieldDef[]>(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
