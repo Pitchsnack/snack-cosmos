@@ -31,20 +31,28 @@ type FieldDef = {
   render: (s: StartupDetail) => React.ReactNode;
 };
 
-const STORAGE_KEY = (id: string) => `sp2.basic-info-restrictions.${id}`;
+/** Restriction scopes are intentionally independent per module. */
+export type RestrictionsScope = "startups" | "my-startups";
 
-function loadRestrictions(id: string): Record<string, boolean> {
+const STORAGE_KEY = (scope: RestrictionsScope, id: string) =>
+  `sp2.basic-info-restrictions.${scope}.${id}`;
+
+function loadRestrictions(scope: RestrictionsScope, id: string): Record<string, boolean> {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(window.localStorage.getItem(STORAGE_KEY(id)) ?? "{}");
+    return JSON.parse(window.localStorage.getItem(STORAGE_KEY(scope, id)) ?? "{}");
   } catch {
     return {};
   }
 }
 
-function saveRestrictionsToStorage(id: string, r: Record<string, boolean>) {
+function saveRestrictionsToStorage(
+  scope: RestrictionsScope,
+  id: string,
+  r: Record<string, boolean>,
+) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY(id), JSON.stringify(r));
+  window.localStorage.setItem(STORAGE_KEY(scope, id), JSON.stringify(r));
 }
 
 function textOrDash(v: string | number | null | undefined): string {
@@ -59,13 +67,20 @@ function joinOrDash(v: string[] | null | undefined): string {
 
 const INITIAL_COUNT = 10;
 
-export function BasicInformationRestrictionsTab({ startup }: { startup: StartupDetail }) {
+export function BasicInformationRestrictionsTab({
+  startup,
+  scope = "startups",
+}: {
+  startup: StartupDetail;
+  /** Restriction settings are stored independently per module. */
+  scope?: RestrictionsScope;
+}) {
   const [restrictions, setRestrictions] = useState<Record<string, boolean>>({});
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    setRestrictions(loadRestrictions(startup.id));
-  }, [startup.id]);
+    setRestrictions(loadRestrictions(scope, startup.id));
+  }, [startup.id, scope]);
 
   const fields = useMemo<FieldDef[]>(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -171,8 +186,12 @@ export function BasicInformationRestrictionsTab({ startup }: { startup: StartupD
   const clearAll = () => setRestrictions({});
 
   const handleSave = () => {
-    saveRestrictionsToStorage(startup.id, restrictions);
-    toast.success("Restrictions saved");
+    saveRestrictionsToStorage(scope, startup.id, restrictions);
+    toast.success(
+      scope === "my-startups"
+        ? "My Startups restrictions saved"
+        : "Restrictions saved",
+    );
   };
 
   return (
