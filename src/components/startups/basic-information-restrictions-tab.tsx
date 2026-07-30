@@ -19,10 +19,16 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import type { StartupDetail } from "@/lib/startups.functions";
+import {
+  loadRestrictions,
+  saveRestrictions,
+  type RestrictionsScope,
+} from "@/lib/restrictions/startup-restrictions";
 
 type FieldDef = {
   key: string;
@@ -32,28 +38,7 @@ type FieldDef = {
 };
 
 /** Restriction scopes are intentionally independent per module. */
-export type RestrictionsScope = "startups" | "my-startups";
-
-const STORAGE_KEY = (scope: RestrictionsScope, id: string) =>
-  `sp2.basic-info-restrictions.${scope}.${id}`;
-
-function loadRestrictions(scope: RestrictionsScope, id: string): Record<string, boolean> {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(window.localStorage.getItem(STORAGE_KEY(scope, id)) ?? "{}");
-  } catch {
-    return {};
-  }
-}
-
-function saveRestrictionsToStorage(
-  scope: RestrictionsScope,
-  id: string,
-  r: Record<string, boolean>,
-) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY(scope, id), JSON.stringify(r));
-}
+export type { RestrictionsScope } from "@/lib/restrictions/startup-restrictions";
 
 function textOrDash(v: string | number | null | undefined): string {
   if (v === null || v === undefined || v === "") return "—";
@@ -185,8 +170,13 @@ export function BasicInformationRestrictionsTab({
 
   const clearAll = () => setRestrictions({});
 
+  const queryClient = useQueryClient();
+
   const handleSave = () => {
-    saveRestrictionsToStorage(scope, startup.id, restrictions);
+    saveRestrictions(scope, startup.id, restrictions);
+    // Refresh startup data so every card/row/panel re-renders with the new rules.
+    queryClient.invalidateQueries({ queryKey: ["startups"] });
+    queryClient.invalidateQueries({ queryKey: ["startup", startup.id] });
     toast.success(
       scope === "my-startups"
         ? "My Startups restrictions saved"

@@ -23,6 +23,7 @@ import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { PublicationStatusBadge } from "@/components/startups/publication-actions";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
+import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { cn } from "@/lib/utils";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
@@ -101,10 +102,14 @@ function MyStartupsPageInner() {
   );
 
 
-  const items = useMemo(
+  // Basic Information Restrictions are the authoritative visibility source for
+  // every My Startups surface. Non-authorized viewers never receive the values.
+  const { mask } = useRestrictionMask("my-startups");
+  const visibleItems = useMemo(
     () => (favOnly ? mineItems.filter((it) => favIds.has(it.id)) : mineItems),
     [mineItems, favOnly, favIds],
   );
+  const items = useMemo(() => visibleItems.map((it) => mask(it)), [visibleItems, mask]);
   const total = items.length;
 
   const update = (patch: Partial<typeof s>) =>
