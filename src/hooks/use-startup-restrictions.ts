@@ -30,8 +30,10 @@ export function useStartupRestrictions(scope: RestrictionsScope, id: string | un
 
 /**
  * Returns a mask() helper applying the saved Basic Information Restrictions to
- * any startup-shaped record for the current viewer. Authorized users (founder /
- * owner / CONTROL) get untouched data.
+ * any startup-shaped record. Restricted values are removed from the data for
+ * every surface, and `restricted_fields` tells the UI where to render the
+ * greyed-out placeholders — including for the founder/owner, so they can see
+ * exactly what non-authorized users see.
  */
 export function useRestrictionMask(scope: RestrictionsScope) {
   const version = useRestrictionsVersion();
@@ -41,9 +43,7 @@ export function useRestrictionMask(scope: RestrictionsScope) {
 
   const mask = useCallback(
     <T extends RestrictableOwnership>(item: T) => {
-      if (isAuthorizedViewer(item, viewerId, isControl)) {
-        return { ...item, restricted_fields: [] as string[] };
-      }
+      void isAuthorizedViewer(item, viewerId, isControl);
       return maskRestricted(item, loadRestrictions(scope, item.id));
     },
     // version participates so masking recomputes after a Save
@@ -53,3 +53,4 @@ export function useRestrictionMask(scope: RestrictionsScope) {
 
   return { mask, version };
 }
+

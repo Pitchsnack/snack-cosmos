@@ -7,6 +7,7 @@ import { RelationshipChips } from "@/components/relationships/relationship-chips
 import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
+import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
 
 
 
@@ -41,6 +42,8 @@ export function StartupListItem({
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const restricted = restrictedSet(s);
+
 
 
   const cardStyle: CSSProperties | undefined = isPressed
@@ -77,7 +80,9 @@ export function StartupListItem({
 
       <div className="flex w-full items-start gap-3 pr-8">
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
-          {s.logo_signed_url ? (
+          {restricted.has("logo") ? (
+            <RestrictedBlock />
+          ) : s.logo_signed_url ? (
             <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
           ) : (
             <span className="text-xs font-semibold text-muted-foreground">
@@ -87,9 +92,13 @@ export function StartupListItem({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-left text-sm font-semibold leading-tight group-hover:text-accent">
-              {s.startup_name}
-            </h3>
+            {restricted.has("startup_name") ? (
+              <RestrictedPill />
+            ) : (
+              <h3 className="truncate text-left text-sm font-semibold leading-tight group-hover:text-accent">
+                {s.startup_name}
+              </h3>
+            )}
             <div className="flex shrink-0 items-center gap-1">
               <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
               {s.investment_stage && (
@@ -99,9 +108,11 @@ export function StartupListItem({
               )}
             </div>
           </div>
-          {s.company_type && (
+          {restricted.has("company_type") ? (
+            <div className="mt-0.5"><RestrictedPill /></div>
+          ) : s.company_type ? (
             <div className="mt-0.5 text-left text-[11px] text-muted-foreground">{s.company_type}</div>
-          )}
+          ) : null}
           {s.headquarters && (
             <div className="mt-0.5 inline-flex items-center gap-1 text-left text-[11px] text-muted-foreground">
               <MapPin className="h-2.5 w-2.5" />

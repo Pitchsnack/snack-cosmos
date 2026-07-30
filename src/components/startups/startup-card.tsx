@@ -10,6 +10,7 @@ import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassig
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { cn } from "@/lib/utils";
+import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
 
 
 function monogram(name: string) {
@@ -65,6 +66,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
   const bookmarked = isFavorite(s.id);
 
   const [isPressed, setIsPressed] = useState(false);
+  const restricted = restrictedSet(s);
   const BROAD = ["Enterprise", "Consumers"];
   const allIndustries = s.industry ?? [];
   const displayIndustries =
@@ -124,7 +126,9 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
         {/* Header row: Logo + Name + Badges; HQ below */}
         <div className="mb-2 flex items-start gap-3">
           <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
-            {s.logo_signed_url ? (
+            {restricted.has("logo") ? (
+              <RestrictedBlock />
+            ) : s.logo_signed_url ? (
               <img
                 src={s.logo_signed_url}
                 alt=""
@@ -138,11 +142,15 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-1.5">
-              <Truncate text={s.startup_name} className="min-w-0">
-                <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-accent">
-                  {s.startup_name}
-                </h3>
-              </Truncate>
+              {restricted.has("startup_name") ? (
+                <RestrictedPill className="mt-0.5" />
+              ) : (
+                <Truncate text={s.startup_name} className="min-w-0">
+                  <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-accent">
+                    {s.startup_name}
+                  </h3>
+                </Truncate>
+              )}
               <div className="flex shrink-0 gap-1">
                 <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
                 {s.investment_stage && (
@@ -150,11 +158,13 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
                     {s.investment_stage}
                   </Badge>
                 )}
-                {s.company_type && (
+                {restricted.has("company_type") ? (
+                  <RestrictedPill />
+                ) : s.company_type ? (
                   <Badge variant="outline" className="rounded-full px-1.5 py-0 text-[10px]">
                     {s.company_type}
                   </Badge>
-                )}
+                ) : null}
               </div>
             </div>
             {s.headquarters && (
