@@ -170,8 +170,13 @@ export function BasicInformationRestrictionsTab({
 
   const clearAll = () => setRestrictions({});
 
+  const queryClient = useQueryClient();
+
   const handleSave = () => {
-    saveRestrictionsToStorage(scope, startup.id, restrictions);
+    saveRestrictions(scope, startup.id, restrictions);
+    // Refresh startup data so every card/row/panel re-renders with the new rules.
+    queryClient.invalidateQueries({ queryKey: ["startups"] });
+    queryClient.invalidateQueries({ queryKey: ["startup", startup.id] });
     toast.success(
       scope === "my-startups"
         ? "My Startups restrictions saved"
