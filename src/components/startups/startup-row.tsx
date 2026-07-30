@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from "react";
 import { MapPin, Users, Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
@@ -30,6 +31,7 @@ export function StartupRow({
   onSelect: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const restricted = restrictedSet(s);
 
 
   return (
@@ -50,7 +52,9 @@ export function StartupRow({
 
       {/* Logo */}
       <div className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
-        {s.logo_signed_url ? (
+        {restricted.has("logo") ? (
+          <RestrictedBlock />
+        ) : s.logo_signed_url ? (
           <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
         ) : (
           <span className="text-sm font-semibold text-muted-foreground">
@@ -62,20 +66,26 @@ export function StartupRow({
       {/* Identity + description */}
       <div className="min-w-0 flex-1 max-w-[36%]">
         <div className="flex flex-wrap items-center gap-1.5">
-          <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
-            {s.startup_name}
-          </h3>
+          {restricted.has("startup_name") ? (
+            <RestrictedPill />
+          ) : (
+            <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
+              {s.startup_name}
+            </h3>
+          )}
           <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
           {s.investment_stage && (
             <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
               {s.investment_stage}
             </Badge>
           )}
-          {s.company_type && (
+          {restricted.has("company_type") ? (
+            <RestrictedPill />
+          ) : s.company_type ? (
             <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
               {s.company_type}
             </Badge>
-          )}
+          ) : null}
         </div>
         {s.headquarters && (
           <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
