@@ -51,6 +51,7 @@ import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { PublicationActions } from "@/components/startups/publication-actions";
+import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
@@ -80,6 +81,8 @@ export function StartupDetailPanel({
 }) {
   const isMyWorkspace = workspace === "my-startups";
   const { data, isLoading, error } = useStartup(id);
+  // Basic Information Restrictions gate what non-authorized viewers receive.
+  const { mask } = useRestrictionMask(workspace);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
@@ -123,7 +126,7 @@ export function StartupDetailPanel({
     );
   }
 
-  const s = data;
+  const s = mask(data);
 
 
 
