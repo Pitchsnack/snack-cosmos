@@ -102,7 +102,7 @@ const PLACEHOLDER_FIELDS = new Set(["startup_name"]);
  * Values are removed from the object entirely (not visually hidden), so the
  * actual data is never handed to a non-authorized surface.
  */
-export function maskRestricted<T extends Record<string, unknown>>(
+export function maskRestricted<T extends object>(
   item: T,
   restrictions: RestrictionMap,
 ): T & { restricted_fields: string[] } {

@@ -40,7 +40,7 @@ export function useRestrictionMask(scope: RestrictionsScope) {
   const viewerId = session?.user?.id ?? null;
 
   const mask = useCallback(
-    <T extends RestrictableOwnership & Record<string, unknown>>(item: T) => {
+    <T extends RestrictableOwnership>(item: T) => {
       if (isAuthorizedViewer(item, viewerId, isControl)) {
         return { ...item, restricted_fields: [] as string[] };
       }
