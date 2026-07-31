@@ -10,7 +10,7 @@ import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassig
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { cn } from "@/lib/utils";
-import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
+import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 
 
 function monogram(name: string) {
@@ -111,6 +111,11 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
 
       {/* Product image banner */}
 
+      {restricted.has("media_images") ? (
+        <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
+          <MaskedImage seed={`${s.id}-tile`} cells={14} />
+        </div>
+      ) : null}
       {s.tile_image_signed_url && (
         <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
           <img
@@ -127,7 +132,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
         <div className="mb-2 flex items-start gap-3">
           <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
             {restricted.has("logo") ? (
-              <RestrictedBlock />
+              <MaskedImage seed={`${s.id}-logo`} cells={6} />
             ) : s.logo_signed_url ? (
               <img
                 src={s.logo_signed_url}
@@ -142,9 +147,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-1.5">
-              {restricted.has("startup_name") ? (
-                <RestrictedPill className="mt-0.5" />
-              ) : (
+              {(
                 <Truncate text={s.startup_name} className="min-w-0">
                   <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-accent">
                     {s.startup_name}
@@ -158,9 +161,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
                     {s.investment_stage}
                   </Badge>
                 )}
-                {restricted.has("company_type") ? (
-                  <RestrictedPill />
-                ) : s.company_type ? (
+                {s.company_type ? (
                   <Badge variant="outline" className="rounded-full px-1.5 py-0 text-[10px]">
                     {s.company_type}
                   </Badge>
