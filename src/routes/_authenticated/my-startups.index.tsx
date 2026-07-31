@@ -86,11 +86,11 @@ function MyStartupsPageInner() {
   }, [s.panel]);
   const closeStartup = () => {
     setModalId(null);
-    if (s.panel) navigate({ search: (prev) => ({ ...prev, panel: undefined }), replace: true });
+    if (s.panel) navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }), replace: true });
   };
   const openStartup = (id: string) => {
     setModalId(id);
-    navigate({ search: (prev) => ({ ...prev, panel: id }), replace: true });
+    navigate({ search: (prev: typeof s) => ({ ...prev, panel: id }), replace: true });
   };
 
   const pageSize = 100; // fetch enough to filter client-side to mine
