@@ -162,6 +162,18 @@ function maskNamed(entry: unknown): unknown {
 
 function maskValue(field: string, current: unknown): unknown {
   if (current == null) return current; // missing value → unchanged
+  if (field === "media" || field === "media_images") {
+    // Keep the slots so the gallery layout survives, but drop every URL/caption.
+    return Array.isArray(current)
+      ? current.map((m) => ({
+          ...(m as Record<string, unknown>),
+          image_signed_url: null,
+          image_url: null,
+          caption: null,
+          masked: true,
+        }))
+      : null;
+  }
   if (DROPPED_FIELDS.has(field)) return Array.isArray(current) ? [] : null;
 
   if (Array.isArray(current)) {

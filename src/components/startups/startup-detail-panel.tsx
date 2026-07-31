@@ -132,7 +132,8 @@ export function StartupDetailPanel({
 
 
 
-  const mediaSlots = s.media.filter((m) => m.image_signed_url);
+  const mediaMasked = restricted.has("media_images");
+  const mediaSlots = mediaMasked ? s.media : s.media.filter((m) => m.image_signed_url);
 
   const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
   if (s.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${s.year_founded}` });
@@ -337,21 +338,25 @@ export function StartupDetailPanel({
               <button
                 key={m.slot}
                 type="button"
-                onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
+                onClick={() => !mediaMasked && m.image_signed_url && setLightbox(m.image_signed_url)}
                 className={cn(
                   "block overflow-hidden rounded-lg bg-muted/40 text-left",
                   single ? "w-[48%] max-w-[50%]" : "aspect-video",
                 )}
                 style={single ? { aspectRatio: "64 / 25" } : undefined}
               >
-                <img
-                  src={m.image_signed_url ?? ""}
-                  alt={m.caption ?? ""}
-                  className={cn(
-                    "h-full w-full transition duration-300 hover:scale-105",
-                    single ? "object-cover object-center" : "object-cover",
-                  )}
-                />
+                {mediaMasked ? (
+                  <MaskedImage seed={`${s.id}-media-${m.slot}`} cells={12} label="Restricted image" />
+                ) : (
+                  <img
+                    src={m.image_signed_url ?? ""}
+                    alt={m.caption ?? ""}
+                    className={cn(
+                      "h-full w-full transition duration-300 hover:scale-105",
+                      single ? "object-cover object-center" : "object-cover",
+                    )}
+                  />
+                )}
 
               </button>
             );
