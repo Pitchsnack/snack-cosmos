@@ -52,7 +52,7 @@ import { GlobalStartupLineageBadge } from "@/components/global-startups/global-s
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { PublicationActions } from "@/components/startups/publication-actions";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
-import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
+import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
@@ -132,12 +132,12 @@ export function StartupDetailPanel({
 
 
 
-  const mediaSlots = s.media.filter((m) => m.image_signed_url);
+  const mediaMasked = restricted.has("media_images");
+  const mediaSlots = mediaMasked ? s.media : s.media.filter((m) => m.image_signed_url);
 
   const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
   if (s.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${s.year_founded}` });
-  if (!restricted.has("company_type") && s.company_type)
-    metaItems.push({ icon: Building2, label: s.company_type });
+  if (s.company_type) metaItems.push({ icon: Building2, label: s.company_type });
   if (s.headquarters) metaItems.push({ icon: MapPin, label: s.headquarters });
   if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
 
@@ -149,7 +149,7 @@ export function StartupDetailPanel({
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {restricted.has("logo") ? (
-              <RestrictedBlock />
+              <MaskedImage seed={`${s.id}-logo`} cells={8} />
             ) : s.logo_signed_url ? (
               <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
             ) : (
@@ -160,7 +160,7 @@ export function StartupDetailPanel({
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-semibold tracking-tight leading-tight">
-              {restricted.has("startup_name") ? <RestrictedPill className="text-xs" /> : s.startup_name}
+              {s.startup_name}
               <PreviewNeedsReassignmentBadge
                 name={s.startup_name}
                 domain="startup"
@@ -338,21 +338,25 @@ export function StartupDetailPanel({
               <button
                 key={m.slot}
                 type="button"
-                onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
+                onClick={() => !mediaMasked && m.image_signed_url && setLightbox(m.image_signed_url)}
                 className={cn(
                   "block overflow-hidden rounded-lg bg-muted/40 text-left",
                   single ? "w-[48%] max-w-[50%]" : "aspect-video",
                 )}
                 style={single ? { aspectRatio: "64 / 25" } : undefined}
               >
-                <img
-                  src={m.image_signed_url ?? ""}
-                  alt={m.caption ?? ""}
-                  className={cn(
-                    "h-full w-full transition duration-300 hover:scale-105",
-                    single ? "object-cover object-center" : "object-cover",
-                  )}
-                />
+                {mediaMasked ? (
+                  <MaskedImage seed={`${s.id}-media-${m.slot}`} cells={12} label="Restricted image" />
+                ) : (
+                  <img
+                    src={m.image_signed_url ?? ""}
+                    alt={m.caption ?? ""}
+                    className={cn(
+                      "h-full w-full transition duration-300 hover:scale-105",
+                      single ? "object-cover object-center" : "object-cover",
+                    )}
+                  />
+                )}
 
               </button>
             );
@@ -455,8 +459,12 @@ export function StartupDetailPanel({
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
             {s.founders.map((f) => (
               <div key={f.id} className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted/60 text-xs font-semibold text-muted-foreground">
-                  {f.full_name.charAt(0).toUpperCase()}
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted/60 text-xs font-semibold text-muted-foreground">
+                  {restricted.has("founders") ? (
+                    <MaskedImage seed={`${s.id}-${f.id}`} cells={6} className="rounded-full" showLock={false} label="Restricted founder picture" />
+                  ) : (
+                    (f.full_name ?? "").charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium leading-tight">{f.full_name}</div>

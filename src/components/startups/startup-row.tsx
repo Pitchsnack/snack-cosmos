@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from "react";
 import { MapPin, Users, Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
+import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
@@ -53,7 +53,7 @@ export function StartupRow({
       {/* Logo */}
       <div className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
         {restricted.has("logo") ? (
-          <RestrictedBlock />
+          <MaskedImage seed={`${s.id}-logo`} cells={7} />
         ) : s.logo_signed_url ? (
           <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
         ) : (
@@ -66,9 +66,7 @@ export function StartupRow({
       {/* Identity + description */}
       <div className="min-w-0 flex-1 max-w-[36%]">
         <div className="flex flex-wrap items-center gap-1.5">
-          {restricted.has("startup_name") ? (
-            <RestrictedPill />
-          ) : (
+          {(
             <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
               {s.startup_name}
             </h3>
@@ -79,9 +77,7 @@ export function StartupRow({
               {s.investment_stage}
             </Badge>
           )}
-          {restricted.has("company_type") ? (
-            <RestrictedPill />
-          ) : s.company_type ? (
+          {s.company_type ? (
             <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
               {s.company_type}
             </Badge>

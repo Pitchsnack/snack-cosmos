@@ -7,7 +7,7 @@ import { RelationshipChips } from "@/components/relationships/relationship-chips
 import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
-import { RestrictedPill, RestrictedBlock, restrictedSet } from "@/components/startups/restricted-placeholder";
+import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 
 
 
@@ -81,7 +81,7 @@ export function StartupListItem({
       <div className="flex w-full items-start gap-3 pr-8">
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {restricted.has("logo") ? (
-            <RestrictedBlock />
+            <MaskedImage seed={`${s.id}-logo`} cells={7} />
           ) : s.logo_signed_url ? (
             <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
           ) : (
@@ -92,9 +92,7 @@ export function StartupListItem({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            {restricted.has("startup_name") ? (
-              <RestrictedPill />
-            ) : (
+            {(
               <h3 className="truncate text-left text-sm font-semibold leading-tight group-hover:text-accent">
                 {s.startup_name}
               </h3>
@@ -108,9 +106,7 @@ export function StartupListItem({
               )}
             </div>
           </div>
-          {restricted.has("company_type") ? (
-            <div className="mt-0.5"><RestrictedPill /></div>
-          ) : s.company_type ? (
+          {s.company_type ? (
             <div className="mt-0.5 text-left text-[11px] text-muted-foreground">{s.company_type}</div>
           ) : null}
           {s.headquarters && (

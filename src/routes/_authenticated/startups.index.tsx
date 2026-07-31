@@ -11,6 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
+import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
@@ -111,10 +112,13 @@ function StartupsPageInner() {
       (it) => readPreviewPublication(it.id).status === "published",
     );
   }, [rawItems, previewDirectoryFilter, previewVersion]);
+  const { mask } = useRestrictionMask("startups");
   const items = useMemo(
-    () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems),
-    [baseItems, favOnly, favIds],
+    () =>
+      (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems).map((it) => mask(it)),
+    [baseItems, favOnly, favIds, mask],
   );
+
   const total = favOnly ? items.length : data && "total" in data ? data.total : 0;
   const pageCount = favOnly ? 1 : Math.max(1, Math.ceil(total / pageSize));
 
