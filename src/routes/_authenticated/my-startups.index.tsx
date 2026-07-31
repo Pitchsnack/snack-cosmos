@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X, Star, Building2 } from "lucide-react";
 import { z } from "zod";
@@ -42,6 +42,7 @@ const searchSchema = z.object({
   sort: z.enum(SORT).optional(),
   view: z.enum(VIEW).optional(),
   selected: z.string().optional(),
+  panel: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
 });
@@ -70,7 +71,7 @@ function MyStartupsPageInner() {
   const { data: session } = useSessionContext();
   const meId = session?.user?.id ?? null;
   const isStartupUser = roles.includes("STARTUP_USER");
-  const navigate = useNavigate({ from: "/my-startups" });
+  const navigate = useNavigate({ from: "/my-startups/" });
   const s = Route.useSearch();
   const page = s.page ?? 1;
   const sort = s.sort ?? "updated_desc";
@@ -79,7 +80,14 @@ function MyStartupsPageInner() {
   const favOnly = !!s.fav;
   const { ids: favIds } = useFavoriteStartups();
 
-  const [modalId, setModalId] = useState<string | null>(null);
+  const [modalId, setModalId] = useState<string | null>(s.panel ?? null);
+  useEffect(() => {
+    if (s.panel) setModalId(s.panel);
+  }, [s.panel]);
+  const closeStartup = () => {
+    setModalId(null);
+    if (s.panel) navigate({ search: (prev) => ({ ...prev, panel: undefined }), replace: true });
+  };
   const openStartup = (id: string) => setModalId(id);
 
   const pageSize = 100; // fetch enough to filter client-side to mine
@@ -318,7 +326,7 @@ function MyStartupsPageInner() {
       {/* Keep unused paging variable silenced */}
       <span className="hidden">{page}</span>
 
-      <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
+      <Dialog open={!!modalId} onOpenChange={(o) => !o && closeStartup()}>
         <DialogContent
           className={cn(
             "[&>button]:hidden",
@@ -327,7 +335,7 @@ function MyStartupsPageInner() {
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
           )}
         >
-          <MyStartupPanelModalBody modalId={modalId} onClose={() => setModalId(null)} />
+          <MyStartupPanelModalBody modalId={modalId} onClose={closeStartup} />
         </DialogContent>
       </Dialog>
     </div>
