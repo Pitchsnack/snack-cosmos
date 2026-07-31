@@ -11,6 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
+import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
