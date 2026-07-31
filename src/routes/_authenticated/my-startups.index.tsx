@@ -71,7 +71,7 @@ function MyStartupsPageInner() {
   const { data: session } = useSessionContext();
   const meId = session?.user?.id ?? null;
   const isStartupUser = roles.includes("STARTUP_USER");
-  const navigate = useNavigate({ from: "/my-startups" });
+  const navigate = useNavigate({ from: "/my-startups/" });
   const s = Route.useSearch();
   const page = s.page ?? 1;
   const sort = s.sort ?? "updated_desc";
