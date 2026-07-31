@@ -90,7 +90,13 @@ export function MaskedImage({
         }}
       >
         {tiles.map((o, i) => (
-          <div key={i} style={{ backgroundColor: `hsl(var(--muted-foreground) / ${o})` }} />
+          <div
+            key={i}
+            style={{
+              backgroundColor: `color-mix(in srgb, var(--muted-foreground) ${Math.round(o * 100)}%, var(--muted))`,
+            }}
+          />
+
         ))}
       </div>
       {showLock && (
