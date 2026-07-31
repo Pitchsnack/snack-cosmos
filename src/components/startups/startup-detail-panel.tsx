@@ -70,6 +70,7 @@ export function StartupDetailPanel({
   showPublication = false,
   workspace = "startups",
   onClose,
+  myStartupsReturnSearch,
 }: {
   id: string;
   showEdit?: boolean;
@@ -79,6 +80,21 @@ export function StartupDetailPanel({
   /** Which module owns this surface — keeps edit navigation inside that module. */
   workspace?: "startups" | "my-startups";
   onClose?: () => void;
+  /** List state restored after editing from the My Startups information panel. */
+  myStartupsReturnSearch?: {
+    q?: string;
+    stage?: string;
+    industry?: string;
+    hq?: string;
+    ct?: string;
+    ptag?: string;
+    mtag?: string;
+    sort?: "updated_desc" | "created_desc" | "name_asc" | "name_desc";
+    view?: "grid" | "split" | "list";
+    selected?: string;
+    page?: number;
+    fav?: boolean;
+  };
 }) {
   const isMyWorkspace = workspace === "my-startups";
   const { data, isLoading, error } = useStartup(id);
@@ -195,9 +211,15 @@ export function StartupDetailPanel({
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
             >
-              <Link to={isMyWorkspace ? "/my-startups/$id/edit" : "/startups/$id/edit"} params={{ id }}>
-                <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
-              </Link>
+              {isMyWorkspace ? (
+                <Link to="/my-startups/$id/edit" params={{ id }} search={myStartupsReturnSearch}>
+                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+                </Link>
+              ) : (
+                <Link to="/startups/$id/edit" params={{ id }}>
+                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+                </Link>
+              )}
             </Button>
           )}
           {compact && (
@@ -232,9 +254,15 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                   {canManage ? (
                     <DropdownMenuItem asChild>
-                      <Link to={isMyWorkspace ? "/my-startups/$id/edit" : "/startups/$id/edit"} params={{ id }} onClick={() => onClose?.()}>
-                        <Pencil className="mr-2 h-4 w-4" /> Edit
-                      </Link>
+                      {isMyWorkspace ? (
+                        <Link to="/my-startups/$id/edit" params={{ id }} search={myStartupsReturnSearch}>
+                          <Pencil className="mr-2 h-4 w-4" /> Edit
+                        </Link>
+                      ) : (
+                        <Link to="/startups/$id/edit" params={{ id }} onClick={() => onClose?.()}>
+                          <Pencil className="mr-2 h-4 w-4" /> Edit
+                        </Link>
+                      )}
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem disabled>

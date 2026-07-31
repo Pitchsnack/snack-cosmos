@@ -15,7 +15,7 @@ import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
 import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favorite-list-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui/dialog";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
@@ -86,9 +86,12 @@ function MyStartupsPageInner() {
   }, [s.panel]);
   const closeStartup = () => {
     setModalId(null);
-    if (s.panel) navigate({ search: (prev) => ({ ...prev, panel: undefined }), replace: true });
+    if (s.panel) navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }), replace: true });
   };
-  const openStartup = (id: string) => setModalId(id);
+  const openStartup = (id: string) => {
+    setModalId(id);
+    navigate({ search: (prev: typeof s) => ({ ...prev, panel: id }), replace: true });
+  };
 
   const pageSize = 100; // fetch enough to filter client-side to mine
 
@@ -335,14 +338,27 @@ function MyStartupsPageInner() {
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
           )}
         >
-          <MyStartupPanelModalBody modalId={modalId} onClose={closeStartup} />
+          <DialogTitle className="sr-only">My startup information</DialogTitle>
+          <MyStartupPanelModalBody
+            modalId={modalId}
+            onClose={closeStartup}
+            returnSearch={{ ...s, panel: undefined }}
+          />
         </DialogContent>
       </Dialog>
     </div>
   );
 }
 
-function MyStartupPanelModalBody({ modalId, onClose }: { modalId: string | null; onClose: () => void }) {
+function MyStartupPanelModalBody({
+  modalId,
+  onClose,
+  returnSearch,
+}: {
+  modalId: string | null;
+  onClose: () => void;
+  returnSearch: Omit<z.infer<typeof searchSchema>, "panel"> & { panel?: undefined };
+}) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const visible = hovered || focused;
@@ -373,6 +389,7 @@ function MyStartupPanelModalBody({ modalId, onClose }: { modalId: string | null;
             showPublication
             workspace="my-startups"
             onClose={onClose}
+            myStartupsReturnSearch={returnSearch}
           />
         )}
       </div>
