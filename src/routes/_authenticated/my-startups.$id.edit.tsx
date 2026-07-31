@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Building2, Lock } from "lucide-react";
+import { z } from "zod";
 
 import { StartupForm } from "@/components/startups/startup-form";
 import { PermissionGuard } from "@/components/permission-guard";
@@ -11,6 +12,20 @@ import type { StartupDetail } from "@/lib/startups.functions";
 import { isUuid } from "@/lib/uuid";
 
 export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
+  validateSearch: z.object({
+    q: z.string().optional(),
+    stage: z.string().optional(),
+    industry: z.string().optional(),
+    hq: z.string().optional(),
+    ct: z.string().optional(),
+    ptag: z.string().optional(),
+    mtag: z.string().optional(),
+    sort: z.enum(["updated_desc", "created_desc", "name_asc", "name_desc"]).optional(),
+    view: z.enum(["grid", "split", "list"]).optional(),
+    selected: z.string().optional(),
+    page: z.coerce.number().int().optional(),
+    fav: z.coerce.boolean().optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Edit My Startup — SnackPortal2" },
@@ -25,6 +40,7 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
 
 function EditMyStartupPage() {
   const { id } = Route.useParams();
+  const returnSearch = Route.useSearch();
   const validId = isUuid(id);
   const { data, isLoading, error } = useStartup(validId ? id : undefined);
 
@@ -40,8 +56,8 @@ function EditMyStartupPage() {
                 <Building2 className="h-3.5 w-3.5" /> MY WORKSPACE
               </div>
               <Link
-                to="/my-startups/$id"
-                params={{ id }}
+                to="/my-startups"
+                search={{ ...returnSearch, panel: id }}
                 className="mt-1 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" /> Back to my startup
@@ -72,7 +88,11 @@ function EditMyStartupPage() {
                 </TabsList>
                 <TabsContent value="edit" className="mt-6">
                   <div className="mx-auto max-w-4xl">
-                    <StartupForm startup={data as unknown as StartupDetail} workspace="my-startups" />
+                    <StartupForm
+                      startup={data as unknown as StartupDetail}
+                      workspace="my-startups"
+                      myStartupsReturnSearch={returnSearch}
+                    />
                   </div>
                 </TabsContent>
                 <TabsContent value="basic-restrictions" className="mt-6">

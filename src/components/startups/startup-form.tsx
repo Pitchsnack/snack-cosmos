@@ -125,6 +125,21 @@ interface Props {
   redirectAfterCreate?: "detail" | "my-startups";
   /** Which module owns this form — keeps post-save navigation inside that module. */
   workspace?: "startups" | "my-startups";
+  /** My Startups list state to restore after a successful edit. */
+  myStartupsReturnSearch?: {
+    q?: string;
+    stage?: string;
+    industry?: string;
+    hq?: string;
+    ct?: string;
+    ptag?: string;
+    mtag?: string;
+    sort?: "updated_desc" | "created_desc" | "name_asc" | "name_desc";
+    view?: "grid" | "split" | "list";
+    selected?: string;
+    page?: number;
+    fav?: boolean;
+  };
 }
 
 
@@ -152,7 +167,12 @@ function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
   return { logo, slots };
 }
 
-export function StartupForm({ startup, redirectAfterCreate = "detail", workspace = "startups" }: Props) {
+export function StartupForm({
+  startup,
+  redirectAfterCreate = "detail",
+  workspace = "startups",
+  myStartupsReturnSearch,
+}: Props) {
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
   const isMyStartupsCreate = !isEdit && redirectAfterCreate === "my-startups";
@@ -495,15 +515,20 @@ export function StartupForm({ startup, redirectAfterCreate = "detail", workspace
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
       void investorStartupLinksAdapter.saveStartupInvestorRelationships(startup!.id, investorLinks);
       toast.success("Saved");
-      qc.invalidateQueries({ queryKey: ["startup", startup!.id] });
-      qc.invalidateQueries({ queryKey: ["startups"] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["startup", startup!.id] }),
+        qc.invalidateQueries({ queryKey: ["startups"] }),
+      ]);
       guard.markSaved();
       if (isMyWorkspace) {
-        navigate({ to: "/my-startups", search: { panel: startup!.id } });
+        navigate({
+          to: "/my-startups",
+          search: { ...myStartupsReturnSearch, panel: startup!.id },
+        });
       } else {
         navigate({ to: "/startups/$id", params: { id: startup!.id } });
       }
