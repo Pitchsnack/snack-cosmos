@@ -53,6 +53,7 @@ import {
   ConnectionAction,
   ConnectionStateCard,
 } from "@/components/startups/connection-action";
+import { useConnectionState } from "@/hooks/use-connection-state";
 
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
