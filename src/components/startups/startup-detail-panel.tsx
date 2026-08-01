@@ -304,6 +304,17 @@ export function StartupDetailPanel({
         />
       )}
 
+      {/* Steps 2 & 4 — relationship state (Connect → Requested → Share) */}
+      <ConnectionStateCard
+        startupRef={id}
+        counterpartName={counterpartName}
+        counterpartRole={counterpartRole}
+      />
+      {/* Step 3 — optional peer suggestions, only after the request is sent */}
+      {connectionState === "requested" && <SuggestedPeers />}
+
+
+
 
 
       <AlertDialog open={confirm === "archive"} onOpenChange={(o) => !o && setConfirm(null)}>
