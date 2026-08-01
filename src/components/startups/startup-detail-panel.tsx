@@ -23,6 +23,7 @@ import {
   Archive,
   Trash2,
   X,
+  Check,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -190,6 +191,15 @@ export function StartupDetailPanel({
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-semibold tracking-tight leading-tight">
               {s.startup_name}
+              {connectionState === "connected" && (
+                <span
+                  className="ml-2 inline-flex items-center align-middle text-emerald-600 dark:text-emerald-400"
+                  title="Connected"
+                  aria-label="Connected"
+                >
+                  <Check className="h-5 w-5" strokeWidth={2.5} />
+                </span>
+              )}
               <PreviewNeedsReassignmentBadge
                 name={s.startup_name}
                 domain="startup"
