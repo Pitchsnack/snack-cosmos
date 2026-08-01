@@ -53,8 +53,7 @@ import {
   ConnectionAction,
   ConnectionStateCard,
 } from "@/components/startups/connection-action";
-import { SuggestedPeers } from "@/components/startups/suggested-peers";
-import { useConnectionState } from "@/hooks/use-connection-state";
+
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { cn } from "@/lib/utils";
@@ -112,7 +111,6 @@ export function StartupDetailPanel({
   const [descExpanded, setDescExpanded] = useState(false);
   const [descClamped, setDescClamped] = useState(false);
   const descRef = useRef<HTMLParagraphElement>(null);
-  const connectionState = useConnectionState(id);
 
 
   useEffect(() => {
@@ -316,8 +314,6 @@ export function StartupDetailPanel({
         counterpartName={counterpartName}
         counterpartRole={counterpartRole}
       />
-      {/* Step 3 — optional peer suggestions, only after the request is sent */}
-      {connectionState === "requested" && <SuggestedPeers />}
 
 
 
