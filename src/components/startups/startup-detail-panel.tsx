@@ -114,6 +114,8 @@ export function StartupDetailPanel({
   const [descExpanded, setDescExpanded] = useState(false);
   const [descClamped, setDescClamped] = useState(false);
   const descRef = useRef<HTMLParagraphElement>(null);
+  const connectionState = useConnectionState(id);
+
 
   useEffect(() => {
     const el = descRef.current;
