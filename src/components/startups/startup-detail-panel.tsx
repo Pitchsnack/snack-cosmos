@@ -51,9 +51,16 @@ import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { PublicationActions } from "@/components/startups/publication-actions";
+import {
+  ConnectionAction,
+  ConnectionStateCard,
+} from "@/components/startups/connection-action";
+import { SuggestedPeers } from "@/components/startups/suggested-peers";
+import { useConnectionState } from "@/hooks/use-connection-state";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { cn } from "@/lib/utils";
+
 
 function monogram(name: string) {
   return name
