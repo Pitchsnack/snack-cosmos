@@ -121,47 +121,8 @@ export function ConnectionStateCard({
     );
   }
 
-  return (
-    <section className="space-y-4 rounded-xl border border-border/70 bg-card p-5">
-      <div className="flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] p-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-          <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" strokeWidth={3} />
-        </div>
-        <div>
-          <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            You’re now connected!
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            You can now share information with {counterpartName}.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-            {initials(counterpartName)}
-          </div>
-          <div>
-            <div className="text-sm font-semibold">{counterpartName}</div>
-            {counterpartRole && (
-              <div className="text-xs text-muted-foreground">{counterpartRole}</div>
-            )}
-          </div>
-        </div>
-        <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-          <Check className="h-3.5 w-3.5" /> Connected
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button variant="outline" className="flex-1 gap-2">
-          <MessageSquare className="h-4 w-4" /> Message
-        </Button>
-        <Button className="flex-1 gap-2 bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]">
-          <Share2 className="h-4 w-4" /> Share
-        </Button>
-      </div>
-    </section>
-  );
+  // Connected state is intentionally not rendered as a card. The header shows a
+  // subtle green checkmark instead; Message/Share actions remain in the primary
+  // ConnectionAction button area.
+  return null;
 }
