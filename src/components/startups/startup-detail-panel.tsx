@@ -155,6 +155,12 @@ export function StartupDetailPanel({
   const s = mask(data);
   const restricted = restrictedSet(s);
 
+  // Relationship counterpart: primary founder when available, else the startup.
+  const primaryFounder = s.founders?.[0];
+  const counterpartName = primaryFounder?.full_name || s.startup_name;
+  const counterpartRole = primaryFounder
+    ? [primaryFounder.position, s.startup_name].filter(Boolean).join(" · ")
+    : (s.company_type ?? null);
 
 
   const mediaMasked = restricted.has("media_images");
