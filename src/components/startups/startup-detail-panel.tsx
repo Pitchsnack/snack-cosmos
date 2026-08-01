@@ -224,13 +224,7 @@ export function StartupDetailPanel({
           )}
           {compact && (
             <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 rounded-full border-accent/40 px-3 py-1 text-xs font-medium text-accent hover:bg-accent/10 hover:text-accent"
-              >
-                <Share2 className="h-3.5 w-3.5" /> Share Info
-              </Button>
+              <ConnectionAction startupRef={id} />
               <FavoriteToggle id={id} size="md" className="h-8 w-8" />
 
               <DropdownMenu>
@@ -245,13 +239,10 @@ export function StartupDetailPanel({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem disabled>
-                    <Link2 className="mr-2 h-4 w-4" /> Connect
-                    <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
+
                   {canManage ? (
                     <DropdownMenuItem asChild>
                       {isMyWorkspace ? (
