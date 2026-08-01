@@ -53,6 +53,7 @@ import {
   ConnectionAction,
   ConnectionStateCard,
 } from "@/components/startups/connection-action";
+import { useConnectionState } from "@/hooks/use-connection-state";
 
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
@@ -102,6 +103,7 @@ export function StartupDetailPanel({
 }) {
   const isMyWorkspace = workspace === "my-startups";
   const { data, isLoading, error } = useStartup(id);
+  const connectionState = useConnectionState(id);
   // Basic Information Restrictions gate what non-authorized viewers receive.
   const { mask } = useRestrictionMask(workspace);
   const { has, isControl } = usePermissions();
@@ -363,6 +365,8 @@ export function StartupDetailPanel({
         </AlertDialogContent>
       </AlertDialog>
 
+      {connectionState === "requested" ? null : (
+        <>
       {/* Media */}
       {mediaSlots.length > 0 && (
         <div
@@ -549,6 +553,8 @@ export function StartupDetailPanel({
             ))}
           </div>
         </Section>
+      )}
+        </>
       )}
     </div>
   );
