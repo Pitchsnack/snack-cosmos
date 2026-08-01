@@ -17,9 +17,7 @@ import {
   Users,
   UserCircle2,
   FileText,
-  Share2,
   MoreVertical,
-  Link2,
   Copy,
   Activity,
   Archive,
@@ -51,9 +49,16 @@ import { usePermissions } from "@/hooks/use-session-context";
 import { GlobalStartupLineageBadge } from "@/components/global-startups/global-startup-lineage-badge";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { PublicationActions } from "@/components/startups/publication-actions";
+import {
+  ConnectionAction,
+  ConnectionStateCard,
+} from "@/components/startups/connection-action";
+import { SuggestedPeers } from "@/components/startups/suggested-peers";
+import { useConnectionState } from "@/hooks/use-connection-state";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { cn } from "@/lib/utils";
+
 
 function monogram(name: string) {
   return name
@@ -107,6 +112,8 @@ export function StartupDetailPanel({
   const [descExpanded, setDescExpanded] = useState(false);
   const [descClamped, setDescClamped] = useState(false);
   const descRef = useRef<HTMLParagraphElement>(null);
+  const connectionState = useConnectionState(id);
+
 
   useEffect(() => {
     const el = descRef.current;
@@ -146,6 +153,12 @@ export function StartupDetailPanel({
   const s = mask(data);
   const restricted = restrictedSet(s);
 
+  // Relationship counterpart: primary founder when available, else the startup.
+  const primaryFounder = s.founders?.[0];
+  const counterpartName = primaryFounder?.full_name || s.startup_name;
+  const counterpartRole = primaryFounder
+    ? [primaryFounder.position, s.startup_name].filter(Boolean).join(" · ")
+    : (s.company_type ?? null);
 
 
   const mediaMasked = restricted.has("media_images");
@@ -224,13 +237,7 @@ export function StartupDetailPanel({
           )}
           {compact && (
             <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 rounded-full border-accent/40 px-3 py-1 text-xs font-medium text-accent hover:bg-accent/10 hover:text-accent"
-              >
-                <Share2 className="h-3.5 w-3.5" /> Share Info
-              </Button>
+              <ConnectionAction startupRef={id} />
               <FavoriteToggle id={id} size="md" className="h-8 w-8" />
 
               <DropdownMenu>
@@ -245,13 +252,10 @@ export function StartupDetailPanel({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem disabled>
-                    <Link2 className="mr-2 h-4 w-4" /> Connect
-                    <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
+
                   {canManage ? (
                     <DropdownMenuItem asChild>
                       {isMyWorkspace ? (
@@ -305,6 +309,17 @@ export function StartupDetailPanel({
           canPublish={canManage}
         />
       )}
+
+      {/* Steps 2 & 4 — relationship state (Connect → Requested → Share) */}
+      <ConnectionStateCard
+        startupRef={id}
+        counterpartName={counterpartName}
+        counterpartRole={counterpartRole}
+      />
+      {/* Step 3 — optional peer suggestions, only after the request is sent */}
+      {connectionState === "requested" && <SuggestedPeers />}
+
+
 
 
 
