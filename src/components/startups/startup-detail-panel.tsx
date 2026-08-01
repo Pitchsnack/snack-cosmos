@@ -552,6 +552,8 @@ export function StartupDetailPanel({
           </div>
         </Section>
       )}
+        </>
+      )}
     </div>
   );
 }
