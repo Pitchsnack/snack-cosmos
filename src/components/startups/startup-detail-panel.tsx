@@ -102,6 +102,7 @@ export function StartupDetailPanel({
 }) {
   const isMyWorkspace = workspace === "my-startups";
   const { data, isLoading, error } = useStartup(id);
+  const connectionState = useConnectionState(id);
   // Basic Information Restrictions gate what non-authorized viewers receive.
   const { mask } = useRestrictionMask(workspace);
   const { has, isControl } = usePermissions();
