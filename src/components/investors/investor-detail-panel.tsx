@@ -63,7 +63,7 @@ type InvestorDetail = {
   short_description: string | null;
   long_description: string | null;
   bio?: string | null;
-  investment_focus?: string | null;
+  investment_focus?: string | string[] | null;
   keywords?: string[] | null;
   preferred_stages?: string[] | null;
   preferred_industries?: string[] | null;
@@ -378,13 +378,20 @@ export function InvestorDetailPanel({
           )}
 
           {/* Investment focus */}
-          {i.investment_focus?.trim() ? (
-            <Section icon={Layers} title="Investment focus">
-              <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/85">
-                {i.investment_focus}
-              </p>
-            </Section>
-          ) : null}
+          {(() => {
+            const focus = Array.isArray(i.investment_focus)
+              ? i.investment_focus.filter(Boolean)
+              : typeof i.investment_focus === "string" && i.investment_focus.trim()
+                ? [i.investment_focus.trim()]
+                : [];
+            if (!focus.length) return null;
+            return (
+              <Section icon={Layers} title="Investment focus">
+                <ChipRow tags={focus} tone="primary" />
+              </Section>
+            );
+          })()}
+
 
 
           {i.preferred_stages?.length ? (
