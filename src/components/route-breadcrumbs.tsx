@@ -44,7 +44,7 @@ const PATH_LABELS: Record<string, string> = {
   "/security": "Security",
   "/notifications": "Notifications",
   "/preferences": "Preferences",
-  "/my-page": "My Page",
+  "/my-page": "My Profile",
   "/startup-activity": "Startup Activity",
 };
 

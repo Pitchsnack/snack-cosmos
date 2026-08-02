@@ -77,7 +77,7 @@ type NavItem = {
 // whose effective role set includes STARTUP_USER.
 const STARTUP_MENU_ORDER = [
   "Dashboard",
-  "My Page",
+  "My Profile",
   "Startup Activity",
   "My Startups",
   "Startups Directory",
@@ -160,7 +160,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
   { label: "Startup Activity", icon: BarChart3, path: "/startup-activity", exact: false },
-  { label: "My Page", icon: UserCircle, path: "/my-page", exact: false },
+  { label: "My Profile", icon: UserCircle, path: "/my-page", exact: false },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 

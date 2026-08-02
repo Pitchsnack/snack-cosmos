@@ -24,15 +24,15 @@ import { ROLE_LABELS } from "@/lib/permissions";
 export const Route = createFileRoute("/_authenticated/my-page")({
   head: () => ({
     meta: [
-      { title: "My Page — SnackPortal2" },
+      { title: "My Profile — SnackPortal2" },
       {
         name: "description",
-        content: "Manage your profile, expertise, tags and account settings.",
+        content: "Manage your professional profile, expertise, tags and account settings.",
       },
-      { property: "og:title", content: "My Page — SnackPortal2" },
+      { property: "og:title", content: "My Profile — SnackPortal2" },
       {
         property: "og:description",
-        content: "Manage your profile, expertise, tags and account settings.",
+        content: "Manage your professional profile, expertise, tags and account settings.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -76,7 +76,7 @@ function MyPage() {
   const { data: session, isLoading } = useSessionContext();
   const user = session?.user;
 
-  const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "—";
+  const name = "Dan Antakon";
   const initials =
     (user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "") ||
     (user?.email?.[0]?.toUpperCase() ?? "?");
@@ -95,7 +95,7 @@ function MyPage() {
     <div className="-mx-8 -mt-10 -mb-10 min-h-screen bg-white px-8 pt-10 pb-10">
       <div className="space-y-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">My Page</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">My Profile</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Manage your profile, expertise, tags and account settings.
           </p>
