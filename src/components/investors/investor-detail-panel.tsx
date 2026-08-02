@@ -378,7 +378,7 @@ export function InvestorDetailPanel({
           )}
 
           {/* Investment focus */}
-          {i.investment_focus && (
+          {i.investment_focus?.trim() ? (
             <Section icon={Layers} title="Investment focus">
               <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/85">
                 {i.investment_focus}
