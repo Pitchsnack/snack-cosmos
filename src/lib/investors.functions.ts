@@ -128,6 +128,8 @@ export const listInvestors = createServerFn({ method: "GET" })
         id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url,
+        preferred_stages, preferred_industries, keywords, min_ticket_size, max_ticket_size,
+
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
         investor_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name)),
