@@ -63,7 +63,7 @@ type InvestorDetail = {
   short_description: string | null;
   long_description: string | null;
   bio?: string | null;
-  investment_focus?: string | null;
+  investment_focus?: string | string[] | null;
   keywords?: string[] | null;
   preferred_stages?: string[] | null;
   preferred_industries?: string[] | null;
