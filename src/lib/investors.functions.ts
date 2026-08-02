@@ -150,7 +150,13 @@ export const listInvestors = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const list = (rows ?? []) as unknown as Array<
       InvestorRow & {
+        preferred_stages: string[] | null;
+        preferred_industries: string[] | null;
+        keywords: string[] | null;
+        min_ticket_size: string | null;
+        max_ticket_size: string | null;
         tenants: { tenant_name: string } | null;
+
         investor_ownership: Array<{
           owning_agent_user_id: string;
           users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
