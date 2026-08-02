@@ -1,16 +1,16 @@
 import { Bookmark } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useFavoriteStartups } from "@/hooks/use-favorites";
+import { useFavorites, type FavoriteEntity } from "@/hooks/use-favorites";
 import { cn } from "@/lib/utils";
 
 /**
- * The single Favorite control used on every startup surface (Grid, Split, List,
- * Favorites views and the detail panel) in both My Startups and the Startup
- * Directory. Do not fork this component — favorite state must stay consistent
- * across surfaces.
+ * The single Favorite control used on every startup and investor surface
+ * (Grid, Split, List, Favorites views and the detail panel). Do not fork this
+ * component — favorite state must stay consistent across surfaces.
  */
 export function FavoriteToggle({
   id,
+  entity = "startups",
   className,
   iconClassName,
   size = "sm",
@@ -20,15 +20,17 @@ export function FavoriteToggle({
   withProvider = true,
 }: {
   id: string;
+  entity?: FavoriteEntity;
   className?: string;
   iconClassName?: string;
   size?: "sm" | "md";
   hidden?: boolean;
   withProvider?: boolean;
 }) {
-  const { isFavorite, toggle, isPending } = useFavoriteStartups();
+  const { isFavorite, toggle, isPending } = useFavorites(entity);
   const favorited = isFavorite(id);
   const pending = isPending(id);
+
   const label = favorited ? "Remove from Favorites" : "Add to Favorites";
 
   const activate = () => {
