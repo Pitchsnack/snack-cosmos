@@ -75,10 +75,16 @@ export interface InvestorRow {
 export interface InvestorListItem extends InvestorRow {
   tenant_name: string | null;
   logo_signed_url: string | null;
+  preferred_stages: string[];
+  preferred_industries: string[];
+  keywords: string[];
+  min_ticket_size: string | null;
+  max_ticket_size: string | null;
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
   related_startups: Array<{ id: string; name: string }>;
 }
+
 
 async function logActivity(
   supabase: import("@supabase/supabase-js").SupabaseClient,
@@ -122,6 +128,8 @@ export const listInvestors = createServerFn({ method: "GET" })
         id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url,
+        preferred_stages, preferred_industries, keywords, min_ticket_size, max_ticket_size,
+
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
         investor_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -142,7 +150,13 @@ export const listInvestors = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const list = (rows ?? []) as unknown as Array<
       InvestorRow & {
+        preferred_stages: string[] | null;
+        preferred_industries: string[] | null;
+        keywords: string[] | null;
+        min_ticket_size: string | null;
+        max_ticket_size: string | null;
         tenants: { tenant_name: string } | null;
+
         investor_ownership: Array<{
           owning_agent_user_id: string;
           users: { id: string; email: string; first_name: string | null; last_name: string | null } | null;
@@ -171,6 +185,12 @@ export const listInvestors = createServerFn({ method: "GET" })
         ...r,
         tenant_name: r.tenants?.tenant_name ?? null,
         logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
+        preferred_stages: r.preferred_stages ?? [],
+        preferred_industries: r.preferred_industries ?? [],
+        keywords: r.keywords ?? [],
+        min_ticket_size: r.min_ticket_size ?? null,
+        max_ticket_size: r.max_ticket_size ?? null,
+
         owning_agent: own ? { id: own.id, email: own.email, name: [own.first_name, own.last_name].filter(Boolean).join(" ") || null } : null,
         owning_ai_agent: aiOwn ? { id: aiOwn.id, email: aiOwn.email, name: [aiOwn.first_name, aiOwn.last_name].filter(Boolean).join(" ") || null } : null,
         related_startups,

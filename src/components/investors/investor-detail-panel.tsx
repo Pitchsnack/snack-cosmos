@@ -1,10 +1,41 @@
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, MapPin, Briefcase, Pencil } from "lucide-react";
+import {
+  ExternalLink,
+  MapPin,
+  Calendar,
+  Linkedin,
+  Briefcase,
+  Pencil,
+  Loader2,
+  Globe,
+  Building2,
+  Coins,
+  Layers,
+  Tag,
+  FileText,
+  MoreVertical,
+  Copy,
+  Activity,
+  X,
+  Check,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useInvestor } from "@/hooks/use-investor";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
+import { ConnectionAction, ConnectionStateCard } from "@/components/startups/connection-action";
+import { useConnectionState } from "@/hooks/use-connection-state";
+import { cn } from "@/lib/utils";
 
 function monogram(name: string) {
   return name
@@ -14,23 +45,83 @@ function monogram(name: string) {
     .join("");
 }
 
+type InvestorDetail = {
+  id: string;
+  investor_name: string;
+  investor_type: string | null;
+  country: string | null;
+  website_url: string | null;
+  linkedin_url: string | null;
+  email?: string | null;
+  firm_name?: string | null;
+  business_address?: string | null;
+  year_founded?: number | string | null;
+  aum: string | null;
+  ticket_size: string | null;
+  min_ticket_size?: string | null;
+  max_ticket_size?: string | null;
+  short_description: string | null;
+  long_description: string | null;
+  bio?: string | null;
+  investment_focus?: string | null;
+  keywords?: string[] | null;
+  preferred_stages?: string[] | null;
+  preferred_industries?: string[] | null;
+  status: string | null;
+  visibility: string | null;
+  logo_signed_url: string | null;
+  tenants?: { tenant_name: string } | null;
+  media?: Array<{ slot: number; image_signed_url: string | null }>;
+  linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url: string | null }>;
+};
+
 export function InvestorDetailPanel({
   id,
-  showEdit = false,
+  showEdit = true,
   compact = false,
+  onClose,
 }: {
   id: string;
   showEdit?: boolean;
   compact?: boolean;
+  onClose?: () => void;
 }) {
   const { data, isLoading, error } = useInvestor(id);
+  const connectionState = useConnectionState(id);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("investors.write");
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descClamped, setDescClamped] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
+
+  const i = (data ?? null) as InvestorDetail | null;
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    const prev = el.style.webkitLineClamp;
+    el.style.webkitLineClamp = "unset";
+    const full = el.scrollHeight;
+    el.style.webkitLineClamp = prev;
+    setDescClamped(full > el.clientHeight + 1);
+  }, [i?.long_description, i?.bio]);
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard?.writeText(`${window.location.origin}/investors/${id}`);
+    }
+  };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="text-sm">Loading investor…</span>
+      </div>
+    );
   }
-  if (error || !data) {
+  if (error || !i) {
     return (
       <div className="p-8 text-center text-sm text-destructive">
         Failed to load: {(error as Error)?.message ?? "Not found"}
@@ -38,68 +129,59 @@ export function InvestorDetailPanel({
     );
   }
 
-  const i = data as typeof data & {
-    tenants?: { tenant_name: string };
-    linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url: string | null }>;
-  };
   const linked = i.linked_startups ?? [];
+  const mediaSlots = (i.media ?? []).filter((m) => m.image_signed_url);
+  const ticket =
+    i.ticket_size || [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null;
+  const overview = i.long_description || i.bio || null;
+
+  const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
+  if (i.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${i.year_founded}` });
+  if (i.investor_type) metaItems.push({ icon: Building2, label: i.investor_type });
+  if (i.country) metaItems.push({ icon: MapPin, label: i.country });
+  if (i.aum) metaItems.push({ icon: Coins, label: `AUM ${i.aum}` });
+  if (ticket) metaItems.push({ icon: Layers, label: `Ticket ${ticket}` });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-[14px] text-foreground">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-border bg-card p-5 shadow-card">
-        <div className="flex flex-1 min-w-0 items-start gap-3">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
-            <span className="text-base font-semibold text-muted-foreground">
-              {monogram(i.investor_name)}
-            </span>
+      <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
+            {i.logo_signed_url ? (
+              <img src={i.logo_signed_url} alt="" className="h-full w-full object-contain" />
+            ) : (
+              <span className="text-sm font-semibold text-muted-foreground">
+                {monogram(i.investor_name)}
+              </span>
+            )}
           </div>
           <div className="min-w-0 flex-1">
-            {!compact && i.tenants?.tenant_name && (
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                {i.tenants.tenant_name}
-              </div>
-            )}
-            <h2 className="text-xl font-semibold tracking-tight">
+            <h2 className="text-2xl font-semibold leading-tight tracking-tight">
               {i.investor_name}
+              {connectionState === "connected" && (
+                <span
+                  className="ml-2 inline-flex items-center align-middle text-emerald-600 dark:text-emerald-400"
+                  title="Connected"
+                  aria-label="Connected"
+                >
+                  <Check className="h-5 w-5" strokeWidth={2.5} />
+                </span>
+              )}
               <PreviewNeedsReassignmentBadge
                 name={i.investor_name}
                 domain="investor"
                 className="ml-2 align-middle"
               />
             </h2>
-            {i.investor_type && (
-              <div className="text-xs text-muted-foreground">{i.investor_type}</div>
-            )}
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-              {i.country && (
-                <span className="inline-flex items-center gap-0.5">
-                  <MapPin className="h-3 w-3" />
-                  {i.country}
-                </span>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
+              {!compact && i.tenants?.tenant_name && <span>{i.tenants.tenant_name}</span>}
+              {!compact && i.tenants?.tenant_name && (i.country || i.investor_type) && (
+                <span aria-hidden>·</span>
               )}
-              {i.website_url && (
-                <a
-                  href={i.website_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-0.5 hover:text-foreground"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {i.website_url.replace(/^https?:\/\//, "")}
-                </a>
-              )}
-              {i.linkedin_url && (
-                <a
-                  href={i.linkedin_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-0.5 hover:text-foreground"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  LinkedIn
-                </a>
-              )}
+              {i.country && <span>{i.country}</span>}
+              {i.country && i.investor_type ? <span aria-hidden>·</span> : null}
+              {i.investor_type && <span>{i.investor_type}</span>}
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {i.status && (
@@ -115,68 +197,245 @@ export function InvestorDetailPanel({
             </div>
           </div>
         </div>
-        {showEdit && canManage && (
-          <div className="flex items-center gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/investors/$id" params={{ id }}>
-                <Pencil className="mr-1 h-3.5 w-3.5" /> Manage
+
+        <div className="flex flex-col items-end gap-2">
+          {showEdit && canManage && !compact && (
+            <Button
+              asChild
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Link to="/investors/$id/edit" params={{ id }}>
+                <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
               </Link>
             </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Description */}
-      {(i.short_description || i.long_description) && (
-        <Section title="About">
-          {i.short_description && <p className="text-sm">{i.short_description}</p>}
-          {i.long_description && (
-            <p className="whitespace-pre-line text-sm text-muted-foreground">
-              {i.long_description}
-            </p>
           )}
-        </Section>
-      )}
-
-      {/* Investment focus */}
-      {(i.aum || i.ticket_size || i.investor_type) && (
-        <Section title="Investment focus">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Type" value={i.investor_type} />
-            <Field label="AUM" value={i.aum} />
-            <Field label="Ticket size" value={i.ticket_size} />
-          </div>
-        </Section>
-      )}
-
-      {/* Portfolio / linked startups */}
-      <Section title={`Portfolio startups${linked.length > 0 ? ` (${linked.length})` : ""}`}>
-        {linked.length === 0 ? (
-          <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <Briefcase className="h-3.5 w-3.5" /> No startups linked yet.
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {linked.map((s) => (
-              <Link
-                key={s.id}
-                to="/startups/$id"
-                params={{ id: s.id }}
-                className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:border-accent/40 hover:bg-accent/5"
-              >
-                <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded bg-muted text-[10px] font-semibold text-muted-foreground">
-                  {s.logo_signed_url ? (
-                    <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
+          {compact && (
+            <div className="flex items-center gap-1">
+              <ConnectionAction startupRef={id} />
+              <FavoriteToggle id={id} entity="investors" size="md" className="h-8 w-8" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    aria-label="More actions"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onSelect={handleCopyLink}>
+                    <Copy className="mr-2 h-4 w-4" /> Copy Link
+                  </DropdownMenuItem>
+                  {canManage ? (
+                    <DropdownMenuItem asChild>
+                      <Link to="/investors/$id/edit" params={{ id }} onClick={() => onClose?.()}>
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                      </Link>
+                    </DropdownMenuItem>
                   ) : (
-                    monogram(s.startup_name)
+                    <DropdownMenuItem disabled>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
                   )}
-                </div>
-                <span className="font-medium">{s.startup_name}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </Section>
+                  <DropdownMenuItem disabled>
+                    <Activity className="mr-2 h-4 w-4" /> View Activity / Audit
+                    <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Relationship state (Connect → Requested → Share) */}
+      <ConnectionStateCard
+        startupRef={id}
+        counterpartName={i.investor_name}
+        counterpartRole={i.investor_type}
+      />
+
+      {connectionState === "requested" ? null : (
+        <>
+          {/* Media */}
+          {mediaSlots.length > 0 && (
+            <div
+              className={cn(
+                "grid gap-3",
+                mediaSlots.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3",
+              )}
+            >
+              {mediaSlots.map((m) => {
+                const single = mediaSlots.length === 1;
+                return (
+                  <button
+                    key={m.slot}
+                    type="button"
+                    onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
+                    className={cn(
+                      "block overflow-hidden rounded-lg bg-muted/40 text-left",
+                      single ? "w-[48%] max-w-[50%]" : "aspect-video",
+                    )}
+                    style={single ? { aspectRatio: "64 / 25" } : undefined}
+                  >
+                    <img
+                      src={m.image_signed_url ?? ""}
+                      alt=""
+                      className="h-full w-full object-cover transition duration-300 hover:scale-105"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {lightbox &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <LightboxOverlay url={lightbox} onClose={() => setLightbox(null)} />,
+              document.body,
+            )}
+
+          {/* Short description */}
+          {i.short_description && (
+            <p className="text-[15px] leading-relaxed text-foreground/85">{i.short_description}</p>
+          )}
+
+          {/* Meta grid */}
+          {(metaItems.length > 0 || i.email || i.website_url || i.linkedin_url) && (
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              {metaItems.map((m, idx) => {
+                const Icon = m.icon;
+                return (
+                  <div key={idx} className="flex items-center gap-2 text-foreground/80">
+                    <Icon className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+                    <span>{m.label}</span>
+                  </div>
+                );
+              })}
+              {i.website_url && (
+                <a
+                  href={i.website_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 text-accent hover:underline"
+                >
+                  <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  <span className="truncate">
+                    Website <span aria-hidden>→</span>
+                  </span>
+                </a>
+              )}
+              {i.linkedin_url && (
+                <a
+                  href={i.linkedin_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 text-accent hover:underline"
+                >
+                  <Linkedin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  <span className="truncate">LinkedIn</span>
+                </a>
+              )}
+              {i.email && (
+                <a
+                  href={`mailto:${i.email}`}
+                  className="flex items-center gap-2 text-accent hover:underline"
+                >
+                  <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  <span className="truncate">{i.email}</span>
+                </a>
+              )}
+            </dl>
+          )}
+
+          {/* Overview */}
+          {overview && (
+            <Section icon={FileText} title="Investor overview">
+              <p
+                ref={descRef}
+                className={cn(
+                  "whitespace-pre-line text-[14px] leading-relaxed text-foreground/85",
+                  !descExpanded && "line-clamp-4",
+                )}
+              >
+                {overview}
+              </p>
+              {(descClamped || descExpanded) && (
+                <button
+                  type="button"
+                  onClick={() => setDescExpanded((v) => !v)}
+                  className="mt-1 text-[13px] font-medium text-primary hover:underline"
+                >
+                  {descExpanded ? "Less" : "More…"}
+                </button>
+              )}
+            </Section>
+          )}
+
+          {/* Investment focus */}
+          {i.investment_focus?.trim() ? (
+            <Section icon={Layers} title="Investment focus">
+              <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/85">
+                {i.investment_focus}
+              </p>
+            </Section>
+          ) : null}
+
+
+          {i.preferred_stages?.length ? (
+            <Section icon={Layers} title="Preferred stages">
+              <ChipRow tags={i.preferred_stages} tone="primary" />
+            </Section>
+          ) : null}
+
+          {i.preferred_industries?.length ? (
+            <Section icon={Building2} title="Preferred industries">
+              <ChipRow tags={i.preferred_industries} tone="muted" />
+            </Section>
+          ) : null}
+
+          {i.keywords?.length ? (
+            <Section icon={Tag} title="Keywords">
+              <ChipRow tags={i.keywords} tone="muted" />
+            </Section>
+          ) : null}
+
+          {/* Portfolio startups */}
+          <Section
+            icon={Building2}
+            title={`Portfolio startups${linked.length > 0 ? ` (${linked.length})` : ""}`}
+          >
+            {linked.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No startups linked yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {linked.map((s) => (
+                  <Link
+                    key={s.id}
+                    to="/startups/$id"
+                    params={{ id: s.id }}
+                    className="flex items-center gap-2 rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-medium text-foreground/85 transition hover:border-accent/40 hover:text-foreground"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted text-[9px] font-semibold text-muted-foreground">
+                      {s.logo_signed_url ? (
+                        <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        monogram(s.startup_name)
+                      )}
+                    </span>
+                    {s.startup_name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Section>
+        </>
+      )}
     </div>
   );
 }
@@ -193,24 +452,77 @@ export function InvestorDetailEmpty() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: typeof Calendar;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="rounded-lg border border-border bg-card p-4 shadow-card">
-      <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <section className="border-t border-border/50 pt-[11.2px]">
+      <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
         {title}
       </h3>
-      <div className="space-y-2">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
 
-function Field({ label, value }: { label: string; value: string | null | undefined }) {
+function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
+  const base =
+    tone === "primary"
+      ? "bg-primary/5 text-foreground/85 border-primary/20"
+      : "bg-muted/50 text-muted-foreground border-transparent";
   return (
-    <div className="rounded-md border border-border bg-background p-3">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
+    <div className="flex flex-wrap gap-1.5">
+      {tags.map((t) => (
+        <span key={t} className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${base}`}>
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function LightboxOverlay({ url, onClose }: { url: string; onClose: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const visible = hovered || focused;
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="relative inline-block"
+        onClick={(e) => e.stopPropagation()}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <img src={url} alt="" className="block max-h-[67vh] max-w-[67vw] rounded-lg object-contain" />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          aria-label="Close image"
+          className={cn(
+            "absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            visible ? "opacity-100" : "opacity-0 pointer-events-none",
+          )}
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
-      <div className="mt-0.5 text-sm">{value || "—"}</div>
     </div>
   );
 }
