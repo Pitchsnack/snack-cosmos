@@ -185,6 +185,12 @@ export const listInvestors = createServerFn({ method: "GET" })
         ...r,
         tenant_name: r.tenants?.tenant_name ?? null,
         logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
+        preferred_stages: r.preferred_stages ?? [],
+        preferred_industries: r.preferred_industries ?? [],
+        keywords: r.keywords ?? [],
+        min_ticket_size: r.min_ticket_size ?? null,
+        max_ticket_size: r.max_ticket_size ?? null,
+
         owning_agent: own ? { id: own.id, email: own.email, name: [own.first_name, own.last_name].filter(Boolean).join(" ") || null } : null,
         owning_ai_agent: aiOwn ? { id: aiOwn.id, email: aiOwn.email, name: [aiOwn.first_name, aiOwn.last_name].filter(Boolean).join(" ") || null } : null,
         related_startups,
