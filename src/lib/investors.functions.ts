@@ -75,10 +75,16 @@ export interface InvestorRow {
 export interface InvestorListItem extends InvestorRow {
   tenant_name: string | null;
   logo_signed_url: string | null;
+  preferred_stages: string[];
+  preferred_industries: string[];
+  keywords: string[];
+  min_ticket_size: string | null;
+  max_ticket_size: string | null;
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
   related_startups: Array<{ id: string; name: string }>;
 }
+
 
 async function logActivity(
   supabase: import("@supabase/supabase-js").SupabaseClient,
