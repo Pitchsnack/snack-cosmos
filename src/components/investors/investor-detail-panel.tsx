@@ -384,7 +384,8 @@ export function InvestorDetailPanel({
                 {i.investment_focus}
               </p>
             </Section>
-          )}
+          ) : null}
+
 
           {i.preferred_stages?.length ? (
             <Section icon={Layers} title="Preferred stages">
