@@ -59,6 +59,7 @@ import { useConnectionState } from "@/hooks/use-connection-state";
 
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
+import { ShareStartupDialog } from "@/components/startups/share-startup-dialog";
 import { cn } from "@/lib/utils";
 
 
