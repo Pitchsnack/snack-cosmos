@@ -25,12 +25,15 @@ export function ConnectionAction({
   startupRef,
   size = "sm",
   className,
+  onShare,
 }: {
   startupRef: string;
   size?: "sm" | "default";
   className?: string;
+  onShare?: () => void;
 }) {
   const state = useConnectionState(startupRef);
+
 
   if (state === "requested") {
     return (
