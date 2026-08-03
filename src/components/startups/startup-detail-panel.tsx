@@ -342,6 +342,19 @@ export function StartupDetailPanel({
         />
       )}
 
+      <ShareStartupDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        startup={{
+          name: s.startup_name,
+          tagline: s.short_description,
+          location: s.headquarters,
+          website: s.website_url,
+          logoUrl: restricted.has("logo") ? null : s.logo_signed_url,
+        }}
+      />
+
+
 
 
 
