@@ -251,9 +251,10 @@ export function StartupDetailPanel({
               {isMyWorkspace ? (
                 <Button
                   size="sm"
+                  onClick={() => setShareOpen(true)}
                   className="gap-1.5 rounded-full bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]"
                 >
-                  <Share2 className="h-3.5 w-3.5" /> Share
+                  <Share2 className="h-3.5 w-3.5" /> Share Info
                 </Button>
               ) : (
                 <ConnectionAction startupRef={id} />
