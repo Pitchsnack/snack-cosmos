@@ -259,7 +259,7 @@ export function StartupDetailPanel({
                   <Share2 className="h-3.5 w-3.5" /> Share Info
                 </Button>
               ) : (
-                <ConnectionAction startupRef={id} />
+                <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
               <FavoriteToggle id={id} size="md" className="h-8 w-8" />
 
