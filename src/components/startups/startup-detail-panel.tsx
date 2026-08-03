@@ -24,6 +24,7 @@ import {
   Trash2,
   X,
   Check,
+  Share2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -247,7 +248,16 @@ export function StartupDetailPanel({
           )}
           {compact && (
             <div className="flex items-center gap-1">
-              <ConnectionAction startupRef={id} />
+              {isMyWorkspace ? (
+                <Button
+                  size="sm"
+                  className="gap-1.5 rounded-full bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]"
+                >
+                  <Share2 className="h-3.5 w-3.5" /> Share
+                </Button>
+              ) : (
+                <ConnectionAction startupRef={id} />
+              )}
               <FavoriteToggle id={id} size="md" className="h-8 w-8" />
 
               <DropdownMenu>
@@ -321,11 +331,13 @@ export function StartupDetailPanel({
       )}
 
       {/* Steps 2 & 4 — relationship state (Connect → Requested → Share) */}
-      <ConnectionStateCard
-        startupRef={id}
-        counterpartName={counterpartName}
-        counterpartRole={counterpartRole}
-      />
+      {!isMyWorkspace && (
+        <ConnectionStateCard
+          startupRef={id}
+          counterpartName={counterpartName}
+          counterpartRole={counterpartRole}
+        />
+      )}
 
 
 
@@ -375,7 +387,7 @@ export function StartupDetailPanel({
         </AlertDialogContent>
       </AlertDialog>
 
-      {connectionState === "requested" ? null : (
+      {!isMyWorkspace && connectionState === "requested" ? null : (
         <>
       {/* Media */}
       {mediaSlots.length > 0 && (
