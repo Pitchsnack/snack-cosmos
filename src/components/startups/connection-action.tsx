@@ -25,12 +25,15 @@ export function ConnectionAction({
   startupRef,
   size = "sm",
   className,
+  onShare,
 }: {
   startupRef: string;
   size?: "sm" | "default";
   className?: string;
+  onShare?: () => void;
 }) {
   const state = useConnectionState(startupRef);
+
 
   if (state === "requested") {
     return (
@@ -57,10 +60,12 @@ export function ConnectionAction({
         </Button>
         <Button
           size={size}
+          onClick={onShare}
           className="gap-1.5 rounded-full bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]"
         >
           <Share2 className="h-3.5 w-3.5" /> Share
         </Button>
+
       </div>
     );
   }

@@ -59,6 +59,7 @@ import { useConnectionState } from "@/hooks/use-connection-state";
 
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
+import { ShareStartupDialog } from "@/components/startups/share-startup-dialog";
 import { cn } from "@/lib/utils";
 
 
@@ -111,6 +112,7 @@ export function StartupDetailPanel({
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [descExpanded, setDescExpanded] = useState(false);
   const [descClamped, setDescClamped] = useState(false);
@@ -251,12 +253,13 @@ export function StartupDetailPanel({
               {isMyWorkspace ? (
                 <Button
                   size="sm"
+                  onClick={() => setShareOpen(true)}
                   className="gap-1.5 rounded-full bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]"
                 >
-                  <Share2 className="h-3.5 w-3.5" /> Share
+                  <Share2 className="h-3.5 w-3.5" /> Share Info
                 </Button>
               ) : (
-                <ConnectionAction startupRef={id} />
+                <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
               <FavoriteToggle id={id} size="md" className="h-8 w-8" />
 
@@ -338,6 +341,19 @@ export function StartupDetailPanel({
           counterpartRole={counterpartRole}
         />
       )}
+
+      <ShareStartupDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        startup={{
+          name: s.startup_name,
+          tagline: s.short_description,
+          location: s.headquarters,
+          website: s.website_url,
+          logoUrl: restricted.has("logo") ? null : s.logo_signed_url,
+        }}
+      />
+
 
 
 
