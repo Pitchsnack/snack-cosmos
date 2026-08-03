@@ -387,7 +387,7 @@ export function StartupDetailPanel({
         </AlertDialogContent>
       </AlertDialog>
 
-      {connectionState === "requested" ? null : (
+      {!isMyWorkspace && connectionState === "requested" ? null : (
         <>
       {/* Media */}
       {mediaSlots.length > 0 && (
