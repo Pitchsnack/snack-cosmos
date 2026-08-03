@@ -248,7 +248,16 @@ export function StartupDetailPanel({
           )}
           {compact && (
             <div className="flex items-center gap-1">
-              <ConnectionAction startupRef={id} />
+              {isMyWorkspace ? (
+                <Button
+                  size="sm"
+                  className="gap-1.5 rounded-full bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]"
+                >
+                  <Share2 className="h-3.5 w-3.5" /> Share
+                </Button>
+              ) : (
+                <ConnectionAction startupRef={id} />
+              )}
               <FavoriteToggle id={id} size="md" className="h-8 w-8" />
 
               <DropdownMenu>
