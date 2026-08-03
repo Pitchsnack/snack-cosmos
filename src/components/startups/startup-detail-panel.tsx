@@ -24,6 +24,7 @@ import {
   Trash2,
   X,
   Check,
+  Share2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
