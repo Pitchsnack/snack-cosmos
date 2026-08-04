@@ -109,7 +109,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
   {
     title: "Control Database",
     labels: [
-      "Entity Control",
+      "Control Data Intelligence",
       "Global Startups",
       "Browse Global Catalogue",
       "Startups Directory",
@@ -141,7 +141,7 @@ const NAV_ITEMS: NavItem[] = [
 
 
   {
-    label: "Entity Control",
+    label: "Control Data Intelligence",
     icon: Database,
     path: "/entity-control",
     exact: false,
