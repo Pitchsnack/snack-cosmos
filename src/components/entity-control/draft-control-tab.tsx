@@ -166,7 +166,7 @@ export function DraftControlTab() {
         </BulkBar>
 
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
-          <div className="grid min-w-[1200px] grid-cols-[2.5rem_minmax(11rem,1.6fr)_6rem_4.5rem_7rem_7rem_minmax(12rem,2fr)_6.5rem_9rem_10rem] items-center gap-3 whitespace-nowrap [&>span]:truncate border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="grid min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_9rem] items-center gap-3 whitespace-nowrap [&>span]:truncate border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <span />
             <span>Entity Name</span>
             <span>Type</span>
@@ -190,7 +190,7 @@ export function DraftControlTab() {
             result.rows.map((d) => (
               <div
                 key={d.draft_ref}
-                className="grid h-14 min-w-[1200px] grid-cols-[2.5rem_minmax(11rem,1.6fr)_6rem_4.5rem_7rem_7rem_minmax(12rem,2fr)_6.5rem_9rem_10rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
+                className="grid h-14 min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_9rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
               >
                 <Checkbox
                   checked={selected.includes(d.draft_ref)}
