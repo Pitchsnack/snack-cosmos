@@ -26,6 +26,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
+import { Route as AuthenticatedEntityControlRouteImport } from './routes/_authenticated/entity-control'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
@@ -147,6 +148,12 @@ const AuthenticatedIntakeQueueRoute =
   AuthenticatedIntakeQueueRouteImport.update({
     id: '/intake-queue',
     path: '/intake-queue',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEntityControlRoute =
+  AuthenticatedEntityControlRouteImport.update({
+    id: '/entity-control',
+    path: '/entity-control',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
@@ -352,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/entity-control': typeof AuthenticatedEntityControlRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/my-page': typeof AuthenticatedMyPageRoute
@@ -400,6 +408,7 @@ export interface FileRoutesByTo {
   '/audit': typeof AuthenticatedAuditRoute
   '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/entity-control': typeof AuthenticatedEntityControlRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -446,6 +455,7 @@ export interface FileRoutesById {
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/_authenticated/entity-control': typeof AuthenticatedEntityControlRoute
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dashboard'
     | '/deals'
+    | '/entity-control'
     | '/intake-queue'
     | '/investors'
     | '/my-page'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/connections'
     | '/dashboard'
+    | '/entity-control'
     | '/intake-queue'
     | '/my-page'
     | '/notifications'
@@ -593,6 +605,7 @@ export interface FileRouteTypes {
     | '/_authenticated/contacts'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
+    | '/_authenticated/entity-control'
     | '/_authenticated/intake-queue'
     | '/_authenticated/investors'
     | '/_authenticated/my-page'
@@ -762,6 +775,13 @@ declare module '@tanstack/react-router' {
       path: '/intake-queue'
       fullPath: '/intake-queue'
       preLoaderRoute: typeof AuthenticatedIntakeQueueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/entity-control': {
+      id: '/_authenticated/entity-control'
+      path: '/entity-control'
+      fullPath: '/entity-control'
+      preLoaderRoute: typeof AuthenticatedEntityControlRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/deals': {
@@ -1145,6 +1165,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
+  AuthenticatedEntityControlRoute: typeof AuthenticatedEntityControlRoute
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
@@ -1172,6 +1193,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
+  AuthenticatedEntityControlRoute: AuthenticatedEntityControlRoute,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
