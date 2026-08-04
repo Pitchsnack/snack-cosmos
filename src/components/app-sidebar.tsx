@@ -232,6 +232,8 @@ function SidebarBody({
   const showSkeleton = !isResolved && !sessionData;
 
   const isStartupUser = roles.includes("STARTUP_USER");
+  const useControlGroups = isControl && !showSkeleton && !isStartupUser;
+
 
   const visibleItems = (() => {
     const filtered = showSkeleton
