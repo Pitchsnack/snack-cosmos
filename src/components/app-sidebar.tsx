@@ -90,6 +90,39 @@ const STARTUP_MENU_ORDER = [
 ];
 
 
+// CONTROL sidebar grouping (navigation UX only — no route/permission changes).
+const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
+  {
+    title: "User Workflow",
+    labels: [
+      "Dashboard",
+      "My Profile",
+      "My Startups",
+      "My Connections",
+      "Contacts",
+      "Deals",
+      "Shared Deals",
+    ],
+  },
+  {
+    title: "Control Database",
+    labels: ["Global Startups", "Browse Global Catalogue", "Startups Directory", "Investors"],
+  },
+  { title: "Coming Soon", labels: ["Communications", "Documents", "Analytics"] },
+  {
+    title: "Administration",
+    labels: [
+      "Default Intake Queue",
+      "Tenants",
+      "Users",
+      "Access Management",
+      "Audit Logs",
+      "Security",
+    ],
+  },
+  { title: "Account & Activity", labels: ["Notifications", "Startup Activity", "Preferences"] },
+];
+
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
 // rendered as disabled placeholders so each role's framework is visible.
 const NAV_ITEMS: NavItem[] = [
