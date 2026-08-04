@@ -46,6 +46,7 @@ const PATH_LABELS: Record<string, string> = {
   "/preferences": "Preferences",
   "/my-page": "My Profile",
   "/startup-activity": "Startup Activity",
+  "/entity-control": "Control Data Intelligence",
 };
 
 const HOME_ROUTE = "/dashboard";

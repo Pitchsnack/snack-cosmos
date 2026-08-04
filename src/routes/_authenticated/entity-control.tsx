@@ -23,13 +23,13 @@ type Tab = (typeof TABS)[number];
 export const Route = createFileRoute("/_authenticated/entity-control")({
   head: () => ({
     meta: [
-      { title: "Entity Control — SnackPortal2" },
+      { title: "Control Data Intelligence — SnackPortal2" },
       {
         name: "description",
         content:
           "Create, review, manage and publish global startup and investor records, and validate AI-extracted drafts before publication.",
       },
-      { property: "og:title", content: "Entity Control — SnackPortal2" },
+      { property: "og:title", content: "Control Data Intelligence — SnackPortal2" },
       {
         property: "og:description",
         content:
@@ -67,9 +67,11 @@ function EntityControlInner() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
-            Control · Entity Control
+            Control · Control Data Intelligence
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Entity Control</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+            Control Data Intelligence
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Create, review, manage and publish startups and investors. Control records stay separate
             from tenant records.
