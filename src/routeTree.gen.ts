@@ -20,6 +20,7 @@ import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
 import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_authenticated/startup-activity'
 import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
+import { Route as AuthenticatedShareCoverpageRouteImport } from './routes/_authenticated/share-coverpage'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -116,6 +117,12 @@ const AuthenticatedSharedDealsRoute =
   AuthenticatedSharedDealsRouteImport.update({
     id: '/shared-deals',
     path: '/shared-deals',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedShareCoverpageRoute =
+  AuthenticatedShareCoverpageRouteImport.update({
+    id: '/share-coverpage',
+    path: '/share-coverpage',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
@@ -372,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
+  '/share-coverpage': typeof AuthenticatedShareCoverpageRoute
   '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
@@ -421,6 +429,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
+  '/share-coverpage': typeof AuthenticatedShareCoverpageRoute
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
@@ -470,6 +479,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
+  '/_authenticated/share-coverpage': typeof AuthenticatedShareCoverpageRoute
   '/_authenticated/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/_authenticated/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/preferences'
     | '/security'
+    | '/share-coverpage'
     | '/shared-deals'
     | '/startup-activity'
     | '/startups'
@@ -575,6 +586,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/preferences'
     | '/security'
+    | '/share-coverpage'
     | '/startup-activity'
     | '/users'
     | '/'
@@ -623,6 +635,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/preferences'
     | '/_authenticated/security'
+    | '/_authenticated/share-coverpage'
     | '/_authenticated/shared-deals'
     | '/_authenticated/startup-activity'
     | '/_authenticated/startups'
@@ -746,6 +759,13 @@ declare module '@tanstack/react-router' {
       path: '/shared-deals'
       fullPath: '/shared-deals'
       preLoaderRoute: typeof AuthenticatedSharedDealsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/share-coverpage': {
+      id: '/_authenticated/share-coverpage'
+      path: '/share-coverpage'
+      fullPath: '/share-coverpage'
+      preLoaderRoute: typeof AuthenticatedShareCoverpageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/security': {
@@ -1192,6 +1212,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
+  AuthenticatedShareCoverpageRoute: typeof AuthenticatedShareCoverpageRoute
   AuthenticatedSharedDealsRoute: typeof AuthenticatedSharedDealsRouteWithChildren
   AuthenticatedStartupActivityRoute: typeof AuthenticatedStartupActivityRoute
   AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
@@ -1220,6 +1241,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
+  AuthenticatedShareCoverpageRoute: AuthenticatedShareCoverpageRoute,
   AuthenticatedSharedDealsRoute: AuthenticatedSharedDealsRouteWithChildren,
   AuthenticatedStartupActivityRoute: AuthenticatedStartupActivityRoute,
   AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
