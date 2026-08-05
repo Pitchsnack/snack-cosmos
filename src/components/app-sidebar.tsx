@@ -45,6 +45,7 @@ type NavPath =
   | "/dashboard"
   | "/startups"
   | "/my-startups"
+  | "/share-coverpage"
   | "/investors"
   | "/deals"
   | "/shared-deals"
