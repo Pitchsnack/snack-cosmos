@@ -141,6 +141,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
   { label: "My Startups", icon: Building2, path: "/my-startups", exact: false, perm: "startups.read" },
+  { label: "Share Coverpage", icon: Share2, path: "/share-coverpage", exact: false, perm: "startups.read" },
 
 
   {
