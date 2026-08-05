@@ -199,7 +199,7 @@ function Profile({ startup }: { startup: StartupDetail }) {
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight lg:text-[42px]">
               <span className="truncate">{startup.startup_name}</span>
-              {startup.status === "Active" && startup.visibility === "Public" && (
+              {startup.status === "Active" && startup.visibility === "Shared" && (
                 <BadgeCheck className="h-6 w-6 shrink-0 text-primary" aria-label="Verified" />
               )}
             </h1>

@@ -40,6 +40,7 @@ import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
 import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
 import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts.index'
+import { Route as ShareStartupIdRouteImport } from './routes/share.startup.$id'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
@@ -229,6 +230,11 @@ const AuthenticatedContactsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedContactsRoute,
   } as any)
+const ShareStartupIdRoute = ShareStartupIdRouteImport.update({
+  id: '/share/startup/$id',
+  path: '/share/startup/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedStartupsNewRoute =
   AuthenticatedStartupsNewRouteImport.update({
     id: '/new',
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/share/startup/$id': typeof ShareStartupIdRoute
   '/contacts/': typeof AuthenticatedContactsIndexRoute
   '/deals/': typeof AuthenticatedDealsIndexRoute
   '/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -427,6 +434,7 @@ export interface FileRoutesByTo {
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/share/startup/$id': typeof ShareStartupIdRoute
   '/contacts': typeof AuthenticatedContactsIndexRoute
   '/deals': typeof AuthenticatedDealsIndexRoute
   '/global-startups': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -481,6 +489,7 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/share/startup/$id': typeof ShareStartupIdRoute
   '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
   '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
   '/_authenticated/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
+    | '/share/startup/$id'
     | '/contacts/'
     | '/deals/'
     | '/global-startups/'
@@ -578,6 +588,7 @@ export interface FileRouteTypes {
     | '/settings/default-intake'
     | '/shared-deals/$id'
     | '/startups/new'
+    | '/share/startup/$id'
     | '/contacts'
     | '/deals'
     | '/global-startups'
@@ -631,6 +642,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals/$id'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
+    | '/share/startup/$id'
     | '/_authenticated/contacts/'
     | '/_authenticated/deals/'
     | '/_authenticated/global-startups/'
@@ -654,6 +666,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
+  ShareStartupIdRoute: typeof ShareStartupIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -874,6 +887,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/contacts/'
       preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
       parentRoute: typeof AuthenticatedContactsRoute
+    }
+    '/share/startup/$id': {
+      id: '/share/startup/$id'
+      path: '/share/startup/$id'
+      fullPath: '/share/startup/$id'
+      preLoaderRoute: typeof ShareStartupIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/startups/new': {
       id: '/_authenticated/startups/new'
@@ -1227,17 +1247,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
+  ShareStartupIdRoute: ShareStartupIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
