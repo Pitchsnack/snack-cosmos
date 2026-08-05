@@ -102,6 +102,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Dashboard",
       "My Profile",
       "My Startups",
+      "Share Coverpage",
       "My Connections",
       "Contacts",
       "Deals",
