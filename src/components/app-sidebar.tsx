@@ -83,6 +83,7 @@ const STARTUP_MENU_ORDER = [
   "My Profile",
   "Startup Activity",
   "My Startups",
+  "Share Coverpage",
   "Startups Directory",
   "My Connections",
   "Contacts",
