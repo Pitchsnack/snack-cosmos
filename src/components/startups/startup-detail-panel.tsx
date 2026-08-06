@@ -25,6 +25,7 @@ import {
   X,
   Check,
   Share2,
+  LayoutTemplate,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
