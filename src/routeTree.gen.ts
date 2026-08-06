@@ -58,6 +58,7 @@ import { Route as AuthenticatedMyStartupsIdIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedInvestorsIdIndexRouteImport } from './routes/_authenticated/investors.$id.index'
 import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
 import { Route as AuthenticatedStartupsIdEditRouteImport } from './routes/_authenticated/startups.$id.edit'
+import { Route as AuthenticatedStartupsIdCoverRouteImport } from './routes/_authenticated/startups.$id.cover'
 import { Route as AuthenticatedMyStartupsIdEditRouteImport } from './routes/_authenticated/my-startups.$id.edit'
 import { Route as AuthenticatedInvestorsIdEditRouteImport } from './routes/_authenticated/investors.$id.edit'
 
@@ -334,6 +335,12 @@ const AuthenticatedStartupsIdEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedStartupsIdRoute,
   } as any)
+const AuthenticatedStartupsIdCoverRoute =
+  AuthenticatedStartupsIdCoverRouteImport.update({
+    id: '/cover',
+    path: '/cover',
+    getParentRoute: () => AuthenticatedStartupsIdRoute,
+  } as any)
 const AuthenticatedMyStartupsIdEditRoute =
   AuthenticatedMyStartupsIdEditRouteImport.update({
     id: '/edit',
@@ -393,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/startups/': typeof AuthenticatedStartupsIndexRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
+  '/startups/$id/cover': typeof AuthenticatedStartupsIdCoverRoute
   '/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
@@ -436,6 +444,7 @@ export interface FileRoutesByTo {
   '/startups': typeof AuthenticatedStartupsIndexRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
+  '/startups/$id/cover': typeof AuthenticatedStartupsIdCoverRoute
   '/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/deals/$id': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdIndexRoute
@@ -490,6 +499,7 @@ export interface FileRoutesById {
   '/_authenticated/startups/': typeof AuthenticatedStartupsIndexRoute
   '/_authenticated/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/_authenticated/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
+  '/_authenticated/startups/$id/cover': typeof AuthenticatedStartupsIdCoverRoute
   '/_authenticated/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/_authenticated/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/_authenticated/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
@@ -544,6 +554,7 @@ export interface FileRouteTypes {
     | '/startups/'
     | '/investors/$id/edit'
     | '/my-startups/$id/edit'
+    | '/startups/$id/cover'
     | '/startups/$id/edit'
     | '/deals/$id/'
     | '/investors/$id/'
@@ -587,6 +598,7 @@ export interface FileRouteTypes {
     | '/startups'
     | '/investors/$id/edit'
     | '/my-startups/$id/edit'
+    | '/startups/$id/cover'
     | '/startups/$id/edit'
     | '/deals/$id'
     | '/investors/$id'
@@ -640,6 +652,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups/'
     | '/_authenticated/investors/$id/edit'
     | '/_authenticated/my-startups/$id/edit'
+    | '/_authenticated/startups/$id/cover'
     | '/_authenticated/startups/$id/edit'
     | '/_authenticated/deals/$id/'
     | '/_authenticated/investors/$id/'
@@ -1001,6 +1014,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartupsIdEditRouteImport
       parentRoute: typeof AuthenticatedStartupsIdRoute
     }
+    '/_authenticated/startups/$id/cover': {
+      id: '/_authenticated/startups/$id/cover'
+      path: '/cover'
+      fullPath: '/startups/$id/cover'
+      preLoaderRoute: typeof AuthenticatedStartupsIdCoverRouteImport
+      parentRoute: typeof AuthenticatedStartupsIdRoute
+    }
     '/_authenticated/my-startups/$id/edit': {
       id: '/_authenticated/my-startups/$id/edit'
       path: '/edit'
@@ -1110,12 +1130,14 @@ const AuthenticatedSharedDealsRouteWithChildren =
   )
 
 interface AuthenticatedStartupsIdRouteChildren {
+  AuthenticatedStartupsIdCoverRoute: typeof AuthenticatedStartupsIdCoverRoute
   AuthenticatedStartupsIdEditRoute: typeof AuthenticatedStartupsIdEditRoute
   AuthenticatedStartupsIdIndexRoute: typeof AuthenticatedStartupsIdIndexRoute
 }
 
 const AuthenticatedStartupsIdRouteChildren: AuthenticatedStartupsIdRouteChildren =
   {
+    AuthenticatedStartupsIdCoverRoute: AuthenticatedStartupsIdCoverRoute,
     AuthenticatedStartupsIdEditRoute: AuthenticatedStartupsIdEditRoute,
     AuthenticatedStartupsIdIndexRoute: AuthenticatedStartupsIdIndexRoute,
   }
@@ -1231,13 +1253,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
