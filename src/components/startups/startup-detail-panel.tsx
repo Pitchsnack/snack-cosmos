@@ -25,6 +25,7 @@ import {
   X,
   Check,
   Share2,
+  LayoutTemplate,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -248,7 +249,21 @@ export function StartupDetailPanel({
               )}
             </Button>
           )}
+          {!compact && (
+            <Button asChild size="sm" variant="outline">
+              {isMyWorkspace ? (
+                <Link to="/my-startups/$id/cover" params={{ id }}>
+                  <LayoutTemplate className="mr-1 h-3.5 w-3.5" /> View Cover Page
+                </Link>
+              ) : (
+                <Link to="/startups/$id/cover" params={{ id }}>
+                  <LayoutTemplate className="mr-1 h-3.5 w-3.5" /> View Cover Page
+                </Link>
+              )}
+            </Button>
+          )}
           {compact && (
+
             <div className="flex items-center gap-1">
               {isMyWorkspace ? (
                 <Button
@@ -278,6 +293,19 @@ export function StartupDetailPanel({
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    {isMyWorkspace ? (
+                      <Link to="/my-startups/$id/cover" params={{ id }} onClick={() => onClose?.()}>
+                        <LayoutTemplate className="mr-2 h-4 w-4" /> View Cover Page
+                      </Link>
+                    ) : (
+                      <Link to="/startups/$id/cover" params={{ id }} onClick={() => onClose?.()}>
+                        <LayoutTemplate className="mr-2 h-4 w-4" /> View Cover Page
+                      </Link>
+                    )}
+                  </DropdownMenuItem>
+
+
 
                   {canManage ? (
                     <DropdownMenuItem asChild>
