@@ -20,7 +20,6 @@ import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
 import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_authenticated/startup-activity'
 import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
-import { Route as AuthenticatedShareCoverpageRouteImport } from './routes/_authenticated/share-coverpage'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -41,7 +40,6 @@ import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
 import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
 import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts.index'
-import { Route as ShareStartupIdRouteImport } from './routes/share.startup.$id'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
@@ -117,12 +115,6 @@ const AuthenticatedSharedDealsRoute =
   AuthenticatedSharedDealsRouteImport.update({
     id: '/shared-deals',
     path: '/shared-deals',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedShareCoverpageRoute =
-  AuthenticatedShareCoverpageRouteImport.update({
-    id: '/share-coverpage',
-    path: '/share-coverpage',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
@@ -237,11 +229,6 @@ const AuthenticatedContactsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedContactsRoute,
   } as any)
-const ShareStartupIdRoute = ShareStartupIdRouteImport.update({
-  id: '/share/startup/$id',
-  path: '/share/startup/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedStartupsNewRoute =
   AuthenticatedStartupsNewRouteImport.update({
     id: '/new',
@@ -379,7 +366,6 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
-  '/share-coverpage': typeof AuthenticatedShareCoverpageRoute
   '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
@@ -398,7 +384,6 @@ export interface FileRoutesByFullPath {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/startups/new': typeof AuthenticatedStartupsNewRoute
-  '/share/startup/$id': typeof ShareStartupIdRoute
   '/contacts/': typeof AuthenticatedContactsIndexRoute
   '/deals/': typeof AuthenticatedDealsIndexRoute
   '/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -429,7 +414,6 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
-  '/share-coverpage': typeof AuthenticatedShareCoverpageRoute
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
@@ -443,7 +427,6 @@ export interface FileRoutesByTo {
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
-  '/share/startup/$id': typeof ShareStartupIdRoute
   '/contacts': typeof AuthenticatedContactsIndexRoute
   '/deals': typeof AuthenticatedDealsIndexRoute
   '/global-startups': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -479,7 +462,6 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
-  '/_authenticated/share-coverpage': typeof AuthenticatedShareCoverpageRoute
   '/_authenticated/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/_authenticated/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
@@ -499,7 +481,6 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
-  '/share/startup/$id': typeof ShareStartupIdRoute
   '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
   '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
   '/_authenticated/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -536,7 +517,6 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/preferences'
     | '/security'
-    | '/share-coverpage'
     | '/shared-deals'
     | '/startup-activity'
     | '/startups'
@@ -555,7 +535,6 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
-    | '/share/startup/$id'
     | '/contacts/'
     | '/deals/'
     | '/global-startups/'
@@ -586,7 +565,6 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/preferences'
     | '/security'
-    | '/share-coverpage'
     | '/startup-activity'
     | '/users'
     | '/'
@@ -600,7 +578,6 @@ export interface FileRouteTypes {
     | '/settings/default-intake'
     | '/shared-deals/$id'
     | '/startups/new'
-    | '/share/startup/$id'
     | '/contacts'
     | '/deals'
     | '/global-startups'
@@ -635,7 +612,6 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/preferences'
     | '/_authenticated/security'
-    | '/_authenticated/share-coverpage'
     | '/_authenticated/shared-deals'
     | '/_authenticated/startup-activity'
     | '/_authenticated/startups'
@@ -655,7 +631,6 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals/$id'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
-    | '/share/startup/$id'
     | '/_authenticated/contacts/'
     | '/_authenticated/deals/'
     | '/_authenticated/global-startups/'
@@ -679,7 +654,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
-  ShareStartupIdRoute: typeof ShareStartupIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -759,13 +733,6 @@ declare module '@tanstack/react-router' {
       path: '/shared-deals'
       fullPath: '/shared-deals'
       preLoaderRoute: typeof AuthenticatedSharedDealsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/share-coverpage': {
-      id: '/_authenticated/share-coverpage'
-      path: '/share-coverpage'
-      fullPath: '/share-coverpage'
-      preLoaderRoute: typeof AuthenticatedShareCoverpageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/security': {
@@ -907,13 +874,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/contacts/'
       preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
       parentRoute: typeof AuthenticatedContactsRoute
-    }
-    '/share/startup/$id': {
-      id: '/share/startup/$id'
-      path: '/share/startup/$id'
-      fullPath: '/share/startup/$id'
-      preLoaderRoute: typeof ShareStartupIdRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/startups/new': {
       id: '/_authenticated/startups/new'
@@ -1212,7 +1172,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
-  AuthenticatedShareCoverpageRoute: typeof AuthenticatedShareCoverpageRoute
   AuthenticatedSharedDealsRoute: typeof AuthenticatedSharedDealsRouteWithChildren
   AuthenticatedStartupActivityRoute: typeof AuthenticatedStartupActivityRoute
   AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
@@ -1241,7 +1200,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
-  AuthenticatedShareCoverpageRoute: AuthenticatedShareCoverpageRoute,
   AuthenticatedSharedDealsRoute: AuthenticatedSharedDealsRouteWithChildren,
   AuthenticatedStartupActivityRoute: AuthenticatedStartupActivityRoute,
   AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
@@ -1269,8 +1227,17 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
-  ShareStartupIdRoute: ShareStartupIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
