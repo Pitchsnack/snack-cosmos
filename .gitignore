@@ -16,6 +16,14 @@ dist-ssr
 .nitro
 *.local
 
+# Environment files (FENV-B). `*.local` above already covers `.env.local`; this rule covers the
+# bare `.env`, which it does NOT match. `.env` was tracked in this repository and carried live
+# Supabase configuration, and a tracked env file is a standing invitation to commit a value. The
+# tracked names-only template is `.env.example`.
+.env
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
