@@ -129,7 +129,7 @@ export function StartupCoverPage({
 
   return (
     <div className="bg-white text-[#0F172A]">
-      <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6 lg:py-7">
+      <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6 lg:py-7" style={{ zoom: 0.8 }}>
         <div className="overflow-hidden rounded-[18px] border border-[#E6ECF5] shadow-[0_18px_60px_-32px_rgba(11,45,99,0.45)] lg:grid lg:grid-cols-[31%_69%] lg:items-stretch">
           {/* ---------------- Left cover ---------------- */}
           <div
