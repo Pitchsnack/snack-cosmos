@@ -141,7 +141,7 @@ export function StartupCoverPage({
             {useMedia && media1Url && (
               <>
                 <div
-                  className="pointer-events-none absolute -inset-6 scale-110 blur-[6px]"
+                  className="pointer-events-none absolute -inset-10 scale-125 blur-[10px]"
                   style={{
                     backgroundImage: `url(${media1Url})`,
                     backgroundSize: "cover",
@@ -364,7 +364,7 @@ export function StartupCoverPage({
                     <SectionHeading icon={Users}>Founders ({s.founders.length})</SectionHeading>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {s.founders.map((f) => (
-                        <div key={f.id} className="flex items-start gap-2.5">
+                        <div key={f.id} className="flex min-w-0 items-start gap-2.5">
                           <div
                             className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[13px] font-semibold"
                             style={{ backgroundColor: "#F1F5FB", color: NAVY }}
