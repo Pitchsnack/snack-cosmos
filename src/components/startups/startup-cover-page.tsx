@@ -187,7 +187,7 @@ export function StartupCoverPage({
               {/* Existing short description only — never generated copy */}
               {s.short_description && (
                 <div className="pt-1">
-                  <p className="line-clamp-5 max-w-[20ch] text-[21px] font-bold leading-[1.25] text-white sm:text-[25px]">
+                  <p className="line-clamp-5 max-w-[20ch] text-[17px] font-bold leading-[1.25] text-white sm:text-[20px]">
                     {s.short_description}
                   </p>
                   <div className="mt-3 h-1 w-9 rounded-full" style={{ background: "#3B82F6" }} />
@@ -262,7 +262,7 @@ export function StartupCoverPage({
 
               <div className="min-w-0 flex-1">
                 <h1
-                  className="text-[30px] font-bold leading-[1.1] tracking-tight sm:text-[40px]"
+                  className="text-[24px] font-bold leading-[1.1] tracking-tight sm:text-[32px]"
                   style={{ color: NAVY }}
                 >
                   {s.startup_name}
