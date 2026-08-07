@@ -187,7 +187,7 @@ export function StartupCoverPage({
               {/* Existing short description only — never generated copy */}
               {s.short_description && (
                 <div className="pt-1">
-                  <p className="line-clamp-6 max-w-[20ch] text-[22px] font-bold leading-[1.2] text-white sm:text-[26px]">
+                  <p className="line-clamp-5 max-w-[20ch] text-[21px] font-bold leading-[1.25] text-white sm:text-[25px]">
                     {s.short_description}
                   </p>
                   <div className="mt-3 h-1 w-9 rounded-full" style={{ background: "#3B82F6" }} />
@@ -362,7 +362,7 @@ export function StartupCoverPage({
                 {s.founders?.length > 0 && (
                   <div>
                     <SectionHeading icon={Users}>Founders ({s.founders.length})</SectionHeading>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {s.founders.map((f) => (
                         <div key={f.id} className="flex items-start gap-2.5">
                           <div
@@ -386,7 +386,7 @@ export function StartupCoverPage({
                               {f.full_name}
                             </div>
                             {f.position && (
-                              <div className="mt-0.5 text-[13px] text-[#5B6B84]">{f.position}</div>
+                              <div className="mt-0.5 truncate text-[13px] text-[#5B6B84]">{f.position}</div>
                             )}
                             {f.linkedin_url && (
                               <a
