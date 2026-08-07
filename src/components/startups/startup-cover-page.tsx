@@ -240,16 +240,16 @@ export function StartupCoverPage({
           </div>
 
           {/* ---------------- Right information panel ---------------- */}
-          <div className="bg-white p-6 sm:p-9 lg:p-10">
+          <div className="bg-white p-5 sm:p-7 lg:p-8">
             {/* Header */}
-            <div className="flex flex-wrap items-start gap-5">
-              <div className="flex h-[86px] w-[86px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#E6ECF5] bg-white">
+            <div className="flex flex-wrap items-start gap-4 sm:flex-nowrap">
+              <div className="flex h-[96px] w-[96px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#E6ECF5] bg-white shadow-[0_6px_18px_-12px_rgba(11,45,99,0.5)]">
                 {restricted.has("logo") ? (
                   <MaskedImage seed={`${s.id}-logo`} cells={8} />
                 ) : s.logo_signed_url ? (
                   <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain p-2" />
                 ) : (
-                  <span className="text-lg font-semibold" style={{ color: NAVY }}>
+                  <span className="text-xl font-semibold" style={{ color: NAVY }}>
                     {monogram(s.startup_name)}
                   </span>
                 )}
@@ -257,13 +257,13 @@ export function StartupCoverPage({
 
               <div className="min-w-0 flex-1">
                 <h1
-                  className="text-[34px] font-bold leading-tight tracking-tight sm:text-[42px]"
+                  className="text-[30px] font-bold leading-[1.1] tracking-tight sm:text-[40px]"
                   style={{ color: NAVY }}
                 >
                   {s.startup_name}
                 </h1>
                 {s.short_description && (
-                  <p className="mt-2 max-w-[54ch] text-[15px] leading-relaxed text-[#42536B]">
+                  <p className="mt-1.5 max-w-[58ch] text-[15px] leading-[1.5] text-[#42536B]">
                     {s.short_description}
                   </p>
                 )}
@@ -271,7 +271,7 @@ export function StartupCoverPage({
 
               <div className="flex shrink-0 items-center gap-2">
                 <Button
-                  className="rounded-lg px-5 text-white hover:opacity-90"
+                  className="h-10 rounded-lg px-4 text-[14px] text-white hover:opacity-90"
                   style={{ backgroundColor: NAVY }}
                   asChild
                 >
@@ -287,7 +287,8 @@ export function StartupCoverPage({
 
             {/* Compact metadata row */}
             {metaItems.length > 0 && (
-              <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] text-[#42536B]">
+              <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[14px] text-[#42536B]">
+
                 {metaItems.map((m, i) => {
                   const Icon = m.icon;
                   return (
