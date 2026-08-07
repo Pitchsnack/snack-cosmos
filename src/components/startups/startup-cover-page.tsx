@@ -463,7 +463,8 @@ export function StartupCoverPage({
         </div>
 
         <p className="mt-3 text-center text-[12px] text-[#8494A8]">
-          Secure. Private. Built for founders &amp; investors.
+          Secure. Private. Built for founders &amp; investors.{"\u00a0 \u00a0"}
+          |{"\u00a0 \u00a0"}2025 PitchSnack
         </p>
       </div>
     </div>
