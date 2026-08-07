@@ -129,11 +129,12 @@ export function StartupCoverPage({
 
   return (
     <div className="bg-white text-[#0F172A]">
-      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:py-10">
-        <div className="overflow-hidden rounded-[22px] border border-[#E6ECF5] shadow-[0_18px_60px_-32px_rgba(11,45,99,0.45)] lg:grid lg:grid-cols-[31%_69%]">
+      <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6 lg:py-7">
+        <div className="overflow-hidden rounded-[18px] border border-[#E6ECF5] shadow-[0_18px_60px_-32px_rgba(11,45,99,0.45)] lg:grid lg:grid-cols-[31%_69%] lg:items-stretch">
           {/* ---------------- Left cover ---------------- */}
           <div
-            className="relative flex min-h-[260px] flex-col justify-between p-6 sm:min-h-[300px] lg:min-h-[720px] lg:p-7"
+            className="relative flex min-h-[240px] flex-col justify-between overflow-hidden p-5 sm:min-h-[280px] lg:p-6"
+
             style={
               useMedia
                 ? {
@@ -153,50 +154,51 @@ export function StartupCoverPage({
                 onError={() => setMediaFailed(true)}
               />
             )}
-            {/* Readability overlay: lighter at top, stronger at bottom */}
+            {/* Readability overlay: media must read as background, never as content */}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0.72) 100%)",
+                  "linear-gradient(to bottom, rgba(4,10,22,0.62) 0%, rgba(4,10,22,0.50) 40%, rgba(4,10,22,0.86) 100%)",
               }}
             />
 
-            <div className="relative z-10 space-y-4">
+            <div className="relative z-10 space-y-3">
               {/* PitchSnack logo — mandatory solid black box */}
-              <div className="inline-flex items-center rounded-[10px] bg-black px-4 py-2.5">
-                <img src={logoWhite} alt="PitchSnack" className="h-8 w-auto" />
+              <div className="inline-flex items-center rounded-[10px] bg-black px-3.5 py-2">
+                <img src={logoWhite} alt="PitchSnack" className="h-6 w-auto" />
               </div>
 
               <div>
                 <span
-                  className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] font-medium text-white"
-                  style={{ background: "rgba(11,45,99,0.55)" }}
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium text-white"
+                  style={{ background: "rgba(11,45,99,0.6)" }}
                 >
-                  <Link2 className="h-3.5 w-3.5" style={{ color: "#7FB2FF" }} />
+                  <Link2 className="h-3 w-3" style={{ color: "#7FB2FF" }} />
                   Shared by a startup founder
                 </span>
               </div>
 
               {/* Existing short description only — never generated copy */}
               {s.short_description && (
-                <div className="pt-2">
-                  <p className="max-w-[22ch] text-[26px] font-bold leading-[1.15] text-white">
+                <div className="pt-1">
+                  <p className="line-clamp-6 max-w-[20ch] text-[22px] font-bold leading-[1.2] text-white sm:text-[26px]">
                     {s.short_description}
                   </p>
-                  <div className="mt-4 h-1 w-10 rounded-full" style={{ background: "#3B82F6" }} />
+                  <div className="mt-3 h-1 w-9 rounded-full" style={{ background: "#3B82F6" }} />
                 </div>
               )}
             </div>
 
             {/* Quick Facts — only rows that already exist on the record */}
-            <div className="relative z-10 mt-8">
+            <div className="relative z-10 mt-6">
               <QuickFacts
                 founded={s.year_founded}
                 website={s.website_url}
                 focus={s.industry?.[0] ?? null}
                 market={s.market_tags?.[0] ?? null}
               />
+
               {canEditBackground && (
                 <div className="mt-4">
                   <DropdownMenu>
