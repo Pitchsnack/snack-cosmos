@@ -47,7 +47,7 @@ function monogram(name: string) {
 function Pill({ children }: { children: React.ReactNode }) {
   return (
     <span
-      className="inline-flex items-center rounded-full border px-3.5 py-1.5 text-[13px] font-medium"
+      className="inline-flex items-center rounded-full border px-3 py-1 text-[13px] font-medium"
       style={{ color: NAVY, backgroundColor: "#F4F7FC", borderColor: "#DCE4F0" }}
     >
       {children}
@@ -63,7 +63,7 @@ function SectionHeading({
   children: React.ReactNode;
 }) {
   return (
-    <h2 className="mb-3 flex items-center gap-2 text-[17px] font-semibold" style={{ color: NAVY }}>
+    <h2 className="mb-2.5 flex items-center gap-2 text-[18px] font-semibold" style={{ color: NAVY }}>
       <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
       {children}
     </h2>
@@ -304,11 +304,11 @@ export function StartupCoverPage({
 
             {/* About — existing Product Overview only */}
             {s.long_description && (
-              <section className="mt-7 border-t border-[#EDF1F7] pt-6">
+              <section className="mt-5 border-t border-[#EDF1F7] pt-4">
                 <SectionHeading icon={Building2}>About {s.startup_name}</SectionHeading>
                 <p
                   className={cn(
-                    "whitespace-pre-line text-[15px] leading-[1.75] text-[#42536B]",
+                    "whitespace-pre-line text-[15px] leading-[1.6] text-[#42536B]",
                     !aboutExpanded && "line-clamp-4",
                   )}
                 >
@@ -317,7 +317,7 @@ export function StartupCoverPage({
                 <button
                   type="button"
                   onClick={() => setAboutExpanded((v) => !v)}
-                  className="mt-1 text-[15px] font-medium hover:underline"
+                  className="mt-1 text-[14px] font-medium hover:underline"
                   style={{ color: NAVY }}
                 >
                   {aboutExpanded ? "Show less" : "More…"}
@@ -327,7 +327,7 @@ export function StartupCoverPage({
 
             {/* Tags */}
             {(s.product_tags?.length > 0 || s.market_tags?.length > 0) && (
-              <section className="mt-7 grid gap-6 border-t border-[#EDF1F7] pt-6 md:grid-cols-2 md:gap-8">
+              <section className="mt-5 grid gap-4 border-t border-[#EDF1F7] pt-4 md:grid-cols-2 md:gap-6">
                 {s.product_tags?.length > 0 && (
                   <div>
                     <SectionHeading icon={Tag}>Product &amp; Service Tags</SectionHeading>
@@ -339,7 +339,7 @@ export function StartupCoverPage({
                   </div>
                 )}
                 {s.market_tags?.length > 0 && (
-                  <div className="md:border-l md:border-[#EDF1F7] md:pl-8">
+                  <div className="md:border-l md:border-[#EDF1F7] md:pl-6">
                     <SectionHeading icon={Tag}>Market Tags</SectionHeading>
                     <div className="flex flex-wrap gap-2">
                       {s.market_tags.map((t) => (
@@ -353,11 +353,11 @@ export function StartupCoverPage({
 
             {/* Founders + Investors */}
             {(s.founders?.length > 0 || investors.length > 0) && (
-              <section className="mt-7 grid gap-6 border-t border-[#EDF1F7] pt-6 md:grid-cols-[55%_45%] md:gap-8">
+              <section className="mt-5 grid gap-4 border-t border-[#EDF1F7] pt-4 md:grid-cols-[56%_44%] md:gap-6">
                 {s.founders?.length > 0 && (
                   <div>
                     <SectionHeading icon={Users}>Founders ({s.founders.length})</SectionHeading>
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {s.founders.map((f) => (
                         <div key={f.id} className="flex items-start gap-2.5">
                           <div
@@ -402,7 +402,7 @@ export function StartupCoverPage({
                 )}
 
                 {investors.length > 0 && (
-                  <div className="md:border-l md:border-[#EDF1F7] md:pl-8">
+                  <div className="md:border-l md:border-[#EDF1F7] md:pl-6">
                     <SectionHeading icon={Users}>Investors ({investors.length})</SectionHeading>
                     <div className="flex flex-wrap gap-2">
                       {visibleInvestors.map((i) => (
@@ -426,21 +426,21 @@ export function StartupCoverPage({
 
             {/* CTA */}
             <section
-              className="mt-8 flex flex-wrap items-center justify-between gap-6 rounded-xl border p-6"
+              className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4"
               style={{ backgroundColor: "#F7FAFF", borderColor: "#E1E9F5" }}
             >
               <div className="min-w-[240px] flex-1">
-                <h3 className="text-[19px] font-semibold" style={{ color: NAVY }}>
+                <h3 className="text-[17px] font-semibold" style={{ color: NAVY }}>
                   Want to see more or connect?
                 </h3>
-                <p className="mt-1 max-w-[52ch] text-[14px] leading-relaxed text-[#5B6B84]">
+                <p className="mt-1 max-w-[52ch] text-[14px] leading-snug text-[#5B6B84]">
                   Join PitchSnack to access full profiles, connect with startups, and manage your
                   pipeline in one place.
                 </p>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <Button
-                  className="rounded-lg px-10 py-6 text-[15px] text-white hover:opacity-90"
+                  className="h-11 rounded-lg px-8 text-[15px] text-white hover:opacity-90"
                   style={{ backgroundColor: NAVY }}
                   asChild
                 >
@@ -457,7 +457,7 @@ export function StartupCoverPage({
           </div>
         </div>
 
-        <p className="mt-4 text-center text-[13px] text-[#8494A8]">
+        <p className="mt-3 text-center text-[12px] text-[#8494A8]">
           Secure. Private. Built for founders &amp; investors.
         </p>
       </div>
@@ -500,15 +500,15 @@ function QuickFacts({
   if (rows.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-white/15 bg-black/55 p-5 backdrop-blur-sm">
-      <div className="mb-3 text-[12px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#7FB2FF" }}>
+    <div className="rounded-xl border border-white/15 bg-black/60 p-3.5 backdrop-blur-sm">
+      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#7FB2FF" }}>
         Quick Facts
       </div>
       <dl className="divide-y divide-white/12">
         {rows.map((r) => (
-          <div key={r.label} className="flex items-center justify-between gap-4 py-2.5">
-            <dt className="text-[13px] text-white/70">{r.label}</dt>
-            <dd className="truncate text-[13px] font-medium text-white">{r.value}</dd>
+          <div key={r.label} className="flex items-center justify-between gap-3 py-1.5">
+            <dt className="text-[12px] text-white/70">{r.label}</dt>
+            <dd className="truncate text-[12px] font-medium text-white">{r.value}</dd>
           </div>
         ))}
       </dl>
