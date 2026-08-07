@@ -288,17 +288,17 @@ export function StartupCoverPage({
             {/* Compact metadata row */}
             {metaItems.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[14px] text-[#42536B]">
-
                 {metaItems.map((m, i) => {
                   const Icon = m.icon;
                   return (
-                    <span key={m.label} className="flex items-center gap-2">
-                      {i > 0 && <span className="mr-2 text-[#C3CDDB]">·</span>}
-                      <Icon className="h-[18px] w-[18px]" style={{ color: NAVY }} strokeWidth={1.9} />
+                    <span key={m.label} className="flex items-center gap-1.5">
+                      {i > 0 && <span className="mr-1.5 text-[#C3CDDB]">·</span>}
+                      <Icon className="h-4 w-4" style={{ color: NAVY }} strokeWidth={1.9} />
                       {m.label}
                     </span>
                   );
                 })}
+
               </div>
             )}
 
