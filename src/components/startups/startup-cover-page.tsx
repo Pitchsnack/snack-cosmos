@@ -63,8 +63,8 @@ function SectionHeading({
   children: React.ReactNode;
 }) {
   return (
-    <h2 className="mb-2.5 flex items-center gap-2 text-[18px] font-semibold" style={{ color: NAVY }}>
-      <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
+    <h2 className="mb-2.5 flex items-center gap-2 text-[15px] font-semibold" style={{ color: NAVY }}>
+      <Icon className="h-[15px] w-[15px]" strokeWidth={1.9} />
       {children}
     </h2>
   );
