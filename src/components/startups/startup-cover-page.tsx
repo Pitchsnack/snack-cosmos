@@ -134,34 +134,39 @@ export function StartupCoverPage({
           {/* ---------------- Left cover ---------------- */}
           <div
             className="relative flex min-h-[240px] flex-col justify-between overflow-hidden p-5 sm:min-h-[280px] lg:p-6"
-
-            style={
-              useMedia
-                ? {
+            style={useMedia ? undefined : { background: preset.css }}
+          >
+            {/* Media1 is treated purely as a background: cropped, scaled and
+                blurred so source website text never reads as page content. */}
+            {useMedia && media1Url && (
+              <>
+                <div
+                  className="pointer-events-none absolute -inset-6 scale-110 blur-[6px]"
+                  style={{
                     backgroundImage: `url(${media1Url})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
-                  }
-                : { background: preset.css }
-            }
-          >
-            {useMedia && media1Url && (
-              <img
-                src={media1Url}
-                alt=""
-                className="hidden"
-                onError={() => setMediaFailed(true)}
-              />
+                  }}
+                />
+                <img
+                  src={media1Url}
+                  alt=""
+                  className="hidden"
+                  onError={() => setMediaFailed(true)}
+                />
+              </>
             )}
             {/* Readability overlay: media must read as background, never as content */}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
-                background:
-                  "linear-gradient(to bottom, rgba(4,10,22,0.62) 0%, rgba(4,10,22,0.50) 40%, rgba(4,10,22,0.86) 100%)",
+                background: useMedia
+                  ? "linear-gradient(to bottom, rgba(4,10,22,0.78) 0%, rgba(4,10,22,0.70) 40%, rgba(4,10,22,0.90) 100%)"
+                  : "linear-gradient(to bottom, rgba(4,10,22,0.35) 0%, rgba(4,10,22,0.22) 40%, rgba(4,10,22,0.72) 100%)",
               }}
             />
+
 
             <div className="relative z-10 space-y-3">
               {/* PitchSnack logo — mandatory solid black box */}
