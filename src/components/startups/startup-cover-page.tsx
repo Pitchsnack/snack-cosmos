@@ -138,9 +138,10 @@ export function StartupCoverPage({
       {useMedia && media1Url && (
         <>
           <div
-            className="pointer-events-none absolute inset-0 scale-105 bg-cover bg-center bg-no-repeat"
+            className="pointer-events-none absolute -inset-16 scale-125 bg-cover bg-center bg-no-repeat blur-[12px]"
             style={{ backgroundImage: `url(${media1Url})` }}
           />
+
           <img src={media1Url} alt="" className="hidden" onError={() => setMediaFailed(true)} />
         </>
       )}
