@@ -456,14 +456,17 @@ export function StartupCoverPage({
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[12px] text-white/80">
-          <ShieldCheck className="h-3.5 w-3.5" style={{ color: "#7FB2FF" }} strokeWidth={2} />
-          <span>Secure. Private. Built for founders &amp; investors.</span>
-          <span className="text-white/35">|</span>
-          <span>© 2025 PitchSnack</span>
-        </div>
-
       </div>
+    </div>
+
+    <div className="w-full bg-white">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2 py-3 text-[12px] text-[#334155]">
+        <ShieldCheck className="h-3.5 w-3.5" style={{ color: NAVY }} strokeWidth={2} />
+        <span>Secure. Private. Built for founders &amp; investors.</span>
+        <span className="text-[#94A3B8]">|</span>
+        <span>© 2025 PitchSnack</span>
+      </div>
+    </div>
     </div>
   );
 }
