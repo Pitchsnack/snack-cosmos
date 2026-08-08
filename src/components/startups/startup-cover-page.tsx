@@ -130,8 +130,9 @@ export function StartupCoverPage({
   const visibleInvestors = showAllInvestors ? investors : investors.slice(0, 12);
 
   return (
+    <div className="w-full">
     <div
-      className="relative w-full overflow-hidden text-[#0F172A]"
+      className="relative mx-6 overflow-hidden text-[#0F172A]"
       style={useMedia ? { backgroundColor: "#050A16" } : { background: preset.css }}
     >
       {/* ---------------- Full-page background canvas ---------------- */}
