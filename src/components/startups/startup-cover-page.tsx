@@ -131,15 +131,10 @@ export function StartupCoverPage({
 
   return (
     <div
-      className="w-full px-6 text-[#0F172A]"
-      style={{ background: preset.css }}
-    >
-    <div
-      className="relative w-full overflow-hidden"
+      className="relative w-full overflow-hidden text-[#0F172A]"
       style={useMedia ? { backgroundColor: "#050A16" } : { background: preset.css }}
     >
       {/* ---------------- Full-page background canvas ---------------- */}
-
       {useMedia && media1Url && (
         <>
           <div
@@ -459,18 +454,17 @@ export function StartupCoverPage({
             </section>
           </div>
         </div>
-      </div>
 
-      <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 bg-white px-4 py-3 text-[12px] text-[#42536B]">
-        <ShieldCheck className="h-3.5 w-3.5" style={{ color: NAVY }} strokeWidth={2} />
-        <span>Secure. Private. Built for founders &amp; investors.</span>
-        <span className="text-[#C3CDDB]">|</span>
-        <span>© 2025 PitchSnack</span>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[12px] text-white/80">
+          <ShieldCheck className="h-3.5 w-3.5" style={{ color: "#7FB2FF" }} strokeWidth={2} />
+          <span>Secure. Private. Built for founders &amp; investors.</span>
+          <span className="text-white/35">|</span>
+          <span>© 2025 PitchSnack</span>
+        </div>
+
       </div>
-    </div>
     </div>
   );
-
 }
 
 function QuickFacts({
