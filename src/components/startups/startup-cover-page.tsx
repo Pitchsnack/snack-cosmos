@@ -10,7 +10,9 @@ import {
   Loader2,
   MapPin,
   Link2,
+  ShieldCheck,
   Tag,
+
   TrendingUp,
   Users,
 } from "lucide-react";
