@@ -10,9 +10,7 @@ import {
   Loader2,
   MapPin,
   Link2,
-  ShieldCheck,
   Tag,
-
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -65,8 +63,8 @@ function SectionHeading({
   children: React.ReactNode;
 }) {
   return (
-    <h2 className="mb-2.5 flex items-center gap-2 text-[15px] font-semibold" style={{ color: NAVY }}>
-      <Icon className="h-[15px] w-[15px]" strokeWidth={1.9} />
+    <h2 className="mb-2.5 flex items-center gap-2 text-[18px] font-semibold" style={{ color: NAVY }}>
+      <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
       {children}
     </h2>
   );
@@ -130,38 +128,47 @@ export function StartupCoverPage({
   const visibleInvestors = showAllInvestors ? investors : investors.slice(0, 12);
 
   return (
-    <div className="w-full">
-    <div
-      className="relative mx-6 overflow-hidden text-[#0F172A]"
-      style={useMedia ? { backgroundColor: "#050A16" } : { background: preset.css }}
-    >
-      {/* ---------------- Full-page background canvas ---------------- */}
-      {useMedia && media1Url && (
-        <>
+    <div className="bg-white text-[#0F172A]">
+      <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6 lg:py-7" style={{ zoom: 0.8 }}>
+        <div className="overflow-hidden rounded-[18px] border border-[#E6ECF5] shadow-[0_18px_60px_-32px_rgba(11,45,99,0.45)] lg:grid lg:grid-cols-[31%_69%] lg:items-stretch">
+          {/* ---------------- Left cover ---------------- */}
           <div
-            className="pointer-events-none absolute -inset-16 scale-125 bg-cover bg-center bg-no-repeat blur-[12px]"
-            style={{ backgroundImage: `url(${media1Url})` }}
-          />
+            className="relative flex min-h-[240px] flex-col justify-between overflow-hidden p-5 sm:min-h-[280px] lg:p-6"
+            style={useMedia ? undefined : { background: preset.css }}
+          >
+            {/* Media1 is treated purely as a background: cropped, scaled and
+                blurred so source website text never reads as page content. */}
+            {useMedia && media1Url && (
+              <>
+                <div
+                  className="pointer-events-none absolute -inset-10 scale-125 blur-[10px]"
+                  style={{
+                    backgroundImage: `url(${media1Url})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+                <img
+                  src={media1Url}
+                  alt=""
+                  className="hidden"
+                  onError={() => setMediaFailed(true)}
+                />
+              </>
+            )}
+            {/* Readability overlay: media must read as background, never as content */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: useMedia
+                  ? "linear-gradient(to bottom, rgba(4,10,22,0.78) 0%, rgba(4,10,22,0.70) 40%, rgba(4,10,22,0.90) 100%)"
+                  : "linear-gradient(to bottom, rgba(4,10,22,0.35) 0%, rgba(4,10,22,0.22) 40%, rgba(4,10,22,0.72) 100%)",
+              }}
+            />
 
-          <img src={media1Url} alt="" className="hidden" onError={() => setMediaFailed(true)} />
-        </>
-      )}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: useMedia
-            ? "linear-gradient(to right, rgba(4,10,22,0.88) 0%, rgba(4,10,22,0.72) 34%, rgba(4,10,22,0.45) 100%)"
-            : "linear-gradient(to bottom, rgba(4,10,22,0.30) 0%, rgba(4,10,22,0.18) 40%, rgba(4,10,22,0.62) 100%)",
-        }}
-      />
-
-      <div className="relative z-10 mx-auto max-w-[1280px] px-4 py-5 sm:px-6 lg:py-7" style={{ zoom: 0.8 }}>
-        <div className="lg:grid lg:grid-cols-[31%_69%] lg:items-stretch">
-          {/* ---------------- Left overlay information ---------------- */}
-          <div className="relative flex min-h-[240px] flex-col justify-between p-5 sm:min-h-[280px] lg:p-6">
 
             <div className="relative z-10 space-y-3">
-
               {/* PitchSnack logo — mandatory solid black box */}
               <div className="inline-flex items-center rounded-[10px] bg-black px-3.5 py-2">
                 <img src={logoWhite} alt="PitchSnack" className="h-6 w-auto" />
@@ -180,8 +187,8 @@ export function StartupCoverPage({
               {/* Existing short description only — never generated copy */}
               {s.short_description && (
                 <div className="pt-1">
-                  <p className="line-clamp-5 max-w-[20ch] whitespace-pre-line text-[17px] font-bold leading-[1.25] text-white sm:text-[20px]">
-                    {"\n"}{s.short_description}
+                  <p className="line-clamp-5 max-w-[20ch] text-[21px] font-bold leading-[1.25] text-white sm:text-[25px]">
+                    {s.short_description}
                   </p>
                   <div className="mt-3 h-1 w-9 rounded-full" style={{ background: "#3B82F6" }} />
                 </div>
@@ -237,9 +244,8 @@ export function StartupCoverPage({
             </div>
           </div>
 
-          {/* ---------------- Right white floating information card ---------------- */}
-          <div className="rounded-[18px] bg-white p-5 shadow-[0_28px_80px_-30px_rgba(4,10,22,0.65)] sm:p-7 lg:p-8">
-
+          {/* ---------------- Right information panel ---------------- */}
+          <div className="bg-white p-5 sm:p-7 lg:p-8">
             {/* Header */}
             <div className="flex flex-wrap items-start gap-4 sm:flex-nowrap">
               <div className="flex h-[96px] w-[96px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#E6ECF5] bg-white shadow-[0_6px_18px_-12px_rgba(11,45,99,0.5)]">
@@ -256,7 +262,7 @@ export function StartupCoverPage({
 
               <div className="min-w-0 flex-1">
                 <h1
-                  className="text-[24px] font-bold leading-[1.1] tracking-tight sm:text-[32px]"
+                  className="text-[30px] font-bold leading-[1.1] tracking-tight sm:text-[40px]"
                   style={{ color: NAVY }}
                 >
                   {s.startup_name}
@@ -456,17 +462,11 @@ export function StartupCoverPage({
           </div>
         </div>
 
+        <p className="mt-3 text-center text-[12px] text-[#8494A8]">
+          Secure. Private. Built for founders &amp; investors.{"\u00a0 \u00a0"}
+          |{"\u00a0 \u00a0"}2025 PitchSnack
+        </p>
       </div>
-    </div>
-
-    <div className="w-full bg-white">
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2 py-3 text-[12px] text-[#334155]">
-        <ShieldCheck className="h-3.5 w-3.5" style={{ color: NAVY }} strokeWidth={2} />
-        <span>Secure. Private. Built for founders &amp; investors.</span>
-        <span className="text-[#94A3B8]">|</span>
-        <span>© 2025 PitchSnack</span>
-      </div>
-    </div>
     </div>
   );
 }
