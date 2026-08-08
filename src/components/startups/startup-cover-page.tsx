@@ -131,7 +131,7 @@ export function StartupCoverPage({
 
   return (
     <div
-      className="relative min-h-screen w-full text-[#0F172A]"
+      className="relative w-full overflow-hidden text-[#0F172A]"
       style={useMedia ? { backgroundColor: "#050A16" } : { background: preset.css }}
     >
       {/* ---------------- Full-page background canvas ---------------- */}
