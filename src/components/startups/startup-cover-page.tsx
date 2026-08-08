@@ -452,10 +452,13 @@ export function StartupCoverPage({
           </div>
         </div>
 
-        <p className="mt-3 text-center text-[12px] text-[#8494A8]">
-          Secure. Private. Built for founders &amp; investors.{"\u00a0 \u00a0"}
-          |{"\u00a0 \u00a0"}2025 PitchSnack
-        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[12px] text-white/80">
+          <ShieldCheck className="h-3.5 w-3.5" style={{ color: "#7FB2FF" }} strokeWidth={2} />
+          <span>Secure. Private. Built for founders &amp; investors.</span>
+          <span className="text-white/35">|</span>
+          <span>© 2025 PitchSnack</span>
+        </div>
+
       </div>
     </div>
   );
