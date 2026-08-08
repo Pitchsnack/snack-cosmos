@@ -188,7 +188,7 @@ export function StartupCoverPage({
               {s.short_description && (
                 <div className="pt-1">
                   <p className="line-clamp-5 max-w-[20ch] whitespace-pre-line text-[17px] font-bold leading-[1.25] text-white sm:text-[20px]">
-                    {"\n\n"}{s.short_description}
+                    {"\n"}{s.short_description}
                   </p>
                   <div className="mt-3 h-1 w-9 rounded-full" style={{ background: "#3B82F6" }} />
                 </div>
