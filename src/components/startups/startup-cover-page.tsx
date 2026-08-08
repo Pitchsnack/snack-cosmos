@@ -233,8 +233,9 @@ export function StartupCoverPage({
             </div>
           </div>
 
-          {/* ---------------- Right information panel ---------------- */}
-          <div className="bg-white p-5 sm:p-7 lg:p-8">
+          {/* ---------------- Right white floating information card ---------------- */}
+          <div className="rounded-[18px] bg-white p-5 shadow-[0_28px_80px_-30px_rgba(4,10,22,0.65)] sm:p-7 lg:p-8">
+
             {/* Header */}
             <div className="flex flex-wrap items-start gap-4 sm:flex-nowrap">
               <div className="flex h-[96px] w-[96px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#E6ECF5] bg-white shadow-[0_6px_18px_-12px_rgba(11,45,99,0.5)]">
