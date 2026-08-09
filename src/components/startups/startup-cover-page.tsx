@@ -111,12 +111,14 @@ export function StartupCoverPage({
   const s = mask(data);
   const restricted = restrictedSet(s);
 
-  // Cover background priority: explicit selection → Media1 → Yellow default.
-  const media1 = s.media?.find((m) => m.slot === 1);
-  const media1Url =
-    !restricted.has("media_images") && !mediaFailed ? media1?.image_signed_url ?? null : null;
+  // Cover background priority: explicit selection → Yellow default.
+  // Media1 is NOT used as the left-panel background; it is displayed as its own
+  // image block between the statement and Quick Facts.
   const preset = coverBackgroundPreset(selected);
-  const useMedia = !selected && !!media1Url;
+
+  // Media1 image block (left panel only). Hidden when restricted or missing.
+  const media1 = s.media?.find((m) => m.slot === 1);
+  const media1Url = !restricted.has("media_images") && !mediaFailed ? media1?.image_signed_url ?? null : null;
 
   const metaItems: { icon: typeof Calendar; label: string }[] = [];
   if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
@@ -134,41 +136,18 @@ export function StartupCoverPage({
           {/* ---------------- Left cover ---------------- */}
           <div
             className="relative flex min-h-[240px] flex-col justify-between overflow-hidden p-5 sm:min-h-[280px] lg:p-6"
-            style={useMedia ? undefined : { background: preset.css }}
+            style={{ background: preset.css }}
           >
-            {/* Media1 is treated purely as a background: cropped, scaled and
-                blurred so source website text never reads as page content. */}
-            {useMedia && media1Url && (
-              <>
-                <div
-                  className="pointer-events-none absolute -inset-10 scale-125 blur-[10px]"
-                  style={{
-                    backgroundImage: `url(${media1Url})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-                <img
-                  src={media1Url}
-                  alt=""
-                  className="hidden"
-                  onError={() => setMediaFailed(true)}
-                />
-              </>
-            )}
-            {/* Readability overlay: media must read as background, never as content */}
+            {/* Readability overlay */}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
-                background: useMedia
-                  ? "linear-gradient(to bottom, rgba(4,10,22,0.78) 0%, rgba(4,10,22,0.70) 40%, rgba(4,10,22,0.90) 100%)"
-                  : "linear-gradient(to bottom, rgba(4,10,22,0.35) 0%, rgba(4,10,22,0.22) 40%, rgba(4,10,22,0.72) 100%)",
+                background:
+                  "linear-gradient(to bottom, rgba(4,10,22,0.35) 0%, rgba(4,10,22,0.22) 40%, rgba(4,10,22,0.72) 100%)",
               }}
             />
 
-
-            <div className="relative z-10 space-y-3">
+            <div className="relative z-10 flex flex-col gap-3">
               {/* PitchSnack logo — mandatory solid black box */}
               <div className="inline-flex items-center rounded-[10px] bg-black px-3.5 py-2">
                 <img src={logoWhite} alt="PitchSnack" className="h-6 w-auto" />
@@ -191,6 +170,18 @@ export function StartupCoverPage({
                     {s.short_description}
                   </p>
                   <div className="mt-3 h-1 w-9 rounded-full" style={{ background: "#3B82F6" }} />
+                </div>
+              )}
+
+              {/* Media1 image block — between statement and Quick Facts */}
+              {media1Url && (
+                <div className="overflow-hidden rounded-[12px] border border-white/15 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]">
+                  <img
+                    src={media1Url}
+                    alt=""
+                    className="h-auto w-full object-cover"
+                    onError={() => setMediaFailed(true)}
+                  />
                 </div>
               )}
             </div>
