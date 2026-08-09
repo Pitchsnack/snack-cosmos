@@ -181,7 +181,6 @@ export function StartupCoverPage({
                     alt=""
                     className="h-auto w-full object-cover"
                     onError={() => setMediaFailed(true)}
-                    style={{ aspectRatio: "16 / 9" }}
                   />
                 </div>
               )}
