@@ -1249,7 +1249,20 @@ export function StartupForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => guard.confirmNavigate(() => navigate({ to: "/startups" }))}
+          onClick={() =>
+            guard.confirmNavigate(() =>
+              isMyWorkspace
+                ? navigate({
+                    to: "/my-startups",
+                    search: { ...myStartupsReturnSearch, panel: startup?.id },
+                  })
+                : navigate({
+                    to: "/startups",
+                    search: { ...directoryReturnSearch, panel: startup?.id },
+                  }),
+            )
+          }
+
         >
           Cancel
         </Button>
