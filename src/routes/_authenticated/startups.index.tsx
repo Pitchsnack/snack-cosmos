@@ -354,7 +354,7 @@ function StartupsPageInner() {
         </div>
       )}
 
-      <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
+      <Dialog open={!!modalId} onOpenChange={(o) => !o && closeStartup()}>
         <DialogContent
           className={cn(
             "[&>button]:hidden",
@@ -363,7 +363,11 @@ function StartupsPageInner() {
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
           )}
         >
-          <StartupPanelModalBody modalId={modalId} onClose={() => setModalId(null)} />
+          <StartupPanelModalBody
+            modalId={modalId}
+            onClose={closeStartup}
+            returnSearch={{ ...s, panel: undefined }}
+          />
         </DialogContent>
       </Dialog>
 
