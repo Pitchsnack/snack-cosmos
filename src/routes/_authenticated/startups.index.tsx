@@ -79,7 +79,21 @@ function StartupsPageInner() {
   const view = s.view ?? "grid";
   const selected = s.selected;
   const favOnly = !!s.fav;
-  const [modalId, setModalId] = useState<string | null>(null);
+  // The information panel is URL-addressable so returning from Edit restores it
+  // over the still-rendered Startup Directory cards.
+  const [modalId, setModalId] = useState<string | null>(s.panel ?? null);
+  useEffect(() => {
+    if (s.panel) setModalId(s.panel);
+  }, [s.panel]);
+  const closeStartup = () => {
+    setModalId(null);
+    if (s.panel) navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }), replace: true });
+  };
+  const openStartup = (id: string) => {
+    setModalId(id);
+    navigate({ search: (prev: typeof s) => ({ ...prev, panel: id }), replace: true });
+  };
+
   const { ids: favIds } = useFavoriteStartups();
 
 
