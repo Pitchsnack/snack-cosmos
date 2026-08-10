@@ -140,7 +140,23 @@ interface Props {
     page?: number;
     fav?: boolean;
   };
+  /** Startup Directory list state to restore after a successful edit. */
+  directoryReturnSearch?: {
+    q?: string;
+    stage?: string;
+    industry?: string;
+    hq?: string;
+    ct?: string;
+    ptag?: string;
+    mtag?: string;
+    sort?: "updated_desc" | "created_desc" | "name_asc" | "name_desc";
+    view?: "grid" | "split" | "list";
+    selected?: string;
+    page?: number;
+    fav?: boolean;
+  };
 }
+
 
 
 function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
