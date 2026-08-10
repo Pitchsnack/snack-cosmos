@@ -49,7 +49,9 @@ const searchSchema = z.object({
   sort: z.enum(SORT).optional(),
   view: z.enum(VIEW).optional(),
   selected: z.string().optional(),
+  panel: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
+
   fav: z.coerce.boolean().optional(),
 });
 
