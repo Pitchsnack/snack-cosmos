@@ -355,7 +355,15 @@ function StartupsPageInner() {
   );
 }
 
-function StartupPanelModalBody({ modalId, onClose }: { modalId: string | null; onClose: () => void }) {
+function StartupPanelModalBody({
+  modalId,
+  onClose,
+  returnSearch,
+}: {
+  modalId: string | null;
+  onClose: () => void;
+  returnSearch: Omit<z.infer<typeof searchSchema>, "panel"> & { panel?: undefined };
+}) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const visible = hovered || focused;
@@ -380,8 +388,17 @@ function StartupPanelModalBody({ modalId, onClose }: { modalId: string | null; o
         </DialogClose>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
-        {modalId && <StartupDetailPanel id={modalId} showEdit={false} compact onClose={onClose} />}
+        {modalId && (
+          <StartupDetailPanel
+            id={modalId}
+            showEdit={false}
+            compact
+            onClose={onClose}
+            returnSearch={returnSearch}
+          />
+        )}
       </div>
+
 
     </div>
   );
