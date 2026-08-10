@@ -140,7 +140,23 @@ interface Props {
     page?: number;
     fav?: boolean;
   };
+  /** Startup Directory list state to restore after a successful edit. */
+  directoryReturnSearch?: {
+    q?: string;
+    stage?: string;
+    industry?: string;
+    hq?: string;
+    ct?: string;
+    ptag?: string;
+    mtag?: string;
+    sort?: "updated_desc" | "created_desc" | "name_asc" | "name_desc";
+    view?: "grid" | "split" | "list";
+    selected?: string;
+    page?: number;
+    fav?: boolean;
+  };
 }
+
 
 
 function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
@@ -172,6 +188,7 @@ export function StartupForm({
   redirectAfterCreate = "detail",
   workspace = "startups",
   myStartupsReturnSearch,
+  directoryReturnSearch,
 }: Props) {
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
@@ -530,7 +547,12 @@ export function StartupForm({
           search: { ...myStartupsReturnSearch, panel: startup!.id },
         });
       } else {
-        navigate({ to: "/startups/$id", params: { id: startup!.id } });
+        // Return to the Startup Directory with the information panel reopened,
+        // so the cards stay visible behind the same panel UX.
+        navigate({
+          to: "/startups",
+          search: { ...directoryReturnSearch, panel: startup!.id },
+        });
       }
     },
     onError: (e: Error) => toast.error(e.message),
@@ -1227,7 +1249,20 @@ export function StartupForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => guard.confirmNavigate(() => navigate({ to: "/startups" }))}
+          onClick={() =>
+            guard.confirmNavigate(() =>
+              isMyWorkspace
+                ? navigate({
+                    to: "/my-startups",
+                    search: { ...myStartupsReturnSearch, panel: startup?.id },
+                  })
+                : navigate({
+                    to: "/startups",
+                    search: { ...directoryReturnSearch, panel: startup?.id },
+                  }),
+            )
+          }
+
         >
           Cancel
         </Button>

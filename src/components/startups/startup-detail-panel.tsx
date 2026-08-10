@@ -80,6 +80,7 @@ export function StartupDetailPanel({
   workspace = "startups",
   onClose,
   myStartupsReturnSearch,
+  returnSearch,
 }: {
   id: string;
   showEdit?: boolean;
@@ -104,8 +105,25 @@ export function StartupDetailPanel({
     page?: number;
     fav?: boolean;
   };
+  /** List state restored after editing from the Startup Directory panel. */
+  returnSearch?: {
+    q?: string;
+    stage?: string;
+    industry?: string;
+    hq?: string;
+    ct?: string;
+    ptag?: string;
+    mtag?: string;
+    sort?: "updated_desc" | "created_desc" | "name_asc" | "name_desc";
+    view?: "grid" | "split" | "list";
+    selected?: string;
+    page?: number;
+    fav?: boolean;
+  };
 }) {
   const isMyWorkspace = workspace === "my-startups";
+  const directoryReturnSearch = returnSearch;
+
   const { data, isLoading, error } = useStartup(id);
   const connectionState = useConnectionState(id);
   // Basic Information Restrictions gate what non-authorized viewers receive.
@@ -243,7 +261,7 @@ export function StartupDetailPanel({
                   <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
                 </Link>
               ) : (
-                <Link to="/startups/$id/edit" params={{ id }}>
+                <Link to="/startups/$id/edit" params={{ id }} search={directoryReturnSearch}>
                   <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
                 </Link>
               )}
@@ -314,7 +332,7 @@ export function StartupDetailPanel({
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </Link>
                       ) : (
-                        <Link to="/startups/$id/edit" params={{ id }} onClick={() => onClose?.()}>
+                        <Link to="/startups/$id/edit" params={{ id }} search={directoryReturnSearch} onClick={() => onClose?.()}>
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </Link>
                       )}
