@@ -86,7 +86,11 @@ function EditStartupPage() {
             </TabsList>
             <TabsContent value="edit" className="mt-6">
               <div className="mx-auto max-w-4xl">
-                <StartupForm startup={data as unknown as StartupDetail} />
+                <StartupForm
+                  startup={data as unknown as StartupDetail}
+                  directoryReturnSearch={search}
+                />
+
               </div>
             </TabsContent>
             <TabsContent value="basic-restrictions" className="mt-6">
