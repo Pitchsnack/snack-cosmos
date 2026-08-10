@@ -188,6 +188,7 @@ export function StartupForm({
   redirectAfterCreate = "detail",
   workspace = "startups",
   myStartupsReturnSearch,
+  directoryReturnSearch,
 }: Props) {
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
@@ -546,7 +547,12 @@ export function StartupForm({
           search: { ...myStartupsReturnSearch, panel: startup!.id },
         });
       } else {
-        navigate({ to: "/startups/$id", params: { id: startup!.id } });
+        // Return to the Startup Directory with the information panel reopened,
+        // so the cards stay visible behind the same panel UX.
+        navigate({
+          to: "/startups",
+          search: { ...directoryReturnSearch, panel: startup!.id },
+        });
       }
     },
     onError: (e: Error) => toast.error(e.message),
