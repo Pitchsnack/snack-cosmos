@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X, Star } from "lucide-react";
 import { z } from "zod";
@@ -290,7 +290,7 @@ function StartupsPageInner() {
           )}
         >
           {items.map((it) => (
-            <StartupCard key={it.id} s={it} onClick={() => setModalId(it.id)} compact={favOnly} />
+            <StartupCard key={it.id} s={it} onClick={() => openStartup(it.id)} compact={favOnly} />
           ))}
         </div>
       ) : view === "list" ? (
@@ -298,13 +298,13 @@ function StartupsPageInner() {
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
             <FavoriteListHeader />
             {items.map((it) => (
-              <FavoriteListRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
+              <FavoriteListRow key={it.id} s={it} onSelect={() => openStartup(it.id)} />
             ))}
           </div>
         ) : (
           <div className="space-y-2">
             {items.map((it) => (
-              <StartupRow key={it.id} s={it} onSelect={() => setModalId(it.id)} />
+              <StartupRow key={it.id} s={it} onSelect={() => openStartup(it.id)} />
             ))}
           </div>
         )
