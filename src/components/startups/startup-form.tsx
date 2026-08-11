@@ -907,6 +907,11 @@ export function StartupForm({
       onKeyDown={handleFormKeyDown}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
+      {!isEdit && (
+        <div className="pb-2">
+          <StartupStepper current={3} />
+        </div>
+      )}
       {/* Tenant (create only) */}
       {!isEdit && (
         <div className="space-y-1.5">
