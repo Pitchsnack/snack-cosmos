@@ -357,6 +357,13 @@ export function StartupForm({
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMediaState(startup));
 
   // Ownership (create only — required by current API)
+  // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
+  const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
+  const [enriching, setEnriching] = useState(false);
+  // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
+  const [lastYearRevenue, setLastYearRevenue] = useState("");
+  const [companySize, setCompanySize] = useState("");
+
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
