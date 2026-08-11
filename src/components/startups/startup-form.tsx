@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw } from "lucide-react";
+import { X, RefreshCw, Sparkles, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +52,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
-import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
+import { StartupStepper } from "./startup-stepper";
+import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
@@ -356,6 +357,13 @@ export function StartupForm({
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMediaState(startup));
 
   // Ownership (create only — required by current API)
+  // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
+  const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
+  const [enriching, setEnriching] = useState(false);
+  // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
+  const [lastYearRevenue, setLastYearRevenue] = useState("");
+  const [companySize, setCompanySize] = useState("");
+
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
 
@@ -703,6 +711,189 @@ export function StartupForm({
     }
   };
 
+  // ── Step 1: Quick Info (create mode only) ──────────────────────────────
+  const logoPreview =
+    media.logo.pendingFile ? URL.createObjectURL(media.logo.pendingFile) : media.logo.signedUrl;
+
+  const runQuickEnrich = async () => {
+    const raw = websiteUrl.trim();
+    if (!startupName.trim()) {
+      toast.error("Company Name is required.");
+      return;
+    }
+    if (!raw) {
+      setPhase("full");
+      toast.info("No website provided — complete the remaining fields manually.");
+      return;
+    }
+    const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    setEnriching(true);
+    try {
+      const result = await autoEnrichAdapter.enrichStartup({ websiteUrl: url });
+      const { applied } = applyEnrichment(result);
+      toast.success(
+        applied.length
+          ? `Auto Enrich populated ${applied.length} field${applied.length === 1 ? "" : "s"}. Review and complete.`
+          : "Auto Enrich found no new details — complete the remaining fields manually.",
+      );
+    } catch (e) {
+      toast.error(
+        (e instanceof Error ? e.message : "Auto Enrich failed.") +
+          " You can still complete the form manually.",
+      );
+    } finally {
+      setEnriching(false);
+      setPhase("full");
+    }
+  };
+
+  if (phase === "quick") {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void runQuickEnrich();
+        }}
+        className="space-y-4 text-sm"
+      >
+        <div className="rounded-lg border border-border bg-card p-4 shadow-card">
+          <StartupStepper current={1} />
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card">
+          <h2 className="text-sm font-semibold">Company Details</h2>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Company Name <span className="text-destructive">*</span></Label>
+              <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
+                placeholder="e.g. Acme Technologies" required maxLength={255} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>City</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. San Francisco" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Country</Label>
+              <CountryCombobox
+                value={headquarters}
+                onChange={(v) => {
+                  setHeadquarters(v);
+                  if (!v) setRegion("");
+                  else if (!region) {
+                    const suggested = regionForCountry(v);
+                    if (suggested) setRegion(suggested);
+                  }
+                }}
+                placeholder="Select country"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Website</Label>
+              <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="https://acme.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Year Founded</Label>
+              <Input type="number" min={1800} max={new Date().getFullYear()}
+                value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Funding Stage</Label>
+              <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select funding stage" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Last Year&apos;s Revenue (USD)</Label>
+              <Input inputMode="numeric" value={lastYearRevenue}
+                onChange={(e) => setLastYearRevenue(e.target.value)} placeholder="e.g. 5,000,000" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Company Size</Label>
+              <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"].map((s) => (
+                    <SelectItem key={s} value={s}>{s} employees</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Company Logo</Label>
+              <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                <span className="truncate">
+                  {media.logo.pendingFile ? media.logo.pendingFile.name : "Upload logo (PNG, JPG, SVG)"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    if (f) setMedia({ ...media, logo: { ...media.logo, pendingFile: f } });
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-border bg-card p-6 shadow-card">
+          <h2 className="text-sm font-semibold">
+            Industry <span className="ml-1 text-xs font-normal text-muted-foreground">(Select one or more)</span>
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {INDUSTRIES.map((i) => (
+              <Pill key={i} active={industries.includes(i)} onClick={() => setIndustries(toggle(industries, i))}>
+                {i}
+              </Pill>
+            ))}
+            {industries.filter((i) => !INDUSTRIES.includes(i)).map((i) => (
+              <Pill key={i} active onClick={() => setIndustries(industries.filter((x) => x !== i))}>
+                {i} ✕
+              </Pill>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); } }}
+              placeholder="Add custom industry..." />
+            <Button type="button" variant="outline" onClick={addCustomIndustry}>Add</Button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
+          <p className="text-xs text-muted-foreground">
+            Required fields are marked with <span className="text-destructive">*</span>
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => navigate({ to: isMyWorkspace ? "/my-startups" : "/startups" })}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={enriching || !startupName.trim()} className="gap-2">
+              {enriching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {enriching ? "Enriching…" : "Auto Enrich & Continue"}
+            </Button>
+          </div>
+        </div>
+      </form>
+    );
+  }
+
   return (
     <form
       onSubmit={(e) => {
@@ -716,6 +907,11 @@ export function StartupForm({
       onKeyDown={handleFormKeyDown}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
+      {!isEdit && (
+        <div className="pb-2">
+          <StartupStepper current={3} />
+        </div>
+      )}
       {/* Tenant (create only) */}
       {!isEdit && (
         <div className="space-y-1.5">
