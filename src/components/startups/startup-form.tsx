@@ -52,7 +52,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
-import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
+import { StartupStepper } from "./startup-stepper";
+import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
+import { Sparkles, Loader2, Upload } from "lucide-react";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
