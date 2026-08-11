@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw } from "lucide-react";
+import { X, RefreshCw, Sparkles, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,7 +54,6 @@ import {
 import { AutoEnrichButton } from "./auto-enrich-button";
 import { StartupStepper } from "./startup-stepper";
 import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
-import { Sparkles, Loader2, Upload } from "lucide-react";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
