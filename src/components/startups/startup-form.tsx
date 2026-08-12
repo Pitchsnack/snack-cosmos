@@ -1500,6 +1500,17 @@ export function StartupForm({
           {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
         </Button>
       </div>
+      <DuplicateWarningDialog
+        open={websiteDup.open}
+        typedName={websiteDup.typedValue}
+        candidates={websiteDup.candidates}
+        onCancel={websiteDup.close}
+        onLinkExisting={(c) => {
+          websiteDup.close();
+          if (c.id) window.open(`/startups/${c.id}`, "_blank", "noopener,noreferrer");
+        }}
+        onCreatePendingAnyway={websiteDup.close}
+      />
       <UnsavedChangesDialog {...guard.dialogProps} />
     </form>
   );
