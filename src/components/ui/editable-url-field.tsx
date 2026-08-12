@@ -9,6 +9,8 @@ interface EditableUrlFieldProps {
   label: string;
   placeholder?: string;
   maxLength?: number;
+  /** Fired with the normalized URL once the value is committed (blur/Enter). */
+  onCommit?: (url: string) => void;
 }
 
 /**
@@ -22,6 +24,7 @@ export function EditableUrlField({
   label,
   placeholder = "https://example.com",
   maxLength = 2048,
+  onCommit,
 }: EditableUrlFieldProps) {
   const [editing, setEditing] = useState(!value?.trim());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +68,7 @@ export function EditableUrlField({
     const normalized = normalizeUrl(t);
     if (normalized !== value) onChange(normalized);
     setEditing(false);
+    onCommit?.(normalized);
   };
 
   const trimmed = value?.trim() ?? "";
