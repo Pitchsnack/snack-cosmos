@@ -906,6 +906,17 @@ export function StartupForm({
 
         {/* The navigation blocker is active in this phase too — without the
             dialog mounted, every blocked navigation would fail silently. */}
+        <DuplicateWarningDialog
+          open={websiteDup.open}
+          typedName={websiteDup.typedValue}
+          candidates={websiteDup.candidates}
+          onCancel={websiteDup.close}
+          onLinkExisting={(c) => {
+            websiteDup.close();
+            if (c.id) window.open(`/startups/${c.id}`, "_blank", "noopener,noreferrer");
+          }}
+          onCreatePendingAnyway={websiteDup.close}
+        />
         <UnsavedChangesDialog {...guard.dialogProps} />
       </form>
     );
