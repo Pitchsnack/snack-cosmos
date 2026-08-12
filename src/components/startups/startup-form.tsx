@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { REGION_OPTIONS, regionForCountry } from "@/lib/country-region";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
+import { useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
+import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -281,6 +283,8 @@ export function StartupForm({
   const [region, setRegion] = useState<string>(startup?.region ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(startup?.website_url ?? "");
   const [linkedinUrl, setLinkedinUrl] = useState(startup?.linkedin_url ?? "");
+  // P-18 Company URL duplicate check — identical in Add and Edit.
+  const websiteDup = useWebsiteDuplicateCheck(startup?.id);
   
   const [city, setCity] = useState(startup?.city ?? "");
 
@@ -789,11 +793,13 @@ export function StartupForm({
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Website</Label>
-              <Input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)}
-                placeholder="https://acme.com" />
-            </div>
+            <EditableUrlField
+              label="Website"
+              value={websiteUrl}
+              onChange={setWebsiteUrl}
+              onCommit={(url) => void websiteDup.check(url)}
+              placeholder="https://acme.com"
+            />
             <div className="space-y-1.5">
               <Label>Year Founded</Label>
               <Input type="number" min={1800} max={new Date().getFullYear()}
@@ -1175,6 +1181,7 @@ export function StartupForm({
           label="Website"
           value={websiteUrl}
           onChange={setWebsiteUrl}
+          onCommit={(url) => void websiteDup.check(url)}
           placeholder="https://"
         />
         <EditableUrlField
