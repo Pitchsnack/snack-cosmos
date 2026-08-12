@@ -881,7 +881,14 @@ export function StartupForm({
             Required fields are marked with <span className="text-destructive">*</span>
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => navigate({ to: isMyWorkspace ? "/my-startups" : "/startups" })}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                guard.bypassOnce();
+                navigate({ to: isMyWorkspace ? "/my-startups" : "/startups" });
+              }}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={enriching || !startupName.trim()} className="gap-2">
@@ -890,9 +897,14 @@ export function StartupForm({
             </Button>
           </div>
         </div>
+
+        {/* The navigation blocker is active in this phase too — without the
+            dialog mounted, every blocked navigation would fail silently. */}
+        <UnsavedChangesDialog {...guard.dialogProps} />
       </form>
     );
   }
+
 
   return (
     <form
