@@ -818,8 +818,23 @@ export function StartupForm({
 
             <div className="space-y-1.5">
               <Label>Last Year&apos;s Revenue (USD)</Label>
-              <Input inputMode="numeric" value={lastYearRevenue}
-                onChange={(e) => setLastYearRevenue(e.target.value)} placeholder="e.g. 5,000,000" />
+              <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {[
+                    "Pre-revenue",
+                    "$1 - $50,000",
+                    "$50,000 - $100,000",
+                    "$100,000 - $500,000",
+                    "$500,000 - $1,000,000",
+                    "$1,000,000 +",
+                    "I’d rather not say",
+                  ].map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Company Size</Label>
