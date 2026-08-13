@@ -258,9 +258,15 @@ export function MapInfoPanel({
       <ShareStartupDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        startupId={startup.id}
-        startupName={startup.startup_name}
+        startup={{
+          name: startup.startup_name,
+          tagline: startup.short_description,
+          location: startup.headquarters ?? startup.city,
+          website: startup.website_url,
+          logoUrl: startup.logo_signed_url,
+        }}
       />
+
     </aside>
   );
 }
