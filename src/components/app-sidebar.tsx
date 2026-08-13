@@ -61,7 +61,8 @@ type NavPath =
   | "/my-page"
   | "/startup-activity"
   | "/contacts"
-  | "/entity-control";
+  | "/entity-control"
+  | "/industry-map";
 
 
 type NavItem = {
@@ -83,6 +84,7 @@ const STARTUP_MENU_ORDER = [
   "Startup Activity",
   "My Startups",
   "Startups Directory",
+  "Industry Map",
   "My Connections",
   "Contacts",
   "Communications",
@@ -113,6 +115,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Global Startups",
       "Browse Global Catalogue",
       "Startups Directory",
+      "Industry Map",
       "Investors",
     ],
   },
@@ -138,6 +141,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
   { label: "My Startups", icon: Building2, path: "/my-startups", exact: false, perm: "startups.read" },
+  { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
 
 
   {

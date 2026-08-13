@@ -105,7 +105,18 @@
   --gradient-subtle: linear-gradient(180deg, hsl(220 20% 97%), hsl(220 15% 92%));
   --shadow-card: 0 1px 3px hsl(225 30% 12% / 0.06), 0 4px 12px hsl(225 30% 12% / 0.04);
   --shadow-elevated: 0 4px 16px hsl(225 30% 12% / 0.08), 0 12px 32px hsl(225 30% 12% / 0.06);
+
+  /* Similarity Map cluster surfaces — soft pastels */
+  --cluster-1: hsl(152 45% 45%);
+  --cluster-2: hsl(205 70% 52%);
+  --cluster-3: hsl(263 55% 58%);
+  --cluster-4: hsl(38 85% 55%);
+  --cluster-5: hsl(340 60% 58%);
+  --cluster-6: hsl(180 45% 42%);
+  --cluster-7: hsl(20 75% 55%);
+  --cluster-8: hsl(225 40% 45%);
 }
+
 
 .dark {
   --background: hsl(225 30% 8%);

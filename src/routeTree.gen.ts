@@ -26,6 +26,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
+import { Route as AuthenticatedIndustryMapRouteImport } from './routes/_authenticated/industry-map'
 import { Route as AuthenticatedEntityControlRouteImport } from './routes/_authenticated/entity-control'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -150,6 +151,12 @@ const AuthenticatedIntakeQueueRoute =
   AuthenticatedIntakeQueueRouteImport.update({
     id: '/intake-queue',
     path: '/intake-queue',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIndustryMapRoute =
+  AuthenticatedIndustryMapRouteImport.update({
+    id: '/industry-map',
+    path: '/industry-map',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedEntityControlRoute =
@@ -374,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/entity-control': typeof AuthenticatedEntityControlRoute
+  '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/my-page': typeof AuthenticatedMyPageRoute
@@ -425,6 +433,7 @@ export interface FileRoutesByTo {
   '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/entity-control': typeof AuthenticatedEntityControlRoute
+  '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -474,6 +483,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
   '/_authenticated/entity-control': typeof AuthenticatedEntityControlRoute
+  '/_authenticated/industry-map': typeof AuthenticatedIndustryMapRoute
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/deals'
     | '/entity-control'
+    | '/industry-map'
     | '/intake-queue'
     | '/investors'
     | '/my-page'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/connections'
     | '/dashboard'
     | '/entity-control'
+    | '/industry-map'
     | '/intake-queue'
     | '/my-page'
     | '/notifications'
@@ -630,6 +642,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
     | '/_authenticated/entity-control'
+    | '/_authenticated/industry-map'
     | '/_authenticated/intake-queue'
     | '/_authenticated/investors'
     | '/_authenticated/my-page'
@@ -801,6 +814,13 @@ declare module '@tanstack/react-router' {
       path: '/intake-queue'
       fullPath: '/intake-queue'
       preLoaderRoute: typeof AuthenticatedIntakeQueueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/industry-map': {
+      id: '/_authenticated/industry-map'
+      path: '/industry-map'
+      fullPath: '/industry-map'
+      preLoaderRoute: typeof AuthenticatedIndustryMapRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/entity-control': {
@@ -1210,6 +1230,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
   AuthenticatedEntityControlRoute: typeof AuthenticatedEntityControlRoute
+  AuthenticatedIndustryMapRoute: typeof AuthenticatedIndustryMapRoute
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
@@ -1238,6 +1259,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
   AuthenticatedEntityControlRoute: AuthenticatedEntityControlRoute,
+  AuthenticatedIndustryMapRoute: AuthenticatedIndustryMapRoute,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
