@@ -20,6 +20,7 @@ import {
   similarTo,
   type SimilarityMode,
 } from "@/lib/similarity-map/similarity";
+import type { StartupListItem } from "@/lib/startups.functions";
 import { cn } from "@/lib/utils";
 
 const MODES = ["industry", "product", "market", "all"] as const;
@@ -71,11 +72,11 @@ function IndustryMapPage() {
     navigate({ search: (prev) => ({ ...prev, ...patch }) });
 
   const { data, isLoading } = useStartups({ scope: "directory", pageSize: 100, sort: "name_asc" });
-  const all = useMemo(() => data?.rows ?? [], [data]);
+  const all = useMemo(() => data?.items ?? [], [data]);
 
   const options = useMemo(() => {
     const ind = new Set<string>(), prod = new Set<string>(), mkt = new Set<string>();
-    for (const r of all) {
+    for (const r of all as StartupListItem[]) {
       (r.industry ?? []).forEach((t) => ind.add(t));
       (r.product_tags ?? []).forEach((t) => prod.add(t));
       (r.market_tags ?? []).forEach((t) => mkt.add(t));
@@ -86,7 +87,7 @@ function IndustryMapPage() {
 
   const rows = useMemo(() => {
     const q = (s.q ?? "").trim().toLowerCase();
-    return all.filter((r) => {
+    return (all as StartupListItem[]).filter((r) => {
       if (q && !r.startup_name.toLowerCase().includes(q)) return false;
       if (s.industry && !(r.industry ?? []).includes(s.industry)) return false;
       if (s.ptag && !(r.product_tags ?? []).includes(s.ptag)) return false;
@@ -98,7 +99,7 @@ function IndustryMapPage() {
   }, [all, s.q, s.industry, s.ptag, s.mtag, s.stage, s.region]);
 
   const clusters = useMemo(() => buildClusters(rows, mode), [rows, mode]);
-  const selected = rows.find((r) => r.id === s.selected) ?? null;
+  const selected = rows.find((r: StartupListItem) => r.id === s.selected) ?? null;
 
   return (
     <div className="space-y-4">
