@@ -774,7 +774,7 @@ export function StartupForm({
                 placeholder="e.g. Acme Technologies" required maxLength={255} />
             </div>
             <div className="space-y-1.5">
-              <Label>City</Label>
+              <Label>Headquater City</Label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. San Francisco" />
             </div>
             <div className="space-y-1.5">
