@@ -235,17 +235,17 @@ export function SimilarityCanvas({
 
   const anchor = selectedId ? nodeById.get(selectedId) : undefined;
 
-  const zoomAt = useCallback((next: number, px: number, py: number) => {
-    setZoom((z) => {
-      const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
-      const k = clamped / z;
-      setOffset((o) => ({ x: px - (px - o.x) * k, y: py - (py - o.y) * k }));
-      return clamped;
-    });
-  }, []);
-
   const zoomRef = useRef(zoom);
   zoomRef.current = zoom;
+
+  const zoomAt = useCallback((next: number, px: number, py: number) => {
+    const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
+    const k = clamped / zoomRef.current;
+    zoomRef.current = clamped;
+    setZoom(clamped);
+    setOffset((o) => ({ x: px - (px - o.x) * k, y: py - (py - o.y) * k }));
+  }, []);
+
 
   useEffect(() => {
     const el = containerRef.current;
