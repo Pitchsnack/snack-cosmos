@@ -107,7 +107,7 @@ function IndustryMapPage() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             Industry, Product &amp; Market Map
-            <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
+            <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium" style={{ borderColor: "color-mix(in oklab, var(--map-accent) 40%, transparent)", background: "color-mix(in oklab, var(--map-accent) 10%, transparent)", color: "var(--map-accent)" }}>
               Discovery
             </span>
           </h1>
@@ -183,14 +183,14 @@ function IndustryMapPage() {
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>{rows.length} startups</span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-px w-6 bg-muted-foreground/60" /> High Similarity
+            <span className="inline-block h-px w-6" style={{ background: "var(--map-accent)" }} /> High Similarity
           </span>
           <span className="flex items-center gap-1">
             <span
               className="inline-block h-px w-6"
               style={{
                 backgroundImage:
-                  "repeating-linear-gradient(to right, var(--muted-foreground) 0 3px, transparent 3px 6px)",
+                  "repeating-linear-gradient(to right, color-mix(in oklab, var(--map-accent) 50%, transparent) 0 3px, transparent 3px 6px)",
               }}
             />
             Lower Similarity
@@ -209,19 +209,20 @@ function IndustryMapPage() {
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
               mode === m.value
-                ? "border-accent bg-accent/15 text-accent-foreground"
+                ? "border-transparent text-[var(--map-accent-foreground)]"
                 : "border-border bg-card text-muted-foreground hover:text-foreground",
             )}
+            style={mode === m.value ? { background: "var(--map-accent)" } : undefined}
           >
             {m.label}
           </button>
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-3">
           {isLoading ? (
-            <Skeleton className="h-[540px] w-full rounded-xl" />
+            <Skeleton className="h-[680px] w-full rounded-2xl" />
           ) : view === "map" ? (
             <SimilarityCanvas
               clusters={clusters}
@@ -330,8 +331,9 @@ function ViewBtn({
       aria-pressed={active}
       className={cn(
         "inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
-        active ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+        active ? "text-[var(--map-accent-foreground)] shadow-sm" : "text-muted-foreground hover:text-foreground",
       )}
+      style={active ? { background: "var(--map-accent)" } : undefined}
     >
       <Icon className="h-3.5 w-3.5" /> {label}
     </button>
