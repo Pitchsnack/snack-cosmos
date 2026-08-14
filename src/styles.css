@@ -115,7 +115,13 @@
   --cluster-6: hsl(180 45% 42%);
   --cluster-7: hsl(20 75% 55%);
   --cluster-8: hsl(225 40% 45%);
+
+  /* Similarity Map interaction language — SnackPortal2 blue/purple */
+  --map-accent: hsl(258 78% 60%);
+  --map-accent-foreground: hsl(0 0% 100%);
+  --map-surface: hsl(226 40% 98%);
 }
+
 
 
 .dark {

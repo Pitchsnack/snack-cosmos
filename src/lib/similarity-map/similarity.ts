@@ -88,16 +88,48 @@ export function buildClusters(rows: StartupListItem[], mode: SimilarityMode): Cl
     if (list) list.push(r);
     else groups.set(best, [r]);
   }
-  return [...groups.entries()]
-    .map(([key, members]) => ({ key, name: key, members }))
-    .sort((a, b) =>
-      a.key === UNCLASSIFIED
-        ? 1
-        : b.key === UNCLASSIFIED
-          ? -1
-          : b.members.length - a.members.length || a.name.localeCompare(b.name),
-    );
+  // Split oversized groups into finer sub-clusters using a secondary dimension,
+  // so the canvas reads as an ecosystem of many small clusters instead of a few
+  // giant boxes. Purely presentational grouping — no data-model change.
+  const secondary: SimilarityMode[] = dim === "product" ? ["market", "industry"] : ["product", "market"];
+  const refined: Cluster[] = [];
+  const MAX = 9;
+  for (const [key, members] of groups) {
+    if (members.length <= MAX || key === UNCLASSIFIED) {
+      refined.push({ key, name: key, members });
+      continue;
+    }
+    const sub = new Map<string, StartupListItem[]>();
+    for (const r of members) {
+      let tag = "";
+      for (const d of secondary) {
+        const t = dimensionTags(r, d).map((x) => x.trim()).filter(Boolean);
+        if (t.length) {
+          tag = t.sort((a, b) => a.localeCompare(b))[0]!;
+          break;
+        }
+      }
+      const k = tag ? `${key} · ${tag}` : key;
+      const list = sub.get(k);
+      if (list) list.push(r);
+      else sub.set(k, [r]);
+    }
+    if (sub.size <= 1) {
+      refined.push({ key, name: key, members });
+      continue;
+    }
+    for (const [k, list] of sub) refined.push({ key: k, name: k, members: list });
+  }
+
+  return refined.sort((a, b) =>
+    a.key === UNCLASSIFIED
+      ? 1
+      : b.key === UNCLASSIFIED
+        ? -1
+        : b.members.length - a.members.length || a.name.localeCompare(b.name),
+  );
 }
+
 
 export interface SimilarMatch {
   startup: StartupListItem;
