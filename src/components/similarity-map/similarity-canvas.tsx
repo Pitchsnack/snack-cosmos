@@ -487,9 +487,9 @@ export function SimilarityCanvas({
                           ) : (
                             <text
                               x={n.x}
-                              y={n.y + 4}
+                              y={n.y + r * 0.14}
                               textAnchor="middle"
-                              fontSize={11}
+                              fontSize={r * 0.62}
                               fontWeight={600}
                               fill="var(--muted-foreground)"
                             >
@@ -498,9 +498,9 @@ export function SimilarityCanvas({
                           )}
                           <text
                             x={n.x}
-                            y={n.y + r + 13}
+                            y={n.y + r + 15 * Math.min(fit, 2.2)}
                             textAnchor="middle"
-                            fontSize={10.5}
+                            fontSize={11 * Math.min(fit, 2.2)}
                             fontWeight={isSel ? 700 : 500}
                             fill={isSel ? "var(--map-accent)" : "var(--foreground)"}
                           >
@@ -508,6 +508,7 @@ export function SimilarityCanvas({
                               ? `${n.startup.startup_name.slice(0, 15)}…`
                               : n.startup.startup_name}
                           </text>
+
                         </g>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-xs space-y-1">
