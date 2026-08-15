@@ -399,33 +399,37 @@ export function SimilarityCanvas({
           >
             <svg className="h-full w-full" viewBox={`0 0 ${W} ${vh}`} preserveAspectRatio="xMidYMid meet">
               <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`}>
-                {blobs.map((b) => (
-                  <g key={b.key}>
-                    <circle
-                      cx={b.cx - b.rx + 22}
-                      cy={b.cy - b.ry - 14}
-                      r={4}
-                      fill={clusterColor(b.ci)}
-                    />
-                    <text
-                      x={b.cx - b.rx + 32}
-                      y={b.cy - b.ry - 10}
-                      fontSize={15}
-                      fontWeight={600}
-                      fill="var(--foreground)"
-                    >
-                      {b.name}
-                    </text>
-                    <text
-                      x={b.cx - b.rx + 32}
-                      y={b.cy - b.ry + 6}
-                      fontSize={11}
-                      fill="var(--muted-foreground)"
-                    >
-                      {b.count} startups
-                    </text>
-                  </g>
-                ))}
+                {blobs.map((b) => {
+                  const s = Math.min(fit, 2.2);
+                  return (
+                    <g key={b.key}>
+                      <circle
+                        cx={b.cx - b.rx + 22 * s}
+                        cy={b.cy - b.ry - 16 * s}
+                        r={4.5 * s}
+                        fill={clusterColor(b.ci)}
+                      />
+                      <text
+                        x={b.cx - b.rx + 34 * s}
+                        y={b.cy - b.ry - 11 * s}
+                        fontSize={15 * s}
+                        fontWeight={600}
+                        fill="var(--foreground)"
+                      >
+                        {b.name}
+                      </text>
+                      <text
+                        x={b.cx - b.rx + 34 * s}
+                        y={b.cy - b.ry + 6 * s}
+                        fontSize={11 * s}
+                        fill="var(--muted-foreground)"
+                      >
+                        {b.count} startups
+                      </text>
+                    </g>
+                  );
+                })}
+
 
                 {nodes.map((n) => {
                   const isSel = n.id === selectedId;
