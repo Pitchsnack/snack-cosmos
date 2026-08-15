@@ -362,30 +362,33 @@ export function SimilarityCanvas({
                   x2={l.x2}
                   y2={l.y2}
                   stroke="var(--map-accent)"
-                  strokeOpacity={0.16}
-                  strokeWidth={1}
-                  strokeDasharray="5 7"
+                  strokeOpacity={0.28}
+                  strokeWidth={1.4 * Math.min(fit, 2)}
+                  strokeDasharray="6 8"
                 />
               ))}
 
               {/* similarity edges from the selected startup */}
               {anchor &&
                 edges.map((e) => {
-                  const strong = e.score >= Math.max(threshold, 0.5);
+                  const strong = e.score >= Math.max(threshold, 0.6);
+                  const medium = !strong && e.score >= Math.max(threshold, 0.35);
                   const mx = (anchor.x + e.to.x) / 2;
                   const my = (anchor.y + e.to.y) / 2 - Math.abs(anchor.x - e.to.x) * 0.12;
+                  const w = Math.min(fit, 2);
                   return (
                     <path
                       key={e.to.id}
                       d={`M ${anchor.x} ${anchor.y} Q ${mx} ${my} ${e.to.x} ${e.to.y}`}
                       fill="none"
                       stroke="var(--map-accent)"
-                      strokeOpacity={strong ? 0.7 : 0.32}
-                      strokeWidth={strong ? 2 : 1.2}
-                      strokeDasharray={strong ? undefined : "4 6"}
+                      strokeOpacity={strong ? 0.85 : medium ? 0.55 : 0.38}
+                      strokeWidth={(strong ? 2.4 : medium ? 1.6 : 1.1) * w}
+                      strokeDasharray={strong ? undefined : medium ? `${7 * w} ${5 * w}` : `${3 * w} ${6 * w}`}
                     />
                   );
                 })}
+
             </g>
           </svg>
 
