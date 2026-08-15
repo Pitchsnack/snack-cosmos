@@ -181,8 +181,15 @@ export function SimilarityCanvas({
   const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
 
   const [vh, setVh] = useState(H_DEFAULT);
-  const { blobs, nodes } = useMemo(() => layout(clusters, vh), [clusters, vh]);
+  const { blobs, nodes, scale: fit } = useMemo(() => layout(clusters, vh), [clusters, vh]);
   const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
+
+  // auto-fit: reset pan/zoom whenever the visible cluster set changes
+  useEffect(() => {
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  }, [clusters]);
+
 
   const selected = useMemo(
     () => rows.find((r) => r.id === selectedId) ?? null,
