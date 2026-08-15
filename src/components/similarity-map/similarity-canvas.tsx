@@ -62,25 +62,22 @@ function layout(clusters: Cluster[], H: number) {
   const n = clusters.length;
   const blobs: Blob[] = [];
   const nodes: NodePos[] = [];
-  if (n === 0) return { blobs, nodes };
+  if (n === 0) return { blobs, nodes, scale: 1 };
 
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  const NODE_R = 24;
-  const RING_GAP = 74;
+  const NODE_R = 30;
+  const RING_GAP = 92;
+  const GAP = 32; // visual separation between neighbouring clusters
 
-  const placed: { x: number; y: number; rad: number }[] = [];
-
-  clusters.forEach((c, i) => {
+  type Pack = { rad: number; local: { x: number; y: number }[] };
+  const packs: Pack[] = clusters.map((c) => {
     const count = c.members.length;
-
-    // local member positions in concentric rings
     const local: { x: number; y: number }[] = [];
     let idx = 0;
     let ring = 0;
     while (idx < count) {
       const ringR = ring * RING_GAP;
       const cap =
-        ring === 0 ? 1 : Math.max(1, Math.floor((2 * Math.PI * ringR) / (NODE_R * 2.9)));
+        ring === 0 ? 1 : Math.max(1, Math.floor((2 * Math.PI * ringR) / (NODE_R * 2.7)));
       const take = Math.min(cap, count - idx);
       for (let k = 0; k < take; k++) {
         const a = (k / take) * Math.PI * 2 + hash01(c.key, ring + 11) * Math.PI;
@@ -91,62 +88,57 @@ function layout(clusters: Cluster[], H: number) {
       if (ring > 12) break;
     }
     const spanR = local.reduce((m, p) => Math.max(m, Math.hypot(p.x, p.y)), 0);
-    const rad = spanR + NODE_R + 34;
+    return { rad: spanR + NODE_R + 40, local };
+  });
 
-    const t = n === 1 ? 0 : Math.sqrt((i + 0.55) / n);
-    const angle = i * golden + hash01(c.key, 7) * 0.5;
-    let x = W / 2 + Math.cos(angle) * W * 0.42 * t;
-    let y = H / 2 + Math.sin(angle) * H * 0.42 * t;
+  // Balanced grid placement — clusters spread evenly across the canvas
+  // instead of a sparse spiral with large dead zones.
+  const aspect = W / H;
+  const cols = Math.max(1, Math.min(n, Math.round(Math.sqrt(n * aspect))));
+  const rows = Math.ceil(n / cols);
+  const cellW = Math.max(...packs.map((p) => p.rad)) * 2 + GAP;
+  const cellH = cellW;
 
-    for (let pass = 0; pass < 200; pass++) {
-      let moved = false;
-      for (const p of placed) {
-        const dx = x - p.x;
-        const dy = y - p.y;
-        const d = Math.hypot(dx, dy) || 0.01;
-        const min = rad + p.rad + 60;
-        if (d < min) {
-          const push = (min - d) / d;
-          x += dx * push * 0.6;
-          y += dy * push * 0.6;
-          moved = true;
-        }
-      }
-      if (!moved) break;
-    }
-    placed.push({ x, y, rad });
+  clusters.forEach((c, i) => {
+    const row = Math.floor(i / cols);
+    const inRow = Math.min(cols, n - row * cols);
+    const col = i - row * cols;
+    // centre each row so partial rows stay balanced
+    const x = (col - (inRow - 1) / 2) * cellW + W / 2;
+    const y = (row - (rows - 1) / 2) * cellH + H / 2;
+    const p = packs[i]!;
 
     blobs.push({
       key: c.key,
       name: c.name,
-      count,
+      count: c.members.length,
       cx: x,
       cy: y,
-      rx: rad * (1.1 + hash01(c.key, 1) * 0.16),
-      ry: rad * (0.94 + hash01(c.key, 2) * 0.16),
-      rot: hash01(c.key, 3) * 50 - 25,
+      rx: p.rad * (1.06 + hash01(c.key, 1) * 0.12),
+      ry: p.rad * (0.96 + hash01(c.key, 2) * 0.12),
+      rot: hash01(c.key, 3) * 30 - 15,
       ci: i,
     });
 
-    local.forEach((p, k) => {
+    p.local.forEach((lp, k) => {
       const m = c.members[k]!;
-      nodes.push({ id: m.id, x: x + p.x, y: y + p.y, r: NODE_R, ci: i, startup: m });
+      nodes.push({ id: m.id, x: x + lp.x, y: y + lp.y, r: NODE_R, ci: i, startup: m });
     });
   });
 
-  // fit everything into the canvas box
+  // fit everything into ~88% of the canvas box
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const b of blobs) {
     minX = Math.min(minX, b.cx - b.rx);
     maxX = Math.max(maxX, b.cx + b.rx);
-    minY = Math.min(minY, b.cy - b.ry - 40);
-    maxY = Math.max(maxY, b.cy + b.ry + 20);
+    minY = Math.min(minY, b.cy - b.ry - 46);
+    maxY = Math.max(maxY, b.cy + b.ry + 24);
   }
-  const pad = 40;
+  const usable = 0.88;
   const scale = Math.min(
-    (W - pad * 2) / Math.max(1, maxX - minX),
-    (H - pad * 2) / Math.max(1, maxY - minY),
-    1.9,
+    (W * usable) / Math.max(1, maxX - minX),
+    (H * usable) / Math.max(1, maxY - minY),
+    3.2,
   );
   const dx = W / 2 - ((minX + maxX) / 2) * scale;
   const dy = H / 2 - ((minY + maxY) / 2) * scale;
@@ -163,8 +155,9 @@ function layout(clusters: Cluster[], H: number) {
     nd.r *= scale;
   }
 
-  return { blobs, nodes };
+  return { blobs, nodes, scale };
 }
+
 
 
 export function SimilarityCanvas({
@@ -188,8 +181,15 @@ export function SimilarityCanvas({
   const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
 
   const [vh, setVh] = useState(H_DEFAULT);
-  const { blobs, nodes } = useMemo(() => layout(clusters, vh), [clusters, vh]);
+  const { blobs, nodes, scale: fit } = useMemo(() => layout(clusters, vh), [clusters, vh]);
   const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
+
+  // auto-fit: reset pan/zoom whenever the visible cluster set changes
+  useEffect(() => {
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  }, [clusters]);
+
 
   const selected = useMemo(
     () => rows.find((r) => r.id === selectedId) ?? null,
@@ -362,30 +362,33 @@ export function SimilarityCanvas({
                   x2={l.x2}
                   y2={l.y2}
                   stroke="var(--map-accent)"
-                  strokeOpacity={0.16}
-                  strokeWidth={1}
-                  strokeDasharray="5 7"
+                  strokeOpacity={0.28}
+                  strokeWidth={1.4 * Math.min(fit, 2)}
+                  strokeDasharray="6 8"
                 />
               ))}
 
               {/* similarity edges from the selected startup */}
               {anchor &&
                 edges.map((e) => {
-                  const strong = e.score >= Math.max(threshold, 0.5);
+                  const strong = e.score >= Math.max(threshold, 0.6);
+                  const medium = !strong && e.score >= Math.max(threshold, 0.35);
                   const mx = (anchor.x + e.to.x) / 2;
                   const my = (anchor.y + e.to.y) / 2 - Math.abs(anchor.x - e.to.x) * 0.12;
+                  const w = Math.min(fit, 2);
                   return (
                     <path
                       key={e.to.id}
                       d={`M ${anchor.x} ${anchor.y} Q ${mx} ${my} ${e.to.x} ${e.to.y}`}
                       fill="none"
                       stroke="var(--map-accent)"
-                      strokeOpacity={strong ? 0.7 : 0.32}
-                      strokeWidth={strong ? 2 : 1.2}
-                      strokeDasharray={strong ? undefined : "4 6"}
+                      strokeOpacity={strong ? 0.85 : medium ? 0.55 : 0.38}
+                      strokeWidth={(strong ? 2.4 : medium ? 1.6 : 1.1) * w}
+                      strokeDasharray={strong ? undefined : medium ? `${7 * w} ${5 * w}` : `${3 * w} ${6 * w}`}
                     />
                   );
                 })}
+
             </g>
           </svg>
 
@@ -396,33 +399,37 @@ export function SimilarityCanvas({
           >
             <svg className="h-full w-full" viewBox={`0 0 ${W} ${vh}`} preserveAspectRatio="xMidYMid meet">
               <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`}>
-                {blobs.map((b) => (
-                  <g key={b.key}>
-                    <circle
-                      cx={b.cx - b.rx + 22}
-                      cy={b.cy - b.ry - 14}
-                      r={4}
-                      fill={clusterColor(b.ci)}
-                    />
-                    <text
-                      x={b.cx - b.rx + 32}
-                      y={b.cy - b.ry - 10}
-                      fontSize={15}
-                      fontWeight={600}
-                      fill="var(--foreground)"
-                    >
-                      {b.name}
-                    </text>
-                    <text
-                      x={b.cx - b.rx + 32}
-                      y={b.cy - b.ry + 6}
-                      fontSize={11}
-                      fill="var(--muted-foreground)"
-                    >
-                      {b.count} startups
-                    </text>
-                  </g>
-                ))}
+                {blobs.map((b) => {
+                  const s = Math.min(fit, 2.2);
+                  return (
+                    <g key={b.key}>
+                      <circle
+                        cx={b.cx - b.rx + 22 * s}
+                        cy={b.cy - b.ry - 16 * s}
+                        r={4.5 * s}
+                        fill={clusterColor(b.ci)}
+                      />
+                      <text
+                        x={b.cx - b.rx + 34 * s}
+                        y={b.cy - b.ry - 11 * s}
+                        fontSize={15 * s}
+                        fontWeight={600}
+                        fill="var(--foreground)"
+                      >
+                        {b.name}
+                      </text>
+                      <text
+                        x={b.cx - b.rx + 34 * s}
+                        y={b.cy - b.ry + 6 * s}
+                        fontSize={11 * s}
+                        fill="var(--muted-foreground)"
+                      >
+                        {b.count} startups
+                      </text>
+                    </g>
+                  );
+                })}
+
 
                 {nodes.map((n) => {
                   const isSel = n.id === selectedId;
@@ -480,9 +487,9 @@ export function SimilarityCanvas({
                           ) : (
                             <text
                               x={n.x}
-                              y={n.y + 4}
+                              y={n.y + r * 0.14}
                               textAnchor="middle"
-                              fontSize={11}
+                              fontSize={r * 0.62}
                               fontWeight={600}
                               fill="var(--muted-foreground)"
                             >
@@ -491,9 +498,9 @@ export function SimilarityCanvas({
                           )}
                           <text
                             x={n.x}
-                            y={n.y + r + 13}
+                            y={n.y + r + 15 * Math.min(fit, 2.2)}
                             textAnchor="middle"
-                            fontSize={10.5}
+                            fontSize={11 * Math.min(fit, 2.2)}
                             fontWeight={isSel ? 700 : 500}
                             fill={isSel ? "var(--map-accent)" : "var(--foreground)"}
                           >
@@ -501,6 +508,7 @@ export function SimilarityCanvas({
                               ? `${n.startup.startup_name.slice(0, 15)}…`
                               : n.startup.startup_name}
                           </text>
+
                         </g>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-xs space-y-1">
