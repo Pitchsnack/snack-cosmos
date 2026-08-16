@@ -232,6 +232,7 @@ export function SimilarityCanvas({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+  const moved = useRef(false);
   const [size, setSize] = useState({ width: 1000, height: 680 });
   const [userZoom, setUserZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -429,7 +430,7 @@ export function SimilarityCanvas({
                   key={node.id}
                   className="cursor-pointer"
                   opacity={anchor && !isSelected && !isNeighbour ? 0.52 : 1}
-                  onClick={(event) => { event.stopPropagation(); onSelect(node.id); }}
+                  onPointerUp={(event) => { event.stopPropagation(); if (!moved.current) onSelect(node.id); }}
                 >
                   <title>{node.startup.startup_name}</title>
                   <circle
