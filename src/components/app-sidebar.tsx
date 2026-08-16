@@ -116,7 +116,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Browse Global Catalogue",
       "Startups Directory",
       "Industry Map",
-      "Investors",
+      "Investors Directory",
     ],
   },
   { title: "Coming Soon", labels: ["Communications", "Documents", "Analytics"] },
