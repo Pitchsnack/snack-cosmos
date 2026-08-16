@@ -406,7 +406,7 @@ export function SimilarityCanvas({
             className="transition-transform duration-300 ease-out"
           >
             {clusterLinks.map((link, index) => (
-              <line key={index} {...link} stroke="var(--muted-foreground)" strokeWidth={1 / effectiveScale} strokeOpacity={0.2} strokeDasharray="2 5" />
+              <line key={index} {...link} stroke="var(--muted-foreground)" strokeWidth={1.5 / effectiveScale} strokeOpacity={0.35} strokeDasharray="6 4" />
             ))}
 
             {boxes.map((box) => {
