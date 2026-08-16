@@ -219,7 +219,7 @@ function IndustryMapPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(640px,72fr)_minmax(300px,28fr)]">
         <div className="min-w-0 space-y-3">
           {isLoading ? (
             <Skeleton className="h-[680px] w-full rounded-2xl" />
@@ -257,7 +257,7 @@ function IndustryMapPage() {
           )}
         </div>
 
-        <div className="min-h-[540px]">
+        <div className="min-h-[540px] max-w-[420px]">
           {selected ? (
             <MapInfoPanel
               startup={selected}
