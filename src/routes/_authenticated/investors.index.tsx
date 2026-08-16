@@ -143,7 +143,7 @@ function InvestorsPageInner() {
             <Briefcase className="h-3.5 w-3.5" /> Investor Directory
             {favOnly ? " · Favorites" : ""}
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Investors</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Venture Capital and Private Equity</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {favOnly
               ? `${total} bookmarked investor${total === 1 ? "" : "s"}`
