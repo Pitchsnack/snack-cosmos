@@ -116,7 +116,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Browse Global Catalogue",
       "Startups Directory",
       "Industry Map",
-      "Investors",
+      "Investors Directory",
     ],
   },
   { title: "Coming Soon", labels: ["Communications", "Documents", "Analytics"] },
@@ -165,7 +165,7 @@ const NAV_ITEMS: NavItem[] = [
     exact: false,
     perm: "global_startups.import",
   },
-  { label: "Investors", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
+  { label: "Investors Directory", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
   { label: "My Connections", icon: Network, path: "/connections", exact: false },
   { label: "Contacts", icon: ContactIcon, path: "/contacts", exact: false },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
@@ -381,7 +381,7 @@ function SidebarBody({
                 className={baseClass}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                {showLabels && <span>{item.label}</span>}
+                {showLabels && <span className="whitespace-pre">{item.label}{item.label === "Investors Directory" ? "\n" : ""}</span>}
               </Link>
             );
           };
