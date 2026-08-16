@@ -42,6 +42,8 @@ interface ClusterBox {
   y: number;
   width: number;
   height: number;
+  cellWidth: number;
+  columns: number;
   displayMembers: StartupListItem[];
   overflow: number;
 }
@@ -61,13 +63,30 @@ interface Bounds {
   maxY: number;
 }
 
+// Reserved hero rectangle in layout space (no viewport involvement).
+const HERO_HALF_W = HERO_WIDTH / 2 + HERO_HALO;
+const HERO_HALF_H = HERO_HEIGHT / 2 + HERO_HALO;
+const HERO_CLEAR = 48;
+
+function labelWidth(name: string) {
+  return shortName(name).length * 6.4 + 8;
+}
+
 function measureCluster(cluster: Cluster, ci: number): ClusterBox {
   const displayMembers = cluster.members.slice(0, 6);
   const overflow = Math.max(0, cluster.members.length - displayMembers.length);
   const itemCount = displayMembers.length + (overflow ? 1 : 0);
   const columns = Math.max(1, Math.ceil(Math.sqrt(itemCount)));
   const rows = Math.max(1, Math.ceil(itemCount / columns));
-  const width = CLUSTER_PADDING * 2 + columns * NODE_SIZE + (columns - 1) * NODE_GAP;
+  const cellWidth = Math.max(
+    NODE_SIZE,
+    ...displayMembers.map((member) => labelWidth(member.startup_name)),
+  );
+  const headerWidth = 30 + cluster.name.length * 8.2 + CLUSTER_PADDING;
+  const width = Math.max(
+    headerWidth,
+    CLUSTER_PADDING * 2 + columns * cellWidth + (columns - 1) * NODE_GAP,
+  );
   const height = CLUSTER_PADDING * 2 + CLUSTER_HEADER + rows * NODE_CELL_HEIGHT + (rows - 1) * NODE_GAP;
   return {
     key: cluster.key,
@@ -78,66 +97,89 @@ function measureCluster(cluster: Cluster, ci: number): ClusterBox {
     y: 0,
     width,
     height,
+    cellWidth,
+    columns,
     displayMembers,
     overflow,
   };
 }
 
+/**
+ * Pure layout: positions come from measured box sizes plus fixed gaps only.
+ * No viewport, container, window or percentage values are referenced here.
+ */
 function placeGrid(boxes: ClusterBox[], selected: boolean) {
   if (!boxes.length) return boxes;
-  const columns = selected
-    ? boxes.length >= 10
-      ? 5
-      : boxes.length >= 4
-        ? 3
-        : 3
-    : Math.max(1, Math.ceil(Math.sqrt(boxes.length)));
-  const reservedIndex = selected ? Math.floor(columns / 2) : -1;
-  const cellCount = boxes.length + (selected ? 1 : 0);
-  const rows = Math.ceil(cellCount / columns);
-  const centreRow = selected ? Math.floor(rows / 2) : -1;
-  const centreIndex = selected ? centreRow * columns + reservedIndex : -1;
-  const cells: Array<ClusterBox | null> = [];
-  let boxIndex = 0;
-  for (let i = 0; i < rows * columns; i += 1) {
-    if (i === centreIndex) cells.push(null);
-    else cells.push(boxes[boxIndex++] ?? null);
+
+  if (selected) {
+    // Clusters are placed so their edges clear the reserved hero rectangle by
+    // HERO_CLEAR px; overlap is impossible by geometry.
+    if (boxes.length <= 3) {
+      const placed: ClusterBox[] = [];
+      const top = boxes.slice(0, boxes.length === 1 ? 1 : 2);
+      const bottom = boxes.slice(top.length);
+      const topWidth = top.reduce((sum, box) => sum + box.width, 0) + CLUSTER_GAP * (top.length - 1);
+      let cursor = -topWidth / 2;
+      for (const box of top) {
+        placed.push({ ...box, x: cursor, y: -HERO_HALF_H - HERO_CLEAR - box.height });
+        cursor += box.width + CLUSTER_GAP;
+      }
+      const bottomWidth = bottom.reduce((sum, box) => sum + box.width, 0) + CLUSTER_GAP * (bottom.length - 1);
+      cursor = -bottomWidth / 2;
+      for (const box of bottom) {
+        placed.push({ ...box, x: cursor, y: HERO_HALF_H + HERO_CLEAR });
+        cursor += box.width + CLUSTER_GAP;
+      }
+      return placed;
+    }
+
+    // Row-major packing with a reserved centre cell for the hero card.
+    const columns = Math.max(3, Math.ceil(Math.sqrt(boxes.length + 1)));
+    const cellCount = boxes.length + 1;
+    const rows = Math.ceil(cellCount / columns);
+    const centreRow = Math.floor(rows / 2);
+    const centreColumn = Math.floor(columns / 2);
+    const centreIndex = centreRow * columns + centreColumn;
+    const cells: Array<ClusterBox | null> = [];
+    let boxIndex = 0;
+    for (let i = 0; i < rows * columns; i += 1) {
+      cells.push(i === centreIndex ? null : (boxes[boxIndex++] ?? null));
+    }
+    const columnWidths = Array.from({ length: columns }, (_, column) =>
+      Math.max(
+        column === centreColumn ? HERO_HALF_W * 2 : 0,
+        ...cells.filter((_, index) => index % columns === column).map((box) => box?.width ?? 0),
+      ),
+    );
+    const rowHeights = Array.from({ length: rows }, (_, row) =>
+      Math.max(
+        row === centreRow ? HERO_HALF_H * 2 : 0,
+        ...cells.slice(row * columns, (row + 1) * columns).map((box) => box?.height ?? 0),
+      ),
+    );
+    return layOut(cells, columns, columnWidths, rowHeights);
   }
 
-  if (selected && boxes.length <= 3) {
-    const positions =
-      boxes.length === 1
-        ? [{ x: 0, y: -(HERO_HEIGHT / 2 + HERO_HALO + CLUSTER_GAP) }]
-        : boxes.length === 2
-          ? [
-              { x: -(HERO_WIDTH / 2 + HERO_HALO + CLUSTER_GAP), y: 0 },
-              { x: HERO_WIDTH / 2 + HERO_HALO + CLUSTER_GAP, y: 0 },
-            ]
-          : [
-              { x: -(HERO_WIDTH / 2 + HERO_HALO + CLUSTER_GAP), y: -(HERO_HEIGHT / 2 + HERO_HALO) },
-              { x: HERO_WIDTH / 2 + HERO_HALO + CLUSTER_GAP, y: -(HERO_HEIGHT / 2 + HERO_HALO) },
-              { x: 0, y: HERO_HEIGHT / 2 + HERO_HALO + CLUSTER_GAP },
-            ];
-    return boxes.map((box, index) => {
-      const position = positions[index] ?? { x: 0, y: 0 };
-      return { ...box, x: position.x - box.width / 2, y: position.y - box.height / 2 };
-    });
-  }
-
+  const columns = Math.max(1, Math.ceil(Math.sqrt(boxes.length)));
+  const rows = Math.ceil(boxes.length / columns);
+  const cells: Array<ClusterBox | null> = Array.from({ length: rows * columns }, (_, i) => boxes[i] ?? null);
   const columnWidths = Array.from({ length: columns }, (_, column) =>
-    Math.max(
-      selected && column === reservedIndex ? HERO_WIDTH + HERO_HALO * 2 : 0,
-      ...cells.filter((_, index) => index % columns === column).map((box) => box?.width ?? 0),
-    ),
+    Math.max(0, ...cells.filter((_, index) => index % columns === column).map((box) => box?.width ?? 0)),
   );
   const rowHeights = Array.from({ length: rows }, (_, row) =>
-    Math.max(
-      selected && row === centreRow ? HERO_HEIGHT + HERO_HALO * 2 : 0,
-      ...cells.slice(row * columns, (row + 1) * columns).map((box) => box?.height ?? 0),
-    ),
+    Math.max(0, ...cells.slice(row * columns, (row + 1) * columns).map((box) => box?.height ?? 0)),
   );
+  return layOut(cells, columns, columnWidths, rowHeights);
+}
+
+function layOut(
+  cells: Array<ClusterBox | null>,
+  columns: number,
+  columnWidths: number[],
+  rowHeights: number[],
+) {
   const totalWidth = columnWidths.reduce((sum, width) => sum + width, 0) + CLUSTER_GAP * (columns - 1);
-  const totalHeight = rowHeights.reduce((sum, height) => sum + height, 0) + CLUSTER_GAP * (rows - 1);
+  const totalHeight = rowHeights.reduce((sum, height) => sum + height, 0) + CLUSTER_GAP * (rowHeights.length - 1);
   const columnStarts: number[] = [];
   const rowStarts: number[] = [];
   let cursor = -totalWidth / 2;
@@ -150,7 +192,6 @@ function placeGrid(boxes: ClusterBox[], selected: boolean) {
     rowStarts.push(cursor);
     cursor += height + CLUSTER_GAP;
   }
-
   return cells.flatMap((box, index) => {
     if (!box) return [];
     const column = index % columns;
@@ -161,21 +202,26 @@ function placeGrid(boxes: ClusterBox[], selected: boolean) {
   });
 }
 
+function nodeOrigin(box: ClusterBox) {
+  const contentWidth = box.columns * box.cellWidth + (box.columns - 1) * NODE_GAP;
+  return {
+    startX: box.x + (box.width - contentWidth) / 2 + box.cellWidth / 2,
+    startY: box.y + CLUSTER_PADDING + CLUSTER_HEADER + NODE_SIZE / 2,
+    step: box.cellWidth + NODE_GAP,
+  };
+}
+
 function buildLayout(clusters: Cluster[], selected: boolean) {
   const boxes = placeGrid(clusters.map(measureCluster), selected);
   const nodes: NodePos[] = [];
   for (const box of boxes) {
-    const itemCount = box.displayMembers.length + (box.overflow ? 1 : 0);
-    const columns = Math.max(1, Math.ceil(Math.sqrt(itemCount)));
-    const contentWidth = columns * NODE_SIZE + (columns - 1) * NODE_GAP;
-    const startX = box.x + (box.width - contentWidth) / 2 + NODE_SIZE / 2;
-    const startY = box.y + CLUSTER_PADDING + CLUSTER_HEADER + NODE_SIZE / 2;
+    const { startX, startY, step } = nodeOrigin(box);
     box.displayMembers.forEach((startup, index) => {
-      const column = index % columns;
-      const row = Math.floor(index / columns);
+      const column = index % box.columns;
+      const row = Math.floor(index / box.columns);
       nodes.push({
         id: startup.id,
-        x: startX + column * (NODE_SIZE + NODE_GAP),
+        x: startX + column * step,
         y: startY + row * (NODE_CELL_HEIGHT + NODE_GAP),
         ci: box.ci,
         startup,
