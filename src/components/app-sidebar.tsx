@@ -381,7 +381,7 @@ function SidebarBody({
                 className={baseClass}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                {showLabels && <span className="whitespace-pre-line">{item.label}{item.label === "Investors Directory" ? "\n" : ""}</span>}
+                {showLabels && <span className="whitespace-pre">{item.label}{item.label === "Investors Directory" ? "\n" : ""}</span>}
               </Link>
             );
           };
