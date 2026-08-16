@@ -430,7 +430,7 @@ export function SimilarityCanvas({
                   key={node.id}
                   className="cursor-pointer"
                   opacity={anchor && !isSelected && !isNeighbour ? 0.52 : 1}
-                  onPointerUp={(event) => { event.stopPropagation(); if (!moved.current) onSelect(node.id); }}
+                  onPointerUp={(event) => { event.stopPropagation(); const wasDrag = moved.current; drag.current = null; if (!wasDrag) onSelect(node.id); }}
                 >
                   <title>{node.startup.startup_name}</title>
                   <circle
