@@ -503,14 +503,10 @@ export function SimilarityCanvas({
 
             {boxes.map((box) => {
               if (!box.overflow) return null;
-              const itemCount = box.displayMembers.length + 1;
-              const columns = Math.max(1, Math.ceil(Math.sqrt(itemCount)));
-              const index = itemCount - 1;
-              const contentWidth = columns * NODE_SIZE + (columns - 1) * NODE_GAP;
-              const startX = box.x + (box.width - contentWidth) / 2 + NODE_SIZE / 2;
-              const startY = box.y + CLUSTER_PADDING + CLUSTER_HEADER + NODE_SIZE / 2;
-              const x = startX + (index % columns) * (NODE_SIZE + NODE_GAP);
-              const y = startY + Math.floor(index / columns) * (NODE_CELL_HEIGHT + NODE_GAP);
+              const index = box.displayMembers.length;
+              const { startX, startY, step } = nodeOrigin(box);
+              const x = startX + (index % box.columns) * step;
+              const y = startY + Math.floor(index / box.columns) * (NODE_CELL_HEIGHT + NODE_GAP);
               return (
                 <g key={`${box.key}-overflow`}>
                   <circle cx={x} cy={y} r={NODE_SIZE / 2} fill={`color-mix(in oklab, ${clusterColor(box.ci)} 18%, var(--card))`} stroke={`color-mix(in oklab, ${clusterColor(box.ci)} 45%, var(--border))`} />
