@@ -330,13 +330,19 @@ export function SimilarityCanvas({
         className="relative h-[68vh] max-h-[820px] min-h-[560px] w-full cursor-grab touch-none select-none active:cursor-grabbing"
         onPointerDown={(event) => {
           drag.current = { x: event.clientX, y: event.clientY, px: pan.x, py: pan.y };
-          event.currentTarget.setPointerCapture(event.pointerId);
+          moved.current = false;
         }}
         onPointerMove={(event) => {
           const origin = drag.current;
-          if (origin) setPan({ x: origin.px + event.clientX - origin.x, y: origin.py + event.clientY - origin.y });
+          if (!origin) return;
+          const dx = event.clientX - origin.x;
+          const dy = event.clientY - origin.y;
+          if (!moved.current && Math.hypot(dx, dy) < 4) return;
+          moved.current = true;
+          setPan({ x: origin.px + dx, y: origin.py + dy });
         }}
         onPointerUp={() => { drag.current = null; }}
+        onPointerLeave={() => { drag.current = null; }}
         onPointerCancel={() => { drag.current = null; }}
       >
         <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} aria-label="Startup similarity map">
