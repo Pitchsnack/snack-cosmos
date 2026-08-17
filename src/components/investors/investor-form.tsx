@@ -759,19 +759,30 @@ export function InvestorForm({ investor }: Props) {
         </div>
       </div>
 
-      {/* Row 3: Email | Company URL | LinkedIn URL */}
+      {/* Row 3: Email | Company URL (+ Auto Enrich) | LinkedIn URL */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Email Address</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="investor@example.com" maxLength={255} />
         </div>
-        <EditableUrlField
-          label="Company URL"
-          value={companyUrl}
-          onChange={setCompanyUrl}
-          placeholder="https://example.com"
-        />
+        <div className="space-y-1.5">
+          <EditableUrlField
+            label="Company URL"
+            value={companyUrl}
+            onChange={setCompanyUrl}
+            placeholder="https://example.com"
+          />
+          <div className="flex items-center gap-2">
+            <InvestorAutoEnrichButton
+              websiteUrl={companyUrl}
+              onEnriched={applyEnrichment}
+              disabled={!companyUrl.trim()}
+            />
+            <span className="text-xs text-muted-foreground">Fills empty fields only</span>
+          </div>
+        </div>
+
         <EditableUrlField
           label="LinkedIn URL"
           value={linkedinUrl}
