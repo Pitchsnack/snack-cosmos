@@ -640,8 +640,26 @@ export function InvestorForm({ investor }: Props) {
       />
 
 
-      {/* Logo + Media */}
-      <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: companyUrl }} />
+      {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
+      <div className="flex items-start gap-4">
+        <div className="flex-1 min-w-0">
+          <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: companyUrl }} />
+        </div>
+        <div className="pt-6 shrink-0">
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <InvestorAutoEnrichButton
+                  websiteUrl={companyUrl}
+                  onEnriched={applyEnrichment}
+                  disabled={submitting}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Fills empty fields only</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
 
       {/* Row 1: Year Founded | Company Name | Investor Classification */}
       <div className="grid grid-cols-[100px_1fr_220px] gap-4">
@@ -759,7 +777,7 @@ export function InvestorForm({ investor }: Props) {
         </div>
       </div>
 
-      {/* Row 3: Email | Company URL (+ Auto Enrich) | LinkedIn URL */}
+      {/* Row 3: Email | Company URL | LinkedIn URL */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Email Address</Label>
@@ -773,14 +791,6 @@ export function InvestorForm({ investor }: Props) {
             onChange={setCompanyUrl}
             placeholder="https://example.com"
           />
-          <div className="flex items-center gap-2">
-            <InvestorAutoEnrichButton
-              websiteUrl={companyUrl}
-              onEnriched={applyEnrichment}
-              disabled={!companyUrl.trim()}
-            />
-            <span className="text-xs text-muted-foreground">Fills empty fields only</span>
-          </div>
         </div>
 
         <EditableUrlField
