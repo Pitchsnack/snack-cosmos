@@ -34,6 +34,8 @@ import { RelationshipLinksEditor, type RelationshipRow } from "@/components/rela
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
 import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
+import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
+import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
