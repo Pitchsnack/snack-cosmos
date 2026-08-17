@@ -34,6 +34,8 @@ import { RelationshipLinksEditor, type RelationshipRow } from "@/components/rela
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
 import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
+import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
+import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -311,6 +313,43 @@ export function InvestorForm({ investor }: Props) {
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+
+  /**
+   * Auto Enrich merge — back-fills ONLY currently empty fields, so nothing the
+   * user already entered is overwritten. Mirrors PitchSnack1 Admin behaviour.
+   */
+  const applyEnrichment = (r: EnrichInvestorResult) => {
+    const fillText = (cur: string, next: string | undefined, set: (v: string) => void) => {
+      if (!cur.trim() && next && next.trim()) set(next.trim());
+    };
+    fillText(displayName, r.investorName, setDisplayName);
+    fillText(firmName, r.firmName, setFirmName);
+    fillText(title, r.investorType, setTitle);
+    fillText(email, r.email, setEmail);
+    fillText(businessAddress, r.businessAddress, setBusinessAddress);
+    fillText(city, r.city, setCity);
+    fillText(linkedinUrl, r.linkedinUrl, setLinkedinUrl);
+    fillText(bio, r.bio, setBio);
+    fillText(aum, r.aum, setAum);
+    fillText(minTicket, r.minTicketSize, setMinTicket);
+    fillText(maxTicket, r.maxTicketSize, setMaxTicket);
+    if (!yearFounded.trim() && r.yearFounded) setYearFounded(String(r.yearFounded));
+    if (!headquarters.trim() && r.headquarters?.trim()) {
+      const country = r.headquarters.trim();
+      setHeadquarters(country);
+      if (!region) {
+        const suggested = regionForCountry(country);
+        if (suggested) setRegion(suggested);
+      }
+    }
+    if (keywords.length === 0 && r.keywords?.length) setKeywords(r.keywords.slice(0, 5));
+    if (preferredStages.length === 0 && r.preferredStages?.length)
+      setPreferredStages(r.preferredStages);
+    if (preferredIndustries.length === 0 && r.preferredIndustries?.length)
+      setPreferredIndustries(r.preferredIndustries.slice(0, 5));
+    if (investmentFocus.length === 0 && r.investmentFocus?.length)
+      setInvestmentFocus(r.investmentFocus.slice(0, 10));
+  };
 
   const addKeyword = () => {
     const t = keywordDraft.trim();
@@ -720,19 +759,30 @@ export function InvestorForm({ investor }: Props) {
         </div>
       </div>
 
-      {/* Row 3: Email | Company URL | LinkedIn URL */}
+      {/* Row 3: Email | Company URL (+ Auto Enrich) | LinkedIn URL */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Email Address</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="investor@example.com" maxLength={255} />
         </div>
-        <EditableUrlField
-          label="Company URL"
-          value={companyUrl}
-          onChange={setCompanyUrl}
-          placeholder="https://example.com"
-        />
+        <div className="space-y-1.5">
+          <EditableUrlField
+            label="Company URL"
+            value={companyUrl}
+            onChange={setCompanyUrl}
+            placeholder="https://example.com"
+          />
+          <div className="flex items-center gap-2">
+            <InvestorAutoEnrichButton
+              websiteUrl={companyUrl}
+              onEnriched={applyEnrichment}
+              disabled={!companyUrl.trim()}
+            />
+            <span className="text-xs text-muted-foreground">Fills empty fields only</span>
+          </div>
+        </div>
+
         <EditableUrlField
           label="LinkedIn URL"
           value={linkedinUrl}
