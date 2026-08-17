@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw, Plus } from "lucide-react";
+import { X, RefreshCw, Plus, Upload, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +36,10 @@ import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-lin
 import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
 import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
 import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
+import { investorEnrichAdapter } from "@/lib/auto-enrich/investor-enrich-adapter";
+import { StartupStepper } from "@/components/startups/startup-stepper";
+import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
+import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -293,6 +297,17 @@ export function InvestorForm({ investor }: Props) {
 
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
+  // P-18 Company URL duplicate check — identical in Add and Edit.
+  const websiteDup = useInvestorWebsiteDuplicateCheck(investor?.id);
+
+  // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
+  const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
+  const [enriching, setEnriching] = useState(false);
+  // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
+  const [fundsLaunched, setFundsLaunched] = useState("");
+  const [avgInvestment, setAvgInvestment] = useState("");
+
+
   // Investment Portfolio (V3) — staged in local UI state until Save. Save is
   // a stub via investorStartupLinksAdapter (future SnackPortal2 API Gateway).
   const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>([]);
@@ -512,11 +527,221 @@ export function InvestorForm({ investor }: Props) {
     !assignableQ.isLoading && !assignableQ.isError && mergedTenants.length === 0;
   const canCreateTenant = perms.isResolved && perms.has("tenants.write");
 
+  // ── Step 1: Quick Info (create mode only) ──────────────────────────────
+  const logoPreview =
+    media.logo.pendingFile ? URL.createObjectURL(media.logo.pendingFile) : media.logo.signedUrl;
+
+  const runQuickEnrich = async () => {
+    const raw = companyUrl.trim();
+    if (!displayName.trim()) {
+      toast.error("Company Name is required.");
+      return;
+    }
+    if (!raw) {
+      setPhase("full");
+      toast.info("No website provided — complete the remaining fields manually.");
+      return;
+    }
+    const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    setEnriching(true);
+    try {
+      const result = await investorEnrichAdapter.enrichInvestor({ websiteUrl: url });
+      applyEnrichment(result);
+      toast.success("Auto Enrich finished. Review and complete.");
+    } catch (e) {
+      toast.error(
+        (e instanceof Error ? e.message : "Auto Enrich failed.") +
+          " You can still complete the form manually.",
+      );
+    } finally {
+      setEnriching(false);
+      setPhase("full");
+    }
+  };
+
+  if (phase === "quick") {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void runQuickEnrich();
+        }}
+        className="space-y-4 text-sm"
+      >
+        <div className="rounded-lg border border-border bg-card p-4 shadow-card">
+          <StartupStepper current={1} />
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card">
+          <h2 className="text-sm font-semibold">Company Details</h2>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Company Name <span className="text-destructive">*</span></Label>
+              <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g. Sequoia Capital" required maxLength={100} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>City</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Singapore" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Country</Label>
+              <CountryCombobox
+                value={headquarters}
+                onChange={(v) => {
+                  setHeadquarters(v);
+                  if (!v) setRegion("");
+                  else if (!region) {
+                    const suggested = regionForCountry(v);
+                    if (suggested) setRegion(suggested);
+                  }
+                }}
+                placeholder="Select country"
+              />
+            </div>
+
+            <EditableUrlField
+              label="Website"
+              value={companyUrl}
+              onChange={setCompanyUrl}
+              onCommit={(url) => void websiteDup.check(url)}
+              placeholder="https://sequoiacap.com"
+            />
+            <div className="space-y-1.5">
+              <Label>Year Founded</Label>
+              <Input type="number" min={1800} max={new Date().getFullYear()}
+                value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Investment Stage</Label>
+              <Select
+                value={preferredStages[0] ?? "none"}
+                onValueChange={(v) => setPreferredStages(v === "none" ? [] : [v])}
+              >
+                <SelectTrigger><SelectValue placeholder="Select investment stage" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Fund&apos;s AUM</Label>
+              <Select value={aum || "none"} onValueChange={(v) => setAum(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select AUM range" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {AUM_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>No. Funds Launched</Label>
+              <Input type="number" min={0} max={999} value={fundsLaunched}
+                onChange={(e) => setFundsLaunched(e.target.value)} placeholder="e.g. 3" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Avg Investment Amount</Label>
+              <Select value={avgInvestment || "none"} onValueChange={(v) => setAvgInvestment(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select ticket range" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {TICKET_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Company Logo</Label>
+              <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                <span className="truncate">
+                  {media.logo.pendingFile ? media.logo.pendingFile.name : "Upload logo (PNG, JPG, SVG)"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    if (f) setMedia({ ...media, logo: { ...media.logo, pendingFile: f } });
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-border bg-card p-6 shadow-card">
+          <h2 className="text-sm font-semibold">
+            Industry Focus <span className="ml-1 text-xs font-normal text-muted-foreground">(Select one or more)</span>
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {INVESTOR_INDUSTRIES.map((i) => (
+              <Pill key={i} active={preferredIndustries.includes(i)}
+                onClick={() => setPreferredIndustries(toggle(preferredIndustries, i))}>
+                {i}
+              </Pill>
+            ))}
+            {preferredIndustries.filter((i) => !INVESTOR_INDUSTRIES.includes(i)).map((i) => (
+              <Pill key={i} active onClick={() => setPreferredIndustries(preferredIndustries.filter((x) => x !== i))}>
+                {i} ✕
+              </Pill>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); } }}
+              placeholder="Add custom industry..." />
+            <Button type="button" variant="outline" onClick={addCustomIndustry}>Add</Button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
+          <p className="text-xs text-muted-foreground">
+            Required fields are marked with <span className="text-destructive">*</span>
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => navigate({ to: "/investors" })}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={enriching || !displayName.trim()} className="gap-2">
+              {enriching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {enriching ? "Enriching…" : "Auto Enrich & Continue"}
+            </Button>
+          </div>
+        </div>
+
+        <DuplicateWarningDialog
+          open={websiteDup.open}
+          typedName={websiteDup.typedValue}
+          candidates={websiteDup.candidates}
+          onCancel={websiteDup.close}
+          onLinkExisting={(c) => {
+            websiteDup.close();
+            if (c.id) window.open(`/investors/${c.id}`, "_blank", "noopener,noreferrer");
+          }}
+          onCreatePendingAnyway={websiteDup.close}
+        />
+      </form>
+    );
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
     >
+      {!isEdit && (
+        <div className="pb-2">
+          <StartupStepper current={3} />
+        </div>
+      )}
       {/* Tenant (create only) */}
       {!isEdit && (
         <div className="space-y-1.5">
@@ -789,6 +1014,7 @@ export function InvestorForm({ investor }: Props) {
             label="Company URL"
             value={companyUrl}
             onChange={setCompanyUrl}
+            onCommit={(url) => void websiteDup.check(url)}
             placeholder="https://example.com"
           />
         </div>
@@ -1088,6 +1314,18 @@ export function InvestorForm({ investor }: Props) {
           {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create investor"}
         </Button>
       </div>
+
+      <DuplicateWarningDialog
+        open={websiteDup.open}
+        typedName={websiteDup.typedValue}
+        candidates={websiteDup.candidates}
+        onCancel={websiteDup.close}
+        onLinkExisting={(c) => {
+          websiteDup.close();
+          if (c.id) window.open(`/investors/${c.id}`, "_blank", "noopener,noreferrer");
+        }}
+        onCreatePendingAnyway={websiteDup.close}
+      />
     </form>
   );
 }
