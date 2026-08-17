@@ -1009,6 +1009,7 @@ export function InvestorForm({ investor }: Props) {
             label="Company URL"
             value={companyUrl}
             onChange={setCompanyUrl}
+            onCommit={(url) => void websiteDup.check(url)}
             placeholder="https://example.com"
           />
         </div>
