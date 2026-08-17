@@ -582,7 +582,7 @@ export function InvestorForm({ investor }: Props) {
                 placeholder="e.g. Sequoia Capital" required maxLength={100} />
             </div>
             <div className="space-y-1.5">
-              <Label>City</Label>
+              <Label>Headquarter City</Label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Singapore" />
             </div>
             <div className="space-y-1.5">
