@@ -297,6 +297,17 @@ export function InvestorForm({ investor }: Props) {
 
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
+  // P-18 Company URL duplicate check — identical in Add and Edit.
+  const websiteDup = useInvestorWebsiteDuplicateCheck(investor?.id);
+
+  // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
+  const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
+  const [enriching, setEnriching] = useState(false);
+  // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
+  const [fundsLaunched, setFundsLaunched] = useState("");
+  const [avgInvestment, setAvgInvestment] = useState("");
+
+
   // Investment Portfolio (V3) — staged in local UI state until Save. Save is
   // a stub via investorStartupLinksAdapter (future SnackPortal2 API Gateway).
   const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>([]);
