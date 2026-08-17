@@ -6,22 +6,9 @@
  * fallback for SPA shells, and phone-country-code HQ inference.
  */
 import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
+import type { EnrichDebugBase, HeadquartersDiagnostic } from "./scrape.server-types";
 
-export type HeadquartersDiagnostic =
-  | "direct"
-  | "inferred_from_phone"
-  | "not_found"
-  | "conflicting_signals";
-
-export interface EnrichDebugBase {
-  origin: string;
-  pagesTried: { path: string; status: number | "error"; bytes: number }[];
-  pagesUsed: number;
-  corpusChars: number;
-  modelOutputChars: number;
-  headquartersDiagnostic?: HeadquartersDiagnostic;
-  headquartersPhoneCc?: string;
-}
+export type { EnrichDebugBase, HeadquartersDiagnostic };
 
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
