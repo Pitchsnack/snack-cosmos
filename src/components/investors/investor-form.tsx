@@ -691,7 +691,7 @@ export function InvestorForm({ investor }: Props) {
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
-            <Label>Headquarters</Label>
+            <Label className="whitespace-pre">Country{"\n"}</Label>
           </div>
           <CountryCombobox
             value={headquarters}
