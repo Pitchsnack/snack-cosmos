@@ -36,6 +36,10 @@ import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-lin
 import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
 import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
 import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
+import { investorEnrichAdapter } from "@/lib/auto-enrich/investor-enrich-adapter";
+import { StartupStepper } from "@/components/startups/startup-stepper";
+import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
+import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
