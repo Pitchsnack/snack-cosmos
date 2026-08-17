@@ -312,6 +312,43 @@ export function InvestorForm({ investor }: Props) {
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
+  /**
+   * Auto Enrich merge — back-fills ONLY currently empty fields, so nothing the
+   * user already entered is overwritten. Mirrors PitchSnack1 Admin behaviour.
+   */
+  const applyEnrichment = (r: EnrichInvestorResult) => {
+    const fillText = (cur: string, next: string | undefined, set: (v: string) => void) => {
+      if (!cur.trim() && next && next.trim()) set(next.trim());
+    };
+    fillText(displayName, r.investorName, setDisplayName);
+    fillText(firmName, r.firmName, setFirmName);
+    fillText(title, r.investorType, setTitle);
+    fillText(email, r.email, setEmail);
+    fillText(businessAddress, r.businessAddress, setBusinessAddress);
+    fillText(city, r.city, setCity);
+    fillText(linkedinUrl, r.linkedinUrl, setLinkedinUrl);
+    fillText(bio, r.bio, setBio);
+    fillText(aum, r.aum, setAum);
+    fillText(minTicket, r.minTicketSize, setMinTicket);
+    fillText(maxTicket, r.maxTicketSize, setMaxTicket);
+    if (!yearFounded.trim() && r.yearFounded) setYearFounded(String(r.yearFounded));
+    if (!headquarters.trim() && r.headquarters?.trim()) {
+      const country = r.headquarters.trim();
+      setHeadquarters(country);
+      if (!region) {
+        const suggested = regionForCountry(country);
+        if (suggested) setRegion(suggested);
+      }
+    }
+    if (keywords.length === 0 && r.keywords?.length) setKeywords(r.keywords.slice(0, 5));
+    if (preferredStages.length === 0 && r.preferredStages?.length)
+      setPreferredStages(r.preferredStages);
+    if (preferredIndustries.length === 0 && r.preferredIndustries?.length)
+      setPreferredIndustries(r.preferredIndustries.slice(0, 5));
+    if (investmentFocus.length === 0 && r.investmentFocus?.length)
+      setInvestmentFocus(r.investmentFocus.slice(0, 10));
+  };
+
   const addKeyword = () => {
     const t = keywordDraft.trim();
     if (!t || keywords.includes(t) || keywords.length >= 5) return;
