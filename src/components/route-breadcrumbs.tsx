@@ -13,7 +13,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 const PATH_LABELS: Record<string, string> = {
   "/": "Tenants",
   "/dashboard": "Dashboard",
-  "/startups": "Startups",
+  "/startups": "Startups Directory\n",
   "/startups/new": "New Startup",
   "/startups/$id": "Startup",
   "/startups/$id/edit": "Edit Startup",
