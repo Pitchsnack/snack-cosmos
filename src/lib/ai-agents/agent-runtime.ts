@@ -433,19 +433,14 @@ export function getDraft(id: string) {
 export function finalDuplicateCheck(draftId: string): { match?: string } {
   const draft = getDraft(draftId);
   if (!draft) return {};
+  const name = draft.result.name.toLowerCase();
+  const host = draft.result.website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] ?? "";
   const match = EXISTING_GLOBAL_STARTUPS.find(
-    (g) =>
-      g.toLowerCase() === draft.result.name.toLowerCase() ||
-      draft.website(g),
+    (g) => g.toLowerCase() === name || host.startsWith(g.toLowerCase()),
   );
   return { match };
 }
 
-declare module "./types" {
-  interface AiDraft {
-    website?(g: string): boolean;
-  }
-}
 
 export function rejectDraft(id: string) {
   const draft = getDraft(id);
