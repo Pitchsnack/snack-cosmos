@@ -1020,6 +1020,7 @@ export function InvestorForm({ investor }: Props) {
             onChange={setCompanyUrl}
             onCommit={(url) => void websiteDup.check(url)}
             placeholder="https://example.com"
+            required={!isEdit}
           />
         </div>
 
