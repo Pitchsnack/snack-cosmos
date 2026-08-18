@@ -573,9 +573,10 @@ export function StartupForm({
   const canSubmit = useMemo(() => {
     if (!startupName) return false;
     if (isEdit) return true;
+    if (!websiteUrl.trim()) return false;
     const matchOk = !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive;
     return !!(tenantId && owningAgentUserId && owningAiAgentId && matchOk);
-  }, [isEdit, startupName, tenantId, owningAgentUserId, owningAiAgentId, tenantMatchesActive]);
+  }, [isEdit, startupName, websiteUrl, tenantId, owningAgentUserId, owningAiAgentId, tenantMatchesActive]);
 
   const submitting = createM.isPending || updateM.isPending;
 
