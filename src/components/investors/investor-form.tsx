@@ -518,6 +518,10 @@ export function InvestorForm({ investor }: Props) {
       toast.error("Complete required fields.");
       return;
     }
+    if (!companyUrl.trim()) {
+      toast.error("Website is required.");
+      return;
+    }
     createM.mutate({ selectedTenantId: tenantId, activeTenantId });
   }
 
@@ -538,8 +542,7 @@ export function InvestorForm({ investor }: Props) {
       return;
     }
     if (!raw) {
-      setPhase("full");
-      toast.info("No website provided — complete the remaining fields manually.");
+      toast.error("Website is required.");
       return;
     }
     const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
@@ -607,6 +610,7 @@ export function InvestorForm({ investor }: Props) {
               onChange={setCompanyUrl}
               onCommit={(url) => void websiteDup.check(url)}
               placeholder="https://sequoiacap.com"
+              required={!isEdit}
             />
             <div className="space-y-1.5">
               <Label>Year Founded</Label>
@@ -1016,6 +1020,7 @@ export function InvestorForm({ investor }: Props) {
             onChange={setCompanyUrl}
             onCommit={(url) => void websiteDup.check(url)}
             placeholder="https://example.com"
+            required={!isEdit}
           />
         </div>
 

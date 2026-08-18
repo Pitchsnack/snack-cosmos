@@ -9,6 +9,8 @@ interface EditableUrlFieldProps {
   label: string;
   placeholder?: string;
   maxLength?: number;
+  /** Marks the field as compulsory (asterisk + native required). */
+  required?: boolean;
   /** Fired with the normalized URL once the value is committed (blur/Enter). */
   onCommit?: (url: string) => void;
 }
@@ -24,6 +26,7 @@ export function EditableUrlField({
   label,
   placeholder = "https://example.com",
   maxLength = 2048,
+  required = false,
   onCommit,
 }: EditableUrlFieldProps) {
   const [editing, setEditing] = useState(!value?.trim());
@@ -90,7 +93,7 @@ export function EditableUrlField({
   if (!editing && trimmed) {
     return (
       <div className="space-y-1.5">
-        <Label>{label}</Label>
+        <Label>{label}{required && <span className="text-destructive"> *</span>}</Label>
         <div className="flex min-h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5">
           <a
             href={href}
@@ -117,10 +120,11 @@ export function EditableUrlField({
 
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
+      <Label>{label}{required && <span className="text-destructive"> *</span>}</Label>
       <Input
         ref={inputRef}
         type="url"
+        required={required}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         onBlur={commit}

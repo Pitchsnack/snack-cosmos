@@ -573,9 +573,10 @@ export function StartupForm({
   const canSubmit = useMemo(() => {
     if (!startupName) return false;
     if (isEdit) return true;
+    if (!websiteUrl.trim()) return false;
     const matchOk = !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive;
     return !!(tenantId && owningAgentUserId && owningAiAgentId && matchOk);
-  }, [isEdit, startupName, tenantId, owningAgentUserId, owningAiAgentId, tenantMatchesActive]);
+  }, [isEdit, startupName, websiteUrl, tenantId, owningAgentUserId, owningAiAgentId, tenantMatchesActive]);
 
   const submitting = createM.isPending || updateM.isPending;
 
@@ -726,8 +727,7 @@ export function StartupForm({
       return;
     }
     if (!raw) {
-      setPhase("full");
-      toast.info("No website provided — complete the remaining fields manually.");
+      toast.error("Website is required.");
       return;
     }
     const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
@@ -799,6 +799,7 @@ export function StartupForm({
               onChange={setWebsiteUrl}
               onCommit={(url) => void websiteDup.check(url)}
               placeholder="https://acme.com"
+              required={!isEdit}
             />
             <div className="space-y-1.5">
               <Label>Year Founded</Label>
@@ -1209,6 +1210,7 @@ export function StartupForm({
           onChange={setWebsiteUrl}
           onCommit={(url) => void websiteDup.check(url)}
           placeholder="https://"
+          required={!isEdit}
         />
         <EditableUrlField
           label="LinkedIn URL"
