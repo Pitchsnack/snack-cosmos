@@ -93,7 +93,7 @@ export function EditableUrlField({
   if (!editing && trimmed) {
     return (
       <div className="space-y-1.5">
-        <Label>{label}</Label>
+        <Label>{label}{required && <span className="text-destructive"> *</span>}</Label>
         <div className="flex min-h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5">
           <a
             href={href}
