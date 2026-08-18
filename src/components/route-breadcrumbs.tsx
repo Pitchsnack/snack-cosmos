@@ -157,7 +157,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
                     params={item.params as never}
                     className="transition-colors hover:text-foreground"
                   >
-                    {item.label}
+                    <span className="whitespace-pre">{item.label}</span>
                   </Link>
                   <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
                 </>
