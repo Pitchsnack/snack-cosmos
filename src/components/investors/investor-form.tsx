@@ -542,8 +542,7 @@ export function InvestorForm({ investor }: Props) {
       return;
     }
     if (!raw) {
-      setPhase("full");
-      toast.info("No website provided — complete the remaining fields manually.");
+      toast.error("Website is required.");
       return;
     }
     const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
