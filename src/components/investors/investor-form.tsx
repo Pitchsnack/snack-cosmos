@@ -518,6 +518,10 @@ export function InvestorForm({ investor }: Props) {
       toast.error("Complete required fields.");
       return;
     }
+    if (!companyUrl.trim()) {
+      toast.error("Website is required.");
+      return;
+    }
     createM.mutate({ selectedTenantId: tenantId, activeTenantId });
   }
 
