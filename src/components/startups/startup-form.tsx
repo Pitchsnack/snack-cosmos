@@ -1210,6 +1210,7 @@ export function StartupForm({
           onChange={setWebsiteUrl}
           onCommit={(url) => void websiteDup.check(url)}
           placeholder="https://"
+          required={!isEdit}
         />
         <EditableUrlField
           label="LinkedIn URL"
