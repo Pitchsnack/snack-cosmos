@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   Activity,
   CheckCircle2,
@@ -129,8 +129,8 @@ export function StatusResultsSection({
                 </thead>
                 <tbody className="divide-y divide-border">
                   {runs.map((r) => (
-                    <>
-                      <tr key={r.id} className="align-top">
+                    <Fragment key={r.id}>
+                      <tr className="align-top">
                         <td className="px-3 py-2 font-mono text-xs">{r.id}</td>
                         <td className="px-3 py-2">Find Startups</td>
                         <td className="px-3 py-2 text-xs text-muted-foreground">
@@ -198,7 +198,7 @@ export function StatusResultsSection({
                         </td>
                       </tr>
                       {expanded === r.id && (
-                        <tr key={`${r.id}-steps`} className="bg-muted/20">
+                        <tr className="bg-muted/20">
                           <td colSpan={11} className="px-3 py-3">
                             <ul className="space-y-1 text-xs">
                               {r.steps.map((s, i) => (
@@ -240,7 +240,7 @@ export function StatusResultsSection({
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
