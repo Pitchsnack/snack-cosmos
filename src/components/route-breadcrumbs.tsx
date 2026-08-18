@@ -148,7 +148,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
                   aria-current="page"
                   className="font-medium text-foreground"
                 >
-                  {item.label}
+                  <span className="whitespace-pre">{item.label}</span>
                 </span>
               ) : (
                 <>
