@@ -800,6 +800,7 @@ export function StartupForm({
               onChange={setWebsiteUrl}
               onCommit={(url) => void websiteDup.check(url)}
               placeholder="https://acme.com"
+              required={!isEdit}
             />
             <div className="space-y-1.5">
               <Label>Year Founded</Label>
