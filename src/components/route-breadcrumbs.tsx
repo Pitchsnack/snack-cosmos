@@ -13,7 +13,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 const PATH_LABELS: Record<string, string> = {
   "/": "Tenants",
   "/dashboard": "Dashboard",
-  "/startups": "Startups",
+  "/startups": "Startups Directory\n",
   "/startups/new": "New Startup",
   "/startups/$id": "Startup",
   "/startups/$id/edit": "Edit Startup",
@@ -148,7 +148,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
                   aria-current="page"
                   className="font-medium text-foreground"
                 >
-                  {item.label}
+                  <span className="whitespace-pre">{item.label}</span>
                 </span>
               ) : (
                 <>
@@ -157,7 +157,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
                     params={item.params as never}
                     className="transition-colors hover:text-foreground"
                   >
-                    {item.label}
+                    <span className="whitespace-pre">{item.label}</span>
                   </Link>
                   <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
                 </>
