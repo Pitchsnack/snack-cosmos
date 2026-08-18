@@ -9,6 +9,8 @@ interface EditableUrlFieldProps {
   label: string;
   placeholder?: string;
   maxLength?: number;
+  /** Marks the field as compulsory (asterisk + native required). */
+  required?: boolean;
   /** Fired with the normalized URL once the value is committed (blur/Enter). */
   onCommit?: (url: string) => void;
 }
@@ -24,6 +26,7 @@ export function EditableUrlField({
   label,
   placeholder = "https://example.com",
   maxLength = 2048,
+  required = false,
   onCommit,
 }: EditableUrlFieldProps) {
   const [editing, setEditing] = useState(!value?.trim());
