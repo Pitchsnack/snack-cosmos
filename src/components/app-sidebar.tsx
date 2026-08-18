@@ -25,6 +25,7 @@ import {
   UserCircle,
   Contact as ContactIcon,
   Database,
+  Bot,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -62,7 +63,8 @@ type NavPath =
   | "/startup-activity"
   | "/contacts"
   | "/entity-control"
-  | "/industry-map";
+  | "/industry-map"
+  | "/ai-agents";
 
 
 type NavItem = {
@@ -111,6 +113,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
   {
     title: "Control Database",
     labels: [
+      "AI Agents",
       "Control Data Intelligence",
       "Global Startups",
       "Browse Global Catalogue",
@@ -144,6 +147,13 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
 
 
+  {
+    label: "AI Agents",
+    icon: Bot,
+    path: "/ai-agents",
+    exact: false,
+    perm: "global_startups.write",
+  },
   {
     label: "Control Data Intelligence",
     icon: Database,

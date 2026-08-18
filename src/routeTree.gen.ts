@@ -33,6 +33,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
 import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
+import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authenticated/startups.index'
 import { Route as AuthenticatedSharedDealsIndexRouteImport } from './routes/_authenticated/shared-deals.index'
@@ -189,6 +190,11 @@ const AuthenticatedConnectionsRoute =
 const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAiAgentsRoute = AuthenticatedAiAgentsRouteImport.update({
+  id: '/ai-agents',
+  path: '/ai-agents',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAccessManagementRoute =
@@ -375,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
+  '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/connections': typeof AuthenticatedConnectionsRoute
   '/contacts': typeof AuthenticatedContactsRouteWithChildren
@@ -429,6 +436,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
+  '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -477,6 +485,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
+  '/_authenticated/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/connections': typeof AuthenticatedConnectionsRoute
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/access-management'
+    | '/ai-agents'
     | '/audit'
     | '/connections'
     | '/contacts'
@@ -589,6 +599,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/access-management'
+    | '/ai-agents'
     | '/audit'
     | '/connections'
     | '/dashboard'
@@ -636,6 +647,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_authenticated/access-management'
+    | '/_authenticated/ai-agents'
     | '/_authenticated/audit'
     | '/_authenticated/connections'
     | '/_authenticated/contacts'
@@ -863,6 +875,13 @@ declare module '@tanstack/react-router' {
       path: '/audit'
       fullPath: '/audit'
       preLoaderRoute: typeof AuthenticatedAuditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ai-agents': {
+      id: '/_authenticated/ai-agents'
+      path: '/ai-agents'
+      fullPath: '/ai-agents'
+      preLoaderRoute: typeof AuthenticatedAiAgentsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/access-management': {
@@ -1224,6 +1243,7 @@ const AuthenticatedMyStartupsIdRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
+  AuthenticatedAiAgentsRoute: typeof AuthenticatedAiAgentsRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedConnectionsRoute: typeof AuthenticatedConnectionsRoute
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
@@ -1253,6 +1273,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
+  AuthenticatedAiAgentsRoute: AuthenticatedAiAgentsRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedConnectionsRoute: AuthenticatedConnectionsRoute,
   AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
