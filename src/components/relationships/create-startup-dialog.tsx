@@ -216,16 +216,35 @@ export function CreateStartupDialog({
                 }}
               />
             </label>
-            {logoFile && (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="text-[11px] text-muted-foreground underline hover:text-foreground"
-                onClick={() => setLogoFile(null)}
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground underline hover:text-foreground"
+                onClick={() => setSnipOpen(true)}
               >
-                Remove logo
+                <Camera className="h-3 w-3" /> Snip from screen
               </button>
-            )}
+              {logoFile && (
+                <button
+                  type="button"
+                  className="text-[11px] text-muted-foreground underline hover:text-foreground"
+                  onClick={() => setLogoFile(null)}
+                >
+                  Remove logo
+                </button>
+              )}
+            </div>
           </div>
+          <SnippingCapture
+            open={snipOpen}
+            outputName="startup-logo"
+            onCancel={() => setSnipOpen(false)}
+            onCapture={(file) => {
+              setLogoFile(file);
+              setSnipOpen(false);
+            }}
+          />
+
           <div className="space-y-1.5">
             <Label htmlFor="create-startup-desc">
               Short description <span className="text-muted-foreground font-normal">(optional)</span>
