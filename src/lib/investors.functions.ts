@@ -332,8 +332,27 @@ const CreateInput = z.object({
   visibility: z.enum(VISIBILITIES).default("Tenant"),
   owningAgentUserId: z.string().uuid(),
   owningAiAgentId: z.string().uuid(),
+  startupIds: z.array(z.string().uuid()).max(200).optional(),
   ...ProfileFields,
 });
+
+/**
+ * Mirror of `syncInvestors` in startups.functions.ts, from the investor side.
+ * Replaces the investor's portfolio links in `startup_investors`.
+ */
+async function syncPortfolio(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  investorId: string,
+  tenantId: string,
+  startupIds: string[],
+) {
+  await supabase.from("startup_investors").delete().eq("investor_id", investorId);
+  if (startupIds.length === 0) return;
+  const unique = Array.from(new Set(startupIds));
+  const rows = unique.map((id) => ({ startup_id: id, tenant_id: tenantId, investor_id: investorId }));
+  const { error } = await supabase.from("startup_investors").insert(rows);
+  if (error) throw new Error("Portfolio: " + error.message);
+}
 
 export const createInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
