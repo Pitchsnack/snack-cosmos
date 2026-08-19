@@ -126,12 +126,30 @@ export function CreateStartupDialog({
   const createM = useMutation({
     mutationFn: async () => {
       assertNoFixtureIds([tenantId, agentId, aiAgentId]);
+
+      let logoPath: string | null = null;
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop()?.toLowerCase() ?? "png";
+        const { path, token } = await getUploadUrl({
+          data: { tenantId, kind: "logo", ext },
+        });
+        const { error } = await supabase.storage
+          .from("startup-media")
+          .uploadToSignedUrl(path, token, logoFile, {
+            contentType: logoFile.type || "image/png",
+            upsert: true,
+          });
+        if (error) throw new Error("Logo upload failed: " + error.message);
+        logoPath = path;
+      }
+
       const res = await create({
         data: {
           tenantId,
           startupName: name.trim(),
           shortDescription: shortDescription.trim() || null,
           websiteUrl: websiteUrl.trim() || null,
+          logoPath,
           owningAgentUserId: agentId,
           owningAiAgentId: aiAgentId,
         },
