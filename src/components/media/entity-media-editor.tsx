@@ -284,7 +284,7 @@ function fileMetaBadge(slot: SlotState): { ext: string | null; size: number | nu
 /*  Logo                                                                      */
 /* -------------------------------------------------------------------------- */
 
-function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotState) => void }) {
+export function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotState) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [snipOpen, setSnipOpen] = useState(false);
