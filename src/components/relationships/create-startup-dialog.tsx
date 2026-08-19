@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -71,6 +72,8 @@ export function CreateStartupDialog({
     : null;
 
   const [name, setName] = useState(initialName);
+  const [shortDescription, setShortDescription] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
@@ -78,6 +81,8 @@ export function CreateStartupDialog({
   useEffect(() => {
     if (open) {
       setName(initialName);
+      setShortDescription("");
+      setWebsiteUrl("");
       const useIt = !!startupDefaults;
       setUseDefaultIntake(useIt);
       setAgentId(useIt ? startupDefaults!.humanId : "");
@@ -114,6 +119,8 @@ export function CreateStartupDialog({
         data: {
           tenantId,
           startupName: name.trim(),
+          shortDescription: shortDescription.trim() || null,
+          websiteUrl: websiteUrl.trim() || null,
           owningAgentUserId: agentId,
           owningAiAgentId: aiAgentId,
         },
@@ -149,6 +156,31 @@ export function CreateStartupDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="create-startup-website">
+              Website <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Input
+              id="create-startup-website"
+              type="url"
+              placeholder="https://example.com"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="create-startup-desc">
+              Short description <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Textarea
+              id="create-startup-desc"
+              rows={3}
+              maxLength={500}
+              placeholder="One or two sentences about the company"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
             />
           </div>
           {startupDefaults && (
