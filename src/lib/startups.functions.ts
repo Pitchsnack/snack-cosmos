@@ -720,14 +720,26 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (
       data.logoPath !== undefined &&
       existing.logo_url &&
-      existing.logo_url !== data.logoPath
+      existing.logo_url !== nextLogo
     ) {
       await removeStorageObjects(supabase, [existing.logo_url]);
     }
 
     if (data.founders !== undefined) await syncFounders(supabase, data.id, existing.tenant_id, data.founders);
     if (data.investorIds !== undefined) await syncInvestors(supabase, data.id, existing.tenant_id, data.investorIds);
-    if (data.media !== undefined) await syncMedia(supabase, data.id, existing.tenant_id, data.media);
+    if (data.media !== undefined) {
+      const media = [];
+      for (const m of data.media) {
+        media.push({
+          ...m,
+          image_path:
+            (await relocateDraftPath(supabase, m.image_path, existing.tenant_id, data.id)) ??
+            m.image_path,
+        });
+      }
+      await syncMedia(supabase, data.id, existing.tenant_id, media);
+    }
+
 
     if (data.status && data.status !== existing.status) {
       await logActivity(supabase, data.id, existing.tenant_id, userId, "STATUS_CHANGED", { from: existing.status, to: data.status });
