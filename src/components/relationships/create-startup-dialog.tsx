@@ -160,7 +160,7 @@ export function CreateStartupDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="create-startup-website">
-              Website <span className="text-muted-foreground font-normal">(optional)</span>
+              Company URL {"\u00a0"}<span className="text-muted-foreground font-normal">(optional)</span>
             </Label>
             <Input
               id="create-startup-website"
