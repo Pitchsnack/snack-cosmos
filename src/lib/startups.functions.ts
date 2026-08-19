@@ -16,11 +16,39 @@ export type InvestmentStage = (typeof STAGES)[number];
 const BUCKET = "startup-media";
 const SIGN_TTL = 3600;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Storage RLS on `startup-media` casts folder segment 2 to uuid, so any path
+ * shaped `<tenant>/draft-xxx/<file>` makes the whole signing batch fail.
+ * Filter those out so one legacy row can't blank every logo in a list.
+ */
+function isSignablePath(path: string): boolean {
+  const parts = path.split("/");
+  return parts.length >= 3 && UUID_RE.test(parts[0]) && UUID_RE.test(parts[1]);
+}
+
+/** Move a `draft-…` upload into the real startup folder so RLS/signing works. */
+async function relocateDraftPath(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  path: string | null | undefined,
+  tenantId: string,
+  startupId: string,
+): Promise<string | null> {
+  if (!path) return path ?? null;
+  const parts = path.split("/");
+  if (parts.length < 3 || !parts[1].startsWith("draft-")) return path;
+  const target = `${tenantId}/${startupId}/${parts.slice(2).join("/")}`;
+  const { error } = await supabase.storage.from(BUCKET).move(path, target);
+  if (error) return path;
+  return target;
+}
+
 async function signPath(
   supabase: import("@supabase/supabase-js").SupabaseClient,
   path: string | null | undefined,
 ): Promise<string | null> {
-  if (!path) return null;
+  if (!path || !isSignablePath(path)) return null;
   const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGN_TTL);
   return data?.signedUrl ?? null;
 }
@@ -29,14 +57,16 @@ async function signMany(
   supabase: import("@supabase/supabase-js").SupabaseClient,
   paths: string[],
 ): Promise<Record<string, string>> {
-  if (paths.length === 0) return {};
-  const { data } = await supabase.storage.from(BUCKET).createSignedUrls(paths, SIGN_TTL);
+  const usable = paths.filter(isSignablePath);
+  if (usable.length === 0) return {};
+  const { data } = await supabase.storage.from(BUCKET).createSignedUrls(usable, SIGN_TTL);
   const map: Record<string, string> = {};
   (data ?? []).forEach((d) => {
     if (d.path && d.signedUrl) map[d.path] = d.signedUrl;
   });
   return map;
 }
+
 
 export interface StartupRow {
   id: string;
@@ -602,9 +632,33 @@ export const createStartup = createServerFn({ method: "POST" })
     });
     if (aErr) { await supabase.from("startups").delete().eq("id", ins.id); throw new Error("AI owner assignment failed: " + aErr.message); }
 
+    // Logos/media uploaded before the row existed live under `draft-…`; move
+    // them into the real startup folder so RLS + signed URLs resolve.
+    const finalLogo = await relocateDraftPath(
+      supabase,
+      emptyToNull(data.logoPath),
+      ins.tenant_id,
+      ins.id,
+    );
+    if (finalLogo !== emptyToNull(data.logoPath)) {
+      await supabase.from("startups").update({ logo_url: finalLogo } as never).eq("id", ins.id);
+    }
+
     if (data.founders) await syncFounders(supabase, ins.id, ins.tenant_id, data.founders);
     if (data.investorIds) await syncInvestors(supabase, ins.id, ins.tenant_id, data.investorIds);
-    if (data.media) await syncMedia(supabase, ins.id, ins.tenant_id, data.media);
+    if (data.media) {
+      const media = [];
+      for (const m of data.media) {
+        media.push({
+          ...m,
+          image_path:
+            (await relocateDraftPath(supabase, m.image_path, ins.tenant_id, ins.id)) ??
+            m.image_path,
+        });
+      }
+      await syncMedia(supabase, ins.id, ins.tenant_id, media);
+    }
+
 
     await logActivity(supabase, ins.id, ins.tenant_id, userId, "STARTUP_CREATED", { name: data.startupName });
     return { id: ins.id };
@@ -643,7 +697,12 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.longDescription !== undefined) patch.long_description = data.longDescription;
     if (data.status !== undefined) patch.status = data.status;
     if (data.visibility !== undefined) patch.visibility = data.visibility;
-    if (data.logoPath !== undefined) patch.logo_url = data.logoPath;
+    let nextLogo = data.logoPath;
+    if (data.logoPath !== undefined) {
+      nextLogo = await relocateDraftPath(supabase, data.logoPath, existing.tenant_id, data.id);
+      patch.logo_url = nextLogo;
+    }
+
     if (data.companyType !== undefined) patch.company_type = data.companyType;
     if (data.yearFounded !== undefined) patch.year_founded = data.yearFounded;
     if (data.email !== undefined) patch.email = data.email;
@@ -661,14 +720,26 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (
       data.logoPath !== undefined &&
       existing.logo_url &&
-      existing.logo_url !== data.logoPath
+      existing.logo_url !== nextLogo
     ) {
       await removeStorageObjects(supabase, [existing.logo_url]);
     }
 
     if (data.founders !== undefined) await syncFounders(supabase, data.id, existing.tenant_id, data.founders);
     if (data.investorIds !== undefined) await syncInvestors(supabase, data.id, existing.tenant_id, data.investorIds);
-    if (data.media !== undefined) await syncMedia(supabase, data.id, existing.tenant_id, data.media);
+    if (data.media !== undefined) {
+      const media = [];
+      for (const m of data.media) {
+        media.push({
+          ...m,
+          image_path:
+            (await relocateDraftPath(supabase, m.image_path, existing.tenant_id, data.id)) ??
+            m.image_path,
+        });
+      }
+      await syncMedia(supabase, data.id, existing.tenant_id, media);
+    }
+
 
     if (data.status && data.status !== existing.status) {
       await logActivity(supabase, data.id, existing.tenant_id, userId, "STATUS_CHANGED", { from: existing.status, to: data.status });
