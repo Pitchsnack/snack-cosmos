@@ -28,9 +28,13 @@ function isSignablePath(path: string): boolean {
   return parts.length >= 3 && UUID_RE.test(parts[0]) && UUID_RE.test(parts[1]);
 }
 
-/** Move a `draft-…` upload into the real startup folder so RLS/signing works. */
+/**
+ * Move a `draft-…` upload into the real startup folder so RLS/signing works.
+ * The user-scoped client cannot move objects out of a `draft-…` folder (the
+ * storage policies cast that segment to uuid), so the move runs with the
+ * privileged client — only ever for a startup row the caller just wrote.
+ */
 async function relocateDraftPath(
-  supabase: import("@supabase/supabase-js").SupabaseClient,
   path: string | null | undefined,
   tenantId: string,
   startupId: string,
@@ -39,10 +43,12 @@ async function relocateDraftPath(
   const parts = path.split("/");
   if (parts.length < 3 || !parts[1].startsWith("draft-")) return path;
   const target = `${tenantId}/${startupId}/${parts.slice(2).join("/")}`;
-  const { error } = await supabase.storage.from(BUCKET).move(path, target);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.storage.from(BUCKET).move(path, target);
   if (error) return path;
   return target;
 }
+
 
 async function signPath(
   supabase: import("@supabase/supabase-js").SupabaseClient,
