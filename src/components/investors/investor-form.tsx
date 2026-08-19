@@ -187,7 +187,7 @@ interface Props {
   investor?: InvestorEditModel;
 }
 
-export function InvestorForm({ investor }: Props) {
+export function InvestorForm({ investor, controlReturn }: Props) {
   const isEdit = !!investor;
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -509,7 +509,11 @@ export function InvestorForm({ investor }: Props) {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["investor", investor!.id] });
       qc.invalidateQueries({ queryKey: ["investors"] });
-      navigate({ to: "/investors/$id", params: { id: investor!.id } });
+      if (controlReturn) {
+        navigate({ to: "/entity-control", search: { tab: controlReturn.tab } });
+      } else {
+        navigate({ to: "/investors/$id", params: { id: investor!.id } });
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -755,7 +759,7 @@ export function InvestorForm({ investor }: Props) {
             Required fields are marked with <span className="text-destructive">*</span>
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => navigate({ to: "/investors" })}>
+            <Button type="button" variant="outline" onClick={() => (controlReturn ? navigate({ to: "/entity-control", search: { tab: controlReturn.tab } }) : navigate({ to: "/investors" }))}>
               Cancel
             </Button>
             <Button type="submit" disabled={enriching || !displayName.trim()} className="gap-2">
@@ -1406,7 +1410,7 @@ export function InvestorForm({ investor }: Props) {
       )}
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={() => navigate({ to: "/investors" })}>
+        <Button type="button" variant="outline" onClick={() => (controlReturn ? navigate({ to: "/entity-control", search: { tab: controlReturn.tab } }) : navigate({ to: "/investors" }))}>
           Cancel
         </Button>
         <Button

@@ -38,6 +38,7 @@ function EditStartupPage() {
   const { id } = Route.useParams();
   const search = Route.useSearch();
   const fromControl = search.from === "entity-control";
+  const { from: _from, tab: _tab, ...listSearch } = search;
   const validId = isUuid(id);
   const { data, isLoading, error } = useStartup(validId ? id : undefined);
 
@@ -63,7 +64,7 @@ function EditStartupPage() {
         ) : (
           <Link
             to="/startups"
-            search={{ ...search, panel: id }}
+            search={{ ...listSearch, panel: id }}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to startup
@@ -101,7 +102,7 @@ function EditStartupPage() {
               <div className="mx-auto max-w-4xl">
                 <StartupForm
                   startup={data as unknown as StartupDetail}
-                  directoryReturnSearch={search}
+                  directoryReturnSearch={listSearch}
                   controlReturn={fromControl ? { tab: search.tab ?? "startups" } : undefined}
                 />
 
