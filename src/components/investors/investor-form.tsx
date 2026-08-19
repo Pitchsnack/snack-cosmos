@@ -458,6 +458,7 @@ export function InvestorForm({ investor }: Props) {
           owningAiAgentId,
           logoPath: null,
           media: [],
+          startupIds: linkedStartupIds,
           ...buildProfile(),
         },
       });
