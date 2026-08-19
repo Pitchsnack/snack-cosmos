@@ -79,7 +79,8 @@ export function CreateStartupDialog({
   const [name, setName] = useState(initialName);
   const [shortDescription, setShortDescription] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoSlot, setLogoSlot] = useState<SlotState>(EMPTY_SLOT);
+  const logoFile = logoSlot.pendingFile;
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
