@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, Camera } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,7 @@ import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
 import { supabase } from "@/integrations/supabase/client";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
 import { useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
+import { SnippingCapture } from "@/components/media/snipping-capture";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 
 interface Props {
@@ -80,6 +81,7 @@ export function CreateStartupDialog({
   const [shortDescription, setShortDescription] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [snipOpen, setSnipOpen] = useState(false);
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
@@ -216,16 +218,35 @@ export function CreateStartupDialog({
                 }}
               />
             </label>
-            {logoFile && (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="text-[11px] text-muted-foreground underline hover:text-foreground"
-                onClick={() => setLogoFile(null)}
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground underline hover:text-foreground"
+                onClick={() => setSnipOpen(true)}
               >
-                Remove logo
+                <Camera className="h-3 w-3" /> Snip from screen
               </button>
-            )}
+              {logoFile && (
+                <button
+                  type="button"
+                  className="text-[11px] text-muted-foreground underline hover:text-foreground"
+                  onClick={() => setLogoFile(null)}
+                >
+                  Remove logo
+                </button>
+              )}
+            </div>
           </div>
+          <SnippingCapture
+            open={snipOpen}
+            outputName="startup-logo"
+            onCancel={() => setSnipOpen(false)}
+            onCapture={(file) => {
+              setLogoFile(file);
+              setSnipOpen(false);
+            }}
+          />
+
           <div className="space-y-1.5">
             <Label htmlFor="create-startup-desc">
               Short description <span className="text-muted-foreground font-normal">(optional)</span>
