@@ -10,7 +10,6 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +35,7 @@ import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
 import { supabase } from "@/integrations/supabase/client";
+import { LogoSlot, EMPTY_SLOT, type SlotState } from "@/components/media/entity-media-editor";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
 import { useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
@@ -79,21 +79,21 @@ export function CreateStartupDialog({
   const [name, setName] = useState(initialName);
   const [shortDescription, setShortDescription] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoSlot, setLogoSlot] = useState<SlotState>(EMPTY_SLOT);
+  const logoFile = logoSlot.pendingFile;
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
 
   const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
   const websiteDup = useWebsiteDuplicateCheck();
-  const logoPreview = logoFile ? URL.createObjectURL(logoFile) : null;
 
   useEffect(() => {
     if (open) {
       setName(initialName);
       setShortDescription("");
       setWebsiteUrl("");
-      setLogoFile(null);
+      setLogoSlot(EMPTY_SLOT);
       const useIt = !!startupDefaults;
       setUseDefaultIntake(useIt);
       setAgentId(useIt ? startupDefaults!.humanId : "");
@@ -194,38 +194,10 @@ export function CreateStartupDialog({
             onCommit={(url) => void websiteDup.check(url)}
             placeholder="https://example.com"
           />
-          <div className="space-y-1.5">
-            <Label>Company Logo</Label>
-            <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
-              {logoPreview ? (
-                <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
-              <span className="truncate">
-                {logoFile ? logoFile.name : "Upload logo (PNG, JPG, SVG)"}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  if (f) setLogoFile(f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            {logoFile && (
-              <button
-                type="button"
-                className="text-[11px] text-muted-foreground underline hover:text-foreground"
-                onClick={() => setLogoFile(null)}
-              >
-                Remove logo
-              </button>
-            )}
-          </div>
+          <LogoSlot
+            value={logoSlot}
+            onChange={(s) => setLogoSlot(s)}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="create-startup-desc">
               Short description <span className="text-muted-foreground font-normal">(optional)</span>
