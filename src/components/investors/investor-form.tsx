@@ -584,6 +584,32 @@ export function InvestorForm({ investor }: Props) {
               <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="e.g. Sequoia Capital" required maxLength={100} />
             </div>
+            <EditableUrlField
+              label="Website"
+              value={companyUrl}
+              onChange={setCompanyUrl}
+              onCommit={(url) => void websiteDup.check(url)}
+              placeholder="https://sequoiacap.com"
+              required={!isEdit}
+            />
+            <div className="space-y-1.5">
+              <Label>Investor Classification</Label>
+              <Select value={title || "none"} onValueChange={(v) => setTitle(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {INVESTOR_CLASSIFICATIONS.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Year Founded</Label>
+              <Input type="number" min={1800} max={new Date().getFullYear()}
+                value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+            </div>
             <div className="space-y-1.5">
               <Label>Headquarter City</Label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Singapore" />
@@ -604,19 +630,6 @@ export function InvestorForm({ investor }: Props) {
               />
             </div>
 
-            <EditableUrlField
-              label="Website"
-              value={companyUrl}
-              onChange={setCompanyUrl}
-              onCommit={(url) => void websiteDup.check(url)}
-              placeholder="https://sequoiacap.com"
-              required={!isEdit}
-            />
-            <div className="space-y-1.5">
-              <Label>Year Founded</Label>
-              <Input type="number" min={1800} max={new Date().getFullYear()}
-                value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
-            </div>
             <div className="space-y-1.5">
               <Label>Investment Stage</Label>
               <Select
@@ -630,7 +643,6 @@ export function InvestorForm({ investor }: Props) {
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-1.5">
               <Label>Fund&apos;s AUM</Label>
               <Select value={aum || "none"} onValueChange={(v) => setAum(v === "none" ? "" : v)}>
@@ -646,6 +658,7 @@ export function InvestorForm({ investor }: Props) {
               <Input type="number" min={0} max={999} value={fundsLaunched}
                 onChange={(e) => setFundsLaunched(e.target.value)} placeholder="e.g. 3" />
             </div>
+
             <div className="space-y-1.5">
               <Label>Avg Investment Amount</Label>
               <Select value={avgInvestment || "none"} onValueChange={(v) => setAvgInvestment(v === "none" ? "" : v)}>

@@ -773,8 +773,32 @@ export function StartupForm({
               <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
                 placeholder="e.g. Acme Technologies" required maxLength={255} />
             </div>
+            <EditableUrlField
+              label="Website"
+              value={websiteUrl}
+              onChange={setWebsiteUrl}
+              onCommit={(url) => void websiteDup.check(url)}
+              placeholder="https://acme.com"
+              required={!isEdit}
+            />
             <div className="space-y-1.5">
-              <Label>Headquater City</Label>
+              <Label>Startup Type</Label>
+              <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select startup type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Year Founded</Label>
+              <Input type="number" min={1800} max={new Date().getFullYear()}
+                value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Headquarter City</Label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. San Francisco" />
             </div>
             <div className="space-y-1.5">
@@ -793,18 +817,17 @@ export function StartupForm({
               />
             </div>
 
-            <EditableUrlField
-              label="Website"
-              value={websiteUrl}
-              onChange={setWebsiteUrl}
-              onCommit={(url) => void websiteDup.check(url)}
-              placeholder="https://acme.com"
-              required={!isEdit}
-            />
             <div className="space-y-1.5">
-              <Label>Year Founded</Label>
-              <Input type="number" min={1800} max={new Date().getFullYear()}
-                value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+              <Label>Company Size</Label>
+              <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Select —</SelectItem>
+                  {["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"].map((s) => (
+                    <SelectItem key={s} value={s}>{s} employees</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Funding Stage</Label>
@@ -816,7 +839,6 @@ export function StartupForm({
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-1.5">
               <Label>Last Year&apos;s Revenue (USD)</Label>
               <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
@@ -837,18 +859,7 @@ export function StartupForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Company Size</Label>
-              <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— Select —</SelectItem>
-                  {["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"].map((s) => (
-                    <SelectItem key={s} value={s}>{s} employees</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
             <div className="space-y-1.5">
               <Label>Company Logo</Label>
               <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
