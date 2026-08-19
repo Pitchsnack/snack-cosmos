@@ -31,10 +31,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createStartup } from "@/lib/startups.functions";
+import { createStartup, createStartupMediaUploadUrl } from "@/lib/startups.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
+import { supabase } from "@/integrations/supabase/client";
+import { EditableUrlField } from "@/components/ui/editable-url-field";
+import { useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
+import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 
 interface Props {
   open: boolean;
