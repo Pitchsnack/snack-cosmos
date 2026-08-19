@@ -697,7 +697,12 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.longDescription !== undefined) patch.long_description = data.longDescription;
     if (data.status !== undefined) patch.status = data.status;
     if (data.visibility !== undefined) patch.visibility = data.visibility;
-    if (data.logoPath !== undefined) patch.logo_url = data.logoPath;
+    let nextLogo = data.logoPath;
+    if (data.logoPath !== undefined) {
+      nextLogo = await relocateDraftPath(supabase, data.logoPath, existing.tenant_id, data.id);
+      patch.logo_url = nextLogo;
+    }
+
     if (data.companyType !== undefined) patch.company_type = data.companyType;
     if (data.yearFounded !== undefined) patch.year_founded = data.yearFounded;
     if (data.email !== undefined) patch.email = data.email;
