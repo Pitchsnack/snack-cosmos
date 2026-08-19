@@ -632,9 +632,33 @@ export const createStartup = createServerFn({ method: "POST" })
     });
     if (aErr) { await supabase.from("startups").delete().eq("id", ins.id); throw new Error("AI owner assignment failed: " + aErr.message); }
 
+    // Logos/media uploaded before the row existed live under `draft-…`; move
+    // them into the real startup folder so RLS + signed URLs resolve.
+    const finalLogo = await relocateDraftPath(
+      supabase,
+      emptyToNull(data.logoPath),
+      ins.tenant_id,
+      ins.id,
+    );
+    if (finalLogo !== emptyToNull(data.logoPath)) {
+      await supabase.from("startups").update({ logo_url: finalLogo } as never).eq("id", ins.id);
+    }
+
     if (data.founders) await syncFounders(supabase, ins.id, ins.tenant_id, data.founders);
     if (data.investorIds) await syncInvestors(supabase, ins.id, ins.tenant_id, data.investorIds);
-    if (data.media) await syncMedia(supabase, ins.id, ins.tenant_id, data.media);
+    if (data.media) {
+      const media = [];
+      for (const m of data.media) {
+        media.push({
+          ...m,
+          image_path:
+            (await relocateDraftPath(supabase, m.image_path, ins.tenant_id, ins.id)) ??
+            m.image_path,
+        });
+      }
+      await syncMedia(supabase, ins.id, ins.tenant_id, media);
+    }
+
 
     await logActivity(supabase, ins.id, ins.tenant_id, userId, "STARTUP_CREATED", { name: data.startupName });
     return { id: ins.id };
