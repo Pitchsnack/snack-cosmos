@@ -80,6 +80,8 @@ export function CreateStartupDialog({
   useEffect(() => {
     if (open) {
       setName(initialName);
+      setShortDescription("");
+      setWebsiteUrl("");
       const useIt = !!startupDefaults;
       setUseDefaultIntake(useIt);
       setAgentId(useIt ? startupDefaults!.humanId : "");
