@@ -187,17 +187,44 @@ export function CreateStartupDialog({
               autoFocus
             />
           </div>
+          <EditableUrlField
+            label="Company URL (optional)"
+            value={websiteUrl}
+            onChange={setWebsiteUrl}
+            onCommit={(url) => void websiteDup.check(url)}
+            placeholder="https://example.com"
+          />
           <div className="space-y-1.5">
-            <Label htmlFor="create-startup-website">
-              Company URL {"\u00a0"}<span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <Input
-              id="create-startup-website"
-              type="url"
-              placeholder="https://example.com"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-            />
+            <Label>Company Logo</Label>
+            <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="truncate">
+                {logoFile ? logoFile.name : "Upload logo (PNG, JPG, SVG)"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  if (f) setLogoFile(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {logoFile && (
+              <button
+                type="button"
+                className="text-[11px] text-muted-foreground underline hover:text-foreground"
+                onClick={() => setLogoFile(null)}
+              >
+                Remove logo
+              </button>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="create-startup-desc">
