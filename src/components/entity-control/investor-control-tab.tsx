@@ -173,7 +173,7 @@ export function InvestorControlTab() {
               <DirectoryStateBadge state={r.directory_state} />
               <div className="flex items-center justify-end gap-1">
                 <Button asChild size="sm" variant="ghost">
-                  <Link to="/investors/$id/edit" params={{ id: r.id }}>
+                  <Link to="/investors/$id/edit" params={{ id: r.id }} search={{ from: "entity-control", tab: "investors" }}>
                     Edit
                   </Link>
                 </Button>

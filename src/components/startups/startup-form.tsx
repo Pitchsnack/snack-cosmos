@@ -168,6 +168,8 @@ interface Props {
     page?: number;
     fav?: boolean;
   };
+  /** When set, the form was opened from Control → Data Intelligence; return there. */
+  controlReturn?: { tab: "startups" | "investors" | "drafts" };
 }
 
 
@@ -202,6 +204,7 @@ export function StartupForm({
   workspace = "startups",
   myStartupsReturnSearch,
   directoryReturnSearch,
+  controlReturn,
 }: Props) {
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
@@ -567,7 +570,9 @@ export function StartupForm({
         qc.invalidateQueries({ queryKey: ["startups"] }),
       ]);
       guard.markSaved();
-      if (isMyWorkspace) {
+      if (controlReturn) {
+        navigate({ to: "/entity-control", search: { tab: controlReturn.tab } });
+      } else if (isMyWorkspace) {
         navigate({
           to: "/my-startups",
           search: { ...myStartupsReturnSearch, panel: startup!.id },
@@ -926,7 +931,11 @@ export function StartupForm({
               variant="outline"
               onClick={() => {
                 guard.bypassOnce();
-                navigate({ to: isMyWorkspace ? "/my-startups" : "/startups" });
+                if (controlReturn) {
+                  navigate({ to: "/entity-control", search: { tab: controlReturn.tab } });
+                } else {
+                  navigate({ to: isMyWorkspace ? "/my-startups" : "/startups" });
+                }
               }}
             >
               Cancel
@@ -1550,7 +1559,9 @@ export function StartupForm({
           variant="outline"
           onClick={() =>
             guard.confirmNavigate(() =>
-              isMyWorkspace
+              controlReturn
+                ? navigate({ to: "/entity-control", search: { tab: controlReturn.tab } })
+                : isMyWorkspace
                 ? navigate({
                     to: "/my-startups",
                     search: { ...myStartupsReturnSearch, panel: startup?.id },
