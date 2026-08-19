@@ -516,6 +516,10 @@ export function InvestorForm({ investor }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (pendingPortfolioCount > 0) {
+      setPendingSaveOpen(true);
+      return;
+    }
     if (isEdit) {
       updateM.mutate();
       return;
