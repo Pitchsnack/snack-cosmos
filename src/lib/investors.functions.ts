@@ -438,6 +438,7 @@ const UpdateInput = z.object({
   longDescription: z.string().max(5000).nullable().optional(),
   status: z.enum(STATUSES).optional(),
   visibility: z.enum(VISIBILITIES).optional(),
+  startupIds: z.array(z.string().uuid()).max(200).optional(),
   ...ProfileFields,
 });
 
