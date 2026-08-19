@@ -89,6 +89,16 @@ function mapSwitchError(msg: string): string {
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
+const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
+const REVENUE_RANGES = [
+  "Pre-revenue",
+  "$1 - $50,000",
+  "$50,000 - $100,000",
+  "$100,000 - $500,000",
+  "$500,000 - $1,000,000",
+  "$1,000,000 +",
+  "I\u2019d rather not say",
+];
 const STAGES = [
   "Pre-Seed", "Seed", "Series A", "Series B", "Series C+",
   "Growth", "IPO", "Acquired", "Inactive",
