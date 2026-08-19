@@ -118,6 +118,8 @@ export function CreateStartupDialog({
         data: {
           tenantId,
           startupName: name.trim(),
+          shortDescription: shortDescription.trim() || null,
+          websiteUrl: websiteUrl.trim() || null,
           owningAgentUserId: agentId,
           owningAiAgentId: aiAgentId,
         },
