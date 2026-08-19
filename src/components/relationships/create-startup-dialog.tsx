@@ -79,15 +79,21 @@ export function CreateStartupDialog({
   const [name, setName] = useState(initialName);
   const [shortDescription, setShortDescription] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
+
+  const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
+  const websiteDup = useWebsiteDuplicateCheck();
+  const logoPreview = logoFile ? URL.createObjectURL(logoFile) : null;
 
   useEffect(() => {
     if (open) {
       setName(initialName);
       setShortDescription("");
       setWebsiteUrl("");
+      setLogoFile(null);
       const useIt = !!startupDefaults;
       setUseDefaultIntake(useIt);
       setAgentId(useIt ? startupDefaults!.humanId : "");
