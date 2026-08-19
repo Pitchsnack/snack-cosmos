@@ -28,9 +28,13 @@ function isSignablePath(path: string): boolean {
   return parts.length >= 3 && UUID_RE.test(parts[0]) && UUID_RE.test(parts[1]);
 }
 
-/** Move a `draft-…` upload into the real startup folder so RLS/signing works. */
+/**
+ * Move a `draft-…` upload into the real startup folder so RLS/signing works.
+ * The user-scoped client cannot move objects out of a `draft-…` folder (the
+ * storage policies cast that segment to uuid), so the move runs with the
+ * privileged client — only ever for a startup row the caller just wrote.
+ */
 async function relocateDraftPath(
-  supabase: import("@supabase/supabase-js").SupabaseClient,
   path: string | null | undefined,
   tenantId: string,
   startupId: string,
@@ -39,10 +43,12 @@ async function relocateDraftPath(
   const parts = path.split("/");
   if (parts.length < 3 || !parts[1].startsWith("draft-")) return path;
   const target = `${tenantId}/${startupId}/${parts.slice(2).join("/")}`;
-  const { error } = await supabase.storage.from(BUCKET).move(path, target);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.storage.from(BUCKET).move(path, target);
   if (error) return path;
   return target;
 }
+
 
 async function signPath(
   supabase: import("@supabase/supabase-js").SupabaseClient,
@@ -634,9 +640,7 @@ export const createStartup = createServerFn({ method: "POST" })
 
     // Logos/media uploaded before the row existed live under `draft-…`; move
     // them into the real startup folder so RLS + signed URLs resolve.
-    const finalLogo = await relocateDraftPath(
-      supabase,
-      emptyToNull(data.logoPath),
+    const finalLogo = await relocateDraftPath(emptyToNull(data.logoPath),
       ins.tenant_id,
       ins.id,
     );
@@ -652,7 +656,7 @@ export const createStartup = createServerFn({ method: "POST" })
         media.push({
           ...m,
           image_path:
-            (await relocateDraftPath(supabase, m.image_path, ins.tenant_id, ins.id)) ??
+            (await relocateDraftPath(m.image_path, ins.tenant_id, ins.id)) ??
             m.image_path,
         });
       }
@@ -699,7 +703,7 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.visibility !== undefined) patch.visibility = data.visibility;
     let nextLogo = data.logoPath;
     if (data.logoPath !== undefined) {
-      nextLogo = await relocateDraftPath(supabase, data.logoPath, existing.tenant_id, data.id);
+      nextLogo = await relocateDraftPath(data.logoPath, existing.tenant_id, data.id);
       patch.logo_url = nextLogo;
     }
 
@@ -733,7 +737,7 @@ export const updateStartup = createServerFn({ method: "POST" })
         media.push({
           ...m,
           image_path:
-            (await relocateDraftPath(supabase, m.image_path, existing.tenant_id, data.id)) ??
+            (await relocateDraftPath(m.image_path, existing.tenant_id, data.id)) ??
             m.image_path,
         });
       }
