@@ -332,8 +332,27 @@ const CreateInput = z.object({
   visibility: z.enum(VISIBILITIES).default("Tenant"),
   owningAgentUserId: z.string().uuid(),
   owningAiAgentId: z.string().uuid(),
+  startupIds: z.array(z.string().uuid()).max(200).optional(),
   ...ProfileFields,
 });
+
+/**
+ * Mirror of `syncInvestors` in startups.functions.ts, from the investor side.
+ * Replaces the investor's portfolio links in `startup_investors`.
+ */
+async function syncPortfolio(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  investorId: string,
+  tenantId: string,
+  startupIds: string[],
+) {
+  await supabase.from("startup_investors").delete().eq("investor_id", investorId);
+  if (startupIds.length === 0) return;
+  const unique = Array.from(new Set(startupIds));
+  const rows = unique.map((id) => ({ startup_id: id, tenant_id: tenantId, investor_id: investorId }));
+  const { error } = await supabase.from("startup_investors").insert(rows);
+  if (error) throw new Error("Portfolio: " + error.message);
+}
 
 export const createInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -398,6 +417,8 @@ export const createInvestor = createServerFn({ method: "POST" })
       throw new Error("AI owner assignment failed: " + aErr.message);
     }
 
+    if (data.startupIds) await syncPortfolio(supabase, ins.id, ins.tenant_id, data.startupIds);
+
     await logActivity(supabase, ins.id, ins.tenant_id, userId, "INVESTOR_CREATED", {
       name: data.investorName, owner: data.owningAgentUserId, ai_owner: data.owningAiAgentId,
     });
@@ -417,6 +438,7 @@ const UpdateInput = z.object({
   longDescription: z.string().max(5000).nullable().optional(),
   status: z.enum(STATUSES).optional(),
   visibility: z.enum(VISIBILITIES).optional(),
+  startupIds: z.array(z.string().uuid()).max(200).optional(),
   ...ProfileFields,
 });
 
@@ -496,6 +518,10 @@ export const updateInvestor = createServerFn({ method: "POST" })
         from: existing.visibility, to: data.visibility,
       });
     }
+    if (data.startupIds !== undefined) {
+      await syncPortfolio(supabase, data.id, existing.tenant_id, data.startupIds);
+    }
+
     await logActivity(supabase, data.id, existing.tenant_id, userId, "INVESTOR_UPDATED", patch);
     return { ok: true };
   });

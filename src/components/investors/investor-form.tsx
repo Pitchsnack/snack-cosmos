@@ -31,7 +31,6 @@ import {
   type EntityMediaState, type SlotState,
 } from "@/components/media/entity-media-editor";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
-import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
 import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
 import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
@@ -40,6 +39,17 @@ import { investorEnrichAdapter } from "@/lib/auto-enrich/investor-enrich-adapter
 import { StartupStepper } from "@/components/startups/startup-stepper";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
+import { CreateStartupDialog } from "@/components/relationships/create-startup-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -146,6 +156,7 @@ export interface InvestorEditModel {
   logo_url: string | null;
   logo_signed_url: string | null;
   media: Array<{ slot: 1 | 2 | 3; image_path: string; image_signed_url: string | null }>;
+  linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url?: string | null }>;
 }
 
 function hydrateMedia(investor?: InvestorEditModel): EntityMediaState {
@@ -308,9 +319,27 @@ export function InvestorForm({ investor }: Props) {
   const [avgInvestment, setAvgInvestment] = useState("");
 
 
-  // Investment Portfolio (V3) — staged in local UI state until Save. Save is
-  // a stub via investorStartupLinksAdapter (future SnackPortal2 API Gateway).
-  const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>([]);
+  // Investment Portfolio — staged in local UI state until Save, then persisted
+  // through createInvestor/updateInvestor `startupIds` (startup_investors).
+  const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>(
+    () =>
+      (investor?.linked_startups ?? []).map((s) => ({
+        id: s.id,
+        startupId: s.id,
+        companyName: s.startup_name,
+        industry: null,
+        relationshipType: "investment" as const,
+        status: "linked" as const,
+      })),
+  );
+  // Promote-pending (create real startup) dialog state.
+  const [createStartupRowId, setCreateStartupRowId] = useState<string | null>(null);
+  const [createStartupName, setCreateStartupName] = useState("");
+  const [pendingSaveOpen, setPendingSaveOpen] = useState(false);
+  const pendingPortfolioCount = portfolioEntries.filter((e) => e.status === "pending").length;
+  const linkedStartupIds = portfolioEntries
+    .filter((e) => e.status === "linked" && e.startupId)
+    .map((e) => e.startupId!);
 
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
@@ -439,6 +468,7 @@ export function InvestorForm({ investor }: Props) {
           owningAiAgentId,
           logoPath: null,
           media: [],
+          startupIds: linkedStartupIds,
           ...buildProfile(),
         },
       });
@@ -450,8 +480,6 @@ export function InvestorForm({ investor }: Props) {
       return { id: newId };
     },
     onSuccess: (res) => {
-      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
-      void investorStartupLinksAdapter.saveInvestorInvestmentPortfolio(res.id, portfolioEntries);
       toast.success("Investor created");
       qc.invalidateQueries({ queryKey: ["investors"] });
       navigate({ to: "/investors/$id", params: { id: res.id } });
@@ -472,13 +500,12 @@ export function InvestorForm({ investor }: Props) {
           investorType: title || null,
           logoPath,
           media: resolvedMedia,
+          startupIds: linkedStartupIds,
           ...buildProfile(),
         },
       });
     },
     onSuccess: () => {
-      // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
-      void investorStartupLinksAdapter.saveInvestorInvestmentPortfolio(investor!.id, portfolioEntries);
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["investor", investor!.id] });
       qc.invalidateQueries({ queryKey: ["investors"] });
@@ -499,6 +526,10 @@ export function InvestorForm({ investor }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (pendingPortfolioCount > 0) {
+      setPendingSaveOpen(true);
+      return;
+    }
     if (isEdit) {
       updateM.mutate();
       return;
@@ -1218,7 +1249,61 @@ export function InvestorForm({ investor }: Props) {
             })),
           )
         }
+        onPromotePending={(row) => {
+          setCreateStartupRowId(row.id);
+          setCreateStartupName(row.name);
+        }}
+        promoteLabel="Create startup"
       />
+
+      {tenantId && (
+        <CreateStartupDialog
+          open={createStartupRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setCreateStartupRowId(null);
+          }}
+          tenantId={tenantId}
+          initialName={createStartupName}
+          onCreated={({ id, name }) => {
+            setPortfolioEntries((prev) =>
+              prev.map((e) =>
+                e.id === createStartupRowId
+                  ? { ...e, id, startupId: id, companyName: name, status: "linked" }
+                  : e,
+              ),
+            );
+            setCreateStartupRowId(null);
+          }}
+        />
+      )}
+
+      <AlertDialog open={pendingSaveOpen} onOpenChange={setPendingSaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingPortfolioCount} pending compan
+              {pendingPortfolioCount === 1 ? "y" : "ies"} won't be saved
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Pending portfolio rows are typed names, not real records. Use "Create startup"
+              on each pending row to persist it, or remove them and save.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back to edit</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setPortfolioEntries((prev) => prev.filter((e) => e.status !== "pending"));
+                setPendingSaveOpen(false);
+                if (isEdit) updateM.mutate();
+              }}
+            >
+              Remove pending and save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
 
       {/* Status & Visibility (create only — edit page has its own controls) */}
