@@ -16,11 +16,39 @@ export type InvestmentStage = (typeof STAGES)[number];
 const BUCKET = "startup-media";
 const SIGN_TTL = 3600;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Storage RLS on `startup-media` casts folder segment 2 to uuid, so any path
+ * shaped `<tenant>/draft-xxx/<file>` makes the whole signing batch fail.
+ * Filter those out so one legacy row can't blank every logo in a list.
+ */
+function isSignablePath(path: string): boolean {
+  const parts = path.split("/");
+  return parts.length >= 3 && UUID_RE.test(parts[0]) && UUID_RE.test(parts[1]);
+}
+
+/** Move a `draft-…` upload into the real startup folder so RLS/signing works. */
+async function relocateDraftPath(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  path: string | null | undefined,
+  tenantId: string,
+  startupId: string,
+): Promise<string | null> {
+  if (!path) return path ?? null;
+  const parts = path.split("/");
+  if (parts.length < 3 || !parts[1].startsWith("draft-")) return path;
+  const target = `${tenantId}/${startupId}/${parts.slice(2).join("/")}`;
+  const { error } = await supabase.storage.from(BUCKET).move(path, target);
+  if (error) return path;
+  return target;
+}
+
 async function signPath(
   supabase: import("@supabase/supabase-js").SupabaseClient,
   path: string | null | undefined,
 ): Promise<string | null> {
-  if (!path) return null;
+  if (!path || !isSignablePath(path)) return null;
   const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGN_TTL);
   return data?.signedUrl ?? null;
 }
@@ -29,14 +57,16 @@ async function signMany(
   supabase: import("@supabase/supabase-js").SupabaseClient,
   paths: string[],
 ): Promise<Record<string, string>> {
-  if (paths.length === 0) return {};
-  const { data } = await supabase.storage.from(BUCKET).createSignedUrls(paths, SIGN_TTL);
+  const usable = paths.filter(isSignablePath);
+  if (usable.length === 0) return {};
+  const { data } = await supabase.storage.from(BUCKET).createSignedUrls(usable, SIGN_TTL);
   const map: Record<string, string> = {};
   (data ?? []).forEach((d) => {
     if (d.path && d.signedUrl) map[d.path] = d.signedUrl;
   });
   return map;
 }
+
 
 export interface StartupRow {
   id: string;
