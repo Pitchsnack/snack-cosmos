@@ -91,6 +91,9 @@ export interface StartupRow {
   updated_at: string;
   logo_url: string | null;
   company_type: string | null;
+  registered_name: string | null;
+  company_size: string | null;
+  last_year_revenue: string | null;
   year_founded: number | null;
   email: string | null;
   headquarters: string | null;
@@ -172,7 +175,8 @@ async function logActivity(
 const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, industry,
   short_description, long_description, status, visibility, created_at, updated_at,
-  logo_url, company_type, year_founded, email, headquarters, region, investment_stage,
+  logo_url, company_type, registered_name, company_size, last_year_revenue,
+  year_founded, email, headquarters, region, investment_stage,
   product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
   startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
@@ -341,7 +345,8 @@ export const getStartup = createServerFn({ method: "GET" })
       .select(`
         id, tenant_id, startup_name, website_url, linkedin_url, city, industry,
         short_description, long_description, status, visibility, created_at, updated_at,
-        logo_url, company_type, year_founded, email, headquarters, region, investment_stage,
+        logo_url, company_type, registered_name, company_size, last_year_revenue,
+  year_founded, email, headquarters, region, investment_stage,
         product_tags, market_tags, url_key, source_global_id, imported_at,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
@@ -455,6 +460,9 @@ const MediaInput = z.object({
 const ProfileFields = {
   logoPath: z.string().max(1024).nullable().optional(),
   companyType: z.string().max(100).nullable().optional(),
+  registeredName: z.string().max(255).nullable().optional(),
+  companySize: z.string().max(100).nullable().optional(),
+  lastYearRevenue: z.string().max(100).nullable().optional(),
   yearFounded: z
     .number()
     .int()
@@ -613,6 +621,9 @@ export const createStartup = createServerFn({ method: "POST" })
         visibility: data.visibility,
         logo_url: emptyToNull(data.logoPath),
         company_type: emptyToNull(data.companyType),
+        registered_name: emptyToNull(data.registeredName),
+        company_size: emptyToNull(data.companySize),
+        last_year_revenue: emptyToNull(data.lastYearRevenue),
         year_founded: data.yearFounded ?? null,
         email: emptyToNull(data.email),
         headquarters: emptyToNull(data.headquarters),
@@ -708,6 +719,9 @@ export const updateStartup = createServerFn({ method: "POST" })
     }
 
     if (data.companyType !== undefined) patch.company_type = data.companyType;
+    if (data.registeredName !== undefined) patch.registered_name = emptyToNull(data.registeredName);
+    if (data.companySize !== undefined) patch.company_size = emptyToNull(data.companySize);
+    if (data.lastYearRevenue !== undefined) patch.last_year_revenue = emptyToNull(data.lastYearRevenue);
     if (data.yearFounded !== undefined) patch.year_founded = data.yearFounded;
     if (data.email !== undefined) patch.email = data.email;
     if (data.headquarters !== undefined) patch.headquarters = data.headquarters;

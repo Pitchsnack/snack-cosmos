@@ -1695,6 +1695,7 @@ export type Database = {
       startups: {
         Row: {
           city: string | null
+          company_size: string | null
           company_type: string | null
           created_at: string
           created_by: string | null
@@ -1704,12 +1705,14 @@ export type Database = {
           imported_at: string | null
           industry: string[]
           investment_stage: string | null
+          last_year_revenue: string | null
           linkedin_url: string | null
           logo_url: string | null
           long_description: string | null
           market_tags: string[]
           product_tags: string[]
           region: string | null
+          registered_name: string | null
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -1724,6 +1727,7 @@ export type Database = {
         }
         Insert: {
           city?: string | null
+          company_size?: string | null
           company_type?: string | null
           created_at?: string
           created_by?: string | null
@@ -1733,12 +1737,14 @@ export type Database = {
           imported_at?: string | null
           industry?: string[]
           investment_stage?: string | null
+          last_year_revenue?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
           product_tags?: string[]
           region?: string | null
+          registered_name?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -1753,6 +1759,7 @@ export type Database = {
         }
         Update: {
           city?: string | null
+          company_size?: string | null
           company_type?: string | null
           created_at?: string
           created_by?: string | null
@@ -1762,12 +1769,14 @@ export type Database = {
           imported_at?: string | null
           industry?: string[]
           investment_stage?: string | null
+          last_year_revenue?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
           product_tags?: string[]
           region?: string | null
+          registered_name?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string
