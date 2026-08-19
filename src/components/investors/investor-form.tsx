@@ -721,6 +721,33 @@ export function InvestorForm({ investor }: Props) {
                   }}
                 />
               </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground underline hover:text-foreground"
+                  onClick={() => setLogoSnipOpen(true)}
+                >
+                  <Camera className="h-3 w-3" /> Snip from screen
+                </button>
+                {media.logo.pendingFile && (
+                  <button
+                    type="button"
+                    className="text-[11px] text-muted-foreground underline hover:text-foreground"
+                    onClick={() => setMedia({ ...media, logo: { ...media.logo, pendingFile: null } })}
+                  >
+                    Remove logo
+                  </button>
+                )}
+              </div>
+              <SnippingCapture
+                open={logoSnipOpen}
+                outputName="investor-logo"
+                onCancel={() => setLogoSnipOpen(false)}
+                onCapture={(file) => {
+                  setMedia({ ...media, logo: { ...media.logo, pendingFile: file } });
+                  setLogoSnipOpen(false);
+                }}
+              />
             </div>
           </div>
         </div>
