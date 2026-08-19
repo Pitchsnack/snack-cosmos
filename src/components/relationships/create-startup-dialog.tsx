@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,10 +31,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createStartup } from "@/lib/startups.functions";
+import { createStartup, createStartupMediaUploadUrl } from "@/lib/startups.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
+import { supabase } from "@/integrations/supabase/client";
+import { EditableUrlField } from "@/components/ui/editable-url-field";
+import { useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
+import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 
 interface Props {
   open: boolean;
@@ -74,15 +79,21 @@ export function CreateStartupDialog({
   const [name, setName] = useState(initialName);
   const [shortDescription, setShortDescription] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
+
+  const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
+  const websiteDup = useWebsiteDuplicateCheck();
+  const logoPreview = logoFile ? URL.createObjectURL(logoFile) : null;
 
   useEffect(() => {
     if (open) {
       setName(initialName);
       setShortDescription("");
       setWebsiteUrl("");
+      setLogoFile(null);
       const useIt = !!startupDefaults;
       setUseDefaultIntake(useIt);
       setAgentId(useIt ? startupDefaults!.humanId : "");
@@ -115,12 +126,30 @@ export function CreateStartupDialog({
   const createM = useMutation({
     mutationFn: async () => {
       assertNoFixtureIds([tenantId, agentId, aiAgentId]);
+
+      let logoPath: string | null = null;
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop()?.toLowerCase() ?? "png";
+        const { path, token } = await getUploadUrl({
+          data: { tenantId, kind: "logo", ext },
+        });
+        const { error } = await supabase.storage
+          .from("startup-media")
+          .uploadToSignedUrl(path, token, logoFile, {
+            contentType: logoFile.type || "image/png",
+            upsert: true,
+          });
+        if (error) throw new Error("Logo upload failed: " + error.message);
+        logoPath = path;
+      }
+
       const res = await create({
         data: {
           tenantId,
           startupName: name.trim(),
           shortDescription: shortDescription.trim() || null,
           websiteUrl: websiteUrl.trim() || null,
+          logoPath,
           owningAgentUserId: agentId,
           owningAiAgentId: aiAgentId,
         },
@@ -158,17 +187,44 @@ export function CreateStartupDialog({
               autoFocus
             />
           </div>
+          <EditableUrlField
+            label="Company URL (optional)"
+            value={websiteUrl}
+            onChange={setWebsiteUrl}
+            onCommit={(url) => void websiteDup.check(url)}
+            placeholder="https://example.com"
+          />
           <div className="space-y-1.5">
-            <Label htmlFor="create-startup-website">
-              Company URL {"\u00a0"}<span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <Input
-              id="create-startup-website"
-              type="url"
-              placeholder="https://example.com"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-            />
+            <Label>Company Logo</Label>
+            <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="truncate">
+                {logoFile ? logoFile.name : "Upload logo (PNG, JPG, SVG)"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  if (f) setLogoFile(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {logoFile && (
+              <button
+                type="button"
+                className="text-[11px] text-muted-foreground underline hover:text-foreground"
+                onClick={() => setLogoFile(null)}
+              >
+                Remove logo
+              </button>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="create-startup-desc">
@@ -295,6 +351,17 @@ export function CreateStartupDialog({
             {createM.isPending ? "Creating…" : "Create startup"}
           </Button>
         </DialogFooter>
+        <DuplicateWarningDialog
+          open={websiteDup.open}
+          typedName={websiteDup.typedValue}
+          candidates={websiteDup.candidates}
+          onCancel={websiteDup.close}
+          onLinkExisting={(c) => {
+            websiteDup.close();
+            if (c.id) window.open(`/startups/${c.id}`, "_blank", "noopener,noreferrer");
+          }}
+          onCreatePendingAnyway={websiteDup.close}
+        />
       </DialogContent>
     </Dialog>
   );
