@@ -1239,7 +1239,61 @@ export function InvestorForm({ investor }: Props) {
             })),
           )
         }
+        onPromotePending={(row) => {
+          setCreateStartupRowId(row.id);
+          setCreateStartupName(row.name);
+        }}
+        promoteLabel="Create startup"
       />
+
+      {tenantId && (
+        <CreateStartupDialog
+          open={createStartupRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setCreateStartupRowId(null);
+          }}
+          tenantId={tenantId}
+          initialName={createStartupName}
+          onCreated={({ id, name }) => {
+            setPortfolioEntries((prev) =>
+              prev.map((e) =>
+                e.id === createStartupRowId
+                  ? { ...e, id, startupId: id, companyName: name, status: "linked" }
+                  : e,
+              ),
+            );
+            setCreateStartupRowId(null);
+          }}
+        />
+      )}
+
+      <AlertDialog open={pendingSaveOpen} onOpenChange={setPendingSaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingPortfolioCount} pending compan
+              {pendingPortfolioCount === 1 ? "y" : "ies"} won't be saved
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Pending portfolio rows are typed names, not real records. Use "Create startup"
+              on each pending row to persist it, or remove them and save.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back to edit</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setPortfolioEntries((prev) => prev.filter((e) => e.status !== "pending"));
+                setPendingSaveOpen(false);
+                if (isEdit) updateM.mutate();
+              }}
+            >
+              Remove pending and save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
 
       {/* Status & Visibility (create only — edit page has its own controls) */}
