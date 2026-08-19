@@ -87,7 +87,6 @@ export function CreateStartupDialog({
 
   const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
   const websiteDup = useWebsiteDuplicateCheck();
-  const logoPreview = logoFile ? URL.createObjectURL(logoFile) : null;
 
   useEffect(() => {
     if (open) {
