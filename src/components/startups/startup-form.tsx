@@ -277,6 +277,7 @@ export function StartupForm({
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? "");
   const [companyType, setCompanyType] = useState<string>(startup?.company_type ?? "");
+  const [registeredName, setRegisteredName] = useState(startup?.registered_name ?? "");
   const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? "");
   const [email, setEmail] = useState(startup?.email ?? "");
   const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? "");
@@ -365,8 +366,8 @@ export function StartupForm({
   const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
   const [enriching, setEnriching] = useState(false);
   // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
-  const [lastYearRevenue, setLastYearRevenue] = useState("");
-  const [companySize, setCompanySize] = useState("");
+  const [lastYearRevenue, setLastYearRevenue] = useState(startup?.last_year_revenue ?? "");
+  const [companySize, setCompanySize] = useState(startup?.company_size ?? "");
 
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
@@ -457,6 +458,9 @@ export function StartupForm({
 
   const buildProfileBase = () => ({
     companyType: companyType || null,
+    registeredName: registeredName || null,
+    companySize: companySize || null,
+    lastYearRevenue: lastYearRevenue || null,
     yearFounded: yearFounded ? Number(yearFounded) : null,
     email: email || null,
     headquarters: headquarters || null,
@@ -583,7 +587,8 @@ export function StartupForm({
   // ── Unsaved Changes: snapshot-diff dirty detection ──
   const currentSnapshot = buildStartupFormSnapshot({
     isEdit,
-    tenantId, startupName, companyType, yearFounded, email, headquarters,
+    tenantId, startupName, companyType, registeredName, companySize, lastYearRevenue,
+    yearFounded, email, headquarters,
     region, city, websiteUrl, linkedinUrl, shortDescription, longDescription,
     industries, productTags, marketTags, investmentStage,
     status, visibility, investorIds, founders,
@@ -823,7 +828,7 @@ export function StartupForm({
                 <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Select —</SelectItem>
-                  {["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"].map((s) => (
+                  {COMPANY_SIZES.map((s) => (
                     <SelectItem key={s} value={s}>{s} employees</SelectItem>
                   ))}
                 </SelectContent>
@@ -845,15 +850,7 @@ export function StartupForm({
                 <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Select —</SelectItem>
-                  {[
-                    "Pre-revenue",
-                    "$1 - $50,000",
-                    "$50,000 - $100,000",
-                    "$100,000 - $500,000",
-                    "$500,000 - $1,000,000",
-                    "$1,000,000 +",
-                    "I’d rather not say",
-                  ].map((s) => (
+                  {REVENUE_RANGES.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
@@ -1088,7 +1085,20 @@ export function StartupForm({
 
       </div>
 
-      {/* Row 2: Investment Stage */}
+      {/* Row 1b: Registered Name */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-1.5 col-span-2">
+          <Label>Registered Name</Label>
+          <Input
+            value={registeredName}
+            onChange={(e) => setRegisteredName(e.target.value)}
+            placeholder="Official registered company name"
+            maxLength={255}
+          />
+        </div>
+      </div>
+
+      {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(investmentStage)) ? MISSING_LABEL : undefined}>Investment Stage</Label>
@@ -1111,6 +1121,31 @@ export function StartupForm({
           </Select>
         </div>
 
+        <div className="space-y-1.5">
+          <Label>Company Size</Label>
+          <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {COMPANY_SIZES.map((s) => (
+                <SelectItem key={s} value={s}>{s} employees</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Last Year&apos;s Revenue (USD)</Label>
+          <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {REVENUE_RANGES.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Row 3: Headquarters | Region | City */}
