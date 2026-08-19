@@ -157,6 +157,31 @@ export function CreateStartupDialog({
               autoFocus
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="create-startup-website">
+              Website <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Input
+              id="create-startup-website"
+              type="url"
+              placeholder="https://example.com"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="create-startup-desc">
+              Short description <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Textarea
+              id="create-startup-desc"
+              rows={3}
+              maxLength={500}
+              placeholder="One or two sentences about the company"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
+            />
+          </div>
           {startupDefaults && (
             <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-2.5">
               <Checkbox
