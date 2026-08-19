@@ -435,8 +435,10 @@ export function RelationshipLinksEditor({
                       value={r.relationshipType}
                       onValueChange={(v) => setRelType(r.id, v as InvestorStartupRelationshipType)}
                     >
-                      <SelectTrigger className="h-7 w-[130px] text-xs">
-                        <SelectValue />
+                      <SelectTrigger className="h-7 w-[74px] text-xs">
+                        <SelectValue>
+                          {r.relationshipType === "investment" ? "Inv." : "M&A"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="investment">Investment</SelectItem>
