@@ -185,6 +185,8 @@ function hydrateMedia(investor?: InvestorEditModel): EntityMediaState {
 
 interface Props {
   investor?: InvestorEditModel;
+  /** When set, the form was opened from Control → Data Intelligence; return there. */
+  controlReturn?: { tab: "startups" | "investors" | "drafts" };
 }
 
 export function InvestorForm({ investor, controlReturn }: Props) {
