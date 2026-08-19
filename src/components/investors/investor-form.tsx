@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw, Plus, Upload, Sparkles, Loader2 } from "lucide-react";
+import { X, RefreshCw, Plus, Upload, Sparkles, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +40,7 @@ import { StartupStepper } from "@/components/startups/startup-stepper";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
 import { CreateStartupDialog } from "@/components/relationships/create-startup-dialog";
+import { SnippingCapture } from "@/components/media/snipping-capture";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -563,6 +564,7 @@ export function InvestorForm({ investor }: Props) {
   const canCreateTenant = perms.isResolved && perms.has("tenants.write");
 
   // ── Step 1: Quick Info (create mode only) ──────────────────────────────
+  const [logoSnipOpen, setLogoSnipOpen] = useState(false);
   const logoPreview =
     media.logo.pendingFile ? URL.createObjectURL(media.logo.pendingFile) : media.logo.signedUrl;
 
