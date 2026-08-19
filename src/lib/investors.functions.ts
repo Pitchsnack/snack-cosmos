@@ -417,6 +417,8 @@ export const createInvestor = createServerFn({ method: "POST" })
       throw new Error("AI owner assignment failed: " + aErr.message);
     }
 
+    if (data.startupIds) await syncPortfolio(supabase, ins.id, ins.tenant_id, data.startupIds);
+
     await logActivity(supabase, ins.id, ins.tenant_id, userId, "INVESTOR_CREATED", {
       name: data.investorName, owner: data.owningAgentUserId, ai_owner: data.owningAiAgentId,
     });
