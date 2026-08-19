@@ -24,6 +24,8 @@ const editSearchSchema = z.object({
   selected: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
+  from: z.literal("entity-control").optional(),
+  tab: z.enum(["startups", "investors", "drafts"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/startups/$id/edit")({
@@ -35,6 +37,7 @@ export const Route = createFileRoute("/_authenticated/startups/$id/edit")({
 function EditStartupPage() {
   const { id } = Route.useParams();
   const search = Route.useSearch();
+  const fromControl = search.from === "entity-control";
   const validId = isUuid(id);
   const { data, isLoading, error } = useStartup(validId ? id : undefined);
 
@@ -49,13 +52,23 @@ function EditStartupPage() {
   return (
     <PermissionGuard permission="startups.write" message="You don't have permission to edit startups.">
       <div className="mx-auto max-w-6xl space-y-6">
-        <Link
-          to="/startups"
-          search={{ ...search, panel: id }}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to startup
-        </Link>
+        {fromControl ? (
+          <Link
+            to="/entity-control"
+            search={{ tab: search.tab ?? "startups" }}
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Data Intelligence
+          </Link>
+        ) : (
+          <Link
+            to="/startups"
+            search={{ ...search, panel: id }}
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to startup
+          </Link>
+        )}
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Edit startup</h1>
         </div>
@@ -89,6 +102,7 @@ function EditStartupPage() {
                 <StartupForm
                   startup={data as unknown as StartupDetail}
                   directoryReturnSearch={search}
+                  controlReturn={fromControl ? { tab: search.tab ?? "startups" } : undefined}
                 />
 
               </div>
