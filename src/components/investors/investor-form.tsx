@@ -31,7 +31,6 @@ import {
   type EntityMediaState, type SlotState,
 } from "@/components/media/entity-media-editor";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
-import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { InvestorPortfolioEntryView } from "@/adapters/investor-startup-links-types";
 import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
 import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
