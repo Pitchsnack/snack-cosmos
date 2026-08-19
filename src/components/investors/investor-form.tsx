@@ -319,8 +319,8 @@ export function InvestorForm({ investor }: Props) {
   const [avgInvestment, setAvgInvestment] = useState("");
 
 
-  // Investment Portfolio (V3) — staged in local UI state until Save. Save is
-  // a stub via investorStartupLinksAdapter (future SnackPortal2 API Gateway).
+  // Investment Portfolio — staged in local UI state until Save, then persisted
+  // through createInvestor/updateInvestor `startupIds` (startup_investors).
   const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>(
     () =>
       (investor?.linked_startups ?? []).map((s) => ({
