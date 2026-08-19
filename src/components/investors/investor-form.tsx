@@ -311,7 +311,25 @@ export function InvestorForm({ investor }: Props) {
 
   // Investment Portfolio (V3) — staged in local UI state until Save. Save is
   // a stub via investorStartupLinksAdapter (future SnackPortal2 API Gateway).
-  const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>([]);
+  const [portfolioEntries, setPortfolioEntries] = useState<InvestorPortfolioEntryView[]>(
+    () =>
+      (investor?.linked_startups ?? []).map((s) => ({
+        id: s.id,
+        startupId: s.id,
+        companyName: s.startup_name,
+        industry: null,
+        relationshipType: "investment" as const,
+        status: "linked" as const,
+      })),
+  );
+  // Promote-pending (create real startup) dialog state.
+  const [createStartupRowId, setCreateStartupRowId] = useState<string | null>(null);
+  const [createStartupName, setCreateStartupName] = useState("");
+  const [pendingSaveOpen, setPendingSaveOpen] = useState(false);
+  const pendingPortfolioCount = portfolioEntries.filter((e) => e.status === "pending").length;
+  const linkedStartupIds = portfolioEntries
+    .filter((e) => e.status === "linked" && e.startupId)
+    .map((e) => e.startupId!);
 
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
