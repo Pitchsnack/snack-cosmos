@@ -640,9 +640,7 @@ export const createStartup = createServerFn({ method: "POST" })
 
     // Logos/media uploaded before the row existed live under `draft-…`; move
     // them into the real startup folder so RLS + signed URLs resolve.
-    const finalLogo = await relocateDraftPath(
-      supabase,
-      emptyToNull(data.logoPath),
+    const finalLogo = await relocateDraftPath(emptyToNull(data.logoPath),
       ins.tenant_id,
       ins.id,
     );
@@ -658,7 +656,7 @@ export const createStartup = createServerFn({ method: "POST" })
         media.push({
           ...m,
           image_path:
-            (await relocateDraftPath(supabase, m.image_path, ins.tenant_id, ins.id)) ??
+            (await relocateDraftPath(m.image_path, ins.tenant_id, ins.id)) ??
             m.image_path,
         });
       }
@@ -705,7 +703,7 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.visibility !== undefined) patch.visibility = data.visibility;
     let nextLogo = data.logoPath;
     if (data.logoPath !== undefined) {
-      nextLogo = await relocateDraftPath(supabase, data.logoPath, existing.tenant_id, data.id);
+      nextLogo = await relocateDraftPath(data.logoPath, existing.tenant_id, data.id);
       patch.logo_url = nextLogo;
     }
 
@@ -739,7 +737,7 @@ export const updateStartup = createServerFn({ method: "POST" })
         media.push({
           ...m,
           image_path:
-            (await relocateDraftPath(supabase, m.image_path, existing.tenant_id, data.id)) ??
+            (await relocateDraftPath(m.image_path, existing.tenant_id, data.id)) ??
             m.image_path,
         });
       }
