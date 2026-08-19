@@ -518,6 +518,10 @@ export const updateInvestor = createServerFn({ method: "POST" })
         from: existing.visibility, to: data.visibility,
       });
     }
+    if (data.startupIds !== undefined) {
+      await syncPortfolio(supabase, data.id, existing.tenant_id, data.startupIds);
+    }
+
     await logActivity(supabase, data.id, existing.tenant_id, userId, "INVESTOR_UPDATED", patch);
     return { ok: true };
   });
