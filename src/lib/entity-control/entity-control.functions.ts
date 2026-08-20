@@ -2,11 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
+  deleteControlEntities,
   fetchControlFacets,
   fetchControlInvestors,
   fetchControlStartups,
   setDirectoryState,
 } from "./query.server";
+
 
 const listSchema = z.object({
   page: z.number().int().min(1).default(1),
