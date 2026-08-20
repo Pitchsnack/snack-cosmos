@@ -134,6 +134,44 @@ function InvestorDetailPage() {
               <p className="mt-2 text-sm">{s.short_description}</p>
             </div>
           )}
+
+          {portfolioStartups.length > 0 && (
+            <div className="rounded-lg border border-border bg-card p-5 shadow-card">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Portfolio startups ({portfolioStartups.length})
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {portfolioStartups.map((p) => (
+                  <CompanyEntityPill
+                    key={p.id}
+                    to="/startups/$id"
+                    id={p.id}
+                    name={p.startup_name}
+                    logoUrl={p.logo_signed_url}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {portfolioInvestors.length > 0 && (
+            <div className="rounded-lg border border-border bg-card p-5 shadow-card">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Portfolio investors ({portfolioInvestors.length})
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {portfolioInvestors.map((p) => (
+                  <CompanyEntityPill
+                    key={p.id}
+                    to="/investors/$id"
+                    id={p.id}
+                    name={p.investor_name}
+                    logoUrl={p.logo_signed_url}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           {canManage && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-lg border border-border bg-card p-5 shadow-card">
