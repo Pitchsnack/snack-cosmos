@@ -74,6 +74,7 @@ type InvestorDetail = {
   tenants?: { tenant_name: string } | null;
   media?: Array<{ slot: number; image_signed_url: string | null }>;
   linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url: string | null }>;
+  portfolio_investors?: Array<{ id: string; investor_name: string; logo_signed_url: string | null }>;
 };
 
 export function InvestorDetailPanel({
@@ -131,6 +132,7 @@ export function InvestorDetailPanel({
   }
 
   const linked = i.linked_startups ?? [];
+  const portfolioInvestors = i.portfolio_investors ?? [];
   const mediaSlots = (i.media ?? []).filter((m) => m.image_signed_url);
   const ticket =
     i.ticket_size || [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null;
@@ -434,6 +436,26 @@ export function InvestorDetailPanel({
               </div>
             )}
           </Section>
+
+          {/* Portfolio investors */}
+          {portfolioInvestors.length > 0 && (
+            <Section
+              icon={Briefcase}
+              title={`Portfolio investors (${portfolioInvestors.length})`}
+            >
+              <div className="flex flex-wrap gap-2">
+                {portfolioInvestors.map((p) => (
+                  <CompanyEntityPill
+                    key={p.id}
+                    to="/investors/$id"
+                    id={p.id}
+                    name={p.investor_name}
+                    logoUrl={p.logo_signed_url}
+                  />
+                ))}
+              </div>
+            </Section>
+          )}
         </>
       )}
     </div>
