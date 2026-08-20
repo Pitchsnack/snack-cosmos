@@ -18,6 +18,7 @@ import { useInvestor, useInvestorActivity, useInvestorAuditLogs } from "@/hooks/
 import { updateInvestor, archiveInvestor } from "@/lib/investors.functions";
 import { usePermissions } from "@/hooks/use-session-context";
 import { isUuid } from "@/lib/uuid";
+import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 
 export const Route = createFileRoute("/_authenticated/investors/$id/")({
   head: () => ({ meta: [{ title: `Investor — SnackPortal2` }] }),
@@ -62,6 +63,15 @@ function InvestorDetailPage() {
     investor_ai_ownership: Array<{ users: { id: string; email: string; first_name: string | null; last_name: string | null } | null; assigned_at: string }>;
     investor_users: Array<{ id: string; user_id: string; role: string | null; created_at: string; users: { id: string; email: string; first_name: string | null; last_name: string | null } | null }>;
   };
+
+  const portfolioStartups =
+    (data as unknown as {
+      linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url: string | null }>;
+    }).linked_startups ?? [];
+  const portfolioInvestors =
+    (data as unknown as {
+      portfolio_investors?: Array<{ id: string; investor_name: string; logo_signed_url: string | null }>;
+    }).portfolio_investors ?? [];
 
   const owner = s.investor_ownership?.[0]?.users ?? null;
   const aiOwner = s.investor_ai_ownership?.[0]?.users ?? null;
@@ -132,6 +142,44 @@ function InvestorDetailPage() {
             <div className="rounded-lg border border-border bg-card p-5 shadow-card">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Description</div>
               <p className="mt-2 text-sm">{s.short_description}</p>
+            </div>
+          )}
+
+          {portfolioStartups.length > 0 && (
+            <div className="rounded-lg border border-border bg-card p-5 shadow-card">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Portfolio startups ({portfolioStartups.length})
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {portfolioStartups.map((p) => (
+                  <CompanyEntityPill
+                    key={p.id}
+                    to="/startups/$id"
+                    id={p.id}
+                    name={p.startup_name}
+                    logoUrl={p.logo_signed_url}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {portfolioInvestors.length > 0 && (
+            <div className="rounded-lg border border-border bg-card p-5 shadow-card">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Portfolio investors ({portfolioInvestors.length})
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {portfolioInvestors.map((p) => (
+                  <CompanyEntityPill
+                    key={p.id}
+                    to="/investors/$id"
+                    id={p.id}
+                    name={p.investor_name}
+                    logoUrl={p.logo_signed_url}
+                  />
+                ))}
+              </div>
             </div>
           )}
           {canManage && (
