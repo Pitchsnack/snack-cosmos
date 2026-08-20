@@ -1296,7 +1296,34 @@ export function InvestorForm({ investor, controlReturn }: Props) {
         title="Portfolio Investors"
         rows={portfolioInvestorRows}
         onChange={setPortfolioInvestorRows}
+        onPromotePending={(row) => {
+          setCreateInvestorRowId(row.id);
+          setCreateInvestorName(row.name);
+        }}
+        promoteLabel="Create investor"
       />
+
+      {tenantId && (
+        <CreateInvestorDialog
+          open={createInvestorRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setCreateInvestorRowId(null);
+          }}
+          tenantId={tenantId}
+          initialName={createInvestorName}
+          onCreated={({ id, name }) => {
+            setPortfolioInvestorRows((prev) =>
+              prev.map((r) =>
+                r.id === createInvestorRowId
+                  ? { ...r, id, refId: id, name, status: "linked" as const }
+                  : r,
+              ),
+            );
+            setCreateInvestorRowId(null);
+          }}
+        />
+      )}
+
 
       {tenantId && (
         <CreateStartupDialog
