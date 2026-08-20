@@ -358,8 +358,13 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   // Promote-pending (create real startup) dialog state.
   const [createStartupRowId, setCreateStartupRowId] = useState<string | null>(null);
   const [createStartupName, setCreateStartupName] = useState("");
+  // Promote-pending (create real investor) dialog state.
+  const [createInvestorRowId, setCreateInvestorRowId] = useState<string | null>(null);
+  const [createInvestorName, setCreateInvestorName] = useState("");
   const [pendingSaveOpen, setPendingSaveOpen] = useState(false);
-  const pendingPortfolioCount = portfolioEntries.filter((e) => e.status === "pending").length;
+  const pendingPortfolioCount =
+    portfolioEntries.filter((e) => e.status === "pending").length +
+    portfolioInvestorRows.filter((r) => r.status === "pending").length;
   const linkedStartupIds = portfolioEntries
     .filter((e) => e.status === "linked" && e.startupId)
     .map((e) => e.startupId!);
