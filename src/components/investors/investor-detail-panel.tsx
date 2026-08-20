@@ -132,6 +132,7 @@ export function InvestorDetailPanel({
   }
 
   const linked = i.linked_startups ?? [];
+  const linkedInvestors = i.linked_investors ?? [];
   const mediaSlots = (i.media ?? []).filter((m) => m.image_signed_url);
   const ticket =
     i.ticket_size || [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null;
