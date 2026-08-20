@@ -11,11 +11,13 @@ import {
 
 import {
   decideDrafts,
+  deleteDrafts,
   draftSummary,
   draftsVersion,
   listDrafts,
   subscribeDrafts,
 } from "@/lib/entity-control/drafts-adapter";
+
 import type {
   ControlListParams,
   DirectoryState,
