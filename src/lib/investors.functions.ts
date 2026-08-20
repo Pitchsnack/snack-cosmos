@@ -237,10 +237,23 @@ export const getInvestor = createServerFn({ method: "GET" })
       .map((l) => l.startups)
       .filter((s): s is { id: string; startup_name: string; logo_url: string | null } => !!s);
 
+    // Portfolio investors (investor_investors). VC/PE/CVC firms invested in by this investor.
+    const { data: portfolioInvestorRows } = await supabase
+      .from("investor_investors")
+      .select("investors:portfolio_investor_id(id, investor_name, logo_url)")
+      .eq("investor_id", data.id);
+
+    const portfolioInvestors = ((portfolioInvestorRows ?? []) as unknown as Array<{
+      investors: { id: string; investor_name: string; logo_url: string | null } | null;
+    }>)
+      .map((r) => r.investors)
+      .filter((i): i is { id: string; investor_name: string; logo_url: string | null } => !!i);
+
     const allPaths = [
       r.logo_url,
       ...mediaEntries.map((m) => m.image_path),
       ...links.map((s) => s.logo_url),
+      ...portfolioInvestors.map((i) => i.logo_url),
     ].filter((p): p is string => !!p);
     const signed = await signMany(supabase, allPaths);
 
@@ -248,6 +261,12 @@ export const getInvestor = createServerFn({ method: "GET" })
       id: s.id,
       startup_name: s.startup_name,
       logo_signed_url: s.logo_url ? (signed[s.logo_url] ?? null) : null,
+    }));
+
+    const portfolio_investors = portfolioInvestors.map((i) => ({
+      id: i.id,
+      investor_name: i.investor_name,
+      logo_signed_url: i.logo_url ? (signed[i.logo_url] ?? null) : null,
     }));
 
     const media: InvestorMediaItem[] = mediaEntries.map((m) => ({
@@ -260,8 +279,10 @@ export const getInvestor = createServerFn({ method: "GET" })
       logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
       media,
       linked_startups,
+      portfolio_investors,
     };
   });
+
 
 export const getInvestorActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
