@@ -83,3 +83,16 @@ export function useDraftSummary(kind: DraftListParams["kind"]) {
 export function useDecideDrafts() {
   return (refs: string[], status: DraftReviewStatus) => decideDrafts(refs, status);
 }
+
+export function useDeleteControlRecords() {
+  const fn = useServerFn(deleteControlRecords);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { entity: "startup" | "investor"; ids: string[] }) => fn({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["entity-control"] }),
+  });
+}
+
+export function useDeleteDrafts() {
+  return (refs: string[]) => deleteDrafts(refs);
+}
