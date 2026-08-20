@@ -158,7 +158,7 @@ export function InvestorControlTab() {
       </BulkBar>
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <div className="grid grid-cols-[2.5rem_minmax(0,2.4fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_13rem] items-center gap-3 border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="grid grid-cols-[2.5rem_minmax(0,2.4fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_16rem] items-center gap-3 border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           <span />
           <span>Investor / VC</span>
           <span>Type</span>
@@ -186,7 +186,7 @@ export function InvestorControlTab() {
           rows.map((r) => (
             <div
               key={r.id}
-              className="grid h-14 grid-cols-[2.5rem_minmax(0,2.4fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_13rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
+              className="grid h-14 grid-cols-[2.5rem_minmax(0,2.4fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_16rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
             >
               <Checkbox checked={selected.includes(r.id)} onCheckedChange={() => toggle(r.id)} aria-label={`Select ${r.name}`} />
               <div className="min-w-0">
@@ -226,7 +226,8 @@ export function InvestorControlTab() {
                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => setPendingDelete([r.id])}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Delete
                 </Button>
               </div>
             </div>

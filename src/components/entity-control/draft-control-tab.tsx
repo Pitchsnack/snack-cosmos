@@ -187,7 +187,7 @@ export function DraftControlTab() {
         </BulkBar>
 
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
-          <div className="grid min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_12rem] items-center gap-3 whitespace-nowrap [&>span]:truncate border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="grid min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_14rem] items-center gap-3 whitespace-nowrap [&>span]:truncate border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <span />
             <span>Entity Name</span>
             <span>Type</span>
@@ -211,7 +211,7 @@ export function DraftControlTab() {
             result.rows.map((d) => (
               <div
                 key={d.draft_ref}
-                className="grid h-14 min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_12rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
+                className="grid h-14 min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_14rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
               >
                 <Checkbox
                   checked={selected.includes(d.draft_ref)}
@@ -253,7 +253,8 @@ export function DraftControlTab() {
                     className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => setPendingDelete([d.draft_ref])}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    Delete
                   </Button>
                 </div>
               </div>
