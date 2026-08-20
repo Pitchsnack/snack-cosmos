@@ -1355,7 +1355,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               Pending portfolio rows are typed names, not real records. Use "Create startup"
-              on each pending row to persist it, or remove them and save.
+              or "Create investor" on each pending row to persist it, or remove them and save.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
