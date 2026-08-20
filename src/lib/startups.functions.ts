@@ -354,7 +354,7 @@ export const getStartup = createServerFn({ method: "GET" })
         startup_users(id, user_id, role, created_at, users:user_id(id,email,first_name,last_name)),
         startup_media(id, slot, image_url, caption),
         startup_founders(id, full_name, position, linkedin_url, bio, photo_url, display_order),
-        startup_investors(id, investor_id, investors:investor_id(id, investor_name, website_url))
+        startup_investors(id, investor_id, investors:investor_id(id, investor_name, website_url, logo_url))
       `)
       .eq("id", data.id)
       .maybeSingle();
@@ -365,11 +365,14 @@ export const getStartup = createServerFn({ method: "GET" })
       tenants: { tenant_name: string };
       startup_media: Array<{ id: string; slot: number; image_url: string; caption: string | null }>;
       startup_founders: StartupFounder[];
-      startup_investors: Array<{ id: string; investor_id: string; investors: { id: string; investor_name: string; website_url: string | null } | null }>;
+      startup_investors: Array<{ id: string; investor_id: string; investors: { id: string; investor_name: string; website_url: string | null; logo_url: string | null } | null }>;
     };
 
     const mediaPaths = (r.startup_media ?? []).map((m) => m.image_url).filter(Boolean);
-    const allPaths = [r.logo_url, ...mediaPaths].filter((p): p is string => !!p);
+    const investorLogoPaths = (r.startup_investors ?? [])
+      .map((l) => l.investors?.logo_url ?? null)
+      .filter((p): p is string => !!p);
+    const allPaths = [r.logo_url, ...mediaPaths, ...investorLogoPaths].filter((p): p is string => !!p);
     const signed = await signMany(supabase, allPaths);
 
     const media: StartupMediaItem[] = (r.startup_media ?? [])
@@ -390,8 +393,8 @@ export const getStartup = createServerFn({ method: "GET" })
       id: l.id,
       investor_id: l.investor_id,
       investor_name: l.investors?.investor_name ?? "(unknown)",
-      logo_url: null,
-      logo_signed_url: null,
+      logo_url: l.investors?.logo_url ?? null,
+      logo_signed_url: l.investors?.logo_url ? (signed[l.investors.logo_url] ?? null) : null,
     }));
 
     return {

@@ -36,6 +36,7 @@ import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassig
 import { ConnectionAction, ConnectionStateCard } from "@/components/startups/connection-action";
 import { useConnectionState } from "@/hooks/use-connection-state";
 import { cn } from "@/lib/utils";
+import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 
 function monogram(name: string) {
   return name
@@ -422,21 +423,13 @@ export function InvestorDetailPanel({
             ) : (
               <div className="flex flex-wrap gap-2">
                 {linked.map((s) => (
-                  <Link
+                  <CompanyEntityPill
                     key={s.id}
                     to="/startups/$id"
-                    params={{ id: s.id }}
-                    className="flex items-center gap-2 rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-medium text-foreground/85 transition hover:border-accent/40 hover:text-foreground"
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted text-[9px] font-semibold text-muted-foreground">
-                      {s.logo_signed_url ? (
-                        <img src={s.logo_signed_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        monogram(s.startup_name)
-                      )}
-                    </span>
-                    {s.startup_name}
-                  </Link>
+                    id={s.id}
+                    name={s.startup_name}
+                    logoUrl={s.logo_signed_url}
+                  />
                 ))}
               </div>
             )}
