@@ -485,7 +485,6 @@ const UpdateInput = z.object({
   visibility: z.enum(VISIBILITIES).optional(),
   startupIds: z.array(z.string().uuid()).max(200).optional(),
   portfolioInvestorIds: z.array(z.string().uuid()).max(200).optional(),
-  portfolioInvestorIds: z.array(z.string().uuid()).max(200).optional(),
   ...ProfileFields,
 });
 
