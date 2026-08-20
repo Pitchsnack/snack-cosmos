@@ -40,6 +40,7 @@ import { StartupStepper } from "@/components/startups/startup-stepper";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
 import { CreateStartupDialog } from "@/components/relationships/create-startup-dialog";
+import { CreateInvestorDialog } from "@/components/relationships/create-investor-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
