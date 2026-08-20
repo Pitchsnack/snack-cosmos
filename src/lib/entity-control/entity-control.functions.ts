@@ -54,3 +54,19 @@ export const setControlDirectoryState = createServerFn({ method: "POST" })
       data.state,
     ),
   );
+
+const deleteSchema = z.object({
+  entity: z.enum(["startup", "investor"]),
+  ids: z.array(z.string().uuid()).min(1).max(100),
+});
+
+export const deleteControlRecords = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => deleteSchema.parse(d))
+  .handler(async ({ data, context }) =>
+    deleteControlEntities(
+      context.supabase,
+      data.entity === "startup" ? "startups" : "investors",
+      data.ids,
+    ),
+  );
