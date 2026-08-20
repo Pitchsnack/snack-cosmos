@@ -1073,46 +1073,22 @@ export function StartupForm({
         </div>
       </div>
 
-      {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
-      <div className="grid grid-cols-[12%_30%_40%_18%] gap-4">
+      {/* Row 1: Year Founded | Company Name | Company Type — PitchSnack1 [120px_1fr_160px] */}
+      <div className="grid grid-cols-[120px_1fr_160px] gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
-          <Input
-            type="number"
-            min={1800}
-            max={new Date().getFullYear()}
-            value={yearFounded}
-            onChange={(e) => setYearFounded(e.target.value)}
+          <Input type="number" min={1800} max={new Date().getFullYear()}
+            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
             placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : "e.g. 2020"}
-            className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined}
-          />
+            className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
         </div>
-
         <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>
-            Company Name <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            value={startupName}
-            onChange={(e) => setStartupName(e.target.value)}
+          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>Company Name <span className="text-destructive">*</span></Label>
+          <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
             placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
             className={miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
-            required
-            maxLength={255}
-          />
+            required maxLength={255} />
         </div>
-
-        <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(registeredName)) ? MISSING_LABEL : undefined}>Registered Name</Label>
-          <Input
-            value={registeredName}
-            onChange={(e) => setRegisteredName(e.target.value)}
-            placeholder={miss(isStrEmpty(registeredName)) ? missingPh("Registered Name") : "Official registered company name"}
-            className={miss(isStrEmpty(registeredName)) ? MISSING_INPUT : undefined}
-            maxLength={255}
-          />
-        </div>
-
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
           <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
@@ -1125,8 +1101,21 @@ export function StartupForm({
             </SelectContent>
           </Select>
         </div>
+
       </div>
 
+      {/* Row 1b: Registered Name */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-1.5 col-span-2">
+          <Label>Registered Name</Label>
+          <Input
+            value={registeredName}
+            onChange={(e) => setRegisteredName(e.target.value)}
+            placeholder="Official registered company name"
+            maxLength={255}
+          />
+        </div>
+      </div>
 
       {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
       <div className="grid grid-cols-3 gap-4">
