@@ -74,6 +74,7 @@ type InvestorDetail = {
   tenants?: { tenant_name: string } | null;
   media?: Array<{ slot: number; image_signed_url: string | null }>;
   linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url: string | null }>;
+  portfolio_investors?: Array<{ id: string; investor_name: string; logo_signed_url: string | null }>;
 };
 
 export function InvestorDetailPanel({
