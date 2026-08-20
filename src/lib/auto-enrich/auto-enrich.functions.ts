@@ -31,6 +31,7 @@ export interface EnrichDebug {
  */
 export interface EnrichResult {
   startupName?: string;
+  registeredName?: string;
   companyType?: string;
   yearFounded?: number;
   email?: string;
