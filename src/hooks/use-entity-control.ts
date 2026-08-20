@@ -2,11 +2,13 @@ import { useSyncExternalStore } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  deleteControlRecords,
   listControlFacets,
   listControlInvestors,
   listControlStartups,
   setControlDirectoryState,
 } from "@/lib/entity-control/entity-control.functions";
+
 import {
   decideDrafts,
   draftSummary,
