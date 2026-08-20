@@ -4,10 +4,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Info } from "lucide-react";
+import { Search, Info, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { BulkBar, ControlPagination, FilterSelect, StatusTabs } from "./control-toolbar";
 import { DirectoryStateBadge } from "./badges";
-import { useControlFacets, useControlStartups, useSetDirectoryState } from "@/hooks/use-entity-control";
+import {
+  useControlFacets,
+  useControlStartups,
+  useDeleteControlRecords,
+  useSetDirectoryState,
+} from "@/hooks/use-entity-control";
+import { DeleteEntityDialog } from "./delete-entity-dialog";
 import { useDebounced } from "@/hooks/use-debounced";
 import type { ControlListParams } from "@/lib/entity-control/types";
 
@@ -38,7 +45,21 @@ export function StartupControlTab() {
   );
   const { data, isLoading, isFetching } = useControlStartups(params);
   const setState = useSetDirectoryState();
+  const del = useDeleteControlRecords();
+  const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
   const rows = data?.rows ?? [];
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      const n = await del.mutateAsync({ entity: "startup", ids: pendingDelete });
+      toast.success(`Deleted ${n} startup${n === 1 ? "" : "s"}.`);
+      setSelected((s) => s.filter((id) => !pendingDelete.includes(id)));
+      setPendingDelete(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Delete failed.");
+    }
+  };
 
   const reset = () => {
     setQ("");
@@ -116,10 +137,18 @@ export function StartupControlTab() {
         <Button size="sm" variant="outline" disabled={!selected.length}>
           Export
         </Button>
+        <Button
+          size="sm"
+          variant="destructive"
+          disabled={!selected.length || del.isPending}
+          onClick={() => setPendingDelete(selected)}
+        >
+          <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
+        </Button>
       </BulkBar>
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <div className="grid grid-cols-[2.5rem_minmax(0,3fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_11rem] items-center gap-3 border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="grid grid-cols-[2.5rem_minmax(0,3fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_13rem] items-center gap-3 border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           <span />
           <span>Startup</span>
           <span>Industry</span>
@@ -146,7 +175,7 @@ export function StartupControlTab() {
           rows.map((r) => (
             <div
               key={r.id}
-              className="grid h-14 grid-cols-[2.5rem_minmax(0,3fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_11rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
+              className="grid h-14 grid-cols-[2.5rem_minmax(0,3fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_13rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
             >
               <Checkbox checked={selected.includes(r.id)} onCheckedChange={() => toggle(r.id)} aria-label={`Select ${r.name}`} />
               <div className="min-w-0">
@@ -178,6 +207,15 @@ export function StartupControlTab() {
                     Publish
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`Delete ${r.name}`}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setPendingDelete([r.id])}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           ))
@@ -191,6 +229,15 @@ export function StartupControlTab() {
           onPageSize={(n) => { setPageSize(n); setPage(1); }}
         />
       </div>
+
+      <DeleteEntityDialog
+        open={!!pendingDelete}
+        onOpenChange={(v) => !v && setPendingDelete(null)}
+        title={`Delete ${pendingDelete?.length ?? 0} startup${(pendingDelete?.length ?? 0) === 1 ? "" : "s"}?`}
+        description="This permanently removes the record from Control and the Startup Directory. This action cannot be undone."
+        pending={del.isPending}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

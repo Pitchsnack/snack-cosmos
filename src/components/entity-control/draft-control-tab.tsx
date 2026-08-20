@@ -2,11 +2,13 @@ import { useMemo, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Clock, CheckCircle2, XCircle, UserSearch } from "lucide-react";
+import { Search, Sparkles, Clock, CheckCircle2, XCircle, UserSearch, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { BulkBar, ControlPagination, FilterSelect } from "./control-toolbar";
 import { ConfidenceBadge, ReviewStatusBadge, REVIEW_LABELS } from "./badges";
 import { DraftReviewPanel } from "./draft-review-panel";
-import { useDecideDrafts, useDraftSummary, useDrafts } from "@/hooks/use-entity-control";
+import { useDecideDrafts, useDeleteDrafts, useDraftSummary, useDrafts } from "@/hooks/use-entity-control";
+import { DeleteEntityDialog } from "./delete-entity-dialog";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
   DRAFTS_DISCLAIMER,
@@ -47,6 +49,17 @@ export function DraftControlTab() {
   const result = useDrafts(params);
   const summary = useDraftSummary(kind);
   const decide = useDecideDrafts();
+  const removeDrafts = useDeleteDrafts();
+  const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+    removeDrafts(pendingDelete);
+    toast.success(`Deleted ${pendingDelete.length} draft${pendingDelete.length === 1 ? "" : "s"}.`);
+    setSelected((s) => s.filter((r) => !pendingDelete.includes(r)));
+    if (openRef && pendingDelete.includes(openRef)) setOpenRef(null);
+    setPendingDelete(null);
+  };
 
   const reset = () => {
     setQ("");
@@ -163,10 +176,18 @@ export function DraftControlTab() {
           <Button size="sm" variant="outline" disabled={!selected.length}>
             Export
           </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={!selected.length}
+            onClick={() => setPendingDelete(selected)}
+          >
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
+          </Button>
         </BulkBar>
 
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
-          <div className="grid min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_9rem] items-center gap-3 whitespace-nowrap [&>span]:truncate border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="grid min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_12rem] items-center gap-3 whitespace-nowrap [&>span]:truncate border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <span />
             <span>Entity Name</span>
             <span>Type</span>
@@ -190,7 +211,7 @@ export function DraftControlTab() {
             result.rows.map((d) => (
               <div
                 key={d.draft_ref}
-                className="grid h-14 min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_9rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
+                className="grid h-14 min-w-[1200px] grid-cols-[2.5rem_minmax(0,1.8fr)_6rem_5rem_7rem_7rem_minmax(0,2fr)_8rem_9rem_12rem] items-center gap-3 border-b border-border px-4 text-sm last:border-0 hover:bg-muted/40"
               >
                 <Checkbox
                   checked={selected.includes(d.draft_ref)}
@@ -224,6 +245,15 @@ export function DraftControlTab() {
                     onClick={() => decide([d.draft_ref], "approved")}
                   >
                     Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`Delete ${d.name}`}
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setPendingDelete([d.draft_ref])}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -260,6 +290,14 @@ export function DraftControlTab() {
           {DRAFTS_DISCLAIMER}
         </p>
       </aside>
+
+      <DeleteEntityDialog
+        open={!!pendingDelete}
+        onOpenChange={(v) => !v && setPendingDelete(null)}
+        title={`Delete ${pendingDelete?.length ?? 0} draft${(pendingDelete?.length ?? 0) === 1 ? "" : "s"}?`}
+        description="The draft is removed from the AI Draft Extraction review queue."
+        onConfirm={confirmDelete}
+      />
 
       <DraftReviewPanel
         draft={openRef ? getDraft(openRef) : null}
