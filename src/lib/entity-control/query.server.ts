@@ -194,3 +194,21 @@ export async function fetchControlFacets(supabase: Client) {
     investorCountries: sorted(investorCountries),
   };
 }
+
+export async function deleteControlEntities(
+  supabase: Client,
+  table: "startups" | "investors",
+  ids: string[],
+): Promise<number> {
+  if (ids.length === 0) return 0;
+  const { data, error } = await supabase.from(table).delete().in("id", ids).select("id");
+  if (error) {
+    if (/violates foreign key|23503/i.test(error.message)) {
+      throw new Error(
+        "This record is still linked to deals, relationships or other data and cannot be deleted.",
+      );
+    }
+    throw new Error(error.message);
+  }
+  return (data ?? []).length;
+}

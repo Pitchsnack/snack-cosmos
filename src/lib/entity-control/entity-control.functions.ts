@@ -2,11 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
+  deleteControlEntities,
   fetchControlFacets,
   fetchControlInvestors,
   fetchControlStartups,
   setDirectoryState,
 } from "./query.server";
+
 
 const listSchema = z.object({
   page: z.number().int().min(1).default(1),
@@ -50,5 +52,21 @@ export const setControlDirectoryState = createServerFn({ method: "POST" })
       data.entity === "startup" ? "startups" : "investors",
       data.ids,
       data.state,
+    ),
+  );
+
+const deleteSchema = z.object({
+  entity: z.enum(["startup", "investor"]),
+  ids: z.array(z.string().uuid()).min(1).max(100),
+});
+
+export const deleteControlRecords = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => deleteSchema.parse(d))
+  .handler(async ({ data, context }) =>
+    deleteControlEntities(
+      context.supabase,
+      data.entity === "startup" ? "startups" : "investors",
+      data.ids,
     ),
   );
