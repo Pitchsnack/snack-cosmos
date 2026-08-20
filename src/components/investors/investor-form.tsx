@@ -1363,6 +1363,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
             <AlertDialogAction
               onClick={() => {
                 setPortfolioEntries((prev) => prev.filter((e) => e.status !== "pending"));
+                setPortfolioInvestorRows((prev) => prev.filter((r) => r.status !== "pending"));
                 setPendingSaveOpen(false);
                 if (isEdit) updateM.mutate();
               }}
