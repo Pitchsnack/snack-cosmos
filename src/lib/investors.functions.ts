@@ -354,6 +354,7 @@ const CreateInput = z.object({
   owningAgentUserId: z.string().uuid(),
   owningAiAgentId: z.string().uuid(),
   startupIds: z.array(z.string().uuid()).max(200).optional(),
+  portfolioInvestorIds: z.array(z.string().uuid()).max(200).optional(),
   ...ProfileFields,
 });
 
@@ -373,6 +374,27 @@ async function syncPortfolio(
   const rows = unique.map((id) => ({ startup_id: id, tenant_id: tenantId, investor_id: investorId }));
   const { error } = await supabase.from("startup_investors").insert(rows);
   if (error) throw new Error("Portfolio: " + error.message);
+}
+
+/**
+ * Replaces the investor's portfolio-investor links in `investor_investors`.
+ */
+async function syncPortfolioInvestors(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  investorId: string,
+  tenantId: string,
+  portfolioInvestorIds: string[],
+) {
+  await supabase.from("investor_investors").delete().eq("investor_id", investorId);
+  const unique = Array.from(new Set(portfolioInvestorIds)).filter((id) => id !== investorId);
+  if (unique.length === 0) return;
+  const rows = unique.map((id) => ({
+    investor_id: investorId,
+    portfolio_investor_id: id,
+    tenant_id: tenantId,
+  }));
+  const { error } = await supabase.from("investor_investors").insert(rows);
+  if (error) throw new Error("Portfolio investors: " + error.message);
 }
 
 export const createInvestor = createServerFn({ method: "POST" })
@@ -439,6 +461,8 @@ export const createInvestor = createServerFn({ method: "POST" })
     }
 
     if (data.startupIds) await syncPortfolio(supabase, ins.id, ins.tenant_id, data.startupIds);
+    if (data.portfolioInvestorIds)
+      await syncPortfolioInvestors(supabase, ins.id, ins.tenant_id, data.portfolioInvestorIds);
 
     await logActivity(supabase, ins.id, ins.tenant_id, userId, "INVESTOR_CREATED", {
       name: data.investorName, owner: data.owningAgentUserId, ai_owner: data.owningAiAgentId,
@@ -460,6 +484,7 @@ const UpdateInput = z.object({
   status: z.enum(STATUSES).optional(),
   visibility: z.enum(VISIBILITIES).optional(),
   startupIds: z.array(z.string().uuid()).max(200).optional(),
+  portfolioInvestorIds: z.array(z.string().uuid()).max(200).optional(),
   ...ProfileFields,
 });
 
@@ -541,6 +566,11 @@ export const updateInvestor = createServerFn({ method: "POST" })
     }
     if (data.startupIds !== undefined) {
       await syncPortfolio(supabase, data.id, existing.tenant_id, data.startupIds);
+    }
+    if (data.portfolioInvestorIds !== undefined) {
+      await syncPortfolioInvestors(
+        supabase, data.id, existing.tenant_id, data.portfolioInvestorIds,
+      );
     }
 
     await logActivity(supabase, data.id, existing.tenant_id, userId, "INVESTOR_UPDATED", patch);

@@ -157,6 +157,7 @@ export interface InvestorEditModel {
   logo_signed_url: string | null;
   media: Array<{ slot: 1 | 2 | 3; image_path: string; image_signed_url: string | null }>;
   linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url?: string | null }>;
+  portfolio_investors?: Array<{ id: string; investor_name: string; logo_signed_url?: string | null }>;
 }
 
 function hydrateMedia(investor?: InvestorEditModel): EntityMediaState {
@@ -334,6 +335,25 @@ export function InvestorForm({ investor, controlReturn }: Props) {
         status: "linked" as const,
       })),
   );
+  // Portfolio Investors — VC/PE/CVC firms this investor has invested in.
+  // Persisted through createInvestor/updateInvestor `portfolioInvestorIds`
+  // (investor_investors).
+  const [portfolioInvestorRows, setPortfolioInvestorRows] = useState<RelationshipRow[]>(
+    () =>
+      (investor?.portfolio_investors ?? []).map((i) => ({
+        id: i.id,
+        refId: i.id,
+        name: i.investor_name,
+        subtitle: null,
+        industry: null,
+        relationshipType: "investment" as const,
+        status: "linked" as const,
+      })),
+  );
+  const linkedPortfolioInvestorIds = portfolioInvestorRows
+    .filter((r) => r.status === "linked" && r.refId)
+    .map((r) => r.refId!);
+
   // Promote-pending (create real startup) dialog state.
   const [createStartupRowId, setCreateStartupRowId] = useState<string | null>(null);
   const [createStartupName, setCreateStartupName] = useState("");
@@ -471,6 +491,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           logoPath: null,
           media: [],
           startupIds: linkedStartupIds,
+          portfolioInvestorIds: linkedPortfolioInvestorIds,
           ...buildProfile(),
         },
       });
@@ -503,6 +524,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           logoPath,
           media: resolvedMedia,
           startupIds: linkedStartupIds,
+          portfolioInvestorIds: linkedPortfolioInvestorIds,
           ...buildProfile(),
         },
       });
@@ -1230,10 +1252,10 @@ export function InvestorForm({ investor, controlReturn }: Props) {
         </div>
       </div>
 
-      {/* Investment Portfolio (V3) — UI-staged only; backend persistence pending. */}
+      {/* Portfolio Startups — startups this investor has invested in. */}
       <RelationshipLinksEditor
         mode="startups"
-        title="Investment Portfolio"
+        title="Portfolio Startups"
         rows={portfolioEntries.map((e): RelationshipRow => ({
           id: e.id,
           refId: e.startupId,
@@ -1260,6 +1282,14 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           setCreateStartupName(row.name);
         }}
         promoteLabel="Create startup"
+      />
+
+      {/* Portfolio Investors — investment firms this investor has invested in. */}
+      <RelationshipLinksEditor
+        mode="investors"
+        title="Portfolio Investors"
+        rows={portfolioInvestorRows}
+        onChange={setPortfolioInvestorRows}
       />
 
       {tenantId && (
