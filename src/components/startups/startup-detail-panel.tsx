@@ -62,6 +62,7 @@ import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { ShareStartupDialog } from "@/components/startups/share-startup-dialog";
 import { cn } from "@/lib/utils";
+import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 
 
 function monogram(name: string) {
@@ -626,14 +627,13 @@ export function StartupDetailPanel({
         >
           <div className="flex flex-wrap gap-2">
             {s.investors.map((i) => (
-              <Link
+              <CompanyEntityPill
                 key={i.id}
                 to="/investors/$id"
-                params={{ id: i.investor_id }}
-                className="rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-medium text-foreground/85 transition hover:border-accent/40 hover:text-foreground"
-              >
-                {i.investor_name}
-              </Link>
+                id={i.investor_id}
+                name={i.investor_name}
+                logoUrl={i.logo_signed_url}
+              />
             ))}
           </div>
         </Section>
