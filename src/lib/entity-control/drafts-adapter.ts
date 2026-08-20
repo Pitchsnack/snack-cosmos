@@ -109,6 +109,7 @@ function buildDraft(kind: EntityKind, index: number): DraftRecord {
 /* ------------------------------ session store ---------------------------- */
 
 const overrides = new Map<string, DraftReviewStatus>();
+const deleted = new Set<string>();
 const decidedToday = { approved: 1_842, rejected: 612 };
 const listeners = new Set<() => void>();
 let version = 0;
@@ -137,6 +138,16 @@ export function decideDrafts(refs: string[], status: DraftReviewStatus) {
   emit();
 }
 
+/** Removes drafts from the session review queue. */
+export function deleteDrafts(refs: string[]) {
+  refs.forEach((r) => deleted.add(r));
+  emit();
+}
+
+export function isDraftDeleted(ref: string) {
+  return deleted.has(ref);
+}
+
 function withOverride(d: DraftRecord): DraftRecord {
   const o = overrides.get(d.draft_ref);
   return o ? { ...d, status: o } : d;
@@ -146,6 +157,7 @@ export function getDraft(ref: string): DraftRecord | null {
   const [kind, , idx] = ref.split("-");
   const index = Number(idx);
   if ((kind !== "startup" && kind !== "investor") || Number.isNaN(index)) return null;
+  if (deleted.has(ref)) return null;
   return withOverride(buildDraft(kind, index));
 }
 
@@ -183,15 +195,18 @@ export function listDrafts(p: DraftListParams): PagedResult<DraftRecord> {
     const from = (p.page - 1) * p.pageSize;
     const rows: DraftRecord[] = [];
     for (let i = from; i < Math.min(from + p.pageSize, total); i++) {
-      rows.push(withOverride(buildDraft(p.kind, i)));
+      const d = buildDraft(p.kind, i);
+      if (deleted.has(d.draft_ref)) continue;
+      rows.push(withOverride(d));
     }
-    return { rows, total, page: p.page, pageSize: p.pageSize };
+    return { rows, total: total - deleted.size, page: p.page, pageSize: p.pageSize };
   }
 
   const hits: DraftRecord[] = [];
   const limit = Math.min(total, SCAN_WINDOW);
   for (let i = 0; i < limit; i++) {
     const d = withOverride(buildDraft(p.kind, i));
+    if (deleted.has(d.draft_ref)) continue;
     if (matches(d, p)) hits.push(d);
   }
   const from = (p.page - 1) * p.pageSize;
