@@ -667,6 +667,7 @@ export function StartupForm({
       else { skipped.push(label); }
     };
     handle("Company Name", !!r.startupName, isEmpty(startupName), () => setStartupName(r.startupName!));
+    handle("Registered Name", !!r.registeredName, isEmpty(registeredName), () => setRegisteredName(r.registeredName!));
     handle("Company Type", !!r.companyType, isEmpty(companyType), () => setCompanyType(r.companyType!));
     handle("Year Founded", !!r.yearFounded, isEmpty(yearFounded), () => setYearFounded(String(r.yearFounded)));
     handle("Email", !!r.email, isEmpty(email), () => setEmail(r.email!));
