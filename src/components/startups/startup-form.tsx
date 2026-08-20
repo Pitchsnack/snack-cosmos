@@ -1073,8 +1073,8 @@ export function StartupForm({
         </div>
       </div>
 
-      {/* Row 1: Year Founded | Company Name | Company Type — PitchSnack1 [120px_1fr_160px] */}
-      <div className="grid grid-cols-[120px_1fr_160px] gap-4">
+      {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
+      <div className="grid grid-cols-[100px_1fr_2fr_140px] gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
@@ -1090,6 +1090,15 @@ export function StartupForm({
             required maxLength={255} />
         </div>
         <div className="space-y-1.5">
+          <Label>Registered Name</Label>
+          <Input
+            value={registeredName}
+            onChange={(e) => setRegisteredName(e.target.value)}
+            placeholder="Official registered company name"
+            maxLength={255}
+          />
+        </div>
+        <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
           <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
             <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
@@ -1101,21 +1110,8 @@ export function StartupForm({
             </SelectContent>
           </Select>
         </div>
-
       </div>
 
-      {/* Row 1b: Registered Name */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-1.5 col-span-2">
-          <Label>Registered Name</Label>
-          <Input
-            value={registeredName}
-            onChange={(e) => setRegisteredName(e.target.value)}
-            placeholder="Official registered company name"
-            maxLength={255}
-          />
-        </div>
-      </div>
 
       {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
       <div className="grid grid-cols-3 gap-4">
