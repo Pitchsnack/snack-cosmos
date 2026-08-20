@@ -1074,7 +1074,7 @@ export function StartupForm({
       </div>
 
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
-      <div className="grid grid-cols-[14%_34%_34%_18%] gap-4">
+      <div className="grid grid-cols-[12%_30%_40%_18%] gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input
