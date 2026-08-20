@@ -436,6 +436,26 @@ export function InvestorDetailPanel({
               </div>
             )}
           </Section>
+
+          {/* Portfolio investors */}
+          {linkedInvestors.length > 0 && (
+            <Section
+              icon={Briefcase}
+              title={`Portfolio investors${linkedInvestors.length > 0 ? ` (${linkedInvestors.length})` : ""}`}
+            >
+              <div className="flex flex-wrap gap-2">
+                {linkedInvestors.map((inv) => (
+                  <CompanyEntityPill
+                    key={inv.id}
+                    to="/investors/$id"
+                    id={inv.id}
+                    name={inv.investor_name}
+                    logoUrl={inv.logo_signed_url}
+                  />
+                ))}
+              </div>
+            </Section>
+          )}
         </>
       )}
     </div>
