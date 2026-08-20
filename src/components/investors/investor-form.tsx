@@ -40,6 +40,7 @@ import { StartupStepper } from "@/components/startups/startup-stepper";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
 import { CreateStartupDialog } from "@/components/relationships/create-startup-dialog";
+import { CreateInvestorDialog } from "@/components/relationships/create-investor-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -357,8 +358,13 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   // Promote-pending (create real startup) dialog state.
   const [createStartupRowId, setCreateStartupRowId] = useState<string | null>(null);
   const [createStartupName, setCreateStartupName] = useState("");
+  // Promote-pending (create real investor) dialog state.
+  const [createInvestorRowId, setCreateInvestorRowId] = useState<string | null>(null);
+  const [createInvestorName, setCreateInvestorName] = useState("");
   const [pendingSaveOpen, setPendingSaveOpen] = useState(false);
-  const pendingPortfolioCount = portfolioEntries.filter((e) => e.status === "pending").length;
+  const pendingPortfolioCount =
+    portfolioEntries.filter((e) => e.status === "pending").length +
+    portfolioInvestorRows.filter((r) => r.status === "pending").length;
   const linkedStartupIds = portfolioEntries
     .filter((e) => e.status === "linked" && e.startupId)
     .map((e) => e.startupId!);
@@ -1290,7 +1296,34 @@ export function InvestorForm({ investor, controlReturn }: Props) {
         title="Portfolio Investors"
         rows={portfolioInvestorRows}
         onChange={setPortfolioInvestorRows}
+        onPromotePending={(row) => {
+          setCreateInvestorRowId(row.id);
+          setCreateInvestorName(row.name);
+        }}
+        promoteLabel="Create investor"
       />
+
+      {tenantId && (
+        <CreateInvestorDialog
+          open={createInvestorRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setCreateInvestorRowId(null);
+          }}
+          tenantId={tenantId}
+          initialName={createInvestorName}
+          onCreated={({ id, name }) => {
+            setPortfolioInvestorRows((prev) =>
+              prev.map((r) =>
+                r.id === createInvestorRowId
+                  ? { ...r, id, refId: id, name, status: "linked" as const }
+                  : r,
+              ),
+            );
+            setCreateInvestorRowId(null);
+          }}
+        />
+      )}
+
 
       {tenantId && (
         <CreateStartupDialog
@@ -1322,7 +1355,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               Pending portfolio rows are typed names, not real records. Use "Create startup"
-              on each pending row to persist it, or remove them and save.
+              or "Create investor" on each pending row to persist it, or remove them and save.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1330,6 +1363,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
             <AlertDialogAction
               onClick={() => {
                 setPortfolioEntries((prev) => prev.filter((e) => e.status !== "pending"));
+                setPortfolioInvestorRows((prev) => prev.filter((r) => r.status !== "pending"));
                 setPendingSaveOpen(false);
                 if (isEdit) updateM.mutate();
               }}
