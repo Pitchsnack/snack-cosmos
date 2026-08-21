@@ -537,6 +537,7 @@ export function InvestorDetailPanel({
                     id={p.id}
                     name={p.investor_name}
                     logoUrl={p.logo_signed_url}
+                    onSelect={onSelectInvestor}
                   />
                 ))}
               </div>
