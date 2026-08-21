@@ -125,7 +125,7 @@ export function ChipRow({
 
   if (expanded) {
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className={cn("flex flex-wrap gap-2", className)}>
         {items.map((i) => (
           <StartupChip key={i.id} item={i} />
         ))}
