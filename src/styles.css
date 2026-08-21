@@ -116,6 +116,16 @@
   --cluster-7: hsl(20 75% 55%);
   --cluster-8: hsl(225 40% 45%);
 
+  /* Investor Directory classification pill colors */
+  --investor-type-angel: hsl(340 60% 58%);
+  --investor-type-venture-capital: hsl(205 70% 52%);
+  --investor-type-private-equity: hsl(263 55% 58%);
+  --investor-type-corporate-vc: hsl(152 45% 45%);
+  --investor-type-family-office: hsl(38 85% 55%);
+  --investor-type-corporate-enterprise: hsl(20 75% 55%);
+  --investor-type-sovereign-fund: hsl(180 45% 42%);
+  --investor-type-incubator-accelerator: hsl(225 40% 45%);
+
   /* Similarity Map interaction language — SnackPortal2 blue/purple */
   --map-accent: hsl(258 78% 60%);
   --map-accent-foreground: hsl(0 0% 100%);

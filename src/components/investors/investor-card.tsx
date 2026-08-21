@@ -21,6 +21,29 @@ function monogram(name: string) {
 const CARD_CLASS =
   "group relative flex h-[236.83px] w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
+const TYPE_STYLES: Record<string, string> = {
+  Angel: "bg-[var(--investor-type-angel)]/10 text-[var(--investor-type-angel)] border-[var(--investor-type-angel)]/20",
+  "Venture Capital":
+    "bg-[var(--investor-type-venture-capital)]/10 text-[var(--investor-type-venture-capital)] border-[var(--investor-type-venture-capital)]/20",
+  "Private Equity":
+    "bg-[var(--investor-type-private-equity)]/10 text-[var(--investor-type-private-equity)] border-[var(--investor-type-private-equity)]/20",
+  "Corporate VC":
+    "bg-[var(--investor-type-corporate-vc)]/10 text-[var(--investor-type-corporate-vc)] border-[var(--investor-type-corporate-vc)]/20",
+  "Family Office":
+    "bg-[var(--investor-type-family-office)]/10 text-[var(--investor-type-family-office)] border-[var(--investor-type-family-office)]/20",
+  "Corporate Enterprise":
+    "bg-[var(--investor-type-corporate-enterprise)]/10 text-[var(--investor-type-corporate-enterprise)] border-[var(--investor-type-corporate-enterprise)]/20",
+  "Sovereign Fund":
+    "bg-[var(--investor-type-sovereign-fund)]/10 text-[var(--investor-type-sovereign-fund)] border-[var(--investor-type-sovereign-fund)]/20",
+  "Incubator/Accelerator":
+    "bg-[var(--investor-type-incubator-accelerator)]/10 text-[var(--investor-type-incubator-accelerator)] border-[var(--investor-type-incubator-accelerator)]/20",
+};
+
+function getInvestorTypeStyle(type: string | null | undefined): string | undefined {
+  return type ? TYPE_STYLES[type] : undefined;
+}
+
+
 const HOVER_CARD_STYLE: CSSProperties = {
   borderColor: "var(--accent)",
   boxShadow:
@@ -126,7 +149,13 @@ export function InvestorCard({
               <div className="flex shrink-0 gap-1 pr-6">
                 <PreviewNeedsReassignmentBadge name={i.investor_name} domain="investor" size="xs" />
                 {i.investor_type && (
-                  <Badge variant="secondary" className="rounded-full px-1.5 py-0 text-[10px]">
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "rounded-full px-1.5 py-0 text-[10px]",
+                      getInvestorTypeStyle(i.investor_type),
+                    )}
+                  >
                     {i.investor_type}
                   </Badge>
                 )}
