@@ -82,6 +82,7 @@ export function StartupDetailPanel({
   onClose,
   myStartupsReturnSearch,
   returnSearch,
+  onSelectInvestor,
 }: {
   id: string;
   showEdit?: boolean;
@@ -121,6 +122,8 @@ export function StartupDetailPanel({
     page?: number;
     fav?: boolean;
   };
+  /** When provided, investor chips open an in-place investor panel instead of navigating. */
+  onSelectInvestor?: (id: string) => void;
 }) {
   const isMyWorkspace = workspace === "my-startups";
   const directoryReturnSearch = returnSearch;
@@ -629,10 +632,11 @@ export function StartupDetailPanel({
             {s.investors.map((i) => (
               <CompanyEntityPill
                 key={i.id}
-                to="/investors/$id"
+                to={onSelectInvestor ? undefined : "/investors/$id"}
                 id={i.investor_id}
                 name={i.investor_name}
                 logoUrl={i.logo_signed_url}
+                onSelect={onSelectInvestor}
               />
             ))}
           </div>

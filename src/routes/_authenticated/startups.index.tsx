@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Search, Rocket, RefreshCw, X, Star } from "lucide-react";
+import { Plus, Search, Rocket, RefreshCw, X, Star, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { StartupListItem } from "@/components/startups/startup-list-item";
@@ -17,6 +17,7 @@ import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
 import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favorite-list-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
+import { InvestorDetailPanel } from "@/components/investors/investor-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
@@ -387,39 +388,75 @@ function StartupPanelModalBody({
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const visible = hovered || focused;
+  const [stack, setStack] = useState<Array<{ kind: "investor"; id: string }>>([]);
+
+  // Reset the drill-down stack whenever the root startup changes.
+  useEffect(() => {
+    setStack([]);
+  }, [modalId]);
+
+  const current = stack[stack.length - 1];
+  const push = (entry: { kind: "investor"; id: string }) =>
+    setStack((prev) => [...prev, entry]);
+
   return (
     <div
       className="relative flex flex-1 flex-col overflow-hidden"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Dedicated close zone above the header action row */}
+      {/* Close/back zone above the header action row */}
       <div className="relative shrink-0 h-10">
-        <DialogClose
+        {current && (
+          <button
+            type="button"
+            onClick={() => setStack((prev) => prev.slice(0, -1))}
+            className="absolute left-4 top-2 z-20 inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+        )}
+        <button
+          type="button"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          aria-label="Close"
+          aria-label={current ? "Back to startup information panel" : "Close"}
+          onClick={() => {
+            if (current) {
+              setStack((prev) => prev.slice(0, -1));
+            } else {
+              onClose();
+            }
+          }}
           className={cn(
             "absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             visible ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
         >
           <X className="h-4 w-4" />
-        </DialogClose>
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
-        {modalId && (
-          <StartupDetailPanel
-            id={modalId}
+        {current ? (
+          <InvestorDetailPanel
+            id={current.id}
             showEdit={false}
             compact
-            onClose={onClose}
-            returnSearch={returnSearch}
           />
+        ) : (
+          modalId && (
+            <StartupDetailPanel
+              id={modalId}
+              showEdit={false}
+              compact
+              onClose={onClose}
+              returnSearch={returnSearch}
+              onSelectInvestor={(iid) => push({ kind: "investor", id: iid })}
+            />
+          )
         )}
       </div>
-
-
     </div>
   );
 }
