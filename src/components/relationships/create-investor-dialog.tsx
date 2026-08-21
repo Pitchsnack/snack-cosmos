@@ -199,6 +199,28 @@ export function CreateInvestorDialog({
               autoFocus
             />
           </div>
+          <EditableUrlField
+            label="Company URL (optional)"
+            value={websiteUrl}
+            onChange={setWebsiteUrl}
+            onCommit={(url) => void websiteDup.check(url)}
+            placeholder="https://example.com"
+          />
+          <LogoSlot value={logoSlot} onChange={(s) => setLogoSlot(s)} />
+          <div className="space-y-1.5">
+            <Label htmlFor="create-investor-desc">
+              Short description{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Textarea
+              id="create-investor-desc"
+              rows={3}
+              maxLength={500}
+              placeholder="One or two sentences about the investor"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
+            />
+          </div>
           {investorDefaults && (
             <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-2.5">
               <Checkbox
