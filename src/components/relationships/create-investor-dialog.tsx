@@ -140,15 +140,33 @@ export function CreateInvestorDialog({
   const createM = useMutation({
     mutationFn: async () => {
       assertNoFixtureIds([tenantId, agentId, aiAgentId]);
-      const res = await create({
+      const res = (await create({
         data: {
           tenantId,
           investorName: name.trim(),
+          websiteUrl: websiteUrl.trim() || null,
+          shortDescription: shortDescription.trim() || null,
           owningAgentUserId: agentId,
           owningAiAgentId: aiAgentId,
         },
-      });
-      return res as { id: string };
+      })) as { id: string };
+
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop()?.toLowerCase() ?? "png";
+        const { path, token } = await getUploadUrl({
+          data: { tenantId, investorId: res.id, kind: "logo", ext },
+        });
+        const { error } = await supabase.storage
+          .from("startup-media")
+          .uploadToSignedUrl(path, token, logoFile, {
+            contentType: logoFile.type || "image/png",
+            upsert: true,
+          });
+        if (error) throw new Error("Logo upload failed: " + error.message);
+        await patchInvestor({ data: { id: res.id, logoPath: path } });
+      }
+
+      return res;
     },
     onSuccess: (res) => {
       toast.success(`Investor "${name.trim()}" created`);
