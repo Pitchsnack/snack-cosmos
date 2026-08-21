@@ -837,3 +837,89 @@ export const getStartupSignedUrl = createServerFn({ method: "POST" })
     const url = await signPath(context.supabase, data.path);
     return { url };
   });
+
+/* ------------------------ Startup Investors page ------------------------- */
+
+export interface StartupInvestorItem {
+  id: string;
+  investor_name: string;
+  logo_signed_url: string | null;
+  investor_type: string | null;
+  country: string | null;
+  short_description: string | null;
+  website_url: string | null;
+  preferred_stages: string[];
+}
+
+/** Full relationship data for the Startup Investors page. */
+export const getStartupInvestors = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+
+    const { data: row, error } = await supabase
+      .from("startups")
+      .select("id, startup_name, logo_url, headquarters, city, industry, investment_stage, short_description, status, visibility")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Not found");
+
+    const { data: linkRows } = await supabase
+      .from("startup_investors")
+      .select(
+        "investors:investor_id(id, investor_name, logo_url, investor_type, country, short_description, website_url, preferred_stages)",
+      )
+      .eq("startup_id", data.id);
+
+    type IRaw = {
+      id: string; investor_name: string; logo_url: string | null; investor_type: string | null;
+      country: string | null; short_description: string | null; website_url: string | null;
+      preferred_stages: string[] | null;
+    };
+    const raw = ((linkRows ?? []) as unknown as Array<{ investors: IRaw | null }>)
+      .map((r) => r.investors)
+      .filter((v): v is IRaw => !!v);
+
+    const signed = await signMany(
+      supabase,
+      [(row as { logo_url: string | null }).logo_url, ...raw.map((i) => i.logo_url)].filter(
+        (p): p is string => !!p,
+      ),
+    );
+
+    const investors: StartupInvestorItem[] = raw
+      .map((i) => ({
+        id: i.id,
+        investor_name: i.investor_name,
+        logo_signed_url: i.logo_url ? (signed[i.logo_url] ?? null) : null,
+        investor_type: i.investor_type,
+        country: i.country,
+        short_description: i.short_description,
+        website_url: i.website_url,
+        preferred_stages: i.preferred_stages ?? [],
+      }))
+      .sort((a, b) => a.investor_name.localeCompare(b.investor_name));
+
+    const r = row as unknown as {
+      id: string; startup_name: string; logo_url: string | null; headquarters: string | null;
+      city: string | null; industry: string[] | null; investment_stage: string | null;
+      short_description: string | null; status: string | null; visibility: string | null;
+    };
+
+    return {
+      startup: {
+        id: r.id,
+        startup_name: r.startup_name,
+        logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
+        country: r.headquarters || r.city || null,
+        industry: r.industry ?? [],
+        investment_stage: r.investment_stage,
+        short_description: r.short_description,
+        status: r.status,
+        visibility: r.visibility,
+      },
+      investors,
+    };
+  });
