@@ -10,6 +10,7 @@ import {
   Globe2,
   Hash,
   Info,
+  PieChart,
   Layers,
   Loader2,
   Maximize2,
@@ -477,7 +478,7 @@ function InvestorPortfolioPage() {
 
         {/* Sidebar */}
         <aside className="space-y-4">
-          <SidebarCard title="Portfolio summary">
+          <SidebarCard title="Portfolio Summary" icon={<PieChart className="h-4 w-4 text-link" strokeWidth={2} />}>
             <SummaryRow
               label="Total startups"
               value={summary.total}
@@ -523,7 +524,7 @@ function InvestorPortfolioPage() {
           </SidebarCard>
 
           {summary.allCountries.length > 0 && (
-            <SidebarCard title="Top countries / regions">
+            <SidebarCard title="Top Countries / Regions">
               {topCountries.map(([c, n]) => (
                 <div key={c} className="py-1.5">
                   <div className="flex items-center justify-between text-sm">
@@ -550,7 +551,7 @@ function InvestorPortfolioPage() {
             </SidebarCard>
           )}
 
-          <SidebarCard title="Quick group by">
+          <SidebarCard title="Quick Group By">
             <div className="flex flex-col gap-1">
               {GROUP_OPTIONS.map((g) => {
                 const Icon = g.icon;
