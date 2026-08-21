@@ -78,10 +78,12 @@ export function ChipRow({
   items,
   expanded,
   onExpand,
+  className,
 }: {
   items: ChipItem[];
   expanded: boolean;
   onExpand: () => void;
+  className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(items.length);
@@ -123,7 +125,7 @@ export function ChipRow({
 
   if (expanded) {
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className={cn("flex flex-wrap gap-2", className)}>
         {items.map((i) => (
           <StartupChip key={i.id} item={i} />
         ))}
@@ -133,7 +135,7 @@ export function ChipRow({
 
   const hidden = items.length - visible;
   return (
-    <div className="relative">
+    <div className={cn("relative", className)}>
       {/* measuring layer: full list, no wrap, invisible */}
       <div
         ref={containerRef}
