@@ -84,12 +84,17 @@ export function InvestorDetailPanel({
   compact = false,
   onClose,
   directorySearch,
+  onSelectStartup,
+  onSelectInvestor,
 }: {
   id: string;
   showEdit?: boolean;
   compact?: boolean;
   onClose?: () => void;
   directorySearch?: InvestorDirectorySearch;
+  /** When provided, portfolio chips open in-place instead of navigating away. */
+  onSelectStartup?: (id: string) => void;
+  onSelectInvestor?: (id: string) => void;
 }) {
   const { data, isLoading, error } = useInvestor(id);
   const connectionState = useConnectionState(id);
