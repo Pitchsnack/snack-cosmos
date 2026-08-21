@@ -443,8 +443,6 @@ function StartupPanelModalBody({
             id={current.id}
             showEdit={false}
             compact
-            onSelectStartup={() => { /* startup-in-investor drilling not supported here */ }}
-            onSelectInvestor={() => { /* investor-in-investor drilling not supported here */ }}
           />
         ) : (
           modalId && (
