@@ -10,6 +10,7 @@ import {
   Globe2,
   Hash,
   Info,
+  PieChart,
   Layers,
   Loader2,
   Maximize2,
@@ -211,8 +212,10 @@ function InvestorPortfolioPage() {
   const maxCountry = summary.allCountries[0]?.[1] ?? 0;
 
   return (
-    <div className="space-y-5">
+    <div className="-mx-2 my-6">
+      <div className="mx-auto max-w-[1280px] space-y-5 rounded-2xl border border-[#E8EAED] bg-card p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <nav className="flex items-center gap-1 text-xs text-muted-foreground">
+
         <Link to="/investors" className="hover:text-foreground">
           Investors
         </Link>
@@ -248,8 +251,12 @@ function InvestorPortfolioPage() {
         </Button>
       </header>
 
+      {/* Section heading */}
+      <h2 className="!mb-5 text-[22px] font-semibold tracking-tight">Portfolio</h2>
+
       {/* Relationship tabs */}
       <div className="flex flex-wrap gap-2">
+
         {(
           [
             { key: "startups", label: `Portfolio Startups (${startups.length})` },
@@ -408,7 +415,7 @@ function InvestorPortfolioPage() {
                     return (
                       <section
                         key={key}
-                        className="rounded-lg border border-border bg-card px-5 py-2 shadow-card"
+                        className="rounded-xl border border-[#EEF0F3] bg-card px-5 py-[7px]"
                       >
                         <GroupCardHeader
                           title={key}
@@ -417,6 +424,7 @@ function InvestorPortfolioPage() {
                           onToggle={() => setOpen((p) => ({ ...p, [key]: !p[key] }))}
                         />
                         <div className="mt-2">
+
                           <ChipRow
                             items={items}
                             expanded={isOpen}
@@ -470,7 +478,7 @@ function InvestorPortfolioPage() {
 
         {/* Sidebar */}
         <aside className="space-y-4">
-          <SidebarCard title="Portfolio summary">
+          <SidebarCard title="Portfolio Summary" icon={<PieChart className="h-4 w-4 text-link" strokeWidth={2} />}>
             <SummaryRow
               label="Total startups"
               value={summary.total}
@@ -516,7 +524,7 @@ function InvestorPortfolioPage() {
           </SidebarCard>
 
           {summary.allCountries.length > 0 && (
-            <SidebarCard title="Top countries / regions">
+            <SidebarCard title="Top Countries / Regions">
               {topCountries.map(([c, n]) => (
                 <div key={c} className="py-1.5">
                   <div className="flex items-center justify-between text-sm">
@@ -543,7 +551,7 @@ function InvestorPortfolioPage() {
             </SidebarCard>
           )}
 
-          <SidebarCard title="Quick group by">
+          <SidebarCard title="Quick Group By">
             <div className="flex flex-col gap-1">
               {GROUP_OPTIONS.map((g) => {
                 const Icon = g.icon;
@@ -575,9 +583,11 @@ function InvestorPortfolioPage() {
           </SidebarCard>
         </aside>
       </div>
+      </div>
     </div>
   );
 }
+
 
 function SummaryRow({
   label,
