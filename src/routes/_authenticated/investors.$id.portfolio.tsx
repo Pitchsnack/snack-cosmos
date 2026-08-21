@@ -2,22 +2,40 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Building2, Loader2, PieChart, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  ChevronDown,
+  ChevronRight,
+  Globe2,
+  Hash,
+  Info,
+  Layers,
+  Loader2,
+  Maximize2,
+  Minus,
+  Search,
+  ShoppingCart,
+  SlidersHorizontal,
+  Tags,
+  TrendingUp,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { FilterSelect } from "@/components/entity-control/control-toolbar";
+import { EntityLogo, EntityRow, SidebarCard } from "@/components/relationships/portfolio-ui";
 import {
-  EntityLogo,
-  EntityRow,
-  GroupHeader,
-  RankedBar,
-  SidebarCard,
-  StatRow,
-} from "@/components/relationships/portfolio-ui";
+  ChipRow,
+  GroupCardHeader,
+  OTHER_GROUP,
+  type ChipItem,
+} from "@/components/relationships/portfolio-chips";
 import { getInvestorPortfolio } from "@/lib/investors.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { isUuid } from "@/lib/uuid";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/investors/$id/portfolio")({
   head: () => ({
@@ -37,16 +55,17 @@ export const Route = createFileRoute("/_authenticated/investors/$id/portfolio")(
   component: InvestorPortfolioPage,
 });
 
-const PREVIEW_COUNT = 5;
+const GROUPS_PER_PAGE = 6;
 
-type GroupKey = "industry" | "product" | "market" | "stage" | "country";
+type GroupKey = "industry" | "keywords" | "product" | "market" | "stage" | "country";
 
-const GROUP_OPTIONS: { value: GroupKey; label: string }[] = [
-  { value: "industry", label: "Industry" },
-  { value: "product", label: "Product & Service Tags" },
-  { value: "market", label: "Market Tags" },
-  { value: "stage", label: "Investment Stage" },
-  { value: "country", label: "Country / Region" },
+const GROUP_OPTIONS: { value: GroupKey; label: string; icon: typeof Layers }[] = [
+  { value: "industry", label: "Industry", icon: Layers },
+  { value: "keywords", label: "Keywords", icon: Hash },
+  { value: "product", label: "Product & Service Tags", icon: Tags },
+  { value: "market", label: "Market Tags", icon: ShoppingCart },
+  { value: "stage", label: "Investment Stage", icon: TrendingUp },
+  { value: "country", label: "Country / Region", icon: Globe2 },
 ];
 
 const EARLY_STAGES = ["Pre-Seed", "Seed", "Series A"];
@@ -67,8 +86,11 @@ function InvestorPortfolioPage() {
   const [industry, setIndustry] = useState<string | undefined>();
   const [stage, setStage] = useState<string | undefined>();
   const [country, setCountry] = useState<string | undefined>();
+  const [stageBand, setStageBand] = useState<"early" | "growth" | undefined>();
   const [sort, setSort] = useState<"az" | "za">("az");
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [groupLimit, setGroupLimit] = useState(GROUPS_PER_PAGE);
+  const [showAllCountries, setShowAllCountries] = useState(false);
   const [invType, setInvType] = useState<string | undefined>();
   const [invCountry, setInvCountry] = useState<string | undefined>();
 
@@ -83,6 +105,11 @@ function InvestorPortfolioPage() {
       if (industry && !s.industry.includes(industry)) return false;
       if (stage && s.investment_stage !== stage) return false;
       if (country && s.country !== country) return false;
+      if (stageBand) {
+        if (!s.investment_stage) return false;
+        const early = EARLY_STAGES.includes(s.investment_stage);
+        if (stageBand === "early" ? !early : early) return false;
+      }
       return true;
     });
     return list.sort((a, b) =>
@@ -90,7 +117,7 @@ function InvestorPortfolioPage() {
         ? a.startup_name.localeCompare(b.startup_name)
         : b.startup_name.localeCompare(a.startup_name),
     );
-  }, [startups, q, industry, stage, country, sort]);
+  }, [startups, q, industry, stage, country, stageBand, sort]);
 
   const filteredInvestors = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -108,23 +135,27 @@ function InvestorPortfolioPage() {
     );
   }, [investors, q, invType, invCountry, sort]);
 
+  /** Each startup lands in exactly one group — its primary value for the dimension. */
   const groups = useMemo(() => {
-    const map = new Map<string, typeof filteredStartups>();
+    const map = new Map<string, ChipItem[]>();
     for (const s of filteredStartups) {
       let keys: string[] = [];
       if (groupBy === "industry") keys = s.industry;
       else if (groupBy === "product") keys = s.product_tags;
       else if (groupBy === "market") keys = s.market_tags;
+      else if (groupBy === "keywords") keys = [...s.product_tags, ...s.market_tags];
       else if (groupBy === "stage") keys = s.investment_stage ? [s.investment_stage] : [];
       else keys = s.country ? [s.country] : [];
-      if (keys.length === 0) keys = ["Other"];
-      for (const k of keys) {
-        const arr = map.get(k) ?? [];
-        arr.push(s);
-        map.set(k, arr);
-      }
+      const key = keys.find((k) => !!k?.trim()) ?? OTHER_GROUP;
+      const arr = map.get(key) ?? [];
+      arr.push({ id: s.id, name: s.startup_name, logoUrl: s.logo_signed_url });
+      map.set(key, arr);
     }
-    return [...map.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    return [...map.entries()].sort((a, b) => {
+      if (a[0] === OTHER_GROUP) return 1;
+      if (b[0] === OTHER_GROUP) return -1;
+      return b[1].length - a[1].length || a[0].localeCompare(b[0]);
+    });
   }, [filteredStartups, groupBy]);
 
   const facets = useMemo(() => {
@@ -153,9 +184,17 @@ function InvestorPortfolioPage() {
       countries: countries.size,
       earlyPct: staged.length ? Math.round((early / staged.length) * 100) : 0,
       growthPct: staged.length ? 100 - Math.round((early / staged.length) * 100) : 0,
-      topCountries: [...countries.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5),
+      allCountries: [...countries.entries()].sort((a, b) => b[1] - a[1]),
     };
   }, [startups]);
+
+  const resetFilters = () => {
+    setIndustry(undefined);
+    setStage(undefined);
+    setCountry(undefined);
+    setStageBand(undefined);
+    setQ("");
+  };
 
   if (!valid) return <p className="text-sm text-destructive">Invalid investor id.</p>;
   if (isLoading)
@@ -164,10 +203,12 @@ function InvestorPortfolioPage() {
         <Loader2 className="h-5 w-5 animate-spin" /> <span className="text-sm">Loading portfolio…</span>
       </div>
     );
-  if (error || !data)
-    return <p className="text-sm text-destructive">Failed to load portfolio.</p>;
+  if (error || !data) return <p className="text-sm text-destructive">Failed to load portfolio.</p>;
 
   const inv = data.investor;
+  const visibleGroups = groups.slice(0, groupLimit);
+  const topCountries = showAllCountries ? summary.allCountries : summary.allCountries.slice(0, 5);
+  const maxCountry = summary.allCountries[0]?.[1] ?? 0;
 
   return (
     <div className="space-y-5">
@@ -219,12 +260,12 @@ function InvestorPortfolioPage() {
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={
-              "rounded-lg border px-3 py-1.5 text-sm font-medium transition " +
-              (tab === t.key
-                ? "border-accent/40 bg-accent/10 text-accent"
-                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground")
-            }
+            className={cn(
+              "rounded-lg border px-3 py-1.5 text-sm font-medium transition",
+              tab === t.key
+                ? "border-link/40 bg-link/10 text-link"
+                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
           >
             {t.label}
           </button>
@@ -233,16 +274,18 @@ function InvestorPortfolioPage() {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="space-y-4">
-          {/* Intro summary */}
-          <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 shadow-card">
-            <PieChart className="mt-0.5 h-5 w-5 shrink-0 text-accent" strokeWidth={1.75} />
-            <p className="text-sm text-muted-foreground">
+          {/* Info banner */}
+          <div className="flex items-start gap-3 rounded-lg border border-link/20 bg-link/5 p-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-link/10 text-link">
+              <BarChart3 className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <p className="text-[13px] leading-relaxed text-foreground/80">
               {tab === "startups" ? (
                 <>
                   {inv.investor_name} is connected to {startups.length} portfolio startup
                   {startups.length === 1 ? "" : "s"}
                   {summary.industries > 0 && <> across {summary.industries} industries</>}. Group,
-                  search and filter to explore the portfolio instead of scrolling one long list.
+                  search and filter to explore the portfolio.
                 </>
               ) : (
                 <>
@@ -253,9 +296,9 @@ function InvestorPortfolioPage() {
             </p>
           </div>
 
-          {/* Control bar */}
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-card">
-            <div className="relative min-w-[220px] flex-1">
+          {/* Toolbar — row 1 */}
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-[200px] flex-1">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={q}
@@ -275,7 +318,38 @@ function InvestorPortfolioPage() {
                 />
                 <FilterSelect label="Industry: All" value={industry} options={facets.industries} onChange={setIndustry} />
                 <FilterSelect label="Stage: All" value={stage} options={facets.stages} onChange={setStage} width="w-36" />
-                <FilterSelect label="Country: All" value={country} options={facets.countries} onChange={setCountry} />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 shrink-0">
+                      <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" /> More filters
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-64 space-y-3">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      More filters
+                    </div>
+                    <FilterSelect
+                      label="Country: All"
+                      value={country}
+                      options={facets.countries}
+                      onChange={setCountry}
+                      width="w-full"
+                    />
+                    <FilterSelect
+                      label="Stage band: All"
+                      value={stageBand}
+                      options={[
+                        { value: "early", label: "Early stage" },
+                        { value: "growth", label: "Growth stage" },
+                      ]}
+                      onChange={(v) => setStageBand((v as "early" | "growth") ?? undefined)}
+                      width="w-full"
+                    />
+                    <Button variant="ghost" size="sm" className="w-full" onClick={resetFilters}>
+                      Clear all
+                    </Button>
+                  </PopoverContent>
+                </Popover>
               </>
             ) : (
               <>
@@ -283,158 +357,250 @@ function InvestorPortfolioPage() {
                 <FilterSelect label="Country: All" value={invCountry} options={facets.invCountries} onChange={setInvCountry} />
               </>
             )}
-            <FilterSelect
-              label="Sort: A–Z"
-              value={sort}
-              options={[
-                { value: "az", label: "Sort: A–Z" },
-                { value: "za", label: "Sort: Z–A" },
-              ]}
-              onChange={(v) => setSort((v as "az" | "za") ?? "az")}
-              width="w-36"
-            />
-            {tab === "startups" && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setOpen(Object.fromEntries(groups.map(([k]) => [k, true])))}
-                >
-                  Expand all
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setOpen({})}>
-                  Collapse all
-                </Button>
-              </div>
-            )}
+          </div>
+
+          {/* Toolbar — row 2 */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              {tab === "startups"
+                ? `${filteredStartups.length} startup${filteredStartups.length === 1 ? "" : "s"}`
+                : `${filteredInvestors.length} investor${filteredInvestors.length === 1 ? "" : "s"}`}
+            </p>
+            <div className="flex items-center gap-2">
+              {tab === "startups" && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    onClick={() => setOpen(Object.fromEntries(groups.map(([k]) => [k, true])))}
+                  >
+                    <Maximize2 className="mr-1.5 h-3.5 w-3.5" /> Expand all
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-9" onClick={() => setOpen({})}>
+                    <Minus className="mr-1.5 h-3.5 w-3.5" /> Collapse all
+                  </Button>
+                </div>
+              )}
+              <FilterSelect
+                label="Sort: A–Z"
+                value={sort}
+                options={[
+                  { value: "az", label: "Sort: A–Z" },
+                  { value: "za", label: "Sort: Z–A" },
+                ]}
+                onChange={(v) => setSort((v as "az" | "za") ?? "az")}
+                width="w-36"
+              />
+            </div>
           </div>
 
           {tab === "startups" ? (
             <>
-              <p className="text-xs text-muted-foreground">
-                {filteredStartups.length} startup{filteredStartups.length === 1 ? "" : "s"}
-              </p>
               {groups.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
                   No startups match the current filters.
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {groups.map(([key, items]) => {
+                  {visibleGroups.map(([key, items]) => {
                     const isOpen = !!open[key];
-                    const visible = isOpen ? items : items.slice(0, PREVIEW_COUNT);
                     return (
-                      <section key={key} className="rounded-lg border border-border bg-card p-4 shadow-card">
-                        <GroupHeader
+                      <section
+                        key={key}
+                        className="rounded-lg border border-border bg-card px-5 py-4 shadow-card"
+                      >
+                        <GroupCardHeader
                           title={key}
                           count={items.length}
-                          open={isOpen}
+                          expanded={isOpen}
                           onToggle={() => setOpen((p) => ({ ...p, [key]: !p[key] }))}
                         />
-                        <div className="mt-3 grid gap-2 md:grid-cols-2">
-                          {visible.map((s) => (
-                            <EntityRow
-                              key={s.id}
-                              to="/startups/$id"
-                              id={s.id}
-                              name={s.startup_name}
-                              logoUrl={s.logo_signed_url}
-                              description={s.short_description}
-                              tags={[s.investment_stage, ...s.industry.slice(0, 2)]}
-                              country={s.country}
-                              websiteUrl={s.website_url}
-                            />
-                          ))}
+                        <div className="mt-3">
+                          <ChipRow
+                            items={items}
+                            expanded={isOpen}
+                            onExpand={() => setOpen((p) => ({ ...p, [key]: true }))}
+                          />
                         </div>
-                        {!isOpen && items.length > PREVIEW_COUNT && (
-                          <button
-                            type="button"
-                            onClick={() => setOpen((p) => ({ ...p, [key]: true }))}
-                            className="mt-3 text-xs font-medium text-accent hover:underline"
-                          >
-                            +{items.length - PREVIEW_COUNT} more in {key}
-                          </button>
-                        )}
                       </section>
                     );
                   })}
+
+                  {groups.length > groupLimit && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setGroupLimit((n) => n + GROUPS_PER_PAGE)}
+                    >
+                      Load more startups
+                      <ChevronDown className="ml-1.5 h-4 w-4" />
+                    </Button>
+                  )}
+
+                  <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                    Classifications are based on startup information and may be updated over time.
+                  </div>
                 </div>
               )}
             </>
+          ) : filteredInvestors.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+              No portfolio investors match the current filters.
+            </div>
           ) : (
-            <>
-              <p className="text-xs text-muted-foreground">
-                {filteredInvestors.length} investor{filteredInvestors.length === 1 ? "" : "s"}
-              </p>
-              {filteredInvestors.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-                  No portfolio investors match the current filters.
-                </div>
-              ) : (
-                <div className="grid gap-2 md:grid-cols-2">
-                  {filteredInvestors.map((i) => (
-                    <EntityRow
-                      key={i.id}
-                      to="/investors/$id"
-                      id={i.id}
-                      name={i.investor_name}
-                      logoUrl={i.logo_signed_url}
-                      description={i.short_description}
-                      tags={[i.investor_type]}
-                      country={i.country}
-                      websiteUrl={i.website_url}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
+            <div className="grid gap-2 md:grid-cols-2">
+              {filteredInvestors.map((i) => (
+                <EntityRow
+                  key={i.id}
+                  to="/investors/$id"
+                  id={i.id}
+                  name={i.investor_name}
+                  logoUrl={i.logo_signed_url}
+                  description={i.short_description}
+                  tags={[i.investor_type]}
+                  country={i.country}
+                  websiteUrl={i.website_url}
+                />
+              ))}
+            </div>
           )}
         </div>
 
         {/* Sidebar */}
         <aside className="space-y-4">
           <SidebarCard title="Portfolio summary">
-            <StatRow label="Total startups" value={summary.total} />
-            <StatRow label="Portfolio investors" value={investors.length} />
-            <StatRow label="Industries" value={summary.industries} />
-            <StatRow label="Countries / regions" value={summary.countries} />
-            <StatRow label="Early stage" value={`${summary.earlyPct}%`} />
-            <StatRow label="Growth stage" value={`${summary.growthPct}%`} />
+            <SummaryRow
+              label="Total startups"
+              value={summary.total}
+              onClick={() => {
+                setTab("startups");
+                resetFilters();
+              }}
+            />
+            <SummaryRow
+              label="Industries"
+              value={summary.industries}
+              onClick={() => {
+                setTab("startups");
+                setGroupBy("industry");
+              }}
+            />
+            <SummaryRow
+              label="Countries / regions"
+              value={summary.countries}
+              onClick={() => {
+                setTab("startups");
+                setGroupBy("country");
+              }}
+            />
+            <SummaryRow
+              label="Early stage"
+              value={`${summary.earlyPct}%`}
+              accent
+              onClick={() => {
+                setTab("startups");
+                setStageBand("early");
+              }}
+            />
+            <SummaryRow
+              label="Growth stage"
+              value={`${summary.growthPct}%`}
+              accent
+              onClick={() => {
+                setTab("startups");
+                setStageBand("growth");
+              }}
+            />
           </SidebarCard>
 
-          {summary.topCountries.length > 0 && (
+          {summary.allCountries.length > 0 && (
             <SidebarCard title="Top countries / regions">
-              {summary.topCountries.map(([c, n]) => (
-                <RankedBar key={c} label={c} value={n} max={summary.topCountries[0][1]} />
+              {topCountries.map(([c, n]) => (
+                <div key={c} className="py-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="truncate">{c}</span>
+                    <span className="tabular-nums text-muted-foreground">{n}</span>
+                  </div>
+                  <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-link"
+                      style={{ width: `${maxCountry > 0 ? Math.max(6, (n / maxCountry) * 100) : 0}%` }}
+                    />
+                  </div>
+                </div>
               ))}
+              {summary.allCountries.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllCountries((v) => !v)}
+                  className="mt-2 text-xs font-medium text-link hover:underline"
+                >
+                  {showAllCountries ? "Show less" : `+${summary.allCountries.length - 5} more`}
+                </button>
+              )}
             </SidebarCard>
           )}
 
           <SidebarCard title="Quick group by">
             <div className="flex flex-col gap-1">
-              {GROUP_OPTIONS.map((g) => (
-                <button
-                  key={g.value}
-                  type="button"
-                  onClick={() => {
-                    setTab("startups");
-                    setGroupBy(g.value);
-                  }}
-                  className={
-                    "flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition " +
-                    (groupBy === g.value
-                      ? "bg-accent/10 font-medium text-accent"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground")
-                  }
-                >
-                  <Building2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  {g.label}
-                </button>
-              ))}
+              {GROUP_OPTIONS.map((g) => {
+                const Icon = g.icon;
+                const active = groupBy === g.value;
+                return (
+                  <button
+                    key={g.value}
+                    type="button"
+                    onClick={() => {
+                      setTab("startups");
+                      setGroupBy(g.value);
+                    }}
+                    className={cn(
+                      "flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition",
+                      active
+                        ? "bg-link/10 font-medium text-link"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      {g.label}
+                    </span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                );
+              })}
             </div>
           </SidebarCard>
         </aside>
       </div>
     </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  accent,
+  onClick,
+}: {
+  label: string;
+  value: React.ReactNode;
+  accent?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-sm transition hover:bg-muted"
+    >
+      <span className="text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1">
+        <span className={cn("font-medium tabular-nums", accent && "text-link")}>{value}</span>
+        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+      </span>
+    </button>
   );
 }
