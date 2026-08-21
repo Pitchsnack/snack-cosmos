@@ -301,16 +301,23 @@ export function InvestorForm({ investor, controlReturn }: Props) {
 
   const [status, setStatus] = useState(investor?.status ?? "Prospect");
   const [visibility, setVisibility] = useState(investor?.visibility ?? "Tenant");
-  const [owningAgentUserId, setOwningAgent] = useState("");
-  const [owningAiAgentId, setOwningAi] = useState("");
+  const [owningAgentUserId, setOwningAgent] = useState(
+    investor?.investor_ownership?.[0]?.owning_agent_user_id ?? "",
+  );
+  const [owningAiAgentId, setOwningAi] = useState(
+    investor?.investor_ai_ownership?.[0]?.owning_ai_agent_id ?? "",
+  );
 
-  // Clear ownership when the tenant changes or its active-workspace match is
-  // lost — CREATE mode only. Edit mode preserves existing ownership values.
+  // Clear ownership whenever the selected tenant moves away from the tenant the
+  // current owner selections belong to (create: any change; edit: only when the
+  // tenant differs from the investor's stored tenant).
+  const ownershipTenantRef = useRef<string>(investor?.tenant_id ?? "");
   useEffect(() => {
-    if (isEdit) return;
+    if (tenantId === ownershipTenantRef.current) return;
+    ownershipTenantRef.current = tenantId;
     setOwningAgent("");
     setOwningAi("");
-  }, [isEdit, tenantId, tenantMatchesActive]);
+  }, [tenantId]);
 
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
