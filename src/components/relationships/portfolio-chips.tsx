@@ -78,10 +78,12 @@ export function ChipRow({
   items,
   expanded,
   onExpand,
+  className,
 }: {
   items: ChipItem[];
   expanded: boolean;
   onExpand: () => void;
+  className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(items.length);
