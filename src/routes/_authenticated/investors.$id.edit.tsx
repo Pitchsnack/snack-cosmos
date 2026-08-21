@@ -43,7 +43,7 @@ function EditInvestorPage() {
             <ArrowLeft className="h-4 w-4" /> Back to Data Intelligence
           </Link>
         ) : (
-          <Link to="/investors/$id" params={{ id }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <Link to="/investors/$id" params={{ id }} search={{ from: "edit" }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to investor
           </Link>
         )}
