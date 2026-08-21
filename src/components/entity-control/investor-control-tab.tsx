@@ -207,13 +207,13 @@ export function InvestorControlTab() {
                   </Link>
                 </Button>
                 {r.directory_state === "published" ? (
-                  <Button size="sm" variant="outline" onClick={() => setState.mutate({ entity: "investor", ids: [r.id], state: "unpublished" })}>
+                  <Button size="sm" variant="outline" className="w-[104px]" onClick={() => setState.mutate({ entity: "investor", ids: [r.id], state: "unpublished" })}>
                     Unpublish
                   </Button>
                 ) : (
                   <Button
                     size="sm"
-                    className="bg-accent text-accent-foreground hover:bg-accent/90"
+                    className="w-[104px] bg-accent text-accent-foreground hover:bg-accent/90"
                     onClick={() => setState.mutate({ entity: "investor", ids: [r.id], state: "published" })}
                   >
                     Publish
