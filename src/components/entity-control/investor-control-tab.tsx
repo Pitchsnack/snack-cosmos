@@ -226,8 +226,7 @@ export function InvestorControlTab() {
                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => setPendingDelete([r.id])}
                 >
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                  Delete
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>

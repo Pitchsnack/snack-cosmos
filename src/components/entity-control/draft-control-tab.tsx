@@ -253,8 +253,7 @@ export function DraftControlTab() {
                     className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => setPendingDelete([d.draft_ref])}
                   >
-                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                    Delete
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
