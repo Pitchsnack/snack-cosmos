@@ -511,7 +511,7 @@ export function InvestorDetailPanel({
           {portfolioInvestors.length > 0 && (
             <Section
               icon={Briefcase}
-              title={`Portfolio investors (${portfolioInvestors.length})`}
+              title={`PORTFOLIO PE/VC (${portfolioInvestors.length})`}
               right={
                 <Link
                   to="/investors/$id/portfolio"
@@ -519,7 +519,7 @@ export function InvestorDetailPanel({
                   search={portfolioSearch}
                   className="text-xs font-medium text-accent hover:underline"
                 >
-                  View Investors →
+                  View Alternative Investment →
                 </Link>
               }
             >
