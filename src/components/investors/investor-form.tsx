@@ -381,15 +381,26 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
-    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive,
   });
   const aisQ = useQuery({
     queryKey: ["assignable-ai", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
-    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive,
   });
-  const humanOptions = tenantMatchesActive ? (humansQ.data ?? []) : [];
-  const aiOptions = tenantMatchesActive ? (aisQ.data ?? []) : [];
+  type OwnerOption = { id: string; first_name?: string | null; last_name?: string | null; email: string };
+  const withCurrent = (list: OwnerOption[], currentId: string): OwnerOption[] =>
+    currentId && !list.some((u) => u.id === currentId)
+      ? [...list, { id: currentId, first_name: null, last_name: null, email: "Currently assigned" }]
+      : list;
+  const humanOptions = withCurrent(
+    tenantMatchesActive ? ((humansQ.data ?? []) as OwnerOption[]) : [],
+    owningAgentUserId,
+  );
+  const aiOptions = withCurrent(
+    tenantMatchesActive ? ((aisQ.data ?? []) as OwnerOption[]) : [],
+    owningAiAgentId,
+  );
   const noAi = tenantMatchesActive && !aisQ.isLoading && aiOptions.length === 0;
 
   const toggle = (arr: string[], v: string) =>
