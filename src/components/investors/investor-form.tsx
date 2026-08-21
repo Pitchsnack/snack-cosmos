@@ -132,6 +132,13 @@ function Pill({
 /** Trigger label for an ownership select. Radix `SelectValue` falls back to the
  *  placeholder when the value has no mounted item yet (options load async), so
  *  the label is resolved explicitly from the option list. */
+/** PostgREST returns a to-one embed as an object and a to-many embed as an
+ *  array; normalize both to the first record. */
+function firstEmbed<T>(v: T[] | T | null | undefined): T | undefined {
+  if (!v) return undefined;
+  return Array.isArray(v) ? v[0] : v;
+}
+
 function ownerLabel(
   options: Array<{ id: string; first_name?: string | null; last_name?: string | null; email: string }>,
   id: string,
@@ -172,8 +179,14 @@ export interface InvestorEditModel {
   media: Array<{ slot: 1 | 2 | 3; image_path: string; image_signed_url: string | null }>;
   linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url?: string | null }>;
   portfolio_investors?: Array<{ id: string; investor_name: string; logo_signed_url?: string | null }>;
-  investor_ownership?: Array<{ owning_agent_user_id: string }> | null;
-  investor_ai_ownership?: Array<{ owning_ai_agent_id: string }> | null;
+  investor_ownership?:
+    | Array<{ owning_agent_user_id: string }>
+    | { owning_agent_user_id: string }
+    | null;
+  investor_ai_ownership?:
+    | Array<{ owning_ai_agent_id: string }>
+    | { owning_ai_agent_id: string }
+    | null;
 }
 
 function hydrateMedia(investor?: InvestorEditModel): EntityMediaState {
@@ -315,10 +328,10 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [status, setStatus] = useState(investor?.status ?? "Prospect");
   const [visibility, setVisibility] = useState(investor?.visibility ?? "Tenant");
   const [owningAgentUserId, setOwningAgent] = useState(
-    investor?.investor_ownership?.[0]?.owning_agent_user_id ?? "",
+    firstEmbed(investor?.investor_ownership)?.owning_agent_user_id ?? "",
   );
   const [owningAiAgentId, setOwningAi] = useState(
-    investor?.investor_ai_ownership?.[0]?.owning_ai_agent_id ?? "",
+    firstEmbed(investor?.investor_ai_ownership)?.owning_ai_agent_id ?? "",
   );
 
   // Clear ownership whenever the selected tenant moves away from the tenant the
@@ -1448,8 +1461,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label data-dbg={JSON.stringify({v:owningAgentUserId,own:investor?.investor_ownership,keys:investor?Object.keys(investor).filter(k=>k.includes("owner")||k.includes("ownership")):null})}>Owning Agent <span className="text-destructive">*</span></Label>
-              <Select
+              <Label              <Select
                 key={`owner-${humanOptions.length}`}
                 value={owningAgentUserId}
                 onValueChange={setOwningAgent}
