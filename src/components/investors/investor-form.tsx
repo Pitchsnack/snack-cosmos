@@ -551,6 +551,9 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           media: resolvedMedia,
           startupIds: linkedStartupIds,
           portfolioInvestorIds: linkedPortfolioInvestorIds,
+          tenantId: tenantId || undefined,
+          owningAgentUserId: owningAgentUserId || undefined,
+          owningAiAgentId: owningAiAgentId || undefined,
           ...buildProfile(),
         },
       });
@@ -569,7 +572,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   });
 
   const canSubmit = isEdit
-    ? !!displayName
+    ? !!(displayName && owningAgentUserId && owningAiAgentId)
     : !!(
         tenantMatchesActive &&
         displayName &&
