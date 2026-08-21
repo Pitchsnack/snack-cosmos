@@ -36,6 +36,9 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-link: var(--link);
+  --color-link-foreground: var(--link-foreground);
+
 
   --color-sidebar: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -87,6 +90,8 @@
   --warning-foreground: hsl(225 55% 12%);
   --info: hsl(210 80% 55%);
   --info-foreground: hsl(0 0% 100%);
+  --link: hsl(221 83% 53%);
+  --link-foreground: hsl(0 0% 100%);
 
   --sidebar-background: hsl(225 30% 12%);
   --sidebar-foreground: hsl(220 20% 90%);
@@ -149,6 +154,8 @@
   --muted-foreground: hsl(220 10% 55%);
   --accent: hsl(38 92% 55%);
   --accent-foreground: hsl(225 55% 12%);
+  --link: hsl(217 91% 65%);
+  --link-foreground: hsl(225 55% 12%);
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(0 0% 100%);
   --border: hsl(225 20% 20%);
