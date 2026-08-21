@@ -632,10 +632,11 @@ export function StartupDetailPanel({
             {s.investors.map((i) => (
               <CompanyEntityPill
                 key={i.id}
-                to="/investors/$id"
+                to={onSelectInvestor ? undefined : "/investors/$id"}
                 id={i.investor_id}
                 name={i.investor_name}
                 logoUrl={i.logo_signed_url}
+                onSelect={onSelectInvestor}
               />
             ))}
           </div>
