@@ -389,40 +389,89 @@ export function InvestorDetailPanel({
             </Section>
           )}
 
-          {/* Investment focus */}
+          {/* Investment focus + Preferred stages */}
           {(() => {
             const focus = Array.isArray(i.investment_focus)
               ? i.investment_focus.filter(Boolean)
               : typeof i.investment_focus === "string" && i.investment_focus.trim()
                 ? [i.investment_focus.trim()]
                 : [];
-            if (!focus.length) return null;
+            const stages = i.preferred_stages ?? [];
+            const hasFocus = focus.length > 0;
+            const hasStages = stages.length > 0;
+            if (!hasFocus && !hasStages) return null;
+
+            if (hasFocus && hasStages) {
+              return (
+                <PairedSection
+                  left={{
+                    icon: Layers,
+                    title: "Investment focus",
+                    content: <ChipRow tags={focus} tone="primary" />,
+                  }}
+                  right={{
+                    icon: Layers,
+                    title: "Preferred stages",
+                    content: <ChipRow tags={stages} tone="primary" />,
+                  }}
+                />
+              );
+            }
+
+            if (hasFocus) {
+              return (
+                <Section icon={Layers} title="Investment focus">
+                  <ChipRow tags={focus} tone="primary" />
+                </Section>
+              );
+            }
+
             return (
-              <Section icon={Layers} title="Investment focus">
-                <ChipRow tags={focus} tone="primary" />
+              <Section icon={Layers} title="Preferred stages">
+                <ChipRow tags={stages} tone="primary" />
               </Section>
             );
           })()}
 
+          {/* Preferred industries + Keywords */}
+          {(() => {
+            const industries = i.preferred_industries ?? [];
+            const keywords = i.keywords ?? [];
+            const hasIndustries = industries.length > 0;
+            const hasKeywords = keywords.length > 0;
+            if (!hasIndustries && !hasKeywords) return null;
 
+            if (hasIndustries && hasKeywords) {
+              return (
+                <PairedSection
+                  left={{
+                    icon: Building2,
+                    title: "Preferred industries",
+                    content: <ChipRow tags={industries} tone="muted" />,
+                  }}
+                  right={{
+                    icon: Tag,
+                    title: "Keywords",
+                    content: <ChipRow tags={keywords} tone="muted" />,
+                  }}
+                />
+              );
+            }
 
-          {i.preferred_stages?.length ? (
-            <Section icon={Layers} title="Preferred stages">
-              <ChipRow tags={i.preferred_stages} tone="primary" />
-            </Section>
-          ) : null}
+            if (hasIndustries) {
+              return (
+                <Section icon={Building2} title="Preferred industries">
+                  <ChipRow tags={industries} tone="muted" />
+                </Section>
+              );
+            }
 
-          {i.preferred_industries?.length ? (
-            <Section icon={Building2} title="Preferred industries">
-              <ChipRow tags={i.preferred_industries} tone="muted" />
-            </Section>
-          ) : null}
-
-          {i.keywords?.length ? (
-            <Section icon={Tag} title="Keywords">
-              <ChipRow tags={i.keywords} tone="muted" />
-            </Section>
-          ) : null}
+            return (
+              <Section icon={Tag} title="Keywords">
+                <ChipRow tags={keywords} tone="muted" />
+              </Section>
+            );
+          })()}
 
           {/* Portfolio startups */}
           <Section
