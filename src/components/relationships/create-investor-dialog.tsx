@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -32,10 +33,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createInvestor } from "@/lib/investors.functions";
+import {
+  createInvestor,
+  updateInvestor,
+  createInvestorMediaUploadUrl,
+} from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
+import { supabase } from "@/integrations/supabase/client";
+import { LogoSlot, EMPTY_SLOT, type SlotState } from "@/components/media/entity-media-editor";
+import { EditableUrlField } from "@/components/ui/editable-url-field";
+import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
+import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 
 interface Props {
   open: boolean;
