@@ -415,7 +415,7 @@ function InvestorPortfolioPage() {
                     return (
                       <section
                         key={key}
-                        className="rounded-xl border border-[#EEF0F3] bg-card px-5 py-[10px]"
+                        className="rounded-xl border border-[#EEF0F3] bg-card px-5 py-2"
                       >
                         <GroupCardHeader
                           title={key}
