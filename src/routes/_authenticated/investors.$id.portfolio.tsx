@@ -276,7 +276,7 @@ function InvestorPortfolioPage() {
         {(
           [
             { key: "startups", label: `Portfolio Startups (${startups.length})` },
-            { key: "investors", label: `Portfolio Investors (${investors.length})` },
+            { key: "investors", label: `Portfolio VC/PE (${investors.length})` },
           ] as const
         ).map((t) => (
           <button
