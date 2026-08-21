@@ -313,6 +313,17 @@ export function CreateInvestorDialog({
             {createM.isPending ? "Creating…" : "Create investor"}
           </Button>
         </DialogFooter>
+        <DuplicateWarningDialog
+          open={websiteDup.open}
+          typedName={websiteDup.typedValue}
+          candidates={websiteDup.candidates}
+          onCancel={websiteDup.close}
+          onLinkExisting={(c) => {
+            websiteDup.close();
+            if (c.id) window.open(`/investors/${c.id}`, "_blank", "noopener,noreferrer");
+          }}
+          onCreatePendingAnyway={websiteDup.close}
+        />
       </DialogContent>
     </Dialog>
   );
