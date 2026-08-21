@@ -50,7 +50,21 @@ export function ChipBody({ name, logoUrl }: { name: string; logoUrl?: string | n
 }
 
 /** Single-line 34px chip: 22px logo + name. Nothing else. */
-export function StartupChip({ item }: { item: ChipItem }) {
+export function StartupChip({
+  item,
+  onSelect,
+}: {
+  item: ChipItem;
+  /** When provided the chip opens an in-page panel instead of navigating. */
+  onSelect?: (id: string) => void;
+}) {
+  if (onSelect) {
+    return (
+      <button type="button" onClick={() => onSelect(item.id)} className={cn(CHIP_CLASS, "text-left")}>
+        <ChipBody name={item.name} logoUrl={item.logoUrl} />
+      </button>
+    );
+  }
   return (
     <Link to="/startups/$id" params={{ id: item.id }} className={CHIP_CLASS}>
       <ChipBody name={item.name} logoUrl={item.logoUrl} />
@@ -78,11 +92,13 @@ export function ChipRow({
   items,
   expanded,
   onExpand,
+  onSelect,
   className,
 }: {
   items: ChipItem[];
   expanded: boolean;
   onExpand: () => void;
+  onSelect?: (id: string) => void;
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,7 +143,7 @@ export function ChipRow({
     return (
       <div className={cn("flex flex-wrap gap-2", className)}>
         {items.map((i) => (
-          <StartupChip key={i.id} item={i} />
+          <StartupChip key={i.id} item={i} onSelect={onSelect} />
         ))}
       </div>
     );
@@ -148,7 +164,7 @@ export function ChipRow({
       </div>
       <div className="flex h-[34px] gap-2 overflow-hidden">
         {items.slice(0, visible).map((i) => (
-          <StartupChip key={i.id} item={i} />
+          <StartupChip key={i.id} item={i} onSelect={onSelect} />
         ))}
         {hidden > 0 && <MoreChip count={hidden} onClick={onExpand} />}
       </div>
