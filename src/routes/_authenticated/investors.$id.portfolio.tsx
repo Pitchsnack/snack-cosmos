@@ -436,11 +436,11 @@ function InvestorPortfolioPage() {
                           onToggle={() => setOpen((p) => ({ ...p, [key]: !p[key] }))}
                         />
                         <div className="mt-2">
-
                           <ChipRow
                             items={items}
                             expanded={isOpen}
                             onExpand={() => setOpen((p) => ({ ...p, [key]: true }))}
+                            className="pl-[52px]"
                           />
                         </div>
                       </section>
