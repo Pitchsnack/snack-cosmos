@@ -533,8 +533,91 @@ export const updateInvestor = createServerFn({ method: "POST" })
       patch.media = data.media.map((m) => ({ slot: m.slot, image_path: m.image_path }));
     }
 
+    // Tenant workspace re-assignment (edit mode). Child rows are tenant-scoped
+    // and guarded by tenant-match triggers, so they must be repointed too.
+    const movedTenant =
+      data.tenantId && data.tenantId !== existing.tenant_id ? data.tenantId : null;
+    if (movedTenant) patch.tenant_id = movedTenant;
+    const effectiveTenantId = movedTenant ?? existing.tenant_id;
+
     const { error } = await supabase.from("investors").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    if (movedTenant) {
+      for (const table of [
+        "investor_ownership",
+        "investor_ai_ownership",
+        "investor_tags",
+        "investor_users",
+        "investor_activity",
+        "startup_investors",
+      ] as const) {
+        await supabase
+          .from(table)
+          .update({ tenant_id: movedTenant } as never)
+          .eq("investor_id", data.id);
+      }
+      await logActivity(supabase, data.id, movedTenant, userId, "TENANT_CHANGED", {
+        from: existing.tenant_id,
+        to: movedTenant,
+      });
+    }
+
+    // Ownership re-assignment.
+    if (data.owningAgentUserId) {
+      const { data: current } = await supabase
+        .from("investor_ownership")
+        .select("id, owning_agent_user_id")
+        .eq("investor_id", data.id)
+        .maybeSingle();
+      if (!current) {
+        await supabase.from("investor_ownership").insert({
+          tenant_id: effectiveTenantId,
+          investor_id: data.id,
+          owning_agent_user_id: data.owningAgentUserId,
+        } as never);
+      } else if (current.owning_agent_user_id !== data.owningAgentUserId) {
+        await supabase
+          .from("investor_ownership")
+          .update({
+            owning_agent_user_id: data.owningAgentUserId,
+            tenant_id: effectiveTenantId,
+            assigned_at: new Date().toISOString(),
+          } as never)
+          .eq("id", current.id);
+        await logActivity(supabase, data.id, effectiveTenantId, userId, "OWNER_CHANGED", {
+          from: current.owning_agent_user_id,
+          to: data.owningAgentUserId,
+        });
+      }
+    }
+    if (data.owningAiAgentId) {
+      const { data: currentAi } = await supabase
+        .from("investor_ai_ownership")
+        .select("id, owning_ai_agent_id")
+        .eq("investor_id", data.id)
+        .maybeSingle();
+      if (!currentAi) {
+        await supabase.from("investor_ai_ownership").insert({
+          tenant_id: effectiveTenantId,
+          investor_id: data.id,
+          owning_ai_agent_id: data.owningAiAgentId,
+        } as never);
+      } else if (currentAi.owning_ai_agent_id !== data.owningAiAgentId) {
+        await supabase
+          .from("investor_ai_ownership")
+          .update({
+            owning_ai_agent_id: data.owningAiAgentId,
+            tenant_id: effectiveTenantId,
+            assigned_at: new Date().toISOString(),
+          } as never)
+          .eq("id", currentAi.id);
+        await logActivity(supabase, data.id, effectiveTenantId, userId, "AI_OWNER_CHANGED", {
+          from: currentAi.owning_ai_agent_id,
+          to: data.owningAiAgentId,
+        });
+      }
+    }
 
     // Storage cleanup (best-effort): orphan old logo + removed/replaced media.
     const orphans: string[] = [];
