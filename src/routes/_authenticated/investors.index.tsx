@@ -438,14 +438,30 @@ function InvestorPanelModalBody({
         </DialogClose>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
-        {modalId && (
-          <InvestorDetailPanel
-            id={modalId}
-            showEdit={false}
-            compact
-            onClose={onClose}
-            directorySearch={directorySearch}
-          />
+        {current ? (
+          current.kind === "startup" ? (
+            <StartupDetailPanel id={current.id} showEdit={false} compact />
+          ) : (
+            <InvestorDetailPanel
+              id={current.id}
+              showEdit={false}
+              compact
+              onSelectStartup={(sid) => push({ kind: "startup", id: sid })}
+              onSelectInvestor={(iid) => push({ kind: "investor", id: iid })}
+            />
+          )
+        ) : (
+          modalId && (
+            <InvestorDetailPanel
+              id={modalId}
+              showEdit={false}
+              compact
+              onClose={onClose}
+              directorySearch={directorySearch}
+              onSelectStartup={(sid) => push({ kind: "startup", id: sid })}
+              onSelectInvestor={(iid) => push({ kind: "investor", id: iid })}
+            />
+          )
         )}
       </div>
     </div>
