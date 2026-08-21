@@ -641,25 +641,25 @@ export const updateInvestor = createServerFn({ method: "POST" })
     await removeStorageObjects(supabase, orphans);
 
     if (data.status && data.status !== existing.status) {
-      await logActivity(supabase, data.id, existing.tenant_id, userId, "STATUS_CHANGED", {
+      await logActivity(supabase, data.id, effectiveTenantId, userId, "STATUS_CHANGED", {
         from: existing.status, to: data.status,
       });
     }
     if (data.visibility && data.visibility !== existing.visibility) {
-      await logActivity(supabase, data.id, existing.tenant_id, userId, "VISIBILITY_CHANGED", {
+      await logActivity(supabase, data.id, effectiveTenantId, userId, "VISIBILITY_CHANGED", {
         from: existing.visibility, to: data.visibility,
       });
     }
     if (data.startupIds !== undefined) {
-      await syncPortfolio(supabase, data.id, existing.tenant_id, data.startupIds);
+      await syncPortfolio(supabase, data.id, effectiveTenantId, data.startupIds);
     }
     if (data.portfolioInvestorIds !== undefined) {
       await syncPortfolioInvestors(
-        supabase, data.id, existing.tenant_id, data.portfolioInvestorIds,
+        supabase, data.id, effectiveTenantId, data.portfolioInvestorIds,
       );
     }
 
-    await logActivity(supabase, data.id, existing.tenant_id, userId, "INVESTOR_UPDATED", patch);
+    await logActivity(supabase, data.id, effectiveTenantId, userId, "INVESTOR_UPDATED", patch);
     return { ok: true };
   });
 
