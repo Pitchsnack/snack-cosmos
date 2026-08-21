@@ -1416,14 +1416,16 @@ export function InvestorForm({ investor, controlReturn }: Props) {
         </div>
       )}
 
-      {/* Ownership (create only) */}
-      {!isEdit && (
+      {/* Ownership */}
+      {(
         <div className="border-t border-border pt-4">
-          <DefaultIntakeOwnershipModeSection
-            domain="investor"
-            className="mb-4"
-            helperText="This Investor will be assigned temporarily to the Investor Intake team and added to the Default Intake Queue."
-          />
+          {!isEdit && (
+            <DefaultIntakeOwnershipModeSection
+              domain="investor"
+              className="mb-4"
+              helperText="This Investor will be assigned temporarily to the Investor Intake team and added to the Default Intake Queue."
+            />
+          )}
           <h3 className="text-sm font-semibold">Ownership (required)</h3>
           <p className="mb-3 text-xs text-muted-foreground">
             Every investor must have one human Owning Agent and one Owning AI Agent.
