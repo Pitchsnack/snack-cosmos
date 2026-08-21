@@ -583,9 +583,11 @@ function InvestorPortfolioPage() {
           </SidebarCard>
         </aside>
       </div>
+      </div>
     </div>
   );
 }
+
 
 function SummaryRow({
   label,
