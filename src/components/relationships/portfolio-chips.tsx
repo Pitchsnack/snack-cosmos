@@ -135,7 +135,7 @@ export function ChipRow({
 
   const hidden = items.length - visible;
   return (
-    <div className="relative">
+    <div className={cn("relative", className)}>
       {/* measuring layer: full list, no wrap, invisible */}
       <div
         ref={containerRef}
