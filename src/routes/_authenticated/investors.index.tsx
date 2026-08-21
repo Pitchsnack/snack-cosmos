@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Search, Briefcase, RefreshCw, X, Star } from "lucide-react";
+import { Plus, Search, Briefcase, RefreshCw, X, Star, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
