@@ -125,16 +125,26 @@ export function GroupHeader({
   );
 }
 
-export function SidebarCard({ title, children }: { title: string; children: React.ReactNode }) {
+export function SidebarCard({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-card">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <div className="rounded-xl border border-[#EEF0F3] bg-card p-4">
+      <div className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
+        {icon}
         {title}
       </div>
       <div className="mt-3">{children}</div>
     </div>
   );
 }
+
 
 export function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
