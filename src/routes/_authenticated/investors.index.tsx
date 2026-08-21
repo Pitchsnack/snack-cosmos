@@ -25,16 +25,20 @@ import { cn } from "@/lib/utils";
 const SORT = ["updated_desc", "created_desc", "name_asc", "name_desc"] as const;
 const VIEW = ["grid", "split", "list"] as const;
 
-const searchSchema = z.object({
+export const investorDirectorySearchSchema = z.object({
   q: z.string().optional(),
   type: z.string().optional(),
   country: z.string().optional(),
   sort: z.enum(SORT).optional(),
   view: z.enum(VIEW).optional(),
   selected: z.string().optional(),
+  panel: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
 });
+
+export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSchema>;
+
 
 export const Route = createFileRoute("/_authenticated/investors/")({
   head: () => ({
@@ -53,7 +57,7 @@ export const Route = createFileRoute("/_authenticated/investors/")({
       },
     ],
   }),
-  validateSearch: searchSchema,
+  validateSearch: investorDirectorySearchSchema,
   component: InvestorsPage,
 });
 
@@ -77,7 +81,6 @@ function InvestorsPageInner() {
   const view = s.view ?? "grid";
   const selected = s.selected;
   const favOnly = !!s.fav;
-  const [modalId, setModalId] = useState<string | null>(null);
   const { ids: favIds } = useFavoriteInvestors();
 
   const pageSize = favOnly ? 100 : view === "split" ? 50 : view === "list" ? 25 : 24;
@@ -291,13 +294,21 @@ function InvestorsPageInner() {
           )}
         >
           {items.map((it) => (
-            <InvestorCard key={it.id} i={it} onClick={() => setModalId(it.id)} />
+            <InvestorCard
+              key={it.id}
+              i={it}
+              onClick={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: it.id }) })}
+            />
           ))}
         </div>
       ) : view === "list" ? (
         <div className="space-y-2">
           {items.map((it) => (
-            <InvestorRow key={it.id} i={it} onSelect={() => setModalId(it.id)} />
+            <InvestorRow
+              key={it.id}
+              i={it}
+              onSelect={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: it.id }) })}
+            />
           ))}
         </div>
       ) : (
@@ -320,7 +331,7 @@ function InvestorsPageInner() {
             ))}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
-            {selected ? <InvestorDetailPanel id={selected} /> : <InvestorDetailEmpty />}
+            {selected ? <InvestorDetailPanel id={selected} directorySearch={s} /> : <InvestorDetailEmpty />}
           </div>
         </div>
       )}
@@ -349,7 +360,12 @@ function InvestorsPageInner() {
         </div>
       )}
 
-      <Dialog open={!!modalId} onOpenChange={(o) => !o && setModalId(null)}>
+      <Dialog
+        open={!!s.panel && s.view !== "split"}
+        onOpenChange={(o) =>
+          !o && navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }) })
+        }
+      >
         <DialogContent
           className={cn(
             "[&>button]:hidden",
@@ -358,7 +374,11 @@ function InvestorsPageInner() {
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
           )}
         >
-          <InvestorPanelModalBody modalId={modalId} onClose={() => setModalId(null)} />
+          <InvestorPanelModalBody
+            modalId={s.panel}
+            onClose={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }) })}
+            directorySearch={s}
+          />
         </DialogContent>
       </Dialog>
     </div>
@@ -368,9 +388,11 @@ function InvestorsPageInner() {
 function InvestorPanelModalBody({
   modalId,
   onClose,
+  directorySearch,
 }: {
-  modalId: string | null;
+  modalId: string | null | undefined;
   onClose: () => void;
+  directorySearch?: InvestorDirectorySearch;
 }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -396,7 +418,13 @@ function InvestorPanelModalBody({
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
         {modalId && (
-          <InvestorDetailPanel id={modalId} showEdit={false} compact onClose={onClose} />
+          <InvestorDetailPanel
+            id={modalId}
+            showEdit={false}
+            compact
+            onClose={onClose}
+            directorySearch={directorySearch}
+          />
         )}
       </div>
     </div>
