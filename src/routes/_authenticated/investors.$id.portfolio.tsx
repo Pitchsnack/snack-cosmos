@@ -598,6 +598,7 @@ function InvestorPortfolioPage() {
         </aside>
       </div>
       </div>
+      </div>
     </div>
   );
 }
