@@ -291,128 +291,129 @@ function InvestorPortfolioPage() {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="space-y-4">
-          {/* Info banner */}
-          <div className="flex items-start gap-3 rounded-lg border border-link/20 bg-link/5 p-4">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-link/10 text-link">
-              <BarChart3 className="h-5 w-5" strokeWidth={1.75} />
-            </span>
-            <p className="text-[13px] leading-relaxed text-foreground/80">
-              {tab === "startups" ? (
-                <>
-                  {inv.investor_name} is connected to {startups.length} portfolio startup
-                  {startups.length === 1 ? "" : "s"}
-                  {summary.industries > 0 && <> across {summary.industries} industries</>}. Group,
-                  search and filter to explore the portfolio.
-                </>
-              ) : (
-                <>
-                  {investors.length} investor{investors.length === 1 ? "" : "s"} are linked to{" "}
-                  {inv.investor_name} — co-investors and firms in its investor network.
-                </>
-              )}
-            </p>
-          </div>
+      {/* Info banner */}
+      <div className="flex items-start gap-3 rounded-lg border border-link/20 bg-link/5 p-4">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-link/10 text-link">
+          <BarChart3 className="h-5 w-5" strokeWidth={1.75} />
+        </span>
+        <p className="text-[13px] leading-relaxed text-foreground/80">
+          {tab === "startups" ? (
+            <>
+              {inv.investor_name} is connected to {startups.length} portfolio startup
+              {startups.length === 1 ? "" : "s"}
+              {summary.industries > 0 && <> across {summary.industries} industries</>}. Group,
+              search and filter to explore the portfolio.
+            </>
+          ) : (
+            <>
+              {investors.length} investor{investors.length === 1 ? "" : "s"} are linked to{" "}
+              {inv.investor_name} — co-investors and firms in its investor network.
+            </>
+          )}
+        </p>
+      </div>
 
-          {/* Toolbar — row 1 */}
-          <div className="flex items-center gap-2">
-            <div className="relative min-w-[200px] flex-1">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder={tab === "startups" ? "Search startups in portfolio…" : "Search investors…"}
-                className="h-9 pl-8"
-              />
-            </div>
-            {tab === "startups" ? (
-              <>
-                <FilterSelect
-                  label="Group by: Industry"
-                  value={groupBy}
-                  options={GROUP_OPTIONS.map((g) => ({ value: g.value, label: `Group by: ${g.label}` }))}
-                  onChange={(v) => setGroupBy((v as GroupKey) ?? "industry")}
-                  width="w-56"
-                />
-                <FilterSelect label="Industry: All" value={industry} options={facets.industries} onChange={setIndustry} />
-                <FilterSelect label="Stage: All" value={stage} options={facets.stages} onChange={setStage} width="w-36" />
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 shrink-0">
-                      <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" /> More filters
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64 space-y-3">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      More filters
-                    </div>
-                    <FilterSelect
-                      label="Country: All"
-                      value={country}
-                      options={facets.countries}
-                      onChange={setCountry}
-                      width="w-full"
-                    />
-                    <FilterSelect
-                      label="Stage band: All"
-                      value={stageBand}
-                      options={[
-                        { value: "early", label: "Early stage" },
-                        { value: "growth", label: "Growth stage" },
-                      ]}
-                      onChange={(v) => setStageBand((v as "early" | "growth") ?? undefined)}
-                      width="w-full"
-                    />
-                    <Button variant="ghost" size="sm" className="w-full" onClick={resetFilters}>
-                      Clear all
-                    </Button>
-                  </PopoverContent>
-                </Popover>
-              </>
-            ) : (
-              <>
-                <FilterSelect label="Type: All" value={invType} options={facets.invTypes} onChange={setInvType} width="w-48" />
-                <FilterSelect label="Country: All" value={invCountry} options={facets.invCountries} onChange={setInvCountry} />
-              </>
-            )}
-          </div>
-
-          {/* Toolbar — row 2 */}
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground">
-              {tab === "startups"
-                ? `${filteredStartups.length} startup${filteredStartups.length === 1 ? "" : "s"}`
-                : `${filteredInvestors.length} investor${filteredInvestors.length === 1 ? "" : "s"}`}
-            </p>
-            <div className="flex items-center gap-2">
-              {tab === "startups" && (
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9"
-                    onClick={() => setOpen(Object.fromEntries(groups.map(([k]) => [k, true])))}
-                  >
-                    <Maximize2 className="mr-1.5 h-3.5 w-3.5" /> Expand all
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9" onClick={() => setOpen({})}>
-                    <Minus className="mr-1.5 h-3.5 w-3.5" /> Collapse all
-                  </Button>
+      {/* Toolbar — row 1 */}
+      <div className="flex items-center gap-2">
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={tab === "startups" ? "Search startups in portfolio…" : "Search investors…"}
+            className="h-9 pl-8"
+          />
+        </div>
+        {tab === "startups" ? (
+          <>
+            <FilterSelect
+              label="Group by: Industry"
+              value={groupBy}
+              options={GROUP_OPTIONS.map((g) => ({ value: g.value, label: `Group by: ${g.label}` }))}
+              onChange={(v) => setGroupBy((v as GroupKey) ?? "industry")}
+              width="w-56"
+            />
+            <FilterSelect label="Industry: All" value={industry} options={facets.industries} onChange={setIndustry} />
+            <FilterSelect label="Stage: All" value={stage} options={facets.stages} onChange={setStage} width="w-36" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 shrink-0">
+                  <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" /> More filters
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-64 space-y-3">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  More filters
                 </div>
-              )}
-              <FilterSelect
-                label="Sort: A–Z"
-                value={sort}
-                options={[
-                  { value: "az", label: "Sort: A–Z" },
-                  { value: "za", label: "Sort: Z–A" },
-                ]}
-                onChange={(v) => setSort((v as "az" | "za") ?? "az")}
-                width="w-36"
-              />
+                <FilterSelect
+                  label="Country: All"
+                  value={country}
+                  options={facets.countries}
+                  onChange={setCountry}
+                  width="w-full"
+                />
+                <FilterSelect
+                  label="Stage band: All"
+                  value={stageBand}
+                  options={[
+                    { value: "early", label: "Early stage" },
+                    { value: "growth", label: "Growth stage" },
+                  ]}
+                  onChange={(v) => setStageBand((v as "early" | "growth") ?? undefined)}
+                  width="w-full"
+                />
+                <Button variant="ghost" size="sm" className="w-full" onClick={resetFilters}>
+                  Clear all
+                </Button>
+              </PopoverContent>
+            </Popover>
+          </>
+        ) : (
+          <>
+            <FilterSelect label="Type: All" value={invType} options={facets.invTypes} onChange={setInvType} width="w-48" />
+            <FilterSelect label="Country: All" value={invCountry} options={facets.invCountries} onChange={setInvCountry} />
+          </>
+        )}
+      </div>
+
+      {/* Toolbar — row 2 */}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          {tab === "startups"
+            ? `${filteredStartups.length} startup${filteredStartups.length === 1 ? "" : "s"}`
+            : `${filteredInvestors.length} investor${filteredInvestors.length === 1 ? "" : "s"}`}
+        </p>
+        <div className="flex items-center gap-2">
+          {tab === "startups" && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => setOpen(Object.fromEntries(groups.map(([k]) => [k, true])))}
+              >
+                <Maximize2 className="mr-1.5 h-3.5 w-3.5" /> Expand all
+              </Button>
+              <Button variant="outline" size="sm" className="h-9" onClick={() => setOpen({})}>
+                <Minus className="mr-1.5 h-3.5 w-3.5" /> Collapse all
+              </Button>
             </div>
-          </div>
+          )}
+          <FilterSelect
+            label="Sort: A–Z"
+            value={sort}
+            options={[
+              { value: "az", label: "Sort: A–Z" },
+              { value: "za", label: "Sort: Z–A" },
+            ]}
+            onChange={(v) => setSort((v as "az" | "za") ?? "az")}
+            width="w-36"
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div>
 
           {tab === "startups" ? (
             <>
