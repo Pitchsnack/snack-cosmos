@@ -1461,7 +1461,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label              <Select
+              <Label>Owning Agent <span className="text-destructive">*</span></Label>
+              <Select
                 key={`owner-${humanOptions.length}`}
                 value={owningAgentUserId}
                 onValueChange={setOwningAgent}
