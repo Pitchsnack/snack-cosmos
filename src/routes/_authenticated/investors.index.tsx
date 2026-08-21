@@ -426,17 +426,25 @@ function InvestorPanelModalBody({
             Back
           </button>
         )}
-        <DialogClose
+        <button
+          type="button"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          aria-label="Close"
+          aria-label={current ? "Back to information panel" : "Close"}
+          onClick={() => {
+            if (current) {
+              setStack((prev) => prev.slice(0, -1));
+            } else {
+              onClose();
+            }
+          }}
           className={cn(
             "absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             visible ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
         >
           <X className="h-4 w-4" />
-        </DialogClose>
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
         {current ? (
