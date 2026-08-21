@@ -211,8 +211,10 @@ function InvestorPortfolioPage() {
   const maxCountry = summary.allCountries[0]?.[1] ?? 0;
 
   return (
-    <div className="space-y-5">
+    <div className="-mx-2 my-6">
+      <div className="mx-auto max-w-[1280px] space-y-5 rounded-2xl border border-[#E8EAED] bg-card p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <nav className="flex items-center gap-1 text-xs text-muted-foreground">
+
         <Link to="/investors" className="hover:text-foreground">
           Investors
         </Link>
@@ -248,8 +250,12 @@ function InvestorPortfolioPage() {
         </Button>
       </header>
 
+      {/* Section heading */}
+      <h2 className="!mb-5 text-[22px] font-semibold tracking-tight">Portfolio</h2>
+
       {/* Relationship tabs */}
       <div className="flex flex-wrap gap-2">
+
         {(
           [
             { key: "startups", label: `Portfolio Startups (${startups.length})` },
