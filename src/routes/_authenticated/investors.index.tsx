@@ -15,6 +15,7 @@ import {
   InvestorDetailPanel,
   InvestorDetailEmpty,
 } from "@/components/investors/investor-detail-panel";
+import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useInvestors } from "@/hooks/use-investors";
 import { useFavoriteInvestors } from "@/hooks/use-favorites";
