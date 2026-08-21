@@ -370,7 +370,7 @@ function InvestorsPageInner() {
           className={cn(
             "[&>button]:hidden",
             "flex flex-col gap-0 overflow-hidden p-0",
-            "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
+            "sm:w-[min(760px,calc(100vw-48px))] sm:max-w-[760px] sm:max-h-[85vh] sm:rounded-2xl",
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
           )}
         >
