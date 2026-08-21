@@ -1448,7 +1448,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label data-dbg={`${owningAgentUserId}|${humanOptions.length}|${tenantMatchesActive}`}>Owning Agent <span className="text-destructive">*</span></Label>
+              <Label data-dbg={JSON.stringify({v:owningAgentUserId,own:investor?.investor_ownership,keys:investor?Object.keys(investor).filter(k=>k.includes("owner")||k.includes("ownership")):null})}>Owning Agent <span className="text-destructive">*</span></Label>
               <Select
                 key={`owner-${humanOptions.length}`}
                 value={owningAgentUserId}
