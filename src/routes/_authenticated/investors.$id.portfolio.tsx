@@ -408,7 +408,7 @@ function InvestorPortfolioPage() {
                     return (
                       <section
                         key={key}
-                        className="rounded-lg border border-border bg-card px-5 py-[10px] shadow-card"
+                        className="rounded-lg border border-border bg-card px-5 py-2 shadow-card"
                       >
                         <GroupCardHeader
                           title={key}
