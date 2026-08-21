@@ -129,6 +129,19 @@ function Pill({
   );
 }
 
+/** Trigger label for an ownership select. Radix `SelectValue` falls back to the
+ *  placeholder when the value has no mounted item yet (options load async), so
+ *  the label is resolved explicitly from the option list. */
+function ownerLabel(
+  options: Array<{ id: string; first_name?: string | null; last_name?: string | null; email: string }>,
+  id: string,
+): string | undefined {
+  if (!id) return undefined;
+  const u = options.find((o) => o.id === id);
+  if (!u) return undefined;
+  return [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email;
+}
+
 /** Shape of the existing investor passed to the form in edit mode. Matches
  *  the projection returned by `getInvestor`. */
 export interface InvestorEditModel {
@@ -1435,22 +1448,23 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Owning Agent <span className="text-destructive">*</span></Label>
+              <Label data-dbg={`${owningAgentUserId}|${humanOptions.length}|${tenantMatchesActive}`}>Owning Agent <span className="text-destructive">*</span></Label>
               <Select
+                key={`owner-${humanOptions.length}`}
                 value={owningAgentUserId}
                 onValueChange={setOwningAgent}
                 disabled={!tenantMatchesActive}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      !tenantMatchesActive
+                  {ownerLabel(humanOptions, owningAgentUserId) ?? (
+                    <span className="text-muted-foreground">
+                      {!tenantMatchesActive
                         ? "Select a matching tenant first"
                         : humansQ.isLoading
                           ? "Loading…"
-                          : "Select an agent"
-                    }
-                  />
+                          : "Select an agent"}
+                    </span>
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {humanOptions.map((u) => (
@@ -1464,22 +1478,23 @@ export function InvestorForm({ investor, controlReturn }: Props) {
             <div className="space-y-1.5">
               <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
               <Select
+                key={`ai-owner-${aiOptions.length}`}
                 value={owningAiAgentId}
                 onValueChange={setOwningAi}
                 disabled={!tenantMatchesActive || noAi}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      !tenantMatchesActive
+                  {ownerLabel(aiOptions, owningAiAgentId) ?? (
+                    <span className="text-muted-foreground">
+                      {!tenantMatchesActive
                         ? "Select a matching tenant first"
                         : aisQ.isLoading
                           ? "Loading…"
                           : noAi
                             ? "No AI users in this tenant"
-                            : "Select an AI agent"
-                    }
-                  />
+                            : "Select an AI agent"}
+                    </span>
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {aiOptions.map((u) => (
