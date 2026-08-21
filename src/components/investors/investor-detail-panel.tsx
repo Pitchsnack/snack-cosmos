@@ -506,6 +506,7 @@ export function InvestorDetailPanel({
                     id={s.id}
                     name={s.startup_name}
                     logoUrl={s.logo_signed_url}
+                    onSelect={onSelectStartup}
                   />
                 ))}
               </div>
