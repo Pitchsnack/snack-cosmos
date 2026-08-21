@@ -36,6 +36,9 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-link: var(--link);
+  --color-link-foreground: var(--link-foreground);
+
 
   --color-sidebar: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
