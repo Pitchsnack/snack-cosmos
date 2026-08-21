@@ -90,13 +90,24 @@ export function CreateInvestorDialog({
     : null;
 
   const [name, setName] = useState(initialName);
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
+  const [logoSlot, setLogoSlot] = useState<SlotState>(EMPTY_SLOT);
+  const logoFile = logoSlot.pendingFile;
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
 
+  const getUploadUrl = useServerFn(createInvestorMediaUploadUrl);
+  const patchInvestor = useServerFn(updateInvestor);
+  const websiteDup = useInvestorWebsiteDuplicateCheck();
+
   useEffect(() => {
     if (open) {
       setName(initialName);
+      setWebsiteUrl("");
+      setShortDescription("");
+      setLogoSlot(EMPTY_SLOT);
       const useIt = !!investorDefaults;
       setUseDefaultIntake(useIt);
       setAgentId(useIt ? investorDefaults!.humanId : defaultAgentUserId ?? "");
