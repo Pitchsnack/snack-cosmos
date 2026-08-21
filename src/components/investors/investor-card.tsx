@@ -149,7 +149,13 @@ export function InvestorCard({
               <div className="flex shrink-0 gap-1 pr-6">
                 <PreviewNeedsReassignmentBadge name={i.investor_name} domain="investor" size="xs" />
                 {i.investor_type && (
-                  <Badge variant="secondary" className="rounded-full px-1.5 py-0 text-[10px]">
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "rounded-full px-1.5 py-0 text-[10px]",
+                      getInvestorTypeStyle(i.investor_type),
+                    )}
+                  >
                     {i.investor_type}
                   </Badge>
                 )}
