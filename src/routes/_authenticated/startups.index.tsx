@@ -388,7 +388,8 @@ function StartupPanelModalBody({
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const visible = hovered || focused;
-  const [stack, setStack] = useState<Array<{ kind: "investor"; id: string }>>([]);
+  type StackEntry = { kind: "investor" | "startup"; id: string };
+  const [stack, setStack] = useState<StackEntry[]>([]);
 
   // Reset the drill-down stack whenever the root startup changes.
   useEffect(() => {
@@ -396,8 +397,7 @@ function StartupPanelModalBody({
   }, [modalId]);
 
   const current = stack[stack.length - 1];
-  const push = (entry: { kind: "investor"; id: string }) =>
-    setStack((prev) => [...prev, entry]);
+  const push = (entry: StackEntry) => setStack((prev) => [...prev, entry]);
 
   return (
     <div
@@ -439,11 +439,22 @@ function StartupPanelModalBody({
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
         {current ? (
-          <InvestorDetailPanel
-            id={current.id}
-            showEdit={false}
-            compact
-          />
+          current.kind === "investor" ? (
+            <InvestorDetailPanel
+              id={current.id}
+              showEdit={false}
+              compact
+              onSelectStartup={(sid) => push({ kind: "startup", id: sid })}
+              onSelectInvestor={(iid) => push({ kind: "investor", id: iid })}
+            />
+          ) : (
+            <StartupDetailPanel
+              id={current.id}
+              showEdit={false}
+              compact
+              onSelectInvestor={(iid) => push({ kind: "investor", id: iid })}
+            />
+          )
         ) : (
           modalId && (
             <StartupDetailPanel
