@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Layers, Coins, Globe } from "lucide-react";
+import { MapPin, Building2, Layers, Coins } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { InvestorListItem } from "@/lib/investors.functions";
 import { OverflowRow } from "@/components/startups/overflow-row";
@@ -175,13 +175,6 @@ export function InvestorCard({
           </div>
         )}
 
-        {/* Website */}
-        {i.website_url && (
-          <div className="mb-1 flex items-center gap-1.5 overflow-hidden text-xs text-foreground/80">
-            <Globe className="h-3 w-3 shrink-0" />
-            <span className="truncate">{i.website_url.replace(/^https?:\/\//, "")}</span>
-          </div>
-        )}
 
         {/* Preferred industries */}
         {i.preferred_industries?.length ? (
