@@ -284,14 +284,14 @@ function InvestorsPageInner() {
       ) : view === "grid" ? (
         <div
           className={cn(
-            "grid gap-4",
+            "grid items-start gap-4",
             favOnly
               ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
               : "sm:grid-cols-2 lg:grid-cols-3",
           )}
         >
           {items.map((it) => (
-            <InvestorCard key={it.id} i={it} onClick={() => setModalId(it.id)} compact={favOnly} />
+            <InvestorCard key={it.id} i={it} onClick={() => setModalId(it.id)} />
           ))}
         </div>
       ) : view === "list" ? (

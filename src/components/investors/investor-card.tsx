@@ -19,10 +19,7 @@ function monogram(name: string) {
 }
 
 const CARD_CLASS =
-  "group relative flex h-[440px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
-
-const COMPACT_CARD_CLASS =
-  "group relative flex h-[380px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
+  "group relative flex w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
   borderColor: "var(--accent)",
@@ -59,21 +56,14 @@ function Truncate({
 export function InvestorCard({
   i,
   onClick,
-  compact = false,
 }: {
   i: InvestorListItem;
   onClick?: () => void;
-  compact?: boolean;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const { isFavorite } = useFavoriteInvestors();
   const bookmarked = isFavorite(i.id);
-
-  const ticket =
-    i.ticket_size ||
-    [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") ||
-    null;
 
   const cardStyle: CSSProperties | undefined = isPressed
     ? PRESSED_CARD_STYLE
@@ -109,7 +99,7 @@ export function InvestorCard({
         )}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col p-4">
+      <div className="flex min-h-0 flex-col p-4">
         {/* Header row: logo + name + badges */}
         <div className="mb-2 flex items-start gap-3">
           <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
@@ -164,13 +154,13 @@ export function InvestorCard({
         )}
 
         {/* Preferred stages */}
-        {!compact && i.preferred_stages?.length ? (
+        {i.preferred_stages?.length ? (
           <div className="mb-0.5">
             <ChipRow tags={i.preferred_stages} tone="primary" />
           </div>
         ) : null}
 
-        {(!compact && i.preferred_stages?.length) || i.short_description ? (
+        {(i.preferred_stages?.length || i.short_description) ? (
           <div className="my-2 border-t border-border/40" />
         ) : null}
 
@@ -181,16 +171,6 @@ export function InvestorCard({
             <span>
               <span className="font-medium text-foreground">AUM:</span>{" "}
               <span className="text-muted-foreground">{i.aum}</span>
-            </span>
-          </div>
-        )}
-
-        {/* Ticket size */}
-        {ticket && (
-          <div className="mb-1 flex items-center gap-1.5 text-xs text-foreground/80">
-            <Layers className="h-3 w-3 shrink-0" />
-            <span className="truncate">
-              <span className="font-medium text-foreground">Ticket:</span> {ticket}
             </span>
           </div>
         )}
@@ -255,7 +235,7 @@ export function InvestorCard({
         <button
           type="button"
           onClick={onClick}
-          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
+          className={CARD_CLASS}
           style={cardStyle}
           {...interactionHandlers}
         >
@@ -265,7 +245,7 @@ export function InvestorCard({
         <Link
           to="/investors/$id"
           params={{ id: i.id }}
-          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
+          className={CARD_CLASS}
           style={cardStyle}
           {...interactionHandlers}
         >
