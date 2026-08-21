@@ -155,7 +155,7 @@ export function InvestorDetailPanel({
   if (ticket) metaItems.push({ icon: Layers, label: `Ticket ${ticket}` });
 
   return (
-    <div className="@container space-y-[14px] text-foreground">
+    <div className="space-y-[14px] text-foreground">
       {/* Header */}
       <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
         <div className="flex items-start gap-4">
