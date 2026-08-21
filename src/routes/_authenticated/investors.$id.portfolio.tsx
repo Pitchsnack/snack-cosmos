@@ -415,7 +415,7 @@ function InvestorPortfolioPage() {
                     return (
                       <section
                         key={key}
-                        className="rounded-xl border border-[#EEF0F3] bg-card px-5 py-2"
+                        className="rounded-xl border border-[#EEF0F3] bg-card px-5 py-[7px]"
                       >
                         <GroupCardHeader
                           title={key}
@@ -423,7 +423,7 @@ function InvestorPortfolioPage() {
                           expanded={isOpen}
                           onToggle={() => setOpen((p) => ({ ...p, [key]: !p[key] }))}
                         />
-                        <div className="mt-[10px]">
+                        <div className="mt-2">
 
                           <ChipRow
                             items={items}
