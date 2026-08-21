@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -32,10 +33,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createInvestor } from "@/lib/investors.functions";
+import {
+  createInvestor,
+  updateInvestor,
+  createInvestorMediaUploadUrl,
+} from "@/lib/investors.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
+import { supabase } from "@/integrations/supabase/client";
+import { LogoSlot, EMPTY_SLOT, type SlotState } from "@/components/media/entity-media-editor";
+import { EditableUrlField } from "@/components/ui/editable-url-field";
+import { useInvestorWebsiteDuplicateCheck } from "@/hooks/use-investor-website-duplicate-check";
+import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 
 interface Props {
   open: boolean;
@@ -80,13 +90,24 @@ export function CreateInvestorDialog({
     : null;
 
   const [name, setName] = useState(initialName);
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
+  const [logoSlot, setLogoSlot] = useState<SlotState>(EMPTY_SLOT);
+  const logoFile = logoSlot.pendingFile;
   const [agentId, setAgentId] = useState<string>("");
   const [aiAgentId, setAiAgentId] = useState<string>("");
   const [useDefaultIntake, setUseDefaultIntake] = useState<boolean>(true);
 
+  const getUploadUrl = useServerFn(createInvestorMediaUploadUrl);
+  const patchInvestor = useServerFn(updateInvestor);
+  const websiteDup = useInvestorWebsiteDuplicateCheck();
+
   useEffect(() => {
     if (open) {
       setName(initialName);
+      setWebsiteUrl("");
+      setShortDescription("");
+      setLogoSlot(EMPTY_SLOT);
       const useIt = !!investorDefaults;
       setUseDefaultIntake(useIt);
       setAgentId(useIt ? investorDefaults!.humanId : defaultAgentUserId ?? "");
@@ -119,15 +140,33 @@ export function CreateInvestorDialog({
   const createM = useMutation({
     mutationFn: async () => {
       assertNoFixtureIds([tenantId, agentId, aiAgentId]);
-      const res = await create({
+      const res = (await create({
         data: {
           tenantId,
           investorName: name.trim(),
+          websiteUrl: websiteUrl.trim() || null,
+          shortDescription: shortDescription.trim() || null,
           owningAgentUserId: agentId,
           owningAiAgentId: aiAgentId,
         },
-      });
-      return res as { id: string };
+      })) as { id: string };
+
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop()?.toLowerCase() ?? "png";
+        const { path, token } = await getUploadUrl({
+          data: { tenantId, investorId: res.id, kind: "logo", ext },
+        });
+        const { error } = await supabase.storage
+          .from("startup-media")
+          .uploadToSignedUrl(path, token, logoFile, {
+            contentType: logoFile.type || "image/png",
+            upsert: true,
+          });
+        if (error) throw new Error("Logo upload failed: " + error.message);
+        await patchInvestor({ data: { id: res.id, logoPath: path } });
+      }
+
+      return res;
     },
     onSuccess: (res) => {
       toast.success(`Investor "${name.trim()}" created`);
@@ -158,6 +197,28 @@ export function CreateInvestorDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
+            />
+          </div>
+          <EditableUrlField
+            label="Company URL (optional)"
+            value={websiteUrl}
+            onChange={setWebsiteUrl}
+            onCommit={(url) => void websiteDup.check(url)}
+            placeholder="https://example.com"
+          />
+          <LogoSlot value={logoSlot} onChange={(s) => setLogoSlot(s)} />
+          <div className="space-y-1.5">
+            <Label htmlFor="create-investor-desc">
+              Short description{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Textarea
+              id="create-investor-desc"
+              rows={3}
+              maxLength={500}
+              placeholder="One or two sentences about the investor"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
             />
           </div>
           {investorDefaults && (
@@ -252,6 +313,17 @@ export function CreateInvestorDialog({
             {createM.isPending ? "Creating…" : "Create investor"}
           </Button>
         </DialogFooter>
+        <DuplicateWarningDialog
+          open={websiteDup.open}
+          typedName={websiteDup.typedValue}
+          candidates={websiteDup.candidates}
+          onCancel={websiteDup.close}
+          onLinkExisting={(c) => {
+            websiteDup.close();
+            if (c.id) window.open(`/investors/${c.id}`, "_blank", "noopener,noreferrer");
+          }}
+          onCreatePendingAnyway={websiteDup.close}
+        />
       </DialogContent>
     </Dialog>
   );
