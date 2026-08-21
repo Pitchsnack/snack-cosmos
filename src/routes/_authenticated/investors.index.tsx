@@ -397,6 +397,17 @@ function InvestorPanelModalBody({
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const visible = hovered || focused;
+  const [stack, setStack] = useState<Array<{ kind: "investor" | "startup"; id: string }>>([]);
+
+  // Reset the drill-down stack whenever the root investor changes.
+  useEffect(() => {
+    setStack([]);
+  }, [modalId]);
+
+  const current = stack[stack.length - 1];
+  const push = (entry: { kind: "investor" | "startup"; id: string }) =>
+    setStack((prev) => [...prev, entry]);
+
   return (
     <div
       className="relative flex flex-1 flex-col overflow-hidden"
