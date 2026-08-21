@@ -844,8 +844,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           <StartupStepper current={3} />
         </div>
       )}
-      {/* Tenant (create only) */}
-      {!isEdit && (
+      {/* Tenant workspace */}
+      {(
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label>Tenant <span className="text-destructive">*</span></Label>
