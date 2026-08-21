@@ -159,6 +159,8 @@ export interface InvestorEditModel {
   media: Array<{ slot: 1 | 2 | 3; image_path: string; image_signed_url: string | null }>;
   linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url?: string | null }>;
   portfolio_investors?: Array<{ id: string; investor_name: string; logo_signed_url?: string | null }>;
+  investor_ownership?: Array<{ owning_agent_user_id: string }> | null;
+  investor_ai_ownership?: Array<{ owning_ai_agent_id: string }> | null;
 }
 
 function hydrateMedia(investor?: InvestorEditModel): EntityMediaState {
