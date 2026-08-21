@@ -415,6 +415,16 @@ function InvestorPanelModalBody({
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative h-10 shrink-0">
+        {current && (
+          <button
+            type="button"
+            onClick={() => setStack((prev) => prev.slice(0, -1))}
+            className="absolute left-4 top-2 z-20 inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+        )}
         <DialogClose
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
