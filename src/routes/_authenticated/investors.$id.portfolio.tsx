@@ -26,6 +26,9 @@ import {
   Tags,
   TrendingUp,
 } from "lucide-react";
+import { X } from "lucide-react";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,6 +106,7 @@ function InvestorPortfolioPage() {
   const [sort, setSort] = useState<"az" | "za">("az");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [groupLimit, setGroupLimit] = useState(GROUPS_PER_PAGE);
+  const [startupPanelId, setStartupPanelId] = useState<string | null>(null);
   const [showAllCountries, setShowAllCountries] = useState(false);
   const [invType, setInvType] = useState<string | undefined>();
   const [invCountry, setInvCountry] = useState<string | undefined>();
@@ -442,6 +446,7 @@ function InvestorPortfolioPage() {
                             items={items}
                             expanded={isOpen}
                             onExpand={() => setOpen((p) => ({ ...p, [key]: true }))}
+                            onSelect={setStartupPanelId}
                             className="pl-[52px]"
                           />
                         </div>
@@ -599,6 +604,38 @@ function InvestorPortfolioPage() {
       </div>
       </div>
       </div>
+
+      <Dialog open={!!startupPanelId} onOpenChange={(o) => !o && setStartupPanelId(null)}>
+        <DialogContent
+          className={cn(
+            "[&>button]:hidden",
+            "p-0 gap-0 flex flex-col overflow-hidden",
+            "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
+            "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
+          )}
+        >
+          <div className="relative flex flex-1 flex-col overflow-hidden">
+            <div className="relative h-10 shrink-0">
+              <DialogClose
+                aria-label="Close"
+                className="absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-4 w-4" />
+              </DialogClose>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
+              {startupPanelId && (
+                <StartupDetailPanel
+                  id={startupPanelId}
+                  showEdit={false}
+                  compact
+                  onClose={() => setStartupPanelId(null)}
+                />
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
