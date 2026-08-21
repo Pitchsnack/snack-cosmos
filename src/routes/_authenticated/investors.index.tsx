@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Search, Briefcase, RefreshCw, X, Star } from "lucide-react";
+import { Plus, Search, Briefcase, RefreshCw, X, Star, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   InvestorDetailPanel,
   InvestorDetailEmpty,
 } from "@/components/investors/investor-detail-panel";
+import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { useInvestors } from "@/hooks/use-investors";
 import { useFavoriteInvestors } from "@/hooks/use-favorites";
@@ -397,6 +398,17 @@ function InvestorPanelModalBody({
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const visible = hovered || focused;
+  const [stack, setStack] = useState<Array<{ kind: "investor" | "startup"; id: string }>>([]);
+
+  // Reset the drill-down stack whenever the root investor changes.
+  useEffect(() => {
+    setStack([]);
+  }, [modalId]);
+
+  const current = stack[stack.length - 1];
+  const push = (entry: { kind: "investor" | "startup"; id: string }) =>
+    setStack((prev) => [...prev, entry]);
+
   return (
     <div
       className="relative flex flex-1 flex-col overflow-hidden"
@@ -404,6 +416,16 @@ function InvestorPanelModalBody({
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative h-10 shrink-0">
+        {current && (
+          <button
+            type="button"
+            onClick={() => setStack((prev) => prev.slice(0, -1))}
+            className="absolute left-4 top-2 z-20 inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+        )}
         <DialogClose
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -417,14 +439,30 @@ function InvestorPanelModalBody({
         </DialogClose>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-5 pt-1">
-        {modalId && (
-          <InvestorDetailPanel
-            id={modalId}
-            showEdit={false}
-            compact
-            onClose={onClose}
-            directorySearch={directorySearch}
-          />
+        {current ? (
+          current.kind === "startup" ? (
+            <StartupDetailPanel id={current.id} showEdit={false} compact />
+          ) : (
+            <InvestorDetailPanel
+              id={current.id}
+              showEdit={false}
+              compact
+              onSelectStartup={(sid) => push({ kind: "startup", id: sid })}
+              onSelectInvestor={(iid) => push({ kind: "investor", id: iid })}
+            />
+          )
+        ) : (
+          modalId && (
+            <InvestorDetailPanel
+              id={modalId}
+              showEdit={false}
+              compact
+              onClose={onClose}
+              directorySearch={directorySearch}
+              onSelectStartup={(sid) => push({ kind: "startup", id: sid })}
+              onSelectInvestor={(iid) => push({ kind: "investor", id: iid })}
+            />
+          )
         )}
       </div>
     </div>
