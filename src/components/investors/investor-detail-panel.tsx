@@ -423,17 +423,26 @@ export function InvestorDetailPanel({
             {linked.length === 0 ? (
               <p className="text-sm text-muted-foreground">No startups linked yet.</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {linked.map((s) => (
-                  <CompanyEntityPill
-                    key={s.id}
-                    to="/startups/$id"
-                    id={s.id}
-                    name={s.startup_name}
-                    logoUrl={s.logo_signed_url}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {linked.map((s) => (
+                    <CompanyEntityPill
+                      key={s.id}
+                      to="/startups/$id"
+                      id={s.id}
+                      name={s.startup_name}
+                      logoUrl={s.logo_signed_url}
+                    />
+                  ))}
+                </div>
+                <Link
+                  to="/investors/$id/portfolio"
+                  params={{ id: i.id }}
+                  className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
+                >
+                  View Portfolio →
+                </Link>
+              </>
             )}
           </Section>
 
@@ -454,8 +463,16 @@ export function InvestorDetailPanel({
                   />
                 ))}
               </div>
+              <Link
+                to="/investors/$id/portfolio"
+                params={{ id: i.id }}
+                className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
+              >
+                View Investors →
+              </Link>
             </Section>
           )}
+
         </>
       )}
     </div>

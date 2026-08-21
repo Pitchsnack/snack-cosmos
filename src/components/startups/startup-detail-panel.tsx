@@ -636,7 +636,15 @@ export function StartupDetailPanel({
               />
             ))}
           </div>
+          <Link
+            to="/startups/$id/investors"
+            params={{ id }}
+            className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
+          >
+            View Investors →
+          </Link>
         </Section>
+
       )}
         </>
       )}

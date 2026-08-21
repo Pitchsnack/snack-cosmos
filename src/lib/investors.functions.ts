@@ -640,3 +640,130 @@ export const getInvestorSignedUrl = createServerFn({ method: "POST" })
       .createSignedUrl(data.path, SIGN_TTL);
     return { url: signed?.signedUrl ?? null };
   });
+
+/* ------------------------- Investor Portfolio page ------------------------ */
+
+export interface PortfolioStartupItem {
+  id: string;
+  startup_name: string;
+  logo_signed_url: string | null;
+  short_description: string | null;
+  website_url: string | null;
+  industry: string[];
+  product_tags: string[];
+  market_tags: string[];
+  investment_stage: string | null;
+  country: string | null;
+}
+
+export interface PortfolioInvestorItem {
+  id: string;
+  investor_name: string;
+  logo_signed_url: string | null;
+  investor_type: string | null;
+  country: string | null;
+  short_description: string | null;
+  website_url: string | null;
+}
+
+/** Full relationship data for the Investor Portfolio page. */
+export const getInvestorPortfolio = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+
+    const { data: row, error } = await supabase
+      .from("investors")
+      .select(
+        "id, investor_name, logo_url, country, investor_type, status, visibility, short_description, long_description, website_url, preferred_industries",
+      )
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Not found");
+
+    const { data: startupRows } = await supabase
+      .from("startup_investors")
+      .select(
+        "startups:startup_id(id, startup_name, logo_url, short_description, website_url, industry, product_tags, market_tags, investment_stage, headquarters, city, region)",
+      )
+      .eq("investor_id", data.id);
+
+    const { data: investorRows } = await supabase
+      .from("investor_investors")
+      .select(
+        "investors:portfolio_investor_id(id, investor_name, logo_url, investor_type, country, short_description, website_url)",
+      )
+      .eq("investor_id", data.id);
+
+    type SRaw = {
+      id: string; startup_name: string; logo_url: string | null; short_description: string | null;
+      website_url: string | null; industry: string[] | null; product_tags: string[] | null;
+      market_tags: string[] | null; investment_stage: string | null;
+      headquarters: string | null; city: string | null; region: string | null;
+    };
+    type IRaw = {
+      id: string; investor_name: string; logo_url: string | null; investor_type: string | null;
+      country: string | null; short_description: string | null; website_url: string | null;
+    };
+
+    const sRaw = ((startupRows ?? []) as unknown as Array<{ startups: SRaw | null }>)
+      .map((r) => r.startups)
+      .filter((v): v is SRaw => !!v);
+    const iRaw = ((investorRows ?? []) as unknown as Array<{ investors: IRaw | null }>)
+      .map((r) => r.investors)
+      .filter((v): v is IRaw => !!v);
+
+    const signed = await signMany(
+      supabase,
+      [
+        (row as { logo_url: string | null }).logo_url,
+        ...sRaw.map((s) => s.logo_url),
+        ...iRaw.map((i) => i.logo_url),
+      ].filter((p): p is string => !!p),
+    );
+
+    const startups: PortfolioStartupItem[] = sRaw
+      .map((s) => ({
+        id: s.id,
+        startup_name: s.startup_name,
+        logo_signed_url: s.logo_url ? (signed[s.logo_url] ?? null) : null,
+        short_description: s.short_description,
+        website_url: s.website_url,
+        industry: s.industry ?? [],
+        product_tags: s.product_tags ?? [],
+        market_tags: s.market_tags ?? [],
+        investment_stage: s.investment_stage,
+        country: s.headquarters || s.city || s.region || null,
+      }))
+      .sort((a, b) => a.startup_name.localeCompare(b.startup_name));
+
+    const investors: PortfolioInvestorItem[] = iRaw
+      .map((i) => ({
+        id: i.id,
+        investor_name: i.investor_name,
+        logo_signed_url: i.logo_url ? (signed[i.logo_url] ?? null) : null,
+        investor_type: i.investor_type,
+        country: i.country,
+        short_description: i.short_description,
+        website_url: i.website_url,
+      }))
+      .sort((a, b) => a.investor_name.localeCompare(b.investor_name));
+
+    return {
+      investor: {
+        ...(row as Record<string, unknown>),
+        logo_signed_url: (row as { logo_url: string | null }).logo_url
+          ? (signed[(row as { logo_url: string }).logo_url] ?? null)
+          : null,
+      } as {
+        id: string; investor_name: string; country: string | null; investor_type: string | null;
+        status: string | null; visibility: string | null; short_description: string | null;
+        long_description: string | null; website_url: string | null;
+        preferred_industries: string[] | null; logo_signed_url: string | null;
+      },
+      startups,
+      investors,
+    };
+  });
