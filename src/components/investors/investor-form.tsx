@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -159,6 +159,8 @@ export interface InvestorEditModel {
   media: Array<{ slot: 1 | 2 | 3; image_path: string; image_signed_url: string | null }>;
   linked_startups?: Array<{ id: string; startup_name: string; logo_signed_url?: string | null }>;
   portfolio_investors?: Array<{ id: string; investor_name: string; logo_signed_url?: string | null }>;
+  investor_ownership?: Array<{ owning_agent_user_id: string }> | null;
+  investor_ai_ownership?: Array<{ owning_ai_agent_id: string }> | null;
 }
 
 function hydrateMedia(investor?: InvestorEditModel): EntityMediaState {
@@ -299,16 +301,23 @@ export function InvestorForm({ investor, controlReturn }: Props) {
 
   const [status, setStatus] = useState(investor?.status ?? "Prospect");
   const [visibility, setVisibility] = useState(investor?.visibility ?? "Tenant");
-  const [owningAgentUserId, setOwningAgent] = useState("");
-  const [owningAiAgentId, setOwningAi] = useState("");
+  const [owningAgentUserId, setOwningAgent] = useState(
+    investor?.investor_ownership?.[0]?.owning_agent_user_id ?? "",
+  );
+  const [owningAiAgentId, setOwningAi] = useState(
+    investor?.investor_ai_ownership?.[0]?.owning_ai_agent_id ?? "",
+  );
 
-  // Clear ownership when the tenant changes or its active-workspace match is
-  // lost — CREATE mode only. Edit mode preserves existing ownership values.
+  // Clear ownership whenever the selected tenant moves away from the tenant the
+  // current owner selections belong to (create: any change; edit: only when the
+  // tenant differs from the investor's stored tenant).
+  const ownershipTenantRef = useRef<string>(investor?.tenant_id ?? "");
   useEffect(() => {
-    if (isEdit) return;
+    if (tenantId === ownershipTenantRef.current) return;
+    ownershipTenantRef.current = tenantId;
     setOwningAgent("");
     setOwningAi("");
-  }, [isEdit, tenantId, tenantMatchesActive]);
+  }, [tenantId]);
 
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMedia(investor));
 
@@ -372,15 +381,26 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
-    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive,
   });
   const aisQ = useQuery({
     queryKey: ["assignable-ai", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "AI" } }),
-    enabled: enabled && !!tenantId && tenantMatchesActive && !isEdit,
+    enabled: enabled && !!tenantId && tenantMatchesActive,
   });
-  const humanOptions = tenantMatchesActive ? (humansQ.data ?? []) : [];
-  const aiOptions = tenantMatchesActive ? (aisQ.data ?? []) : [];
+  type OwnerOption = { id: string; first_name?: string | null; last_name?: string | null; email: string };
+  const withCurrent = (list: OwnerOption[], currentId: string): OwnerOption[] =>
+    currentId && !list.some((u) => u.id === currentId)
+      ? [...list, { id: currentId, first_name: null, last_name: null, email: "Currently assigned" }]
+      : list;
+  const humanOptions = withCurrent(
+    tenantMatchesActive ? ((humansQ.data ?? []) as OwnerOption[]) : [],
+    owningAgentUserId,
+  );
+  const aiOptions = withCurrent(
+    tenantMatchesActive ? ((aisQ.data ?? []) as OwnerOption[]) : [],
+    owningAiAgentId,
+  );
   const noAi = tenantMatchesActive && !aisQ.isLoading && aiOptions.length === 0;
 
   const toggle = (arr: string[], v: string) =>
@@ -531,6 +551,9 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           media: resolvedMedia,
           startupIds: linkedStartupIds,
           portfolioInvestorIds: linkedPortfolioInvestorIds,
+          tenantId: tenantId || undefined,
+          owningAgentUserId: owningAgentUserId || undefined,
+          owningAiAgentId: owningAiAgentId || undefined,
           ...buildProfile(),
         },
       });
@@ -549,7 +572,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   });
 
   const canSubmit = isEdit
-    ? !!displayName
+    ? !!(displayName && owningAgentUserId && owningAiAgentId)
     : !!(
         tenantMatchesActive &&
         displayName &&
@@ -824,8 +847,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           <StartupStepper current={3} />
         </div>
       )}
-      {/* Tenant (create only) */}
-      {!isEdit && (
+      {/* Tenant workspace */}
+      {(
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label>Tenant <span className="text-destructive">*</span></Label>
@@ -1396,14 +1419,16 @@ export function InvestorForm({ investor, controlReturn }: Props) {
         </div>
       )}
 
-      {/* Ownership (create only) */}
-      {!isEdit && (
+      {/* Ownership */}
+      {(
         <div className="border-t border-border pt-4">
-          <DefaultIntakeOwnershipModeSection
-            domain="investor"
-            className="mb-4"
-            helperText="This Investor will be assigned temporarily to the Investor Intake team and added to the Default Intake Queue."
-          />
+          {!isEdit && (
+            <DefaultIntakeOwnershipModeSection
+              domain="investor"
+              className="mb-4"
+              helperText="This Investor will be assigned temporarily to the Investor Intake team and added to the Default Intake Queue."
+            />
+          )}
           <h3 className="text-sm font-semibold">Ownership (required)</h3>
           <p className="mb-3 text-xs text-muted-foreground">
             Every investor must have one human Owning Agent and one Owning AI Agent.
