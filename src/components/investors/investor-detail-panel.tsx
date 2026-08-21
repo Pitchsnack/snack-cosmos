@@ -477,31 +477,33 @@ export function InvestorDetailPanel({
           <Section
             icon={Building2}
             title={`Portfolio startups${linked.length > 0 ? ` (${linked.length})` : ""}`}
-          >
-            {linked.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No startups linked yet.</p>
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-2">
-                  {linked.map((s) => (
-                    <CompanyEntityPill
-                      key={s.id}
-                      to="/startups/$id"
-                      id={s.id}
-                      name={s.startup_name}
-                      logoUrl={s.logo_signed_url}
-                    />
-                  ))}
-                </div>
+            right={
+              linked.length > 0 ? (
                 <Link
                   to="/investors/$id/portfolio"
                   params={{ id: i.id }}
                   search={portfolioSearch}
-                  className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
+                  className="text-xs font-medium text-accent hover:underline"
                 >
                   View Portfolio →
                 </Link>
-              </>
+              ) : undefined
+            }
+          >
+            {linked.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No startups linked yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {linked.map((s) => (
+                  <CompanyEntityPill
+                    key={s.id}
+                    to="/startups/$id"
+                    id={s.id}
+                    name={s.startup_name}
+                    logoUrl={s.logo_signed_url}
+                  />
+                ))}
+              </div>
             )}
           </Section>
 
@@ -510,6 +512,16 @@ export function InvestorDetailPanel({
             <Section
               icon={Briefcase}
               title={`Portfolio investors (${portfolioInvestors.length})`}
+              right={
+                <Link
+                  to="/investors/$id/portfolio"
+                  params={{ id: i.id }}
+                  search={portfolioSearch}
+                  className="text-xs font-medium text-accent hover:underline"
+                >
+                  View Investors →
+                </Link>
+              }
             >
               <div className="flex flex-wrap gap-2">
                 {portfolioInvestors.map((p) => (
@@ -522,14 +534,6 @@ export function InvestorDetailPanel({
                   />
                 ))}
               </div>
-                <Link
-                  to="/investors/$id/portfolio"
-                  params={{ id: i.id }}
-                  search={portfolioSearch}
-                  className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
-                >
-                  View Investors →
-                </Link>
             </Section>
           )}
 
