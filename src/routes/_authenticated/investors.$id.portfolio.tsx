@@ -1,7 +1,12 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import {
+  investorDirectorySearchSchema,
+  type InvestorDirectorySearch,
+} from "@/routes/_authenticated/investors.index";
 import {
   ArrowLeft,
   BarChart3,
@@ -38,6 +43,8 @@ import { useHasSession } from "@/hooks/use-has-session";
 import { isUuid } from "@/lib/uuid";
 import { cn } from "@/lib/utils";
 
+export type InvestorPortfolioSearch = InvestorDirectorySearch;
+
 export const Route = createFileRoute("/_authenticated/investors/$id/portfolio")({
   head: () => ({
     meta: [
@@ -53,6 +60,7 @@ export const Route = createFileRoute("/_authenticated/investors/$id/portfolio")(
       },
     ],
   }),
+  validateSearch: investorDirectorySearchSchema,
   component: InvestorPortfolioPage,
 });
 
@@ -73,6 +81,10 @@ const EARLY_STAGES = ["Pre-Seed", "Seed", "Series A"];
 
 function InvestorPortfolioPage() {
   const { id } = Route.useParams();
+  const rawSearch = useRouterState({ select: (s) => s.location.search });
+  const parsed = investorDirectorySearchSchema.safeParse(rawSearch);
+  const baseSearch: InvestorDirectorySearch = parsed.success ? parsed.data : { selected: id };
+  const returnSearch = baseSearch.view === "split" ? { ...baseSearch, selected: id } : { ...baseSearch, panel: id };
   const valid = isUuid(id);
   const fn = useServerFn(getInvestorPortfolio);
   const { data, isLoading, error } = useQuery({
@@ -245,7 +257,7 @@ function InvestorPortfolioPage() {
           </div>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/investors/$id" params={{ id }}>
+          <Link to="/investors" search={returnSearch}>
             <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back to investor
           </Link>
         </Button>

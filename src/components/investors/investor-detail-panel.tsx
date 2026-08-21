@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
+import { type InvestorDirectorySearch } from "@/routes/_authenticated/investors.index";
 import {
   ExternalLink,
   MapPin,
@@ -82,11 +83,13 @@ export function InvestorDetailPanel({
   showEdit = true,
   compact = false,
   onClose,
+  directorySearch,
 }: {
   id: string;
   showEdit?: boolean;
   compact?: boolean;
   onClose?: () => void;
+  directorySearch?: InvestorDirectorySearch;
 }) {
   const { data, isLoading, error } = useInvestor(id);
   const connectionState = useConnectionState(id);
@@ -98,6 +101,12 @@ export function InvestorDetailPanel({
   const descRef = useRef<HTMLParagraphElement>(null);
 
   const i = (data ?? null) as InvestorDetail | null;
+
+  const portfolioSearch = directorySearch
+    ? directorySearch.view === "split"
+      ? { ...directorySearch, selected: i?.id ?? id }
+      : { ...directorySearch, panel: i?.id ?? id }
+    : undefined;
 
   useEffect(() => {
     const el = descRef.current;
@@ -438,6 +447,7 @@ export function InvestorDetailPanel({
                 <Link
                   to="/investors/$id/portfolio"
                   params={{ id: i.id }}
+                  search={portfolioSearch}
                   className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
                 >
                   View Portfolio →
@@ -463,13 +473,14 @@ export function InvestorDetailPanel({
                   />
                 ))}
               </div>
-              <Link
-                to="/investors/$id/portfolio"
-                params={{ id: i.id }}
-                className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
-              >
-                View Investors →
-              </Link>
+                <Link
+                  to="/investors/$id/portfolio"
+                  params={{ id: i.id }}
+                  search={portfolioSearch}
+                  className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
+                >
+                  View Investors →
+                </Link>
             </Section>
           )}
 
