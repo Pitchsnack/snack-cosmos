@@ -21,6 +21,14 @@ import { isUuid } from "@/lib/uuid";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 
 export const Route = createFileRoute("/_authenticated/investors/$id/")({
+  validateSearch: z.object({ from: z.literal("edit").optional() }),
+  beforeLoad: ({ params, search }) => {
+    // This page is only reachable from Edit → Properties. Any other entry
+    // point shows the investor information panel in the directory instead.
+    if (search.from !== "edit") {
+      throw redirect({ to: "/investors", search: { panel: params.id } });
+    }
+  },
   head: () => ({ meta: [{ title: `Investor — SnackPortal2` }] }),
   component: InvestorDetailPage,
 });
