@@ -389,40 +389,89 @@ export function InvestorDetailPanel({
             </Section>
           )}
 
-          {/* Investment focus */}
+          {/* Investment focus + Preferred stages */}
           {(() => {
             const focus = Array.isArray(i.investment_focus)
               ? i.investment_focus.filter(Boolean)
               : typeof i.investment_focus === "string" && i.investment_focus.trim()
                 ? [i.investment_focus.trim()]
                 : [];
-            if (!focus.length) return null;
+            const stages = i.preferred_stages ?? [];
+            const hasFocus = focus.length > 0;
+            const hasStages = stages.length > 0;
+            if (!hasFocus && !hasStages) return null;
+
+            if (hasFocus && hasStages) {
+              return (
+                <PairedSection
+                  left={{
+                    icon: Layers,
+                    title: "Investment focus",
+                    content: <ChipRow tags={focus} tone="primary" />,
+                  }}
+                  right={{
+                    icon: Layers,
+                    title: "Preferred stages",
+                    content: <ChipRow tags={stages} tone="primary" />,
+                  }}
+                />
+              );
+            }
+
+            if (hasFocus) {
+              return (
+                <Section icon={Layers} title="Investment focus">
+                  <ChipRow tags={focus} tone="primary" />
+                </Section>
+              );
+            }
+
             return (
-              <Section icon={Layers} title="Investment focus">
-                <ChipRow tags={focus} tone="primary" />
+              <Section icon={Layers} title="Preferred stages">
+                <ChipRow tags={stages} tone="primary" />
               </Section>
             );
           })()}
 
+          {/* Preferred industries + Keywords */}
+          {(() => {
+            const industries = i.preferred_industries ?? [];
+            const keywords = i.keywords ?? [];
+            const hasIndustries = industries.length > 0;
+            const hasKeywords = keywords.length > 0;
+            if (!hasIndustries && !hasKeywords) return null;
 
+            if (hasIndustries && hasKeywords) {
+              return (
+                <PairedSection
+                  left={{
+                    icon: Building2,
+                    title: "Preferred industries",
+                    content: <ChipRow tags={industries} tone="muted" />,
+                  }}
+                  right={{
+                    icon: Tag,
+                    title: "Keywords",
+                    content: <ChipRow tags={keywords} tone="muted" />,
+                  }}
+                />
+              );
+            }
 
-          {i.preferred_stages?.length ? (
-            <Section icon={Layers} title="Preferred stages">
-              <ChipRow tags={i.preferred_stages} tone="primary" />
-            </Section>
-          ) : null}
+            if (hasIndustries) {
+              return (
+                <Section icon={Building2} title="Preferred industries">
+                  <ChipRow tags={industries} tone="muted" />
+                </Section>
+              );
+            }
 
-          {i.preferred_industries?.length ? (
-            <Section icon={Building2} title="Preferred industries">
-              <ChipRow tags={i.preferred_industries} tone="muted" />
-            </Section>
-          ) : null}
-
-          {i.keywords?.length ? (
-            <Section icon={Tag} title="Keywords">
-              <ChipRow tags={i.keywords} tone="muted" />
-            </Section>
-          ) : null}
+            return (
+              <Section icon={Tag} title="Keywords">
+                <ChipRow tags={keywords} tone="muted" />
+              </Section>
+            );
+          })()}
 
           {/* Portfolio startups */}
           <Section
@@ -518,6 +567,43 @@ function Section({
         {title}
       </h3>
       <div>{children}</div>
+    </section>
+  );
+}
+
+function PairedSection({
+  left,
+  right,
+  className,
+}: {
+  left: { icon: typeof Calendar; title: string; content: React.ReactNode };
+  right: { icon: typeof Calendar; title: string; content: React.ReactNode };
+  className?: string;
+}) {
+  return (
+    <section
+      className={cn(
+        "grid border-t border-b border-border/50 py-[11.2px]",
+        "max-[700px]:grid-cols-1 max-[700px]:divide-y max-[700px]:divide-border/50 max-[700px]:gap-0",
+        "min-[700px]:grid-cols-[1fr_1px_1fr] min-[700px]:gap-[11.5px]",
+        className,
+      )}
+    >
+      <div className="min-w-0">
+        <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <left.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {left.title}
+        </h3>
+        <div className="min-w-0">{left.content}</div>
+      </div>
+      <div className="hidden w-px bg-[#EEEEEE] self-stretch min-[700px]:block" aria-hidden />
+      <div className="min-w-0 max-[700px]:pt-[11.2px]">
+        <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <right.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {right.title}
+        </h3>
+        <div className="min-w-0">{right.content}</div>
+      </div>
     </section>
   );
 }
