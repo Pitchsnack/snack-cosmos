@@ -523,7 +523,7 @@ export function StartupDetailPanel({
               href={s.website_url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 text-accent hover:underline"
+              className="flex items-center gap-2 text-blue-900 hover:underline"
             >
               <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               <span className="truncate">
@@ -534,7 +534,7 @@ export function StartupDetailPanel({
           {s.email && (
             <a
               href={`mailto:${s.email}`}
-              className="flex items-center gap-2 text-accent hover:underline"
+              className="flex items-center gap-2 text-blue-900 hover:underline"
             >
               <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               <span className="truncate">{s.email}</span>
