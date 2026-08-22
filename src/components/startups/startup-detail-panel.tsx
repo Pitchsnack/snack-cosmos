@@ -626,7 +626,16 @@ export function StartupDetailPanel({
       {s.investors.length > 0 && (
         <Section
           icon={Users}
-          title={`Investor${s.investors.length > 1 ? `s (${s.investors.length})` : ""}`}
+          title={`INVESTORS (${s.investors.length})`}
+          right={
+            <Link
+              to="/startups/$id/investors"
+              params={{ id }}
+              className="text-xs font-medium text-blue-900 hover:underline"
+            >
+              View Investors →
+            </Link>
+          }
         >
           <div className="flex flex-wrap gap-2">
             {s.investors.map((i) => (
@@ -640,15 +649,7 @@ export function StartupDetailPanel({
               />
             ))}
           </div>
-          <Link
-            to="/startups/$id/investors"
-            params={{ id }}
-            className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
-          >
-            View Investors →
-          </Link>
         </Section>
-
       )}
         </>
       )}
