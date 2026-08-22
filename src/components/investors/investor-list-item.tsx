@@ -174,7 +174,7 @@ export function InvestorListItem({
 
       <div className="mt-auto flex w-full justify-end pt-0.5">
         <span
-          className="cursor-pointer text-xs font-medium text-accent group-hover:underline"
+          className="cursor-pointer text-xs font-medium text-blue-900 group-hover:underline"
           onClick={(e) => {
             e.stopPropagation();
             setExpanded((v) => !v);

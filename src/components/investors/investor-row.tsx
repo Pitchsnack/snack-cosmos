@@ -133,7 +133,7 @@ export function InvestorRow({
             </div>
           )}
         </div>
-        <span className="mt-2 inline-flex items-center gap-1 self-end text-xs font-medium text-accent group-hover:underline">
+        <span className="mt-2 inline-flex items-center gap-1 self-end text-xs font-medium text-blue-900 group-hover:underline">
           View details <ArrowRight className="h-3 w-3" />
         </span>
       </div>
