@@ -17,6 +17,7 @@ import {
 } from "@/components/investors/investor-detail-panel";
 import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
+import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useInvestors } from "@/hooks/use-investors";
 import { useFavoriteInvestors } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";

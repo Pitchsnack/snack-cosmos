@@ -19,6 +19,7 @@ import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favor
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { InvestorDetailPanel } from "@/components/investors/investor-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
+import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
