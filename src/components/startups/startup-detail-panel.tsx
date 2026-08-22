@@ -610,7 +610,7 @@ export function StartupDetailPanel({
                       href={f.linkedin_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+                      className="mt-1 inline-flex items-center gap-1 text-[11px] text-blue-900 hover:underline"
                     >
                       <Linkedin className="h-3 w-3" strokeWidth={1.75} /> LinkedIn
                     </a>
