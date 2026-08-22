@@ -673,20 +673,24 @@ function Section({
   icon: Icon,
   title,
   children,
+  right,
 }: {
   icon: typeof Calendar;
   title: string;
   children: React.ReactNode;
+  right?: React.ReactNode;
 }) {
   return (
     <section className="border-t border-border/50 pt-[11.2px]">
-      <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
-        {title}
-      </h3>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {title}
+        </h3>
+        {right && <div className="shrink-0">{right}</div>}
+      </div>
       <div>{children}</div>
     </section>
-
   );
 }
 
