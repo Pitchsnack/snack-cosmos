@@ -193,7 +193,10 @@ function StartupsPageInner() {
           </button>
           <ViewToggle
             value={view}
-            onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
+            onChange={(v) => {
+              persistView(v);
+              navigate({ search: (p: typeof s) => ({ ...p, view: v }) });
+            }}
           />
           {has("startups.write") && (
             <Button

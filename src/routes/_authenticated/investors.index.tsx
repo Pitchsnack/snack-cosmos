@@ -191,7 +191,10 @@ function InvestorsPageInner() {
           </button>
           <ViewToggle
             value={view}
-            onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
+            onChange={(v) => {
+              persistView(v);
+              navigate({ search: (p: typeof s) => ({ ...p, view: v }) });
+            }}
           />
           {has("investors.write") && (
             <Button
@@ -365,7 +368,7 @@ function InvestorsPageInner() {
       )}
 
       <Dialog
-        open={!!s.panel && s.view !== "split"}
+        open={!!s.panel && view !== "split"}
         onOpenChange={(o) =>
           !o && navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }) })
         }
