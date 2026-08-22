@@ -19,6 +19,7 @@ import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favor
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { InvestorDetailPanel } from "@/components/investors/investor-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
+import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
@@ -77,7 +78,9 @@ function StartupsPageInner() {
   const s = Route.useSearch();
   const page = s.page ?? 1;
   const sort = s.sort ?? "updated_desc";
-  const view = s.view ?? "grid";
+  // Split is the default; the choice persists across refresh/reopen via
+  // localStorage. An explicit ?view= param (shared link) always wins.
+  const { view, persist: persistView } = usePersistentView("sp2-startups-view", s.view);
   const selected = s.selected;
   const favOnly = !!s.fav;
   // The information panel is URL-addressable so returning from Edit restores it
@@ -190,7 +193,10 @@ function StartupsPageInner() {
           </button>
           <ViewToggle
             value={view}
-            onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
+            onChange={(v) => {
+              persistView(v);
+              navigate({ search: (p: typeof s) => ({ ...p, view: v }) });
+            }}
           />
           {has("startups.write") && (
             <Button

@@ -17,6 +17,7 @@ import {
 } from "@/components/investors/investor-detail-panel";
 import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
+import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useInvestors } from "@/hooks/use-investors";
 import { useFavoriteInvestors } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
@@ -79,7 +80,9 @@ function InvestorsPageInner() {
   const s = Route.useSearch();
   const page = s.page ?? 1;
   const sort = s.sort ?? "updated_desc";
-  const view = s.view ?? "grid";
+  // Split is the default; the choice persists across refresh/reopen via
+  // localStorage. An explicit ?view= param (shared link) always wins.
+  const { view, persist: persistView } = usePersistentView("sp2-investors-view", s.view);
   const selected = s.selected;
   const favOnly = !!s.fav;
   const { ids: favIds } = useFavoriteInvestors();
@@ -188,7 +191,10 @@ function InvestorsPageInner() {
           </button>
           <ViewToggle
             value={view}
-            onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
+            onChange={(v) => {
+              persistView(v);
+              navigate({ search: (p: typeof s) => ({ ...p, view: v }) });
+            }}
           />
           {has("investors.write") && (
             <Button
@@ -362,7 +368,7 @@ function InvestorsPageInner() {
       )}
 
       <Dialog
-        open={!!s.panel && s.view !== "split"}
+        open={!!s.panel && view !== "split"}
         onOpenChange={(o) =>
           !o && navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }) })
         }
