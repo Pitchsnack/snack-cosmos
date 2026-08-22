@@ -523,7 +523,7 @@ export function StartupDetailPanel({
               href={s.website_url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 text-accent hover:underline"
+              className="flex items-center gap-2 text-blue-900 hover:underline"
             >
               <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               <span className="truncate">
@@ -534,7 +534,7 @@ export function StartupDetailPanel({
           {s.email && (
             <a
               href={`mailto:${s.email}`}
-              className="flex items-center gap-2 text-accent hover:underline"
+              className="flex items-center gap-2 text-blue-900 hover:underline"
             >
               <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               <span className="truncate">{s.email}</span>
@@ -610,7 +610,7 @@ export function StartupDetailPanel({
                       href={f.linkedin_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+                      className="mt-1 inline-flex items-center gap-1 text-[11px] text-blue-900 hover:underline"
                     >
                       <Linkedin className="h-3 w-3" strokeWidth={1.75} /> LinkedIn
                     </a>
@@ -626,7 +626,16 @@ export function StartupDetailPanel({
       {s.investors.length > 0 && (
         <Section
           icon={Users}
-          title={`Investor${s.investors.length > 1 ? `s (${s.investors.length})` : ""}`}
+          title={`INVESTORS (${s.investors.length})`}
+          right={
+            <Link
+              to="/startups/$id/investors"
+              params={{ id }}
+              className="text-xs font-medium text-blue-900 hover:underline"
+            >
+              View Investors →
+            </Link>
+          }
         >
           <div className="flex flex-wrap gap-2">
             {s.investors.map((i) => (
@@ -640,15 +649,7 @@ export function StartupDetailPanel({
               />
             ))}
           </div>
-          <Link
-            to="/startups/$id/investors"
-            params={{ id }}
-            className="mt-3 inline-flex text-xs font-medium text-accent hover:underline"
-          >
-            View Investors →
-          </Link>
         </Section>
-
       )}
         </>
       )}
@@ -672,20 +673,24 @@ function Section({
   icon: Icon,
   title,
   children,
+  right,
 }: {
   icon: typeof Calendar;
   title: string;
   children: React.ReactNode;
+  right?: React.ReactNode;
 }) {
   return (
     <section className="border-t border-border/50 pt-[11.2px]">
-      <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
-        {title}
-      </h3>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {title}
+        </h3>
+        {right && <div className="shrink-0">{right}</div>}
+      </div>
       <div>{children}</div>
     </section>
-
   );
 }
 
