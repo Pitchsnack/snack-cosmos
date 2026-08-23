@@ -18,6 +18,24 @@ export type ExtractionStatus = "not_extracted" | "pending" | "extracted" | "fail
 
 export const MAX_COMPETITORS = 3;
 
+/**
+ * Read-only snapshot of an existing startup record the target is linked to.
+ * Selecting "Use This Startup" in the P-18 duplicate check creates an
+ * Acquisition Target *relationship* to that record — the original startup is
+ * never recreated, copied into a second profile, or modified.
+ */
+export interface LinkedStartupSnapshot {
+  name: string;
+  website: string;
+  logo: string | null;
+  shortDescription: string | null;
+  industry: string[];
+  productTags: string[];
+  marketTags: string[];
+  headquarters: string | null;
+  city: string | null;
+}
+
 export interface TargetCompany {
   id: string;
   name: string;
@@ -27,6 +45,10 @@ export interface TargetCompany {
   /** "Why this company is attractive" — up to 5 keyword pills. */
   attractiveKeywords: string[];
   notes: string;
+  /** Existing startup record id when this target links to one; null = manual entry. */
+  linkedStartupId: string | null;
+  /** Display snapshot of the linked startup (only when linkedStartupId is set). */
+  linkedSnapshot: LinkedStartupSnapshot | null;
 }
 
 export interface CompetitorExtractionResult {
@@ -43,6 +65,8 @@ export interface CompetitorReference {
   logo: string | null;
   attractiveKeywords: string[];
   notes: string;
+  linkedStartupId: string | null;
+  linkedSnapshot: LinkedStartupSnapshot | null;
   status: ExtractionStatus;
   lastExtractedAt: string | null;
   result: CompetitorExtractionResult | null;
