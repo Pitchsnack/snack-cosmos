@@ -147,7 +147,26 @@ export function TargetCompaniesSection({
                           {t.name.slice(0, 1).toUpperCase()}
                         </span>
                       )}
-                      <span className="font-medium">{t.name}</span>
+                      <div className="min-w-0">
+                        {t.linkedStartupId ? (
+                          <a
+                            href={`/startups/${t.linkedStartupId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-medium text-blue-900 hover:underline"
+                            title="Open the linked startup record"
+                          >
+                            {t.name} <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <span className="font-medium">{t.name}</span>
+                        )}
+                        {t.linkedStartupId && (
+                          <span className="ml-1.5 rounded-full border border-primary/25 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-primary">
+                            Linked
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="py-2.5 pr-4">
