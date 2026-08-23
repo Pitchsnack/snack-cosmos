@@ -21,6 +21,7 @@ const PATH_LABELS: Record<string, string> = {
   "/my-startups/new": "Add My Startup",
   "/my-startups/$id": "My Startup",
   "/my-startups/$id/edit": "Edit My Startup",
+  "/my-startups/$id/acquisition": "Acquisition Strategy",
 
   "/investors": "Investors Directory",
   "/investors/new": "New Investor",

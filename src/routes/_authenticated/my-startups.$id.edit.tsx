@@ -25,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
     selected: z.string().optional(),
     page: z.coerce.number().int().optional(),
     fav: z.coerce.boolean().optional(),
+    tab: z.enum(["edit", "basic-restrictions"]).optional(),
   }),
   head: () => ({
     meta: [
@@ -71,7 +72,7 @@ function EditMyStartupPage() {
             {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
             {!isLoading && (error || !data) && <StartupNotFound reason="missing" workspace="my-startups" />}
             {data && (
-              <Tabs defaultValue="edit" className="w-full">
+              <Tabs key={returnSearch.tab ?? "edit"} defaultValue={returnSearch.tab ?? "edit"} className="w-full">
                 <TabsList className="bg-transparent p-0 h-auto border-b border-border/60 rounded-none w-full justify-start gap-6 overflow-x-auto">
                   <TabsTrigger
                     value="edit"
