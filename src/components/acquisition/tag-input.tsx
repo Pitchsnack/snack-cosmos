@@ -14,19 +14,24 @@ export function TagInput({
   placeholder,
   suggestions,
   disabled,
+  max,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
   suggestions?: string[];
   disabled?: boolean;
+  /** Maximum number of tags; input and suggestions hide once reached. */
+  max?: number;
 }) {
   const [draft, setDraft] = useState("");
+  const atMax = max != null && value.length >= max;
 
   const add = (raw: string) => {
     const tag = raw.trim().replace(/,+$/, "");
     if (!tag) return;
-    if (!value.some((v) => v.toLowerCase() === tag.toLowerCase())) onChange([...value, tag]);
+    if (!atMax && !value.some((v) => v.toLowerCase() === tag.toLowerCase()))
+      onChange([...value, tag]);
     setDraft("");
   };
 
@@ -60,7 +65,7 @@ export function TagInput({
             )}
           </span>
         ))}
-        {!disabled && (
+        {!disabled && !atMax && (
           <Input
             value={draft}
             onChange={(e) => {
@@ -82,7 +87,7 @@ export function TagInput({
           />
         )}
       </div>
-      {remaining.length > 0 && !disabled && (
+      {remaining.length > 0 && !disabled && !atMax && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">
             Suggested
