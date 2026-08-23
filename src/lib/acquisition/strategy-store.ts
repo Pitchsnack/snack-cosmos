@@ -163,10 +163,32 @@ function toKeywords(v: unknown): string[] {
   return v.filter((k): k is string => typeof k === "string" && !!k.trim()).slice(0, 5);
 }
 
+function toStringArray(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
+/** Normalize a persisted linked-startup snapshot; returns null when not linked. */
+function normalizeSnapshot(raw: unknown): LinkedStartupSnapshot | null {
+  const s = raw as Partial<LinkedStartupSnapshot> | null;
+  if (!s || typeof s.name !== "string" || !s.name) return null;
+  return {
+    name: s.name,
+    website: typeof s.website === "string" ? s.website : "",
+    logo: typeof s.logo === "string" && s.logo ? s.logo : null,
+    shortDescription: typeof s.shortDescription === "string" ? s.shortDescription : null,
+    industry: toStringArray(s.industry),
+    productTags: toStringArray(s.productTags),
+    marketTags: toStringArray(s.marketTags),
+    headquarters: typeof s.headquarters === "string" ? s.headquarters : null,
+    city: typeof s.city === "string" ? s.city : null,
+  };
+}
+
 /** Normalize persisted rows so older saves (with `source`, without logo/keywords) stay readable. */
 function normalizeTarget(raw: unknown): TargetCompany | null {
   const t = raw as Partial<TargetCompany> | null;
   if (!t || typeof t.id !== "string" || typeof t.name !== "string") return null;
+  const linkedStartupId = typeof t.linkedStartupId === "string" && t.linkedStartupId ? t.linkedStartupId : null;
   return {
     id: t.id,
     name: t.name,
@@ -174,12 +196,15 @@ function normalizeTarget(raw: unknown): TargetCompany | null {
     logo: typeof t.logo === "string" && t.logo ? t.logo : null,
     attractiveKeywords: toKeywords(t.attractiveKeywords),
     notes: typeof t.notes === "string" ? t.notes : "",
+    linkedStartupId,
+    linkedSnapshot: linkedStartupId ? normalizeSnapshot(t.linkedSnapshot) : null,
   };
 }
 
 function normalizeCompetitor(raw: unknown): CompetitorReference | null {
   const c = raw as Partial<CompetitorReference> | null;
   if (!c || typeof c.id !== "string" || typeof c.name !== "string") return null;
+  const linkedStartupId = typeof c.linkedStartupId === "string" && c.linkedStartupId ? c.linkedStartupId : null;
   return {
     id: c.id,
     name: c.name,
@@ -187,6 +212,8 @@ function normalizeCompetitor(raw: unknown): CompetitorReference | null {
     logo: typeof c.logo === "string" && c.logo ? c.logo : null,
     attractiveKeywords: toKeywords(c.attractiveKeywords),
     notes: typeof c.notes === "string" ? c.notes : "",
+    linkedStartupId,
+    linkedSnapshot: linkedStartupId ? normalizeSnapshot(c.linkedSnapshot) : null,
     status: EXTRACTION_STATUSES.includes(c.status as ExtractionStatus)
       ? (c.status as ExtractionStatus)
       : "not_extracted",
