@@ -17,6 +17,10 @@ interface Props {
   onCancel: () => void;
   onLinkExisting: (candidate: DuplicateCandidate) => void;
   onCreatePendingAnyway: () => void;
+  /** Label for picking an existing record (default: "Link"). */
+  linkLabel?: string;
+  /** Label for the proceed-anyway footer button (default: "Create Pending Anyway"). */
+  createLabel?: string;
 }
 
 export function DuplicateWarningDialog({
@@ -26,6 +30,8 @@ export function DuplicateWarningDialog({
   onCancel,
   onLinkExisting,
   onCreatePendingAnyway,
+  linkLabel = "Link",
+  createLabel = "Create Pending Anyway",
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onCancel(); }}>

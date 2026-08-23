@@ -83,5 +83,5 @@ export function useWebsiteDuplicateCheck(excludeId?: string) {
     [fn, excludeId],
   );
 
-  return { check, checking, candidates, typedValue, close, open: candidates.length > 0 };
+  return { check, checking, candidates, typedValue, close, open: candidates.length > 0, startupById };
 }
