@@ -58,9 +58,12 @@ export function DuplicateWarningDialog({
                   <div className="truncate text-xs text-muted-foreground">{c.subtitle}</div>
                 )}
               </div>
-              <Badge variant="secondary" className="shrink-0 text-[10px]">
-                {c.matchKind}
-              </Badge>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Badge variant="secondary" className="text-[10px]">
+                  {c.matchKind}
+                </Badge>
+                <Badge className="text-[10px]">{linkLabel}</Badge>
+              </div>
             </button>
           ))}
           {candidates.length === 0 && (
@@ -73,7 +76,7 @@ export function DuplicateWarningDialog({
             Cancel
           </Button>
           <Button type="button" variant="secondary" onClick={onCreatePendingAnyway}>
-            Create Pending Anyway
+            {createLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
