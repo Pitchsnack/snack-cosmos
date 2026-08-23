@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/acquisitio
     tab: z
       .enum(["overview", "targets", "competitors", "requirements", "insights"])
       .optional(),
+    // Linked startup shown in the information-panel overlay.
+    panel: z.string().optional(),
   }),
   head: () => ({
     meta: [
@@ -36,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/acquisitio
 
 function AcquisitionStrategyRoute() {
   const { id } = Route.useParams();
-  const { tab } = Route.useSearch();
+  const { tab, panel } = Route.useSearch();
   const validId = isUuid(id);
   const { data, isLoading, error } = useStartup(validId ? id : undefined);
   const { has, isControl } = usePermissions();
@@ -55,6 +57,7 @@ function AcquisitionStrategyRoute() {
           startup={data as unknown as StartupDetail}
           tab={tab ?? "overview"}
           canEdit={canEdit}
+          panelStartupId={panel && isUuid(panel) ? panel : null}
         />
       )}
     </PermissionGuard>
