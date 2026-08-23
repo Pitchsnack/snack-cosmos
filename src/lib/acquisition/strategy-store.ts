@@ -264,7 +264,7 @@ export function buildStrategyExport(startupName: string, s: AcquisitionStrategy)
     ...(s.targets.length
       ? s.targets.map(
           (t) =>
-            `- ${t.name}${t.website ? ` (${t.website})` : ""} — Source: ${t.source || "—"}${t.notes ? ` — ${t.notes}` : ""}`,
+            `- ${t.name}${t.website ? ` (${t.website})` : ""}${t.attractiveKeywords.length ? ` — Why attractive: ${t.attractiveKeywords.join(", ")}` : ""}${t.notes ? ` — ${t.notes}` : ""}`,
         )
       : ["- None added yet."]),
     "",
@@ -272,7 +272,7 @@ export function buildStrategyExport(startupName: string, s: AcquisitionStrategy)
     ...(s.competitors.length
       ? s.competitors.map(
           (c) =>
-            `- ${c.name}${c.website ? ` (${c.website})` : ""} — ${EXTRACTION_STATUS_LABEL[c.status]}`,
+            `- ${c.name}${c.website ? ` (${c.website})` : ""} — ${EXTRACTION_STATUS_LABEL[c.status]}${c.attractiveKeywords.length ? ` — Why attractive: ${c.attractiveKeywords.join(", ")}` : ""}${c.notes ? ` — ${c.notes}` : ""}`,
         )
       : ["- None added yet."]),
     "",
