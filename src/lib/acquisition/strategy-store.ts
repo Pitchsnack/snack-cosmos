@@ -198,7 +198,7 @@ export const EXTRACTION_STATUS_LABEL: Record<ExtractionStatus, string> = {
 
 /** Human-readable export of the full strategy (Save/Export actions). */
 export function buildStrategyExport(startupName: string, s: AcquisitionStrategy): string {
-  const lines: string[] = [
+  const lines: (string | null)[] = [
     `# Acquisition Strategy — ${startupName}`,
     "",
     `Exported: ${new Date().toISOString()}`,
