@@ -14,19 +14,24 @@ export function TagInput({
   placeholder,
   suggestions,
   disabled,
+  max,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
   suggestions?: string[];
   disabled?: boolean;
+  /** Maximum number of tags; input and suggestions hide once reached. */
+  max?: number;
 }) {
   const [draft, setDraft] = useState("");
+  const atMax = max != null && value.length >= max;
 
   const add = (raw: string) => {
     const tag = raw.trim().replace(/,+$/, "");
     if (!tag) return;
-    if (!value.some((v) => v.toLowerCase() === tag.toLowerCase())) onChange([...value, tag]);
+    if (!atMax && !value.some((v) => v.toLowerCase() === tag.toLowerCase()))
+      onChange([...value, tag]);
     setDraft("");
   };
 

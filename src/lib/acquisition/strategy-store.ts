@@ -22,7 +22,10 @@ export interface TargetCompany {
   id: string;
   name: string;
   website: string;
-  source: string;
+  /** Data URL (uploaded/snipped) or remote URL (auto-enrich favicon). */
+  logo: string | null;
+  /** "Why this company is attractive" — up to 5 keyword pills. */
+  attractiveKeywords: string[];
   notes: string;
 }
 
@@ -37,6 +40,9 @@ export interface CompetitorReference {
   id: string;
   name: string;
   website: string;
+  logo: string | null;
+  attractiveKeywords: string[];
+  notes: string;
   status: ExtractionStatus;
   lastExtractedAt: string | null;
   result: CompetitorExtractionResult | null;
@@ -96,8 +102,14 @@ export function loadStrategy(startupId: string): AcquisitionStrategy {
     try {
       const parsed = JSON.parse(raw) as Partial<AcquisitionStrategy>;
       value = {
-        targets: Array.isArray(parsed.targets) ? parsed.targets : [],
-        competitors: Array.isArray(parsed.competitors) ? parsed.competitors : [],
+        targets: Array.isArray(parsed.targets)
+          ? parsed.targets.map(normalizeTarget).filter((t): t is TargetCompany => t !== null)
+          : [],
+        competitors: Array.isArray(parsed.competitors)
+          ? parsed.competitors
+              .map(normalizeCompetitor)
+              .filter((c): c is CompetitorReference => c !== null)
+          : [],
         requirements: { ...EMPTY_REQUIREMENTS, ...(parsed.requirements ?? {}) },
         updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : null,
       };
