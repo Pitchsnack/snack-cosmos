@@ -19,6 +19,7 @@ export function TargetCompaniesSection({
   expanded = false,
   numberedTitle,
   description,
+  onOpenLinked,
 }: {
   strategy: AcquisitionStrategy;
   update: Updater;
@@ -27,6 +28,8 @@ export function TargetCompaniesSection({
   expanded?: boolean;
   numberedTitle?: string;
   description?: string;
+  /** Opens a linked startup's information panel as an overlay on this page. */
+  onOpenLinked?: (startupId: string) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TargetCompany | null>(null);

@@ -33,6 +33,7 @@ export function CompetitorReferencesSection({
   canEdit,
   expanded = false,
   numberedTitle,
+  onOpenLinked,
 }: {
   strategy: AcquisitionStrategy;
   update: Updater;
@@ -40,6 +41,8 @@ export function CompetitorReferencesSection({
   /** Expanded tab view: shows per-competitor extraction results. */
   expanded?: boolean;
   numberedTitle?: string;
+  /** Opens a linked startup's information panel as an overlay on this page. */
+  onOpenLinked?: (startupId: string) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [openResults, setOpenResults] = useState<Record<string, boolean>>({});
