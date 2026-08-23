@@ -3,16 +3,11 @@ import { Bot, ChevronDown, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import {
+  CompanyFormDialog,
+  type CompanyFormValue,
+} from "@/components/acquisition/company-form-dialog";
 import {
   EXTRACTION_STATUS_LABEL,
   MAX_COMPETITORS,
@@ -47,26 +42,28 @@ export function CompetitorReferencesSection({
   numberedTitle?: string;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", website: "" });
   const [openResults, setOpenResults] = useState<Record<string, boolean>>({});
 
   const atLimit = strategy.competitors.length >= MAX_COMPETITORS;
 
-  const addCompetitor = () => {
-    const name = form.name.trim();
-    if (!name) {
-      toast.error("Competitor name is required");
-      return;
-    }
+  const addCompetitor = (value: CompanyFormValue) => {
     update((d) => ({
       ...d,
       competitors: [
         ...d.competitors,
-        { id: newId(), name, website: form.website.trim(), status: "not_extracted", lastExtractedAt: null, result: null },
+        {
+          id: newId(),
+          name: value.name,
+          website: value.website,
+          logo: value.logo,
+          attractiveKeywords: value.attractiveKeywords,
+          notes: value.notes,
+          status: "not_extracted",
+          lastExtractedAt: null,
+          result: null,
+        },
       ],
     }));
-    setDialogOpen(false);
-    setForm({ name: "", website: "" });
     toast.success("Competitor reference added");
   };
 
@@ -145,17 +142,39 @@ export function CompetitorReferencesSection({
               <div key={c.id} className="rounded-md border border-border/50">
                 <div className="grid grid-cols-1 items-center gap-2 px-3 py-2.5 md:grid-cols-[1.2fr_1.4fr_1fr_1fr_auto] md:gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-                      {c.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-                    </span>
-                    <span className="text-sm font-medium">{c.name}</span>
+                    {c.logo ? (
+                      <img
+                        src={c.logo}
+                        alt={`${c.name} logo`}
+                        className="h-7 w-7 shrink-0 rounded-md border border-border/60 bg-background object-contain"
+                      />
+                    ) : (
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                        {c.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <span className="text-sm font-medium">{c.name}</span>
+                      {c.attractiveKeywords.length > 0 && (
+                        <div className="mt-0.5 flex flex-wrap gap-1">
+                          {c.attractiveKeywords.map((k) => (
+                            <span
+                              key={k}
+                              className="rounded-full border border-primary/20 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-foreground/75"
+                            >
+                              {k}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     {c.website ? (
                       <a
                         href={/^https?:\/\//i.test(c.website) ? c.website : `https://${c.website}`}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-xs text-blue-900 hover:underline"
                       >
                         {c.website} <ExternalLink className="h-3 w-3" />
@@ -244,43 +263,16 @@ export function CompetitorReferencesSection({
         </button>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Competitor Reference</DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-muted-foreground">
-            Only the competitor name and website are needed — acquisition history, targets and
-            patterns are discovered automatically by the Extract action.
-          </p>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="cr-name">Competitor Name</Label>
-              <Input
-                id="cr-name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. Competitor A"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cr-website">Website</Label>
-              <Input
-                id="cr-website"
-                value={form.website}
-                onChange={(e) => setForm({ ...form, website: e.target.value })}
-                placeholder="https://competitor.com"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={addCompetitor}>Add Competitor</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CompanyFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title="Add Competitor Reference"
+        description="Add the competitor's details — acquisition history, targets and patterns are discovered automatically by the Extract action."
+        submitLabel="Add Competitor"
+        nameLabel="Competitor Name"
+        namePlaceholder="e.g. Competitor A"
+        onSave={addCompetitor}
+      />
     </section>
   );
 }
