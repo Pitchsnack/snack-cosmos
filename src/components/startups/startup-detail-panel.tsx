@@ -347,6 +347,13 @@ export function StartupDetailPanel({
                       <Pencil className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
                   )}
+                  {isMyWorkspace && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/my-startups/$id/acquisition" params={{ id }} onClick={() => onClose?.()}>
+                        <Target className="mr-2 h-4 w-4" /> Acquisition Strategy
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem disabled>
                     <Activity className="mr-2 h-4 w-4" /> View Activity / Audit
                     <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
