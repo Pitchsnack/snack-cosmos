@@ -296,6 +296,47 @@ export function simulateExtraction(name: string, website: string): CompetitorExt
   };
 }
 
+/**
+ * "✨ Auto Enrich Acquisition Analysis" for a linked target.
+ *
+ * Derives up to 5 acquisition-attractiveness keywords from the existing
+ * startup's profile. These describe *why the startup is attractive to
+ * acquire* (AI Capability, Supply Chain Synergy, …) — they are NOT a copy of
+ * the startup's normal Industry / Product / Market tags. Deterministic per
+ * snapshot so repeated runs agree.
+ */
+export function acquisitionAttractivenessKeywords(s: LinkedStartupSnapshot): string[] {
+  const text = [
+    s.name,
+    s.shortDescription ?? "",
+    ...s.industry,
+    ...s.productTags,
+    ...s.marketTags,
+  ]
+    .join(" ")
+    .toLowerCase();
+  const has = (...terms: string[]) => terms.some((t) => text.includes(t));
+
+  const out: string[] = [];
+  const add = (k: string) => {
+    if (out.length < 5 && !out.some((x) => x.toLowerCase() === k.toLowerCase())) out.push(k);
+  };
+
+  if (has("artificial intelligence", "machine learning", " ai", "ai ", "ai-")) add("AI Capability");
+  if (has("data")) add("Data Infrastructure");
+  if (has("supply chain", "logistic", "route", "fleet", "delivery")) add("Supply Chain Synergy");
+  if (has("deeptech", "deep tech", "robot", "hardware", "iot", "sensor")) add("Strategic Technology");
+  if (has("platform", "saas", "software", "api")) add("Product Synergy");
+  if (has("marketplace", "commerce", "b2b", "customer")) add("Customer Base");
+  if (has("patent", "proprietary", " ip ")) add("Strong IP");
+
+  // Generic fillers keep the analysis useful even for sparse profiles.
+  for (const g of ["Strategic Technology", "Market Expansion", "Talent Acquisition", "Recurring Revenue"]) {
+    add(g);
+  }
+  return out.slice(0, 5);
+}
+
 export const EXTRACTION_STATUS_LABEL: Record<ExtractionStatus, string> = {
   not_extracted: "Not Extracted",
   pending: "Extraction Pending",
@@ -315,7 +356,7 @@ export function buildStrategyExport(startupName: string, s: AcquisitionStrategy)
     ...(s.targets.length
       ? s.targets.map(
           (t) =>
-            `- ${t.name}${t.website ? ` (${t.website})` : ""}${t.attractiveKeywords.length ? ` — Why attractive: ${t.attractiveKeywords.join(", ")}` : ""}${t.notes ? ` — ${t.notes}` : ""}`,
+            `- ${t.name}${t.website ? ` (${t.website})` : ""}${t.linkedStartupId ? " — Linked to existing startup record" : ""}${t.attractiveKeywords.length ? ` — Why attractive: ${t.attractiveKeywords.join(", ")}` : ""}${t.notes ? ` — ${t.notes}` : ""}`,
         )
       : ["- None added yet."]),
     "",
