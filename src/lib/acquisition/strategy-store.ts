@@ -18,6 +18,24 @@ export type ExtractionStatus = "not_extracted" | "pending" | "extracted" | "fail
 
 export const MAX_COMPETITORS = 3;
 
+/**
+ * Read-only snapshot of an existing startup record the target is linked to.
+ * Selecting "Use This Startup" in the P-18 duplicate check creates an
+ * Acquisition Target *relationship* to that record — the original startup is
+ * never recreated, copied into a second profile, or modified.
+ */
+export interface LinkedStartupSnapshot {
+  name: string;
+  website: string;
+  logo: string | null;
+  shortDescription: string | null;
+  industry: string[];
+  productTags: string[];
+  marketTags: string[];
+  headquarters: string | null;
+  city: string | null;
+}
+
 export interface TargetCompany {
   id: string;
   name: string;
@@ -27,6 +45,10 @@ export interface TargetCompany {
   /** "Why this company is attractive" — up to 5 keyword pills. */
   attractiveKeywords: string[];
   notes: string;
+  /** Existing startup record id when this target links to one; null = manual entry. */
+  linkedStartupId: string | null;
+  /** Display snapshot of the linked startup (only when linkedStartupId is set). */
+  linkedSnapshot: LinkedStartupSnapshot | null;
 }
 
 export interface CompetitorExtractionResult {
@@ -43,6 +65,8 @@ export interface CompetitorReference {
   logo: string | null;
   attractiveKeywords: string[];
   notes: string;
+  linkedStartupId: string | null;
+  linkedSnapshot: LinkedStartupSnapshot | null;
   status: ExtractionStatus;
   lastExtractedAt: string | null;
   result: CompetitorExtractionResult | null;
@@ -139,10 +163,32 @@ function toKeywords(v: unknown): string[] {
   return v.filter((k): k is string => typeof k === "string" && !!k.trim()).slice(0, 5);
 }
 
+function toStringArray(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
+/** Normalize a persisted linked-startup snapshot; returns null when not linked. */
+function normalizeSnapshot(raw: unknown): LinkedStartupSnapshot | null {
+  const s = raw as Partial<LinkedStartupSnapshot> | null;
+  if (!s || typeof s.name !== "string" || !s.name) return null;
+  return {
+    name: s.name,
+    website: typeof s.website === "string" ? s.website : "",
+    logo: typeof s.logo === "string" && s.logo ? s.logo : null,
+    shortDescription: typeof s.shortDescription === "string" ? s.shortDescription : null,
+    industry: toStringArray(s.industry),
+    productTags: toStringArray(s.productTags),
+    marketTags: toStringArray(s.marketTags),
+    headquarters: typeof s.headquarters === "string" ? s.headquarters : null,
+    city: typeof s.city === "string" ? s.city : null,
+  };
+}
+
 /** Normalize persisted rows so older saves (with `source`, without logo/keywords) stay readable. */
 function normalizeTarget(raw: unknown): TargetCompany | null {
   const t = raw as Partial<TargetCompany> | null;
   if (!t || typeof t.id !== "string" || typeof t.name !== "string") return null;
+  const linkedStartupId = typeof t.linkedStartupId === "string" && t.linkedStartupId ? t.linkedStartupId : null;
   return {
     id: t.id,
     name: t.name,
@@ -150,12 +196,15 @@ function normalizeTarget(raw: unknown): TargetCompany | null {
     logo: typeof t.logo === "string" && t.logo ? t.logo : null,
     attractiveKeywords: toKeywords(t.attractiveKeywords),
     notes: typeof t.notes === "string" ? t.notes : "",
+    linkedStartupId,
+    linkedSnapshot: linkedStartupId ? normalizeSnapshot(t.linkedSnapshot) : null,
   };
 }
 
 function normalizeCompetitor(raw: unknown): CompetitorReference | null {
   const c = raw as Partial<CompetitorReference> | null;
   if (!c || typeof c.id !== "string" || typeof c.name !== "string") return null;
+  const linkedStartupId = typeof c.linkedStartupId === "string" && c.linkedStartupId ? c.linkedStartupId : null;
   return {
     id: c.id,
     name: c.name,
@@ -163,6 +212,8 @@ function normalizeCompetitor(raw: unknown): CompetitorReference | null {
     logo: typeof c.logo === "string" && c.logo ? c.logo : null,
     attractiveKeywords: toKeywords(c.attractiveKeywords),
     notes: typeof c.notes === "string" ? c.notes : "",
+    linkedStartupId,
+    linkedSnapshot: linkedStartupId ? normalizeSnapshot(c.linkedSnapshot) : null,
     status: EXTRACTION_STATUSES.includes(c.status as ExtractionStatus)
       ? (c.status as ExtractionStatus)
       : "not_extracted",
@@ -245,6 +296,47 @@ export function simulateExtraction(name: string, website: string): CompetitorExt
   };
 }
 
+/**
+ * "✨ Auto Enrich Acquisition Analysis" for a linked target.
+ *
+ * Derives up to 5 acquisition-attractiveness keywords from the existing
+ * startup's profile. These describe *why the startup is attractive to
+ * acquire* (AI Capability, Supply Chain Synergy, …) — they are NOT a copy of
+ * the startup's normal Industry / Product / Market tags. Deterministic per
+ * snapshot so repeated runs agree.
+ */
+export function acquisitionAttractivenessKeywords(s: LinkedStartupSnapshot): string[] {
+  const text = [
+    s.name,
+    s.shortDescription ?? "",
+    ...s.industry,
+    ...s.productTags,
+    ...s.marketTags,
+  ]
+    .join(" ")
+    .toLowerCase();
+  const has = (...terms: string[]) => terms.some((t) => text.includes(t));
+
+  const out: string[] = [];
+  const add = (k: string) => {
+    if (out.length < 5 && !out.some((x) => x.toLowerCase() === k.toLowerCase())) out.push(k);
+  };
+
+  if (has("artificial intelligence", "machine learning", " ai", "ai ", "ai-")) add("AI Capability");
+  if (has("data")) add("Data Infrastructure");
+  if (has("supply chain", "logistic", "route", "fleet", "delivery")) add("Supply Chain Synergy");
+  if (has("deeptech", "deep tech", "robot", "hardware", "iot", "sensor")) add("Strategic Technology");
+  if (has("platform", "saas", "software", "api")) add("Product Synergy");
+  if (has("marketplace", "commerce", "b2b", "customer")) add("Customer Base");
+  if (has("patent", "proprietary", " ip ")) add("Strong IP");
+
+  // Generic fillers keep the analysis useful even for sparse profiles.
+  for (const g of ["Strategic Technology", "Market Expansion", "Talent Acquisition", "Recurring Revenue"]) {
+    add(g);
+  }
+  return out.slice(0, 5);
+}
+
 export const EXTRACTION_STATUS_LABEL: Record<ExtractionStatus, string> = {
   not_extracted: "Not Extracted",
   pending: "Extraction Pending",
@@ -264,7 +356,7 @@ export function buildStrategyExport(startupName: string, s: AcquisitionStrategy)
     ...(s.targets.length
       ? s.targets.map(
           (t) =>
-            `- ${t.name}${t.website ? ` (${t.website})` : ""}${t.attractiveKeywords.length ? ` — Why attractive: ${t.attractiveKeywords.join(", ")}` : ""}${t.notes ? ` — ${t.notes}` : ""}`,
+            `- ${t.name}${t.website ? ` (${t.website})` : ""}${t.linkedStartupId ? " — Linked to existing startup record" : ""}${t.attractiveKeywords.length ? ` — Why attractive: ${t.attractiveKeywords.join(", ")}` : ""}${t.notes ? ` — ${t.notes}` : ""}`,
         )
       : ["- None added yet."]),
     "",

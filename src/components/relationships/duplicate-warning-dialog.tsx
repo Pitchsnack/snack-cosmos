@@ -17,6 +17,10 @@ interface Props {
   onCancel: () => void;
   onLinkExisting: (candidate: DuplicateCandidate) => void;
   onCreatePendingAnyway: () => void;
+  /** Label for picking an existing record (default: "Link"). */
+  linkLabel?: string;
+  /** Label for the proceed-anyway footer button (default: "Create Pending Anyway"). */
+  createLabel?: string;
 }
 
 export function DuplicateWarningDialog({
@@ -26,6 +30,8 @@ export function DuplicateWarningDialog({
   onCancel,
   onLinkExisting,
   onCreatePendingAnyway,
+  linkLabel = "Link",
+  createLabel = "Create Pending Anyway",
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onCancel(); }}>
@@ -52,9 +58,12 @@ export function DuplicateWarningDialog({
                   <div className="truncate text-xs text-muted-foreground">{c.subtitle}</div>
                 )}
               </div>
-              <Badge variant="secondary" className="shrink-0 text-[10px]">
-                {c.matchKind}
-              </Badge>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Badge variant="secondary" className="text-[10px]">
+                  {c.matchKind}
+                </Badge>
+                <Badge className="text-[10px]">{linkLabel}</Badge>
+              </div>
             </button>
           ))}
           {candidates.length === 0 && (
@@ -67,7 +76,7 @@ export function DuplicateWarningDialog({
             Cancel
           </Button>
           <Button type="button" variant="secondary" onClick={onCreatePendingAnyway}>
-            Create Pending Anyway
+            {createLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
