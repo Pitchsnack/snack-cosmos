@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listStartups } from "@/lib/startups.functions";
+import { listStartups, type StartupListItem } from "@/lib/startups.functions";
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
 import type { DuplicateCandidate } from "@/adapters/investor-startup-links-types";
 
@@ -32,8 +32,15 @@ export function useWebsiteDuplicateCheck(excludeId?: string) {
   const [checking, setChecking] = useState(false);
   const [candidates, setCandidates] = useState<DuplicateCandidate[]>([]);
   const [typedValue, setTypedValue] = useState("");
+  /** Full rows from the last check — lets callers link to the existing record. */
+  const [rows, setRows] = useState<StartupListItem[]>([]);
 
   const close = useCallback(() => setCandidates([]), []);
+
+  const startupById = useCallback(
+    (id: string | null | undefined) => (id ? rows.find((r) => r.id === id) : undefined),
+    [rows],
+  );
 
   const check = useCallback(
     async (url: string) => {
@@ -44,6 +51,7 @@ export function useWebsiteDuplicateCheck(excludeId?: string) {
       try {
         const res = await fn({ data: { search: term, pageSize: 50 } });
         const rows = (res?.items ?? []).filter((r) => r.id !== excludeId);
+        setRows(rows);
 
         const exact = rows.filter(
           (r) => r.website_url && normalizeWebsite(r.website_url) === host,
