@@ -16,17 +16,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 import {
   buildStrategyExport,
   useAcquisitionStrategy,
+  type AcquisitionRequirements,
 } from "@/lib/acquisition/strategy-store";
 import type { StartupDetail } from "@/lib/startups.functions";
 import { TargetCompaniesSection } from "@/components/acquisition/target-companies-section";
 import { CompetitorReferencesSection } from "@/components/acquisition/competitor-references-section";
 import { RequirementsSection, RequirementsForm } from "@/components/acquisition/requirements-section";
 import { InsightsTab } from "@/components/acquisition/insights-tab";
-import { useEffect, useState } from "react";
-import type { AcquisitionRequirements } from "@/lib/acquisition/strategy-store";
 
 export type AcquisitionTab = "overview" | "targets" | "competitors" | "requirements" | "insights";
 
