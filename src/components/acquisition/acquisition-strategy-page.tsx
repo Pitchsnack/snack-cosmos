@@ -335,12 +335,14 @@ export function AcquisitionStrategyPage({
                 update={update}
                 canEdit={canEdit}
                 numberedTitle="1. Companies We Want to Acquire"
+                onOpenLinked={openLinkedStartup}
               />
               <CompetitorReferencesSection
                 strategy={strategy}
                 update={update}
                 canEdit={canEdit}
                 numberedTitle="2. Competitor Acquisition References"
+                onOpenLinked={openLinkedStartup}
               />
               <RequirementsSection
                 strategy={strategy}
@@ -352,7 +354,13 @@ export function AcquisitionStrategyPage({
             </TabsContent>
 
             <TabsContent value="targets" className="mt-6">
-              <TargetCompaniesSection strategy={strategy} update={update} canEdit={canEdit} expanded />
+              <TargetCompaniesSection
+                strategy={strategy}
+                update={update}
+                canEdit={canEdit}
+                expanded
+                onOpenLinked={openLinkedStartup}
+              />
             </TabsContent>
 
             <TabsContent value="competitors" className="mt-6">
@@ -361,6 +369,7 @@ export function AcquisitionStrategyPage({
                 update={update}
                 canEdit={canEdit}
                 expanded
+                onOpenLinked={openLinkedStartup}
               />
             </TabsContent>
 
