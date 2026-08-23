@@ -26,6 +26,7 @@ import {
   Check,
   Share2,
   LayoutTemplate,
+  Target,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -344,6 +345,13 @@ export function StartupDetailPanel({
                   ) : (
                     <DropdownMenuItem disabled>
                       <Pencil className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                  )}
+                  {isMyWorkspace && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/my-startups/$id/acquisition" params={{ id }} onClick={() => onClose?.()}>
+                        <Target className="mr-2 h-4 w-4" /> Acquisition Strategy
+                      </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem disabled>
