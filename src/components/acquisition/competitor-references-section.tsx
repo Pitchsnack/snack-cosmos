@@ -58,6 +58,8 @@ export function CompetitorReferencesSection({
           logo: value.logo,
           attractiveKeywords: value.attractiveKeywords,
           notes: value.notes,
+          linkedStartupId: value.linkedStartupId,
+          linkedSnapshot: value.linkedSnapshot,
           status: "not_extracted",
           lastExtractedAt: null,
           result: null,

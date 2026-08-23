@@ -78,6 +78,8 @@ export function TargetCompaniesSection({
         logo: editing.logo,
         attractiveKeywords: editing.attractiveKeywords,
         notes: editing.notes,
+        linkedStartupId: editing.linkedStartupId,
+        linkedSnapshot: editing.linkedSnapshot,
       }
     : null;
 
