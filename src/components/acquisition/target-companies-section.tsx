@@ -19,6 +19,7 @@ export function TargetCompaniesSection({
   expanded = false,
   numberedTitle,
   description,
+  onOpenLinked,
 }: {
   strategy: AcquisitionStrategy;
   update: Updater;
@@ -27,6 +28,8 @@ export function TargetCompaniesSection({
   expanded?: boolean;
   numberedTitle?: string;
   description?: string;
+  /** Opens a linked startup's information panel as an overlay on this page. */
+  onOpenLinked?: (startupId: string) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TargetCompany | null>(null);
@@ -149,22 +152,26 @@ export function TargetCompaniesSection({
                       )}
                       <div className="min-w-0">
                         {t.linkedStartupId ? (
-                          <a
-                            href={`/startups/${t.linkedStartupId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 font-medium text-blue-900 hover:underline"
-                            title="Open the linked startup record"
+                          <button
+                            type="button"
+                            onClick={() => onOpenLinked?.(t.linkedStartupId!)}
+                            className="font-medium text-blue-900 hover:underline"
+                            title="View the linked startup record"
                           >
-                            {t.name} <ExternalLink className="h-3 w-3" />
-                          </a>
+                            {t.name}
+                          </button>
                         ) : (
                           <span className="font-medium">{t.name}</span>
                         )}
                         {t.linkedStartupId && (
-                          <span className="ml-1.5 rounded-full border border-primary/25 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-primary">
+                          <button
+                            type="button"
+                            onClick={() => onOpenLinked?.(t.linkedStartupId!)}
+                            title="View the linked startup record"
+                            className="ml-1.5 rounded-full border border-primary/25 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-primary transition-colors hover:bg-primary/10"
+                          >
                             Linked
-                          </span>
+                          </button>
                         )}
                       </div>
                     </div>

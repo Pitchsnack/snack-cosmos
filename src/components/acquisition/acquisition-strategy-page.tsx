@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   buildStrategyExport,
   useAcquisitionStrategy,
@@ -27,6 +27,7 @@ import { TargetCompaniesSection } from "@/components/acquisition/target-companie
 import { CompetitorReferencesSection } from "@/components/acquisition/competitor-references-section";
 import { RequirementsSection, RequirementsForm } from "@/components/acquisition/requirements-section";
 import { InsightsTab } from "@/components/acquisition/insights-tab";
+import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
 
 export type AcquisitionTab = "overview" | "targets" | "competitors" | "requirements" | "insights";
 
@@ -79,10 +80,13 @@ export function AcquisitionStrategyPage({
   startup,
   tab,
   canEdit,
+  panelStartupId,
 }: {
   startup: StartupDetail;
   tab: AcquisitionTab;
   canEdit: boolean;
+  /** Linked startup whose information panel is open as an overlay (from ?panel=). */
+  panelStartupId: string | null;
 }) {
   const navigate = useNavigate();
   const { strategy, update } = useAcquisitionStrategy(startup.id);
@@ -101,6 +105,44 @@ export function AcquisitionStrategyPage({
       search: { tab: next },
       replace: true,
     });
+  };
+
+  // Linked startup information panel — a temporary overlay on this page, never
+  // a navigation destination. Opening pushes a history entry so the browser
+  // Back button closes the overlay and lands on this same Acquisition Strategy
+  // page/tab; closing restores the previous scroll position.
+  const [panelId, setPanelId] = useState<string | null>(panelStartupId);
+  const scrollRef = useRef(0);
+  useEffect(() => {
+    if (panelId && !panelStartupId) {
+      // Closed via browser Back/Forward — restore the pre-overlay scroll.
+      const y = scrollRef.current;
+      requestAnimationFrame(() => window.scrollTo(0, y));
+    }
+    setPanelId(panelStartupId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panelStartupId]);
+
+  const openLinkedStartup = (linkedId: string) => {
+    scrollRef.current = window.scrollY;
+    setPanelId(linkedId);
+    void navigate({
+      to: "/my-startups/$id/acquisition",
+      params: { id: startup.id },
+      search: { tab, panel: linkedId },
+    });
+  };
+
+  const closeLinkedStartup = () => {
+    setPanelId(null);
+    void navigate({
+      to: "/my-startups/$id/acquisition",
+      params: { id: startup.id },
+      search: { tab },
+      replace: true,
+    });
+    const y = scrollRef.current;
+    requestAnimationFrame(() => window.scrollTo(0, y));
   };
 
   const exportStrategy = () => {
@@ -293,12 +335,14 @@ export function AcquisitionStrategyPage({
                 update={update}
                 canEdit={canEdit}
                 numberedTitle="1. Companies We Want to Acquire"
+                onOpenLinked={openLinkedStartup}
               />
               <CompetitorReferencesSection
                 strategy={strategy}
                 update={update}
                 canEdit={canEdit}
                 numberedTitle="2. Competitor Acquisition References"
+                onOpenLinked={openLinkedStartup}
               />
               <RequirementsSection
                 strategy={strategy}
@@ -310,7 +354,13 @@ export function AcquisitionStrategyPage({
             </TabsContent>
 
             <TabsContent value="targets" className="mt-6">
-              <TargetCompaniesSection strategy={strategy} update={update} canEdit={canEdit} expanded />
+              <TargetCompaniesSection
+                strategy={strategy}
+                update={update}
+                canEdit={canEdit}
+                expanded
+                onOpenLinked={openLinkedStartup}
+              />
             </TabsContent>
 
             <TabsContent value="competitors" className="mt-6">
@@ -319,6 +369,7 @@ export function AcquisitionStrategyPage({
                 update={update}
                 canEdit={canEdit}
                 expanded
+                onOpenLinked={openLinkedStartup}
               />
             </TabsContent>
 
@@ -354,6 +405,9 @@ export function AcquisitionStrategyPage({
           </Tabs>
         </div>
       </div>
+
+      {/* Linked startup information panel — overlay that always returns here. */}
+      <LinkedStartupPanel startupId={panelId} onClose={closeLinkedStartup} />
     </div>
   );
 }

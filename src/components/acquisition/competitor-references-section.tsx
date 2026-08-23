@@ -33,6 +33,7 @@ export function CompetitorReferencesSection({
   canEdit,
   expanded = false,
   numberedTitle,
+  onOpenLinked,
 }: {
   strategy: AcquisitionStrategy;
   update: Updater;
@@ -40,6 +41,8 @@ export function CompetitorReferencesSection({
   /** Expanded tab view: shows per-competitor extraction results. */
   expanded?: boolean;
   numberedTitle?: string;
+  /** Opens a linked startup's information panel as an overlay on this page. */
+  onOpenLinked?: (startupId: string) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [openResults, setOpenResults] = useState<Record<string, boolean>>({});
@@ -156,7 +159,28 @@ export function CompetitorReferencesSection({
                       </span>
                     )}
                     <div className="min-w-0">
-                      <span className="text-sm font-medium">{c.name}</span>
+                      {c.linkedStartupId ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenLinked?.(c.linkedStartupId!)}
+                          className="text-sm font-medium text-blue-900 hover:underline"
+                          title="View the linked startup record"
+                        >
+                          {c.name}
+                        </button>
+                      ) : (
+                        <span className="text-sm font-medium">{c.name}</span>
+                      )}
+                      {c.linkedStartupId && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenLinked?.(c.linkedStartupId!)}
+                          title="View the linked startup record"
+                          className="ml-1.5 rounded-full border border-primary/25 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-primary transition-colors hover:bg-primary/10"
+                        >
+                          Linked
+                        </button>
+                      )}
                       {c.attractiveKeywords.length > 0 && (
                         <div className="mt-0.5 flex flex-wrap gap-1">
                           {c.attractiveKeywords.map((k) => (
