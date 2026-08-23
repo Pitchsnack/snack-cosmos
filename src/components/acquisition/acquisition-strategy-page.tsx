@@ -405,6 +405,9 @@ export function AcquisitionStrategyPage({
           </Tabs>
         </div>
       </div>
+
+      {/* Linked startup information panel — overlay that always returns here. */}
+      <LinkedStartupPanel startupId={panelId} onClose={closeLinkedStartup} />
     </div>
   );
 }
