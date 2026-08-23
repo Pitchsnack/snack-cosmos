@@ -127,6 +127,50 @@ export function saveStrategy(startupId: string, strategy: AcquisitionStrategy) {
   window.dispatchEvent(new CustomEvent(STRATEGY_CHANGE_EVENT));
 }
 
+const EXTRACTION_STATUSES: ExtractionStatus[] = [
+  "not_extracted",
+  "pending",
+  "extracted",
+  "failed",
+];
+
+function toKeywords(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter((k): k is string => typeof k === "string" && !!k.trim()).slice(0, 5);
+}
+
+/** Normalize persisted rows so older saves (with `source`, without logo/keywords) stay readable. */
+function normalizeTarget(raw: unknown): TargetCompany | null {
+  const t = raw as Partial<TargetCompany> | null;
+  if (!t || typeof t.id !== "string" || typeof t.name !== "string") return null;
+  return {
+    id: t.id,
+    name: t.name,
+    website: typeof t.website === "string" ? t.website : "",
+    logo: typeof t.logo === "string" && t.logo ? t.logo : null,
+    attractiveKeywords: toKeywords(t.attractiveKeywords),
+    notes: typeof t.notes === "string" ? t.notes : "",
+  };
+}
+
+function normalizeCompetitor(raw: unknown): CompetitorReference | null {
+  const c = raw as Partial<CompetitorReference> | null;
+  if (!c || typeof c.id !== "string" || typeof c.name !== "string") return null;
+  return {
+    id: c.id,
+    name: c.name,
+    website: typeof c.website === "string" ? c.website : "",
+    logo: typeof c.logo === "string" && c.logo ? c.logo : null,
+    attractiveKeywords: toKeywords(c.attractiveKeywords),
+    notes: typeof c.notes === "string" ? c.notes : "",
+    status: EXTRACTION_STATUSES.includes(c.status as ExtractionStatus)
+      ? (c.status as ExtractionStatus)
+      : "not_extracted",
+    lastExtractedAt: typeof c.lastExtractedAt === "string" ? c.lastExtractedAt : null,
+    result: c.result ?? null,
+  };
+}
+
 function subscribe(cb: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   window.addEventListener("storage", cb);

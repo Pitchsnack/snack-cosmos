@@ -65,7 +65,7 @@ export function TagInput({
             )}
           </span>
         ))}
-        {!disabled && (
+        {!disabled && !atMax && (
           <Input
             value={draft}
             onChange={(e) => {
@@ -87,7 +87,7 @@ export function TagInput({
           />
         )}
       </div>
-      {remaining.length > 0 && !disabled && (
+      {remaining.length > 0 && !disabled && !atMax && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">
             Suggested
