@@ -280,6 +280,9 @@ export function StartupCard({
             </div>
           </div>
         ) : null}
+
+        {/* Compact Acquisition section (My Startups grid cards) */}
+        {acquisitionSection}
       </div>
     </>
   );
