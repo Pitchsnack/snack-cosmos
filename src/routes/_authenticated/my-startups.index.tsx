@@ -105,6 +105,46 @@ function MyStartupsPageInner() {
     navigate({ search: (prev: typeof s) => ({ ...prev, panel: id }), replace: true });
   };
 
+  // Acquisition overlays (target / competitor / requirements panels). They are
+  // temporary views over this page: opening pushes a history entry so the
+  // browser Back button closes the panel, and closing always lands the user on
+  // this same My Startups page with its view and scroll position intact.
+  const acqStartupId = s.ap ?? null;
+  const acqType = s.apt ?? null;
+  const { strategy: acqStrategy } = useAcquisitionStrategy(acqStartupId ?? undefined);
+  const acqTarget =
+    acqStartupId && acqType === "target" && s.apid
+      ? (acqStrategy.targets.find((t) => t.id === s.apid) ?? null)
+      : null;
+  const acqCompetitor =
+    acqStartupId && acqType === "competitor" && s.apid
+      ? (acqStrategy.competitors.find((c) => c.id === s.apid) ?? null)
+      : null;
+
+  const openAcqPanel = (startupId: string, req: AcquisitionPanelRequest) =>
+    navigate({
+      search: (prev: typeof s) => ({
+        ...prev,
+        ap: startupId,
+        apt: req.type,
+        apid: "id" in req ? req.id : undefined,
+      }),
+    });
+  const closeAcqPanel = () =>
+    navigate({
+      search: (prev: typeof s) => ({ ...prev, ap: undefined, apt: undefined, apid: undefined }),
+      replace: true,
+    });
+  const openStrategy = (
+    startupId: string,
+    tab: "overview" | "targets" | "competitors" | "requirements",
+  ) =>
+    navigate({
+      to: "/my-startups/$id/acquisition",
+      params: { id: startupId },
+      search: { tab },
+    });
+
   const pageSize = 100; // fetch enough to filter client-side to mine
 
   const { data, isLoading, isFetching, refetch } = useStartups({
