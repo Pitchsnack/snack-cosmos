@@ -1,0 +1,221 @@
+/**
+ * Target Company / Competitor Reference information panels for My Startups.
+ *
+ * Opened by clicking a pill on a My Startups card. Rendered as a temporary
+ * overlay — closing (X, Esc, backdrop) returns the user to the same My
+ * Startups page, view and scroll position. Linked acquisition targets open
+ * the full startup record via LinkedStartupPanel instead; this component
+ * renders manual (unlinked) targets and all competitor references.
+ */
+
+import { ExternalLink, Link2, X } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  EXTRACTION_STATUS_LABEL,
+  type CompetitorReference,
+  type ExtractionStatus,
+  type TargetCompany,
+} from "@/lib/acquisition/strategy-store";
+import { cn } from "@/lib/utils";
+
+const STATUS_TONE: Record<ExtractionStatus, string> = {
+  not_extracted: "border-transparent bg-muted/60 text-muted-foreground",
+  pending: "border-accent/40 bg-accent/10 text-accent-foreground",
+  extracted: "border-primary/30 bg-primary/5 text-primary",
+  failed: "border-destructive/30 bg-destructive/10 text-destructive",
+};
+
+function monogram(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function formatDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function websiteHref(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+function PanelSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="border-t border-border/50 pt-3">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1.5 text-sm text-foreground/90">{children}</div>
+    </div>
+  );
+}
+
+function KeywordPills({ items }: { items: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {items.map((k) => (
+        <span
+          key={k}
+          className="rounded-full border border-border/70 bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-foreground/80"
+        >
+          {k}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function AcquisitionCompanyPanel({
+  target,
+  competitor,
+  onClose,
+}: {
+  /** Manual (unlinked) acquisition target to show; null when closed or linked. */
+  target: TargetCompany | null;
+  /** Competitor reference to show; null when closed. */
+  competitor: CompetitorReference | null;
+  onClose: () => void;
+}) {
+  const entry = target ?? competitor;
+  const isCompetitor = !!competitor;
+
+  return (
+    <Dialog open={!!entry} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent
+        className={cn(
+          "[&>button]:hidden",
+          "p-0 gap-0 flex flex-col overflow-hidden",
+          "sm:max-w-xl sm:max-h-[85vh] sm:rounded-2xl",
+          "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
+        )}
+      >
+        <DialogTitle className="sr-only">
+          {isCompetitor ? "Competitor reference information" : "Target company information"}
+        </DialogTitle>
+        {entry && (
+          <div className="relative flex flex-1 flex-col overflow-hidden">
+            <div className="relative h-10 shrink-0">
+              <DialogClose
+                aria-label="Back to My Startups"
+                title="Back to My Startups"
+                className="absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-4 w-4" />
+              </DialogClose>
+            </div>
+
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 pb-5 pt-1">
+              {/* Header */}
+              <div className="flex items-start gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
+                  {entry.logo ? (
+                    <img src={entry.logo} alt="" className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="text-base font-semibold text-muted-foreground">
+                      {monogram(entry.name)}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="truncate text-base font-semibold">{entry.name}</h3>
+                    {entry.linkedStartupId && (
+                      <Badge variant="outline" className="gap-1 border-blue-900/30 bg-blue-900/5 text-blue-900">
+                        <Link2 className="h-3 w-3" /> Linked
+                      </Badge>
+                    )}
+                    {competitor && (
+                      <Badge variant="outline" className={cn("gap-1", STATUS_TONE[competitor.status])}>
+                        {EXTRACTION_STATUS_LABEL[competitor.status]}
+                      </Badge>
+                    )}
+                  </div>
+                  {entry.website && (
+                    <a
+                      href={websiteHref(entry.website)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-0.5 inline-flex items-center gap-1 text-xs text-blue-900 hover:underline"
+                    >
+                      {entry.website.replace(/^https?:\/\//i, "")}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  {competitor?.lastExtractedAt && formatDate(competitor.lastExtractedAt) && (
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      Extracted {formatDate(competitor.lastExtractedAt)}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Why attractive */}
+              {entry.attractiveKeywords.length > 0 && (
+                <PanelSection label={isCompetitor ? "Why Relevant" : "Why Attractive"}>
+                  <KeywordPills items={entry.attractiveKeywords} />
+                </PanelSection>
+              )}
+
+              {/* Notes */}
+              {entry.notes && (
+                <PanelSection label="Notes">
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{entry.notes}</p>
+                </PanelSection>
+              )}
+
+              {/* Competitor extraction results */}
+              {competitor?.result && (
+                <>
+                  {competitor.result.acquisitionHistory.length > 0 && (
+                    <PanelSection label="Acquisition History">
+                      <ul className="list-disc space-y-1 pl-4 text-sm leading-relaxed">
+                        {competitor.result.acquisitionHistory.map((h) => (
+                          <li key={h}>{h}</li>
+                        ))}
+                      </ul>
+                    </PanelSection>
+                  )}
+                  {competitor.result.acquiredCompanies.length > 0 && (
+                    <PanelSection label="Acquired Companies">
+                      <KeywordPills items={competitor.result.acquiredCompanies} />
+                    </PanelSection>
+                  )}
+                  {competitor.result.commonThemes.length > 0 && (
+                    <PanelSection label="Common Themes">
+                      <KeywordPills items={competitor.result.commonThemes} />
+                    </PanelSection>
+                  )}
+                  {competitor.result.strategicPatterns.length > 0 && (
+                    <PanelSection label="Strategic Pattern Summary">
+                      <ul className="list-disc space-y-1 pl-4 text-sm leading-relaxed">
+                        {competitor.result.strategicPatterns.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    </PanelSection>
+                  )}
+                </>
+              )}
+
+              {!entry.attractiveKeywords.length &&
+                !entry.notes &&
+                !competitor?.result && (
+                  <p className="text-sm text-muted-foreground">
+                    No additional details yet. Open the Acquisition Strategy page to add keywords
+                    and notes{isCompetitor ? " or run extraction" : ""}.
+                  </p>
+                )}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Factory, ShoppingCart, Users } from "lucide-react";
@@ -26,6 +26,10 @@ const CARD_CLASS =
 
 const COMPACT_CARD_CLASS =
   "group relative flex h-[380px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
+
+/** Grid card with the compact Acquisition section pinned to the bottom. */
+const ACQUISITION_CARD_CLASS =
+  "group relative flex h-[600px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
   borderColor: "var(--accent)",
@@ -60,7 +64,18 @@ function Truncate({
   );
 }
 
-export function StartupCard({ s, onClick, compact = false }: { s: StartupListItem; onClick?: () => void; compact?: boolean }) {
+export function StartupCard({
+  s,
+  onClick,
+  compact = false,
+  acquisitionSection,
+}: {
+  s: StartupListItem;
+  onClick?: () => void;
+  compact?: boolean;
+  /** Compact Acquisition preview block pinned to the card bottom (My Startups). */
+  acquisitionSection?: ReactNode;
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const { isFavorite } = useFavoriteStartups();
   const bookmarked = isFavorite(s.id);
@@ -265,9 +280,18 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
             </div>
           </div>
         ) : null}
+
+        {/* Compact Acquisition section (My Startups grid cards) */}
+        {acquisitionSection}
       </div>
     </>
   );
+
+  const cardClass = compact
+    ? COMPACT_CARD_CLASS
+    : acquisitionSection
+      ? ACQUISITION_CARD_CLASS
+      : CARD_CLASS;
 
   return (
     <TooltipProvider disableHoverableContent>
@@ -275,7 +299,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
         <button
           type="button"
           onClick={onClick}
-          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
+          className={cardClass}
           style={cardStyle}
           {...interactionHandlers}
         >
@@ -285,7 +309,7 @@ export function StartupCard({ s, onClick, compact = false }: { s: StartupListIte
         <Link
           to="/startups/$id"
           params={{ id: s.id }}
-          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
+          className={cardClass}
           style={cardStyle}
           {...interactionHandlers}
         >

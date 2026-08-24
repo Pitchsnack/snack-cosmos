@@ -15,9 +15,12 @@ import { cn } from "@/lib/utils";
 export function LinkedStartupPanel({
   startupId,
   onClose,
+  backLabel = "Back to Acquisition Strategy",
 }: {
   startupId: string | null;
   onClose: () => void;
+  /** Accessible label for the close button — names the surface it returns to. */
+  backLabel?: string;
 }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -43,8 +46,8 @@ export function LinkedStartupPanel({
             <DialogClose
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
-              aria-label="Back to Acquisition Strategy"
-              title="Back to Acquisition Strategy"
+              aria-label={backLabel}
+              title={backLabel}
               className={cn(
                 "absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 visible ? "opacity-100" : "pointer-events-none opacity-0",
