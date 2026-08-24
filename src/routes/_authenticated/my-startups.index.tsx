@@ -411,6 +411,25 @@ function MyStartupsPageInner() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Acquisition overlays — temporary views that always return here. */}
+      <LinkedStartupPanel
+        startupId={acqTarget?.linkedStartupId ?? null}
+        onClose={closeAcqPanel}
+        backLabel="Back to My Startups"
+      />
+      <AcquisitionCompanyPanel
+        target={acqTarget && !acqTarget.linkedStartupId ? acqTarget : null}
+        competitor={acqCompetitor}
+        onClose={closeAcqPanel}
+      />
+      <AcquisitionRequirementsPanel
+        open={!!acqStartupId && acqType === "requirements"}
+        requirements={acqStrategy.requirements}
+        updatedAt={acqStrategy.updatedAt}
+        onClose={closeAcqPanel}
+        onEdit={acqStartupId ? () => openStrategy(acqStartupId, "requirements") : undefined}
+      />
     </div>
   );
 }
