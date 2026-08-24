@@ -15,9 +15,12 @@ import { cn } from "@/lib/utils";
 export function LinkedStartupPanel({
   startupId,
   onClose,
+  backLabel = "Back to Acquisition Strategy",
 }: {
   startupId: string | null;
   onClose: () => void;
+  /** Accessible label for the close button — names the surface it returns to. */
+  backLabel?: string;
 }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);

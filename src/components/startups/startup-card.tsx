@@ -287,13 +287,19 @@ export function StartupCard({
     </>
   );
 
+  const cardClass = compact
+    ? COMPACT_CARD_CLASS
+    : acquisitionSection
+      ? ACQUISITION_CARD_CLASS
+      : CARD_CLASS;
+
   return (
     <TooltipProvider disableHoverableContent>
       {onClick ? (
         <button
           type="button"
           onClick={onClick}
-          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
+          className={cardClass}
           style={cardStyle}
           {...interactionHandlers}
         >
@@ -303,7 +309,7 @@ export function StartupCard({
         <Link
           to="/startups/$id"
           params={{ id: s.id }}
-          className={compact ? COMPACT_CARD_CLASS : CARD_CLASS}
+          className={cardClass}
           style={cardStyle}
           {...interactionHandlers}
         >
