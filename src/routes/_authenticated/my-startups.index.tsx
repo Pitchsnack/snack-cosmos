@@ -24,6 +24,14 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { PublicationStatusBadge } from "@/components/startups/publication-actions";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
+import {
+  AcquisitionCardSection,
+  type AcquisitionPanelRequest,
+} from "@/components/acquisition/acquisition-card-section";
+import { AcquisitionCompanyPanel } from "@/components/acquisition/acquisition-company-panel";
+import { AcquisitionRequirementsPanel } from "@/components/acquisition/acquisition-requirements-panel";
+import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
+import { useAcquisitionStrategy } from "@/lib/acquisition/strategy-store";
 import { cn } from "@/lib/utils";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
@@ -43,6 +51,10 @@ const searchSchema = z.object({
   view: z.enum(VIEW).optional(),
   selected: z.string().optional(),
   panel: z.string().optional(),
+  // Acquisition overlays: startup id, panel type, and entry id.
+  ap: z.string().optional(),
+  apt: z.enum(["target", "competitor", "requirements"]).optional(),
+  apid: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
 });
