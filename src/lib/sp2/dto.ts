@@ -20,11 +20,34 @@ export type TenantStartupDetailDTO = {
   lineage_reference: string | null;
 };
 
+/**
+ * `GET /tenant/startups` — the BFF's `listActiveTenantStartups` operation.
+ * An envelope, never a bare array, exactly as `GET /memberships` is.
+ */
+export type TenantStartupListDTO = {
+  records: TenantStartupDetailDTO[];
+};
+
 export type TenantStartupUpdateRequestDTO = {
   short_description: string | null;
 };
 
+/**
+ * `POST /tenant/startups` — the BFF's `createActiveTenantStartup` operation.
+ * The request carries no tenant, principal, role or permission: every one of
+ * those is server-derived from the signed claim. `display_name` is the only
+ * required field.
+ */
+export type TenantStartupCreateRequestDTO = {
+  display_name: string;
+  short_description?: string | null;
+  investment_stage?: string | null;
+};
+
 export const SHORT_DESCRIPTION_MAX = 500;
+
+/** Backend bound on `display_name` (BFF `CreateStartupRequest`: 1..256). */
+export const DISPLAY_NAME_MAX = 256;
 
 /** Discriminated Gateway outcome. Maps 1:1 to PRD §7 error table. */
 export type GatewayOutcome<T> =

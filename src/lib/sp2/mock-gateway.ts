@@ -47,6 +47,53 @@ export async function mockGatewayFetch(
     return json(200, { memberships });
   }
 
+  // The COLLECTION routes, matched before the item route so `/tenant/startups`
+  // is never read as an item reference.
+  if (url.pathname.endsWith("/tenant/startups")) {
+    const expectedToken = `Bearer ${MOCK_MARKERS.tenantPrefix}${tenantHeader}`;
+    if (!tenantHeader) return json(403, {});
+    if (auth !== expectedToken) return json(401, {});
+    const tenantStore = startups[tenantHeader];
+    if (!tenantStore) return json(403, {});
+
+    if (method === "GET") {
+      // Envelope, never a bare array — the same wire contract the BFF serves.
+      return json(200, { records: Object.values(tenantStore) });
+    }
+    if (method === "POST") {
+      try {
+        const body = JSON.parse((init?.body as string) ?? "{}") as {
+          display_name?: unknown;
+          short_description?: unknown;
+          investment_stage?: unknown;
+        };
+        const name = typeof body.display_name === "string" ? body.display_name.trim() : "";
+        if (name.length === 0 || name.length > 256) return json(422, {});
+        const description =
+          typeof body.short_description === "string" ? body.short_description : null;
+        if (description !== null && description.length > 500) return json(422, {});
+        const ref = `stp_mock_${String(Object.keys(tenantStore).length + 1).padStart(3, "0")}`;
+        const created: TenantStartupDetailDTO = {
+          record_ref: ref,
+          display_name: name,
+          short_description: description,
+          investment_stage:
+            typeof body.investment_stage === "string" ? body.investment_stage : null,
+          record_origin: "tenant_direct",
+          record_residency: "tenant",
+          record_type: "startup",
+          lineage_reference: null,
+        };
+        tenantStore[ref] = created;
+        // 201, exactly as `createActiveTenantStartup` answers.
+        return json(201, created);
+      } catch {
+        return json(400, {});
+      }
+    }
+    return json(503, {});
+  }
+
   const startupMatch = url.pathname.match(/\/tenant\/startups\/([^/]+)$/);
   if (startupMatch) {
     const ref = decodeURIComponent(startupMatch[1]);
