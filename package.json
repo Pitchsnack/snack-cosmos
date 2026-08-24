@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:arch": "bun test test/architecture/no-direct-supabase.test.ts"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:arch": "bun test test/architecture/no-direct-supabase.test.ts",
+    "test:sp2": "bun test test/sp2"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

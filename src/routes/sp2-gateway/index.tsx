@@ -11,6 +11,7 @@ import {
 import { decideTenantJourney } from "@/lib/sp2/tenant-journey";
 import { SnackPortalGatewayClient } from "@/lib/sp2/gateway-client";
 import {
+  DISPLAY_NAME_MAX,
   SHORT_DESCRIPTION_MAX,
   type GatewayOutcome,
   type TenantStartupDetailDTO,
@@ -51,7 +52,6 @@ type Bootstrap =
       fetchImpl: typeof fetch | undefined;
       baseUrl: string;
       isMock: boolean;
-      demoStartupRef: string;
     };
 
 function RouteEntry() {
@@ -73,10 +73,11 @@ function RouteEntry() {
 
       if (posture.kind === "real") {
         // Complete real configuration — construct the real Keycloak adapter
-        // and the real Gateway client (global fetch). Never import mock
-        // modules on this path. Tenant-scoped auth remains unsupported, so
-        // there is no demo startup ref; the tenant journey fails closed
-        // before any startup load.
+        // and the real BFF client (global fetch). Never import mock modules
+        // on this path. No startup reference is configured here, in either
+        // posture: the journey obtains one from the server by listing the
+        // active tenant's Startups, or by creating one. A tenant record
+        // reference is never a build-time constant.
         if (!cancelled)
           setBoot({
             kind: "ready",
@@ -89,7 +90,6 @@ function RouteEntry() {
             fetchImpl: (input, init) => fetch(input, init),
             baseUrl: posture.gatewayBaseUrl,
             isMock: false,
-            demoStartupRef: "",
           });
         return;
       }
@@ -128,7 +128,6 @@ function RouteEntry() {
         fetchImpl: mockGw.mockGatewayFetch,
         baseUrl: "/sp2-gateway-dev",
         isMock: true,
-        demoStartupRef: mockGw.MOCK_DEMO_STARTUP_REF,
       });
     })();
     return () => {
@@ -150,12 +149,7 @@ function RouteEntry() {
 
   return (
     <SP2AuthProvider adapter={boot.adapter}>
-      <GatewayJourney
-        baseUrl={boot.baseUrl}
-        fetchImpl={boot.fetchImpl}
-        isMock={boot.isMock}
-        demoStartupRef={boot.demoStartupRef}
-      />
+      <GatewayJourney baseUrl={boot.baseUrl} fetchImpl={boot.fetchImpl} isMock={boot.isMock} />
     </SP2AuthProvider>
   );
 }
@@ -182,12 +176,10 @@ function GatewayJourney({
   baseUrl,
   fetchImpl,
   isMock,
-  demoStartupRef,
 }: {
   baseUrl: string;
   fetchImpl: typeof fetch | undefined;
   isMock: boolean;
-  demoStartupRef: string;
 }) {
   const { signedIn, signIn, signOut, adapter } = useSP2Auth();
   const gw = useMemo(
@@ -204,6 +196,23 @@ function GatewayJourney({
   >({ kind: "idle" });
 
   const [activeTenant, setActiveTenant] = useState<string | null>(null);
+
+  // The active tenant's Startups, from GET /tenant/startups. This is where a
+  // REAL record reference comes from: the browser holds no hard-coded tenant
+  // record reference and never fabricates one.
+  const [startupsState, setStartupsState] = useState<
+    | { kind: "idle" }
+    | { kind: "loading" }
+    | { kind: "ok"; items: TenantStartupDetailDTO[] }
+    | { kind: "error"; outcome: GatewayOutcome<unknown>["kind"] }
+  >({ kind: "idle" });
+
+  const [newStartupName, setNewStartupName] = useState<string>("");
+  const [createState, setCreateState] = useState<
+    | { kind: "idle" }
+    | { kind: "creating" }
+    | { kind: "error"; outcome: GatewayOutcome<unknown>["kind"] }
+  >({ kind: "idle" });
 
   const [startupState, setStartupState] = useState<
     | { kind: "idle" }
@@ -231,6 +240,23 @@ function GatewayJourney({
   useEffect(() => {
     setResidentTenant(getResidentTenantId());
   }, []);
+
+  // After the TENANT callback, the resident tenant authentication is the only
+  // authentication in memory: the adapter's sequential model clears the
+  // principal token when a tenant token is stored, so `signedIn` is false here
+  // by design. The workspace is nevertheless authenticated, and this is where
+  // its records are asked for.
+  //
+  // The active tenant comes from `getResidentTenantId()` — the value the
+  // callback match-or-rejected against the returned signed claim — and never
+  // from a selector click. §6.3/§6.4 are unchanged: a click may only START
+  // authentication, and activation still requires a real tenant token.
+  useEffect(() => {
+    if (residentTenant === null || activeTenant !== null) return;
+    setActiveTenant(residentTenant);
+    void loadStartups(residentTenant);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [residentTenant]);
 
   // After the PKCE callback SPA-navigates back here, the principal token is
   // already in adapter memory — resume the signed-in journey without another
@@ -281,10 +307,16 @@ function GatewayJourney({
     if (signedIn) loadMemberships();
     else {
       setMembershipsState({ kind: "idle" });
-      setActiveTenant(null);
-      setStartupState({ kind: "idle" });
       // §6.6: deliberately does NOT touch residentTenant — the principal
-      // signed-out reset never erases a valid resident tenant presentation.
+      // signed-out reset never erases a valid resident tenant presentation,
+      // and (since the tenant callback clears the principal token) must not
+      // tear down a tenant journey that is the only authentication in memory.
+      if (residentTenant === null) {
+        setActiveTenant(null);
+        setStartupsState({ kind: "idle" });
+        setStartupState({ kind: "idle" });
+        setCreateState({ kind: "idle" });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn]);
@@ -302,15 +334,52 @@ function GatewayJourney({
     const token = await adapter.getTenantAccessToken(tenantId);
     if (!token) return;
     setActiveTenant(tenantId);
-    await loadStartup(tenantId);
+    setStartupState({ kind: "idle" });
+    await loadStartups(tenantId);
   }
 
-  async function loadStartup(tenantId: string) {
-    // §7 no-Startup boundary: every Startup request decision flows through
-    // decideTenantJourney. The real TA-1 posture keeps demoStartupRef = ""
-    // and therefore never constructs a /tenant/startups request; only the
-    // dev mock's configured synthetic reference reaches load_startup.
-    const journey = decideTenantJourney(demoStartupRef);
+  /** GET /tenant/startups for the active tenant — the source of every record reference. */
+  async function loadStartups(tenantId: string) {
+    setStartupsState({ kind: "loading" });
+    setCreateState({ kind: "idle" });
+    const token = await adapter.getTenantAccessToken(tenantId);
+    if (!token) {
+      setStartupsState({ kind: "error", outcome: "unauthorized" });
+      return;
+    }
+    const outcome = await gw.listTenantStartups(token, tenantId);
+    if (outcome.kind !== "ok") {
+      setStartupsState({ kind: "error", outcome: outcome.kind });
+      return;
+    }
+    setStartupsState({ kind: "ok", items: outcome.data });
+  }
+
+  /** POST /tenant/startups, then open the record the SERVER minted a reference for. */
+  async function createStartup(tenantId: string, displayName: string) {
+    setCreateState({ kind: "creating" });
+    const token = await adapter.getTenantAccessToken(tenantId);
+    if (!token) {
+      setCreateState({ kind: "error", outcome: "unauthorized" });
+      return;
+    }
+    const outcome = await gw.createTenantStartup(token, tenantId, { display_name: displayName });
+    if (outcome.kind !== "ok") {
+      setCreateState({ kind: "error", outcome: outcome.kind });
+      return;
+    }
+    setCreateState({ kind: "idle" });
+    setNewStartupName("");
+    await loadStartups(tenantId);
+    await loadStartup(tenantId, outcome.data.record_ref);
+  }
+
+  async function loadStartup(tenantId: string, startupRef: string) {
+    // The no-Startup boundary (START-GATE §7): every Startup request decision
+    // still flows through decideTenantJourney, so an absent or blank reference
+    // cannot produce a request. What changed is where the reference comes
+    // from — a server response rather than build-time configuration.
+    const journey = decideTenantJourney(startupRef);
     if (!journey.loadStartup) return;
     setStartupState({ kind: "loading" });
     const token = await adapter.getTenantAccessToken(tenantId);
@@ -377,14 +446,7 @@ function GatewayJourney({
           )}
         </header>
 
-        {!signedIn && residentTenant !== null ? (
-          <Panel title={`Workspace — ${residentTenant}`}>
-            <StatusNote tone="ok">
-              Tenant workspace <span className="font-mono">{residentTenant}</span> is authenticated
-              and ready — awaiting Gateway confirmation. No tenant data has been requested.
-            </StatusNote>
-          </Panel>
-        ) : !signedIn ? (
+        {!signedIn && residentTenant === null ? (
           <Panel title="Sign in">
             {isMock ? (
               <>
@@ -413,48 +475,147 @@ function GatewayJourney({
           </Panel>
         ) : (
           <>
-            <Panel title="Memberships">
-              {membershipsState.kind === "loading" && <StatusNote>Loading memberships…</StatusNote>}
-              {membershipsState.kind === "empty" && (
-                <StatusNote tone="warn">No workspace available.</StatusNote>
-              )}
-              {membershipsState.kind === "error" && (
-                <MembershipError outcome={membershipsState.outcome} onRetry={loadMemberships} />
-              )}
-              {membershipsState.kind === "ok" && (
-                <ul className="space-y-2">
-                  {membershipsState.items.map((m) => {
-                    const isActive = activeTenant === m.tenant_id;
-                    return (
-                      <li
-                        key={m.tenant_id}
-                        className="flex items-center justify-between rounded-md border border-border bg-background p-3"
-                      >
-                        <div>
-                          <div className="text-sm font-medium">{m.tenant_id}</div>
-                          <div className="text-[11px] text-muted-foreground">role: {m.role}</div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant={isActive ? "secondary" : "default"}
-                          onClick={() => void selectWorkspace(m.tenant_id)}
+            {residentTenant !== null && (
+              <Panel title={`Workspace — ${residentTenant}`}>
+                <StatusNote tone="ok">
+                  Tenant workspace <span className="font-mono">{residentTenant}</span> is
+                  authenticated. The active tenant is the signed claim the callback verified — not
+                  the workspace that was clicked.
+                </StatusNote>
+              </Panel>
+            )}
+
+            {signedIn && (
+              <Panel title="Memberships">
+                {membershipsState.kind === "loading" && (
+                  <StatusNote>Loading memberships…</StatusNote>
+                )}
+                {membershipsState.kind === "empty" && (
+                  <StatusNote tone="warn">No workspace available.</StatusNote>
+                )}
+                {membershipsState.kind === "error" && (
+                  <MembershipError outcome={membershipsState.outcome} onRetry={loadMemberships} />
+                )}
+                {membershipsState.kind === "ok" && (
+                  <ul className="space-y-2">
+                    {membershipsState.items.map((m) => {
+                      const isActive = activeTenant === m.tenant_id;
+                      return (
+                        <li
+                          key={m.tenant_id}
+                          className="flex items-center justify-between rounded-md border border-border bg-background p-3"
                         >
-                          {isActive ? "Selected" : "Select"}
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </Panel>
+                          <div>
+                            <div className="text-sm font-medium">{m.tenant_id}</div>
+                            <div className="text-[11px] text-muted-foreground">role: {m.role}</div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={isActive ? "secondary" : "default"}
+                            onClick={() => void selectWorkspace(m.tenant_id)}
+                          >
+                            {isActive ? "Selected" : "Select"}
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </Panel>
+            )}
 
             {activeTenant && (
+              <Panel title={`Startups — ${activeTenant}`}>
+                {startupsState.kind === "loading" && <StatusNote>Loading startups…</StatusNote>}
+                {startupsState.kind === "error" && (
+                  <StartupError
+                    outcome={startupsState.outcome}
+                    onRetry={() => void loadStartups(activeTenant)}
+                  />
+                )}
+                {startupsState.kind === "ok" && startupsState.items.length > 0 && (
+                  <ul className="mb-4 space-y-2">
+                    {startupsState.items.map((s) => {
+                      const isOpen =
+                        startupState.kind === "ok" && startupState.data.record_ref === s.record_ref;
+                      return (
+                        <li
+                          key={s.record_ref}
+                          className="flex items-center justify-between rounded-md border border-border bg-background p-3"
+                        >
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">{s.display_name}</div>
+                            <div className="truncate font-mono text-[11px] text-muted-foreground">
+                              {s.record_ref}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={isOpen ? "secondary" : "default"}
+                            onClick={() => void loadStartup(activeTenant, s.record_ref)}
+                          >
+                            {isOpen ? "Open" : "Open"}
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {startupsState.kind === "ok" && startupsState.items.length === 0 && (
+                  <div className="mb-4">
+                    <StatusNote tone="warn">
+                      This tenant holds no Startups yet. Create one to continue — it is written to
+                      this tenant&apos;s own physical database.
+                    </StatusNote>
+                  </div>
+                )}
+                {startupsState.kind === "ok" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new_startup" className="text-xs uppercase tracking-wide">
+                      Add a Startup
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      <Input
+                        id="new_startup"
+                        value={newStartupName}
+                        placeholder="Organization name"
+                        maxLength={DISPLAY_NAME_MAX}
+                        onChange={(e) => setNewStartupName(e.target.value)}
+                        className="max-w-xs"
+                      />
+                      <Button
+                        size="sm"
+                        disabled={
+                          newStartupName.trim().length === 0 || createState.kind === "creating"
+                        }
+                        onClick={() => void createStartup(activeTenant, newStartupName)}
+                      >
+                        {createState.kind === "creating" ? "Creating…" : "Create"}
+                      </Button>
+                    </div>
+                    {createState.kind === "error" && (
+                      <StatusNote tone="error">
+                        {createState.outcome === "forbidden"
+                          ? "Access denied."
+                          : createState.outcome === "unauthorized"
+                            ? "Session expired. Please sign in again."
+                            : createState.outcome === "too_large"
+                              ? "That name exceeds the permitted bound."
+                              : "The Startup could not be created."}
+                      </StatusNote>
+                    )}
+                  </div>
+                )}
+              </Panel>
+            )}
+
+            {activeTenant && startupState.kind !== "idle" && (
               <Panel title={`Startup — ${activeTenant}`}>
                 {startupState.kind === "loading" && <StatusNote>Loading startup…</StatusNote>}
                 {startupState.kind === "error" && (
                   <StartupError
                     outcome={startupState.outcome}
-                    onRetry={() => void loadStartup(activeTenant)}
+                    onRetry={() => void loadStartups(activeTenant)}
                   />
                 )}
                 {startupState.kind === "ok" && (
@@ -630,5 +791,3 @@ function SaveError({ outcome }: { outcome: GatewayOutcome<unknown>["kind"] }) {
                 : "Save failed.";
   return <StatusNote tone="error">{msg}</StatusNote>;
 }
-
-void Input;

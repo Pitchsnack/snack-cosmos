@@ -9,9 +9,11 @@
  */
 import {
   type GatewayOutcome,
+  type TenantStartupCreateRequestDTO,
   type TenantStartupDetailDTO,
   type TenantStartupUpdateRequestDTO,
   type WorkspaceMembershipDTO,
+  DISPLAY_NAME_MAX,
   SHORT_DESCRIPTION_MAX,
 } from "./dto";
 
@@ -42,6 +44,30 @@ export class SnackPortalGatewayClient {
     return { kind: "ok", data: memberships };
   }
 
+  /**
+   * GET /tenant/startups — the BFF's `listActiveTenantStartups`.
+   *
+   * The tenant is the signed claim; there is no parameter through which
+   * another could be named. This is how the journey obtains a REAL record
+   * reference: the browser never invents one, and never holds a hard-coded
+   * tenant record reference.
+   */
+  async listTenantStartups(
+    tenantToken: string,
+    tenantId: string,
+  ): Promise<GatewayOutcome<TenantStartupDetailDTO[]>> {
+    const outcome = await this.request<unknown>({
+      method: "GET",
+      path: "/tenant/startups",
+      token: tenantToken,
+      tenantId,
+    });
+    if (outcome.kind !== "ok") return outcome;
+    const records = decodeStartupListEnvelope(outcome.data);
+    if (records === null) return { kind: "unavailable" };
+    return { kind: "ok", data: records };
+  }
+
   async getTenantStartup(
     tenantToken: string,
     tenantId: string,
@@ -52,6 +78,42 @@ export class SnackPortalGatewayClient {
       path: `/tenant/startups/${encodeURIComponent(startupRef)}`,
       token: tenantToken,
       tenantId,
+    });
+  }
+
+  /**
+   * POST /tenant/startups — the BFF's `createActiveTenantStartup`.
+   *
+   * The body carries no tenant, principal, role or permission: all of those
+   * are server-derived from the signed claim. Client-side bound guards mirror
+   * the backend's declared bounds so an obviously-invalid request is not sent;
+   * they are a courtesy, never the authority.
+   */
+  async createTenantStartup(
+    tenantToken: string,
+    tenantId: string,
+    request: TenantStartupCreateRequestDTO,
+  ): Promise<GatewayOutcome<TenantStartupDetailDTO>> {
+    const displayName = request.display_name.trim();
+    if (displayName.length === 0 || displayName.length > DISPLAY_NAME_MAX) {
+      return { kind: "too_large" };
+    }
+    const shortDescription = request.short_description ?? null;
+    if (shortDescription !== null && shortDescription.length > SHORT_DESCRIPTION_MAX) {
+      return { kind: "too_large" };
+    }
+    // Exact body closure — no extra fields, and nothing the server derives.
+    const body: TenantStartupCreateRequestDTO = {
+      display_name: displayName,
+      short_description: shortDescription,
+      investment_stage: request.investment_stage ?? null,
+    };
+    return this.request<TenantStartupDetailDTO>({
+      method: "POST",
+      path: "/tenant/startups",
+      token: tenantToken,
+      tenantId,
+      body,
     });
   }
 
@@ -82,7 +144,7 @@ export class SnackPortalGatewayClient {
   }
 
   private async request<T>(args: {
-    method: "GET" | "PATCH";
+    method: "GET" | "POST" | "PATCH";
     path: string;
     token: string;
     tenantId?: string;
@@ -147,6 +209,30 @@ function decodeMembershipsEnvelope(body: unknown): WorkspaceMembershipDTO[] | nu
     }
   }
   return memberships as WorkspaceMembershipDTO[];
+}
+
+/**
+ * Decodes the lawful GET /tenant/startups wire contract:
+ * `{ "records": TenantStartupDetailDTO[] }`. A bare array is not a lawful
+ * body. Returns null on any invalid envelope so the caller fails closed —
+ * and rejects any entry without a usable `record_ref`, because a reference
+ * is the one field the journey goes on to address a record with.
+ */
+function decodeStartupListEnvelope(body: unknown): TenantStartupDetailDTO[] | null {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return null;
+  }
+  const records = (body as { records?: unknown }).records;
+  if (!Array.isArray(records)) return null;
+  for (const entry of records) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      return null;
+    }
+    const record = entry as { record_ref?: unknown; display_name?: unknown };
+    if (typeof record.record_ref !== "string" || record.record_ref.length === 0) return null;
+    if (typeof record.display_name !== "string") return null;
+  }
+  return records as TenantStartupDetailDTO[];
 }
 
 /**
