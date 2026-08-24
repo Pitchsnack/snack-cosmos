@@ -232,12 +232,19 @@ function subscribe(cb: () => void): () => void {
   };
 }
 
+/**
+ * Shared empty snapshot. useSyncExternalStore requires getSnapshot to return a
+ * cached identity — a fresh object per call triggers an infinite render loop.
+ * Never mutate this value.
+ */
+const EMPTY_STRATEGY_SNAPSHOT = emptyStrategy();
+
 /** Reactive per-startup strategy hook. */
 export function useAcquisitionStrategy(startupId: string | undefined) {
   const strategy = useSyncExternalStore(
     subscribe,
-    () => (startupId ? loadStrategy(startupId) : emptyStrategy()),
-    () => emptyStrategy(),
+    () => (startupId ? loadStrategy(startupId) : EMPTY_STRATEGY_SNAPSHOT),
+    () => EMPTY_STRATEGY_SNAPSHOT,
   );
 
   const update = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => {
