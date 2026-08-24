@@ -315,7 +315,20 @@ function MyStartupsPageInner() {
                 startupRef={it.id}
                 className="absolute left-3 top-3 z-10 bg-background/95"
               />
-              <StartupCard s={it} onClick={() => openStartup(it.id)} compact={favOnly} />
+              <StartupCard
+                s={it}
+                onClick={() => openStartup(it.id)}
+                compact={favOnly}
+                acquisitionSection={
+                  favOnly ? undefined : (
+                    <AcquisitionCardSection
+                      startupId={it.id}
+                      onOpenPanel={(req) => openAcqPanel(it.id, req)}
+                      onOpenStrategy={(tab) => openStrategy(it.id, tab)}
+                    />
+                  )
+                }
+              />
             </div>
           ))}
         </div>
