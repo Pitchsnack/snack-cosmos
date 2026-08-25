@@ -172,7 +172,7 @@ function LoginPage() {
             />
             <div>
               <div className="font-heading text-lg font-semibold tracking-tight">
-                SnackPortal<span className="text-blue-400">2</span>
+                Power by SnackPortal<span className="text-blue-400">2</span>
               </div>
               <div className="text-xs text-blue-200/70">
                 Multi-Tenant Venture Collaboration
