@@ -16,6 +16,7 @@ import {
 } from "@/lib/deals.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
+import { queryAssignableTenants } from "@/lib/assignable-tenants-query";
 import { switchWorkspace } from "@/lib/session-context.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
@@ -68,7 +69,7 @@ export function DealForm() {
   // routing, or physical-database selection.
   const assignableQ = useQuery({
     queryKey: ["assignable-tenants", principalRef],
-    queryFn: () => fetchAssignableTenants(),
+    queryFn: () => queryAssignableTenants(fetchAssignableTenants),
     enabled: WORKSPACE_ENFORCEMENT_ENABLED && enabled && !!principalRef,
     staleTime: 60_000,
   });

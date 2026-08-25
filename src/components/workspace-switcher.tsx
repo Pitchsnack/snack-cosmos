@@ -20,6 +20,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
 import { switchWorkspace } from "@/lib/session-context.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
+import { queryAssignableTenants } from "@/lib/assignable-tenants-query";
 import { ROLE_LABELS } from "@/lib/permissions";
 
 // Preview-only feature flag. Production stays OFF until the Option A backend
@@ -76,7 +77,7 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   const principalRef = session?.user?.id ?? null;
   const assignableQ = useQuery({
     queryKey: ["assignable-tenants", principalRef],
-    queryFn: () => fetchAssignableTenants(),
+    queryFn: () => queryAssignableTenants(fetchAssignableTenants),
     enabled: WORKSPACE_ENFORCEMENT_ENABLED && hasSession && !!principalRef,
     staleTime: 60_000,
   });

@@ -26,6 +26,7 @@ import {
 } from "@/lib/startups.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
+import { queryAssignableTenants } from "@/lib/assignable-tenants-query";
 import { switchWorkspace } from "@/lib/session-context.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useHasSession } from "@/hooks/use-has-session";
@@ -227,7 +228,7 @@ export function StartupForm({
     queryKey: WORKSPACE_ENFORCEMENT_ENABLED
       ? ["assignable-tenants", principalRef]
       : ["assignable-tenants"],
-    queryFn: () => fetchTenants(),
+    queryFn: () => queryAssignableTenants(fetchTenants),
     enabled: enabled && !isEdit,
     staleTime: 60_000,
   });
