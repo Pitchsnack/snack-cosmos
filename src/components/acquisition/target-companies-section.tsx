@@ -8,7 +8,18 @@ import {
   CompanyFormDialog,
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
-import { newId, type AcquisitionStrategy, type TargetCompany } from "@/lib/acquisition/strategy-store";
+import {
+  newId,
+  TARGET_SOURCES,
+  type AcquisitionStrategy,
+  type TargetCompany,
+  type TargetSource,
+} from "@/lib/acquisition/strategy-store";
+
+const SOURCE_TONE: Record<TargetSource, string> = {
+  "Internal Research": "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "Leadership Direction": "border-purple-200 bg-purple-50 text-purple-700",
+};
 
 type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => void;
 
