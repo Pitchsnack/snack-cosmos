@@ -64,9 +64,21 @@ export function TargetCompaniesSection({
           targets: d.targets.map((t) => (t.id === editing.id ? { ...t, ...value } : t)),
         };
       }
-      return { ...d, targets: [...d.targets, { id: newId(), ...value }] };
+      return {
+        ...d,
+        targets: [...d.targets, { id: newId(), source: "Internal Research" as TargetSource, ...value }],
+      };
     });
     toast.success(editing ? "Target company updated" : "Target company added");
+  };
+
+  /** Source is a single pill; click cycles it between the two allowed values. */
+  const cycleSource = (t: TargetCompany) => {
+    const next = TARGET_SOURCES[(TARGET_SOURCES.indexOf(t.source) + 1) % TARGET_SOURCES.length];
+    update((d) => ({
+      ...d,
+      targets: d.targets.map((x) => (x.id === t.id ? { ...x, source: next } : x)),
+    }));
   };
 
   const remove = (t: TargetCompany) => {
