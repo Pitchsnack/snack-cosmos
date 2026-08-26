@@ -267,10 +267,8 @@ export function AcquisitionStrategyPage({
               )}
             </div>
 
-            <div className="mt-5 border-t border-border/50 pt-4">
-              <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Startup Navigation
-              </div>
+            <div className="mt-6">
+              <div className="mb-1 px-3 text-xs text-muted-foreground">Startup Navigation</div>
               <nav className="space-y-0.5">
                 <StartupNavLink
                   to="/my-startups/$id"
