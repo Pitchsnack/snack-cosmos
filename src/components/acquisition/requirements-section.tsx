@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/acquisition/tag-input";
+import { InfoTip } from "@/components/acquisition/info-tip";
 import {
   EMPTY_REQUIREMENTS,
   type AcquisitionRequirements,
@@ -26,26 +27,30 @@ type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => 
 const STAGE_SUGGESTIONS = ["Seed", "Early Stage", "Growth", "Mature", "Pre-IPO"];
 const SIZE_SUGGESTIONS = ["1–20 employees", "20–200 employees", "200–1,000 employees", "1,000+ employees"];
 
-type Tone = "primary" | "muted" | "accent" | "outline";
+type Tone = "green" | "blue" | "purple" | "orange" | "amber" | "muted";
 
 const TONE_CLASS: Record<Tone, string> = {
-  primary: "border-primary/20 bg-primary/5 text-foreground/85",
-  muted: "border-transparent bg-muted/60 text-muted-foreground",
-  accent: "border-accent/40 bg-accent/10 text-accent-foreground",
-  outline: "border-border bg-background text-foreground/80",
+  green: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  blue: "border-blue-200 bg-blue-50 text-blue-700",
+  purple: "border-purple-200 bg-purple-50 text-purple-700",
+  orange: "border-orange-200 bg-orange-50 text-orange-700",
+  amber: "border-amber-200 bg-amber-50 text-amber-700",
+  muted: "border-border bg-muted/50 text-muted-foreground",
 };
 
+const MAX_VISIBLE_TAGS = 3;
+
 function ChipGroup({ label, tags, tone }: { label: string; tags: string[]; tone: Tone }) {
+  const visible = tags.slice(0, MAX_VISIBLE_TAGS);
+  const overflow = tags.length - visible.length;
   return (
     <div>
-      <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </h4>
+      <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</h4>
       {tags.length === 0 ? (
         <p className="text-xs text-muted-foreground/70">—</p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
-          {tags.map((t) => (
+          {visible.map((t) => (
             <span
               key={t}
               className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${TONE_CLASS[tone]}`}
@@ -53,6 +58,14 @@ function ChipGroup({ label, tags, tone }: { label: string; tags: string[]; tone:
               {t}
             </span>
           ))}
+          {overflow > 0 && (
+            <span
+              title={tags.slice(MAX_VISIBLE_TAGS).join(", ")}
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${TONE_CLASS.muted}`}
+            >
+              +{overflow}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -214,7 +227,10 @@ export function RequirementsSection({
     <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold">{numberedTitle ?? "Acquisition Requirements"}</h2>
+          <h2 className="text-sm font-semibold">
+            {numberedTitle ?? "Acquisition Requirements"}
+            <InfoTip text="Criteria used to discover ideal acquisition targets: industries, keywords, product tags, markets, stage and size." />
+          </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Define the types of companies we want to find and acquire.
           </p>
@@ -233,17 +249,15 @@ export function RequirementsSection({
         </p>
       ) : (
         <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-          <ChipGroup label="Industries" tags={r.industries} tone="primary" />
-          <ChipGroup label="Keywords" tags={r.keywords} tone="muted" />
-          <ChipGroup label="Product & Service Tags" tags={r.productTags} tone="accent" />
-          <ChipGroup label="Markets" tags={r.markets} tone="outline" />
-          <ChipGroup label="Company Stage" tags={r.stages} tone="accent" />
+          <ChipGroup label="Industries" tags={r.industries} tone="green" />
+          <ChipGroup label="Keywords" tags={r.keywords} tone="blue" />
+          <ChipGroup label="Product & Service Tags" tags={r.productTags} tone="purple" />
+          <ChipGroup label="Markets" tags={r.markets} tone="orange" />
+          <ChipGroup label="Company Stage" tags={r.stages} tone="amber" />
           <div>
-            <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Company Size
-            </h4>
+            <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">Company Size</h4>
             {r.companySize ? (
-              <span className="inline-block rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
+              <span className="inline-block rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700">
                 {r.companySize}
               </span>
             ) : (
@@ -251,11 +265,10 @@ export function RequirementsSection({
             )}
           </div>
           <div className="sm:col-span-2">
-            <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Strategic Reason
-            </h4>
+            <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">Strategic Reason</h4>
             <p className="text-xs leading-relaxed text-foreground/80">{r.strategicReason || "—"}</p>
           </div>
+
         </div>
       )}
 
