@@ -4,7 +4,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { InfoTip } from "@/components/acquisition/info-tip";
 import {
   CompanyFormDialog,
   type CompanyFormValue,
@@ -110,7 +109,6 @@ export function CompetitorReferencesSection({
           <h2 className="text-sm font-semibold">
             {numberedTitle ?? "Competitor Acquisition References"}{" "}
             <span className="font-normal text-muted-foreground">(Optional)</span>
-            <InfoTip text="Up to 3 competitors whose acquisition history and patterns we analyse for reference." />
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Add up to 3 competitors for which we want to analyze acquisition history and patterns.
@@ -136,7 +134,7 @@ export function CompetitorReferencesSection({
         </p>
       ) : (
         <div className="mt-4 space-y-2">
-          <div className="hidden grid-cols-[1.2fr_1.4fr_1fr_1fr_auto] gap-4 border-b border-border/60 pb-2 text-[11px] tracking-wide text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[1.2fr_1.4fr_1fr_1fr_auto] gap-4 border-b border-border/60 pb-2 text-[11px] uppercase tracking-wider text-muted-foreground md:grid">
             <span>Competitor Name</span>
             <span>Website</span>
             <span>AI Extraction Status</span>
@@ -147,8 +145,8 @@ export function CompetitorReferencesSection({
             const resultsOpen = !!openResults[c.id];
             return (
               <div key={c.id} className="rounded-md border border-border/50">
-                <div className="grid grid-cols-1 items-center gap-2 px-3 py-2 md:h-14 md:grid-cols-[1.2fr_1.4fr_1fr_1fr_auto] md:gap-4 md:py-0">
-                  <div className="flex min-w-0 items-center gap-2">
+                <div className="grid grid-cols-1 items-center gap-2 px-3 py-2.5 md:grid-cols-[1.2fr_1.4fr_1fr_1fr_auto] md:gap-4">
+                  <div className="flex items-center gap-2">
                     {c.logo ? (
                       <img
                         src={c.logo}
@@ -160,7 +158,7 @@ export function CompetitorReferencesSection({
                         {c.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
                       </span>
                     )}
-                    <div className="min-w-0 truncate">
+                    <div className="min-w-0">
                       {c.linkedStartupId ? (
                         <button
                           type="button"
@@ -173,9 +171,30 @@ export function CompetitorReferencesSection({
                       ) : (
                         <span className="text-sm font-medium">{c.name}</span>
                       )}
+                      {c.linkedStartupId && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenLinked?.(c.linkedStartupId!)}
+                          title="View the linked startup record"
+                          className="ml-1.5 rounded-full border border-primary/25 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-primary transition-colors hover:bg-primary/10"
+                        >
+                          Linked
+                        </button>
+                      )}
+                      {c.attractiveKeywords.length > 0 && (
+                        <div className="mt-0.5 flex flex-wrap gap-1">
+                          {c.attractiveKeywords.map((k) => (
+                            <span
+                              key={k}
+                              className="rounded-full border border-primary/20 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-foreground/75"
+                            >
+                              {k}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-
                   <div>
                     {c.website ? (
                       <a

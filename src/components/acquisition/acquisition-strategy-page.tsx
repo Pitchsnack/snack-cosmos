@@ -67,8 +67,10 @@ function StartupNavLink({
 
 function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+    <div className="border-t border-border/50 pt-3">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
       <div className="mt-1 text-sm text-foreground/90">{children}</div>
     </div>
   );
@@ -181,15 +183,11 @@ export function AcquisitionStrategyPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="bg-background" onClick={exportStrategy}>
+          <Button variant="outline" size="sm" onClick={exportStrategy}>
             <Download className="mr-1 h-3.5 w-3.5" /> Export Strategy
           </Button>
           {canEdit && (
-            <Button
-              size="sm"
-              className="bg-amber-500 text-white hover:bg-amber-600"
-              onClick={saveAll}
-            >
+            <Button size="sm" onClick={saveAll}>
               <Save className="mr-1 h-3.5 w-3.5" /> Save Strategy
             </Button>
           )}
@@ -234,13 +232,12 @@ export function AcquisitionStrategyPage({
             </div>
 
             {startup.investment_stage && (
-              <span className="mt-3 inline-block rounded-full border border-purple-200 bg-purple-50 px-2.5 py-1 text-[11px] font-medium text-purple-700">
+              <Badge variant="secondary" className="mt-3">
                 {startup.investment_stage}
-              </span>
+              </Badge>
             )}
 
-            <div className="mt-4 space-y-4">
-
+            <div className="mt-4 space-y-3">
               {startup.industry.length > 0 && (
                 <SummaryRow label="Industry">{startup.industry.join(", ")}</SummaryRow>
               )}
@@ -267,8 +264,10 @@ export function AcquisitionStrategyPage({
               )}
             </div>
 
-            <div className="mt-6">
-              <div className="mb-1 px-3 text-xs text-muted-foreground">Startup Navigation</div>
+            <div className="mt-5 border-t border-border/50 pt-4">
+              <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Startup Navigation
+              </div>
               <nav className="space-y-0.5">
                 <StartupNavLink
                   to="/my-startups/$id"
@@ -301,8 +300,8 @@ export function AcquisitionStrategyPage({
             </div>
           </div>
 
-          <div className="flex items-start gap-2 rounded-lg border border-purple-200 bg-purple-50 p-4 text-xs leading-relaxed text-purple-800">
-            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" />
+          <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
+            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             This information is private and visible only to authorized users in this workspace.
           </div>
         </aside>
@@ -323,7 +322,7 @@ export function AcquisitionStrategyPage({
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm text-muted-foreground data-[state=active]:border-amber-500 data-[state=active]:bg-transparent data-[state=active]:font-medium data-[state=active]:text-amber-600 data-[state=active]:shadow-none"
+                  className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
                 >
                   {label}
                 </TabsTrigger>

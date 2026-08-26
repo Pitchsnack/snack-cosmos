@@ -36,11 +36,6 @@ export interface LinkedStartupSnapshot {
   city: string | null;
 }
 
-/** Where the target came from — rendered as a single coloured pill. */
-export type TargetSource = "Internal Research" | "Leadership Direction";
-
-export const TARGET_SOURCES: TargetSource[] = ["Internal Research", "Leadership Direction"];
-
 export interface TargetCompany {
   id: string;
   name: string;
@@ -50,8 +45,6 @@ export interface TargetCompany {
   /** "Why this company is attractive" — up to 5 keyword pills. */
   attractiveKeywords: string[];
   notes: string;
-  /** Origin of the target (Source column). */
-  source: TargetSource;
   /** Existing startup record id when this target links to one; null = manual entry. */
   linkedStartupId: string | null;
   /** Display snapshot of the linked startup (only when linkedStartupId is set). */
@@ -203,9 +196,6 @@ function normalizeTarget(raw: unknown): TargetCompany | null {
     logo: typeof t.logo === "string" && t.logo ? t.logo : null,
     attractiveKeywords: toKeywords(t.attractiveKeywords),
     notes: typeof t.notes === "string" ? t.notes : "",
-    source: TARGET_SOURCES.includes(t.source as TargetSource)
-      ? (t.source as TargetSource)
-      : "Internal Research",
     linkedStartupId,
     linkedSnapshot: linkedStartupId ? normalizeSnapshot(t.linkedSnapshot) : null,
   };
