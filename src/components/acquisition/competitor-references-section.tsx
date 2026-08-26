@@ -151,7 +151,7 @@ export function CompetitorReferencesSection({
             variant="outline"
             disabled={atLimit}
             title={atLimit ? "Maximum of 3 competitor references reached" : undefined}
-            onClick={() => setDialogOpen(true)}
+            onClick={() => openAdd()}
           >
             <Plus className="mr-1 h-3.5 w-3.5" /> Add Competitor (Up to 3)
           </Button>
@@ -286,6 +286,17 @@ export function CompetitorReferencesSection({
                       <Button
                         size="icon"
                         variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => openEdit(c)}
+                        aria-label={`Edit ${c.name}`}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {canEdit && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
                         className="h-7 w-7 text-destructive hover:text-destructive"
                         onClick={() => remove(c)}
                         aria-label={`Delete ${c.name}`}
@@ -313,7 +324,7 @@ export function CompetitorReferencesSection({
       {canEdit && strategy.competitors.length > 0 && !atLimit && (
         <button
           type="button"
-          onClick={() => setDialogOpen(true)}
+          onClick={() => openAdd()}
           className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border py-2 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
         >
           <Plus className="h-3.5 w-3.5" /> Add Competitor (Up to 3)
@@ -323,12 +334,29 @@ export function CompetitorReferencesSection({
       <CompanyFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title="Add Competitor Reference"
-        description="Add the competitor's details — acquisition history, targets and patterns are discovered automatically by the Extract action."
-        submitLabel="Add Competitor"
+        title={editing ? "Edit Competitor Reference" : "Add Competitor Reference"}
+        description={
+          editing
+            ? "Update the competitor's details — acquisition history, targets and patterns are discovered automatically by the Extract action."
+            : "Add the competitor's details — acquisition history, targets and patterns are discovered automatically by the Extract action."
+        }
+        submitLabel={editing ? "Save Changes" : "Add Competitor"}
         nameLabel="Competitor Name"
         namePlaceholder="e.g. Competitor A"
-        onSave={addCompetitor}
+        initial={
+          editing
+            ? {
+                name: editing.name,
+                website: editing.website,
+                logo: editing.logo,
+                attractiveKeywords: editing.attractiveKeywords,
+                notes: editing.notes,
+                linkedStartupId: editing.linkedStartupId,
+                linkedSnapshot: editing.linkedSnapshot,
+              }
+            : null
+        }
+        onSave={save}
       />
     </section>
   );
