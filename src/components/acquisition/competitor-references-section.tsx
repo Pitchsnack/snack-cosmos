@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bot, ChevronDown, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Bot, ChevronDown, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -45,31 +45,62 @@ export function CompetitorReferencesSection({
   onOpenLinked?: (startupId: string) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<CompetitorReference | null>(null);
   const [openResults, setOpenResults] = useState<Record<string, boolean>>({});
 
   const atLimit = strategy.competitors.length >= MAX_COMPETITORS;
 
-  const addCompetitor = (value: CompanyFormValue) => {
-    update((d) => ({
-      ...d,
-      competitors: [
-        ...d.competitors,
-        {
-          id: newId(),
-          name: value.name,
-          website: value.website,
-          logo: value.logo,
-          attractiveKeywords: value.attractiveKeywords,
-          notes: value.notes,
-          linkedStartupId: value.linkedStartupId,
-          linkedSnapshot: value.linkedSnapshot,
-          status: "not_extracted",
-          lastExtractedAt: null,
-          result: null,
-        },
-      ],
-    }));
-    toast.success("Competitor reference added");
+  const openAdd = () => {
+    setEditing(null);
+    setDialogOpen(true);
+  };
+  const openEdit = (c: CompetitorReference) => {
+    setEditing(c);
+    setDialogOpen(true);
+  };
+
+  const save = (value: CompanyFormValue) => {
+    update((d) => {
+      if (editing) {
+        return {
+          ...d,
+          competitors: d.competitors.map((c) =>
+            c.id === editing.id
+              ? {
+                  ...c,
+                  name: value.name,
+                  website: value.website,
+                  logo: value.logo,
+                  attractiveKeywords: value.attractiveKeywords,
+                  notes: value.notes,
+                  linkedStartupId: value.linkedStartupId,
+                  linkedSnapshot: value.linkedSnapshot,
+                }
+              : c,
+          ),
+        };
+      }
+      return {
+        ...d,
+        competitors: [
+          ...d.competitors,
+          {
+            id: newId(),
+            name: value.name,
+            website: value.website,
+            logo: value.logo,
+            attractiveKeywords: value.attractiveKeywords,
+            notes: value.notes,
+            linkedStartupId: value.linkedStartupId,
+            linkedSnapshot: value.linkedSnapshot,
+            status: "not_extracted",
+            lastExtractedAt: null,
+            result: null,
+          },
+        ],
+      };
+    });
+    toast.success(editing ? "Competitor reference updated" : "Competitor reference added");
   };
 
   const remove = (c: CompetitorReference) => {
@@ -120,7 +151,7 @@ export function CompetitorReferencesSection({
             variant="outline"
             disabled={atLimit}
             title={atLimit ? "Maximum of 3 competitor references reached" : undefined}
-            onClick={() => setDialogOpen(true)}
+            onClick={() => openAdd()}
           >
             <Plus className="mr-1 h-3.5 w-3.5" /> Add Competitor (Up to 3)
           </Button>
@@ -255,6 +286,17 @@ export function CompetitorReferencesSection({
                       <Button
                         size="icon"
                         variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => openEdit(c)}
+                        aria-label={`Edit ${c.name}`}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {canEdit && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
                         className="h-7 w-7 text-destructive hover:text-destructive"
                         onClick={() => remove(c)}
                         aria-label={`Delete ${c.name}`}
@@ -282,7 +324,7 @@ export function CompetitorReferencesSection({
       {canEdit && strategy.competitors.length > 0 && !atLimit && (
         <button
           type="button"
-          onClick={() => setDialogOpen(true)}
+          onClick={() => openAdd()}
           className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border py-2 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
         >
           <Plus className="h-3.5 w-3.5" /> Add Competitor (Up to 3)
@@ -292,12 +334,29 @@ export function CompetitorReferencesSection({
       <CompanyFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title="Add Competitor Reference"
-        description="Add the competitor's details — acquisition history, targets and patterns are discovered automatically by the Extract action."
-        submitLabel="Add Competitor"
+        title={editing ? "Edit Competitor Reference" : "Add Competitor Reference"}
+        description={
+          editing
+            ? "Update the competitor's details — acquisition history, targets and patterns are discovered automatically by the Extract action."
+            : "Add the competitor's details — acquisition history, targets and patterns are discovered automatically by the Extract action."
+        }
+        submitLabel={editing ? "Save Changes" : "Add Competitor"}
         nameLabel="Competitor Name"
         namePlaceholder="e.g. Competitor A"
-        onSave={addCompetitor}
+        initial={
+          editing
+            ? {
+                name: editing.name,
+                website: editing.website,
+                logo: editing.logo,
+                attractiveKeywords: editing.attractiveKeywords,
+                notes: editing.notes,
+                linkedStartupId: editing.linkedStartupId,
+                linkedSnapshot: editing.linkedSnapshot,
+              }
+            : null
+        }
+        onSave={save}
       />
     </section>
   );
