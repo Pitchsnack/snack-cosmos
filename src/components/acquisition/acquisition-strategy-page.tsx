@@ -181,11 +181,15 @@ export function AcquisitionStrategyPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={exportStrategy}>
+          <Button variant="outline" size="sm" className="bg-background" onClick={exportStrategy}>
             <Download className="mr-1 h-3.5 w-3.5" /> Export Strategy
           </Button>
           {canEdit && (
-            <Button size="sm" onClick={saveAll}>
+            <Button
+              size="sm"
+              className="bg-amber-500 text-white hover:bg-amber-600"
+              onClick={saveAll}
+            >
               <Save className="mr-1 h-3.5 w-3.5" /> Save Strategy
             </Button>
           )}
@@ -230,12 +234,13 @@ export function AcquisitionStrategyPage({
             </div>
 
             {startup.investment_stage && (
-              <Badge variant="secondary" className="mt-3">
+              <span className="mt-3 inline-block rounded-full border border-purple-200 bg-purple-50 px-2.5 py-1 text-[11px] font-medium text-purple-700">
                 {startup.investment_stage}
-              </Badge>
+              </span>
             )}
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
+
               {startup.industry.length > 0 && (
                 <SummaryRow label="Industry">{startup.industry.join(", ")}</SummaryRow>
               )}
