@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/acquisition/tag-input";
+import { InfoTip } from "@/components/acquisition/info-tip";
 import {
   EMPTY_REQUIREMENTS,
   type AcquisitionRequirements,
