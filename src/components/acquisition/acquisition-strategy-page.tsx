@@ -67,10 +67,8 @@ function StartupNavLink({
 
 function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="border-t border-border/50 pt-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
+    <div>
+      <div className="text-xs text-muted-foreground">{label}</div>
       <div className="mt-1 text-sm text-foreground/90">{children}</div>
     </div>
   );
