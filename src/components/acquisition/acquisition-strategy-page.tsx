@@ -301,8 +301,8 @@ export function AcquisitionStrategyPage({
             </div>
           </div>
 
-          <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
-            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="flex items-start gap-2 rounded-lg border border-purple-200 bg-purple-50 p-4 text-xs leading-relaxed text-purple-800">
+            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" />
             This information is private and visible only to authorized users in this workspace.
           </div>
         </aside>
@@ -323,7 +323,7 @@ export function AcquisitionStrategyPage({
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                  className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm text-muted-foreground data-[state=active]:border-amber-500 data-[state=active]:bg-transparent data-[state=active]:font-medium data-[state=active]:text-amber-600 data-[state=active]:shadow-none"
                 >
                   {label}
                 </TabsTrigger>
