@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InfoTip } from "@/components/acquisition/info-tip";
 import {
   CompanyFormDialog,
   type CompanyFormValue,
