@@ -149,17 +149,18 @@ export function TargetCompaniesSection({
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border/60 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-border/60 text-left text-[11px] tracking-wide text-muted-foreground">
                 <th className="pb-2 pr-4 font-medium">Company Name</th>
                 <th className="pb-2 pr-4 font-medium">Website</th>
-                <th className="pb-2 pr-4 font-medium">Why Attractive</th>
+                <th className="pb-2 pr-4 font-medium">Source</th>
                 <th className="pb-2 pr-4 font-medium">Notes</th>
                 {canEdit && <th className="pb-2 text-right font-medium">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {targets.map((t) => (
-                <tr key={t.id} className="border-b border-border/40 last:border-0">
+                <tr key={t.id} className="h-14 border-b border-border/40 last:border-0">
+
                   <td className="py-2.5 pr-4">
                     <div className="flex items-center gap-2">
                       {t.logo ? (
