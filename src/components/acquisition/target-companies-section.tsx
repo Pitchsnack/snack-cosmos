@@ -115,6 +115,7 @@ export function TargetCompaniesSection({
         <div>
           <h2 className="text-sm font-semibold">
             {numberedTitle ?? "Companies We Want to Acquire"}
+            <InfoTip text="Specific companies this startup is actively interested in acquiring. Private to this workspace." />
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {description ?? "List specific companies that we are actively interested in acquiring."}
