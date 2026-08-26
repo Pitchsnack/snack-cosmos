@@ -226,7 +226,10 @@ export function RequirementsSection({
     <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold">{numberedTitle ?? "Acquisition Requirements"}</h2>
+          <h2 className="text-sm font-semibold">
+            {numberedTitle ?? "Acquisition Requirements"}
+            <InfoTip text="Criteria used to discover ideal acquisition targets: industries, keywords, product tags, markets, stage and size." />
+          </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Define the types of companies we want to find and acquire.
           </p>
@@ -245,17 +248,15 @@ export function RequirementsSection({
         </p>
       ) : (
         <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-          <ChipGroup label="Industries" tags={r.industries} tone="primary" />
-          <ChipGroup label="Keywords" tags={r.keywords} tone="muted" />
-          <ChipGroup label="Product & Service Tags" tags={r.productTags} tone="accent" />
-          <ChipGroup label="Markets" tags={r.markets} tone="outline" />
-          <ChipGroup label="Company Stage" tags={r.stages} tone="accent" />
+          <ChipGroup label="Industries" tags={r.industries} tone="green" />
+          <ChipGroup label="Keywords" tags={r.keywords} tone="blue" />
+          <ChipGroup label="Product & Service Tags" tags={r.productTags} tone="purple" />
+          <ChipGroup label="Markets" tags={r.markets} tone="orange" />
+          <ChipGroup label="Company Stage" tags={r.stages} tone="amber" />
           <div>
-            <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Company Size
-            </h4>
+            <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">Company Size</h4>
             {r.companySize ? (
-              <span className="inline-block rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
+              <span className="inline-block rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700">
                 {r.companySize}
               </span>
             ) : (
@@ -263,11 +264,10 @@ export function RequirementsSection({
             )}
           </div>
           <div className="sm:col-span-2">
-            <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Strategic Reason
-            </h4>
+            <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">Strategic Reason</h4>
             <p className="text-xs leading-relaxed text-foreground/80">{r.strategicReason || "—"}</p>
           </div>
+
         </div>
       )}
 
