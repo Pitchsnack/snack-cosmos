@@ -203,6 +203,9 @@ function normalizeTarget(raw: unknown): TargetCompany | null {
     logo: typeof t.logo === "string" && t.logo ? t.logo : null,
     attractiveKeywords: toKeywords(t.attractiveKeywords),
     notes: typeof t.notes === "string" ? t.notes : "",
+    source: TARGET_SOURCES.includes(t.source as TargetSource)
+      ? (t.source as TargetSource)
+      : "Internal Research",
     linkedStartupId,
     linkedSnapshot: linkedStartupId ? normalizeSnapshot(t.linkedSnapshot) : null,
   };
