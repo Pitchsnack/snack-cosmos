@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bot, ChevronDown, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Bot, ChevronDown, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -45,31 +45,62 @@ export function CompetitorReferencesSection({
   onOpenLinked?: (startupId: string) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<CompetitorReference | null>(null);
   const [openResults, setOpenResults] = useState<Record<string, boolean>>({});
 
   const atLimit = strategy.competitors.length >= MAX_COMPETITORS;
 
-  const addCompetitor = (value: CompanyFormValue) => {
-    update((d) => ({
-      ...d,
-      competitors: [
-        ...d.competitors,
-        {
-          id: newId(),
-          name: value.name,
-          website: value.website,
-          logo: value.logo,
-          attractiveKeywords: value.attractiveKeywords,
-          notes: value.notes,
-          linkedStartupId: value.linkedStartupId,
-          linkedSnapshot: value.linkedSnapshot,
-          status: "not_extracted",
-          lastExtractedAt: null,
-          result: null,
-        },
-      ],
-    }));
-    toast.success("Competitor reference added");
+  const openAdd = () => {
+    setEditing(null);
+    setDialogOpen(true);
+  };
+  const openEdit = (c: CompetitorReference) => {
+    setEditing(c);
+    setDialogOpen(true);
+  };
+
+  const save = (value: CompanyFormValue) => {
+    update((d) => {
+      if (editing) {
+        return {
+          ...d,
+          competitors: d.competitors.map((c) =>
+            c.id === editing.id
+              ? {
+                  ...c,
+                  name: value.name,
+                  website: value.website,
+                  logo: value.logo,
+                  attractiveKeywords: value.attractiveKeywords,
+                  notes: value.notes,
+                  linkedStartupId: value.linkedStartupId,
+                  linkedSnapshot: value.linkedSnapshot,
+                }
+              : c,
+          ),
+        };
+      }
+      return {
+        ...d,
+        competitors: [
+          ...d.competitors,
+          {
+            id: newId(),
+            name: value.name,
+            website: value.website,
+            logo: value.logo,
+            attractiveKeywords: value.attractiveKeywords,
+            notes: value.notes,
+            linkedStartupId: value.linkedStartupId,
+            linkedSnapshot: value.linkedSnapshot,
+            status: "not_extracted",
+            lastExtractedAt: null,
+            result: null,
+          },
+        ],
+      };
+    });
+    toast.success(editing ? "Competitor reference updated" : "Competitor reference added");
   };
 
   const remove = (c: CompetitorReference) => {
