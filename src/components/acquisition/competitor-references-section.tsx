@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { InfoTip } from "@/components/acquisition/info-tip";
 import {
   CompanyFormDialog,
   type CompanyFormValue,
@@ -109,6 +110,7 @@ export function CompetitorReferencesSection({
           <h2 className="text-sm font-semibold">
             {numberedTitle ?? "Competitor Acquisition References"}{" "}
             <span className="font-normal text-muted-foreground">(Optional)</span>
+            <InfoTip text="Up to 3 competitors whose acquisition history and patterns we analyse for reference." />
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Add up to 3 competitors for which we want to analyze acquisition history and patterns.
