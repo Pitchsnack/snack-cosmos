@@ -213,25 +213,28 @@ export function TargetCompaniesSection({
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </td>
-                  <td className="max-w-[260px] py-2.5 pr-4">
-                    {t.attractiveKeywords.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {t.attractiveKeywords.map((k) => (
-                          <span
-                            key={k}
-                            className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] font-medium text-foreground/80"
-                          >
-                            {k}
-                          </span>
-                        ))}
-                      </div>
+                  <td className="py-2.5 pr-4">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => cycleSource(t)}
+                        title="Click to switch source"
+                        className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium ${SOURCE_TONE[t.source]}`}
+                      >
+                        {t.source}
+                      </button>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span
+                        className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium ${SOURCE_TONE[t.source]}`}
+                      >
+                        {t.source}
+                      </span>
                     )}
                   </td>
-                  <td className="max-w-[220px] py-2.5 pr-4">
-                    <span className="line-clamp-2 text-xs text-muted-foreground">{t.notes || "—"}</span>
+                  <td className="max-w-[260px] py-2.5 pr-4">
+                    <span className="block truncate text-xs text-muted-foreground">{t.notes || "—"}</span>
                   </td>
+
                   {canEdit && (
                     <td className="py-2.5 text-right">
                       <div className="inline-flex gap-1">
