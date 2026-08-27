@@ -26,18 +26,20 @@ type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => 
 const STAGE_SUGGESTIONS = ["Seed", "Early Stage", "Growth", "Mature", "Pre-IPO"];
 const SIZE_SUGGESTIONS = ["1–20 employees", "20–200 employees", "200–1,000 employees", "1,000+ employees"];
 
-type Tone = "primary" | "muted" | "accent" | "outline";
+type Tone = "green" | "blue" | "purple" | "orange" | "grey" | "amber";
 
 const TONE_CLASS: Record<Tone, string> = {
-  primary: "border-primary/20 bg-primary/5 text-foreground/85",
-  muted: "border-transparent bg-muted/60 text-muted-foreground",
-  accent: "border-accent/40 bg-accent/10 text-accent-foreground",
-  outline: "border-border bg-background text-foreground/80",
+  green: "border-emerald-600/25 bg-emerald-600/10 text-emerald-800",
+  blue: "border-blue-600/25 bg-blue-600/10 text-blue-900",
+  purple: "border-purple-600/25 bg-purple-600/10 text-purple-800",
+  orange: "border-orange-500/30 bg-orange-500/10 text-orange-800",
+  grey: "border-border bg-muted/60 text-muted-foreground",
+  amber: "border-accent/40 bg-accent/15 text-accent-foreground",
 };
 
 function ChipGroup({ label, tags, tone }: { label: string; tags: string[]; tone: Tone }) {
   return (
-    <div>
+    <div className="min-w-0 px-4 first:pl-0 last:pr-0">
       <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </h4>
