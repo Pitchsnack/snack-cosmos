@@ -1,15 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  Building2,
-  Download,
-  FileText,
-  Globe,
-  Lock,
-  Pencil,
-  Save,
-  Target,
-  UserCircle,
-} from "lucide-react";
+import { Download, FileText, Globe, Lock, Pencil, Save, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +19,7 @@ import { RequirementsSection, RequirementsForm } from "@/components/acquisition/
 import { InsightsTab } from "@/components/acquisition/insights-tab";
 import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
 
-export type AcquisitionTab = "overview" | "targets" | "competitors" | "requirements" | "insights";
+export type AcquisitionTab = "overview" | "startup-info" | "targets" | "competitors" | "requirements" | "insights";
 
 function StartupNavLink({
   to,
@@ -53,7 +43,7 @@ function StartupNavLink({
       search={search as never}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+        "flex items-center gap-2 rounded-md border border-border/60 px-3 py-1.5 text-xs transition-colors",
         active
           ? "bg-accent/15 font-medium text-accent-foreground"
           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
