@@ -136,20 +136,25 @@ export function CompanyTable({
                     )}
                   </td>
                   <td className="py-3 pr-4 align-middle">
-                    {item.attractiveKeywords.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {item.attractiveKeywords.map((k) => (
-                          <span
-                            key={k}
-                            className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] font-medium text-foreground/80"
-                          >
-                            {k}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                    {(() => {
+                      const statusPill = renderStatusPill?.(item);
+                      if (!statusPill && item.attractiveKeywords.length === 0) {
+                        return <span className="text-xs text-muted-foreground">—</span>;
+                      }
+                      return (
+                        <div className="flex flex-wrap items-center gap-1">
+                          {statusPill}
+                          {item.attractiveKeywords.map((k) => (
+                            <span
+                              key={k}
+                              className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${keywordClassName}`}
+                            >
+                              {k}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 align-middle text-right">
                     {canEdit ? (
