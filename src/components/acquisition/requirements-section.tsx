@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/acquisition/tag-input";
-import { InfoHint } from "@/components/acquisition/info-hint";
 import {
   EMPTY_REQUIREMENTS,
   type AcquisitionRequirements,
@@ -27,20 +26,18 @@ type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => 
 const STAGE_SUGGESTIONS = ["Seed", "Early Stage", "Growth", "Mature", "Pre-IPO"];
 const SIZE_SUGGESTIONS = ["1–20 employees", "20–200 employees", "200–1,000 employees", "1,000+ employees"];
 
-type Tone = "green" | "blue" | "purple" | "orange" | "grey" | "amber";
+type Tone = "primary" | "muted" | "accent" | "outline";
 
 const TONE_CLASS: Record<Tone, string> = {
-  green: "border-emerald-600/25 bg-emerald-600/10 text-emerald-800",
-  blue: "border-blue-600/25 bg-blue-600/10 text-blue-900",
-  purple: "border-purple-600/25 bg-purple-600/10 text-purple-800",
-  orange: "border-orange-500/30 bg-orange-500/10 text-orange-800",
-  grey: "border-border bg-muted/60 text-muted-foreground",
-  amber: "border-accent/40 bg-accent/15 text-accent-foreground",
+  primary: "border-primary/20 bg-primary/5 text-foreground/85",
+  muted: "border-transparent bg-muted/60 text-muted-foreground",
+  accent: "border-accent/40 bg-accent/10 text-accent-foreground",
+  outline: "border-border bg-background text-foreground/80",
 };
 
 function ChipGroup({ label, tags, tone }: { label: string; tags: string[]; tone: Tone }) {
   return (
-    <div className="min-w-0 px-4 first:pl-0 last:pr-0">
+    <div>
       <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </h4>
@@ -217,10 +214,7 @@ export function RequirementsSection({
     <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
-            {numberedTitle ?? "Acquisition Requirements"}
-            <InfoHint text="Criteria used to discover acquisition targets: industries, keywords, products, markets, stage and size." />
-          </h2>
+          <h2 className="text-sm font-semibold">{numberedTitle ?? "Acquisition Requirements"}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Define the types of companies we want to find and acquire.
           </p>
@@ -238,20 +232,25 @@ export function RequirementsSection({
           targets.
         </p>
       ) : (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-y-4 divide-[#EEEEEE] sm:grid-cols-3 lg:grid-cols-6 lg:divide-x">
-            <ChipGroup label="Industries" tags={r.industries} tone="green" />
-            <ChipGroup label="Keywords" tags={r.keywords} tone="blue" />
-            <ChipGroup label="Product & Service Tags" tags={r.productTags} tone="purple" />
-            <ChipGroup label="Markets" tags={r.markets} tone="orange" />
-            <ChipGroup label="Company Stage" tags={r.stages} tone="grey" />
-            <ChipGroup
-              label="Company Size"
-              tags={r.companySize ? [r.companySize] : []}
-              tone="amber"
-            />
+        <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ChipGroup label="Industries" tags={r.industries} tone="primary" />
+          <ChipGroup label="Keywords" tags={r.keywords} tone="muted" />
+          <ChipGroup label="Product & Service Tags" tags={r.productTags} tone="accent" />
+          <ChipGroup label="Markets" tags={r.markets} tone="outline" />
+          <ChipGroup label="Company Stage" tags={r.stages} tone="accent" />
+          <div>
+            <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Company Size
+            </h4>
+            {r.companySize ? (
+              <span className="inline-block rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
+                {r.companySize}
+              </span>
+            ) : (
+              <p className="text-xs text-muted-foreground/70">—</p>
+            )}
           </div>
-          <div className="border-t border-[#EEEEEE] pt-3">
+          <div className="sm:col-span-2">
             <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Strategic Reason
             </h4>

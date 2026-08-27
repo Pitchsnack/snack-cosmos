@@ -36,8 +36,6 @@ export function CompanyTable({
   onDelete,
   onOpenLinked,
   renderExtra,
-  renderStatusPill,
-  keywordClassName = "border-primary/20 bg-primary/5 text-foreground/80",
 }: {
   items: CompanyRowItem[];
   canEdit: boolean;
@@ -46,10 +44,6 @@ export function CompanyTable({
   onOpenLinked?: (startupId: string) => void;
   /** Optional trailing content rendered below a row (e.g. extraction results). */
   renderExtra?: (item: CompanyRowItem) => React.ReactNode;
-  /** Optional leading pill in the "Why Attractive" cell (e.g. extraction status). */
-  renderStatusPill?: (item: CompanyRowItem) => React.ReactNode;
-  /** Tone classes for the keyword pills. */
-  keywordClassName?: string;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -136,25 +130,20 @@ export function CompanyTable({
                     )}
                   </td>
                   <td className="py-3 pr-4 align-middle">
-                    {(() => {
-                      const statusPill = renderStatusPill?.(item);
-                      if (!statusPill && item.attractiveKeywords.length === 0) {
-                        return <span className="text-xs text-muted-foreground">—</span>;
-                      }
-                      return (
-                        <div className="flex flex-wrap items-center gap-1">
-                          {statusPill}
-                          {item.attractiveKeywords.map((k) => (
-                            <span
-                              key={k}
-                              className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${keywordClassName}`}
-                            >
-                              {k}
-                            </span>
-                          ))}
-                        </div>
-                      );
-                    })()}
+                    {item.attractiveKeywords.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {item.attractiveKeywords.map((k) => (
+                          <span
+                            key={k}
+                            className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] font-medium text-foreground/80"
+                          >
+                            {k}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="py-3 align-middle text-right">
                     {canEdit ? (

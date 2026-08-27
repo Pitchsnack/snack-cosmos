@@ -9,7 +9,6 @@ import {
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
 import { CompanyTable } from "@/components/acquisition/company-table";
-import { InfoHint } from "@/components/acquisition/info-hint";
 import { newId, type AcquisitionStrategy, type TargetCompany } from "@/lib/acquisition/strategy-store";
 
 type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => void;
@@ -92,9 +91,8 @@ export function TargetCompaniesSection({
     <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+          <h2 className="text-sm font-semibold">
             {numberedTitle ?? "Companies We Want to Acquire"}
-            <InfoHint text="Specific companies you are actively interested in acquiring. Link a record to reuse an existing startup profile." />
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {description ?? "List specific companies that we are actively interested in acquiring."}
