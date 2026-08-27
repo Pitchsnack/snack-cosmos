@@ -252,7 +252,7 @@ export function AcquisitionStrategyPage({
         </TabsContent>
 
         <TabsContent value="startup-info" className="mt-5">
-          <section className="rounded-lg border border-border bg-card p-5 shadow-card">
+          <section className="rounded-[14px] border border-border bg-card p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
@@ -364,7 +364,7 @@ export function AcquisitionStrategyPage({
         </TabsContent>
 
         <TabsContent value="requirements" className="mt-5">
-          <section className="rounded-lg border border-border bg-card p-5 shadow-card">
+          <section className="rounded-[14px] border border-border bg-card p-5">
             <h2 className="text-sm font-semibold">Acquisition Requirements</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Define the types of companies we want to find and acquire. Suggestions are prefilled

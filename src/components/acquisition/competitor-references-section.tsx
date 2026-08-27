@@ -135,7 +135,7 @@ export function CompetitorReferencesSection({
   };
 
   return (
-    <section className="rounded-lg border border-border bg-card p-5 shadow-card">
+    <section className="rounded-[14px] border border-border bg-card p-5">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold">

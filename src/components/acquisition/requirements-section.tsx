@@ -209,7 +209,7 @@ export function RequirementsSection({
   };
 
   return (
-    <section className="rounded-lg border border-border bg-card p-5 shadow-card">
+    <section className="rounded-[14px] border border-border bg-card p-5">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold">{numberedTitle ?? "Acquisition Requirements"}</h2>
