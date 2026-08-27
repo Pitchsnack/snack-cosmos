@@ -140,8 +140,8 @@ export function CompetitorReferencesSection({
       <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
-            <InfoHint text="Competitors whose acquisition history we analyse to learn what kinds of companies they buy." />{" "}
-            {numberedTitle ?? "Competitor Acquisition References"}{" "}
+            {numberedTitle ?? "Competitor Acquisition References"}
+            <InfoHint text="Competitors whose acquisition history we analyse to learn what kinds of companies they buy." />
             <span className="font-normal text-muted-foreground">(Optional)</span>
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
