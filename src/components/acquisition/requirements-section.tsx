@@ -230,30 +230,59 @@ export function RequirementsSection({
           targets.
         </p>
       ) : (
-        <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-          <ChipGroup label="Industries" tags={r.industries} tone="primary" />
-          <ChipGroup label="Keywords" tags={r.keywords} tone="muted" />
-          <ChipGroup label="Product & Service Tags" tags={r.productTags} tone="accent" />
-          <ChipGroup label="Markets" tags={r.markets} tone="outline" />
-          <ChipGroup label="Company Stage" tags={r.stages} tone="accent" />
-          <div>
-            <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Company Size
-            </h4>
-            {r.companySize ? (
-              <span className="inline-block rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
-                {r.companySize}
-              </span>
-            ) : (
-              <p className="text-xs text-muted-foreground/70">—</p>
-            )}
-          </div>
-          <div className="sm:col-span-2">
-            <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Strategic Reason
-            </h4>
-            <p className="text-xs leading-relaxed text-foreground/80">{r.strategicReason || "—"}</p>
-          </div>
+        <div className="space-y-4">
+          {(() => {
+            // Only groups with values render; dividers sit strictly between them.
+            const groups = [
+              <ChipGroup key="ind" label="Industries" tags={r.industries} tone="primary" />,
+              <ChipGroup key="kw" label="Keywords" tags={r.keywords} tone="muted" />,
+              <ChipGroup
+                key="pt"
+                label="Product & Service Tags"
+                tags={r.productTags}
+                tone="accent"
+              />,
+              <ChipGroup key="mk" label="Markets" tags={r.markets} tone="outline" />,
+              <ChipGroup key="st" label="Company Stage" tags={r.stages} tone="accent" />,
+              r.companySize.trim() ? (
+                <div key="sz" className="min-w-0">
+                  <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Company Size
+                  </h4>
+                  <span className="inline-block rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
+                    {r.companySize}
+                  </span>
+                </div>
+              ) : null,
+            ].filter(Boolean) as React.ReactElement[];
+
+            if (groups.length === 0) return null;
+            return (
+              <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
+                {groups.map((g, i) => (
+                  <div
+                    key={g.key}
+                    className={
+                      i > 0
+                        ? "min-w-[140px] flex-1 border-l border-border/60 pl-6"
+                        : "min-w-[140px] flex-1"
+                    }
+                  >
+                    {g}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {r.strategicReason.trim() && (
+            <div className="border-t border-border/60 pt-4">
+              <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Strategic Reason
+              </h4>
+              <p className="text-xs leading-relaxed text-foreground/80">{r.strategicReason}</p>
+            </div>
+          )}
         </div>
       )}
 
