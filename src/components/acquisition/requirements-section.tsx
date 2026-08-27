@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/acquisition/tag-input";
+import { InfoHint } from "@/components/acquisition/info-hint";
 import {
   EMPTY_REQUIREMENTS,
   type AcquisitionRequirements,
@@ -216,7 +217,10 @@ export function RequirementsSection({
     <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold">{numberedTitle ?? "Acquisition Requirements"}</h2>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            {numberedTitle ?? "Acquisition Requirements"}
+            <InfoHint text="Criteria used to discover acquisition targets: industries, keywords, products, markets, stage and size." />
+          </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Define the types of companies we want to find and acquire.
           </p>
