@@ -12,7 +12,7 @@ function InsightCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-border bg-card p-5 shadow-card">
+    <section className="rounded-[14px] border border-border bg-card p-5">
       <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
         <Icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
         {title}

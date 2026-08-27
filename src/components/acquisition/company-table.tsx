@@ -49,9 +49,9 @@ export function CompanyTable({
     <div className="overflow-x-auto">
       <table className="w-full table-fixed text-sm">
         <colgroup>
-          <col className="w-[34%]" />
+          <col className="w-[38%]" />
           <col className="w-[14%]" />
-          <col className="w-[42%]" />
+          <col className="w-[38%]" />
           <col className="w-[10%]" />
         </colgroup>
         <thead>
