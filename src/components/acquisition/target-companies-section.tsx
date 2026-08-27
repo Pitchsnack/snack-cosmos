@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ExternalLink, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   CompanyFormDialog,
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
+import { CompanyTable } from "@/components/acquisition/company-table";
 import { newId, type AcquisitionStrategy, type TargetCompany } from "@/lib/acquisition/strategy-store";
 
 type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => void;
@@ -123,116 +124,17 @@ export function TargetCompaniesSection({
             : "No companies match your search."}
         </p>
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/60 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                <th className="pb-2 pr-4 font-medium">Company Name</th>
-                <th className="pb-2 pr-4 font-medium">Website</th>
-                <th className="pb-2 pr-4 font-medium">Why Attractive</th>
-                <th className="pb-2 pr-4 font-medium">Notes</th>
-                {canEdit && <th className="pb-2 text-right font-medium">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {targets.map((t) => (
-                <tr key={t.id} className="border-b border-border/40 last:border-0">
-                  <td className="py-2.5 pr-4">
-                    <div className="flex items-center gap-2">
-                      {t.logo ? (
-                        <img
-                          src={t.logo}
-                          alt={`${t.name} logo`}
-                          className="h-7 w-7 shrink-0 rounded-md border border-border/60 bg-background object-contain"
-                        />
-                      ) : (
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
-                          {t.name.slice(0, 1).toUpperCase()}
-                        </span>
-                      )}
-                      <div className="min-w-0">
-                        {t.linkedStartupId ? (
-                          <button
-                            type="button"
-                            onClick={() => onOpenLinked?.(t.linkedStartupId!)}
-                            className="font-medium text-blue-900 hover:underline"
-                            title="View the linked startup record"
-                          >
-                            {t.name}
-                          </button>
-                        ) : (
-                          <span className="font-medium">{t.name}</span>
-                        )}
-                        {t.linkedStartupId && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenLinked?.(t.linkedStartupId!)}
-                            title="View the linked startup record"
-                            className="ml-1.5 rounded-full border border-primary/25 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-primary transition-colors hover:bg-primary/10"
-                          >
-                            Linked
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-2.5 pr-4">
-                    {t.website ? (
-                      <a
-                        href={/^https?:\/\//i.test(t.website) ? t.website : `https://${t.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-blue-900 hover:underline"
-                      >
-                        {t.website} <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="max-w-[260px] py-2.5 pr-4">
-                    {t.attractiveKeywords.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {t.attractiveKeywords.map((k) => (
-                          <span
-                            key={k}
-                            className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] font-medium text-foreground/80"
-                          >
-                            {k}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="max-w-[220px] py-2.5 pr-4">
-                    <span className="line-clamp-2 text-xs text-muted-foreground">{t.notes || "—"}</span>
-                  </td>
-                  {canEdit && (
-                    <td className="py-2.5 text-right">
-                      <div className="inline-flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(t)} aria-label={`Edit ${t.name}`}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => remove(t)}
-                          aria-label={`Delete ${t.name}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-4">
+          <CompanyTable
+            items={targets}
+            canEdit={canEdit}
+            onEdit={(t: TargetCompany) => openEdit(t)}
+            onDelete={(t: TargetCompany) => remove(t)}
+            onOpenLinked={onOpenLinked}
+          />
         </div>
       )}
+
 
       {canEdit && targets.length > 0 && (
         <button

@@ -12,7 +12,14 @@ import { isUuid } from "@/lib/uuid";
 export const Route = createFileRoute("/_authenticated/my-startups/$id/acquisition")({
   validateSearch: z.object({
     tab: z
-      .enum(["overview", "targets", "competitors", "requirements", "insights"])
+      .enum([
+        "overview",
+        "startup-info",
+        "targets",
+        "competitors",
+        "requirements",
+        "insights",
+      ])
       .optional(),
     // Linked startup shown in the information-panel overlay.
     panel: z.string().optional(),

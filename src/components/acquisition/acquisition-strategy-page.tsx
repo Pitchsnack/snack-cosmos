@@ -1,15 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  Building2,
-  Download,
-  FileText,
-  Globe,
-  Lock,
-  Pencil,
-  Save,
-  Target,
-  UserCircle,
-} from "lucide-react";
+import { Download, FileText, Globe, Lock, Pencil, Save, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +19,7 @@ import { RequirementsSection, RequirementsForm } from "@/components/acquisition/
 import { InsightsTab } from "@/components/acquisition/insights-tab";
 import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
 
-export type AcquisitionTab = "overview" | "targets" | "competitors" | "requirements" | "insights";
+export type AcquisitionTab = "overview" | "startup-info" | "targets" | "competitors" | "requirements" | "insights";
 
 function StartupNavLink({
   to,
@@ -53,7 +43,7 @@ function StartupNavLink({
       search={search as never}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+        "flex items-center gap-2 rounded-md border border-border/60 px-3 py-1.5 text-xs transition-colors",
         active
           ? "bg-accent/15 font-medium text-accent-foreground"
           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -163,24 +153,44 @@ export function AcquisitionStrategyPage({
     toast.success("Acquisition strategy saved");
   };
 
+  const websiteHref = startup.website_url
+    ? /^https?:\/\//i.test(startup.website_url)
+      ? startup.website_url
+      : `https://${startup.website_url}`
+    : null;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5" /> MY WORKSPACE
+    <div className="space-y-5">
+      {/* Compact startup header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
+            {startup.logo_signed_url ? (
+              <img
+                src={startup.logo_signed_url}
+                alt={`${startup.startup_name} logo`}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <span className="text-base font-semibold text-muted-foreground">
+                {startup.startup_name.slice(0, 1).toUpperCase()}
+              </span>
+            )}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-semibold tracking-tight">Acquisition Strategy</h1>
-            <Badge variant="outline" className="gap-1 border-accent/50 bg-accent/10 text-accent-foreground">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h1 className="truncate text-2xl font-semibold tracking-tight">
+              {startup.startup_name}
+            </h1>
+            {startup.investment_stage && (
+              <Badge variant="secondary">{startup.investment_stage}</Badge>
+            )}
+            <Badge
+              variant="outline"
+              className="gap-1 border-accent/50 bg-accent/10 text-accent-foreground"
+            >
               <Lock className="h-3 w-3" /> Private
             </Badge>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Define companies we want to acquire and criteria for discovering ideal acquisition
-            targets.
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportStrategy}>
@@ -194,11 +204,56 @@ export function AcquisitionStrategyPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        {/* Left column — startup summary + navigation */}
-        <aside className="space-y-4">
-          <div className="rounded-lg border border-border bg-card p-5 shadow-card">
-            <div className="flex items-start justify-between gap-2">
+      {/* Full-width acquisition workspace */}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as AcquisitionTab)} className="w-full">
+        <TabsList className="h-auto w-full justify-start gap-6 overflow-x-auto rounded-none border-b border-border/60 bg-transparent p-0">
+          {(
+            [
+              ["overview", "Overview"],
+              ["startup-info", "Startup Info"],
+              ["targets", "Target Companies"],
+              ["competitors", "Competitor References"],
+              ["requirements", "Acquisition Requirements"],
+              ["insights", "Insights"],
+            ] as const
+          ).map(([value, label]) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+            >
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-5 space-y-4">
+          <TargetCompaniesSection
+            strategy={strategy}
+            update={update}
+            canEdit={canEdit}
+            numberedTitle="1. Companies We Want to Acquire"
+            onOpenLinked={openLinkedStartup}
+          />
+          <CompetitorReferencesSection
+            strategy={strategy}
+            update={update}
+            canEdit={canEdit}
+            numberedTitle="2. Competitor Acquisition References"
+            onOpenLinked={openLinkedStartup}
+          />
+          <RequirementsSection
+            strategy={strategy}
+            update={update}
+            startup={startup}
+            canEdit={canEdit}
+            numberedTitle="3. Acquisition Requirements"
+          />
+        </TabsContent>
+
+        <TabsContent value="startup-info" className="mt-5">
+          <section className="rounded-lg border border-border bg-card p-5 shadow-card">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
                   {startup.logo_signed_url ? (
@@ -214,200 +269,134 @@ export function AcquisitionStrategyPage({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold">{startup.startup_name}</div>
+                  <div className="text-sm font-semibold">{startup.startup_name}</div>
                   {startup.registered_name && (
-                    <div className="truncate text-xs text-muted-foreground">
-                      {startup.registered_name}
-                    </div>
+                    <div className="text-xs text-muted-foreground">{startup.registered_name}</div>
                   )}
                 </div>
               </div>
               {canEdit && (
-                <Button asChild size="sm" variant="outline" className="h-7 shrink-0 px-2 text-xs">
+                <Button asChild size="sm" variant="outline" className="h-8 text-xs">
                   <Link to="/my-startups/$id/edit" params={{ id: startup.id }}>
-                    <Pencil className="mr-1 h-3 w-3" /> Edit
+                    <Pencil className="mr-1 h-3 w-3" /> Edit Startup
                   </Link>
                 </Button>
               )}
             </div>
 
-            {startup.investment_stage && (
-              <Badge variant="secondary" className="mt-3">
-                {startup.investment_stage}
-              </Badge>
-            )}
-
-            <div className="mt-4 space-y-3">
+            <div className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
               {startup.industry.length > 0 && (
                 <SummaryRow label="Industry">{startup.industry.join(", ")}</SummaryRow>
               )}
               {startup.market_tags.length > 0 && (
                 <SummaryRow label="Market">{startup.market_tags.join(" | ")}</SummaryRow>
               )}
-              {startup.headquarters && <SummaryRow label="Headquarters">{startup.headquarters}</SummaryRow>}
-              {startup.website_url && (
+              {startup.headquarters && (
+                <SummaryRow label="Headquarters">{startup.headquarters}</SummaryRow>
+              )}
+              {websiteHref && (
                 <SummaryRow label="Website">
                   <a
-                    href={
-                      /^https?:\/\//i.test(startup.website_url)
-                        ? startup.website_url
-                        : `https://${startup.website_url}`
-                    }
+                    href={websiteHref}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-blue-900 hover:underline"
                   >
-                    <Globe className="h-3.5 w-3.5" />
-                    {startup.website_url.replace(/^https?:\/\//i, "")}
+                    <Globe className="h-3.5 w-3.5" /> Website
                   </a>
                 </SummaryRow>
               )}
-            </div>
-
-            <div className="mt-5 border-t border-border/50 pt-4">
-              <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Startup Navigation
-              </div>
-              <nav className="space-y-0.5">
-                <StartupNavLink
-                  to="/my-startups/$id"
-                  params={{ id: startup.id }}
-                  icon={UserCircle}
-                  label="Profile"
-                />
-                <StartupNavLink
-                  to="/my-startups/$id/edit"
-                  params={{ id: startup.id }}
-                  search={{ tab: "edit" }}
-                  icon={FileText}
-                  label="Information"
-                />
-                <StartupNavLink
-                  to="/my-startups/$id/edit"
-                  params={{ id: startup.id }}
-                  search={{ tab: "basic-restrictions" }}
-                  icon={Lock}
-                  label="Private Information"
-                />
-                <StartupNavLink
-                  to="/my-startups/$id/acquisition"
-                  params={{ id: startup.id }}
-                  icon={Target}
-                  label="Acquisition Strategy"
-                  active
-                />
-              </nav>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
-            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            This information is private and visible only to authorized users in this workspace.
-          </div>
-        </aside>
-
-        {/* Right column — tabs */}
-        <div className="min-w-0">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as AcquisitionTab)} className="w-full">
-            <TabsList className="h-auto w-full justify-start gap-6 overflow-x-auto rounded-none border-b border-border/60 bg-transparent p-0">
-              {(
-                [
-                  ["overview", "Overview"],
-                  ["targets", "Target Companies"],
-                  ["competitors", "Competitor References"],
-                  ["requirements", "Acquisition Requirements"],
-                  ["insights", "Insights"],
-                ] as const
-              ).map(([value, label]) => (
-                <TabsTrigger
-                  key={value}
-                  value={value}
-                  className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
-                >
-                  {label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            <TabsContent value="overview" className="mt-6 space-y-6">
-              <TargetCompaniesSection
-                strategy={strategy}
-                update={update}
-                canEdit={canEdit}
-                numberedTitle="1. Companies We Want to Acquire"
-                onOpenLinked={openLinkedStartup}
-              />
-              <CompetitorReferencesSection
-                strategy={strategy}
-                update={update}
-                canEdit={canEdit}
-                numberedTitle="2. Competitor Acquisition References"
-                onOpenLinked={openLinkedStartup}
-              />
-              <RequirementsSection
-                strategy={strategy}
-                update={update}
-                startup={startup}
-                canEdit={canEdit}
-                numberedTitle="3. Acquisition Requirements"
-              />
-            </TabsContent>
-
-            <TabsContent value="targets" className="mt-6">
-              <TargetCompaniesSection
-                strategy={strategy}
-                update={update}
-                canEdit={canEdit}
-                expanded
-                onOpenLinked={openLinkedStartup}
-              />
-            </TabsContent>
-
-            <TabsContent value="competitors" className="mt-6">
-              <CompetitorReferencesSection
-                strategy={strategy}
-                update={update}
-                canEdit={canEdit}
-                expanded
-                onOpenLinked={openLinkedStartup}
-              />
-            </TabsContent>
-
-            <TabsContent value="requirements" className="mt-6">
-              <section className="rounded-lg border border-border bg-card p-5 shadow-card">
-                <h2 className="text-sm font-semibold">Acquisition Requirements</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Define the types of companies we want to find and acquire. Suggestions are
-                  prefilled from the startup profile where available.
-                </p>
-                <div className="mt-5">
-                  <RequirementsForm value={reqDraft} onChange={setReqDraft} startup={startup} />
+              {startup.short_description && (
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <SummaryRow label="Short Description">{startup.short_description}</SummaryRow>
                 </div>
-                {canEdit && (
-                  <div className="mt-5 flex justify-end">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        update((d) => ({ ...d, requirements: reqDraft }));
-                        toast.success("Acquisition requirements saved");
-                      }}
-                    >
-                      <Save className="mr-1 h-3.5 w-3.5" /> Save Requirements
-                    </Button>
-                  </div>
-                )}
-              </section>
-            </TabsContent>
+              )}
+            </div>
 
-            <TabsContent value="insights" className="mt-6">
-              <InsightsTab strategy={strategy} startupName={startup.startup_name} />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+            <div className="mt-5 flex flex-wrap gap-2 border-t border-border/50 pt-4">
+              <StartupNavLink
+                to="/my-startups/$id"
+                params={{ id: startup.id }}
+                icon={UserCircle}
+                label="Profile"
+              />
+              <StartupNavLink
+                to="/my-startups/$id/edit"
+                params={{ id: startup.id }}
+                search={{ tab: "edit" }}
+                icon={FileText}
+                label="Information"
+              />
+              <StartupNavLink
+                to="/my-startups/$id/edit"
+                params={{ id: startup.id }}
+                search={{ tab: "basic-restrictions" }}
+                icon={Lock}
+                label="Private Information"
+              />
+            </div>
+
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              This information is private and visible only to authorized users in this workspace.
+            </div>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="targets" className="mt-5">
+          <TargetCompaniesSection
+            strategy={strategy}
+            update={update}
+            canEdit={canEdit}
+            expanded
+            onOpenLinked={openLinkedStartup}
+          />
+        </TabsContent>
+
+        <TabsContent value="competitors" className="mt-5">
+          <CompetitorReferencesSection
+            strategy={strategy}
+            update={update}
+            canEdit={canEdit}
+            expanded
+            onOpenLinked={openLinkedStartup}
+          />
+        </TabsContent>
+
+        <TabsContent value="requirements" className="mt-5">
+          <section className="rounded-lg border border-border bg-card p-5 shadow-card">
+            <h2 className="text-sm font-semibold">Acquisition Requirements</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Define the types of companies we want to find and acquire. Suggestions are prefilled
+              from the startup profile where available.
+            </p>
+            <div className="mt-5">
+              <RequirementsForm value={reqDraft} onChange={setReqDraft} startup={startup} />
+            </div>
+            {canEdit && (
+              <div className="mt-5 flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    update((d) => ({ ...d, requirements: reqDraft }));
+                    toast.success("Acquisition requirements saved");
+                  }}
+                >
+                  <Save className="mr-1 h-3.5 w-3.5" /> Save Requirements
+                </Button>
+              </div>
+            )}
+          </section>
+        </TabsContent>
+
+        <TabsContent value="insights" className="mt-5">
+          <InsightsTab strategy={strategy} startupName={startup.startup_name} />
+        </TabsContent>
+      </Tabs>
 
       {/* Linked startup information panel — overlay that always returns here. */}
       <LinkedStartupPanel startupId={panelId} onClose={closeLinkedStartup} />
     </div>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bot, ChevronDown, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
+import { Bot, ChevronDown, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   CompanyFormDialog,
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
+import { CompanyTable } from "@/components/acquisition/company-table";
 import {
   EXTRACTION_STATUS_LABEL,
   MAX_COMPETITORS,
@@ -164,162 +165,102 @@ export function CompetitorReferencesSection({
           patterns.
         </p>
       ) : (
-        <div className="mt-4 space-y-2">
-          <div className="hidden grid-cols-[1.2fr_1.4fr_1fr_1fr_auto] gap-4 border-b border-border/60 pb-2 text-[11px] uppercase tracking-wider text-muted-foreground md:grid">
-            <span>Competitor Name</span>
-            <span>Website</span>
-            <span>AI Extraction Status</span>
-            <span>Last Extracted</span>
-            <span className="text-right">Actions</span>
-          </div>
-          {strategy.competitors.map((c) => {
-            const resultsOpen = !!openResults[c.id];
-            return (
-              <div key={c.id} className="rounded-md border border-border/50">
-                <div className="grid grid-cols-1 items-center gap-2 px-3 py-2.5 md:grid-cols-[1.2fr_1.4fr_1fr_1fr_auto] md:gap-4">
-                  <div className="flex items-center gap-2">
-                    {c.logo ? (
-                      <img
-                        src={c.logo}
-                        alt={`${c.name} logo`}
-                        className="h-7 w-7 shrink-0 rounded-md border border-border/60 bg-background object-contain"
-                      />
-                    ) : (
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-                        {c.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      {c.linkedStartupId ? (
-                        <button
-                          type="button"
-                          onClick={() => onOpenLinked?.(c.linkedStartupId!)}
-                          className="text-sm font-medium text-blue-900 hover:underline"
-                          title="View the linked startup record"
-                        >
-                          {c.name}
-                        </button>
-                      ) : (
-                        <span className="text-sm font-medium">{c.name}</span>
-                      )}
-                      {c.linkedStartupId && (
-                        <button
-                          type="button"
-                          onClick={() => onOpenLinked?.(c.linkedStartupId!)}
-                          title="View the linked startup record"
-                          className="ml-1.5 rounded-full border border-primary/25 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-primary transition-colors hover:bg-primary/10"
-                        >
-                          Linked
-                        </button>
-                      )}
-                      {c.attractiveKeywords.length > 0 && (
-                        <div className="mt-0.5 flex flex-wrap gap-1">
-                          {c.attractiveKeywords.map((k) => (
+        <div className="mt-4">
+          <CompanyTable
+            items={strategy.competitors}
+            canEdit={canEdit}
+            onEdit={(c: CompetitorReference) => openEdit(c)}
+            onDelete={(c: CompetitorReference) => remove(c)}
+            onOpenLinked={onOpenLinked}
+            renderExtra={
+              expanded
+                ? (item) => {
+                    const c = item as CompetitorReference;
+                    const resultsOpen = !!openResults[c.id];
+                    return (
+                      <div className="rounded-md border border-border/50 bg-muted/20">
+                        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                             <span
-                              key={k}
-                              className="rounded-full border border-primary/20 bg-primary/5 px-1.5 py-px text-[10px] font-medium text-foreground/75"
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium",
+                                STATUS_TONE[c.status],
+                              )}
                             >
-                              {k}
+                              {c.status === "pending" && (
+                                <span className="h-2 w-2 animate-spin rounded-full border border-current border-t-transparent" />
+                              )}
+                              {EXTRACTION_STATUS_LABEL[c.status]}
                             </span>
-                          ))}
+                            <span>
+                              Last extracted:{" "}
+                              {c.lastExtractedAt
+                                ? new Date(c.lastExtractedAt).toLocaleString()
+                                : "—"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {canEdit && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                disabled={c.status === "pending"}
+                                onClick={() => extract(c)}
+                              >
+                                <Bot className="mr-1 h-3.5 w-3.5" />
+                                {c.status === "extracted" ? "Re-extract" : "Extract"}
+                              </Button>
+                            )}
+                            {c.result && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                aria-label={
+                                  resultsOpen ? "Hide extraction results" : "Show extraction results"
+                                }
+                                onClick={() =>
+                                  setOpenResults((s) => ({ ...s, [c.id]: !s[c.id] }))
+                                }
+                              >
+                                <ChevronDown
+                                  className={cn(
+                                    "h-4 w-4 transition-transform",
+                                    resultsOpen && "rotate-180",
+                                  )}
+                                />
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    {c.website ? (
-                      <a
-                        href={/^https?:\/\//i.test(c.website) ? c.website : `https://${c.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-blue-900 hover:underline"
-                      >
-                        {c.website} <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </div>
-                  <div>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-                        STATUS_TONE[c.status],
-                      )}
-                    >
-                      {c.status === "pending" && (
-                        <span className="h-2 w-2 animate-spin rounded-full border border-current border-t-transparent" />
-                      )}
-                      {EXTRACTION_STATUS_LABEL[c.status]}
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {c.lastExtractedAt ? new Date(c.lastExtractedAt).toLocaleString() : "—"}
-                  </div>
-                  <div className="flex items-center justify-end gap-1">
-                    {canEdit && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs"
-                        disabled={c.status === "pending"}
-                        onClick={() => extract(c)}
-                      >
-                        <Bot className="mr-1 h-3.5 w-3.5" />
-                        {c.status === "extracted" ? "Re-extract" : "Extract"}
-                      </Button>
-                    )}
-                    {expanded && c.result && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        aria-label={resultsOpen ? "Hide extraction results" : "Show extraction results"}
-                        onClick={() => setOpenResults((s) => ({ ...s, [c.id]: !s[c.id] }))}
-                      >
-                        <ChevronDown
-                          className={cn("h-4 w-4 transition-transform", resultsOpen && "rotate-180")}
-                        />
-                      </Button>
-                    )}
-                    {canEdit && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => openEdit(c)}
-                        aria-label={`Edit ${c.name}`}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    {canEdit && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => remove(c)}
-                        aria-label={`Delete ${c.name}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {expanded && resultsOpen && c.result && (
-                  <div className="grid gap-4 border-t border-border/50 bg-muted/20 px-4 py-4 sm:grid-cols-2">
-                    <ResultBlock title="Acquisition History" items={c.result.acquisitionHistory} ordered />
-                    <ResultBlock title="Acquired Companies" items={c.result.acquiredCompanies} />
-                    <ResultBlock title="Common Themes" items={c.result.commonThemes} chips />
-                    <ResultBlock title="Strategic Patterns" items={c.result.strategicPatterns} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                        {resultsOpen && c.result && (
+                          <div className="grid gap-4 border-t border-border/50 px-4 py-4 sm:grid-cols-2">
+                            <ResultBlock
+                              title="Acquisition History"
+                              items={c.result.acquisitionHistory}
+                              ordered
+                            />
+                            <ResultBlock
+                              title="Acquired Companies"
+                              items={c.result.acquiredCompanies}
+                            />
+                            <ResultBlock title="Common Themes" items={c.result.commonThemes} chips />
+                            <ResultBlock
+                              title="Strategic Patterns"
+                              items={c.result.strategicPatterns}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                : undefined
+            }
+          />
         </div>
       )}
+
 
       {canEdit && strategy.competitors.length > 0 && !atLimit && (
         <button
