@@ -35,26 +35,24 @@ const TONE_CLASS: Record<Tone, string> = {
   outline: "border-border bg-background text-foreground/80",
 };
 
+/** Renders a group only when it has values; empty groups produce nothing at all. */
 function ChipGroup({ label, tags, tone }: { label: string; tags: string[]; tone: Tone }) {
+  if (tags.length === 0) return null;
   return (
-    <div>
+    <div className="min-w-0">
       <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </h4>
-      {tags.length === 0 ? (
-        <p className="text-xs text-muted-foreground/70">—</p>
-      ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {tags.map((t) => (
-            <span
-              key={t}
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${TONE_CLASS[tone]}`}
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-1.5">
+        {tags.map((t) => (
+          <span
+            key={t}
+            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${TONE_CLASS[tone]}`}
+          >
+            {t}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
