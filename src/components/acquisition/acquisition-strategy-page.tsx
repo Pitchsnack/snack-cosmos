@@ -197,7 +197,11 @@ export function AcquisitionStrategyPage({
             <Download className="mr-1 h-3.5 w-3.5" /> Export Strategy
           </Button>
           {canEdit && (
-            <Button size="sm" onClick={saveAll}>
+            <Button
+              size="sm"
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={saveAll}
+            >
               <Save className="mr-1 h-3.5 w-3.5" /> Save Strategy
             </Button>
           )}
@@ -220,7 +224,7 @@ export function AcquisitionStrategyPage({
             <TabsTrigger
               key={value}
               value={value}
-              className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+              className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:font-medium data-[state=active]:text-accent data-[state=active]:shadow-none"
             >
               {label}
             </TabsTrigger>

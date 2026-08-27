@@ -9,6 +9,7 @@ import {
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
 import { CompanyTable } from "@/components/acquisition/company-table";
+import { InfoHint } from "@/components/acquisition/info-hint";
 import {
   EXTRACTION_STATUS_LABEL,
   MAX_COMPETITORS,
@@ -138,7 +139,8 @@ export function CompetitorReferencesSection({
     <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold">
+          <h2 className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
+            <InfoHint text="Competitors whose acquisition history we analyse to learn what kinds of companies they buy." />{" "}
             {numberedTitle ?? "Competitor Acquisition References"}{" "}
             <span className="font-normal text-muted-foreground">(Optional)</span>
           </h2>
