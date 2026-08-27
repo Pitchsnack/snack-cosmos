@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -66,8 +67,8 @@ export function CompanyTable({
             const line = shortLine(item);
             const extra = renderExtra?.(item);
             return (
-              <>
-                <tr key={item.id} className="border-b border-border/40 last:border-0">
+              <Fragment key={item.id}>
+                <tr className="border-b border-border/40 last:border-0">
                   <td className="py-3 pr-4 align-middle">
                     <div className="flex items-center gap-2.5">
                       {item.logo ? (
@@ -172,13 +173,13 @@ export function CompanyTable({
                   </td>
                 </tr>
                 {extra && (
-                  <tr key={`${item.id}-extra`} className="border-b border-border/40 last:border-0">
+                  <tr className="border-b border-border/40 last:border-0">
                     <td colSpan={4} className="pb-4">
                       {extra}
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>
