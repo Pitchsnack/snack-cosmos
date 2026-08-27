@@ -9,6 +9,7 @@ import {
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
 import { CompanyTable } from "@/components/acquisition/company-table";
+import { InfoHint } from "@/components/acquisition/info-hint";
 import {
   EXTRACTION_STATUS_LABEL,
   MAX_COMPETITORS,
@@ -138,8 +139,9 @@ export function CompetitorReferencesSection({
     <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold">
-            {numberedTitle ?? "Competitor Acquisition References"}{" "}
+          <h2 className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
+            {numberedTitle ?? "Competitor Acquisition References"}
+            <InfoHint text="Competitors whose acquisition history we analyse to learn what kinds of companies they buy." />
             <span className="font-normal text-muted-foreground">(Optional)</span>
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -172,6 +174,16 @@ export function CompetitorReferencesSection({
             onEdit={(c: CompetitorReference) => openEdit(c)}
             onDelete={(c: CompetitorReference) => remove(c)}
             onOpenLinked={onOpenLinked}
+            keywordClassName="border-emerald-600/25 bg-emerald-600/10 text-emerald-800"
+            renderStatusPill={(item) => {
+              const c = item as CompetitorReference;
+              if (c.status === "extracted") return null;
+              return (
+                <span className="rounded-full border border-accent/40 bg-accent/15 px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
+                  {c.status === "pending" ? "Extraction Running" : "Extraction Pending"}
+                </span>
+              );
+            }}
             renderExtra={
               expanded
                 ? (item) => {

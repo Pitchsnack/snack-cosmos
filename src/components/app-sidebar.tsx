@@ -591,7 +591,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="h-screen min-w-0 overflow-y-auto overflow-x-hidden">
-        <div className="mx-auto max-w-7xl px-8 py-10">
+        <div className="max-w-[1600px] px-8 py-10">
           <WorkspaceHeader />
           <RouteBreadcrumbs className="sticky top-14 z-10 -mx-8 mb-4 border-b border-border/60 bg-background/95 px-8 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70" />
           {children}
