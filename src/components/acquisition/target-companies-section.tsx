@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ExternalLink, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   CompanyFormDialog,
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
+import { CompanyTable } from "@/components/acquisition/company-table";
 import { newId, type AcquisitionStrategy, type TargetCompany } from "@/lib/acquisition/strategy-store";
 
 type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => void;
