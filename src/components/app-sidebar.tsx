@@ -590,29 +590,10 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         <SidebarBody collapsed={effectiveCollapsed} onToggle={toggle} />
       </aside>
 
-      <main
-        className={cn(
-          "h-screen min-w-0 overflow-y-auto overflow-x-hidden",
-          // Acquisition Strategy uses a white working surface instead of the grey page background.
-          pathname.endsWith("/acquisition") && "bg-card",
-        )}
-      >
-        <div
-          className={cn(
-            pathname.endsWith("/acquisition")
-              ? "max-w-[1280px] px-8 pb-14 pt-[22px]"
-              : "mx-auto max-w-7xl px-8 py-10",
-          )}
-        >
+      <main className="h-screen min-w-0 overflow-y-auto overflow-x-hidden">
+        <div className="mx-auto max-w-7xl px-8 py-10">
           <WorkspaceHeader />
-          <RouteBreadcrumbs
-            className={cn(
-              "sticky top-14 z-10 -mx-8 mb-4 border-b border-border/60 px-8 py-2 backdrop-blur",
-              pathname.endsWith("/acquisition")
-                ? "bg-card/95 supports-[backdrop-filter]:bg-card/70"
-                : "bg-background/95 supports-[backdrop-filter]:bg-background/70",
-            )}
-          />
+          <RouteBreadcrumbs className="sticky top-14 z-10 -mx-8 mb-4 border-b border-border/60 bg-background/95 px-8 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70" />
           {children}
         </div>
       </main>

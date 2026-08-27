@@ -88,7 +88,7 @@ export function TargetCompaniesSection({
     : null;
 
   return (
-    <section className="rounded-[14px] border border-border bg-card p-5">
+    <section className="rounded-lg border border-border bg-card p-5 shadow-card">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold">
