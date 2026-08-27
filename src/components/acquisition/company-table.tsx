@@ -36,6 +36,8 @@ export function CompanyTable({
   onDelete,
   onOpenLinked,
   renderExtra,
+  renderStatusPill,
+  keywordClassName = "border-primary/20 bg-primary/5 text-foreground/80",
 }: {
   items: CompanyRowItem[];
   canEdit: boolean;
@@ -44,6 +46,10 @@ export function CompanyTable({
   onOpenLinked?: (startupId: string) => void;
   /** Optional trailing content rendered below a row (e.g. extraction results). */
   renderExtra?: (item: CompanyRowItem) => React.ReactNode;
+  /** Optional leading pill in the "Why Attractive" cell (e.g. extraction status). */
+  renderStatusPill?: (item: CompanyRowItem) => React.ReactNode;
+  /** Tone classes for the keyword pills. */
+  keywordClassName?: string;
 }) {
   return (
     <div className="overflow-x-auto">
