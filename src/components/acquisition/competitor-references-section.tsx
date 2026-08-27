@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bot, ChevronDown, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
+import { Bot, ChevronDown, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   CompanyFormDialog,
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
+import { CompanyTable } from "@/components/acquisition/company-table";
 import {
   EXTRACTION_STATUS_LABEL,
   MAX_COMPETITORS,
