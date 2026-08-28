@@ -157,17 +157,18 @@ export function AcquisitionCompanyPanel({
 
   const handleShare = async () => {
     if (!entry) return;
-    const nav = typeof navigator !== "undefined" ? navigator : undefined;
+    if (typeof navigator === "undefined") return;
+    const nav: Navigator & { share?: (d: ShareData) => Promise<void> } = navigator;
     try {
-      if (nav && "share" in nav) {
-        await (nav as Navigator & { share: (d: ShareData) => Promise<void> }).share({
+      if (nav.share) {
+        await nav.share({
           title: entry.name,
           text: summary,
           ...(entry.website ? { url: websiteHref(entry.website) } : {}),
         });
         return;
       }
-      await nav?.clipboard?.writeText(summary);
+      await nav.clipboard?.writeText(summary);
       toast.success("Company info copied to clipboard");
     } catch {
       /* user dismissed the share sheet */
