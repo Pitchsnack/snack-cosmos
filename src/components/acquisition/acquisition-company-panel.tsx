@@ -8,22 +8,38 @@
  * renders manual (unlinked) targets and all competitor references.
  */
 
+import { useState } from "react";
 import {
   Building2,
   Calendar,
+  Copy,
+  ExternalLink,
   FileText,
   Globe,
   Layers,
   Link2,
   MapPin,
+  MoreVertical,
+  Pencil,
+  Share2,
   ShoppingCart,
   Target,
+  Trash2,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 
 
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   EXTRACTION_STATUS_LABEL,
