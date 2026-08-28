@@ -8,38 +8,22 @@
  * renders manual (unlinked) targets and all competitor references.
  */
 
-import { useState } from "react";
 import {
   Building2,
   Calendar,
-  Copy,
-  ExternalLink,
   FileText,
   Globe,
   Layers,
   Link2,
   MapPin,
-  MoreVertical,
-  Pencil,
-  Share2,
   ShoppingCart,
   Target,
-  Trash2,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
 
 
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   EXTRACTION_STATUS_LABEL,
@@ -122,18 +106,12 @@ export function AcquisitionCompanyPanel({
   target,
   competitor,
   onClose,
-  onEdit,
-  onDelete,
 }: {
   /** Manual (unlinked) acquisition target to show; null when closed or linked. */
   target: TargetCompany | null;
   /** Competitor reference to show; null when closed. */
   competitor: CompetitorReference | null;
   onClose: () => void;
-  /** Optional: opens the edit dialog for this entry. */
-  onEdit?: () => void;
-  /** Optional: removes this entry from the strategy. */
-  onDelete?: () => void;
 }) {
   const entry = target ?? competitor;
   const isCompetitor = !!competitor;
@@ -142,48 +120,6 @@ export function AcquisitionCompanyPanel({
   const industry = snap?.industry ?? [];
   const productTags = snap?.productTags ?? [];
   const marketTags = snap?.marketTags ?? [];
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const summary = entry
-    ? [
-        entry.name,
-        entry.website ? websiteHref(entry.website) : null,
-        snap?.headquarters ?? null,
-        snap?.shortDescription ?? entry.notes ?? null,
-      ]
-        .filter(Boolean)
-        .join("\n")
-    : "";
-
-  const handleShare = async () => {
-    if (!entry) return;
-    if (typeof navigator === "undefined") return;
-    const nav: Navigator & { share?: (d: ShareData) => Promise<void> } = navigator;
-    try {
-      if (nav.share) {
-        await nav.share({
-          title: entry.name,
-          text: summary,
-          ...(entry.website ? { url: websiteHref(entry.website) } : {}),
-        });
-        return;
-      }
-      await nav.clipboard?.writeText(summary);
-      toast.success("Company info copied to clipboard");
-    } catch {
-      /* user dismissed the share sheet */
-    }
-  };
-
-  const handleCopyLink = async () => {
-    if (!entry?.website) {
-      await navigator.clipboard?.writeText(summary);
-      toast.success("Company info copied");
-      return;
-    }
-    await navigator.clipboard?.writeText(websiteHref(entry.website));
-    toast.success("Link copied");
-  };
 
 
   return (
@@ -201,72 +137,11 @@ export function AcquisitionCompanyPanel({
         </DialogTitle>
         {entry && (
           <div className="relative flex flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 items-center justify-end gap-1 px-3 pt-2">
-              <Button
-                size="sm"
-                onClick={handleShare}
-                className="gap-1.5 rounded-full bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]"
-              >
-                <Share2 className="h-3.5 w-3.5" /> Share Info
-              </Button>
-
-              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    aria-label="More actions"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem onSelect={() => void handleCopyLink()}>
-                    <Copy className="mr-2 h-4 w-4" /> Copy Link
-                  </DropdownMenuItem>
-                  {entry.website && (
-                    <DropdownMenuItem asChild>
-                      <a href={websiteHref(entry.website)} target="_blank" rel="noreferrer">
-                        <ExternalLink className="mr-2 h-4 w-4" /> Open Website
-                      </a>
-                    </DropdownMenuItem>
-                  )}
-                  {onEdit ? (
-                    <DropdownMenuItem
-                      onSelect={() => {
-                        onClose();
-                        onEdit();
-                      }}
-                    >
-                      <Pencil className="mr-2 h-4 w-4" /> Edit
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem disabled>
-                      <Pencil className="mr-2 h-4 w-4" /> Edit
-                    </DropdownMenuItem>
-                  )}
-                  {onDelete && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          onClose();
-                          onDelete();
-                        }}
-                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" /> Remove
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
+            <div className="relative h-10 shrink-0">
               <DialogClose
                 aria-label="Back to Acquisition Strategy"
                 title="Back to Acquisition Strategy"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="h-4 w-4" />
               </DialogClose>
