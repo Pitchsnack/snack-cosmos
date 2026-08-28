@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Download, FileText, Globe, Lock, Pencil, Save, UserCircle } from "lucide-react";
+import { ArrowLeft, Download, Lock, Pencil, Save } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -18,53 +18,9 @@ import { CompetitorReferencesSection } from "@/components/acquisition/competitor
 import { RequirementsSection, RequirementsForm } from "@/components/acquisition/requirements-section";
 import { InsightsTab } from "@/components/acquisition/insights-tab";
 import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
+import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 
 export type AcquisitionTab = "overview" | "startup-info" | "targets" | "competitors" | "requirements" | "insights";
-
-function StartupNavLink({
-  to,
-  params,
-  search,
-  icon: Icon,
-  label,
-  active = false,
-}: {
-  to: string;
-  params: { id: string };
-  search?: Record<string, string>;
-  icon: typeof UserCircle;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <Link
-      to={to as never}
-      params={params as never}
-      search={search as never}
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        "flex items-center gap-2 rounded-md border border-border/60 px-3 py-1.5 text-xs transition-colors",
-        active
-          ? "bg-accent/15 font-medium text-accent-foreground"
-          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-      )}
-    >
-      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-      {label}
-    </Link>
-  );
-}
-
-function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="border-t border-border/50 pt-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1 text-sm text-foreground/90">{children}</div>
-    </div>
-  );
-}
 
 export function AcquisitionStrategyPage({
   startup,
@@ -88,7 +44,16 @@ export function AcquisitionStrategyPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [strategy.updatedAt, startup.id]);
 
+  // Remember where the user came from so Back from Startup Info restores the
+  // previous tab and scroll position on this same page.
+  const prevTabRef = useRef<AcquisitionTab>(tab === "startup-info" ? "overview" : tab);
+  const infoScrollRef = useRef(0);
+
   const setTab = (next: AcquisitionTab) => {
+    if (next === "startup-info" && tab !== "startup-info") {
+      prevTabRef.current = tab;
+      infoScrollRef.current = window.scrollY;
+    }
     void navigate({
       to: "/my-startups/$id/acquisition",
       params: { id: startup.id },
@@ -96,6 +61,13 @@ export function AcquisitionStrategyPage({
       replace: true,
     });
   };
+
+  const backFromStartupInfo = () => {
+    setTab(prevTabRef.current === "startup-info" ? "overview" : prevTabRef.current);
+    const y = infoScrollRef.current;
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  };
+
 
   // Linked startup information panel — a temporary overlay on this page, never
   // a navigation destination. Opening pushes a history entry so the browser
@@ -153,11 +125,6 @@ export function AcquisitionStrategyPage({
     toast.success("Acquisition strategy saved");
   };
 
-  const websiteHref = startup.website_url
-    ? /^https?:\/\//i.test(startup.website_url)
-      ? startup.website_url
-      : `https://${startup.website_url}`
-    : null;
 
   return (
     <div className="space-y-5">
@@ -253,28 +220,10 @@ export function AcquisitionStrategyPage({
 
         <TabsContent value="startup-info" className="mt-5">
           <section className="rounded-lg border border-border bg-card p-5 shadow-card">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
-                  {startup.logo_signed_url ? (
-                    <img
-                      src={startup.logo_signed_url}
-                      alt={`${startup.startup_name} logo`}
-                      className="h-full w-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-lg font-semibold text-muted-foreground">
-                      {startup.startup_name.slice(0, 1).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold">{startup.startup_name}</div>
-                  {startup.registered_name && (
-                    <div className="text-xs text-muted-foreground">{startup.registered_name}</div>
-                  )}
-                </div>
-              </div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={backFromStartupInfo}>
+                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back to Acquisition Strategy
+              </Button>
               {canEdit && (
                 <Button asChild size="sm" variant="outline" className="h-8 text-xs">
                   <Link to="/my-startups/$id/edit" params={{ id: startup.id }}>
@@ -284,57 +233,14 @@ export function AcquisitionStrategyPage({
               )}
             </div>
 
-            <div className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-              {startup.industry.length > 0 && (
-                <SummaryRow label="Industry">{startup.industry.join(", ")}</SummaryRow>
-              )}
-              {startup.market_tags.length > 0 && (
-                <SummaryRow label="Market">{startup.market_tags.join(" | ")}</SummaryRow>
-              )}
-              {startup.headquarters && (
-                <SummaryRow label="Headquarters">{startup.headquarters}</SummaryRow>
-              )}
-              {websiteHref && (
-                <SummaryRow label="Website">
-                  <a
-                    href={websiteHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-900 hover:underline"
-                  >
-                    <Globe className="h-3.5 w-3.5" /> Website
-                  </a>
-                </SummaryRow>
-              )}
-              {startup.short_description && (
-                <div className="sm:col-span-2 lg:col-span-4">
-                  <SummaryRow label="Short Description">{startup.short_description}</SummaryRow>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-2 border-t border-border/50 pt-4">
-              <StartupNavLink
-                to="/my-startups/$id"
-                params={{ id: startup.id }}
-                icon={UserCircle}
-                label="Profile"
-              />
-              <StartupNavLink
-                to="/my-startups/$id/edit"
-                params={{ id: startup.id }}
-                search={{ tab: "edit" }}
-                icon={FileText}
-                label="Information"
-              />
-              <StartupNavLink
-                to="/my-startups/$id/edit"
-                params={{ id: startup.id }}
-                search={{ tab: "basic-restrictions" }}
-                icon={Lock}
-                label="Private Information"
-              />
-            </div>
+            {/* Standard Information Panel presentation */}
+            <StartupDetailPanel
+              id={startup.id}
+              compact
+              workspace="my-startups"
+              showEdit={false}
+              onClose={backFromStartupInfo}
+            />
 
             <div className="mt-4 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground">
               <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -342,6 +248,7 @@ export function AcquisitionStrategyPage({
             </div>
           </section>
         </TabsContent>
+
 
         <TabsContent value="targets" className="mt-5">
           <TargetCompaniesSection
