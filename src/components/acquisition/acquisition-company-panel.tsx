@@ -57,54 +57,48 @@ function websiteHref(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-function PanelSection({ label, children }: { label: string; children: React.ReactNode }) {
+/**
+ * Same section chrome as the standard Startup Information Panel:
+ * top border, uppercase tracked label with a leading icon.
+ */
+function Section({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: typeof Building2;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="border-t border-border/50 pt-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
+    <section className="border-t border-border/50 pt-[11.2px]">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {title}
+        </h3>
       </div>
-      <div className="mt-1.5 text-sm text-foreground/90">{children}</div>
-    </div>
+      <div>{children}</div>
+    </section>
   );
 }
 
-function KeywordPills({ items }: { items: string[] }) {
+function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
+  const base =
+    tone === "primary"
+      ? "bg-primary/5 text-foreground/85 border-primary/20"
+      : "bg-muted/50 text-muted-foreground border-transparent";
   return (
-    <div className="flex flex-wrap gap-1">
-      {items.map((k) => (
-        <span
-          key={k}
-          className="rounded-full border border-border/70 bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-foreground/80"
-        >
-          {k}
+    <div className="flex flex-wrap gap-1.5">
+      {tags.map((t) => (
+        <span key={t} className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${base}`}>
+          {t}
         </span>
       ))}
     </div>
   );
 }
 
-
-function Field({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Building2;
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-2">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-      <div className="min-w-0">
-        <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt>
-        <dd className="text-sm text-foreground/85">
-          {value || <span className="text-muted-foreground">Not available</span>}
-        </dd>
-      </div>
-    </div>
-  );
-}
 
 export function AcquisitionCompanyPanel({
   target,
