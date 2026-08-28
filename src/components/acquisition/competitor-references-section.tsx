@@ -35,6 +35,7 @@ export function CompetitorReferencesSection({
   expanded = false,
   numberedTitle,
   onOpenLinked,
+  onOpenCompany,
 }: {
   strategy: AcquisitionStrategy;
   update: Updater;
@@ -44,6 +45,8 @@ export function CompetitorReferencesSection({
   numberedTitle?: string;
   /** Opens a linked startup's information panel as an overlay on this page. */
   onOpenLinked?: (startupId: string) => void;
+  /** Opens the information panel for a manual (unlinked) company. */
+  onOpenCompany?: (item: CompetitorReference) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CompetitorReference | null>(null);
@@ -172,6 +175,7 @@ export function CompetitorReferencesSection({
             onEdit={(c: CompetitorReference) => openEdit(c)}
             onDelete={(c: CompetitorReference) => remove(c)}
             onOpenLinked={onOpenLinked}
+            onOpenCompany={onOpenCompany ? (i) => onOpenCompany(i as CompetitorReference) : undefined}
             renderExtra={
               expanded
                 ? (item) => {

@@ -21,6 +21,7 @@ export function TargetCompaniesSection({
   numberedTitle,
   description,
   onOpenLinked,
+  onOpenCompany,
 }: {
   strategy: AcquisitionStrategy;
   update: Updater;
@@ -31,6 +32,8 @@ export function TargetCompaniesSection({
   description?: string;
   /** Opens a linked startup's information panel as an overlay on this page. */
   onOpenLinked?: (startupId: string) => void;
+  /** Opens the information panel for a manual (unlinked) company. */
+  onOpenCompany?: (item: TargetCompany) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TargetCompany | null>(null);
@@ -131,6 +134,7 @@ export function TargetCompaniesSection({
             onEdit={(t: TargetCompany) => openEdit(t)}
             onDelete={(t: TargetCompany) => remove(t)}
             onOpenLinked={onOpenLinked}
+            onOpenCompany={onOpenCompany ? (i) => onOpenCompany(i as TargetCompany) : undefined}
           />
         </div>
       )}

@@ -35,6 +35,7 @@ export function CompanyTable({
   onEdit,
   onDelete,
   onOpenLinked,
+  onOpenCompany,
   renderExtra,
 }: {
   items: CompanyRowItem[];
@@ -42,6 +43,8 @@ export function CompanyTable({
   onEdit: (item: never) => void;
   onDelete: (item: never) => void;
   onOpenLinked?: (startupId: string) => void;
+  /** Opens the information panel for a manual (unlinked) company row. */
+  onOpenCompany?: (item: CompanyRowItem) => void;
   /** Optional trailing content rendered below a row (e.g. extraction results). */
   renderExtra?: (item: CompanyRowItem) => React.ReactNode;
 }) {
@@ -90,6 +93,15 @@ export function CompanyTable({
                               onClick={() => onOpenLinked?.(item.linkedStartupId!)}
                               className="truncate font-medium text-blue-900 hover:underline"
                               title="View the linked startup record"
+                            >
+                              {item.name}
+                            </button>
+                          ) : onOpenCompany ? (
+                            <button
+                              type="button"
+                              onClick={() => onOpenCompany(item)}
+                              className="truncate font-medium text-blue-900 hover:underline"
+                              title={`View ${item.name} details`}
                             >
                               {item.name}
                             </button>
