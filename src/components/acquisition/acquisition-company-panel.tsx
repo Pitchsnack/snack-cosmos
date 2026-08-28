@@ -8,7 +8,18 @@
  * renders manual (unlinked) targets and all competitor references.
  */
 
-import { ExternalLink, Link2, X } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  ExternalLink,
+  Globe,
+  Layers,
+  Link2,
+  MapPin,
+  ShoppingCart,
+  X,
+} from "lucide-react";
+
 
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -72,6 +83,29 @@ function KeywordPills({ items }: { items: string[] }) {
   );
 }
 
+
+function Field({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Building2;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+      <div className="min-w-0">
+        <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt>
+        <dd className="text-sm text-foreground/85">
+          {value || <span className="text-muted-foreground">Not available</span>}
+        </dd>
+      </div>
+    </div>
+  );
+}
+
 export function AcquisitionCompanyPanel({
   target,
   competitor,
@@ -85,6 +119,12 @@ export function AcquisitionCompanyPanel({
 }) {
   const entry = target ?? competitor;
   const isCompetitor = !!competitor;
+  const snap = entry?.linkedSnapshot ?? null;
+  const logo = entry?.logo ?? snap?.logo ?? null;
+  const industry = snap?.industry ?? [];
+  const productTags = snap?.productTags ?? [];
+  const marketTags = snap?.marketTags ?? [];
+
 
   return (
     <Dialog open={!!entry} onOpenChange={(o) => !o && onClose()}>
@@ -103,31 +143,44 @@ export function AcquisitionCompanyPanel({
           <div className="relative flex flex-1 flex-col overflow-hidden">
             <div className="relative h-10 shrink-0">
               <DialogClose
-                aria-label="Back to My Startups"
-                title="Back to My Startups"
+                aria-label="Back to Acquisition Strategy"
+                title="Back to Acquisition Strategy"
                 className="absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="h-4 w-4" />
               </DialogClose>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 pb-5 pt-1">
-              {/* Header */}
-              <div className="flex items-start gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
-                  {entry.logo ? (
-                    <img src={entry.logo} alt="" className="h-full w-full object-contain" />
+            <div className="flex-1 space-y-[14px] overflow-y-auto px-5 pb-5 pt-1 text-foreground">
+              {/* Header — standard Information Panel format */}
+              <header className="flex items-start gap-4 pt-1">
+                <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
+                  {logo ? (
+                    <img src={logo} alt="" className="h-full w-full object-contain" />
                   ) : (
-                    <span className="text-base font-semibold text-muted-foreground">
+                    <span className="text-sm font-semibold text-muted-foreground">
                       {monogram(entry.name)}
                     </span>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="truncate text-base font-semibold">{entry.name}</h3>
+                  <h2 className="text-2xl font-semibold leading-tight tracking-tight">
+                    {entry.name}
+                  </h2>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
+                    {snap?.headquarters && <span>{snap.headquarters}</span>}
+                    {snap?.headquarters && industry.length ? <span aria-hidden>·</span> : null}
+                    {industry.length ? <span>{industry.join(" · ")}</span> : null}
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className="text-[11px]">
+                      {isCompetitor ? "Competitor Reference" : "Acquisition Target"}
+                    </Badge>
                     {entry.linkedStartupId && (
-                      <Badge variant="outline" className="gap-1 border-blue-900/30 bg-blue-900/5 text-blue-900">
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-blue-900/30 bg-blue-900/5 text-blue-900"
+                      >
                         <Link2 className="h-3 w-3" /> Linked
                       </Badge>
                     )}
@@ -137,38 +190,81 @@ export function AcquisitionCompanyPanel({
                       </Badge>
                     )}
                   </div>
-                  {entry.website && (
-                    <a
-                      href={websiteHref(entry.website)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-0.5 inline-flex items-center gap-1 text-xs text-blue-900 hover:underline"
-                    >
-                      {entry.website.replace(/^https?:\/\//i, "")}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
-                  {competitor?.lastExtractedAt && formatDate(competitor.lastExtractedAt) && (
-                    <div className="mt-0.5 text-[11px] text-muted-foreground">
-                      Extracted {formatDate(competitor.lastExtractedAt)}
-                    </div>
-                  )}
                 </div>
-              </div>
+              </header>
+
+              {/* Short description */}
+              <p className="text-[15px] leading-relaxed text-foreground/85">
+                {snap?.shortDescription || (
+                  <span className="text-muted-foreground">No description available yet.</span>
+                )}
+              </p>
+
+              {/* Standard company information fields */}
+              <PanelSection label="Company Information">
+                <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                  <Field icon={Building2} label="Company Name" value={entry.name} />
+                  <Field
+                    icon={Globe}
+                    label="Website"
+                    value={
+                      entry.website ? (
+                        <a
+                          href={websiteHref(entry.website)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-blue-900 hover:underline"
+                        >
+                          {entry.website.replace(/^https?:\/\//i, "")}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : null
+                    }
+                  />
+                  <Field icon={MapPin} label="Headquarters" value={snap?.headquarters ?? null} />
+                  <Field icon={MapPin} label="City" value={snap?.city ?? null} />
+                  <Field icon={Layers} label="Industry" value={industry.length ? industry.join(", ") : null} />
+                  <Field
+                    icon={ShoppingCart}
+                    label="Market Tags"
+                    value={marketTags.length ? marketTags.join(", ") : null}
+                  />
+                  <Field
+                    icon={Layers}
+                    label="Product & Service Tags"
+                    value={productTags.length ? productTags.join(", ") : null}
+                  />
+                  <Field
+                    icon={Calendar}
+                    label={isCompetitor ? "Last Extracted" : "Record Type"}
+                    value={
+                      isCompetitor
+                        ? formatDate(competitor?.lastExtractedAt ?? null)
+                        : entry.linkedStartupId
+                          ? "Linked startup record"
+                          : "Manual entry"
+                    }
+                  />
+                </dl>
+              </PanelSection>
 
               {/* Why attractive */}
-              {entry.attractiveKeywords.length > 0 && (
-                <PanelSection label={isCompetitor ? "Why Relevant" : "Why Attractive"}>
+              <PanelSection label={isCompetitor ? "Why Relevant" : "Why Attractive"}>
+                {entry.attractiveKeywords.length > 0 ? (
                   <KeywordPills items={entry.attractiveKeywords} />
-                </PanelSection>
-              )}
+                ) : (
+                  <span className="text-sm text-muted-foreground">Not available</span>
+                )}
+              </PanelSection>
 
               {/* Notes */}
-              {entry.notes && (
-                <PanelSection label="Notes">
+              <PanelSection label="Notes">
+                {entry.notes ? (
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{entry.notes}</p>
-                </PanelSection>
-              )}
+                ) : (
+                  <span className="text-sm text-muted-foreground">Not available</span>
+                )}
+              </PanelSection>
 
               {/* Competitor extraction results */}
               {competitor?.result && (
@@ -203,18 +299,10 @@ export function AcquisitionCompanyPanel({
                   )}
                 </>
               )}
-
-              {!entry.attractiveKeywords.length &&
-                !entry.notes &&
-                !competitor?.result && (
-                  <p className="text-sm text-muted-foreground">
-                    No additional details yet. Open the Acquisition Strategy page to add keywords
-                    and notes{isCompetitor ? " or run extraction" : ""}.
-                  </p>
-                )}
             </div>
           </div>
         )}
+
       </DialogContent>
     </Dialog>
   );
