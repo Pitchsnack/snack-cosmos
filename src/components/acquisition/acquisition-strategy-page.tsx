@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Download, FileText, Globe, Lock, Pencil, Save, UserCircle } from "lucide-react";
+import { ArrowLeft, Download, Lock, Pencil, Save } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -18,53 +18,9 @@ import { CompetitorReferencesSection } from "@/components/acquisition/competitor
 import { RequirementsSection, RequirementsForm } from "@/components/acquisition/requirements-section";
 import { InsightsTab } from "@/components/acquisition/insights-tab";
 import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
+import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 
 export type AcquisitionTab = "overview" | "startup-info" | "targets" | "competitors" | "requirements" | "insights";
-
-function StartupNavLink({
-  to,
-  params,
-  search,
-  icon: Icon,
-  label,
-  active = false,
-}: {
-  to: string;
-  params: { id: string };
-  search?: Record<string, string>;
-  icon: typeof UserCircle;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <Link
-      to={to as never}
-      params={params as never}
-      search={search as never}
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        "flex items-center gap-2 rounded-md border border-border/60 px-3 py-1.5 text-xs transition-colors",
-        active
-          ? "bg-accent/15 font-medium text-accent-foreground"
-          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-      )}
-    >
-      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-      {label}
-    </Link>
-  );
-}
-
-function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="border-t border-border/50 pt-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1 text-sm text-foreground/90">{children}</div>
-    </div>
-  );
-}
 
 export function AcquisitionStrategyPage({
   startup,
@@ -169,11 +125,6 @@ export function AcquisitionStrategyPage({
     toast.success("Acquisition strategy saved");
   };
 
-  const websiteHref = startup.website_url
-    ? /^https?:\/\//i.test(startup.website_url)
-      ? startup.website_url
-      : `https://${startup.website_url}`
-    : null;
 
   return (
     <div className="space-y-5">
