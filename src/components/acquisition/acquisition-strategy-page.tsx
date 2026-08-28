@@ -88,7 +88,16 @@ export function AcquisitionStrategyPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [strategy.updatedAt, startup.id]);
 
+  // Remember where the user came from so Back from Startup Info restores the
+  // previous tab and scroll position on this same page.
+  const prevTabRef = useRef<AcquisitionTab>(tab === "startup-info" ? "overview" : tab);
+  const infoScrollRef = useRef(0);
+
   const setTab = (next: AcquisitionTab) => {
+    if (next === "startup-info" && tab !== "startup-info") {
+      prevTabRef.current = tab;
+      infoScrollRef.current = window.scrollY;
+    }
     void navigate({
       to: "/my-startups/$id/acquisition",
       params: { id: startup.id },
@@ -96,6 +105,13 @@ export function AcquisitionStrategyPage({
       replace: true,
     });
   };
+
+  const backFromStartupInfo = () => {
+    setTab(prevTabRef.current === "startup-info" ? "overview" : prevTabRef.current);
+    const y = infoScrollRef.current;
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  };
+
 
   // Linked startup information panel — a temporary overlay on this page, never
   // a navigation destination. Opening pushes a history entry so the browser
