@@ -83,6 +83,29 @@ function KeywordPills({ items }: { items: string[] }) {
   );
 }
 
+
+function Field({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Building2;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+      <div className="min-w-0">
+        <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt>
+        <dd className="text-sm text-foreground/85">
+          {value || <span className="text-muted-foreground">Not available</span>}
+        </dd>
+      </div>
+    </div>
+  );
+}
+
 export function AcquisitionCompanyPanel({
   target,
   competitor,
@@ -96,6 +119,12 @@ export function AcquisitionCompanyPanel({
 }) {
   const entry = target ?? competitor;
   const isCompetitor = !!competitor;
+  const snap = entry?.linkedSnapshot ?? null;
+  const logo = entry?.logo ?? snap?.logo ?? null;
+  const industry = snap?.industry ?? [];
+  const productTags = snap?.productTags ?? [];
+  const marketTags = snap?.marketTags ?? [];
+
 
   return (
     <Dialog open={!!entry} onOpenChange={(o) => !o && onClose()}>
