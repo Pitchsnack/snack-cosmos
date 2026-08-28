@@ -269,28 +269,10 @@ export function AcquisitionStrategyPage({
 
         <TabsContent value="startup-info" className="mt-5">
           <section className="rounded-lg border border-border bg-card p-5 shadow-card">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
-                  {startup.logo_signed_url ? (
-                    <img
-                      src={startup.logo_signed_url}
-                      alt={`${startup.startup_name} logo`}
-                      className="h-full w-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-lg font-semibold text-muted-foreground">
-                      {startup.startup_name.slice(0, 1).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold">{startup.startup_name}</div>
-                  {startup.registered_name && (
-                    <div className="text-xs text-muted-foreground">{startup.registered_name}</div>
-                  )}
-                </div>
-              </div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={backFromStartupInfo}>
+                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back to Acquisition Strategy
+              </Button>
               {canEdit && (
                 <Button asChild size="sm" variant="outline" className="h-8 text-xs">
                   <Link to="/my-startups/$id/edit" params={{ id: startup.id }}>
@@ -300,57 +282,14 @@ export function AcquisitionStrategyPage({
               )}
             </div>
 
-            <div className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-              {startup.industry.length > 0 && (
-                <SummaryRow label="Industry">{startup.industry.join(", ")}</SummaryRow>
-              )}
-              {startup.market_tags.length > 0 && (
-                <SummaryRow label="Market">{startup.market_tags.join(" | ")}</SummaryRow>
-              )}
-              {startup.headquarters && (
-                <SummaryRow label="Headquarters">{startup.headquarters}</SummaryRow>
-              )}
-              {websiteHref && (
-                <SummaryRow label="Website">
-                  <a
-                    href={websiteHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-900 hover:underline"
-                  >
-                    <Globe className="h-3.5 w-3.5" /> Website
-                  </a>
-                </SummaryRow>
-              )}
-              {startup.short_description && (
-                <div className="sm:col-span-2 lg:col-span-4">
-                  <SummaryRow label="Short Description">{startup.short_description}</SummaryRow>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-2 border-t border-border/50 pt-4">
-              <StartupNavLink
-                to="/my-startups/$id"
-                params={{ id: startup.id }}
-                icon={UserCircle}
-                label="Profile"
-              />
-              <StartupNavLink
-                to="/my-startups/$id/edit"
-                params={{ id: startup.id }}
-                search={{ tab: "edit" }}
-                icon={FileText}
-                label="Information"
-              />
-              <StartupNavLink
-                to="/my-startups/$id/edit"
-                params={{ id: startup.id }}
-                search={{ tab: "basic-restrictions" }}
-                icon={Lock}
-                label="Private Information"
-              />
-            </div>
+            {/* Standard Information Panel presentation */}
+            <StartupDetailPanel
+              id={startup.id}
+              compact
+              workspace="my-startups"
+              showEdit={false}
+              onClose={backFromStartupInfo}
+            />
 
             <div className="mt-4 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground">
               <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -358,6 +297,7 @@ export function AcquisitionStrategyPage({
             </div>
           </section>
         </TabsContent>
+
 
         <TabsContent value="targets" className="mt-5">
           <TargetCompaniesSection
