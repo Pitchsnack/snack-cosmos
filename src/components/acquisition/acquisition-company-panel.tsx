@@ -11,14 +11,16 @@
 import {
   Building2,
   Calendar,
-  ExternalLink,
+  FileText,
   Globe,
   Layers,
   Link2,
   MapPin,
   ShoppingCart,
+  Target,
   X,
 } from "lucide-react";
+
 
 
 import { Badge } from "@/components/ui/badge";
