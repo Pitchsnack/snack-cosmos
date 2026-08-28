@@ -200,11 +200,72 @@ export function AcquisitionCompanyPanel({
         </DialogTitle>
         {entry && (
           <div className="relative flex flex-1 flex-col overflow-hidden">
-            <div className="relative h-10 shrink-0">
+            <div className="flex shrink-0 items-center justify-end gap-1 px-3 pt-2">
+              <Button
+                size="sm"
+                onClick={handleShare}
+                className="gap-1.5 rounded-full bg-[hsl(263_70%_42%)] text-white hover:bg-[hsl(263_70%_36%)]"
+              >
+                <Share2 className="h-3.5 w-3.5" /> Share Info
+              </Button>
+
+              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    aria-label="More actions"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onSelect={() => void handleCopyLink()}>
+                    <Copy className="mr-2 h-4 w-4" /> Copy Link
+                  </DropdownMenuItem>
+                  {entry.website && (
+                    <DropdownMenuItem asChild>
+                      <a href={websiteHref(entry.website)} target="_blank" rel="noreferrer">
+                        <ExternalLink className="mr-2 h-4 w-4" /> Open Website
+                      </a>
+                    </DropdownMenuItem>
+                  )}
+                  {onEdit ? (
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        onClose();
+                        onEdit();
+                      }}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={() => {
+                          onClose();
+                          onDelete();
+                        }}
+                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" /> Remove
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <DialogClose
                 aria-label="Back to Acquisition Strategy"
                 title="Back to Acquisition Strategy"
-                className="absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="h-4 w-4" />
               </DialogClose>
