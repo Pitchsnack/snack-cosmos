@@ -122,12 +122,18 @@ export function AcquisitionCompanyPanel({
   target,
   competitor,
   onClose,
+  onEdit,
+  onDelete,
 }: {
   /** Manual (unlinked) acquisition target to show; null when closed or linked. */
   target: TargetCompany | null;
   /** Competitor reference to show; null when closed. */
   competitor: CompetitorReference | null;
   onClose: () => void;
+  /** Optional: opens the edit dialog for this entry. */
+  onEdit?: () => void;
+  /** Optional: removes this entry from the strategy. */
+  onDelete?: () => void;
 }) {
   const entry = target ?? competitor;
   const isCompetitor = !!competitor;
@@ -136,6 +142,47 @@ export function AcquisitionCompanyPanel({
   const industry = snap?.industry ?? [];
   const productTags = snap?.productTags ?? [];
   const marketTags = snap?.marketTags ?? [];
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const summary = entry
+    ? [
+        entry.name,
+        entry.website ? websiteHref(entry.website) : null,
+        snap?.headquarters ?? null,
+        snap?.shortDescription ?? entry.notes ?? null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
+
+  const handleShare = async () => {
+    if (!entry) return;
+    const nav = typeof navigator !== "undefined" ? navigator : undefined;
+    try {
+      if (nav && "share" in nav) {
+        await (nav as Navigator & { share: (d: ShareData) => Promise<void> }).share({
+          title: entry.name,
+          text: summary,
+          ...(entry.website ? { url: websiteHref(entry.website) } : {}),
+        });
+        return;
+      }
+      await nav?.clipboard?.writeText(summary);
+      toast.success("Company info copied to clipboard");
+    } catch {
+      /* user dismissed the share sheet */
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!entry?.website) {
+      await navigator.clipboard?.writeText(summary);
+      toast.success("Company info copied");
+      return;
+    }
+    await navigator.clipboard?.writeText(websiteHref(entry.website));
+    toast.success("Link copied");
+  };
 
 
   return (
