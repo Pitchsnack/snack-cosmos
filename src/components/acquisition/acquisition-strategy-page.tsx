@@ -13,12 +13,14 @@ import {
   type AcquisitionRequirements,
 } from "@/lib/acquisition/strategy-store";
 import type { StartupDetail } from "@/lib/startups.functions";
+import type { CompetitorReference, TargetCompany } from "@/lib/acquisition/strategy-store";
 import { TargetCompaniesSection } from "@/components/acquisition/target-companies-section";
 import { CompetitorReferencesSection } from "@/components/acquisition/competitor-references-section";
 import { RequirementsSection, RequirementsForm } from "@/components/acquisition/requirements-section";
 import { InsightsTab } from "@/components/acquisition/insights-tab";
 import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
 import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
+import { AcquisitionCompanyPanel } from "@/components/acquisition/acquisition-company-panel";
 
 export type AcquisitionTab = "overview" | "startup-info" | "targets" | "competitors" | "requirements" | "insights";
 
@@ -105,6 +107,15 @@ export function AcquisitionStrategyPage({
     });
     const y = scrollRef.current;
     requestAnimationFrame(() => window.scrollTo(0, y));
+  };
+
+  // Manual (unlinked) company information panels — temporary overlays that
+  // always return to this Acquisition Strategy page and tab.
+  const [companyTarget, setCompanyTarget] = useState<TargetCompany | null>(null);
+  const [companyCompetitor, setCompanyCompetitor] = useState<CompetitorReference | null>(null);
+  const closeCompanyPanel = () => {
+    setCompanyTarget(null);
+    setCompanyCompetitor(null);
   };
 
   const exportStrategy = () => {
@@ -201,6 +212,7 @@ export function AcquisitionStrategyPage({
             canEdit={canEdit}
             numberedTitle="1. Companies We Want to Acquire"
             onOpenLinked={openLinkedStartup}
+            onOpenCompany={setCompanyTarget}
           />
           <CompetitorReferencesSection
             strategy={strategy}
@@ -208,6 +220,7 @@ export function AcquisitionStrategyPage({
             canEdit={canEdit}
             numberedTitle="2. Competitor Acquisition References"
             onOpenLinked={openLinkedStartup}
+            onOpenCompany={setCompanyCompetitor}
           />
           <RequirementsSection
             strategy={strategy}
@@ -257,6 +270,7 @@ export function AcquisitionStrategyPage({
             canEdit={canEdit}
             expanded
             onOpenLinked={openLinkedStartup}
+            onOpenCompany={setCompanyTarget}
           />
         </TabsContent>
 
@@ -267,6 +281,7 @@ export function AcquisitionStrategyPage({
             canEdit={canEdit}
             expanded
             onOpenLinked={openLinkedStartup}
+            onOpenCompany={setCompanyCompetitor}
           />
         </TabsContent>
 
@@ -303,6 +318,13 @@ export function AcquisitionStrategyPage({
 
       {/* Linked startup information panel — overlay that always returns here. */}
       <LinkedStartupPanel startupId={panelId} onClose={closeLinkedStartup} />
+
+      {/* Manual target / competitor information panel. */}
+      <AcquisitionCompanyPanel
+        target={companyTarget}
+        competitor={companyCompetitor}
+        onClose={closeCompanyPanel}
+      />
     </div>
   );
 }
