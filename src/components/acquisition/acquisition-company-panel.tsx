@@ -8,7 +8,18 @@
  * renders manual (unlinked) targets and all competitor references.
  */
 
-import { ExternalLink, Link2, X } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  ExternalLink,
+  Globe,
+  Layers,
+  Link2,
+  MapPin,
+  ShoppingCart,
+  X,
+} from "lucide-react";
+
 
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
