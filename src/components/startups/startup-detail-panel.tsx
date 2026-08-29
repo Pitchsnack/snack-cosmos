@@ -1,21 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
-  ExternalLink,
   MapPin,
   Calendar,
-  Linkedin,
   Rocket,
   Pencil,
   Loader2,
-  Globe,
   Building2,
-  TrendingUp,
-  Layers,
-  ShoppingCart,
   Users,
-  UserCircle2,
   FileText,
   MoreVertical,
   Copy,
@@ -64,6 +57,7 @@ import { MaskedImage, restrictedSet } from "@/components/startups/restricted-pla
 import { ShareStartupDialog } from "@/components/startups/share-startup-dialog";
 import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
+import { StartupInfoBody } from "@/components/startups/startup-info-body";
 
 
 function monogram(name: string) {
@@ -138,21 +132,9 @@ export function StartupDetailPanel({
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
-  const [descExpanded, setDescExpanded] = useState(false);
-  const [descClamped, setDescClamped] = useState(false);
-  const descRef = useRef<HTMLParagraphElement>(null);
 
 
-  useEffect(() => {
-    const el = descRef.current;
-    if (!el) return;
-    // Measure natural (unclamped) height against clamped height
-    const prev = el.style.webkitLineClamp;
-    el.style.webkitLineClamp = "unset";
-    const full = el.scrollHeight;
-    el.style.webkitLineClamp = prev;
-    setDescClamped(full > el.clientHeight + 1);
-  }, [data?.long_description]);
+
 
 
 
@@ -192,11 +174,6 @@ export function StartupDetailPanel({
   const mediaMasked = restricted.has("media_images");
   const mediaSlots = mediaMasked ? s.media : s.media.filter((m) => m.image_signed_url);
 
-  const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
-  if (s.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${s.year_founded}` });
-  if (s.company_type) metaItems.push({ icon: Building2, label: s.company_type });
-  if (s.headquarters) metaItems.push({ icon: MapPin, label: s.headquarters });
-  if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
 
   return (
     <div className="space-y-[14px] text-foreground">
@@ -509,126 +486,56 @@ export function StartupDetailPanel({
       )}
 
 
-      {/* Short description */}
-      {s.short_description && (
-        <p className="text-[15px] leading-relaxed text-foreground/85">{s.short_description}</p>
-      )}
-
-      {/* Meta grid */}
-      {(metaItems.length > 0 || s.email || s.website_url) && (
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 text-sm">
-          {metaItems.map((m, i) => {
-            const Icon = m.icon;
-            return (
-              <div key={i} className="flex items-center gap-2 text-foreground/80">
-                <Icon className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-                <span>{m.label}</span>
-              </div>
-            );
-          })}
-          {s.website_url && (
-            <a
-              href={s.website_url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 text-blue-900 hover:underline"
-            >
-              <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              <span className="truncate">
-                Company URL <span aria-hidden>→</span>
-              </span>
-            </a>
-          )}
-          {s.email && (
-            <a
-              href={`mailto:${s.email}`}
-              className="flex items-center gap-2 text-blue-900 hover:underline"
-            >
-              <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              <span className="truncate">{s.email}</span>
-            </a>
-          )}
-        </dl>
-      )}
-
-      {/* Long description */}
-      {s.long_description && (
-        <Section icon={FileText} title="Product overview">
-          <p
-            ref={descRef}
-            className={cn(
-              "whitespace-pre-line text-[14px] leading-relaxed text-foreground/85",
-              !descExpanded && "line-clamp-4",
-            )}
-          >
-            {s.long_description}
-          </p>
-          {(descClamped || descExpanded) && (
-            <button
-              type="button"
-              onClick={() => setDescExpanded((v) => !v)}
-              className="mt-1 text-[13px] font-medium text-primary hover:underline"
-            >
-              {descExpanded ? "Less" : "More…"}
-            </button>
-          )}
+      {mediaSlots.length === 0 && (
+        <Section icon={FileText} title="Media">
+          <span className="text-sm text-muted-foreground">Not available</span>
         </Section>
       )}
 
-      {/* Product tags */}
-      {s.product_tags.length > 0 && (
-        <Section icon={Layers} title="Product & service tags">
-          <ChipRow tags={s.product_tags} tone="primary" />
-        </Section>
-      )}
+      {/* Canonical Startup Information Panel body — identical on every surface */}
+      <StartupInfoBody
+        data={{
+          name: s.startup_name,
+          registeredName: s.registered_name,
+          companyType: s.company_type,
+          yearFounded: s.year_founded,
+          investmentStage: s.investment_stage,
+          companySize: s.company_size,
+          revenue: s.last_year_revenue,
+          headquarters: s.headquarters,
+          region: s.region,
+          city: s.city,
+          website: s.website_url,
+          email: s.email,
+          linkedinUrl: s.linkedin_url,
+          shortDescription: s.short_description,
+          longDescription: s.long_description,
+          industry: s.industry ?? [],
+          productTags: s.product_tags,
+          marketTags: s.market_tags,
+          founders: s.founders.map((f) => ({
+            id: f.id,
+            fullName: f.full_name,
+            position: f.position,
+            bio: f.bio,
+            linkedinUrl: f.linkedin_url,
+          })),
+        }}
+        renderFounderAvatar={(f) =>
+          restricted.has("founders") ? (
+            <MaskedImage
+              seed={`${s.id}-${f.id}`}
+              cells={6}
+              className="rounded-full"
+              showLock={false}
+              label="Restricted founder picture"
+            />
+          ) : (
+            (f.fullName ?? "").charAt(0).toUpperCase()
+          )
+        }
+      />
 
-      {/* Market tags */}
-      {s.market_tags.length > 0 && (
-        <Section icon={ShoppingCart} title="Market tags">
-          <ChipRow tags={s.market_tags} tone="muted" />
-        </Section>
-      )}
-
-      {/* Founders */}
-      {s.founders.length > 0 && (
-        <Section
-          icon={UserCircle2}
-          title={`Founder${s.founders.length > 1 ? `s (${s.founders.length})` : ""}`}
-        >
-          <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-            {s.founders.map((f) => (
-              <div key={f.id} className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted/60 text-xs font-semibold text-muted-foreground">
-                  {restricted.has("founders") ? (
-                    <MaskedImage seed={`${s.id}-${f.id}`} cells={6} className="rounded-full" showLock={false} label="Restricted founder picture" />
-                  ) : (
-                    (f.full_name ?? "").charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium leading-tight">{f.full_name}</div>
-                  {f.position && (
-                    <div className="text-xs text-muted-foreground mt-0.5">{f.position}</div>
-                  )}
-                  {f.bio && (
-                    <p className="mt-1 text-xs text-foreground/75 leading-relaxed">{f.bio}</p>
-                  )}
-                  {f.linkedin_url && (
-                    <a
-                      href={f.linkedin_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-[11px] text-blue-900 hover:underline"
-                    >
-                      <Linkedin className="h-3 w-3" strokeWidth={1.75} /> LinkedIn
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
 
       {/* Investors */}
       {s.investors.length > 0 && (
@@ -699,22 +606,6 @@ function Section({
       </div>
       <div>{children}</div>
     </section>
-  );
-}
-
-function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
-  const base =
-    tone === "primary"
-      ? "bg-primary/5 text-foreground/85 border-primary/20"
-      : "bg-muted/50 text-muted-foreground border-transparent";
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {tags.map((t) => (
-        <span key={t} className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${base}`}>
-          {t}
-        </span>
-      ))}
-    </div>
   );
 }
 
