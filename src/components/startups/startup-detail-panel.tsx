@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
@@ -64,6 +64,7 @@ import { MaskedImage, restrictedSet } from "@/components/startups/restricted-pla
 import { ShareStartupDialog } from "@/components/startups/share-startup-dialog";
 import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
+import { StartupInfoBody } from "@/components/startups/startup-info-body";
 
 
 function monogram(name: string) {
@@ -138,21 +139,9 @@ export function StartupDetailPanel({
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
-  const [descExpanded, setDescExpanded] = useState(false);
-  const [descClamped, setDescClamped] = useState(false);
-  const descRef = useRef<HTMLParagraphElement>(null);
 
 
-  useEffect(() => {
-    const el = descRef.current;
-    if (!el) return;
-    // Measure natural (unclamped) height against clamped height
-    const prev = el.style.webkitLineClamp;
-    el.style.webkitLineClamp = "unset";
-    const full = el.scrollHeight;
-    el.style.webkitLineClamp = prev;
-    setDescClamped(full > el.clientHeight + 1);
-  }, [data?.long_description]);
+
 
 
 
