@@ -8,17 +8,7 @@
  * renders manual (unlinked) targets and all competitor references.
  */
 
-import {
-  Building2,
-  Calendar,
-  ExternalLink,
-  Globe,
-  Layers,
-  Link2,
-  MapPin,
-  ShoppingCart,
-  X,
-} from "lucide-react";
+import { Building2, Calendar, FileText, Layers, Link2, Sparkles, X } from "lucide-react";
 
 
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +20,7 @@ import {
   type TargetCompany,
 } from "@/lib/acquisition/strategy-store";
 import { cn } from "@/lib/utils";
+import { StartupInfoBody, StartupInfoSection } from "@/components/startups/startup-info-body";
 
 const STATUS_TONE: Record<ExtractionStatus, string> = {
   not_extracted: "border-transparent bg-muted/60 text-muted-foreground",
@@ -57,17 +48,6 @@ function websiteHref(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-function PanelSection({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="border-t border-border/50 pt-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1.5 text-sm text-foreground/90">{children}</div>
-    </div>
-  );
-}
-
 function KeywordPills({ items }: { items: string[] }) {
   return (
     <div className="flex flex-wrap gap-1">
@@ -83,28 +63,6 @@ function KeywordPills({ items }: { items: string[] }) {
   );
 }
 
-
-function Field({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Building2;
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-2">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-      <div className="min-w-0">
-        <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt>
-        <dd className="text-sm text-foreground/85">
-          {value || <span className="text-muted-foreground">Not available</span>}
-        </dd>
-      </div>
-    </div>
-  );
-}
 
 export function AcquisitionCompanyPanel({
   target,
@@ -193,109 +151,94 @@ export function AcquisitionCompanyPanel({
                 </div>
               </header>
 
-              {/* Short description */}
-              <p className="text-[15px] leading-relaxed text-foreground/85">
-                {snap?.shortDescription || (
-                  <span className="text-muted-foreground">No description available yet.</span>
-                )}
-              </p>
+              {/* Canonical Startup Information Panel body — same on every surface */}
+              <StartupInfoBody
+                data={{
+                  name: entry.name,
+                  registeredName: null,
+                  companyType: null,
+                  yearFounded: null,
+                  investmentStage: null,
+                  companySize: null,
+                  revenue: null,
+                  headquarters: snap?.headquarters ?? null,
+                  region: null,
+                  city: snap?.city ?? null,
+                  website: entry.website || null,
+                  email: null,
+                  linkedinUrl: null,
+                  shortDescription: snap?.shortDescription ?? null,
+                  longDescription: null,
+                  industry,
+                  productTags,
+                  marketTags,
+                  founders: [],
+                }}
+              />
 
-              {/* Standard company information fields */}
-              <PanelSection label="Company Information">
-                <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                  <Field icon={Building2} label="Company Name" value={entry.name} />
-                  <Field
-                    icon={Globe}
-                    label="Website"
-                    value={
-                      entry.website ? (
-                        <a
-                          href={websiteHref(entry.website)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-900 hover:underline"
-                        >
-                          {entry.website.replace(/^https?:\/\//i, "")}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : null
-                    }
-                  />
-                  <Field icon={MapPin} label="Headquarters" value={snap?.headquarters ?? null} />
-                  <Field icon={MapPin} label="City" value={snap?.city ?? null} />
-                  <Field icon={Layers} label="Industry" value={industry.length ? industry.join(", ") : null} />
-                  <Field
-                    icon={ShoppingCart}
-                    label="Market Tags"
-                    value={marketTags.length ? marketTags.join(", ") : null}
-                  />
-                  <Field
-                    icon={Layers}
-                    label="Product & Service Tags"
-                    value={productTags.length ? productTags.join(", ") : null}
-                  />
-                  <Field
-                    icon={Calendar}
-                    label={isCompetitor ? "Last Extracted" : "Record Type"}
-                    value={
-                      isCompetitor
-                        ? formatDate(competitor?.lastExtractedAt ?? null)
-                        : entry.linkedStartupId
-                          ? "Linked startup record"
-                          : "Manual entry"
-                    }
-                  />
-                </dl>
-              </PanelSection>
+              <StartupInfoSection icon={FileText} title="Media">
+                <span className="text-sm text-muted-foreground">Not available</span>
+              </StartupInfoSection>
 
-              {/* Why attractive */}
-              <PanelSection label={isCompetitor ? "Why Relevant" : "Why Attractive"}>
+              <StartupInfoSection
+                icon={Sparkles}
+                title={isCompetitor ? "Why relevant" : "Why attractive"}
+              >
                 {entry.attractiveKeywords.length > 0 ? (
                   <KeywordPills items={entry.attractiveKeywords} />
                 ) : (
                   <span className="text-sm text-muted-foreground">Not available</span>
                 )}
-              </PanelSection>
+              </StartupInfoSection>
 
-              {/* Notes */}
-              <PanelSection label="Notes">
+              <StartupInfoSection icon={FileText} title="Notes">
                 {entry.notes ? (
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{entry.notes}</p>
                 ) : (
                   <span className="text-sm text-muted-foreground">Not available</span>
                 )}
-              </PanelSection>
+              </StartupInfoSection>
+
+              {isCompetitor && (
+                <StartupInfoSection icon={Calendar} title="Last extracted">
+                  <span className="text-sm text-foreground/85">
+                    {formatDate(competitor?.lastExtractedAt ?? null) ?? (
+                      <span className="text-muted-foreground">Not available</span>
+                    )}
+                  </span>
+                </StartupInfoSection>
+              )}
 
               {/* Competitor extraction results */}
               {competitor?.result && (
                 <>
                   {competitor.result.acquisitionHistory.length > 0 && (
-                    <PanelSection label="Acquisition History">
+                    <StartupInfoSection icon={Layers} title="Acquisition history">
                       <ul className="list-disc space-y-1 pl-4 text-sm leading-relaxed">
                         {competitor.result.acquisitionHistory.map((h) => (
                           <li key={h}>{h}</li>
                         ))}
                       </ul>
-                    </PanelSection>
+                    </StartupInfoSection>
                   )}
                   {competitor.result.acquiredCompanies.length > 0 && (
-                    <PanelSection label="Acquired Companies">
+                    <StartupInfoSection icon={Building2} title="Acquired companies">
                       <KeywordPills items={competitor.result.acquiredCompanies} />
-                    </PanelSection>
+                    </StartupInfoSection>
                   )}
                   {competitor.result.commonThemes.length > 0 && (
-                    <PanelSection label="Common Themes">
+                    <StartupInfoSection icon={Layers} title="Common themes">
                       <KeywordPills items={competitor.result.commonThemes} />
-                    </PanelSection>
+                    </StartupInfoSection>
                   )}
                   {competitor.result.strategicPatterns.length > 0 && (
-                    <PanelSection label="Strategic Pattern Summary">
+                    <StartupInfoSection icon={Sparkles} title="Strategic pattern summary">
                       <ul className="list-disc space-y-1 pl-4 text-sm leading-relaxed">
                         {competitor.result.strategicPatterns.map((p) => (
                           <li key={p}>{p}</li>
                         ))}
                       </ul>
-                    </PanelSection>
+                    </StartupInfoSection>
                   )}
                 </>
               )}
