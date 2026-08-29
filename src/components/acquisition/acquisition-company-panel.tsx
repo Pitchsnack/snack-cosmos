@@ -44,10 +44,6 @@ function formatDate(iso: string | null): string | null {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function websiteHref(url: string): string {
-  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
-}
-
 function KeywordPills({ items }: { items: string[] }) {
   return (
     <div className="flex flex-wrap gap-1">
