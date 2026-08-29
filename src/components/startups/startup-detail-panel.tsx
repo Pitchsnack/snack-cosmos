@@ -2,20 +2,13 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
-  ExternalLink,
   MapPin,
   Calendar,
-  Linkedin,
   Rocket,
   Pencil,
   Loader2,
-  Globe,
   Building2,
-  TrendingUp,
-  Layers,
-  ShoppingCart,
   Users,
-  UserCircle2,
   FileText,
   MoreVertical,
   Copy,
@@ -181,11 +174,6 @@ export function StartupDetailPanel({
   const mediaMasked = restricted.has("media_images");
   const mediaSlots = mediaMasked ? s.media : s.media.filter((m) => m.image_signed_url);
 
-  const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
-  if (s.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${s.year_founded}` });
-  if (s.company_type) metaItems.push({ icon: Building2, label: s.company_type });
-  if (s.headquarters) metaItems.push({ icon: MapPin, label: s.headquarters });
-  if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
 
   return (
     <div className="space-y-[14px] text-foreground">
@@ -618,22 +606,6 @@ function Section({
       </div>
       <div>{children}</div>
     </section>
-  );
-}
-
-function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
-  const base =
-    tone === "primary"
-      ? "bg-primary/5 text-foreground/85 border-primary/20"
-      : "bg-muted/50 text-muted-foreground border-transparent";
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {tags.map((t) => (
-        <span key={t} className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${base}`}>
-          {t}
-        </span>
-      ))}
-    </div>
   );
 }
 
