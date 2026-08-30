@@ -67,6 +67,8 @@ export function CreateStartupDialog({
   tenantId,
   initialName,
   onCreated,
+  title,
+  descriptionText,
 }: Props) {
   const enabled = useHasSession();
   const fetchUsers = useServerFn(listAssignableUsers);
@@ -167,7 +169,12 @@ export function CreateStartupDialog({
     onSuccess: (res) => {
       toast.success(`Startup "${name.trim()}" created`);
       qc.invalidateQueries({ queryKey: ["startups"] });
-      onCreated({ id: res.id, name: name.trim() });
+      onCreated({
+        id: res.id,
+        name: name.trim(),
+        websiteUrl: websiteUrl.trim(),
+        shortDescription: shortDescription.trim(),
+      });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -179,10 +186,10 @@ export function CreateStartupDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create startup</DialogTitle>
+          <DialogTitle>{title ?? "Create startup"}</DialogTitle>
           <DialogDescription>
-            Create a new startup record in this workspace and link it to this investor's
-            portfolio. You can edit the full profile later.
+            {descriptionText ??
+              "Create a new startup record in this workspace and link it to this investor's portfolio. You can edit the full profile later."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-2">
