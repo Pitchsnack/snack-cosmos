@@ -327,7 +327,9 @@ export function CompetitorReferencesSection({
         initialName=""
         title="Add Competitor Reference"
         descriptionText="Creates a standard startup record in this workspace — the same as adding a company in My Startups — and links it as a competitor reference."
+        allowLinkExisting
         onCreated={addFromCreated}
+
       />
 
       <CompanyFormDialog
