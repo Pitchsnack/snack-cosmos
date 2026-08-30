@@ -218,6 +218,7 @@ export function AcquisitionStrategyPage({
             strategy={strategy}
             update={update}
             canEdit={canEdit}
+            tenantId={startup.tenant_id}
             numberedTitle="2. Competitor Acquisition References"
             onOpenLinked={openLinkedStartup}
             onOpenCompany={setCompanyCompetitor}
@@ -279,6 +280,7 @@ export function AcquisitionStrategyPage({
             strategy={strategy}
             update={update}
             canEdit={canEdit}
+            tenantId={startup.tenant_id}
             expanded
             onOpenLinked={openLinkedStartup}
             onOpenCompany={setCompanyCompetitor}
