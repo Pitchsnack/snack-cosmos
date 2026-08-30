@@ -342,13 +342,30 @@ export function CreateStartupDialog({
           open={websiteDup.open}
           typedName={websiteDup.typedValue}
           candidates={websiteDup.candidates}
+          linkLabel={allowLinkExisting ? "Use This Startup" : "Link"}
+          createLabel={allowLinkExisting ? "Create New Anyway" : "Create Pending Anyway"}
           onCancel={websiteDup.close}
           onLinkExisting={(c) => {
             websiteDup.close();
-            if (c.id) window.open(`/startups/${c.id}`, "_blank", "noopener,noreferrer");
+            if (!c.id) return;
+            // Reuse the existing record instead of creating a duplicate.
+            const row = allowLinkExisting ? websiteDup.startupById(c.id) : undefined;
+            if (row) {
+              toast.success(`Linked to existing startup “${row.startup_name}”`);
+              onCreated({
+                id: row.id,
+                name: row.startup_name,
+                websiteUrl: row.website_url ?? undefined,
+                shortDescription: row.short_description ?? undefined,
+              });
+              onOpenChange(false);
+              return;
+            }
+            window.open(`/startups/${c.id}`, "_blank", "noopener,noreferrer");
           }}
           onCreatePendingAnyway={websiteDup.close}
         />
+
       </DialogContent>
     </Dialog>
   );
