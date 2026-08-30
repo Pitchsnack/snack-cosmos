@@ -9,6 +9,7 @@ import {
   type CompanyFormValue,
 } from "@/components/acquisition/company-form-dialog";
 import { CompanyTable } from "@/components/acquisition/company-table";
+import { CreateStartupDialog } from "@/components/relationships/create-startup-dialog";
 import {
   EXTRACTION_STATUS_LABEL,
   MAX_COMPETITORS,
@@ -32,6 +33,7 @@ export function CompetitorReferencesSection({
   strategy,
   update,
   canEdit,
+  tenantId,
   expanded = false,
   numberedTitle,
   onOpenLinked,
@@ -40,6 +42,8 @@ export function CompetitorReferencesSection({
   strategy: AcquisitionStrategy;
   update: Updater;
   canEdit: boolean;
+  /** Workspace the newly created competitor startup record belongs to. */
+  tenantId: string;
   /** Expanded tab view: shows per-competitor extraction results. */
   expanded?: boolean;
   numberedTitle?: string;
@@ -49,14 +53,54 @@ export function CompetitorReferencesSection({
   onOpenCompany?: (item: CompetitorReference) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<CompetitorReference | null>(null);
   const [openResults, setOpenResults] = useState<Record<string, boolean>>({});
 
   const atLimit = strategy.competitors.length >= MAX_COMPETITORS;
 
+  // Adding a competitor creates a real startup record — same flow as
+  // Home / My Startups — and links it as a competitor reference.
   const openAdd = () => {
     setEditing(null);
-    setDialogOpen(true);
+    setCreateOpen(true);
+  };
+
+  const addFromCreated = (res: {
+    id: string;
+    name: string;
+    websiteUrl?: string;
+    shortDescription?: string;
+  }) => {
+    update((d) => ({
+      ...d,
+      competitors: [
+        ...d.competitors,
+        {
+          id: newId(),
+          name: res.name,
+          website: res.websiteUrl ?? "",
+          logo: null,
+          attractiveKeywords: [],
+          notes: "",
+          linkedStartupId: res.id,
+          linkedSnapshot: {
+            name: res.name,
+            website: res.websiteUrl ?? "",
+            logo: null,
+            shortDescription: res.shortDescription || null,
+            industry: [],
+            productTags: [],
+            marketTags: [],
+            headquarters: null,
+            city: null,
+          },
+          status: "not_extracted",
+          lastExtractedAt: null,
+          result: null,
+        },
+      ],
+    }));
   };
   const openEdit = (c: CompetitorReference) => {
     setEditing(c);
@@ -275,6 +319,16 @@ export function CompetitorReferencesSection({
           <Plus className="h-3.5 w-3.5" /> Add Competitor (Up to 3)
         </button>
       )}
+
+      <CreateStartupDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        tenantId={tenantId}
+        initialName=""
+        title="Add Competitor Reference"
+        descriptionText="Creates a standard startup record in this workspace — the same as adding a company in My Startups — and links it as a competitor reference."
+        onCreated={addFromCreated}
+      />
 
       <CompanyFormDialog
         open={dialogOpen}
