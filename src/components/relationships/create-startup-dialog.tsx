@@ -54,6 +54,9 @@ interface Props {
   /** Override the dialog copy (default: investor-portfolio wording). */
   title?: string;
   descriptionText?: string;
+  /** When a website duplicate is found, allow reusing that record via onCreated. */
+  allowLinkExisting?: boolean;
+
 }
 
 function displayName(u: { first_name: string | null; last_name: string | null; email: string }) {
