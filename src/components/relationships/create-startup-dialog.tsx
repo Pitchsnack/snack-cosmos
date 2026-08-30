@@ -72,6 +72,8 @@ export function CreateStartupDialog({
   onCreated,
   title,
   descriptionText,
+  allowLinkExisting = false,
+
 }: Props) {
   const enabled = useHasSession();
   const fetchUsers = useServerFn(listAssignableUsers);
