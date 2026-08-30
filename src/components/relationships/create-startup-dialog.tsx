@@ -45,7 +45,15 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   tenantId: string;
   initialName: string;
-  onCreated: (result: { id: string; name: string }) => void;
+  onCreated: (result: {
+    id: string;
+    name: string;
+    websiteUrl?: string;
+    shortDescription?: string;
+  }) => void;
+  /** Override the dialog copy (default: investor-portfolio wording). */
+  title?: string;
+  descriptionText?: string;
 }
 
 function displayName(u: { first_name: string | null; last_name: string | null; email: string }) {
