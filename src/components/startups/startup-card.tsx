@@ -110,6 +110,26 @@ export function StartupCard({
     },
   };
 
+  // Rebalanced (~50/50) spacing applies ONLY to the My Startups vector card,
+  // i.e. when a compact acquisitionSection is supplied. Startup Directory and
+  // other cards keep their original spacing/layout untouched.
+  const isAcquisitionCard = Boolean(acquisitionSection);
+  const headerRowClass = isAcquisitionCard
+    ? "mb-1.5 flex items-start gap-3"
+    : "mb-2 flex items-start gap-3";
+  const descClass = isAcquisitionCard
+    ? "mb-1 line-clamp-2 text-[11px] leading-snug text-foreground/90"
+    : "mb-2 line-clamp-2 text-[11px] leading-relaxed text-foreground/90";
+  const dividerClass = isAcquisitionCard
+    ? "my-1 border-t border-border/40"
+    : "my-2 border-t border-border/40";
+  // For acquisition cards, reserve the top ~50% and clip overflow. For every
+  // other card, `contents` makes the wrapper transparent so layout is
+  // byte-for-byte identical to having no wrapper at all.
+  const startupInfoWrapClass = isAcquisitionCard
+    ? "flex min-h-0 basis-[42%] flex-col overflow-hidden"
+    : "contents";
+
   const inner = (
     <>
       {/* Favorite toggle - shown when favorited or card hovered/focused */}
@@ -143,10 +163,10 @@ export function StartupCard({
       )}
 
       <div className="flex min-h-0 flex-1 flex-col p-4">
-        {/* TOP ~50% — Startup Information */}
-        <div className="flex min-h-0 basis-[42%] flex-col overflow-hidden">
+        {/* Startup Information — rebalanced to ~50% height only for My Startups vector cards */}
+        <div className={startupInfoWrapClass}>
         {/* Header row: Logo + Name + Badges; HQ below */}
-        <div className="mb-1.5 flex items-start gap-3">
+        <div className={headerRowClass}>
           <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
             {restricted.has("logo") ? (
               <MaskedImage seed={`${s.id}-logo`} cells={6} />
@@ -196,7 +216,7 @@ export function StartupCard({
 
         {/* Short description */}
         {s.short_description && (
-          <p className="mb-1 line-clamp-2 text-[11px] leading-snug text-foreground/90">
+          <p className={descClass}>
             {s.short_description}
           </p>
         )}
@@ -210,7 +230,7 @@ export function StartupCard({
 
         {/* Divider */}
         {(!compact && s.product_tags?.length || s.short_description) && (
-          <div className="my-1 border-t border-border/40" />
+          <div className={dividerClass} />
         )}
 
         {/* Est. year row */}
