@@ -143,8 +143,10 @@ export function StartupCard({
       )}
 
       <div className="flex min-h-0 flex-1 flex-col p-4">
+        {/* TOP ~50% — Startup Information */}
+        <div className="flex min-h-0 basis-[42%] flex-col overflow-hidden">
         {/* Header row: Logo + Name + Badges; HQ below */}
-        <div className="mb-2 flex items-start gap-3">
+        <div className="mb-1.5 flex items-start gap-3">
           <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
             {restricted.has("logo") ? (
               <MaskedImage seed={`${s.id}-logo`} cells={6} />
@@ -194,7 +196,7 @@ export function StartupCard({
 
         {/* Short description */}
         {s.short_description && (
-          <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-foreground/90">
+          <p className="mb-1 line-clamp-2 text-[11px] leading-snug text-foreground/90">
             {s.short_description}
           </p>
         )}
@@ -208,7 +210,7 @@ export function StartupCard({
 
         {/* Divider */}
         {(!compact && s.product_tags?.length || s.short_description) && (
-          <div className="my-2 border-t border-border/40" />
+          <div className="my-1 border-t border-border/40" />
         )}
 
         {/* Est. year row */}
@@ -281,7 +283,9 @@ export function StartupCard({
           </div>
         ) : null}
 
-        {/* Compact Acquisition section (My Startups grid cards) */}
+        </div>
+
+        {/* BOTTOM ~50% — Compact Acquisition section (My Startups grid cards) */}
         {acquisitionSection}
       </div>
     </>

@@ -143,12 +143,12 @@ export function AcquisitionCardSection({
 
   return (
     <div
-      className="mt-auto border-t border-border/50 pt-2"
+      className="flex min-h-0 flex-1 flex-col gap-1.5 border-t border-border/50 pt-2"
       onClick={stop}
       onMouseDown={stop}
       data-acquisition-section
     >
-      <div className="mb-1 flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Acquisition
         </span>
@@ -162,11 +162,11 @@ export function AcquisitionCardSection({
       </div>
 
       {/* Target Companies */}
-      <div className="mb-1">
+      <div>
         <div className="text-[9px] uppercase tracking-wide text-muted-foreground/80">
           Target Companies
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+        <div className="mt-1 flex flex-wrap items-center gap-1">
           {targets.slice(0, MAX_PILLS).map((t) => (
             <CompanyPill
               key={t.id}
@@ -199,11 +199,11 @@ export function AcquisitionCardSection({
       </div>
 
       {/* Competitor References */}
-      <div className="mb-1">
+      <div>
         <div className="text-[9px] uppercase tracking-wide text-muted-foreground/80">
           Competitor References
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+        <div className="mt-1 flex flex-wrap items-center gap-1">
           {competitors.slice(0, MAX_PILLS).map((c) => (
             <CompanyPill
               key={c.id}
@@ -240,7 +240,7 @@ export function AcquisitionCardSection({
         <div className="text-[9px] uppercase tracking-wide text-muted-foreground/80">
           Acquisition Requirements
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+        <div className="mt-1 flex flex-wrap items-center gap-1">
           {configured ? (
             <>
               {reqChips.map((chip) => (
@@ -270,7 +270,7 @@ export function AcquisitionCardSection({
       </div>
 
       {updatedAt && formatUpdated(updatedAt) && (
-        <div className="mt-1 text-[9px] text-muted-foreground/70">
+        <div className="mt-auto pt-1 text-[9px] text-muted-foreground/70">
           Updated {formatUpdated(updatedAt)}
         </div>
       )}
