@@ -163,10 +163,10 @@ export function StartupCard({
       )}
 
       <div className="flex min-h-0 flex-1 flex-col p-4">
-        {/* TOP ~50% — Startup Information */}
-        <div className="flex min-h-0 basis-[42%] flex-col overflow-hidden">
+        {/* Startup Information — rebalanced to ~50% height only for My Startups vector cards */}
+        <div className={startupInfoWrapClass}>
         {/* Header row: Logo + Name + Badges; HQ below */}
-        <div className="mb-1.5 flex items-start gap-3">
+        <div className={headerRowClass}>
           <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
             {restricted.has("logo") ? (
               <MaskedImage seed={`${s.id}-logo`} cells={6} />
