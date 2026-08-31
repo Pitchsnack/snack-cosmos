@@ -230,7 +230,7 @@ export function StartupCard({
 
         {/* Divider */}
         {(!compact && s.product_tags?.length || s.short_description) && (
-          <div className="my-1 border-t border-border/40" />
+          <div className={dividerClass} />
         )}
 
         {/* Est. year row */}
