@@ -216,7 +216,7 @@ export function StartupCard({
 
         {/* Short description */}
         {s.short_description && (
-          <p className="mb-1 line-clamp-2 text-[11px] leading-snug text-foreground/90">
+          <p className={descClass}>
             {s.short_description}
           </p>
         )}
