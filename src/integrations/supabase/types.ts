@@ -58,6 +58,75 @@ export type Database = {
           },
         ]
       }
+      cash_flow_items: {
+        Row: {
+          amount: number | null
+          created_at: string
+          display_order: number
+          financial_statement_id: string
+          fiscal_year: number
+          id: string
+          is_total: boolean
+          item_code: string
+          item_label: string
+          percent_change: number | null
+          section: string
+          source_reference: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id: string
+          fiscal_year: number
+          id?: string
+          is_total?: boolean
+          item_code: string
+          item_label: string
+          percent_change?: number | null
+          section: string
+          source_reference?: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id?: string
+          fiscal_year?: number
+          id?: string
+          is_total?: boolean
+          item_code?: string
+          item_label?: string
+          percent_change?: number | null
+          section?: string
+          source_reference?: string | null
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_flow_items_financial_statement_id_fkey"
+            columns: ["financial_statement_id"]
+            isOneToOne: false
+            referencedRelation: "financial_statements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_items_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_activity: {
         Row: {
           activity_details: Json
@@ -643,6 +712,194 @@ export type Database = {
           },
         ]
       }
+      financial_position_items: {
+        Row: {
+          amount: number | null
+          created_at: string
+          display_order: number
+          financial_statement_id: string
+          fiscal_year: number
+          id: string
+          is_total: boolean
+          item_code: string
+          item_label: string
+          percent_change: number | null
+          source_reference: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id: string
+          fiscal_year: number
+          id?: string
+          is_total?: boolean
+          item_code: string
+          item_label: string
+          percent_change?: number | null
+          source_reference?: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id?: string
+          fiscal_year?: number
+          id?: string
+          is_total?: boolean
+          item_code?: string
+          item_label?: string
+          percent_change?: number | null
+          source_reference?: string | null
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_position_items_financial_statement_id_fkey"
+            columns: ["financial_statement_id"]
+            isOneToOne: false
+            referencedRelation: "financial_statements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_position_items_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_ratios: {
+        Row: {
+          calculation_source: string | null
+          created_at: string
+          display_order: number
+          financial_statement_id: string | null
+          fiscal_year: number
+          id: string
+          ratio_category: string
+          ratio_code: string
+          ratio_label: string
+          source_reference: string | null
+          startup_id: string
+          tenant_id: string
+          unit: string
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          calculation_source?: string | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id?: string | null
+          fiscal_year: number
+          id?: string
+          ratio_category: string
+          ratio_code: string
+          ratio_label: string
+          source_reference?: string | null
+          startup_id: string
+          tenant_id: string
+          unit?: string
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          calculation_source?: string | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id?: string | null
+          fiscal_year?: number
+          id?: string
+          ratio_category?: string
+          ratio_code?: string
+          ratio_label?: string
+          source_reference?: string | null
+          startup_id?: string
+          tenant_id?: string
+          unit?: string
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_ratios_financial_statement_id_fkey"
+            columns: ["financial_statement_id"]
+            isOneToOne: false
+            referencedRelation: "financial_statements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_ratios_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_statements: {
+        Row: {
+          created_at: string
+          currency: string
+          fiscal_year: number
+          id: string
+          source_date: string | null
+          source_name: string | null
+          source_reference: string | null
+          startup_id: string
+          statement_basis: string | null
+          tenant_id: string
+          updated_at: string
+          verified_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          fiscal_year: number
+          id?: string
+          source_date?: string | null
+          source_name?: string | null
+          source_reference?: string | null
+          startup_id: string
+          statement_basis?: string | null
+          tenant_id: string
+          updated_at?: string
+          verified_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          fiscal_year?: number
+          id?: string
+          source_date?: string | null
+          source_name?: string | null
+          source_reference?: string | null
+          startup_id?: string
+          statement_basis?: string | null
+          tenant_id?: string
+          updated_at?: string
+          verified_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_statements_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       global_startup_imports: {
         Row: {
           global_id: string
@@ -711,6 +968,72 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      income_statement_items: {
+        Row: {
+          amount: number | null
+          created_at: string
+          display_order: number
+          financial_statement_id: string
+          fiscal_year: number
+          id: string
+          is_total: boolean
+          item_code: string
+          item_label: string
+          percent_change: number | null
+          source_reference: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id: string
+          fiscal_year: number
+          id?: string
+          is_total?: boolean
+          item_code: string
+          item_label: string
+          percent_change?: number | null
+          source_reference?: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          display_order?: number
+          financial_statement_id?: string
+          fiscal_year?: number
+          id?: string
+          is_total?: boolean
+          item_code?: string
+          item_label?: string
+          percent_change?: number | null
+          source_reference?: string | null
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "income_statement_items_financial_statement_id_fkey"
+            columns: ["financial_statement_id"]
+            isOneToOne: false
+            referencedRelation: "financial_statements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "income_statement_items_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       investor_activity: {
         Row: {

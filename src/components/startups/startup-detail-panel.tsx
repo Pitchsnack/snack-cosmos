@@ -19,7 +19,9 @@ import {
   Check,
   Share2,
   LayoutTemplate,
+  BarChart3,
   Target,
+
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -304,6 +306,18 @@ export function StartupDetailPanel({
                       </Link>
                     )}
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    {isMyWorkspace ? (
+                      <Link to="/my-startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
+                        <BarChart3 className="mr-2 h-4 w-4" /> Financials
+                      </Link>
+                    ) : (
+                      <Link to="/startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
+                        <BarChart3 className="mr-2 h-4 w-4" /> Financials
+                      </Link>
+                    )}
+                  </DropdownMenuItem>
+
 
 
 
