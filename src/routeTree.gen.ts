@@ -63,6 +63,7 @@ import { Route as AuthenticatedStartupsIdInvestorsRouteImport } from './routes/_
 import { Route as AuthenticatedStartupsIdFinancialsRouteImport } from './routes/_authenticated/startups.$id.financials'
 import { Route as AuthenticatedStartupsIdEditRouteImport } from './routes/_authenticated/startups.$id.edit'
 import { Route as AuthenticatedStartupsIdCoverRouteImport } from './routes/_authenticated/startups.$id.cover'
+import { Route as AuthenticatedMyStartupsIdFinancialsRouteImport } from './routes/_authenticated/my-startups.$id.financials'
 import { Route as AuthenticatedMyStartupsIdEditRouteImport } from './routes/_authenticated/my-startups.$id.edit'
 import { Route as AuthenticatedMyStartupsIdCoverRouteImport } from './routes/_authenticated/my-startups.$id.cover'
 import { Route as AuthenticatedMyStartupsIdAcquisitionRouteImport } from './routes/_authenticated/my-startups.$id.acquisition'
@@ -371,6 +372,12 @@ const AuthenticatedStartupsIdCoverRoute =
     path: '/cover',
     getParentRoute: () => AuthenticatedStartupsIdRoute,
   } as any)
+const AuthenticatedMyStartupsIdFinancialsRoute =
+  AuthenticatedMyStartupsIdFinancialsRouteImport.update({
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
+  } as any)
 const AuthenticatedMyStartupsIdEditRoute =
   AuthenticatedMyStartupsIdEditRouteImport.update({
     id: '/edit',
@@ -453,6 +460,7 @@ export interface FileRoutesByFullPath {
   '/my-startups/$id/acquisition': typeof AuthenticatedMyStartupsIdAcquisitionRoute
   '/my-startups/$id/cover': typeof AuthenticatedMyStartupsIdCoverRoute
   '/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
+  '/my-startups/$id/financials': typeof AuthenticatedMyStartupsIdFinancialsRoute
   '/startups/$id/cover': typeof AuthenticatedStartupsIdCoverRoute
   '/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
@@ -504,6 +512,7 @@ export interface FileRoutesByTo {
   '/my-startups/$id/acquisition': typeof AuthenticatedMyStartupsIdAcquisitionRoute
   '/my-startups/$id/cover': typeof AuthenticatedMyStartupsIdCoverRoute
   '/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
+  '/my-startups/$id/financials': typeof AuthenticatedMyStartupsIdFinancialsRoute
   '/startups/$id/cover': typeof AuthenticatedStartupsIdCoverRoute
   '/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
@@ -566,6 +575,7 @@ export interface FileRoutesById {
   '/_authenticated/my-startups/$id/acquisition': typeof AuthenticatedMyStartupsIdAcquisitionRoute
   '/_authenticated/my-startups/$id/cover': typeof AuthenticatedMyStartupsIdCoverRoute
   '/_authenticated/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
+  '/_authenticated/my-startups/$id/financials': typeof AuthenticatedMyStartupsIdFinancialsRoute
   '/_authenticated/startups/$id/cover': typeof AuthenticatedStartupsIdCoverRoute
   '/_authenticated/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/_authenticated/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
@@ -628,6 +638,7 @@ export interface FileRouteTypes {
     | '/my-startups/$id/acquisition'
     | '/my-startups/$id/cover'
     | '/my-startups/$id/edit'
+    | '/my-startups/$id/financials'
     | '/startups/$id/cover'
     | '/startups/$id/edit'
     | '/startups/$id/financials'
@@ -679,6 +690,7 @@ export interface FileRouteTypes {
     | '/my-startups/$id/acquisition'
     | '/my-startups/$id/cover'
     | '/my-startups/$id/edit'
+    | '/my-startups/$id/financials'
     | '/startups/$id/cover'
     | '/startups/$id/edit'
     | '/startups/$id/financials'
@@ -740,6 +752,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-startups/$id/acquisition'
     | '/_authenticated/my-startups/$id/cover'
     | '/_authenticated/my-startups/$id/edit'
+    | '/_authenticated/my-startups/$id/financials'
     | '/_authenticated/startups/$id/cover'
     | '/_authenticated/startups/$id/edit'
     | '/_authenticated/startups/$id/financials'
@@ -1139,6 +1152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartupsIdCoverRouteImport
       parentRoute: typeof AuthenticatedStartupsIdRoute
     }
+    '/_authenticated/my-startups/$id/financials': {
+      id: '/_authenticated/my-startups/$id/financials'
+      path: '/financials'
+      fullPath: '/my-startups/$id/financials'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIdFinancialsRouteImport
+      parentRoute: typeof AuthenticatedMyStartupsIdRoute
+    }
     '/_authenticated/my-startups/$id/edit': {
       id: '/_authenticated/my-startups/$id/edit'
       path: '/edit'
@@ -1316,6 +1336,7 @@ interface AuthenticatedMyStartupsIdRouteChildren {
   AuthenticatedMyStartupsIdAcquisitionRoute: typeof AuthenticatedMyStartupsIdAcquisitionRoute
   AuthenticatedMyStartupsIdCoverRoute: typeof AuthenticatedMyStartupsIdCoverRoute
   AuthenticatedMyStartupsIdEditRoute: typeof AuthenticatedMyStartupsIdEditRoute
+  AuthenticatedMyStartupsIdFinancialsRoute: typeof AuthenticatedMyStartupsIdFinancialsRoute
   AuthenticatedMyStartupsIdIndexRoute: typeof AuthenticatedMyStartupsIdIndexRoute
 }
 
@@ -1325,6 +1346,8 @@ const AuthenticatedMyStartupsIdRouteChildren: AuthenticatedMyStartupsIdRouteChil
       AuthenticatedMyStartupsIdAcquisitionRoute,
     AuthenticatedMyStartupsIdCoverRoute: AuthenticatedMyStartupsIdCoverRoute,
     AuthenticatedMyStartupsIdEditRoute: AuthenticatedMyStartupsIdEditRoute,
+    AuthenticatedMyStartupsIdFinancialsRoute:
+      AuthenticatedMyStartupsIdFinancialsRoute,
     AuthenticatedMyStartupsIdIndexRoute: AuthenticatedMyStartupsIdIndexRoute,
   }
 

@@ -304,6 +304,18 @@ export function StartupDetailPanel({
                       </Link>
                     )}
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    {isMyWorkspace ? (
+                      <Link to="/my-startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
+                        <BarChart3 className="mr-2 h-4 w-4" /> Financials
+                      </Link>
+                    ) : (
+                      <Link to="/startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
+                        <BarChart3 className="mr-2 h-4 w-4" /> Financials
+                      </Link>
+                    )}
+                  </DropdownMenuItem>
+
 
 
 
