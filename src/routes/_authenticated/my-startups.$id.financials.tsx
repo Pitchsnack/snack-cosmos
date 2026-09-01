@@ -27,6 +27,6 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/financials
 
 function RouteComponent() {
   const { id } = Route.useParams();
-  if (!isUuid(id)) return <StartupNotFound />;
+  if (!isUuid(id)) return <StartupNotFound reason="invalid" workspace="my-startups" />;
   return <StartupFinancialsPage id={id} workspace="my-startups" />;
 }
