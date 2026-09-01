@@ -19,7 +19,9 @@ import {
   Check,
   Share2,
   LayoutTemplate,
+  BarChart3,
   Target,
+
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
