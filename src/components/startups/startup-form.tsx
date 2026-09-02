@@ -292,6 +292,7 @@ export function StartupForm({
   const [startupName, setStartupName] = useState(startup?.startup_name ?? "");
   const [companyType, setCompanyType] = useState<string>(startup?.company_type ?? "");
   const [registeredName, setRegisteredName] = useState(startup?.registered_name ?? "");
+  const [registeredNumber, setRegisteredNumber] = useState(startup?.registered_number ?? "");
   const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? "");
   const [email, setEmail] = useState(startup?.email ?? "");
   const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? "");
@@ -473,6 +474,7 @@ export function StartupForm({
   const buildProfileBase = () => ({
     companyType: companyType || null,
     registeredName: registeredName || null,
+    registeredNumber: registeredNumber || null,
     companySize: companySize || null,
     lastYearRevenue: lastYearRevenue || null,
     yearFounded: yearFounded ? Number(yearFounded) : null,
@@ -603,7 +605,7 @@ export function StartupForm({
   // ── Unsaved Changes: snapshot-diff dirty detection ──
   const currentSnapshot = buildStartupFormSnapshot({
     isEdit,
-    tenantId, startupName, companyType, registeredName, companySize, lastYearRevenue,
+    tenantId, startupName, companyType, registeredName, registeredNumber, companySize, lastYearRevenue,
     yearFounded, email, headquarters,
     region, city, websiteUrl, linkedinUrl, shortDescription, longDescription,
     industries, productTags, marketTags, investmentStage,
@@ -1098,6 +1100,15 @@ export function StartupForm({
             onChange={(e) => setRegisteredName(e.target.value)}
             placeholder="Official registered company name"
             maxLength={255}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Registered Number</Label>
+          <Input
+            value={registeredNumber}
+            onChange={(e) => setRegisteredNumber(e.target.value)}
+            placeholder="e.g. 0105555078063"
+            maxLength={64}
           />
         </div>
         <div className="space-y-1.5">
