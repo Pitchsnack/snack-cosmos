@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Save, Sparkles, Trash2, X } from "lucide-react";
@@ -344,9 +344,9 @@ function EditTable({
         </thead>
         <tbody>
           {sections.map((section) => (
-            <>
+            <Fragment key={section.title ?? "main"}>
               {section.title && (
-                <tr key={`${section.title}-head`} className="bg-muted/30">
+                <tr className="bg-muted/30">
                   <td
                     colSpan={years.length + 1}
                     className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
@@ -384,7 +384,7 @@ function EditTable({
                   })}
                 </tr>
               ))}
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
