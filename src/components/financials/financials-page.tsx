@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, BarChart3, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, BarChart3, Loader2, Pencil, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatementTable } from "@/components/financials/statement-table";
 import { RatiosTable } from "@/components/financials/ratios-table";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
+import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
 import { getStartupFinancials, loadSampleFinancials } from "@/lib/financials.functions";
 import { usePermissions } from "@/hooks/use-session-context";
@@ -33,6 +34,7 @@ export function StartupFinancialsPage({
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
   const [tab, setTab] = useState("overview");
+  const [editing, setEditing] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["startup-financials", id],
@@ -87,7 +89,13 @@ export function StartupFinancialsPage({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">Unit : Baht ({data.currency})</Badge>
-          {canManage && years.length === 0 && (
+          {canManage && (
+            <Button size="sm" variant="outline" onClick={() => setEditing((v) => !v)}>
+              <Pencil className="mr-1 h-3.5 w-3.5" />
+              {editing ? "Close editor" : "Edit"}
+            </Button>
+          )}
+          {canManage && years.length === 0 && !editing && (
             <Button size="sm" onClick={() => sample.mutate()} disabled={sample.isPending}>
               {sample.isPending ? (
                 <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
@@ -100,7 +108,17 @@ export function StartupFinancialsPage({
         </div>
       </div>
 
-      {years.length === 0 ? (
+      {editing ? (
+        <FinancialsEdit
+          startupId={id}
+          data={data}
+          onCancel={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
+          }}
+        />
+      ) : years.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-12 text-center">
           <p className="text-sm font-medium">No financial data recorded for this startup</p>
           <p className="mt-1 text-xs text-muted-foreground">
