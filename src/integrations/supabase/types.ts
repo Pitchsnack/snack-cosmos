@@ -853,6 +853,9 @@ export type Database = {
           currency: string
           fiscal_year: number
           id: string
+          matched_registered_name: string | null
+          matched_registered_number: string | null
+          retrieved_at: string | null
           source_date: string | null
           source_name: string | null
           source_reference: string | null
@@ -867,6 +870,9 @@ export type Database = {
           currency?: string
           fiscal_year: number
           id?: string
+          matched_registered_name?: string | null
+          matched_registered_number?: string | null
+          retrieved_at?: string | null
           source_date?: string | null
           source_name?: string | null
           source_reference?: string | null
@@ -881,6 +887,9 @@ export type Database = {
           currency?: string
           fiscal_year?: number
           id?: string
+          matched_registered_name?: string | null
+          matched_registered_number?: string | null
+          retrieved_at?: string | null
           source_date?: string | null
           source_name?: string | null
           source_reference?: string | null
@@ -2085,6 +2094,7 @@ export type Database = {
           product_tags: string[]
           region: string | null
           registered_name: string | null
+          registered_number: string | null
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -2117,6 +2127,7 @@ export type Database = {
           product_tags?: string[]
           region?: string | null
           registered_name?: string | null
+          registered_number?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -2149,6 +2160,7 @@ export type Database = {
           product_tags?: string[]
           region?: string | null
           registered_name?: string | null
+          registered_number?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string
