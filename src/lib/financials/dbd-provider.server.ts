@@ -93,6 +93,18 @@ export async function lookupDbdFinancials(input: {
   registeredNumber?: string | null;
   registeredName?: string | null;
 }): Promise<DbdOutcome> {
+  // Provider mode: gateway (production default) | test_scraper | fixture.
+  // Production never silently falls back to a non-gateway mode.
+  const mode = (process.env.DBD_PROVIDER_MODE ?? "gateway").toLowerCase();
+  if (mode === "fixture") {
+    const { dbdFixtureOutcome, resolveFixtureCase } = await import("./dbd-fixtures.server");
+    return dbdFixtureOutcome(resolveFixtureCase(input.registeredName), input);
+  }
+  if (mode === "test_scraper") {
+    const { lookupDbdFinancialsViaTestScraper } = await import("./dbd-test-scraper.server");
+    return lookupDbdFinancialsViaTestScraper(input);
+  }
+
   const gateway = process.env.DBD_GATEWAY_URL;
   if (!gateway) return { status: "not_configured" };
 
