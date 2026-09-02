@@ -21,6 +21,7 @@ export interface StartupFormSnapshotInput {
   startupName: string;
   companyType: string;
   registeredName: string;
+  registeredNumber: string;
   companySize: string;
   lastYearRevenue: string;
   yearFounded: string;
@@ -83,6 +84,7 @@ export function buildStartupFormSnapshot(input: StartupFormSnapshotInput): strin
     startupName: s(input.startupName),
     companyType: s(input.companyType),
     registeredName: s(input.registeredName),
+    registeredNumber: s(input.registeredNumber),
     companySize: s(input.companySize),
     lastYearRevenue: s(input.lastYearRevenue),
     yearFounded: s(input.yearFounded),
