@@ -99,6 +99,9 @@ function FinancialsAction({
       variant={hasData ? "default" : "outline"}
       title={label}
       aria-label={label}
+      onMouseEnter={prefetch}
+      onFocus={prefetch}
+      onPointerDown={prefetch}
       className={cn(
         "gap-1.5 rounded-full",
         hasData
