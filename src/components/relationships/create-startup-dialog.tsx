@@ -358,9 +358,10 @@ export function CreateStartupDialog({
           >
             Cancel
           </Button>
-          <Button type="button" onClick={() => createM.mutate()} disabled={!canSubmit}>
-            {createM.isPending ? "Creating…" : "Create startup"}
+          <Button type="button" onClick={() => void submit()} disabled={!canSubmit}>
+            {createM.isPending ? "Creating…" : websiteDup.checking ? "Checking…" : "Create startup"}
           </Button>
+
         </DialogFooter>
         <DuplicateWarningDialog
           open={websiteDup.open}
