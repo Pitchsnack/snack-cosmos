@@ -383,8 +383,8 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          )}
+          </div>
+
         </div>
       </header>
 
