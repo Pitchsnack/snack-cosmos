@@ -109,6 +109,14 @@ export function StartupFinancialsPage({
         </div>
       </div>
 
+      {isSample && !editing && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+          <span className="font-semibold">Demo data — not from the DBD Data Warehouse.</span> These
+          figures came from the “Load sample dataset” action and do not reflect this company’s filed
+          statements. Open the editor to clear them or run Auto Enrich to pull the real filing.
+        </div>
+      )}
+
       {editing ? (
         <FinancialsEdit
           startupId={id}
