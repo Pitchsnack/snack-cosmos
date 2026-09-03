@@ -149,6 +149,7 @@ export function FinancialsEdit({
         toast.error(result.message ?? "Auto Enrich returned no data.");
         return;
       }
+      setDrafts({}); // proposed values replace any in-progress text
       const touched = new Set<string>();
       setYears((prev) => {
         const map = new Map(prev.map((y) => [y.fiscalYear, y]));
