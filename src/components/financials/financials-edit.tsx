@@ -17,11 +17,20 @@ import {
 import {
   autoEnrichFinancials,
   saveStartupFinancials,
+  type CompanyProfileDraft,
   type FinancialYearDraft,
 } from "@/lib/financials-edit.functions";
 import type { StartupFinancials } from "@/lib/financials.functions";
 
 type Group = "income" | "position" | "cashFlow" | "ratios";
+
+const PROFILE_FIELDS: { key: keyof CompanyProfileDraft; label: string; placeholder: string }[] = [
+  { key: "registeredType", label: "Registered Type", placeholder: "Company Limited" },
+  { key: "status", label: "Status", placeholder: "Operating" },
+  { key: "registeredDate", label: "Registered Date", placeholder: "30 Apr 2024" },
+  { key: "registeredCapital", label: "Registered Capital", placeholder: "2,000,000.00 Baht" },
+  { key: "businessSize", label: "Business Size", placeholder: "S" },
+];
 
 interface Provenance {
   source?: string | null;
@@ -86,6 +95,14 @@ export function FinancialsEdit({
   const [provenance, setProvenance] = useState<Provenance | null>(null);
   const [enrichedKeys, setEnrichedKeys] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState("income");
+  const [profile, setProfile] = useState<CompanyProfileDraft>(() => ({
+    registeredType: data.profile.registeredType,
+    status: data.profile.status,
+    registeredDate: data.profile.registeredDate,
+    registeredCapital: data.profile.registeredCapital,
+    businessSize: data.profile.businessSize,
+  }));
+  const [enrichedProfileKeys, setEnrichedProfileKeys] = useState<Set<string>>(new Set());
 
   /**
    * Raw keystrokes per cell. Kept alongside the parsed numbers so partial input
@@ -145,6 +162,24 @@ export function FinancialsEdit({
   const enrichMutation = useMutation({
     mutationFn: () => enrich({ data: { startupId } }),
     onSuccess: (result) => {
+      // The Company Profile block is applied whenever the company was matched,
+      // even when no financial statements were published.
+      if (result.profile) {
+        const incoming = result.profile;
+        const touchedProfile = new Set<string>();
+        setProfile((prev) => {
+          const next = { ...prev };
+          for (const { key } of PROFILE_FIELDS) {
+            const value = incoming[key];
+            if (value && value.trim()) {
+              next[key] = value.trim();
+              touchedProfile.add(key);
+            }
+          }
+          return next;
+        });
+        setEnrichedProfileKeys(touchedProfile);
+      }
       if (result.status !== "ok" || !result.years?.length) {
         toast.error(result.message ?? "Auto Enrich returned no data.");
         return;
@@ -207,6 +242,7 @@ export function FinancialsEdit({
           startupId,
           years,
           removedYears,
+          profile,
           provenance: provenance
             ? {
                 source: provenance.source ?? null,
@@ -285,6 +321,51 @@ export function FinancialsEdit({
           . Highlighted cells are proposed edits — review before saving.
         </div>
       )}
+
+      <div className="rounded-xl border border-border p-4">
+        <div className="mb-3 flex items-center justify-between gap-2 border-b border-border/60 pb-2">
+          <h3 className="text-sm font-semibold">Company Profile</h3>
+          <span className="text-xs text-muted-foreground">
+            Extracted from the DBD company profile page — editable.
+          </span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {PROFILE_FIELDS.map(({ key, label, placeholder }) => {
+            const enriched = enrichedProfileKeys.has(key);
+            return (
+              <div key={key} className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground" htmlFor={`p-${key}`}>
+                    {label}
+                  </label>
+                  {enriched && (
+                    <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                      DBD
+                    </Badge>
+                  )}
+                </div>
+                <Input
+                  id={`p-${key}`}
+                  value={profile[key] ?? ""}
+                  placeholder={placeholder}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setProfile((prev) => ({ ...prev, [key]: value === "" ? null : value }));
+                    setEnrichedProfileKeys((prev) => {
+                      const next = new Set(prev);
+                      next.delete(key);
+                      return next;
+                    });
+                  }}
+                  className={`h-9 ${enriched ? "border-primary/60 bg-primary/5" : ""}`}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+
 
       {years.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">

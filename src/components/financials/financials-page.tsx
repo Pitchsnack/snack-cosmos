@@ -164,6 +164,7 @@ export function StartupFinancialsPage({
         data: {
           startupId: id,
           years: result.years,
+          ...(result.profile ? { profile: result.profile } : {}),
           provenance: {
             source: "DBD_DATA_WAREHOUSE",
             sourceReference: result.sourceReference ?? null,
