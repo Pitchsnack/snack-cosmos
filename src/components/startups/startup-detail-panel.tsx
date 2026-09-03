@@ -319,17 +319,7 @@ export function StartupDetailPanel({
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    {isMyWorkspace ? (
-                      <Link to="/my-startups/$id/cover" params={{ id }} onClick={() => onClose?.()}>
-                        <LayoutTemplate className="mr-2 h-4 w-4" /> View Cover Page
-                      </Link>
-                    ) : (
-                      <Link to="/startups/$id/cover" params={{ id }} onClick={() => onClose?.()}>
-                        <LayoutTemplate className="mr-2 h-4 w-4" /> View Cover Page
-                      </Link>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+
                     {isMyWorkspace ? (
                       <Link to="/my-startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
                         <BarChart3 className="mr-2 h-4 w-4" /> Financials
