@@ -278,7 +278,9 @@ export function StartupDetailPanel({
               ) : (
                 <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
+              <FinancialsAction id={id} isMyWorkspace={isMyWorkspace} onClose={onClose} />
               <FavoriteToggle id={id} size="md" className="h-8 w-8" />
+
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
