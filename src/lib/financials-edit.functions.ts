@@ -172,8 +172,31 @@ function pick(
 }
 
 /* ------------------------------------------------------------------ */
+/* Clear — removes every stored fiscal year for a startup.             */
+/* ------------------------------------------------------------------ */
+
+export const clearStartupFinancials = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ startupId: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    for (const table of [
+      "income_statement_items",
+      "financial_position_items",
+      "cash_flow_items",
+      "financial_ratios",
+      "financial_statements",
+    ] as const) {
+      const d = await supabase.from(table).delete().eq("startup_id", data.startupId);
+      if (d.error) throw new Error(d.error.message);
+    }
+    return { ok: true };
+  });
+
+/* ------------------------------------------------------------------ */
 /* Save — the only path that writes financial data.                    */
 /* ------------------------------------------------------------------ */
+
 
 export const saveStartupFinancials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
