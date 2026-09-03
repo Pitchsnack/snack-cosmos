@@ -29,7 +29,6 @@ export function StartupFinancialsPage({
   workspace?: "startups" | "my-startups";
 }) {
   const fetchFinancials = useServerFn(getStartupFinancials);
-  const loadSample = useServerFn(loadSampleFinancials);
   const queryClient = useQueryClient();
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
@@ -41,14 +40,7 @@ export function StartupFinancialsPage({
     queryFn: () => fetchFinancials({ data: { startupId: id } }),
   });
 
-  const sample = useMutation({
-    mutationFn: () => loadSample({ data: { startupId: id } }),
-    onSuccess: () => {
-      toast.success("Sample financial dataset loaded");
-      queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+
 
   if (isLoading) {
     return (
