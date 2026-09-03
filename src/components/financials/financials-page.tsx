@@ -68,6 +68,7 @@ export function StartupFinancialsPage({
   const years = data.years;
   const range = years.length ? `${years[0]} - ${years[years.length - 1]}` : "—";
   const backTo = workspace === "my-startups" ? "/my-startups" : "/startups";
+  const isSample = data.statements.some((s) => s.source_name === "Sample dataset");
 
   return (
     <div className="space-y-5 p-6">
@@ -107,6 +108,14 @@ export function StartupFinancialsPage({
           )}
         </div>
       </div>
+
+      {isSample && !editing && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+          <span className="font-semibold">Demo data — not from the DBD Data Warehouse.</span> These
+          figures came from the “Load sample dataset” action and do not reflect this company’s filed
+          statements. Open the editor to clear them or run Auto Enrich to pull the real filing.
+        </div>
+      )}
 
       {editing ? (
         <FinancialsEdit
