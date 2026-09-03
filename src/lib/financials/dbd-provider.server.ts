@@ -93,9 +93,14 @@ export async function lookupDbdFinancials(input: {
   registeredNumber?: string | null;
   registeredName?: string | null;
 }): Promise<DbdOutcome> {
-  // Provider mode: gateway (production default) | test_scraper | fixture.
-  // Production never silently falls back to a non-gateway mode.
-  const mode = (process.env.DBD_PROVIDER_MODE ?? "gateway").toLowerCase();
+  // Provider mode: firecrawl (default — live DBD read), gateway, test_scraper, fixture.
+  const mode = (
+    process.env.DBD_PROVIDER_MODE ?? (process.env.FIRECRAWL_API_KEY ? "firecrawl" : "gateway")
+  ).toLowerCase();
+  if (mode === "firecrawl") {
+    const { lookupDbdFinancialsViaFirecrawl } = await import("./dbd-firecrawl.server");
+    return lookupDbdFinancialsViaFirecrawl(input);
+  }
   if (mode === "fixture") {
     const { dbdFixtureOutcome, resolveFixtureCase } = await import("./dbd-fixtures.server");
     return dbdFixtureOutcome(resolveFixtureCase(input.registeredName), input);
@@ -107,6 +112,7 @@ export async function lookupDbdFinancials(input: {
 
   const gateway = process.env.DBD_GATEWAY_URL;
   if (!gateway) return { status: "not_configured" };
+
 
   const token = process.env.DBD_GATEWAY_TOKEN;
   const ctrl = new AbortController();
