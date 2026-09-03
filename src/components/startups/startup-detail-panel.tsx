@@ -17,7 +17,6 @@ import {
   X,
   Check,
   Share2,
-  LayoutTemplate,
   BarChart3,
   Target,
 
@@ -125,7 +124,7 @@ function FinancialsAction({
 
 export function StartupDetailPanel({
   id,
-  showEdit = true,
+  showEdit: _showEdit = true,
   compact = false,
   showPublication = false,
   workspace = "startups",
