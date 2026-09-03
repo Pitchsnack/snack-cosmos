@@ -68,6 +68,7 @@ export function StartupFinancialsPage({
   const years = data.years;
   const range = years.length ? `${years[0]} - ${years[years.length - 1]}` : "—";
   const backTo = workspace === "my-startups" ? "/my-startups" : "/startups";
+  const isSample = data.statements.some((s) => s.source_name === "Sample dataset");
 
   return (
     <div className="space-y-5 p-6">
