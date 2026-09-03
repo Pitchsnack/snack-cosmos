@@ -17,11 +17,20 @@ import {
 import {
   autoEnrichFinancials,
   saveStartupFinancials,
+  type CompanyProfileDraft,
   type FinancialYearDraft,
 } from "@/lib/financials-edit.functions";
 import type { StartupFinancials } from "@/lib/financials.functions";
 
 type Group = "income" | "position" | "cashFlow" | "ratios";
+
+const PROFILE_FIELDS: { key: keyof CompanyProfileDraft; label: string; placeholder: string }[] = [
+  { key: "registeredType", label: "Registered Type", placeholder: "Company Limited" },
+  { key: "status", label: "Status", placeholder: "Operating" },
+  { key: "registeredDate", label: "Registered Date", placeholder: "30 Apr 2024" },
+  { key: "registeredCapital", label: "Registered Capital", placeholder: "2,000,000.00 Baht" },
+  { key: "businessSize", label: "Business Size", placeholder: "S" },
+];
 
 interface Provenance {
   source?: string | null;
