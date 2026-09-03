@@ -526,7 +526,7 @@ export function FinancialsOverview({
                   {currency}
                 </text>
               </svg>
-              <div className="min-w-0 flex-1 rounded-[10px] px-[11px] py-[9px]" style={{ border: `1px solid ${C.hair}` }}>
+              <div className="w-full min-w-0 flex-1 rounded-[10px] px-[11px] py-[9px]" style={{ border: `1px solid ${C.hair}` }}>
                 {[
                   { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
                   { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
