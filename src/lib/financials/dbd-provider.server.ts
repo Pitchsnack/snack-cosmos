@@ -29,10 +29,21 @@ export interface DbdStatement {
   ratios: Record<string, number>;
 }
 
+/** Company Profile block as published on the DBD profile page. */
+export interface DbdCompanyProfile {
+  registeredType: string | null;
+  status: string | null;
+  registeredDate: string | null;
+  registeredCapital: string | null;
+  businessSize: string | null;
+}
+
 export interface DbdCompany {
   registeredNumber: string | null;
   registeredName: string | null;
   sourceReference: string | null;
+  /** Only present when the profile block could be read. */
+  profile?: DbdCompanyProfile;
 }
 
 export type DbdOutcome =
