@@ -10,7 +10,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Info, Loader2 } from "lucide-react";
+import { Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
 import { defaultIntakeAdapter, type EligibleDefaultIntakeAgent } from "@/lib/default-intake";
 import { CreateTenantAiAgentDialog } from "@/components/intake/create-tenant-ai-agent-dialog";
+import { ButtonLoading } from "@/components/ui/PitchSnackLoader";
 
 export function DefaultIntakeForm() {
   const { data: session } = useSessionContext();
@@ -155,7 +156,9 @@ export function DefaultIntakeForm() {
         <div className="flex min-h-[1.5rem] items-center gap-2 text-xs text-muted-foreground">
           {saveM.isPending ? (
             <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+              <span className="ps-btn-loading">
+                <ButtonLoading label="Saving…" invert={false} />
+              </span>
             </>
           ) : dirty ? (
             <>

@@ -9,7 +9,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Loader2,
   Users,
   Target,
   ShieldCheck,
@@ -23,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { recordLogin, logSecurityEvent } from "@/lib/auth.functions";
 import logoAsset from "@/assets/pitchsnack-logo.png.asset.json";
+import { ButtonLoading } from "@/components/ui/PitchSnackLoader";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -387,9 +387,8 @@ function LoginPage() {
               className="h-11 w-full rounded-lg bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800"
             >
               {busy ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Signing in...
+                <span className="ps-btn-loading">
+                  <ButtonLoading label="Signing in…" />
                 </span>
               ) : (
                 "Sign in"

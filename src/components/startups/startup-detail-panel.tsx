@@ -6,7 +6,6 @@ import {
   Calendar,
   Rocket,
   Pencil,
-  Loader2,
   Building2,
   Users,
   FileText,
@@ -61,6 +60,7 @@ import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 import { StartupInfoBody } from "@/components/startups/startup-info-body";
 import { useHasFinancials } from "@/hooks/use-has-financials";
+import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 
 
@@ -198,9 +198,8 @@ export function StartupDetailPanel({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 text-muted-foreground">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="text-sm">Loading startup…</span>
+      <div className="min-h-[40vh] p-8">
+        <HatSkeleton lines={5} headMessage="Loading startup…" />
       </div>
     );
   }

@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Image as ImageIcon,
   Linkedin,
-  Loader2,
   MapPin,
   Link2,
   Tag,
@@ -33,6 +32,7 @@ import {
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { cn } from "@/lib/utils";
+import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 const NAVY = "#0B2D63";
 
@@ -95,8 +95,8 @@ export function StartupCoverPage({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center gap-2 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" /> Loading cover page…
+      <div className="p-6">
+        <HatSkeleton lines={5} headMessage="Loading cover page…" />
       </div>
     );
   }

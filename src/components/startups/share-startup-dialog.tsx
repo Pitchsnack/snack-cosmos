@@ -5,7 +5,6 @@ import {
   Search,
   X,
   Send,
-  Loader2,
   CheckCircle2,
   ShieldCheck,
   Info,
@@ -47,6 +46,7 @@ import {
   type ShareContact,
   type ShareContactFilter,
 } from "@/lib/contacts/share-contacts";
+import { Loading } from "@/components/ui/PitchSnackLoader";
 
 const MESSAGE_MAX = 500;
 
@@ -142,11 +142,7 @@ export function ShareStartupDialog({
         </DialogHeader>
 
         {phase === "sharing" ? (
-          <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm font-medium">Sharing…</p>
-            <p className="text-xs text-muted-foreground">Please wait</p>
-          </div>
+          <Loading size="lg" message="Sharing…" />
         ) : phase === "success" ? (
           <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
             <CheckCircle2 className="h-11 w-11 text-emerald-500" />
