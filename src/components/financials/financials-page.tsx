@@ -96,26 +96,17 @@ export function StartupFinancialsPage({
               {editing ? "Close editor" : "Edit"}
             </Button>
           )}
-          {canManage && years.length === 0 && !editing && (
-            <Button size="sm" onClick={() => sample.mutate()} disabled={sample.isPending}>
-              {sample.isPending ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="mr-1 h-3.5 w-3.5" />
-              )}
-              Load sample dataset
-            </Button>
-          )}
         </div>
       </div>
 
       {isSample && !editing && (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
           <span className="font-semibold">Demo data — not from the DBD Data Warehouse.</span> These
-          figures came from the “Load sample dataset” action and do not reflect this company’s filed
-          statements. Open the editor to clear them or run Auto Enrich to pull the real filing.
+          figures are placeholders. Open the editor and run Auto Enrich to replace them with the
+          company&rsquo;s filed statements.
         </div>
       )}
+
 
       {editing ? (
         <FinancialsEdit
