@@ -219,6 +219,15 @@ export const saveStartupFinancials = createServerFn({ method: "POST" })
         startupId: z.string().uuid(),
         years: z.array(yearSchema).max(30),
         removedYears: z.array(z.number().int()).optional(),
+        profile: z
+          .object({
+            registeredType: z.string().max(120).nullable().optional(),
+            status: z.string().max(120).nullable().optional(),
+            registeredDate: z.string().max(120).nullable().optional(),
+            registeredCapital: z.string().max(120).nullable().optional(),
+            businessSize: z.string().max(120).nullable().optional(),
+          })
+          .optional(),
         provenance: z
           .object({
             source: z.string().max(64).nullable().optional(),
@@ -243,6 +252,22 @@ export const saveStartupFinancials = createServerFn({ method: "POST" })
     if (sErr) throw new Error(sErr.message);
     if (!startup) throw new Error("Startup not found");
     const tenantId = startup.tenant_id as string;
+
+    // Company Profile block lives on the startup record itself.
+    if (data.profile) {
+      const trim = (v: string | null | undefined) => (v?.trim() ? v.trim() : null);
+      const upd = await supabase
+        .from("startups")
+        .update({
+          registered_type: trim(data.profile.registeredType),
+          registered_status: trim(data.profile.status),
+          registered_date: trim(data.profile.registeredDate),
+          registered_capital: trim(data.profile.registeredCapital),
+          business_size: trim(data.profile.businessSize),
+        } as never)
+        .eq("id", startupId);
+      if (upd.error) throw new Error(upd.error.message);
+    }
 
     // Remove fiscal years the user deleted. Items cascade with the statement.
     for (const year of data.removedYears ?? []) {
