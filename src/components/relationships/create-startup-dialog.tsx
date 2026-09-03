@@ -185,7 +185,26 @@ export function CreateStartupDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit = !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending;
+  const canSubmit =
+    !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending && !websiteDup.checking;
+
+  /**
+   * Always resolve the duplicate check before creating: clicking "Create
+   * startup" straight after typing a URL must still surface "Use This Startup"
+   * rather than silently writing a second copy of an existing company.
+   */
+  const submit = async () => {
+    const url = websiteUrl.trim();
+    if (url) {
+      const alreadyChecked =
+        websiteDup.typedValue &&
+        normalizeWebsite(websiteDup.typedValue) === normalizeWebsite(url);
+      const candidates = alreadyChecked ? websiteDup.candidates : await websiteDup.check(url);
+      if (candidates.length > 0) return; // duplicate dialog takes over
+    }
+    createM.mutate();
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
