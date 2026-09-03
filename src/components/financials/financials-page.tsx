@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, BarChart3, Loader2, Pencil, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, BarChart3, Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,8 +11,9 @@ import { RatiosTable } from "@/components/financials/ratios-table";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
 import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
-import { getStartupFinancials, loadSampleFinancials } from "@/lib/financials.functions";
+import { getStartupFinancials } from "@/lib/financials.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+
 
 const REMARKS = [
   "This statement includes only important accounts.",
