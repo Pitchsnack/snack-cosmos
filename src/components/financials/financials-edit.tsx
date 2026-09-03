@@ -162,6 +162,24 @@ export function FinancialsEdit({
   const enrichMutation = useMutation({
     mutationFn: () => enrich({ data: { startupId } }),
     onSuccess: (result) => {
+      // The Company Profile block is applied whenever the company was matched,
+      // even when no financial statements were published.
+      if (result.profile) {
+        const incoming = result.profile;
+        const touchedProfile = new Set<string>();
+        setProfile((prev) => {
+          const next = { ...prev };
+          for (const { key } of PROFILE_FIELDS) {
+            const value = incoming[key];
+            if (value && value.trim()) {
+              next[key] = value.trim();
+              touchedProfile.add(key);
+            }
+          }
+          return next;
+        });
+        setEnrichedProfileKeys(touchedProfile);
+      }
       if (result.status !== "ok" || !result.years?.length) {
         toast.error(result.message ?? "Auto Enrich returned no data.");
         return;
