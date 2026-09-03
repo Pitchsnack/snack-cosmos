@@ -11,7 +11,13 @@
  *  - never fabricates, estimates or zero-fills a value — blanks stay absent;
  *  - returns a typed outcome, never throws for expected failures.
  */
-import type { DbdCompany, DbdLookupKey, DbdOutcome, DbdStatement } from "./dbd-provider.server";
+import type {
+  DbdCompany,
+  DbdCompanyProfile,
+  DbdLookupKey,
+  DbdOutcome,
+  DbdStatement,
+} from "./dbd-provider.server";
 import { normalizeRegisteredName, normalizeRegisteredNumber, parseDbdNumber } from "./dbd-parse";
 
 const BASE = "https://datawarehouse.dbd.go.th";
