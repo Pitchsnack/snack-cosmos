@@ -37,7 +37,7 @@ import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoSlot, EMPTY_SLOT, type SlotState } from "@/components/media/entity-media-editor";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
-import { useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
+import { normalizeWebsite, useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 
 interface Props {
