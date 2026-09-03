@@ -70,6 +70,54 @@ function monogram(name: string) {
     .join("");
 }
 
+/**
+ * Financials shortcut. Colour-coded: solid emerald when Auto Enrich has already
+ * produced data for the startup, muted outline when there is nothing yet.
+ */
+function FinancialsAction({
+  id,
+  isMyWorkspace,
+  onClose,
+}: {
+  id: string;
+  isMyWorkspace: boolean;
+  onClose?: () => void;
+}) {
+  const { hasData } = useHasFinancials(id);
+  const label = hasData ? "Financials available" : "No financial data yet";
+  const content = (
+    <>
+      <BarChart3 className="h-3.5 w-3.5" /> Financials
+    </>
+  );
+  return (
+    <Button
+      asChild
+      size="sm"
+      variant={hasData ? "default" : "outline"}
+      title={label}
+      aria-label={label}
+      className={cn(
+        "gap-1.5 rounded-full",
+        hasData
+          ? "bg-emerald-600 text-white hover:bg-emerald-700"
+          : "border-dashed border-muted-foreground/40 text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {isMyWorkspace ? (
+        <Link to="/my-startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
+          {content}
+        </Link>
+      ) : (
+        <Link to="/startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
+          {content}
+        </Link>
+      )}
+    </Button>
+  );
+}
+
+
 export function StartupDetailPanel({
   id,
   showEdit = true,
