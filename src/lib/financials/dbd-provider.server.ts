@@ -87,11 +87,21 @@ function normMap(raw: unknown): Record<string, number> {
 
 function normCompany(raw: unknown): DbdCompany {
   const r = (raw ?? {}) as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  const p = (r.profile ?? {}) as Record<string, unknown>;
+  const profile: DbdCompanyProfile = {
+    registeredType: str(p.registered_type),
+    status: str(p.status),
+    registeredDate: str(p.registered_date),
+    registeredCapital: str(p.registered_capital),
+    businessSize: str(p.business_size),
+  };
   return {
     registeredNumber:
       typeof r.registered_number === "string" ? r.registered_number.trim() : null,
     registeredName: typeof r.registered_name === "string" ? r.registered_name.trim() : null,
     sourceReference: typeof r.source_reference === "string" ? r.source_reference : null,
+    ...(Object.values(profile).some(Boolean) ? { profile } : {}),
   };
 }
 
