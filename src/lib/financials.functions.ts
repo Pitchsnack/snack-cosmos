@@ -27,6 +27,14 @@ export type StartupFinancials = {
   startupId: string;
   startupName: string;
   registeredName: string | null;
+  profile: {
+    registeredType: string | null;
+    status: string | null;
+    registeredDate: string | null;
+    registeredCapital: string | null;
+    registeredNumber: string | null;
+    businessSize: string | null;
+  };
   currency: string;
   years: number[];
   statements: {
@@ -53,7 +61,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
 
     const { data: startup, error: sErr } = await supabase
       .from("startups")
-      .select("id, startup_name, registered_name")
+      .select("id, startup_name, registered_name, registered_number, company_type, company_size, status, year_founded")
       .eq("id", startupId)
       .maybeSingle();
     if (sErr) throw new Error(sErr.message);
@@ -108,6 +116,14 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       startupId,
       startupName: startup.startup_name,
       registeredName: startup.registered_name ?? null,
+      profile: {
+        registeredType: startup.company_type ?? null,
+        status: startup.status ?? null,
+        registeredDate: startup.year_founded ? String(startup.year_founded) : null,
+        registeredCapital: null,
+        registeredNumber: startup.registered_number ?? null,
+        businessSize: startup.company_size ?? null,
+      },
       currency: statements[0]?.currency ?? "THB",
       years: statements.map((s) => s.fiscal_year),
       statements,
