@@ -242,6 +242,7 @@ export function FinancialsEdit({
           startupId,
           years,
           removedYears,
+          profile,
           provenance: provenance
             ? {
                 source: provenance.source ?? null,
