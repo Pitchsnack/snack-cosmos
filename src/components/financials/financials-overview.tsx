@@ -501,7 +501,7 @@ export function FinancialsOverview({
             </span>
           </h2>
           <div className="flex flex-1 flex-col">
-            <div className="flex flex-1 items-center gap-3.5">
+            <div className="flex flex-1 flex-col items-center gap-3.5 2xl:flex-row">
               <svg viewBox="0 0 180 180" width="152" height="152" className="shrink-0">
                 <circle cx="90" cy="90" r="64" fill="none" stroke={C.blueLight} strokeWidth="34" />
                 {assetBase > 0 && (
