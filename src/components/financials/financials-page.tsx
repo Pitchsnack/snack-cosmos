@@ -198,8 +198,8 @@ export function StartupFinancialsPage({
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <HatSkeleton lines={6} headMessage="Loading financial overview…" />
+      <div className="min-h-[60vh] bg-[#F4F6FA] p-6">
+        <HatSkeleton lines={6} headMessage="Loading financial overview…" delay={0} />
       </div>
     );
   }
