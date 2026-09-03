@@ -60,6 +60,8 @@ import { ShareStartupDialog } from "@/components/startups/share-startup-dialog";
 import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 import { StartupInfoBody } from "@/components/startups/startup-info-body";
+import { useHasFinancials } from "@/hooks/use-has-financials";
+
 
 
 function monogram(name: string) {
