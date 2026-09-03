@@ -1,11 +1,12 @@
 import { forwardRef, useState } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   investorEnrichAdapter,
   type EnrichInvestorResult,
 } from "@/lib/auto-enrich/investor-enrich-adapter";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 
 interface Props {
   websiteUrl: string;
@@ -91,7 +92,7 @@ export const InvestorAutoEnrichButton = forwardRef<HTMLButtonElement, Props>(
       className="gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
       title="Scrape the Company URL and back-fill empty fields"
     >
-      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+      {loading ? <ButtonSpinner invert={false} /> : <Sparkles className="h-3.5 w-3.5" />}
       {loading ? "Enriching…" : "Auto Enrich"}
     </Button>
   );

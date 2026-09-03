@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw, Plus, Upload, Sparkles, Loader2 } from "lucide-react";
+import { X, RefreshCw, Plus, Upload, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -843,8 +844,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
               Cancel
             </Button>
             <Button type="submit" disabled={enriching || !displayName.trim()} className="gap-2">
-              {enriching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {enriching ? "Enriching…" : "Auto Enrich & Continue"}
+              {enriching ? <ButtonSpinner invert={false} /> : <Sparkles className="h-4 w-4" />}
+              <span className={enriching ? "ps-btn-loading__label" : undefined}>{enriching ? "Enriching…" : "Auto Enrich & Continue"}</span>
             </Button>
           </div>
         </div>

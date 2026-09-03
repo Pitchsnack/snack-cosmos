@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Globe, EyeOff, Loader2, Info, FlaskConical } from "lucide-react";
+import { Globe, EyeOff, Info, FlaskConical } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +18,7 @@ import {
   isPublicationPreview,
   PREVIEW_DISCLAIMER,
 } from "@/lib/publication";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 
 type StartupLike = Parameters<typeof toDirectoryProjection>[0] & {
   tenant_id?: string | null;
@@ -75,7 +76,7 @@ export function PublicationActions({
             className="gap-1.5"
           >
             {pub.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              <ButtonSpinner invert={false} />
             ) : published ? (
               <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
             ) : (
@@ -148,7 +149,7 @@ export function PublicationActions({
                 void submit();
               }}
             >
-              {pub.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              {pub.isPending && <ButtonSpinner invert={false} className="mr-2" />}
               {confirm === "unpublish" ? "Unpublish" : "Publish"}
             </AlertDialogAction>
           </AlertDialogFooter>
