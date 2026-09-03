@@ -322,6 +322,51 @@ export function FinancialsEdit({
         </div>
       )}
 
+      <div className="rounded-xl border border-border p-4">
+        <div className="mb-3 flex items-center justify-between gap-2 border-b border-border/60 pb-2">
+          <h3 className="text-sm font-semibold">Company Profile</h3>
+          <span className="text-xs text-muted-foreground">
+            Extracted from the DBD company profile page — editable.
+          </span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {PROFILE_FIELDS.map(({ key, label, placeholder }) => {
+            const enriched = enrichedProfileKeys.has(key);
+            return (
+              <div key={key} className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground" htmlFor={`p-${key}`}>
+                    {label}
+                  </label>
+                  {enriched && (
+                    <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                      DBD
+                    </Badge>
+                  )}
+                </div>
+                <Input
+                  id={`p-${key}`}
+                  value={profile[key] ?? ""}
+                  placeholder={placeholder}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setProfile((prev) => ({ ...prev, [key]: value === "" ? null : value }));
+                    setEnrichedProfileKeys((prev) => {
+                      const next = new Set(prev);
+                      next.delete(key);
+                      return next;
+                    });
+                  }}
+                  className={`h-9 ${enriched ? "border-primary/60 bg-primary/5" : ""}`}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+
+
       {years.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           No fiscal years yet. Add a fiscal year or run Auto Enrich.
