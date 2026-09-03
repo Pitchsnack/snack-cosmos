@@ -85,7 +85,7 @@ function FinancialsAction({
   isMyWorkspace: boolean;
   onClose?: () => void;
 }) {
-  const { hasData } = useHasFinancials(id);
+  const { hasData, prefetch } = useHasFinancials(id);
   const label = hasData ? "Financials available" : "No financial data yet";
   const content = (
     <>
