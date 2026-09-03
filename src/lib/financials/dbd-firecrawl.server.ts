@@ -198,15 +198,64 @@ function ensure(map: Map<number, DbdStatement>, year: number): DbdStatement {
 }
 
 /** Reads the company header block (name + registration number) from the profile page. */
+/**
+ * Reads the "Company Profile" block. DBD renders it as label/value pairs in
+ * either Thai or English; anything not found simply stays null.
+ */
+function parseProfile(html: string): DbdCompanyProfile {
+  const text = clean(html);
+  const LABELS: Record<keyof DbdCompanyProfile, string[]> = {
+    registeredType: ["ประเภทนิติบุคคล", "Registered Type"],
+    status: ["สถานะนิติบุคคล", "สถานะ", "Status"],
+    registeredDate: ["วันที่จดทะเบียนจัดตั้ง", "วันที่จดทะเบียน", "Registered Date"],
+    registeredCapital: ["ทุนจดทะเบียน", "Registered Capital"],
+    businessSize: ["ขนาดธุรกิจ", "Business Size"],
+  };
+  // Every known label acts as a stop marker so a value never swallows the next row.
+  const stops = [
+    ...Object.values(LABELS).flat(),
+    "Last Registered ID",
+    "เลขทะเบียนนิติบุคคล",
+    "ปีงบการเงิน",
+    "Fiscal Year",
+    "หมายเหตุ",
+    "Remark",
+    "Industry group",
+    "กลุ่มธุรกิจ",
+  ].map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+  const read = (labels: string[]): string | null => {
+    for (const label of labels) {
+      const esc = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp(`${esc}\\s*:?\\s*([^:]{1,80}?)\\s*(?=${stops.join("|")}|$)`);
+      const m = text.match(re);
+      const value = m?.[1]?.trim().replace(/^[-–—]$/, "");
+      if (value) return value;
+    }
+    return null;
+  };
+
+  return {
+    registeredType: read(LABELS.registeredType),
+    status: read(LABELS.status),
+    registeredDate: read(LABELS.registeredDate),
+    registeredCapital: read(LABELS.registeredCapital),
+    businessSize: read(LABELS.businessSize),
+  };
+}
+
+/** Reads the company header block (name + registration number) from the profile page. */
 function parseCompany(html: string): DbdCompany | null {
   const text = clean(html);
   const name = text.match(/ชื่อนิติบุคคล\s*:\s*([^#]{3,160}?)\s*เลขทะเบียนนิติบุคคล/);
   const number = text.match(/เลขทะเบียนนิติบุคคล\s*:?\s*(\d{13})/);
   if (!number) return null;
+  const profile = parseProfile(html);
   return {
     registeredNumber: number[1],
     registeredName: name ? name[1].trim() : null,
     sourceReference: `${BASE}/company/profile/5${number[1]}`,
+    ...(Object.values(profile).some(Boolean) ? { profile } : {}),
   };
 }
 
