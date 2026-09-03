@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, BarChart3, Loader2, Pencil, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, BarChart3, Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,8 +11,9 @@ import { RatiosTable } from "@/components/financials/ratios-table";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
 import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
-import { getStartupFinancials, loadSampleFinancials } from "@/lib/financials.functions";
+import { getStartupFinancials } from "@/lib/financials.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+
 
 const REMARKS = [
   "This statement includes only important accounts.",
@@ -29,7 +29,6 @@ export function StartupFinancialsPage({
   workspace?: "startups" | "my-startups";
 }) {
   const fetchFinancials = useServerFn(getStartupFinancials);
-  const loadSample = useServerFn(loadSampleFinancials);
   const queryClient = useQueryClient();
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
@@ -41,14 +40,7 @@ export function StartupFinancialsPage({
     queryFn: () => fetchFinancials({ data: { startupId: id } }),
   });
 
-  const sample = useMutation({
-    mutationFn: () => loadSample({ data: { startupId: id } }),
-    onSuccess: () => {
-      toast.success("Sample financial dataset loaded");
-      queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+
 
   if (isLoading) {
     return (
@@ -96,26 +88,17 @@ export function StartupFinancialsPage({
               {editing ? "Close editor" : "Edit"}
             </Button>
           )}
-          {canManage && years.length === 0 && !editing && (
-            <Button size="sm" onClick={() => sample.mutate()} disabled={sample.isPending}>
-              {sample.isPending ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="mr-1 h-3.5 w-3.5" />
-              )}
-              Load sample dataset
-            </Button>
-          )}
         </div>
       </div>
 
       {isSample && !editing && (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
           <span className="font-semibold">Demo data — not from the DBD Data Warehouse.</span> These
-          figures came from the “Load sample dataset” action and do not reflect this company’s filed
-          statements. Open the editor to clear them or run Auto Enrich to pull the real filing.
+          figures are placeholders. Open the editor and run Auto Enrich to replace them with the
+          company&rsquo;s filed statements.
         </div>
       )}
+
 
       {editing ? (
         <FinancialsEdit
