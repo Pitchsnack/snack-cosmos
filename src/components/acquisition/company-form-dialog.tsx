@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, Link2, Loader2, Sparkles, Unlink } from "lucide-react";
+import { ExternalLink, Link2, Sparkles, Unlink } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
 } from "@/lib/acquisition/strategy-store";
 import type { EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import type { StartupListItem } from "@/lib/startups.functions";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 
 export const MAX_ATTRACTIVE_KEYWORDS = 5;
 
@@ -417,7 +418,7 @@ export function CompanyFormDialog({
             Cancel
           </Button>
           <Button onClick={() => void save()} disabled={saving}>
-            {saving && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+            {saving && <ButtonSpinner invert={false} className="mr-1.5" />}
             {submitLabel}
           </Button>
         </DialogFooter>

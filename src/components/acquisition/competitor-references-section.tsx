@@ -19,6 +19,7 @@ import {
   type CompetitorReference,
   type ExtractionStatus,
 } from "@/lib/acquisition/strategy-store";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 
 type Updater = (mutate: (draft: AcquisitionStrategy) => AcquisitionStrategy) => void;
 
@@ -236,7 +237,7 @@ export function CompetitorReferencesSection({
                               )}
                             >
                               {c.status === "pending" && (
-                                <span className="h-2 w-2 animate-spin rounded-full border border-current border-t-transparent" />
+                                <ButtonSpinner invert={false} />
                               )}
                               {EXTRACTION_STATUS_LABEL[c.status]}
                             </span>

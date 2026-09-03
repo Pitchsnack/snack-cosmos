@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw, Sparkles, Loader2, Upload } from "lucide-react";
+import { X, RefreshCw, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +60,7 @@ import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/a
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -945,7 +946,7 @@ export function StartupForm({
               Cancel
             </Button>
             <Button type="submit" disabled={enriching || !startupName.trim()} className="gap-2">
-              {enriching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {enriching ? <ButtonSpinner invert={false} /> : <Sparkles className="h-4 w-4" />}
               {enriching ? "Enriching…" : "Auto Enrich & Continue"}
             </Button>
           </div>

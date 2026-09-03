@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Pencil, RefreshCw } from "lucide-react";
+import { ArrowLeft, Pencil, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ import {
   saveStartupFinancials,
 } from "@/lib/financials-edit.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 
 const NAVY = "#122B54";
@@ -194,8 +195,8 @@ export function StartupFinancialsPage({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center gap-2 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" /> Loading financials…
+      <div className="p-6">
+        <HatSkeleton lines={6} headMessage="Loading financial overview…" />
       </div>
     );
   }

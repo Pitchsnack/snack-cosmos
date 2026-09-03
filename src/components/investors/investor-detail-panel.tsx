@@ -9,7 +9,6 @@ import {
   Linkedin,
   Briefcase,
   Pencil,
-  Loader2,
   Globe,
   Building2,
   Coins,
@@ -38,6 +37,7 @@ import { ConnectionAction, ConnectionStateCard } from "@/components/startups/con
 import { useConnectionState } from "@/hooks/use-connection-state";
 import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
+import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 function monogram(name: string) {
   return name
@@ -131,9 +131,8 @@ export function InvestorDetailPanel({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 text-muted-foreground">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="text-sm">Loading investor…</span>
+      <div className="min-h-[40vh] p-8">
+        <HatSkeleton lines={5} headMessage="Loading investor…" />
       </div>
     );
   }

@@ -8,7 +8,6 @@ import {
   RotateCcw,
   Check,
   AlertCircle,
-  Loader2,
   ScanLine,
   Plus,
   Mail,
@@ -49,6 +48,7 @@ import {
   type FieldConfidence,
   type ScanStage,
 } from "@/lib/contacts/quick-add-adapter";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 
 export const Route = createFileRoute("/_authenticated/contacts/quick-add")({
   head: () => ({
@@ -414,7 +414,7 @@ function QuickAddContactPage() {
                 </Button>
                 <Button onClick={saveAndScanNext} disabled={saving}>
                   {saving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <ButtonSpinner invert={false} className="mr-2" />
                   ) : (
                     <Camera className="mr-2 h-4 w-4" />
                   )}
@@ -783,7 +783,7 @@ function StageIcon({ status }: { status: StageState["status"] }) {
     return <Check className="h-4 w-4 text-emerald-600" aria-label="Done" />;
   if (status === "in_progress")
     return (
-      <Loader2 className="h-4 w-4 animate-spin text-primary" aria-label="In progress" />
+      <ButtonSpinner invert={false} className="text-primary" />
     );
   if (status === "review")
     return (

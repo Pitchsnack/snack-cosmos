@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Loader2, Search, Users } from "lucide-react";
+import { ArrowLeft, Search, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import {
 import { getStartupInvestors } from "@/lib/startups.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { isUuid } from "@/lib/uuid";
+import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 export const Route = createFileRoute("/_authenticated/startups/$id/investors")({
   head: () => ({
@@ -94,8 +95,8 @@ function StartupInvestorsPage() {
   if (!valid) return <p className="text-sm text-destructive">Invalid startup id.</p>;
   if (isLoading)
     return (
-      <div className="flex min-h-[40vh] items-center justify-center gap-2 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" /> <span className="text-sm">Loading investors…</span>
+      <div className="min-h-[40vh] p-6">
+        <HatSkeleton lines={5} headMessage="Loading investors…" />
       </div>
     );
   if (error || !data) return <p className="text-sm text-destructive">Failed to load investors.</p>;

@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { usePermissions } from "@/hooks/use-session-context";
 import { useSessionContext } from "@/hooks/use-session-context";
 import type { Permission } from "@/lib/permissions";
+import { Loading } from "@/components/ui/PitchSnackLoader";
 
 interface PermissionGuardProps {
   /** Required permission. Either `permission` or `anyOf` must be provided. */
@@ -72,8 +72,7 @@ export function PermissionGuard({
           aria-busy="true"
           className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground"
         >
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading…
+          <Loading size="md" message="Loading…" />
         </div>
       )
     );

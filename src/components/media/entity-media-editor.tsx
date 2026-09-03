@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Image as ImageIcon, Upload, X, ZoomIn, Loader2, Lock, Unlock, Camera, Crop,
+  Image as ImageIcon, Upload, X, ZoomIn, Lock, Unlock, Camera, Crop,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
 } from "@/lib/media/media-capture-adapter";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { MediaPreviewDialog } from "@/components/media/media-preview-dialog";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 
 /**
  * Shared remove-X button. Only rendered when the tile has an image.
@@ -551,7 +552,7 @@ function MediaSlots({
                     onClick={handleCaptureScreenshot}
                   >
                     {capturing
-                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                      ? <ButtonSpinner invert={false} />
                       : <Camera className="h-3 w-3" />}
                     <span className="ml-1">Screenshot</span>
                   </Button>

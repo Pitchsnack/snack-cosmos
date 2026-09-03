@@ -17,7 +17,6 @@ import {
   Info,
   PieChart,
   Layers,
-  Loader2,
   Maximize2,
   Minus,
   Search,
@@ -45,6 +44,7 @@ import { getInvestorPortfolio } from "@/lib/investors.functions";
 import { useHasSession } from "@/hooks/use-has-session";
 import { isUuid } from "@/lib/uuid";
 import { cn } from "@/lib/utils";
+import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 export type InvestorPortfolioSearch = InvestorDirectorySearch;
 
@@ -216,8 +216,8 @@ function InvestorPortfolioPage() {
   if (!valid) return <p className="text-sm text-destructive">Invalid investor id.</p>;
   if (isLoading)
     return (
-      <div className="flex min-h-[40vh] items-center justify-center gap-2 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" /> <span className="text-sm">Loading portfolio…</span>
+      <div className="min-h-[40vh] p-6">
+        <HatSkeleton lines={6} headMessage="Loading portfolio…" />
       </div>
     );
   if (error || !data) return <p className="text-sm text-destructive">Failed to load portfolio.</p>;

@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Save, Sparkles, Trash2, X } from "lucide-react";
+import { Plus, Save, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import {
   type FinancialYearDraft,
 } from "@/lib/financials-edit.functions";
 import type { StartupFinancials } from "@/lib/financials.functions";
+import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 
 type Group = "income" | "position" | "cashFlow" | "ratios";
 
@@ -282,11 +283,13 @@ export function FinancialsEdit({
         <div className="flex items-center gap-2">
           <Button size="sm" onClick={() => enrichMutation.mutate()} disabled={busy}>
             {enrichMutation.isPending ? (
-              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              <ButtonSpinner invert={false} className="mr-1" />
             ) : (
               <Sparkles className="mr-1 h-3.5 w-3.5" />
             )}
-            Auto Enrich
+            <span className={enrichMutation.isPending ? "ps-btn-loading__label" : undefined}>
+              {enrichMutation.isPending ? "Enriching…" : "Auto Enrich"}
+            </span>
           </Button>
           <span className="text-xs text-muted-foreground">
             Looks the company up in the DBD Data Warehouse. Nothing is saved until you click Save.
@@ -301,11 +304,13 @@ export function FinancialsEdit({
           </Button>
           <Button size="sm" onClick={() => saveMutation.mutate()} disabled={busy}>
             {saveMutation.isPending ? (
-              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              <ButtonSpinner invert={false} className="mr-1" />
             ) : (
               <Save className="mr-1 h-3.5 w-3.5" />
             )}
-            Save
+            <span className={saveMutation.isPending ? "ps-btn-loading__label" : undefined}>
+              {saveMutation.isPending ? "Saving…" : "Save"}
+            </span>
           </Button>
         </div>
       </div>
