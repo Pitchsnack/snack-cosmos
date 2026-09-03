@@ -95,6 +95,14 @@ export function FinancialsEdit({
   const [provenance, setProvenance] = useState<Provenance | null>(null);
   const [enrichedKeys, setEnrichedKeys] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState("income");
+  const [profile, setProfile] = useState<CompanyProfileDraft>(() => ({
+    registeredType: data.profile.registeredType,
+    status: data.profile.status,
+    registeredDate: data.profile.registeredDate,
+    registeredCapital: data.profile.registeredCapital,
+    businessSize: data.profile.businessSize,
+  }));
+  const [enrichedProfileKeys, setEnrichedProfileKeys] = useState<Set<string>>(new Set());
 
   /**
    * Raw keystrokes per cell. Kept alongside the parsed numbers so partial input
