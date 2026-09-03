@@ -87,10 +87,22 @@ export function FinancialsEdit({
   const [enrichedKeys, setEnrichedKeys] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState("income");
 
+  /**
+   * Raw keystrokes per cell. Kept alongside the parsed numbers so partial input
+   * ("-", "1.", "-0.") survives typing instead of being reverted by the
+   * controlled input.
+   */
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
   const setValue = (fiscalYear: number, group: Group, code: string, raw: string) => {
+    const key = `${fiscalYear}:${group}:${code}`;
     const trimmed = raw.trim();
+    // Allow only numeric-ish input, including in-progress values.
+    if (trimmed !== "" && !/^-?[\d,]*\.?\d*$/.test(trimmed)) return;
+    setDrafts((prev) => ({ ...prev, [key]: raw }));
+
     const parsed = trimmed === "" ? null : Number(trimmed.replace(/,/g, ""));
-    if (parsed !== null && !Number.isFinite(parsed)) return;
+    if (parsed !== null && !Number.isFinite(parsed)) return; // "-" / "." — keep text, no value yet
     setYears((prev) =>
       prev.map((y) =>
         y.fiscalYear === fiscalYear
@@ -100,10 +112,11 @@ export function FinancialsEdit({
     );
     setEnrichedKeys((prev) => {
       const next = new Set(prev);
-      next.delete(`${fiscalYear}:${group}:${code}`);
+      next.delete(key);
       return next;
     });
   };
+
 
   const addYear = () => {
     const next = years.length ? Math.max(...years.map((y) => y.fiscalYear)) + 1 : new Date().getFullYear();
