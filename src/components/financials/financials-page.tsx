@@ -28,6 +28,7 @@ import {
   saveStartupFinancials,
 } from "@/lib/financials-edit.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+import { FINANCIALS_STALE_TIME, financialsQueryKey } from "@/hooks/use-has-financials";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 
