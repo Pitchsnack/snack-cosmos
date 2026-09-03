@@ -1,0 +1,144 @@
+/* ============================================================
+   PitchSnack loading indicators
+   Two variants: "tip of the hat" (spinner) and "skeleton header".
+   CSS only — no JS, no external requests.
+   Place at: /public/css/pitchsnack-loader.css
+   Requires: /public/img/pitchsnack-hat.svg
+   ============================================================ */
+
+:root{
+  --ps-loader-ink: #0F1B33;      /* hat colour on light surfaces */
+  --ps-skeleton-bg: #DCE1E9;     /* skeleton bar fill */
+  --ps-skeleton-radius: 6px;
+}
+
+/* ── shared ───────────────────────────────────────────────── */
+
+.ps-loader{
+  display:block;
+  width:88px;
+  color:var(--ps-loader-ink);   /* fill is currentColor */
+  flex:none;
+}
+
+/* on dark surfaces */
+.ps-loader--invert{ color:#FFFFFF; }
+
+/* sizes */
+.ps-loader--xs{ width:18px; }   /* inside buttons */
+.ps-loader--sm{ width:34px; }   /* inline, table rows */
+.ps-loader--md{ width:64px; }   /* panels, cards */
+.ps-loader--lg{ width:104px; }  /* full page */
+
+/* ── A · TIP OF THE HAT ───────────────────────────────────── */
+
+.ps-tip{
+  transform-origin:78% 88%;
+  animation:ps-tip 2.2s cubic-bezier(.42,0,.3,1) infinite;
+}
+
+@keyframes ps-tip{
+  0%, 58%, 100% { transform:translate(0,0) rotate(0deg); }
+  22%, 40%      { transform:translate(-7%,-16%) rotate(-19deg); }
+}
+
+/* centred block with optional message */
+.ps-loading{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  padding:48px 20px;
+  min-height:180px;
+}
+.ps-loading__msg{
+  font-size:13px;
+  color:#6B7280;
+  text-align:center;
+  max-width:34ch;
+}
+
+/* full-page overlay */
+.ps-loading--overlay{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  background:rgba(255,255,255,.86);
+  backdrop-filter:blur(2px);
+}
+
+/* inside a button — keeps the label in place.
+   The hat stays STILL here; the label pulses instead. A tipping hat at 18px
+   reads as a jitter, and the moving element sits better on the word. */
+.ps-btn-loading{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+}
+
+/* label pulse — pair with a static hat */
+.ps-btn-loading__label{
+  animation:ps-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes ps-blink{
+  0%, 100% { opacity:1; }
+  50%      { opacity:.42; }
+}
+
+/* ── B · SKELETON HEADER ──────────────────────────────────── */
+
+.ps-skeleton{ width:100%; }
+
+.ps-skeleton__head{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding:22px 0 18px;
+}
+.ps-skeleton__head .ps-loader{ width:32px; }
+.ps-skeleton__head-msg{ font-size:12px; color:#9AA3AF; }
+
+.ps-skeleton__bar{
+  height:10px;
+  border-radius:var(--ps-skeleton-radius);
+  background:var(--ps-skeleton-bg);
+  margin:10px 0;
+  animation:ps-pulse 1.4s ease-in-out infinite;
+}
+.ps-skeleton__bar--w95{ width:95%; }
+.ps-skeleton__bar--w85{ width:85%; }
+.ps-skeleton__bar--w60{ width:60%; }
+.ps-skeleton__bar--w40{ width:40%; }
+.ps-skeleton__bar--tall{ height:22px; }
+
+/* stagger so the page does not strobe */
+.ps-skeleton__bar:nth-child(2){ animation-delay:.12s; }
+.ps-skeleton__bar:nth-child(3){ animation-delay:.24s; }
+.ps-skeleton__bar:nth-child(4){ animation-delay:.36s; }
+.ps-skeleton__bar:nth-child(5){ animation-delay:.48s; }
+
+@keyframes ps-pulse{
+  0%,100%{ opacity:.5; }
+  50%    { opacity:1; }
+}
+
+/* ── accessibility ────────────────────────────────────────── */
+
+@media (prefers-reduced-motion:reduce){
+  .ps-tip,
+  .ps-skeleton__bar,
+  .ps-btn-loading__label{
+    animation:none !important;
+  }
+  .ps-skeleton__bar{ opacity:.75; }
+}
+
+/* screen-reader-only text paired with role="status" */
+.ps-sr{
+  position:absolute; width:1px; height:1px;
+  padding:0; margin:-1px; overflow:hidden;
+  clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
