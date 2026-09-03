@@ -304,6 +304,7 @@ export function FinancialsEdit({
                 sections={sections[group]}
                 years={years}
                 enrichedKeys={enrichedKeys}
+                drafts={drafts}
                 onChange={setValue}
                 onRemoveYear={removeYear}
               />
@@ -320,6 +321,7 @@ function EditTable({
   sections,
   years,
   enrichedKeys,
+  drafts,
   onChange,
   onRemoveYear,
 }: {
@@ -327,6 +329,7 @@ function EditTable({
   sections: { title: string | null; rows: StatementRowDef[] }[];
   years: FinancialYearDraft[];
   enrichedKeys: Set<string>;
+  drafts: Record<string, string>;
   onChange: (fiscalYear: number, group: Group, code: string, value: string) => void;
   onRemoveYear: (fiscalYear: number) => void;
 }) {
@@ -374,8 +377,12 @@ function EditTable({
                     {row.label}
                   </td>
                   {years.map((y) => {
+                    const cellKey = `${y.fiscalYear}:${group}:${row.code}`;
                     const value = (y[group] as Record<string, number | null>)[row.code];
-                    const enriched = enrichedKeys.has(`${y.fiscalYear}:${group}:${row.code}`);
+                    const enriched = enrichedKeys.has(cellKey);
+                    // Show the user's in-progress text ("-", "1.") verbatim.
+                    const text =
+                      drafts[cellKey] ?? (value === null || value === undefined ? "" : String(value));
                     return (
                       <td key={y.fiscalYear} className="px-2 py-1">
                         <div className="flex items-center justify-end gap-1">
@@ -386,7 +393,7 @@ function EditTable({
                           )}
                           <Input
                             inputMode="decimal"
-                            value={value === null || value === undefined ? "" : String(value)}
+                            value={text}
                             placeholder=""
                             onChange={(e) => onChange(y.fiscalYear, group, row.code, e.target.value)}
                             className={`h-8 w-32 text-right ${enriched ? "border-primary/60 bg-primary/5" : ""}`}
