@@ -388,7 +388,11 @@ export function CreateStartupDialog({
             }
             window.open(`/startups/${c.id}`, "_blank", "noopener,noreferrer");
           }}
-          onCreatePendingAnyway={websiteDup.close}
+          onCreatePendingAnyway={() => {
+            websiteDup.close();
+            createM.mutate();
+          }}
+
         />
 
       </DialogContent>
