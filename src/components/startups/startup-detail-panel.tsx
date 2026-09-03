@@ -285,40 +285,9 @@ export function StartupDetailPanel({
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          {showEdit && canManage && !compact && (
-            <Button
-              asChild
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              {isMyWorkspace ? (
-                <Link to="/my-startups/$id/edit" params={{ id }} search={myStartupsReturnSearch}>
-                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
-                </Link>
-              ) : (
-                <Link to="/startups/$id/edit" params={{ id }} search={directoryReturnSearch}>
-                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
-                </Link>
-              )}
-            </Button>
-          )}
-          {!compact && (
-            <Button asChild size="sm" variant="outline">
-              {isMyWorkspace ? (
-                <Link to="/my-startups/$id/cover" params={{ id }}>
-                  <LayoutTemplate className="mr-1 h-3.5 w-3.5" /> View Cover Page
-                </Link>
-              ) : (
-                <Link to="/startups/$id/cover" params={{ id }}>
-                  <LayoutTemplate className="mr-1 h-3.5 w-3.5" /> View Cover Page
-                </Link>
-              )}
-            </Button>
-          )}
-          {compact && (
-
+          {(
             <div className="flex items-center gap-1">
+
               {isMyWorkspace ? (
                 <Button
                   size="sm"
