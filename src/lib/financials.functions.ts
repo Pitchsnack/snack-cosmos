@@ -120,12 +120,14 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       startupName: startup.startup_name,
       registeredName: startup.registered_name ?? null,
       profile: {
-        registeredType: startup.company_type ?? null,
-        status: startup.status ?? null,
-        registeredDate: startup.year_founded ? String(startup.year_founded) : null,
-        registeredCapital: null,
+        registeredType: (s.registered_type as string | null) ?? startup.company_type ?? null,
+        status: (s.registered_status as string | null) ?? startup.status ?? null,
+        registeredDate:
+          (s.registered_date as string | null) ??
+          (startup.year_founded ? String(startup.year_founded) : null),
+        registeredCapital: (s.registered_capital as string | null) ?? null,
         registeredNumber: startup.registered_number ?? null,
-        businessSize: startup.company_size ?? null,
+        businessSize: (s.business_size as string | null) ?? startup.company_size ?? null,
       },
       currency: statements[0]?.currency ?? "THB",
       years: statements.map((s) => s.fiscal_year),
