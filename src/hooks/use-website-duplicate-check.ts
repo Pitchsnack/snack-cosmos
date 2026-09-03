@@ -42,11 +42,12 @@ export function useWebsiteDuplicateCheck(excludeId?: string) {
     [rows],
   );
 
+  /** Runs the check and also returns the candidates so callers can gate submit. */
   const check = useCallback(
-    async (url: string) => {
+    async (url: string): Promise<DuplicateCandidate[]> => {
       const host = normalizeWebsite(url);
       const term = websiteSearchTerm(url);
-      if (!host || !term) return;
+      if (!host || !term) return [];
       setChecking(true);
       try {
         const res = await fn({ data: { search: term, pageSize: 50 } });
@@ -73,15 +74,18 @@ export function useWebsiteDuplicateCheck(excludeId?: string) {
 
         setTypedValue(url.trim());
         setCandidates(merged);
+        return merged;
       } catch {
         // Duplicate check is advisory — never block the form on failure.
         setCandidates([]);
+        return [];
       } finally {
         setChecking(false);
       }
     },
     [fn, excludeId],
   );
+
 
   return { check, checking, candidates, typedValue, close, open: candidates.length > 0, startupById };
 }

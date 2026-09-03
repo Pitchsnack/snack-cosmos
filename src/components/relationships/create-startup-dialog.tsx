@@ -37,7 +37,7 @@ import { assertNoFixtureIds, defaultIntakeAdapter } from "@/lib/default-intake";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoSlot, EMPTY_SLOT, type SlotState } from "@/components/media/entity-media-editor";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
-import { useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
+import { normalizeWebsite, useWebsiteDuplicateCheck } from "@/hooks/use-website-duplicate-check";
 import { DuplicateWarningDialog } from "@/components/relationships/duplicate-warning-dialog";
 
 interface Props {
@@ -185,7 +185,26 @@ export function CreateStartupDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit = !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending;
+  const canSubmit =
+    !!name.trim() && !!agentId && !!aiAgentId && !createM.isPending && !websiteDup.checking;
+
+  /**
+   * Always resolve the duplicate check before creating: clicking "Create
+   * startup" straight after typing a URL must still surface "Use This Startup"
+   * rather than silently writing a second copy of an existing company.
+   */
+  const submit = async () => {
+    const url = websiteUrl.trim();
+    if (url) {
+      const alreadyChecked =
+        websiteDup.typedValue &&
+        normalizeWebsite(websiteDup.typedValue) === normalizeWebsite(url);
+      const candidates = alreadyChecked ? websiteDup.candidates : await websiteDup.check(url);
+      if (candidates.length > 0) return; // duplicate dialog takes over
+    }
+    createM.mutate();
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -339,9 +358,10 @@ export function CreateStartupDialog({
           >
             Cancel
           </Button>
-          <Button type="button" onClick={() => createM.mutate()} disabled={!canSubmit}>
-            {createM.isPending ? "Creating…" : "Create startup"}
+          <Button type="button" onClick={() => void submit()} disabled={!canSubmit}>
+            {createM.isPending ? "Creating…" : websiteDup.checking ? "Checking…" : "Create startup"}
           </Button>
+
         </DialogFooter>
         <DuplicateWarningDialog
           open={websiteDup.open}
@@ -368,7 +388,11 @@ export function CreateStartupDialog({
             }
             window.open(`/startups/${c.id}`, "_blank", "noopener,noreferrer");
           }}
-          onCreatePendingAnyway={websiteDup.close}
+          onCreatePendingAnyway={() => {
+            websiteDup.close();
+            createM.mutate();
+          }}
+
         />
 
       </DialogContent>

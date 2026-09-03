@@ -87,10 +87,22 @@ export function FinancialsEdit({
   const [enrichedKeys, setEnrichedKeys] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState("income");
 
+  /**
+   * Raw keystrokes per cell. Kept alongside the parsed numbers so partial input
+   * ("-", "1.", "-0.") survives typing instead of being reverted by the
+   * controlled input.
+   */
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
   const setValue = (fiscalYear: number, group: Group, code: string, raw: string) => {
+    const key = `${fiscalYear}:${group}:${code}`;
     const trimmed = raw.trim();
+    // Allow only numeric-ish input, including in-progress values.
+    if (trimmed !== "" && !/^-?[\d,]*\.?\d*$/.test(trimmed)) return;
+    setDrafts((prev) => ({ ...prev, [key]: raw }));
+
     const parsed = trimmed === "" ? null : Number(trimmed.replace(/,/g, ""));
-    if (parsed !== null && !Number.isFinite(parsed)) return;
+    if (parsed !== null && !Number.isFinite(parsed)) return; // "-" / "." — keep text, no value yet
     setYears((prev) =>
       prev.map((y) =>
         y.fiscalYear === fiscalYear
@@ -100,10 +112,11 @@ export function FinancialsEdit({
     );
     setEnrichedKeys((prev) => {
       const next = new Set(prev);
-      next.delete(`${fiscalYear}:${group}:${code}`);
+      next.delete(key);
       return next;
     });
   };
+
 
   const addYear = () => {
     const next = years.length ? Math.max(...years.map((y) => y.fiscalYear)) + 1 : new Date().getFullYear();
@@ -136,6 +149,7 @@ export function FinancialsEdit({
         toast.error(result.message ?? "Auto Enrich returned no data.");
         return;
       }
+      setDrafts({}); // proposed values replace any in-progress text
       const touched = new Set<string>();
       setYears((prev) => {
         const map = new Map(prev.map((y) => [y.fiscalYear, y]));
@@ -291,6 +305,7 @@ export function FinancialsEdit({
                 sections={sections[group]}
                 years={years}
                 enrichedKeys={enrichedKeys}
+                drafts={drafts}
                 onChange={setValue}
                 onRemoveYear={removeYear}
               />
@@ -307,6 +322,7 @@ function EditTable({
   sections,
   years,
   enrichedKeys,
+  drafts,
   onChange,
   onRemoveYear,
 }: {
@@ -314,6 +330,7 @@ function EditTable({
   sections: { title: string | null; rows: StatementRowDef[] }[];
   years: FinancialYearDraft[];
   enrichedKeys: Set<string>;
+  drafts: Record<string, string>;
   onChange: (fiscalYear: number, group: Group, code: string, value: string) => void;
   onRemoveYear: (fiscalYear: number) => void;
 }) {
@@ -361,8 +378,12 @@ function EditTable({
                     {row.label}
                   </td>
                   {years.map((y) => {
+                    const cellKey = `${y.fiscalYear}:${group}:${row.code}`;
                     const value = (y[group] as Record<string, number | null>)[row.code];
-                    const enriched = enrichedKeys.has(`${y.fiscalYear}:${group}:${row.code}`);
+                    const enriched = enrichedKeys.has(cellKey);
+                    // Show the user's in-progress text ("-", "1.") verbatim.
+                    const text =
+                      drafts[cellKey] ?? (value === null || value === undefined ? "" : String(value));
                     return (
                       <td key={y.fiscalYear} className="px-2 py-1">
                         <div className="flex items-center justify-end gap-1">
@@ -373,7 +394,7 @@ function EditTable({
                           )}
                           <Input
                             inputMode="decimal"
-                            value={value === null || value === undefined ? "" : String(value)}
+                            value={text}
                             placeholder=""
                             onChange={(e) => onChange(y.fiscalYear, group, row.code, e.target.value)}
                             className={`h-8 w-32 text-right ${enriched ? "border-primary/60 bg-primary/5" : ""}`}
