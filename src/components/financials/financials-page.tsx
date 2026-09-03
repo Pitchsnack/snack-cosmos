@@ -186,8 +186,10 @@ export function StartupFinancialsPage({
   };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["startup-financials", id],
+    queryKey: financialsQueryKey(id),
     queryFn: () => fetchFinancials({ data: { startupId: id } }),
+    staleTime: FINANCIALS_STALE_TIME,
+    gcTime: 10 * 60_000,
   });
 
 
