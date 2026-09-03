@@ -22,7 +22,13 @@ import { FinIcon } from "@/components/financials/fin-icon";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
 import { getStartupFinancials } from "@/lib/financials.functions";
 import type { StartupFinancials } from "@/lib/financials.functions";
+import {
+  autoEnrichFinancials,
+  clearStartupFinancials,
+  saveStartupFinancials,
+} from "@/lib/financials-edit.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+
 
 const NAVY = "#122B54";
 const BLUE = "#2563EB";
