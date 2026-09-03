@@ -179,9 +179,15 @@ export function fmtPercent(value: number | null | undefined): string {
   return `${value.toFixed(2)}%`;
 }
 
-export function fmtCompact(value: number | null | undefined): string {
+/** Compact notation used by the Financial Overview KPI cards and charts. */
+export function fmtCompact(value: number | null | undefined, digits = 2): string {
   if (value === null || value === undefined || Number.isNaN(value)) return EMPTY;
-  return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  const unit =
+    abs >= 1e12 ? ["T", 1e12] : abs >= 1e9 ? ["B", 1e9] : abs >= 1e6 ? ["M", 1e6] : abs >= 1e3 ? ["K", 1e3] : null;
+  if (!unit) return `${sign}${abs.toFixed(digits)}`;
+  return `${sign}${(abs / (unit[1] as number)).toFixed(digits)}${unit[0]}`;
 }
 
 export function pctChange(current?: number | null, previous?: number | null): number | null {
