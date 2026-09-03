@@ -265,11 +265,24 @@ export function StartupFinancialsPage({
             Export PDF
           </button>
           {canManage && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Clear stored data and re-run Auto extraction from DBD"
+            >
+              <RefreshCw className={`mr-1 h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              {refreshing ? "Refreshing…" : "Refresh data"}
+            </Button>
+          )}
+          {canManage && (
             <Button size="sm" variant="outline" onClick={() => setEditing((v) => !v)}>
               <Pencil className="mr-1 h-3.5 w-3.5" />
               {editing ? "Close editor" : "Edit"}
             </Button>
           )}
+
         </div>
       </div>
 
