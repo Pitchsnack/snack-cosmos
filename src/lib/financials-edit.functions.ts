@@ -141,6 +141,7 @@ export const autoEnrichFinancials = createServerFn({ method: "POST" })
           matchedBy: outcome.matchedBy,
           matchedRegisteredNumber: outcome.company.registeredNumber,
           matchedRegisteredName: outcome.company.registeredName,
+          profile: outcome.company.profile,
           message: "The company was found, but no financial data was available for enrichment.",
         };
       case "ok": {
@@ -163,6 +164,7 @@ export const autoEnrichFinancials = createServerFn({ method: "POST" })
           sourceReference: outcome.company.sourceReference,
           retrievedAt: new Date().toISOString(),
           years,
+          profile: outcome.company.profile,
           warnings: outcome.warnings,
         };
       }
