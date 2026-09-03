@@ -24,6 +24,15 @@ export interface FinancialYearDraft {
   ratios: Record<string, number | null>;
 }
 
+/** Editable Company Profile block (mirrors the DBD profile page). */
+export interface CompanyProfileDraft {
+  registeredType: string | null;
+  status: string | null;
+  registeredDate: string | null;
+  registeredCapital: string | null;
+  businessSize: string | null;
+}
+
 export interface AutoEnrichFinancialsResult {
   status:
     | "ok"
@@ -41,6 +50,8 @@ export interface AutoEnrichFinancialsResult {
   retrievedAt?: string;
   candidates?: { registeredNumber: string | null; registeredName: string | null }[];
   years?: FinancialYearDraft[];
+  /** Company Profile values read from the profile page, when available. */
+  profile?: CompanyProfileDraft;
   warnings?: string[];
 }
 
