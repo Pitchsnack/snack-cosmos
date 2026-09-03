@@ -380,7 +380,8 @@ export function FinancialsOverview({
               % Change
             </span>
           </div>
-          <svg viewBox="0 0 460 214" width="100%" className="block">
+          <div className="flex min-h-[210px] flex-1 items-stretch">
+          <svg viewBox="0 0 460 214" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="block">
             <g fontSize="9.5" fill={C.muted}>
               <text x="0" y="16">
                 {currency}
@@ -446,6 +447,7 @@ export function FinancialsOverview({
               );
             })}
           </svg>
+          </div>
           <table className="mt-auto w-full border-collapse pt-1.5 text-[11.5px]">
             <thead>
               <tr>
