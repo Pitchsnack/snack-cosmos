@@ -2075,6 +2075,7 @@ export type Database = {
       }
       startups: {
         Row: {
+          business_size: string | null
           city: string | null
           company_size: string | null
           company_type: string | null
@@ -2093,8 +2094,12 @@ export type Database = {
           market_tags: string[]
           product_tags: string[]
           region: string | null
+          registered_capital: string | null
+          registered_date: string | null
           registered_name: string | null
           registered_number: string | null
+          registered_status: string | null
+          registered_type: string | null
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -2108,6 +2113,7 @@ export type Database = {
           year_founded: number | null
         }
         Insert: {
+          business_size?: string | null
           city?: string | null
           company_size?: string | null
           company_type?: string | null
@@ -2126,8 +2132,12 @@ export type Database = {
           market_tags?: string[]
           product_tags?: string[]
           region?: string | null
+          registered_capital?: string | null
+          registered_date?: string | null
           registered_name?: string | null
           registered_number?: string | null
+          registered_status?: string | null
+          registered_type?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -2141,6 +2151,7 @@ export type Database = {
           year_founded?: number | null
         }
         Update: {
+          business_size?: string | null
           city?: string | null
           company_size?: string | null
           company_type?: string | null
@@ -2159,8 +2170,12 @@ export type Database = {
           market_tags?: string[]
           product_tags?: string[]
           region?: string | null
+          registered_capital?: string | null
+          registered_date?: string | null
           registered_name?: string | null
           registered_number?: string | null
+          registered_status?: string | null
+          registered_type?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string
