@@ -61,11 +61,14 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
 
     const { data: startup, error: sErr } = await supabase
       .from("startups")
-      .select("id, startup_name, registered_name, registered_number, company_type, company_size, status, year_founded")
+      .select(
+        "id, startup_name, registered_name, registered_number, company_type, company_size, status, year_founded, registered_type, registered_status, registered_date, registered_capital, business_size",
+      )
       .eq("id", startupId)
       .maybeSingle();
     if (sErr) throw new Error(sErr.message);
     if (!startup) throw new Error("Startup not found");
+    const s = startup as unknown as Record<string, string | number | null>;
 
     const [stmts, income, position, cash, ratios] = await Promise.all([
       supabase
