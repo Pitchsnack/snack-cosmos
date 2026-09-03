@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Loader2, Pencil } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowLeft, Loader2, Pencil, RefreshCw } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +22,13 @@ import { FinIcon } from "@/components/financials/fin-icon";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
 import { getStartupFinancials } from "@/lib/financials.functions";
 import type { StartupFinancials } from "@/lib/financials.functions";
+import {
+  autoEnrichFinancials,
+  clearStartupFinancials,
+  saveStartupFinancials,
+} from "@/lib/financials-edit.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+
 
 const NAVY = "#122B54";
 const BLUE = "#2563EB";
@@ -124,18 +132,62 @@ export function StartupFinancialsPage({
   workspace?: "startups" | "my-startups";
 }) {
   const fetchFinancials = useServerFn(getStartupFinancials);
+  const clearFinancials = useServerFn(clearStartupFinancials);
+  const enrichFinancials = useServerFn(autoEnrichFinancials);
+  const saveFinancials = useServerFn(saveStartupFinancials);
   const queryClient = useQueryClient();
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
   const [tab, setTab] = useState("overview");
   const [editing, setEditing] = useState(false);
   const [year, setYear] = useState<number | undefined>(undefined);
+  const [refreshing, setRefreshing] = useState(false);
 
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    const ok = window.confirm(
+      "Clear all stored financial data for this startup and re-extract it from the DBD Data Warehouse?",
+    );
+    if (!ok) return;
+    setRefreshing(true);
+    const toastId = toast.loading("Clearing data and re-extracting…");
+    try {
+      const result = await enrichFinancials({ data: { startupId: id } });
+      if (result.status !== "ok" || !result.years?.length) {
+        toast.error(result.message ?? "Auto extraction returned no data. Existing data kept.", {
+          id: toastId,
+        });
+        return;
+      }
+      await clearFinancials({ data: { startupId: id } });
+      await saveFinancials({
+        data: {
+          startupId: id,
+          years: result.years,
+          provenance: {
+            source: "DBD_DATA_WAREHOUSE",
+            sourceReference: result.sourceReference ?? null,
+            matchedRegisteredNumber: result.matchedRegisteredNumber ?? null,
+            matchedRegisteredName: result.matchedRegisteredName ?? null,
+            retrievedAt: result.retrievedAt ?? null,
+          },
+        },
+      });
+      await queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
+      setYear(undefined);
+      toast.success(`Refreshed ${result.years.length} fiscal year(s) from DBD.`, { id: toastId });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Refresh failed.", { id: toastId });
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["startup-financials", id],
     queryFn: () => fetchFinancials({ data: { startupId: id } }),
   });
+
 
 
 
@@ -213,11 +265,24 @@ export function StartupFinancialsPage({
             Export PDF
           </button>
           {canManage && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Clear stored data and re-run Auto extraction from DBD"
+            >
+              <RefreshCw className={`mr-1 h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              {refreshing ? "Refreshing…" : "Refresh data"}
+            </Button>
+          )}
+          {canManage && (
             <Button size="sm" variant="outline" onClick={() => setEditing((v) => !v)}>
               <Pencil className="mr-1 h-3.5 w-3.5" />
               {editing ? "Close editor" : "Edit"}
             </Button>
           )}
+
         </div>
       </div>
 
