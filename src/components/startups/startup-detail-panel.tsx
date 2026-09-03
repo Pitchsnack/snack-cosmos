@@ -17,7 +17,6 @@ import {
   X,
   Check,
   Share2,
-  LayoutTemplate,
   BarChart3,
   Target,
 
@@ -125,7 +124,7 @@ function FinancialsAction({
 
 export function StartupDetailPanel({
   id,
-  showEdit = true,
+  showEdit: _showEdit = true,
   compact = false,
   showPublication = false,
   workspace = "startups",
@@ -285,40 +284,9 @@ export function StartupDetailPanel({
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          {showEdit && canManage && !compact && (
-            <Button
-              asChild
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              {isMyWorkspace ? (
-                <Link to="/my-startups/$id/edit" params={{ id }} search={myStartupsReturnSearch}>
-                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
-                </Link>
-              ) : (
-                <Link to="/startups/$id/edit" params={{ id }} search={directoryReturnSearch}>
-                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
-                </Link>
-              )}
-            </Button>
-          )}
-          {!compact && (
-            <Button asChild size="sm" variant="outline">
-              {isMyWorkspace ? (
-                <Link to="/my-startups/$id/cover" params={{ id }}>
-                  <LayoutTemplate className="mr-1 h-3.5 w-3.5" /> View Cover Page
-                </Link>
-              ) : (
-                <Link to="/startups/$id/cover" params={{ id }}>
-                  <LayoutTemplate className="mr-1 h-3.5 w-3.5" /> View Cover Page
-                </Link>
-              )}
-            </Button>
-          )}
-          {compact && (
+          <div className="flex items-center gap-1">
 
-            <div className="flex items-center gap-1">
+
               {isMyWorkspace ? (
                 <Button
                   size="sm"
@@ -350,17 +318,7 @@ export function StartupDetailPanel({
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    {isMyWorkspace ? (
-                      <Link to="/my-startups/$id/cover" params={{ id }} onClick={() => onClose?.()}>
-                        <LayoutTemplate className="mr-2 h-4 w-4" /> View Cover Page
-                      </Link>
-                    ) : (
-                      <Link to="/startups/$id/cover" params={{ id }} onClick={() => onClose?.()}>
-                        <LayoutTemplate className="mr-2 h-4 w-4" /> View Cover Page
-                      </Link>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+
                     {isMyWorkspace ? (
                       <Link to="/my-startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
                         <BarChart3 className="mr-2 h-4 w-4" /> Financials
@@ -424,8 +382,8 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          )}
+          </div>
+
         </div>
       </header>
 
