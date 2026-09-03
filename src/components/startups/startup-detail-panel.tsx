@@ -85,7 +85,7 @@ function FinancialsAction({
   isMyWorkspace: boolean;
   onClose?: () => void;
 }) {
-  const { hasData } = useHasFinancials(id);
+  const { hasData, prefetch } = useHasFinancials(id);
   const label = hasData ? "Financials available" : "No financial data yet";
   const content = (
     <>
@@ -99,6 +99,9 @@ function FinancialsAction({
       variant={hasData ? "default" : "outline"}
       title={label}
       aria-label={label}
+      onMouseEnter={prefetch}
+      onFocus={prefetch}
+      onPointerDown={prefetch}
       className={cn(
         "gap-1.5 rounded-full",
         hasData

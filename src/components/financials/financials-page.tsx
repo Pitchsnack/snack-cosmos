@@ -28,6 +28,7 @@ import {
   saveStartupFinancials,
 } from "@/lib/financials-edit.functions";
 import { usePermissions } from "@/hooks/use-session-context";
+import { FINANCIALS_STALE_TIME, financialsQueryKey } from "@/hooks/use-has-financials";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 
@@ -186,8 +187,10 @@ export function StartupFinancialsPage({
   };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["startup-financials", id],
+    queryKey: financialsQueryKey(id),
     queryFn: () => fetchFinancials({ data: { startupId: id } }),
+    staleTime: FINANCIALS_STALE_TIME,
+    gcTime: 10 * 60_000,
   });
 
 
@@ -195,8 +198,8 @@ export function StartupFinancialsPage({
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <HatSkeleton lines={6} headMessage="Loading financial overview…" />
+      <div className="min-h-[60vh] bg-[#F4F6FA] p-6">
+        <HatSkeleton lines={6} headMessage="Loading financial overview…" delay={0} />
       </div>
     );
   }
