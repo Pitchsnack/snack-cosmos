@@ -322,10 +322,15 @@ async function lookup(input: {
     return { status: "ambiguous", candidates: [company] };
   }
 
-  const [incomeHtml, ratioHtml] = await Promise.all([
+  const [incomeHtml, ratioHtml, infoHtml] = await Promise.all([
     scrape(profileUrl, financialActions(2)),
     scrape(profileUrl, financialActions(3)),
+    // The Thai Company Info blocks live on the untouched profile page.
+    scrape(profileUrl, [{ type: "wait", milliseconds: 8000 }]),
   ]);
+
+  const companyInfo = parseCompanyInfoTh(infoHtml ?? positionHtml);
+  if (hasAnyCompanyInfo(companyInfo)) company.companyInfo = companyInfo;
 
   const byYear = new Map<number, DbdStatement>();
   const warnings: string[] = [];
