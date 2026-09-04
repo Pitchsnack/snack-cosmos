@@ -19,6 +19,7 @@ import type {
   DbdStatement,
 } from "./dbd-provider.server";
 import { normalizeRegisteredName, normalizeRegisteredNumber, parseDbdNumber } from "./dbd-parse";
+import { hasAnyCompanyInfo, parseCompanyInfoTh } from "./dbd-company-info";
 
 const BASE = "https://datawarehouse.dbd.go.th";
 const FIRECRAWL = "https://api.firecrawl.dev/v2/scrape";
