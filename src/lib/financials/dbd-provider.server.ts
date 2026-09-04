@@ -15,6 +15,8 @@
  * UI tells the user Auto Enrich is unavailable — existing data is untouched.
  */
 
+import type { DbdCompanyInfoTh } from "./dbd-company-info";
+
 export type DbdLookupKey = "registered_number" | "registered_name";
 
 /** One normalised statement (single fiscal year) returned by the provider. */
@@ -44,6 +46,8 @@ export interface DbdCompany {
   sourceReference: string | null;
   /** Only present when the profile block could be read. */
   profile?: DbdCompanyProfile;
+  /** Thai Company Info block (ข้อมูลนิติบุคคล) when the profile page could be read. */
+  companyInfo?: DbdCompanyInfoTh;
 }
 
 export type DbdOutcome =

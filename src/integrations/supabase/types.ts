@@ -127,6 +127,302 @@ export type Database = {
           },
         ]
       }
+      company_director_th: {
+        Row: {
+          company_info_id: string
+          created_at: string
+          director_name_th: string
+          display_order: number
+          id: string
+          is_active: boolean
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_info_id: string
+          created_at?: string
+          director_name_th: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_info_id?: string
+          created_at?: string
+          director_name_th?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_director_th_company_info_id_fkey"
+            columns: ["company_info_id"]
+            isOneToOne: false
+            referencedRelation: "company_info_th"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_director_th_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_financial_submission_year_th: {
+        Row: {
+          company_info_id: string
+          created_at: string
+          financial_year_be: number
+          financial_year_ce: number | null
+          id: string
+          is_latest: boolean
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_info_id: string
+          created_at?: string
+          financial_year_be: number
+          financial_year_ce?: number | null
+          id?: string
+          is_latest?: boolean
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_info_id?: string
+          created_at?: string
+          financial_year_be?: number
+          financial_year_ce?: number | null
+          id?: string
+          is_latest?: boolean
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_financial_submission_year_th_company_info_id_fkey"
+            columns: ["company_info_id"]
+            isOneToOne: false
+            referencedRelation: "company_info_th"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_financial_submission_year_th_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_info_th: {
+        Row: {
+          authorized_signatory_th: string | null
+          business_group_th: string | null
+          business_size: string | null
+          created_at: string
+          head_office_address_th: string | null
+          id: string
+          legal_entity_status_th: string | null
+          legal_entity_type_th: string | null
+          legal_name_th: string | null
+          manually_edited_at: string | null
+          manually_edited_by: string | null
+          previous_registration_number: string | null
+          registered_capital_th_raw: string | null
+          registered_capital_thb: number | null
+          registration_date: string | null
+          registration_date_th_raw: string | null
+          registration_number: string | null
+          retrieved_at: string | null
+          source_name: string | null
+          source_url: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          authorized_signatory_th?: string | null
+          business_group_th?: string | null
+          business_size?: string | null
+          created_at?: string
+          head_office_address_th?: string | null
+          id?: string
+          legal_entity_status_th?: string | null
+          legal_entity_type_th?: string | null
+          legal_name_th?: string | null
+          manually_edited_at?: string | null
+          manually_edited_by?: string | null
+          previous_registration_number?: string | null
+          registered_capital_th_raw?: string | null
+          registered_capital_thb?: number | null
+          registration_date?: string | null
+          registration_date_th_raw?: string | null
+          registration_number?: string | null
+          retrieved_at?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          authorized_signatory_th?: string | null
+          business_group_th?: string | null
+          business_size?: string | null
+          created_at?: string
+          head_office_address_th?: string | null
+          id?: string
+          legal_entity_status_th?: string | null
+          legal_entity_type_th?: string | null
+          legal_name_th?: string | null
+          manually_edited_at?: string | null
+          manually_edited_by?: string | null
+          previous_registration_number?: string | null
+          registered_capital_th_raw?: string | null
+          registered_capital_thb?: number | null
+          registration_date?: string | null
+          registration_date_th_raw?: string | null
+          registration_number?: string | null
+          retrieved_at?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_info_th_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: true
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_latest_business_th: {
+        Row: {
+          business_code: string | null
+          business_description_th: string | null
+          business_objective_th: string | null
+          company_info_id: string
+          created_at: string
+          financial_year_be: number | null
+          id: string
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_code?: string | null
+          business_description_th?: string | null
+          business_objective_th?: string | null
+          company_info_id: string
+          created_at?: string
+          financial_year_be?: number | null
+          id?: string
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_code?: string | null
+          business_description_th?: string | null
+          business_objective_th?: string | null
+          company_info_id?: string
+          created_at?: string
+          financial_year_be?: number | null
+          id?: string
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_latest_business_th_company_info_id_fkey"
+            columns: ["company_info_id"]
+            isOneToOne: true
+            referencedRelation: "company_info_th"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_latest_business_th_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_registered_business_th: {
+        Row: {
+          business_code: string | null
+          business_description_th: string | null
+          business_objective_th: string | null
+          company_info_id: string
+          created_at: string
+          id: string
+          startup_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_code?: string | null
+          business_description_th?: string | null
+          business_objective_th?: string | null
+          company_info_id: string
+          created_at?: string
+          id?: string
+          startup_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_code?: string | null
+          business_description_th?: string | null
+          business_objective_th?: string | null
+          company_info_id?: string
+          created_at?: string
+          id?: string
+          startup_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_registered_business_th_company_info_id_fkey"
+            columns: ["company_info_id"]
+            isOneToOne: true
+            referencedRelation: "company_info_th"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_registered_business_th_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_activity: {
         Row: {
           activity_details: Json
