@@ -131,6 +131,9 @@ async function scrape(url: string, actions: Action[]): Promise<string | null> {
       onlyMainContent: false,
       waitFor: 8000,
       timeout: 120000,
+      // DBD serves Thai or English depending on the visitor's locale — always ask for Thai.
+      location: { country: "TH", languages: ["th-TH", "th"] },
+      headers: { "Accept-Language": "th-TH,th;q=0.9" },
       actions,
     }),
   });
