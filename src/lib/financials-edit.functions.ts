@@ -136,15 +136,18 @@ export const autoEnrichFinancials = createServerFn({ method: "POST" })
           })),
         };
       case "no_financials":
+        await persistCompanyInfo(supabase, data.startupId, startup, outcome.company.companyInfo);
         return {
           status: "no_financials",
           matchedBy: outcome.matchedBy,
           matchedRegisteredNumber: outcome.company.registeredNumber,
           matchedRegisteredName: outcome.company.registeredName,
           profile: outcome.company.profile,
+          companyInfoSaved: Boolean(outcome.company.companyInfo),
           message: "The company was found, but no financial data was available for enrichment.",
         };
       case "ok": {
+        await persistCompanyInfo(supabase, data.startupId, startup, outcome.company.companyInfo);
         const years: FinancialYearDraft[] = outcome.statements
           .sort((a, b) => a.fiscalYear - b.fiscalYear)
           .map((s) => ({
