@@ -44,6 +44,8 @@ export interface DbdCompany {
   sourceReference: string | null;
   /** Only present when the profile block could be read. */
   profile?: DbdCompanyProfile;
+  /** Thai Company Info block (ข้อมูลนิติบุคคล) when the profile page could be read. */
+  companyInfo?: DbdCompanyInfoTh;
 }
 
 export type DbdOutcome =
