@@ -251,17 +251,94 @@ function parseBusinessBlock(html: string, heading: string): DbdBusinessTh | null
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Card/grid layout used by the live DBD profile page.                  */
+/* Values live in Bootstrap "col-*" pairs inside <div class="card-infos">*/
+/* ------------------------------------------------------------------ */
+
+interface DbdCard {
+  title: string;
+  html: string;
+}
+
+function parseCards(html: string): DbdCard[] {
+  const out: DbdCard[] = [];
+  const re = /<h5[^>]*class="[^"]*card-title[^"]*"[^>]*>([\s\S]*?)<\/h5>([\s\S]*?)(?=<h5[^>]*class="[^"]*card-title|$)/gi;
+  for (const m of html.matchAll(re)) {
+    out.push({ title: strip(m[1]), html: m[2] });
+  }
+  return out;
+}
+
+/** label → value pairs from `col-* bold prompt` / `col-*` div sequences. */
+function colPairs(html: string): Map<string, string> {
+  const map = new Map<string, string>();
+  const re = /<div class="(col-[^"]*)"[^>]*>([\s\S]*?)<\/div>/gi;
+  let label: string | null = null;
+  for (const m of html.matchAll(re)) {
+    const isLabel = m[1].includes("prompt");
+    if (isLabel) {
+      label = strip(m[2]).replace(/\s*:\s*$/, "");
+    } else if (label) {
+      if (!map.has(label)) map.set(label, stripLines(m[2]));
+      label = null;
+    }
+  }
+  return map;
+}
+
+function cardByTitle(cards: DbdCard[], needle: string): DbdCard | null {
+  return cards.find((c) => c.title.includes(needle)) ?? null;
+}
+
+function parseBusinessCard(cards: DbdCard[], title: string): DbdBusinessTh | null {
+  const card = cardByTitle(cards, title);
+  if (!card) return null;
+  const pairs = colPairs(card.html);
+  const description = nullish(pairs.get("ประเภทธุรกิจ") ?? null);
+  const objective = nullish(pairs.get("วัตถุประสงค์") ?? null);
+  if (!description && !objective) return null;
+  const codeMatch = description?.match(/^(\d{4,6})\s*/);
+  return {
+    code: codeMatch ? codeMatch[1] : null,
+    descriptionTh: description ? description.replace(/^(\d{4,6})\s*/, "").trim() || description : null,
+    objectiveTh: objective,
+  };
+}
+
+function parseDirectorsFromCard(cards: DbdCard[]): string[] {
+  const card = cardByTitle(cards, "รายชื่อกรรมการ");
+  if (!card) return [];
+  const names: string[] = [];
+  for (const m of card.html.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
+    const name = nullish(strip(m[1]));
+    if (!name || /^\d+$/.test(name)) continue;
+    names.push(name.replace(/\/$/, "").trim());
+  }
+  return names;
+}
+
 export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
+  const cards = parseCards(html);
+  const infoCard = cardByTitle(cards, "ข้อมูลนิติบุคคล");
+  const cardPairs = infoCard ? colPairs(infoCard.html) : new Map<string, string>();
+  const signatoryCard = cardByTitle(cards, "กรรมการลงชื่อผูกพัน");
+
   const tables = parseTables(html);
   const map = labelValueMap(tables);
   const text = strip(html);
 
-  const get = (labels: string[]) =>
-    readLabel(map, labels) ?? readText(text, labels, KNOWN_LABELS);
+  const get = (labels: string[]) => {
+    for (const l of labels) {
+      const v = nullish(cardPairs.get(l) ?? null);
+      if (v) return v;
+    }
+    return readLabel(map, labels) ?? readText(text, labels, KNOWN_LABELS);
+  };
 
   const registrationNumber =
-    nullish(get(["เลขทะเบียนนิติบุคคล"])?.match(/\d[\d\s-]{10,}/)?.[0]?.replace(/\D/g, "") ?? null) ??
-    nullish(text.match(/เลขทะเบียนนิติบุคคล\s*:?\s*(\d{13})/)?.[1] ?? null);
+    nullish(text.match(/เลขทะเบียนนิติบุคคล\s*:?\s*(\d{13})/)?.[1] ?? null) ??
+    nullish(get(["เลขทะเบียนนิติบุคคล"])?.match(/\d[\d\s-]{10,}/)?.[0]?.replace(/\D/g, "") ?? null);
 
   const legalNameTh =
     nullish(text.match(/ชื่อนิติบุคคล\s*:?\s*([^:]{3,160}?)\s*เลขทะเบียนนิติบุคคล/)?.[1] ?? null) ??
@@ -287,6 +364,14 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
     return m ? m[1] : null;
   })();
 
+  const directorsFromCards = parseDirectorsFromCard(cards);
+  const registeredBusiness =
+    parseBusinessCard(cards, "ประเภทธุรกิจตอนจดทะเบียน") ??
+    parseBusinessBlock(html, "ประเภทธุรกิจตอนจดทะเบียน");
+  const latestBusinessBase =
+    parseBusinessCard(cards, "ประเภทธุรกิจที่ส่งงบการเงินปีล่าสุด") ??
+    parseBusinessBlock(html, "ประเภทธุรกิจที่ส่งงบการเงินปีล่าสุด");
+
   return {
     legalNameTh,
     registrationNumber,
@@ -299,18 +384,19 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
     previousRegistrationNumber: get(["เลขทะเบียนเดิม"]),
     businessGroupTh: get(["กลุ่มธุรกิจ"]),
     businessSize: get(["ขนาดธุรกิจ"]),
-    headOfficeAddressTh: get(["ที่ตั้งสำนักงานใหญ่"]),
+    headOfficeAddressTh: get(["ที่ตั้งสำนักงานแห่งใหญ่", "ที่ตั้งสำนักงานใหญ่"]),
     website,
-    authorizedSignatoryTh: get(["กรรมการลงชื่อผูกพัน"]),
+    authorizedSignatoryTh:
+      nullish(signatoryCard ? stripLines(signatoryCard.html).replace(/\n/g, " ") : null) ??
+      get(["กรรมการลงชื่อผูกพัน"]),
     submissionYearsBe,
-    directors: parseDirectors(tables),
-    registeredBusiness: parseBusinessBlock(html, "ประเภทธุรกิจตอนจดทะเบียน"),
-    latestBusiness: (() => {
-      const b = parseBusinessBlock(html, "ประเภทธุรกิจที่ส่งงบการเงินปีล่าสุด");
-      if (!b) return null;
-      return { ...b, financialYearBe: submissionYearsBe[0] ?? null };
-    })(),
+    directors: directorsFromCards.length ? directorsFromCards : parseDirectors(tables),
+    registeredBusiness,
+    latestBusiness: latestBusinessBase
+      ? { ...latestBusinessBase, financialYearBe: submissionYearsBe[0] ?? null }
+      : null,
   };
+
 }
 
 /** True when at least one field carries real data — used to avoid empty writes. */
