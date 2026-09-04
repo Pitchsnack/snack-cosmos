@@ -15,6 +15,8 @@
  * UI tells the user Auto Enrich is unavailable — existing data is untouched.
  */
 
+import type { DbdCompanyInfoTh } from "./dbd-company-info";
+
 export type DbdLookupKey = "registered_number" | "registered_name";
 
 /** One normalised statement (single fiscal year) returned by the provider. */
