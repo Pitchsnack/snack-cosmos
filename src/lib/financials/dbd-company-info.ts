@@ -251,7 +251,75 @@ function parseBusinessBlock(html: string, heading: string): DbdBusinessTh | null
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Card/grid layout used by the live DBD profile page.                  */
+/* Values live in Bootstrap "col-*" pairs inside <div class="card-infos">*/
+/* ------------------------------------------------------------------ */
+
+interface DbdCard {
+  title: string;
+  html: string;
+}
+
+function parseCards(html: string): DbdCard[] {
+  const out: DbdCard[] = [];
+  const re = /<h5[^>]*class="[^"]*card-title[^"]*"[^>]*>([\s\S]*?)<\/h5>([\s\S]*?)(?=<h5[^>]*class="[^"]*card-title|$)/gi;
+  for (const m of html.matchAll(re)) {
+    out.push({ title: strip(m[1]), html: m[2] });
+  }
+  return out;
+}
+
+/** label → value pairs from `col-* bold prompt` / `col-*` div sequences. */
+function colPairs(html: string): Map<string, string> {
+  const map = new Map<string, string>();
+  const re = /<div class="(col-[^"]*)"[^>]*>([\s\S]*?)<\/div>/gi;
+  let label: string | null = null;
+  for (const m of html.matchAll(re)) {
+    const isLabel = m[1].includes("prompt");
+    if (isLabel) {
+      label = strip(m[2]).replace(/\s*:\s*$/, "");
+    } else if (label) {
+      if (!map.has(label)) map.set(label, stripLines(m[2]));
+      label = null;
+    }
+  }
+  return map;
+}
+
+function cardByTitle(cards: DbdCard[], needle: string): DbdCard | null {
+  return cards.find((c) => c.title.includes(needle)) ?? null;
+}
+
+function parseBusinessCard(cards: DbdCard[], title: string): DbdBusinessTh | null {
+  const card = cardByTitle(cards, title);
+  if (!card) return null;
+  const pairs = colPairs(card.html);
+  const description = nullish(pairs.get("ประเภทธุรกิจ") ?? null);
+  const objective = nullish(pairs.get("วัตถุประสงค์") ?? null);
+  if (!description && !objective) return null;
+  const codeMatch = description?.match(/^(\d{4,6})\s*/);
+  return {
+    code: codeMatch ? codeMatch[1] : null,
+    descriptionTh: description ? description.replace(/^(\d{4,6})\s*/, "").trim() || description : null,
+    objectiveTh: objective,
+  };
+}
+
+function parseDirectorsFromCard(cards: DbdCard[]): string[] {
+  const card = cardByTitle(cards, "รายชื่อกรรมการ");
+  if (!card) return [];
+  const names: string[] = [];
+  for (const m of card.html.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
+    const name = nullish(strip(m[1]));
+    if (!name || /^\d+$/.test(name)) continue;
+    names.push(name.replace(/\/$/, "").trim());
+  }
+  return names;
+}
+
 export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
+
   const tables = parseTables(html);
   const map = labelValueMap(tables);
   const text = strip(html);
