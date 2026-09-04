@@ -21,6 +21,8 @@ import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { FinIcon } from "@/components/financials/fin-icon";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
 import { getStartupFinancials } from "@/lib/financials.functions";
+import { getCompanyInfoTh } from "@/lib/company-info.functions";
+import { CompanyInfoTab } from "@/components/financials/company-info-tab";
 import type { StartupFinancials } from "@/lib/financials.functions";
 import {
   autoEnrichFinancials,
@@ -177,6 +179,7 @@ export function StartupFinancialsPage({
         },
       });
       await queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
+      await queryClient.invalidateQueries({ queryKey: ["company-info-th", id] });
       setYear(undefined);
       toast.success(`Refreshed ${result.years.length} fiscal year(s) from DBD.`, { id: toastId });
     } catch (e) {
@@ -185,6 +188,13 @@ export function StartupFinancialsPage({
       setRefreshing(false);
     }
   };
+
+  const fetchCompanyInfo = useServerFn(getCompanyInfoTh);
+  const { data: companyInfo } = useQuery({
+    queryKey: ["company-info-th", id],
+    queryFn: () => fetchCompanyInfo({ data: { startupId: id } }),
+    staleTime: FINANCIALS_STALE_TIME,
+  });
 
   const { data, isLoading, error } = useQuery({
     queryKey: financialsQueryKey(id),
@@ -318,7 +328,7 @@ export function StartupFinancialsPage({
             queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
           }}
         />
-      ) : years.length === 0 ? (
+      ) : years.length === 0 && !companyInfo?.exists ? (
         <div className="rounded-xl border border-dashed border-border bg-white p-12 text-center">
           <p className="text-sm font-medium">No financial data recorded for this startup</p>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -331,6 +341,7 @@ export function StartupFinancialsPage({
           <TabsList className="h-auto w-full flex-wrap justify-start gap-6 rounded-none border-b border-[#E5E7EB] bg-transparent p-0">
             {[
               ["overview", "Overview"],
+              ["company-info", "Company Info"],
               ["income", "Income Statement"],
               ["position", "Financial Position"],
               ["cash-flow", "Cash Flow Statement"],
@@ -356,6 +367,23 @@ export function StartupFinancialsPage({
               position={data.position}
               ratios={data.ratios}
             />
+          </TabsContent>
+
+          <TabsContent value="company-info" className="mt-4">
+            {companyInfo ? (
+              <CompanyInfoTab
+                startupId={id}
+                info={companyInfo}
+                canManage={canManage}
+                onSaved={() =>
+                  queryClient.invalidateQueries({ queryKey: ["company-info-th", id] })
+                }
+              />
+            ) : (
+              <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center text-sm text-muted-foreground">
+                Loading company information…
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="income" className="mt-4 space-y-3">
