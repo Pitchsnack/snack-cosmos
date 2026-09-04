@@ -319,17 +319,26 @@ function parseDirectorsFromCard(cards: DbdCard[]): string[] {
 }
 
 export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
+  const cards = parseCards(html);
+  const infoCard = cardByTitle(cards, "ข้อมูลนิติบุคคล");
+  const cardPairs = infoCard ? colPairs(infoCard.html) : new Map<string, string>();
+  const signatoryCard = cardByTitle(cards, "กรรมการลงชื่อผูกพัน");
 
   const tables = parseTables(html);
   const map = labelValueMap(tables);
   const text = strip(html);
 
-  const get = (labels: string[]) =>
-    readLabel(map, labels) ?? readText(text, labels, KNOWN_LABELS);
+  const get = (labels: string[]) => {
+    for (const l of labels) {
+      const v = nullish(cardPairs.get(l) ?? null);
+      if (v) return v;
+    }
+    return readLabel(map, labels) ?? readText(text, labels, KNOWN_LABELS);
+  };
 
   const registrationNumber =
-    nullish(get(["เลขทะเบียนนิติบุคคล"])?.match(/\d[\d\s-]{10,}/)?.[0]?.replace(/\D/g, "") ?? null) ??
-    nullish(text.match(/เลขทะเบียนนิติบุคคล\s*:?\s*(\d{13})/)?.[1] ?? null);
+    nullish(text.match(/เลขทะเบียนนิติบุคคล\s*:?\s*(\d{13})/)?.[1] ?? null) ??
+    nullish(get(["เลขทะเบียนนิติบุคคล"])?.match(/\d[\d\s-]{10,}/)?.[0]?.replace(/\D/g, "") ?? null);
 
   const legalNameTh =
     nullish(text.match(/ชื่อนิติบุคคล\s*:?\s*([^:]{3,160}?)\s*เลขทะเบียนนิติบุคคล/)?.[1] ?? null) ??
@@ -355,6 +364,14 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
     return m ? m[1] : null;
   })();
 
+  const directorsFromCards = parseDirectorsFromCard(cards);
+  const registeredBusiness =
+    parseBusinessCard(cards, "ประเภทธุรกิจตอนจดทะเบียน") ??
+    parseBusinessBlock(html, "ประเภทธุรกิจตอนจดทะเบียน");
+  const latestBusinessBase =
+    parseBusinessCard(cards, "ประเภทธุรกิจที่ส่งงบการเงินปีล่าสุด") ??
+    parseBusinessBlock(html, "ประเภทธุรกิจที่ส่งงบการเงินปีล่าสุด");
+
   return {
     legalNameTh,
     registrationNumber,
@@ -367,18 +384,19 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
     previousRegistrationNumber: get(["เลขทะเบียนเดิม"]),
     businessGroupTh: get(["กลุ่มธุรกิจ"]),
     businessSize: get(["ขนาดธุรกิจ"]),
-    headOfficeAddressTh: get(["ที่ตั้งสำนักงานใหญ่"]),
+    headOfficeAddressTh: get(["ที่ตั้งสำนักงานแห่งใหญ่", "ที่ตั้งสำนักงานใหญ่"]),
     website,
-    authorizedSignatoryTh: get(["กรรมการลงชื่อผูกพัน"]),
+    authorizedSignatoryTh:
+      nullish(signatoryCard ? stripLines(signatoryCard.html).replace(/\n/g, " ") : null) ??
+      get(["กรรมการลงชื่อผูกพัน"]),
     submissionYearsBe,
-    directors: parseDirectors(tables),
-    registeredBusiness: parseBusinessBlock(html, "ประเภทธุรกิจตอนจดทะเบียน"),
-    latestBusiness: (() => {
-      const b = parseBusinessBlock(html, "ประเภทธุรกิจที่ส่งงบการเงินปีล่าสุด");
-      if (!b) return null;
-      return { ...b, financialYearBe: submissionYearsBe[0] ?? null };
-    })(),
+    directors: directorsFromCards.length ? directorsFromCards : parseDirectors(tables),
+    registeredBusiness,
+    latestBusiness: latestBusinessBase
+      ? { ...latestBusinessBase, financialYearBe: submissionYearsBe[0] ?? null }
+      : null,
   };
+
 }
 
 /** True when at least one field carries real data — used to avoid empty writes. */
