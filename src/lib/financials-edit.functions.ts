@@ -52,6 +52,8 @@ export interface AutoEnrichFinancialsResult {
   years?: FinancialYearDraft[];
   /** Company Profile values read from the profile page, when available. */
   profile?: CompanyProfileDraft;
+  /** True when Thai Company Info was retrieved and stored by this run. */
+  companyInfoSaved?: boolean;
   warnings?: string[];
 }
 
@@ -85,7 +87,7 @@ export const autoEnrichFinancials = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: startup, error } = await supabase
       .from("startups")
-      .select("id, startup_name, registered_name, registered_number")
+      .select("id, tenant_id, startup_name, registered_name, registered_number")
       .eq("id", data.startupId)
       .maybeSingle();
     if (error) throw new Error(error.message);
