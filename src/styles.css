@@ -198,3 +198,8 @@
     background-clip: text;
   }
 }
+
+/* Thai script line-height helper for the Company Info registry view. */
+.th {
+  line-height: 1.65;
+}
