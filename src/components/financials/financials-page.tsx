@@ -374,6 +374,8 @@ export function StartupFinancialsPage({
               <CompanyInfoTab
                 startupId={id}
                 info={companyInfo}
+                financials={data}
+                workspace={workspace}
                 canManage={canManage}
                 onSaved={() =>
                   queryClient.invalidateQueries({ queryKey: ["company-info-th", id] })
