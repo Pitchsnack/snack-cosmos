@@ -48,20 +48,59 @@ function ChangeText({ value, arrows = true }: { value: number | null; arrows?: b
   );
 }
 
-/** 62×30 sparkline with an arrow head on the final point. */
+/**
+ * Shared magnitude scale: a year-over-year percentage maps to a fraction of the
+ * 18px band. Identical for every card — deliberately NOT normalised per series,
+ * so a 5% move stays flat while a 1000% move spikes.
+ */
+function riseFraction(pct: number) {
+  const abs = Math.abs(pct);
+  const mag =
+    abs >= 100
+      ? Math.min(0.75, 0.55 + ((abs - 100) / 900) * 0.2)
+      : abs >= 25
+        ? 0.35 + ((abs - 25) / 75) * 0.15
+        : abs >= 10
+          ? 0.15 + ((abs - 10) / 15) * 0.1
+          : (abs / 10) * 0.12;
+  return pct < 0 ? -mag : mag;
+}
+
+const SPARK_W = 72;
+const SPARK_H = 26;
+const BAND = 18; // 4px padding top and bottom
+
+/** 72×26 angular sparkline with an arrow head on the final point. */
 function Sparkline({ values, color }: { values: (number | null)[]; color: string }) {
   const pts = values.filter((v): v is number => v !== null && !Number.isNaN(v));
   if (pts.length < 2) return null;
-  const min = Math.min(...pts);
-  const max = Math.max(...pts);
-  const span = max - min || 1;
-  const step = pts.length > 1 ? 56 / (pts.length - 1) : 0;
-  const coords = pts.map((v, i) => [2 + i * step, 26 - ((v - min) / span) * 22] as const);
+
+  // Year-over-year percentage moves → band units on the shared scale.
+  const ys: number[] = [13];
+  for (let i = 1; i < pts.length; i++) {
+    const prevVal = pts[i - 1];
+    const pct = prevVal === 0 ? 0 : ((pts[i] - prevVal) / Math.abs(prevVal)) * 100;
+    ys.push(ys[i - 1] - riseFraction(pct) * BAND);
+  }
+
+  // Translate (never rescale) so the shape sits inside the band.
+  const lo = Math.min(...ys);
+  const hi = Math.max(...ys);
+  const shift = lo < 4 ? 4 - lo : hi > 22 ? 22 - hi : 0;
+  const clamped = ys.map((y) => Math.max(2, Math.min(24, y + shift)));
+
+  const step = (SPARK_W - 8) / (clamped.length - 1);
+  const coords = clamped.map((y, i) => [4 + i * step, y] as const);
   const last = coords[coords.length - 1];
+  const before = coords[coords.length - 2];
+  const down = last[1] > before[1];
+
   return (
     <svg
-      className="pointer-events-none absolute bottom-1.5 right-2 z-0 h-[30px] w-[62px]"
-      viewBox="0 0 62 30"
+      className="ml-auto block shrink-0"
+      width={SPARK_W}
+      height={SPARK_H}
+      viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
       aria-hidden="true"
     >
       <polyline
@@ -69,7 +108,7 @@ function Sparkline({ values, color }: { values: (number | null)[]; color: string
         stroke={color}
         strokeWidth="2"
         strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeLinejoin="miter"
         points={coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ")}
       />
       <polyline
@@ -78,9 +117,26 @@ function Sparkline({ values, color }: { values: (number | null)[]; color: string
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points={`${(last[0] - 6).toFixed(1)},${(last[1] - 1).toFixed(1)} ${last[0].toFixed(1)},${last[1].toFixed(1)} ${(last[0] - 1).toFixed(1)},${(last[1] + 7).toFixed(1)}`}
+        points={
+          down
+            ? `${(last[0] - 4.1).toFixed(1)},${(last[1] - 4.4).toFixed(1)} ${last[0].toFixed(1)},${last[1].toFixed(1)} ${(last[0] - 5.8).toFixed(1)},${(last[1] + 1.5).toFixed(1)}`
+            : `${(last[0] - 4.1).toFixed(1)},${(last[1] + 4.4).toFixed(1)} ${last[0].toFixed(1)},${last[1].toFixed(1)} ${(last[0] - 5.8).toFixed(1)},${(last[1] - 1.5).toFixed(1)}`
+        }
       />
     </svg>
+  );
+}
+
+/** Delta glyph + number in ONE element; 1000%+ collapses to >999%. */
+function Delta({ value }: { value: number | null }) {
+  if (value === null) return <span style={{ color: C.muted, fontSize: 12 }}>{EMPTY}</span>;
+  const up = value >= 0;
+  const abs = Math.abs(value);
+  const text = abs >= 1000 ? ">999%" : `${fmtNumber(value === 0 ? 0 : abs)}%`;
+  return (
+    <span style={{ color: up ? C.green : C.red, fontWeight: 700, fontSize: 12 }}>
+      {up ? "▲" : "▼"} {text}
+    </span>
   );
 }
 
@@ -107,10 +163,10 @@ function KpiCard({
 }) {
   return (
     <div
-      className="relative flex flex-col gap-2 overflow-hidden rounded-xl bg-white p-[13px_14px]"
+      className="flex min-h-[128px] flex-col gap-2.5 rounded-xl bg-white p-[14px_15px]"
       style={{ border: `1px solid ${C.line}` }}
     >
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-start gap-[11px]">
         <span
           className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full text-white"
           style={{ background: color }}
@@ -118,28 +174,36 @@ function KpiCard({
           <FinIcon name={icon} />
         </span>
         <div className="min-w-0">
-          <div className="text-xs font-semibold leading-tight" style={{ color: C.ink }}>
+          <div
+            className="min-h-[30px] text-xs font-semibold"
+            style={{ color: C.ink, lineHeight: 1.25 }}
+          >
             {label}
           </div>
           <div
-            className="mt-[3px] whitespace-nowrap text-[18px] font-bold tabular-nums"
-            style={{ color: C.ink }}
+            className="whitespace-nowrap text-[19px] font-bold tabular-nums"
+            style={{ color: C.ink, letterSpacing: "-0.01em", lineHeight: 1.2 }}
             title={title}
           >
             {display}
           </div>
-          {currency ? (
-            <div className="text-[11.5px] font-semibold" style={{ color: C.muted }}>
-              {currency}
-            </div>
-          ) : null}
+          <div className="text-[11.5px] font-semibold" style={{ color: C.muted }}>
+            {currency ?? "\u00A0"}
+          </div>
         </div>
       </div>
-      <div className="relative z-[1] mt-auto flex items-center gap-1.5 text-[11.5px]">
-        <ChangeText value={change} />
-        <span style={{ color: C.muted }}>{compareLabel}</span>
+      <div
+        className="mt-auto flex flex-nowrap items-center gap-1.5 whitespace-nowrap"
+        title={
+          change !== null && Math.abs(change) >= 1000
+            ? `Exact change: ${fmtNumber(change)}%`
+            : undefined
+        }
+      >
+        <Delta value={change} />
+        <span style={{ color: C.muted, fontSize: 12 }}>{compareLabel}</span>
+        <Sparkline values={series} color={color} />
       </div>
-      <Sparkline values={series} color={color} />
     </div>
   );
 }
@@ -333,7 +397,7 @@ export function FinancialsOverview({
   return (
     <div className="space-y-3 text-[13px]" style={{ color: C.body }}>
       {/* KPI row */}
-      <div className="grid grid-cols-2 gap-[11px] md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 [@media(min-width:721px)]:grid-cols-3 [@media(min-width:1201px)]:grid-cols-6">
         {kpis.map((k) => (
           <KpiCard
             key={k.label}
