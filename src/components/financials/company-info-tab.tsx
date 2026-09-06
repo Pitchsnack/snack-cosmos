@@ -224,7 +224,7 @@ export function CompanyInfoTab({
     {
       label: "Business size",
       value: info.businessSize ?? NOT_ON_FILE,
-      caption: info.businessSize ? `DBD classification “${info.businessSize}”` : NOT_ON_FILE,
+      caption: info.businessSize ? `Classification “${info.businessSize}”` : NOT_ON_FILE,
     },
     {
       label: "Years operating",
