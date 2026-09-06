@@ -48,25 +48,30 @@ function ChangeText({ value, arrows = true }: { value: number | null; arrows?: b
   );
 }
 
-/** 62×30 smooth sparkline with an arrow head on the final point. */
+/** 90×34 inline sparkline: last 5 years, 22px amplitude, arrow head on the final point. */
 function Sparkline({ values, color }: { values: (number | null)[]; color: string }) {
-  const pts = values.filter((v): v is number => v !== null && !Number.isNaN(v));
-  if (pts.length < 2) return null;
+  const all = values.filter((v): v is number => v !== null && !Number.isNaN(v));
+  const pts = all.slice(-5);
+  if (pts.length < 2) return <span className="ml-auto h-[34px] w-[90px] shrink-0" />;
   const min = Math.min(...pts);
   const max = Math.max(...pts);
   const span = max - min || 1;
-  const step = pts.length > 1 ? 56 / (pts.length - 1) : 0;
-  const coords = pts.map((v, i) => [2 + i * step, 26 - ((v - min) / span) * 22] as const);
+  const step = 78 / (pts.length - 1);
+  const coords = pts.map((v, i) => [4 + i * step, 28 - ((v - min) / span) * 22] as const);
   const last = coords[coords.length - 1];
   const linePath = coords.slice(1).reduce((path, point, i) => {
     const previous = coords[i];
     const midpoint = (previous[0] + point[0]) / 2;
     return `${path} C ${midpoint.toFixed(1)} ${previous[1].toFixed(1)}, ${midpoint.toFixed(1)} ${point[1].toFixed(1)}, ${point[0].toFixed(1)} ${point[1].toFixed(1)}`;
   }, `M ${coords[0][0].toFixed(1)} ${coords[0][1].toFixed(1)}`);
+  const prevPt = coords[coords.length - 2];
+  const angle = Math.atan2(last[1] - prevPt[1], last[0] - prevPt[0]);
+  const head = (offset: number) =>
+    `${(last[0] - 6 * Math.cos(angle - offset)).toFixed(1)},${(last[1] - 6 * Math.sin(angle - offset)).toFixed(1)}`;
   return (
     <svg
-      className="pointer-events-none absolute bottom-1.5 right-2 z-0 h-[30px] w-[62px]"
-      viewBox="0 0 62 30"
+      className="pointer-events-none ml-auto h-[34px] w-[90px] shrink-0"
+      viewBox="0 0 90 34"
       aria-hidden="true"
     >
       <path
@@ -83,11 +88,12 @@ function Sparkline({ values, color }: { values: (number | null)[]; color: string
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points={`${(last[0] - 6).toFixed(1)},${(last[1] - 1).toFixed(1)} ${last[0].toFixed(1)},${last[1].toFixed(1)} ${(last[0] - 1).toFixed(1)},${(last[1] + 7).toFixed(1)}`}
+        points={`${head(0.5)} ${last[0].toFixed(1)},${last[1].toFixed(1)} ${head(-0.5)}`}
       />
     </svg>
   );
 }
+
 
 function KpiCard({
   icon,
