@@ -149,8 +149,9 @@ function KpiCard({
       <div className="relative z-[1] mt-auto flex items-center gap-1.5 text-[11.5px]">
         <ChangeText value={change} />
         <span style={{ color: C.muted }}>{compareLabel}</span>
+        <Sparkline values={series} color={color} />
       </div>
-      <Sparkline values={series} color={color} />
+
     </div>
   );
 }
