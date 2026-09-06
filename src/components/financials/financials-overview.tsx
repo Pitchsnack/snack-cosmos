@@ -48,7 +48,7 @@ function ChangeText({ value, arrows = true }: { value: number | null; arrows?: b
   );
 }
 
-/** 62×30 sparkline with an arrow head on the final point. */
+/** 62×30 smooth sparkline with an arrow head on the final point. */
 function Sparkline({ values, color }: { values: (number | null)[]; color: string }) {
   const pts = values.filter((v): v is number => v !== null && !Number.isNaN(v));
   if (pts.length < 2) return null;
@@ -58,19 +58,24 @@ function Sparkline({ values, color }: { values: (number | null)[]; color: string
   const step = pts.length > 1 ? 56 / (pts.length - 1) : 0;
   const coords = pts.map((v, i) => [2 + i * step, 26 - ((v - min) / span) * 22] as const);
   const last = coords[coords.length - 1];
+  const linePath = coords.slice(1).reduce((path, point, i) => {
+    const previous = coords[i];
+    const midpoint = (previous[0] + point[0]) / 2;
+    return `${path} C ${midpoint.toFixed(1)} ${previous[1].toFixed(1)}, ${midpoint.toFixed(1)} ${point[1].toFixed(1)}, ${point[0].toFixed(1)} ${point[1].toFixed(1)}`;
+  }, `M ${coords[0][0].toFixed(1)} ${coords[0][1].toFixed(1)}`);
   return (
     <svg
       className="pointer-events-none absolute bottom-1.5 right-2 z-0 h-[30px] w-[62px]"
       viewBox="0 0 62 30"
       aria-hidden="true"
     >
-      <polyline
+      <path
         fill="none"
         stroke={color}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points={coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ")}
+        d={linePath}
       />
       <polyline
         fill="none"
