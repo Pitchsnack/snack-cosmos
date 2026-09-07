@@ -27,6 +27,7 @@ export type StartupFinancials = {
   startupId: string;
   startupName: string;
   registeredName: string | null;
+  logoUrl: string | null;
   profile: {
     registeredType: string | null;
     status: string | null;
