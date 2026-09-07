@@ -88,7 +88,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
     if (!startup) throw new Error("Startup not found");
     const s = startup as unknown as Record<string, string | number | null>;
 
-    const [stmts, income, position, cash, ratios] = await Promise.all([
+    const [stmts, income, position, cash, ratios, companyInfoRow] = await Promise.all([
       supabase
         .from("financial_statements")
         .select("fiscal_year, currency, source_name, verified_status")
@@ -112,7 +112,19 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
         .from("financial_ratios")
         .select("fiscal_year, ratio_category, ratio_code, ratio_label, value, unit, display_order")
         .eq("startup_id", startupId),
+      // Thai Company Info retrieved by Auto Enrich from DBD — authoritative when present.
+      supabase
+        .from("company_info_th")
+        .select(
+          "legal_entity_type_th, legal_entity_status_th, registration_date, registration_date_th_raw, registered_capital_thb, registered_capital_th_raw, registration_number, business_size",
+        )
+        .eq("startup_id", startupId)
+        .maybeSingle(),
     ]);
+
+    const ci = (companyInfoRow.data ?? null) as Record<string, unknown> | null;
+    const firstDbd = <T,>(...vals: (T | null | undefined)[]): T | null =>
+      vals.find((v) => v !== null && v !== undefined && v !== "") as T | null ?? null;
 
     const statements = (stmts.data ?? []).map((r) => ({
       fiscal_year: r.fiscal_year,
