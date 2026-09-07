@@ -73,8 +73,19 @@ function CompanyProfileCard({
   return (
     <div className="rounded-[13px] border border-[#E5E7EB] bg-white px-5 py-4">
       <div className="flex items-start gap-4">
-        <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[11px] bg-[#EAF1FD]" style={{ color: NAVY }}>
-          <FinIcon name="building" className="h-[21px] w-[21px]" />
+        <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-[11px] bg-[#EAF1FD]" style={{ color: NAVY }}>
+          {data.logoUrl ? (
+            <img
+              src={data.logoUrl}
+              alt={`${data.startupName} logo`}
+              className="h-full w-full object-contain"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          ) : (
+            <FinIcon name="building" className="h-[21px] w-[21px]" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-3 border-b border-[#EFF1F4] pb-2 text-[15.5px] font-bold" style={{ color: NAVY }}>

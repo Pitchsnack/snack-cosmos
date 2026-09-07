@@ -27,6 +27,7 @@ export type StartupFinancials = {
   startupId: string;
   startupName: string;
   registeredName: string | null;
+  logoUrl: string | null;
   profile: {
     registeredType: string | null;
     status: string | null;
@@ -62,7 +63,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
     const { data: startup, error: sErr } = await supabase
       .from("startups")
       .select(
-        "id, startup_name, registered_name, registered_number, company_type, company_size, status, year_founded, registered_type, registered_status, registered_date, registered_capital, business_size",
+        "id, startup_name, registered_name, logo_url, registered_number, company_type, company_size, status, year_founded, registered_type, registered_status, registered_date, registered_capital, business_size",
       )
       .eq("id", startupId)
       .maybeSingle();
@@ -119,6 +120,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       startupId,
       startupName: startup.startup_name,
       registeredName: startup.registered_name ?? null,
+      logoUrl: (s.logo_url as string | null) ?? null,
       profile: {
         registeredType: (s.registered_type as string | null) ?? startup.company_type ?? null,
         status: (s.registered_status as string | null) ?? startup.status ?? null,
