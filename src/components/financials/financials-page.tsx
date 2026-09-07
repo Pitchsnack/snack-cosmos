@@ -56,7 +56,11 @@ function CompanyProfileCard({
   onSelectYear: (year: number) => void;
 }) {
   const p = data.profile;
-  const operating = (p.status ?? "").toLowerCase() === "active" || (p.status ?? "").toLowerCase() === "operating";
+  const statusText = (p.status ?? "").toLowerCase();
+  const operating =
+    statusText === "active" ||
+    statusText === "operating" ||
+    p.status === "ยังดำเนินกิจการอยู่";
   const rows: [string, string, boolean?][][] = [
     [
       ["Registered Type", p.registeredType ?? DASH],
