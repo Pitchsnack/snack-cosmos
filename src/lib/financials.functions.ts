@@ -151,14 +151,37 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       registeredName: startup.registered_name ?? null,
       logoUrl: await signLogo(supabase, (s.logo_url as string | null) ?? null),
       profile: {
-        registeredType: (s.registered_type as string | null) ?? startup.company_type ?? null,
-        status: (s.registered_status as string | null) ?? null,
-        registeredDate:
-          (s.registered_date as string | null) ??
-          (startup.year_founded ? String(startup.year_founded) : null),
-        registeredCapital: (s.registered_capital as string | null) ?? null,
-        registeredNumber: startup.registered_number ?? null,
-        businessSize: (s.business_size as string | null) ?? startup.company_size ?? null,
+        // Prefer the DBD Company Info (Thai, authoritative) over the startup's
+        // own editable columns; fall back to those columns, then to legacy
+        // startup fields, so manual companies without DBD data still display.
+        registeredType: firstDbd(
+          ci?.legal_entity_type_th as string | null,
+          s.registered_type as string | null,
+          startup.company_type as string | null,
+        ),
+        status: firstDbd(
+          ci?.legal_entity_status_th as string | null,
+          s.registered_status as string | null,
+        ),
+        registeredDate: firstDbd(
+          ci?.registration_date_th_raw as string | null,
+          ci?.registration_date as string | null,
+          s.registered_date as string | null,
+          startup.year_founded ? String(startup.year_founded) : null,
+        ),
+        registeredCapital: firstDbd(
+          ci?.registered_capital_th_raw as string | null,
+          s.registered_capital as string | null,
+        ),
+        registeredNumber: firstDbd(
+          ci?.registration_number as string | null,
+          startup.registered_number as string | null,
+        ),
+        businessSize: firstDbd(
+          ci?.business_size as string | null,
+          s.business_size as string | null,
+          startup.company_size as string | null,
+        ),
       },
       currency: statements[0]?.currency ?? "THB",
       years: statements.map((s) => s.fiscal_year),
