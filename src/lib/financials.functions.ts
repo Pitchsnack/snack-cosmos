@@ -137,7 +137,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       startupId,
       startupName: startup.startup_name,
       registeredName: startup.registered_name ?? null,
-      logoUrl: (s.logo_url as string | null) ?? null,
+      logoUrl: await signLogo(supabase, (s.logo_url as string | null) ?? null),
       profile: {
         registeredType: (s.registered_type as string | null) ?? startup.company_type ?? null,
         status: (s.registered_status as string | null) ?? startup.status ?? null,
