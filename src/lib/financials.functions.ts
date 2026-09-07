@@ -2,6 +2,23 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const LOGO_BUCKET = "startup-media";
+const LOGO_SIGN_TTL = 3600;
+const LOGO_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Storage object paths need signing; absolute URLs pass through untouched. */
+async function signLogo(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  path: string | null,
+): Promise<string | null> {
+  if (!path) return null;
+  if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:")) return path;
+  const parts = path.split("/");
+  if (parts.length < 3 || !LOGO_UUID_RE.test(parts[0]) || !LOGO_UUID_RE.test(parts[1])) return null;
+  const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(path, LOGO_SIGN_TTL);
+  return data?.signedUrl ?? null;
+}
+
 export type StatementItem = {
   fiscal_year: number;
   item_code: string;
@@ -120,7 +137,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       startupId,
       startupName: startup.startup_name,
       registeredName: startup.registered_name ?? null,
-      logoUrl: (s.logo_url as string | null) ?? null,
+      logoUrl: await signLogo(supabase, (s.logo_url as string | null) ?? null),
       profile: {
         registeredType: (s.registered_type as string | null) ?? startup.company_type ?? null,
         status: (s.registered_status as string | null) ?? startup.status ?? null,
