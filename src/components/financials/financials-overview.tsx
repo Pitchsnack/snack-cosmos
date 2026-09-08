@@ -636,13 +636,16 @@ export function FinancialsOverview({
               </div>
             </div>
             <div
-              className="mt-[11px] flex items-center gap-3 rounded-[10px] px-[15px] py-[13px]"
+              className="mt-[11px] flex items-center gap-[10px] rounded-[10px] px-[15px] py-[13px]"
               style={{ background: C.blueBg }}
             >
-              <FinIcon name="scale" className="h-[26px] w-[26px]" style={{ color: C.navy }} />
-              <div>
-                <div className="text-[13px] font-semibold" style={{ color: C.navy }}>
-                  Total Assets &nbsp;=&nbsp; Total Liabilities &amp; Equity
+              <FinIcon name="scale" className="h-[22px] w-[22px] shrink-0" style={{ color: C.navy }} />
+              <div className="min-w-0">
+                <div
+                  className="whitespace-nowrap text-[12.5px] font-semibold"
+                  style={{ color: C.navy }}
+                >
+                  Total Assets = Total Liabilities &amp; Equity
                 </div>
                 <div className="mt-0.5 text-[14.5px] font-bold tabular-nums" style={{ color: C.navy }}>
                   {fmtAmount(totalAssets)} {currency}
