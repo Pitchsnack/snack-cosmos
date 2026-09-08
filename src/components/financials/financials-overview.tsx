@@ -397,7 +397,7 @@ export function FinancialsOverview({
   return (
     <div className="space-y-3 text-[13px]" style={{ color: C.body }}>
       {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 [@media(min-width:721px)]:grid-cols-3 [@media(min-width:1201px)]:grid-cols-6">
+      <div className="kpi-grid">
         {kpis.map((k) => (
           <KpiCard
             key={k.label}
