@@ -325,10 +325,11 @@ export function FinancialsOverview({
     ...bars.flatMap((b) => [b.prev ?? 0, b.curr ?? 0].map((n) => (n > 0 ? n : 0))),
   );
   const axis = niceAxis(axisMax);
-  const Y0 = 174;
-  const YTOP = 30;
+  const Y0 = 250;
+  const YTOP = 40;
+  const TICK_GAP = (Y0 - YTOP) / 3;
   const scale = (n: number | null) => (n === null || n <= 0 ? 0 : ((n / axis.top) * (Y0 - YTOP)));
-  const groupCenters = [106, 238, 370];
+  const groupCenters = [104, 250, 396];
 
   const miniRows = [
     { code: "revenue_sales_services", label: "Revenue from Sales & Services", icon: "dollar", color: C.blue },
@@ -452,21 +453,21 @@ export function FinancialsOverview({
               % Change
             </span>
           </div>
-          <div className="flex min-h-[210px] flex-1 items-stretch">
-          <svg viewBox="0 0 460 214" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="block">
-            <g fontSize="9.5" fill={C.muted}>
-              <text x="0" y="16">
+          <div className="flex min-h-[300px] flex-1 items-stretch">
+          <svg viewBox="0 0 460 300" width="100%" height="100%" preserveAspectRatio="none" className="block h-full w-full">
+            <g fontSize="12" fill={C.muted}>
+              <text x="0" y="20">
                 {currency}
               </text>
               {axis.ticks.map((t, i) => (
-                <text key={t} x={i === 3 ? 14 : 0} y={YTOP + i * 48 + 4}>
+                <text key={t} x={i === 3 ? 18 : 0} y={YTOP + i * TICK_GAP + 4}>
                   {t === 0 ? "0" : fmtCompact(t, 1)}
                 </text>
               ))}
             </g>
             <g stroke={C.hair}>
               {axis.ticks.map((t, i) => (
-                <line key={t} x1="34" y1={YTOP + i * 48} x2="460" y2={YTOP + i * 48} />
+                <line key={t} x1="40" y1={YTOP + i * TICK_GAP} x2="460" y2={YTOP + i * TICK_GAP} />
               ))}
             </g>
             {bars.map((b, i) => {
@@ -476,28 +477,28 @@ export function FinancialsOverview({
               const topY = Math.min(Y0 - hPrev, Y0 - hCurr);
               return (
                 <g key={b.code}>
-                  <rect x={cx - 34} y={Y0 - hPrev} width="32" height={Math.max(hPrev, 1)} fill={C.barPrev} rx="2" />
-                  <rect x={cx + 2} y={Y0 - hCurr} width="32" height={Math.max(hCurr, 1)} fill={C.navy} rx="2" />
-                  <text x={cx - 18} y={Y0 - hPrev - 5} fontSize="9" fill={C.body} textAnchor="middle">
+                  <rect x={cx - 38} y={Y0 - hPrev} width="34" height={Math.max(hPrev, 1)} fill={C.barPrev} rx="3" />
+                  <rect x={cx + 4} y={Y0 - hCurr} width="34" height={Math.max(hCurr, 1)} fill={C.navy} rx="3" />
+                  <text x={cx - 21} y={Y0 - hPrev - 7} fontSize="11.5" fill={C.body} textAnchor="middle">
                     {b.prev === null ? EMPTY : fmtCompact(b.prev, 1)}
                   </text>
-                  <text x={cx + 18} y={Y0 - hCurr - 5} fontSize="9" fill={C.ink} textAnchor="middle" fontWeight="700">
+                  <text x={cx + 21} y={Y0 - hCurr - 7} fontSize="11.5" fill={C.ink} textAnchor="middle" fontWeight="700">
                     {b.curr === null ? EMPTY : fmtCompact(b.curr, 1)}
                   </text>
                   {b.change !== null && (
                     <>
                       <rect
-                        x={cx - 26}
-                        y={Math.max(6, topY - 32)}
-                        width="52"
-                        height="14"
-                        rx="7"
+                        x={cx - 33}
+                        y={Math.max(6, topY - 40)}
+                        width="66"
+                        height="19"
+                        rx="9.5"
                         fill={b.change >= 0 ? C.greenBg : C.redBg}
                       />
                       <text
                         x={cx}
-                        y={Math.max(6, topY - 32) + 10}
-                        fontSize="8.5"
+                        y={Math.max(6, topY - 40) + 13.5}
+                        fontSize="11"
                         fill={b.change >= 0 ? C.green : C.red}
                         textAnchor="middle"
                         fontWeight="700"
@@ -507,11 +508,11 @@ export function FinancialsOverview({
                       </text>
                     </>
                   )}
-                  <g fontSize="9.5" fill={C.body} textAnchor="middle">
-                    <text x={cx} y="194">
+                  <g fontSize="12" fill={C.body} textAnchor="middle">
+                    <text x={cx} y="273">
                       {b.lines[0]}
                     </text>
-                    <text x={cx} y="206">
+                    <text x={cx} y="289">
                       {b.lines[1]}
                     </text>
                   </g>
@@ -635,13 +636,16 @@ export function FinancialsOverview({
               </div>
             </div>
             <div
-              className="mt-[11px] flex items-center gap-3 rounded-[10px] px-[15px] py-[13px]"
+              className="mt-[11px] flex items-center gap-[10px] rounded-[10px] px-[15px] py-[13px]"
               style={{ background: C.blueBg }}
             >
-              <FinIcon name="scale" className="h-[26px] w-[26px]" style={{ color: C.navy }} />
-              <div>
-                <div className="text-[13px] font-semibold" style={{ color: C.navy }}>
-                  Total Assets &nbsp;=&nbsp; Total Liabilities &amp; Equity
+              <FinIcon name="scale" className="h-[22px] w-[22px] shrink-0" style={{ color: C.navy }} />
+              <div className="min-w-0">
+                <div
+                  className="whitespace-nowrap text-[12.5px] font-semibold"
+                  style={{ color: C.navy }}
+                >
+                  Total Assets = Total Liabilities &amp; Equity
                 </div>
                 <div className="mt-0.5 text-[14.5px] font-bold tabular-nums" style={{ color: C.navy }}>
                   {fmtAmount(totalAssets)} {currency}
