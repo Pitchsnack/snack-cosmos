@@ -169,7 +169,7 @@ function KpiCard({
 }) {
   return (
     <div
-      className="flex min-h-[128px] flex-col gap-2.5 rounded-xl bg-white p-[14px_15px]"
+      className="flex min-h-[128px] min-w-0 flex-col gap-2.5 rounded-xl bg-white p-[14px_15px]"
       style={{ border: `1px solid ${C.line}` }}
     >
       <div className="flex items-start gap-[11px]">
@@ -199,7 +199,7 @@ function KpiCard({
         </div>
       </div>
       <div
-        className="mt-auto flex flex-nowrap items-center gap-1.5 whitespace-nowrap"
+        className="mt-auto flex min-w-0 flex-nowrap items-center gap-1.5 whitespace-nowrap"
         title={
           change !== null && Math.abs(change) >= 1000
             ? `Exact change: ${fmtNumber(change)}%`
@@ -207,8 +207,10 @@ function KpiCard({
         }
       >
         <Delta value={change} />
-        <span style={{ color: C.muted, fontSize: 12 }}>{compareLabel}</span>
-        <Sparkline values={series} color={color} />
+        <span className="truncate" style={{ color: C.muted, fontSize: 12 }}>
+          {compareLabel}
+        </span>
+        <Sparkline values={series} color={color} change={change} />
       </div>
     </div>
   );
