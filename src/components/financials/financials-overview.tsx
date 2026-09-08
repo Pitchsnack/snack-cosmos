@@ -325,10 +325,11 @@ export function FinancialsOverview({
     ...bars.flatMap((b) => [b.prev ?? 0, b.curr ?? 0].map((n) => (n > 0 ? n : 0))),
   );
   const axis = niceAxis(axisMax);
-  const Y0 = 174;
-  const YTOP = 30;
+  const Y0 = 250;
+  const YTOP = 40;
+  const TICK_GAP = (Y0 - YTOP) / 3;
   const scale = (n: number | null) => (n === null || n <= 0 ? 0 : ((n / axis.top) * (Y0 - YTOP)));
-  const groupCenters = [106, 238, 370];
+  const groupCenters = [104, 250, 396];
 
   const miniRows = [
     { code: "revenue_sales_services", label: "Revenue from Sales & Services", icon: "dollar", color: C.blue },
