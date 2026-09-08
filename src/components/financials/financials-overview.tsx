@@ -70,30 +70,36 @@ const SPARK_W = 72;
 const SPARK_H = 26;
 const BAND = 18; // 4px padding top and bottom
 
-/** 72×26 angular sparkline with an arrow head on the final point. */
-function Sparkline({ values, color }: { values: (number | null)[]; color: string }) {
-  const pts = values.filter((v): v is number => v !== null && !Number.isNaN(v));
-  if (pts.length < 2) return null;
+/**
+ * 72×26 angular sparkline: 5 points, straight mitred segments, exactly two
+ * direction changes. The overall rise/fall uses the SHARED magnitude scale
+ * (never per-series normalisation) and its sign always matches `change`.
+ */
+function Sparkline({
+  values,
+  color,
+  change,
+}: {
+  values: (number | null)[];
+  color: string;
+  change: number | null;
+}) {
+  const known = values.filter((v): v is number => v !== null && !Number.isNaN(v));
+  if (known.length < 2 || change === null) return null;
 
-  // Year-over-year percentage moves → band units on the shared scale.
-  const ys: number[] = [13];
-  for (let i = 1; i < pts.length; i++) {
-    const prevVal = pts[i - 1];
-    const pct = prevVal === 0 ? 0 : ((pts[i] - prevVal) / Math.abs(prevVal)) * 100;
-    ys.push(ys[i - 1] - riseFraction(pct) * BAND);
-  }
+  const signed = riseFraction(change) * BAND; // + = rise, − = fall
+  const dir = signed < 0 ? -1 : 1;
+  const r = dir * Math.max(3.2, Math.abs(signed)); // keep tiny moves visible
+  const center = SPARK_H / 2;
 
-  // Translate (never rescale) so the shape sits inside the band.
-  const lo = Math.min(...ys);
-  const hi = Math.max(...ys);
-  const shift = lo < 4 ? 4 - lo : hi > 22 ? 22 - hi : 0;
-  const clamped = ys.map((y) => Math.max(2, Math.min(24, y + shift)));
+  // Zigzag profile as fractions of the total move: up, back, up, up.
+  const profile = [0, 0.45, 0.22, 0.82, 1];
+  const ys = profile.map((f) => center + r / 2 - f * r);
 
-  const step = (SPARK_W - 8) / (clamped.length - 1);
-  const coords = clamped.map((y, i) => [4 + i * step, y] as const);
+  const step = (SPARK_W - 8) / (ys.length - 1);
+  const coords = ys.map((y, i) => [4 + i * step, Math.max(2.5, Math.min(23.5, y))] as const);
   const last = coords[coords.length - 1];
-  const before = coords[coords.length - 2];
-  const down = last[1] > before[1];
+  const down = dir < 0;
 
   return (
     <svg
@@ -163,7 +169,7 @@ function KpiCard({
 }) {
   return (
     <div
-      className="flex min-h-[128px] flex-col gap-2.5 rounded-xl bg-white p-[14px_15px]"
+      className="flex min-h-[128px] min-w-0 flex-col gap-2.5 rounded-xl bg-white p-[14px_15px]"
       style={{ border: `1px solid ${C.line}` }}
     >
       <div className="flex items-start gap-[11px]">
@@ -193,7 +199,7 @@ function KpiCard({
         </div>
       </div>
       <div
-        className="mt-auto flex flex-nowrap items-center gap-1.5 whitespace-nowrap"
+        className="mt-auto flex min-w-0 flex-nowrap items-center gap-1.5 whitespace-nowrap"
         title={
           change !== null && Math.abs(change) >= 1000
             ? `Exact change: ${fmtNumber(change)}%`
@@ -201,8 +207,10 @@ function KpiCard({
         }
       >
         <Delta value={change} />
-        <span style={{ color: C.muted, fontSize: 12 }}>{compareLabel}</span>
-        <Sparkline values={series} color={color} />
+        <span className="truncate" style={{ color: C.muted, fontSize: 12 }}>
+          {compareLabel}
+        </span>
+        <Sparkline values={series} color={color} change={change} />
       </div>
     </div>
   );
@@ -397,7 +405,7 @@ export function FinancialsOverview({
   return (
     <div className="space-y-3 text-[13px]" style={{ color: C.body }}>
       {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 [@media(min-width:721px)]:grid-cols-3 [@media(min-width:1201px)]:grid-cols-6">
+      <div className="kpi-grid">
         {kpis.map((k) => (
           <KpiCard
             key={k.label}
