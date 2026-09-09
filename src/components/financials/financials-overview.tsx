@@ -612,25 +612,31 @@ export function FinancialsOverview({
                   "sep" in row ? (
                     <div key="sep" className="my-[5px]" style={{ borderTop: `1px solid ${C.hair}` }} />
                   ) : (
-                    <div key={row.label ?? i} className="flex items-start justify-between gap-3 py-1.5">
-                      <span className="whitespace-nowrap text-xs">
+                    <div key={row.label ?? i} className="flex items-baseline gap-3 whitespace-nowrap py-[9px]">
+                      <span className="flex-1 text-xs">
                         <span
                           className="mr-2 inline-block h-2 w-2 rounded-full align-[1px]"
                           style={{ background: row.color }}
                         />
                         {row.label}
                       </span>
-                      <span className="whitespace-nowrap text-right">
-                        <b className="text-[12.5px] font-bold tabular-nums" style={{ color: C.ink }}>
-                          {fmtAmount(row.value ?? null)}
-                        </b>
-                        <small className="block text-[11px]" style={{ color: C.muted }}>
-                          {share(row.value ?? null, row.base ?? 0) === null
-                            ? EMPTY
-                            : `(${fmtNumber(share(row.value ?? null, row.base ?? 0))}%)`}
-                        </small>
-                      </span>
+                      <b
+                        className="text-right text-[12.5px] font-bold tabular-nums"
+                        style={{ color: C.ink }}
+                        title={fmtAmount(row.value ?? null)}
+                      >
+                        {fmtMillions(row.value ?? null)}
+                      </b>
+                      <small
+                        className="min-w-[62px] text-right text-[11px]"
+                        style={{ color: C.muted }}
+                      >
+                        {share(row.value ?? null, row.base ?? 0) === null
+                          ? EMPTY
+                          : `(${fmtNumber(share(row.value ?? null, row.base ?? 0))}%)`}
+                      </small>
                     </div>
+
                   ),
                 )}
               </div>
