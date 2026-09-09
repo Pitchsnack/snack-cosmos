@@ -603,7 +603,7 @@ export function FinancialsOverview({
               </svg>
               <div
                 data-testid="financial-position-legend"
-                className="flex w-full min-w-0 flex-1 flex-col rounded-[10px] px-[11px] py-[9px]"
+                className="flex w-full min-w-0 flex-1 flex-col justify-evenly rounded-[10px] px-[11px] py-[9px]"
                 style={{ border: `1px solid ${C.hair}` }}
               >
                 {[
