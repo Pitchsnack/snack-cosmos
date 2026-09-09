@@ -208,3 +208,15 @@ export function pctChange(current?: number | null, previous?: number | null): nu
   if (previous === null || previous === undefined || previous === 0) return null;
   return ((current - previous) / Math.abs(previous)) * 100;
 }
+
+/**
+ * Overview-only compact notation: always two decimals, M floor below a billion
+ * so a column never mixes K and M. 645,234 → "0.65M"; 2,176,888,132 → "2.18B".
+ */
+export function fmtMillions(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return EMPTY;
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  if (abs >= 1e9) return `${sign}${(abs / 1e9).toFixed(2)}B`;
+  return `${sign}${(abs / 1e6).toFixed(2)}M`;
+}

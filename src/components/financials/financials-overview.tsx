@@ -1,5 +1,5 @@
 import { FinIcon } from "@/components/financials/fin-icon";
-import { EMPTY, fmtAmount, fmtCompact, fmtNumber, pctChange } from "@/lib/financials";
+import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtNumber, pctChange } from "@/lib/financials";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 
 /* Palette from the Financial Overview design spec. */
@@ -612,25 +612,31 @@ export function FinancialsOverview({
                   "sep" in row ? (
                     <div key="sep" className="my-[5px]" style={{ borderTop: `1px solid ${C.hair}` }} />
                   ) : (
-                    <div key={row.label ?? i} className="flex items-start justify-between gap-3 py-1.5">
-                      <span className="whitespace-nowrap text-xs">
+                    <div key={row.label ?? i} className="flex items-baseline gap-3 whitespace-nowrap py-[9px]">
+                      <span className="flex-1 text-xs">
                         <span
                           className="mr-2 inline-block h-2 w-2 rounded-full align-[1px]"
                           style={{ background: row.color }}
                         />
                         {row.label}
                       </span>
-                      <span className="whitespace-nowrap text-right">
-                        <b className="text-[12.5px] font-bold tabular-nums" style={{ color: C.ink }}>
-                          {fmtAmount(row.value ?? null)}
-                        </b>
-                        <small className="block text-[11px]" style={{ color: C.muted }}>
-                          {share(row.value ?? null, row.base ?? 0) === null
-                            ? EMPTY
-                            : `(${fmtNumber(share(row.value ?? null, row.base ?? 0))}%)`}
-                        </small>
-                      </span>
+                      <b
+                        className="text-right text-[12.5px] font-bold tabular-nums"
+                        style={{ color: C.ink }}
+                        title={fmtAmount(row.value ?? null)}
+                      >
+                        {fmtMillions(row.value ?? null)}
+                      </b>
+                      <small
+                        className="min-w-[62px] text-right text-[11px]"
+                        style={{ color: C.muted }}
+                      >
+                        {share(row.value ?? null, row.base ?? 0) === null
+                          ? EMPTY
+                          : `(${fmtNumber(share(row.value ?? null, row.base ?? 0))}%)`}
+                      </small>
                     </div>
+
                   ),
                 )}
               </div>
@@ -648,7 +654,7 @@ export function FinancialsOverview({
                   Total Assets = Total Liabilities &amp; Equity
                 </div>
                 <div className="mt-0.5 text-[14.5px] font-bold tabular-nums" style={{ color: C.navy }}>
-                  {fmtAmount(totalAssets)} {currency}
+                  <span title={fmtAmount(totalAssets)}>{fmtMillions(totalAssets)}</span> {currency}
                 </div>
               </div>
             </div>
@@ -737,10 +743,10 @@ export function FinancialsOverview({
                         {m.label}
                       </td>
                       <td className="whitespace-nowrap border-b px-2.5 py-[7px] text-right tabular-nums" style={{ borderColor: C.hair }}>
-                        {fmtAmount(a)}
+                        <span title={fmtAmount(a)}>{fmtMillions(a)}</span>
                       </td>
                       <td className="whitespace-nowrap border-b px-2.5 py-[7px] text-right tabular-nums" style={{ borderColor: C.hair }}>
-                        {fmtAmount(b)}
+                        <span title={fmtAmount(b)}>{fmtMillions(b)}</span>
                       </td>
                       <td className="whitespace-nowrap border-b px-2.5 py-[7px] text-right" style={{ borderColor: C.hair }}>
                         <ChangeText value={pctChange(b, a)} />
