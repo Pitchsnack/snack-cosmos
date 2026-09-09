@@ -329,7 +329,7 @@ export function FinancialsOverview({
   const YTOP = 40;
   const TICK_GAP = (Y0 - YTOP) / 3;
   const scale = (n: number | null) => (n === null || n <= 0 ? 0 : ((n / axis.top) * (Y0 - YTOP)));
-  const groupCenters = [104, 250, 396];
+  const groupCenters = [104, 230, 356];
 
   const miniRows = [
     { code: "revenue_sales_services", label: "Revenue from Sales & Services", icon: "dollar", color: C.blue },
@@ -432,7 +432,7 @@ export function FinancialsOverview({
       {/* Row A / B / C */}
       <div className="grid items-stretch gap-[11px] grid-cols-1 xl:h-[512px] xl:[grid-template-columns:1.06fr_0.94fr_1.20fr]">
         {/* A */}
-        <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-visible rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             A) Income Highlights{" "}
             <span className="font-medium" style={{ color: C.muted }}>
@@ -453,9 +453,9 @@ export function FinancialsOverview({
               % Change
             </span>
           </div>
-          <div className="flex min-h-[300px] flex-1 items-stretch">
+          <div className="flex min-h-[180px] max-h-[300px] flex-1 items-stretch">
           <svg viewBox="0 0 460 300" width="100%" height="100%" preserveAspectRatio="none" className="block h-full w-full">
-            <g fontSize="12" fill={C.muted}>
+            <g fontSize="9" fill={C.muted}>
               <text x="0" y="20">
                 {currency}
               </text>
@@ -477,12 +477,12 @@ export function FinancialsOverview({
               const topY = Math.min(Y0 - hPrev, Y0 - hCurr);
               return (
                 <g key={b.code}>
-                  <rect x={cx - 38} y={Y0 - hPrev} width="34" height={Math.max(hPrev, 1)} fill={C.barPrev} rx="3" />
-                  <rect x={cx + 4} y={Y0 - hCurr} width="34" height={Math.max(hCurr, 1)} fill={C.navy} rx="3" />
-                  <text x={cx - 21} y={Y0 - hPrev - 7} fontSize="11.5" fill={C.body} textAnchor="middle">
+                   <rect x={cx - 33} y={Y0 - hPrev} width="30" height={Math.max(hPrev, 1)} fill={C.barPrev} rx="3" />
+                   <rect x={cx + 3} y={Y0 - hCurr} width="30" height={Math.max(hCurr, 1)} fill={C.navy} rx="3" />
+                   <text x={cx - 18} y={Y0 - hPrev - 7} fontSize="9" fill={C.body} textAnchor="middle">
                     {b.prev === null ? EMPTY : fmtCompact(b.prev, 1)}
                   </text>
-                  <text x={cx + 21} y={Y0 - hCurr - 7} fontSize="11.5" fill={C.ink} textAnchor="middle" fontWeight="700">
+                   <text x={cx + 18} y={Y0 - hCurr - 7} fontSize="9" fill={C.ink} textAnchor="middle" fontWeight="700">
                     {b.curr === null ? EMPTY : fmtCompact(b.curr, 1)}
                   </text>
                   {b.change !== null && (
@@ -498,7 +498,7 @@ export function FinancialsOverview({
                       <text
                         x={cx}
                         y={Math.max(6, topY - 40) + 13.5}
-                        fontSize="11"
+                         fontSize="8.5"
                         fill={b.change >= 0 ? C.green : C.red}
                         textAnchor="middle"
                         fontWeight="700"
@@ -508,7 +508,7 @@ export function FinancialsOverview({
                       </text>
                     </>
                   )}
-                  <g fontSize="12" fill={C.body} textAnchor="middle">
+                   <g fontSize="9" fill={C.body} textAnchor="middle">
                     <text x={cx} y="273">
                       {b.lines[0]}
                     </text>
@@ -521,7 +521,7 @@ export function FinancialsOverview({
             })}
           </svg>
           </div>
-          <table className="mt-auto w-full border-collapse pt-1.5 text-[11.5px]">
+          <table className="mt-auto w-full shrink-0 border-collapse pt-1.5 text-[11.5px]">
             <thead>
               <tr>
                 <th className="border-b py-1 pl-1 text-left text-[10.5px] font-semibold" style={{ borderColor: C.hair, color: C.muted }} />
@@ -568,7 +568,7 @@ export function FinancialsOverview({
         </section>
 
         {/* B */}
-        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col overflow-visible rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             B) Financial Position{" "}
             <span className="font-medium" style={{ color: C.muted }}>
@@ -662,7 +662,7 @@ export function FinancialsOverview({
         </section>
 
         {/* C */}
-        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col overflow-visible rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             C) Key Ratio Snapshot{" "}
             <span className="font-medium" style={{ color: C.muted }}>
