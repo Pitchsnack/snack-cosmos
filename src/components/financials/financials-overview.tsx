@@ -577,7 +577,7 @@ export function FinancialsOverview({
           </h2>
           <div className="flex flex-1 flex-col">
             <div className="flex flex-1 flex-col items-center gap-3.5">
-              <svg viewBox="0 0 180 180" width="152" height="152" className="shrink-0">
+              <svg viewBox="0 0 180 180" width="180" height="180" className="shrink-0">
                 <circle cx="90" cy="90" r="64" fill="none" stroke={C.blueLight} strokeWidth="34" />
                 {assetBase > 0 && (
                   <circle
@@ -610,7 +610,7 @@ export function FinancialsOverview({
                   { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
                   { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
                 ].map((row) => (
-                    <div key={row.label} className="flex items-baseline gap-3 whitespace-nowrap">
+                    <div key={row.label} className="flex min-h-[40px] items-center gap-3 whitespace-nowrap">
                       <span className="flex-1 text-xs">
                         <span
                           className="mr-2 inline-block h-2 w-2 rounded-full align-[1px]"
@@ -644,7 +644,7 @@ export function FinancialsOverview({
                   { label: "Total Liabilities", value: totalLiabilities, color: C.purple, base: fundingBase },
                   { label: "Equity", value: equity, color: C.green, base: fundingBase },
                 ].map((row) => (
-                  <div key={row.label} className="flex items-baseline gap-3 whitespace-nowrap">
+                  <div key={row.label} className="flex min-h-[40px] items-center gap-3 whitespace-nowrap">
                     <span className="flex-1 text-xs">
                       <span
                         className="mr-2 inline-block h-2 w-2 rounded-full align-[1px]"
