@@ -20,6 +20,7 @@ import {
 
 import { formatThaiDateTime, type CompanyInfoTh } from "@/lib/company-info";
 import type { StartupFinancials, StatementItem } from "@/lib/financials.functions";
+import { fmtCapital } from "@/lib/financials";
 import { CompanyInfoEditor } from "@/components/financials/company-info-editor";
 
 /* ------------------------------------------------------------------ */
@@ -219,7 +220,7 @@ export function CompanyInfoTab({
     {
       label: "Registered capital",
       value: compactBaht(capital) ?? NOT_ON_FILE,
-      caption: info.registeredCapitalThRaw ?? NOT_ON_FILE,
+      caption: fmtCapital(info.registeredCapitalThRaw) ?? NOT_ON_FILE,
     },
     {
       label: "Business size",
@@ -481,7 +482,7 @@ export function CompanyInfoTab({
               </div>
               <div>
                 <RecRow label="Registered date" value={info.registrationDateThRaw} />
-                <RecRow label="Registered capital" value={info.registeredCapitalThRaw} />
+                <RecRow label="Registered capital" value={fmtCapital(info.registeredCapitalThRaw)} />
                 <RecRow label="Business size" value={info.businessSize} />
                 <RecRow label="Last registered ID" value={info.previousRegistrationNumber} mono />
                 <RecRow label="Head office" value={info.headOfficeAddressTh} />

@@ -19,7 +19,7 @@ import { RatiosTable } from "@/components/financials/ratios-table";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
 import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { FinIcon } from "@/components/financials/fin-icon";
-import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
+import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS, fmtCapital } from "@/lib/financials";
 import { getStartupFinancials } from "@/lib/financials.functions";
 import { getCompanyInfoTh } from "@/lib/company-info.functions";
 import { CompanyInfoTab } from "@/components/financials/company-info-tab";
@@ -68,7 +68,7 @@ function CompanyProfileCard({
       ["Registered Date", p.registeredDate ?? DASH],
     ],
     [
-      ["Registered Capital", p.registeredCapital ?? DASH],
+      ["Registered Capital", fmtCapital(p.registeredCapital) ?? DASH],
       ["Last Registered ID", p.registeredNumber ?? DASH],
       ["Business Size", p.businessSize ?? DASH],
     ],
