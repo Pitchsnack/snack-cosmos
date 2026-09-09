@@ -430,10 +430,10 @@ export function FinancialsOverview({
       </div>
 
       {/* Row A / B / C */}
-      <div className="grid items-stretch gap-[11px] grid-cols-1 xl:[grid-template-columns:1.06fr_0.94fr_1.20fr]">
+      <div className="grid items-stretch gap-[11px] grid-cols-1 xl:h-[512px] xl:[grid-template-columns:1.06fr_0.94fr_1.20fr]">
         {/* A */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
+        <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+          <h2 className="flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             A) Income Highlights{" "}
             <span className="font-medium" style={{ color: C.muted }}>
               ({prev ?? EMPTY} vs {latest ?? EMPTY})
@@ -568,16 +568,16 @@ export function FinancialsOverview({
         </section>
 
         {/* B */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             B) Financial Position{" "}
             <span className="font-medium" style={{ color: C.muted }}>
               (as of {latest ?? EMPTY})
             </span>
           </h2>
-          <div className="flex flex-1 flex-col">
-            <div className="flex flex-col items-center gap-3.5">
-              <svg viewBox="0 0 180 180" width="180" height="180" className="shrink-0">
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="flex min-h-0 flex-1 items-center justify-center">
+              <svg viewBox="0 0 180 180" className="aspect-square h-full max-h-[220px] w-auto max-w-[220px] shrink-0">
                 <circle cx="90" cy="90" r="64" fill="none" stroke={C.blueLight} strokeWidth="34" />
                 {assetBase > 0 && (
                   <circle
@@ -601,7 +601,8 @@ export function FinancialsOverview({
                   {currency}
                 </text>
               </svg>
-              <div className="grid w-full min-w-0 gap-[10px] rounded-[10px] px-[14px] py-[12px]" style={{ border: `1px solid ${C.hair}` }}>
+            </div>
+            <div className="grid w-full min-w-0 gap-[10px] rounded-[10px] px-[14px] py-[12px]" style={{ border: `1px solid ${C.hair}` }}>
                 {[
                   { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
                   { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
@@ -639,10 +640,9 @@ export function FinancialsOverview({
 
                   ),
                 )}
-              </div>
             </div>
             <div
-              className="mt-auto flex items-center gap-[10px] rounded-[10px] px-[15px] py-[13px]"
+              className="flex items-center gap-[10px] rounded-[10px] px-[15px] py-[13px]"
               style={{ background: C.blueBg }}
             >
               <FinIcon name="scale" className="h-[22px] w-[22px] shrink-0" style={{ color: C.navy }} />
@@ -662,7 +662,7 @@ export function FinancialsOverview({
         </section>
 
         {/* C */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             C) Key Ratio Snapshot{" "}
             <span className="font-medium" style={{ color: C.muted }}>
