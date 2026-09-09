@@ -607,17 +607,9 @@ export function FinancialsOverview({
                 style={{ border: `1px solid ${C.hair}` }}
               >
                 {[
-                  [
-                    { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
-                    { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
-                  ],
-                  [
-                    { label: "Total Liabilities", value: totalLiabilities, color: C.purple, base: fundingBase },
-                    { label: "Equity", value: equity, color: C.green, base: fundingBase },
-                  ],
-                ].map((group, groupIndex) => (
-                  <div key={groupIndex} className="flex min-h-0 flex-1 flex-col justify-evenly">
-                    {group.map((row) => (
+                  { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
+                  { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
+                ].map((row) => (
                     <div key={row.label} className="flex items-baseline gap-3 whitespace-nowrap">
                       <span className="flex-1 text-xs">
                         <span
@@ -642,17 +634,38 @@ export function FinancialsOverview({
                           : `(${fmtNumber(share(row.value ?? null, row.base ?? 0))}%)`}
                       </small>
                     </div>
-                    ))}
-                    {groupIndex === 0 && (
-                      <div className="absolute" aria-hidden="true" />
-                    )}
-                  </div>
                 ))}
                 <div
                   className="order-none shrink-0"
                   style={{ borderTop: `1px solid ${C.hair}` }}
                   aria-hidden="true"
                 />
+                {[
+                  { label: "Total Liabilities", value: totalLiabilities, color: C.purple, base: fundingBase },
+                  { label: "Equity", value: equity, color: C.green, base: fundingBase },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-baseline gap-3 whitespace-nowrap">
+                    <span className="flex-1 text-xs">
+                      <span
+                        className="mr-2 inline-block h-2 w-2 rounded-full align-[1px]"
+                        style={{ background: row.color }}
+                      />
+                      {row.label}
+                    </span>
+                    <b
+                      className="text-right text-[12.5px] font-bold tabular-nums"
+                      style={{ color: C.ink }}
+                      title={fmtAmount(row.value)}
+                    >
+                      {fmtMillions(row.value)}
+                    </b>
+                    <small className="min-w-[62px] text-right text-[11px]" style={{ color: C.muted }}>
+                      {share(row.value, row.base) === null
+                        ? EMPTY
+                        : `(${fmtNumber(share(row.value, row.base))}%)`}
+                    </small>
+                  </div>
+                ))}
               </div>
             </div>
             <div
