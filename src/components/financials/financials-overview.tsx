@@ -551,11 +551,19 @@ export function FinancialsOverview({
                       </span>
                       {row.label}
                     </td>
-                    <td className="whitespace-nowrap border-b p-1 text-right tabular-nums" style={{ borderColor: C.hair }}>
-                      {fmtAmount(a)}
+                    <td
+                      className="whitespace-nowrap border-b p-1 text-right tabular-nums"
+                      style={{ borderColor: C.hair }}
+                      title={a === null ? undefined : fmtAmount(a)}
+                    >
+                      {fmtMillionsOnly(a)}
                     </td>
-                    <td className="whitespace-nowrap border-b p-1 text-right tabular-nums" style={{ borderColor: C.hair }}>
-                      {fmtAmount(b)}
+                    <td
+                      className="whitespace-nowrap border-b p-1 text-right tabular-nums"
+                      style={{ borderColor: C.hair }}
+                      title={b === null ? undefined : fmtAmount(b)}
+                    >
+                      {fmtMillionsOnly(b)}
                     </td>
                     <td className="whitespace-nowrap border-b p-1 text-right" style={{ borderColor: C.hair }}>
                       <ChangeText value={pctChange(b, a)} arrows={false} />
