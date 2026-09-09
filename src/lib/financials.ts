@@ -166,8 +166,21 @@ export const EMPTY = "—";
 
 export function fmtAmount(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return EMPTY;
-  return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Math.round(value).toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
+
+/**
+ * Registered capital arrives from DBD as a raw string like "2,000,000.00 บาท".
+ * Display it without the always-zero decimals and with a THB suffix.
+ */
+export function fmtCapital(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const num = Number(raw.replace(/,/g, "").match(/-?\d+(\.\d+)?/)?.[0] ?? NaN);
+  if (Number.isNaN(num)) return raw;
+  const hasUnit = /บาท|baht|thb/i.test(raw);
+  return `${Math.round(num).toLocaleString("en-US", { maximumFractionDigits: 0 })}${hasUnit ? " THB" : ""}`;
+}
+
 
 export function fmtNumber(value: number | null | undefined, digits = 2): string {
   if (value === null || value === undefined || Number.isNaN(value)) return EMPTY;
