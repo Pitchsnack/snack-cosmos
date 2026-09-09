@@ -432,7 +432,7 @@ export function FinancialsOverview({
       {/* Row A / B / C */}
       <div className="grid items-stretch gap-[11px] grid-cols-1 xl:[grid-template-columns:1.06fr_0.94fr_1.20fr]">
         {/* A */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section data-testid="financial-overview-card-a" className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             A) Income Highlights{" "}
             <span className="font-medium" style={{ color: C.muted }}>
@@ -568,7 +568,7 @@ export function FinancialsOverview({
         </section>
 
         {/* B */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section data-testid="financial-overview-card-b" className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             B) Financial Position{" "}
             <span className="font-medium" style={{ color: C.muted }}>
@@ -601,18 +601,24 @@ export function FinancialsOverview({
                   {currency}
                 </text>
               </svg>
-              <div className="w-full min-w-0 flex-1 rounded-[10px] px-[11px] py-[9px]" style={{ border: `1px solid ${C.hair}` }}>
+              <div
+                data-testid="financial-position-legend"
+                className="flex w-full min-w-0 flex-1 flex-col rounded-[10px] px-[11px] py-[9px]"
+                style={{ border: `1px solid ${C.hair}` }}
+              >
                 {[
-                  { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
-                  { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
-                  { sep: true as const },
-                  { label: "Total Liabilities", value: totalLiabilities, color: C.purple, base: fundingBase },
-                  { label: "Equity", value: equity, color: C.green, base: fundingBase },
-                ].map((row, i) =>
-                  "sep" in row ? (
-                    <div key="sep" className="my-[5px]" style={{ borderTop: `1px solid ${C.hair}` }} />
-                  ) : (
-                    <div key={row.label ?? i} className="flex items-baseline gap-3 whitespace-nowrap py-[9px]">
+                  [
+                    { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
+                    { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
+                  ],
+                  [
+                    { label: "Total Liabilities", value: totalLiabilities, color: C.purple, base: fundingBase },
+                    { label: "Equity", value: equity, color: C.green, base: fundingBase },
+                  ],
+                ].map((group, groupIndex) => (
+                  <div key={groupIndex} className="flex min-h-0 flex-1 flex-col justify-evenly">
+                    {group.map((row) => (
+                    <div key={row.label} className="flex items-baseline gap-3 whitespace-nowrap">
                       <span className="flex-1 text-xs">
                         <span
                           className="mr-2 inline-block h-2 w-2 rounded-full align-[1px]"
@@ -636,9 +642,17 @@ export function FinancialsOverview({
                           : `(${fmtNumber(share(row.value ?? null, row.base ?? 0))}%)`}
                       </small>
                     </div>
-
-                  ),
-                )}
+                    ))}
+                    {groupIndex === 0 && (
+                      <div className="absolute" aria-hidden="true" />
+                    )}
+                  </div>
+                ))}
+                <div
+                  className="order-none shrink-0"
+                  style={{ borderTop: `1px solid ${C.hair}` }}
+                  aria-hidden="true"
+                />
               </div>
             </div>
             <div
@@ -662,7 +676,7 @@ export function FinancialsOverview({
         </section>
 
         {/* C */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section data-testid="financial-overview-card-c" className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             C) Key Ratio Snapshot{" "}
             <span className="font-medium" style={{ color: C.muted }}>
