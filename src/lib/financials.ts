@@ -220,3 +220,14 @@ export function fmtMillions(value: number | null | undefined): string {
   if (abs >= 1e9) return `${sign}${(abs / 1e9).toFixed(2)}B`;
   return `${sign}${(abs / 1e6).toFixed(2)}M`;
 }
+
+/**
+ * Fixed-millions display: always M, exactly two decimals, thousands grouping.
+ * Never switches to B or K, so a column can be scanned without reading suffixes.
+ * 2,158,981,263 → "2,158.98M", 645,234 → "0.65M", -435,077 → "-0.44M".
+ */
+export function fmtMillionsOnly(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return EMPTY;
+  const m = value / 1e6;
+  return `${m.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`;
+}

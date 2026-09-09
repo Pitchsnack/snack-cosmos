@@ -1,5 +1,5 @@
 import { FinIcon } from "@/components/financials/fin-icon";
-import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtNumber, pctChange } from "@/lib/financials";
+import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtMillionsOnly, fmtNumber, pctChange } from "@/lib/financials";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 
 /* Palette from the Financial Overview design spec. */
@@ -551,11 +551,19 @@ export function FinancialsOverview({
                       </span>
                       {row.label}
                     </td>
-                    <td className="whitespace-nowrap border-b p-1 text-right tabular-nums" style={{ borderColor: C.hair }}>
-                      {fmtAmount(a)}
+                    <td
+                      className="whitespace-nowrap border-b p-1 text-right tabular-nums"
+                      style={{ borderColor: C.hair }}
+                      title={a === null ? undefined : fmtAmount(a)}
+                    >
+                      {fmtMillionsOnly(a)}
                     </td>
-                    <td className="whitespace-nowrap border-b p-1 text-right tabular-nums" style={{ borderColor: C.hair }}>
-                      {fmtAmount(b)}
+                    <td
+                      className="whitespace-nowrap border-b p-1 text-right tabular-nums"
+                      style={{ borderColor: C.hair }}
+                      title={b === null ? undefined : fmtAmount(b)}
+                    >
+                      {fmtMillionsOnly(b)}
                     </td>
                     <td className="whitespace-nowrap border-b p-1 text-right" style={{ borderColor: C.hair }}>
                       <ChangeText value={pctChange(b, a)} arrows={false} />
