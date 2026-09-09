@@ -1,5 +1,5 @@
 import { FinIcon } from "@/components/financials/fin-icon";
-import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtNumber, pctChange } from "@/lib/financials";
+import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtMillionsOnly, fmtNumber, pctChange } from "@/lib/financials";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 
 /* Palette from the Financial Overview design spec. */
