@@ -1,5 +1,5 @@
 import { FinIcon } from "@/components/financials/fin-icon";
-import { EMPTY, fmtAmount, fmtCompact, fmtNumber, pctChange } from "@/lib/financials";
+import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtNumber, pctChange } from "@/lib/financials";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 
 /* Palette from the Financial Overview design spec. */
@@ -654,7 +654,7 @@ export function FinancialsOverview({
                   Total Assets = Total Liabilities &amp; Equity
                 </div>
                 <div className="mt-0.5 text-[14.5px] font-bold tabular-nums" style={{ color: C.navy }}>
-                  {fmtAmount(totalAssets)} {currency}
+                  <span title={fmtAmount(totalAssets)}>{fmtMillions(totalAssets)}</span> {currency}
                 </div>
               </div>
             </div>
@@ -743,10 +743,10 @@ export function FinancialsOverview({
                         {m.label}
                       </td>
                       <td className="whitespace-nowrap border-b px-2.5 py-[7px] text-right tabular-nums" style={{ borderColor: C.hair }}>
-                        {fmtAmount(a)}
+                        <span title={fmtAmount(a)}>{fmtMillions(a)}</span>
                       </td>
                       <td className="whitespace-nowrap border-b px-2.5 py-[7px] text-right tabular-nums" style={{ borderColor: C.hair }}>
-                        {fmtAmount(b)}
+                        <span title={fmtAmount(b)}>{fmtMillions(b)}</span>
                       </td>
                       <td className="whitespace-nowrap border-b px-2.5 py-[7px] text-right" style={{ borderColor: C.hair }}>
                         <ChangeText value={pctChange(b, a)} />
