@@ -430,9 +430,9 @@ export function FinancialsOverview({
       </div>
 
       {/* Row A / B / C */}
-      <div className="grid items-stretch gap-[11px] grid-cols-1 xl:[grid-template-columns:1.06fr_0.94fr_1.20fr]">
+      <div className="grid items-stretch gap-[11px] grid-cols-1 xl:h-[512px] xl:[grid-template-columns:1.06fr_0.94fr_1.20fr]">
         {/* A */}
-        <section className="flex min-w-0 flex-col gap-3 rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             A) Income Highlights{" "}
             <span className="font-medium" style={{ color: C.muted }}>
@@ -568,7 +568,7 @@ export function FinancialsOverview({
         </section>
 
         {/* B */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             B) Financial Position{" "}
             <span className="font-medium" style={{ color: C.muted }}>
@@ -662,7 +662,7 @@ export function FinancialsOverview({
         </section>
 
         {/* C */}
-        <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
             C) Key Ratio Snapshot{" "}
             <span className="font-medium" style={{ color: C.muted }}>
