@@ -576,8 +576,8 @@ export function FinancialsOverview({
             </span>
           </h2>
           <div className="flex flex-1 flex-col">
-            <div className="flex flex-1 flex-col items-center gap-3.5">
-              <svg viewBox="0 0 180 180" width="152" height="152" className="shrink-0">
+            <div className="flex flex-col items-center gap-3.5">
+              <svg viewBox="0 0 180 180" width="180" height="180" className="shrink-0">
                 <circle cx="90" cy="90" r="64" fill="none" stroke={C.blueLight} strokeWidth="34" />
                 {assetBase > 0 && (
                   <circle
@@ -601,7 +601,7 @@ export function FinancialsOverview({
                   {currency}
                 </text>
               </svg>
-              <div className="w-full min-w-0 flex-1 rounded-[10px] px-[11px] py-[9px]" style={{ border: `1px solid ${C.hair}` }}>
+              <div className="grid w-full min-w-0 gap-[10px] rounded-[10px] px-[14px] py-[12px]" style={{ border: `1px solid ${C.hair}` }}>
                 {[
                   { label: "Current Assets", value: currentAssets, color: C.blueDark, base: assetBase },
                   { label: "Non-current Assets", value: nonCurrentAssets, color: C.blueLight, base: assetBase },
@@ -610,9 +610,9 @@ export function FinancialsOverview({
                   { label: "Equity", value: equity, color: C.green, base: fundingBase },
                 ].map((row, i) =>
                   "sep" in row ? (
-                    <div key="sep" className="my-[5px]" style={{ borderTop: `1px solid ${C.hair}` }} />
+                    <div key="sep" style={{ borderTop: `1px solid ${C.hair}` }} />
                   ) : (
-                    <div key={row.label ?? i} className="flex items-baseline gap-3 whitespace-nowrap py-[9px]">
+                    <div key={row.label ?? i} className="flex items-baseline gap-3 whitespace-nowrap">
                       <span className="flex-1 text-xs">
                         <span
                           className="mr-2 inline-block h-2 w-2 rounded-full align-[1px]"
@@ -642,7 +642,7 @@ export function FinancialsOverview({
               </div>
             </div>
             <div
-              className="mt-[11px] flex items-center gap-[10px] rounded-[10px] px-[15px] py-[13px]"
+              className="mt-auto flex items-center gap-[10px] rounded-[10px] px-[15px] py-[13px]"
               style={{ background: C.blueBg }}
             >
               <FinIcon name="scale" className="h-[22px] w-[22px] shrink-0" style={{ color: C.navy }} />
