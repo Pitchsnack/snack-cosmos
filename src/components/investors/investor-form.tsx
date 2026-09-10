@@ -827,6 +827,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
               {supportsSnip && (
                 <SnippingCapture
                   open={snipLogoOpen}
+                  outputName="logo.png"
                   onCancel={() => setSnipLogoOpen(false)}
                   onCapture={(file) => {
                     setSnipLogoOpen(false);
