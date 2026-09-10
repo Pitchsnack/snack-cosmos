@@ -158,12 +158,16 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
     // Fetch candidate pages sequentially with early stop so we can keep latency low.
     const pagesTried: EnrichDebug["pagesTried"] = [];
     const usedTexts: string[] = [];
+    // SPA routers serve the SAME shell HTML for every path. Without dedupe the
+    // corpus looks large (11 x boilerplate) and the Firecrawl fallback never fires.
+    const seen = new Set<string>();
     let total = 0;
     for (const path of CANDIDATE_PATHS) {
       const url = origin + path;
       const out = await fetchText(url);
       pagesTried.push({ path: path || "/", status: out.status, bytes: out.bytes });
-      if (out.text) {
+      if (out.text && !seen.has(out.text)) {
+        seen.add(out.text);
         usedTexts.push(out.text);
         total += out.text.length;
         if (total >= EARLY_STOP_CHARS) break;
