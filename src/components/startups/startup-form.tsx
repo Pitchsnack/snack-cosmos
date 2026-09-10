@@ -879,25 +879,39 @@ export function StartupForm({
 
             <div className="space-y-1.5">
               <Label>Company Logo</Label>
-              <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
-                {logoPreview ? (
-                  <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
-                ) : (
-                  <Upload className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <label className="flex h-[38px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  <span className="truncate">
+                    {media.logo.pendingFile ? media.logo.pendingFile.name : "Upload logo (PNG, JPG, SVG)"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      if (f) setMedia({ ...media, logo: { ...media.logo, pendingFile: f } });
+                    }}
+                  />
+                </label>
+                {supportsSnip && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-[38px] shrink-0"
+                    onClick={() => setSnipLogoOpen(true)}
+                    title="Snip from screen"
+                  >
+                    <Scissors className="mr-1.5 h-3.5 w-3.5" /> Snip
+                  </Button>
                 )}
-                <span className="truncate">
-                  {media.logo.pendingFile ? media.logo.pendingFile.name : "Upload logo (PNG, JPG, SVG)"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] ?? null;
-                    if (f) setMedia({ ...media, logo: { ...media.logo, pendingFile: f } });
-                  }}
-                />
-              </label>
+              </div>
             </div>
           </div>
         </div>
