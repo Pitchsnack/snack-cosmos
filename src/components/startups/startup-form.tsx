@@ -290,6 +290,11 @@ export function StartupForm({
     }
   }, [tenants, tenantId, activeTenantId, isEdit]);
 
+  // Logo snip-from-screen
+  const [snipLogoOpen, setSnipLogoOpen] = useState(false);
+  const supportsSnip =
+    typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
+
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? "");
   const [companyType, setCompanyType] = useState<string>(startup?.company_type ?? "");
