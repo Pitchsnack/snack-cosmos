@@ -304,6 +304,9 @@ export function InvestorForm({ investor, controlReturn }: Props) {
     mergedTenants.find((t) => t.tenantId === tenantId)?.tenantName ?? null;
 
   // Core fields (hydrated from investor in edit mode)
+  const [snipLogoOpen, setSnipLogoOpen] = useState(false);
+  const supportsSnip =
+    typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
   const [displayName, setDisplayName] = useState(investor?.investor_name ?? "");
   const [firmName, setFirmName] = useState(investor?.firm_name ?? "");
   const [title, setTitle] = useState(investor?.investor_type ?? "");
