@@ -918,9 +918,20 @@ export function StartupForm({
                   </Button>
                 )}
               </div>
+              {supportsSnip && (
+                <SnippingCapture
+                  open={snipLogoOpen}
+                  onCancel={() => setSnipLogoOpen(false)}
+                  onCapture={(file) => {
+                    setSnipLogoOpen(false);
+                    setMedia({ ...media, logo: { ...media.logo, pendingFile: file } });
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
+
 
         <div className="space-y-3 rounded-lg border border-border bg-card p-6 shadow-card">
           <h2 className="text-sm font-semibold">
