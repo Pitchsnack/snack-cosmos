@@ -157,6 +157,54 @@ export function StartupInfoBody({
   const marketTags = data.marketTags ?? [];
   const founders = data.founders ?? [];
 
+  const metaItems: { icon: typeof Calendar; value: React.ReactNode }[] = [];
+  if (data.yearFounded) metaItems.push({ icon: Calendar, value: `Est. ${data.yearFounded}` });
+  if (data.companyType) metaItems.push({ icon: Building2, value: data.companyType });
+  if (data.investmentStage) metaItems.push({ icon: TrendingUp, value: data.investmentStage });
+  if (data.companySize) metaItems.push({ icon: Users, value: data.companySize });
+  if (data.revenue) metaItems.push({ icon: Banknote, value: data.revenue });
+  if (data.headquarters) metaItems.push({ icon: MapPin, value: data.headquarters });
+  if (data.city) metaItems.push({ icon: MapPin, value: data.city });
+  if (data.region) metaItems.push({ icon: Globe, value: data.region });
+  if (data.website)
+    metaItems.push({
+      icon: Globe,
+      value: (
+        <a
+          href={href(data.website)}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-900 hover:underline"
+        >
+          Website →
+        </a>
+      ),
+    });
+  if (data.email)
+    metaItems.push({
+      icon: Mail,
+      value: (
+        <a href={`mailto:${data.email}`} className="text-blue-900 hover:underline">
+          {data.email}
+        </a>
+      ),
+    });
+  if (data.linkedinUrl)
+    metaItems.push({
+      icon: Linkedin,
+      value: (
+        <a
+          href={href(data.linkedinUrl)}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-900 hover:underline"
+        >
+          LinkedIn →
+        </a>
+      ),
+    });
+
+
   return (
     <>
       {/* Short description */}
