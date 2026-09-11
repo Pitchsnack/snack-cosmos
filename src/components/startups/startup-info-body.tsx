@@ -181,7 +181,7 @@ export function StartupInfoBody({
           <Field icon={Users} label="Company Size" value={data.companySize ?? null} />
           <Field icon={Banknote} label="Revenue" value={data.revenue ?? null} />
           <Field icon={MapPin} label="Headquarters" value={data.headquarters ?? null} />
-          <Field icon={Globe} label="Region" value={data.region ?? null} />
+          <Field icon={Globe} label="\n" value={data.region ?? null} />
           <Field icon={MapPin} label="City" value={data.city ?? null} />
           <Field
             icon={Globe}
