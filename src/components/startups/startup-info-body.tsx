@@ -90,28 +90,8 @@ export function StartupInfoSection({
   );
 }
 
-function Field({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Calendar;
-  label: string;
-  value: React.ReactNode;
-}) {
-  const empty = value === null || value === undefined || value === "";
-  return (
-    <div className="flex items-start gap-2">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-      <div className="min-w-0">
-        <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt>
-        <dd className={cn("text-sm", empty ? "text-muted-foreground" : "text-foreground/85")}>
-          {empty ? EMPTY : value}
-        </dd>
-      </div>
-    </div>
-  );
-}
+
+
 
 function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
   if (tags.length === 0) return <span className="text-sm text-muted-foreground">Not available</span>;
