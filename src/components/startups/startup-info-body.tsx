@@ -59,7 +59,7 @@ export interface StartupInfoData {
   founders?: StartupInfoFounder[];
 }
 
-const EMPTY = "—";
+
 
 function href(url: string) {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
@@ -90,28 +90,8 @@ export function StartupInfoSection({
   );
 }
 
-function Field({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Calendar;
-  label: string;
-  value: React.ReactNode;
-}) {
-  const empty = value === null || value === undefined || value === "";
-  return (
-    <div className="flex items-start gap-2">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-      <div className="min-w-0">
-        <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt>
-        <dd className={cn("text-sm", empty ? "text-muted-foreground" : "text-foreground/85")}>
-          {empty ? EMPTY : value}
-        </dd>
-      </div>
-    </div>
-  );
-}
+
+
 
 function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
   if (tags.length === 0) return <span className="text-sm text-muted-foreground">Not available</span>;
@@ -157,6 +137,54 @@ export function StartupInfoBody({
   const marketTags = data.marketTags ?? [];
   const founders = data.founders ?? [];
 
+  const metaItems: { icon: typeof Calendar; value: React.ReactNode }[] = [];
+  if (data.yearFounded) metaItems.push({ icon: Calendar, value: `Est. ${data.yearFounded}` });
+  if (data.companyType) metaItems.push({ icon: Building2, value: data.companyType });
+  if (data.investmentStage) metaItems.push({ icon: TrendingUp, value: data.investmentStage });
+  if (data.companySize) metaItems.push({ icon: Users, value: data.companySize });
+  if (data.revenue) metaItems.push({ icon: Banknote, value: data.revenue });
+  if (data.headquarters) metaItems.push({ icon: MapPin, value: data.headquarters });
+  if (data.city) metaItems.push({ icon: MapPin, value: data.city });
+  if (data.region) metaItems.push({ icon: Globe, value: data.region });
+  if (data.website)
+    metaItems.push({
+      icon: Globe,
+      value: (
+        <a
+          href={href(data.website)}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-900 hover:underline"
+        >
+          Website →
+        </a>
+      ),
+    });
+  if (data.email)
+    metaItems.push({
+      icon: Mail,
+      value: (
+        <a href={`mailto:${data.email}`} className="text-blue-900 hover:underline">
+          {data.email}
+        </a>
+      ),
+    });
+  if (data.linkedinUrl)
+    metaItems.push({
+      icon: Linkedin,
+      value: (
+        <a
+          href={href(data.linkedinUrl)}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-900 hover:underline"
+        >
+          LinkedIn →
+        </a>
+      ),
+    });
+
+
   return (
     <>
       {/* Short description */}
@@ -166,68 +194,18 @@ export function StartupInfoBody({
         )}
       </p>
 
-      {/* Company information — always the same fields, in the same order */}
-      <StartupInfoSection icon={Building2} title="Company information">
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <Field icon={Building2} label="Company Name" value={data.name} />
-          <Field icon={FileText} label="Registered Name" value={data.registeredName ?? null} />
-          <Field icon={Building2} label="Company Type" value={data.companyType ?? null} />
-          <Field icon={Calendar} label="Year Founded" value={data.yearFounded ?? null} />
-          <Field
-            icon={TrendingUp}
-            label="Investment / Funding Stage"
-            value={data.investmentStage ?? null}
-          />
-          <Field icon={Users} label="Company Size" value={data.companySize ?? null} />
-          <Field icon={Banknote} label="Revenue" value={data.revenue ?? null} />
-          <Field icon={MapPin} label="Headquarters" value={data.headquarters ?? null} />
-          <Field icon={Globe} label="\n" value={data.region ?? null} />
-          <Field icon={MapPin} label="City" value={data.city ?? null} />
-          <Field
-            icon={Globe}
-            label="Website"
-            value={
-              data.website ? (
-                <a
-                  href={href(data.website)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-900 hover:underline"
-                >
-                  {data.website.replace(/^https?:\/\//i, "")}
-                </a>
-              ) : null
-            }
-          />
-          <Field
-            icon={Mail}
-            label="Email"
-            value={
-              data.email ? (
-                <a href={`mailto:${data.email}`} className="text-blue-900 hover:underline">
-                  {data.email}
-                </a>
-              ) : null
-            }
-          />
-          <Field
-            icon={Linkedin}
-            label="LinkedIn"
-            value={
-              data.linkedinUrl ? (
-                <a
-                  href={href(data.linkedinUrl)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-900 hover:underline"
-                >
-                  View profile
-                </a>
-              ) : null
-            }
-          />
-        </dl>
-      </StartupInfoSection>
+      {/* Compact meta row — matches the investor panel */}
+      {metaItems.length > 0 && (
+        <div className="grid grid-cols-1 gap-x-5 gap-y-[11px] border-y border-[#EFF1F4] py-[11px] text-[13.5px] sm:grid-cols-2 lg:grid-cols-3">
+          {metaItems.map((item, i) => (
+            <div key={i} className="flex items-center gap-[9px] min-w-0">
+              <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground" strokeWidth={1.75} />
+              <span className="truncate">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
 
       {/* Long description */}
       <StartupInfoSection icon={FileText} title="Product overview">
