@@ -1117,9 +1117,8 @@ export function StartupForm({
         </div>
       </div>
 
-      {/* Row 1: Year Founded | Company Name | Company Type | Registered Name | Registered Number
-          Single line at >=1280px; wraps to two lines below 1280px. */}
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-[130px_240px_160px_1fr_200px] xl:items-end">
+      {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
+      <div className="grid grid-cols-[100px_1fr_2fr_140px] gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
@@ -1135,27 +1134,12 @@ export function StartupForm({
             required maxLength={255} />
         </div>
         <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
-          <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
-            <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
-              <SelectValue placeholder={miss(isStrEmpty(companyType)) ? missingPh("Type") : "Type"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
           <Label>Registered Name</Label>
           <Input
             value={registeredName}
             onChange={(e) => setRegisteredName(e.target.value)}
-            onFocus={(e) => e.currentTarget.select()}
             placeholder="Official registered company name"
             maxLength={255}
-            title={registeredName || undefined}
-            className="overflow-hidden text-ellipsis whitespace-nowrap"
           />
         </div>
         <div className="space-y-1.5">
@@ -1166,6 +1150,18 @@ export function StartupForm({
             placeholder="e.g. 0105555078063"
             maxLength={64}
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
+          <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
+            <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
+              <SelectValue placeholder={miss(isStrEmpty(companyType)) ? missingPh("Type") : "Type"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
