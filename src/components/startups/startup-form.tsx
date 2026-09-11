@@ -1151,6 +1151,7 @@ export function StartupForm({
           <Input
             value={registeredName}
             onChange={(e) => setRegisteredName(e.target.value)}
+            onFocus={(e) => e.currentTarget.select()}
             placeholder="Official registered company name"
             maxLength={255}
             title={registeredName || undefined}
