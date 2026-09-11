@@ -1117,9 +1117,8 @@ export function StartupForm({
         </div>
       </div>
 
-      {/* Row 1: Year Founded | Company Name | Company Type */}
-      {/* Row 2: Registered Name | Registered Number | (empty) */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
+      <div className="grid grid-cols-[100px_1fr_2fr_140px] gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
@@ -1133,18 +1132,6 @@ export function StartupForm({
             placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
             className={miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
             required maxLength={255} />
-        </div>
-        <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
-          <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
-            <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
-              <SelectValue placeholder={miss(isStrEmpty(companyType)) ? missingPh("Type") : "Type"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
         </div>
         <div className="space-y-1.5">
           <Label>Registered Name</Label>
@@ -1163,6 +1150,18 @@ export function StartupForm({
             placeholder="e.g. 0105555078063"
             maxLength={64}
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
+          <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
+            <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
+              <SelectValue placeholder={miss(isStrEmpty(companyType)) ? missingPh("Type") : "Type"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
