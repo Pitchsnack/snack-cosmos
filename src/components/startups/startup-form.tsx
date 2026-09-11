@@ -1119,7 +1119,7 @@ export function StartupForm({
 
       {/* Row 1: Year Founded | Company Name | Company Type */}
       {/* Row 2: Registered Name | Registered Number | (empty) */}
-      <div className="grid grid-cols-3 gap-x-5 gap-y-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
