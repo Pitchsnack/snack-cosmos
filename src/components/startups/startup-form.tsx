@@ -829,9 +829,15 @@ export function StartupForm({
                 value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
             </div>
             <div className="space-y-1.5">
+              <Label>Registered Number</Label>
+              <Input value={registeredNumber} onChange={(e) => setRegisteredNumber(e.target.value)}
+                placeholder="e.g. 0105555078063" maxLength={64} />
+            </div>
+            <div className="space-y-1.5">
               <Label>Headquarter City</Label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. San Francisco" />
             </div>
+
             <div className="space-y-1.5">
               <Label>Country</Label>
               <CountryCombobox
