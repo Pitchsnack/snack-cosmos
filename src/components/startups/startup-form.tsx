@@ -834,11 +834,6 @@ export function StartupForm({
                 placeholder="e.g. 0105555078063" maxLength={64} />
             </div>
             <div className="space-y-1.5">
-              <Label>Headquarter City</Label>
-              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. San Francisco" />
-            </div>
-
-            <div className="space-y-1.5">
               <Label>Country</Label>
               <CountryCombobox
                 value={headquarters}
@@ -853,6 +848,12 @@ export function StartupForm({
                 placeholder="Select country"
               />
             </div>
+
+            <div className="space-y-1.5">
+              <Label>Headquarter City</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. San Francisco" />
+            </div>
+
 
             <div className="space-y-1.5">
               <Label>Company Size</Label>
