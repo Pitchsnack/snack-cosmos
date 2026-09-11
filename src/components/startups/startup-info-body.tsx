@@ -59,7 +59,7 @@ export interface StartupInfoData {
   founders?: StartupInfoFounder[];
 }
 
-const EMPTY = "—";
+
 
 function href(url: string) {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
