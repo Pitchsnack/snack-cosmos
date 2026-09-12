@@ -12,8 +12,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  BadgeCheck,
   Banknote,
   Building2,
+  ShieldCheck,
   Calendar,
   FileText,
   Globe,
@@ -192,6 +194,8 @@ export function StartupInfoBody({
   const industry = data.industry ?? [];
   const productTags = data.productTags ?? [];
   const marketTags = data.marketTags ?? [];
+  const licences = data.regulatoryLicenses ?? [];
+  const isoStandards = data.isoStandards ?? [];
   const founders = data.founders ?? [];
 
   const metaItems: { icon: typeof Calendar; value: React.ReactNode }[] = [];
@@ -303,6 +307,24 @@ export function StartupInfoBody({
       <StartupInfoSection icon={ShoppingCart} title="Market tags">
         <ChipRow tags={marketTags} tone="muted" />
       </StartupInfoSection>
+
+      {/* Omitted entirely — heading included — when there are no values. */}
+      {licences.length > 0 && (
+        <StartupInfoSection icon={ShieldCheck} title="Regulatory licenses">
+          <LicenceRow licences={licences} />
+        </StartupInfoSection>
+      )}
+
+      {isoStandards.length > 0 && (
+        <StartupInfoSection icon={BadgeCheck} title="International standards (ISO)">
+          <ChipRow tags={isoStandards.slice(0, MAX_PILLS)} tone="muted" />
+          {isoStandards.length > MAX_PILLS && (
+            <span className="mt-1 inline-block text-[11px] text-muted-foreground">
+              +{isoStandards.length - MAX_PILLS} more
+            </span>
+          )}
+        </StartupInfoSection>
+      )}
 
       <StartupInfoSection
         icon={UserCircle2}
