@@ -539,6 +539,8 @@ export function StartupDetailPanel({
           industry: s.industry ?? [],
           productTags: s.product_tags,
           marketTags: s.market_tags,
+          regulatoryLicenses: s.regulatory_licenses ?? [],
+          isoStandards: s.iso_standards ?? [],
           founders: s.founders.map((f) => ({
             id: f.id,
             fullName: f.full_name,
