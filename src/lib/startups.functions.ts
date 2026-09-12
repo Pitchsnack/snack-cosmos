@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  ISO_STANDARDS,
+  LICENCE_CATEGORIES,
+  parseLicences,
+  type RegulatoryLicence,
+} from "@/lib/compliance";
 
 const STATUSES = [
   "Draft","Active","Fundraising","Due Diligence","Portfolio","Exited",
