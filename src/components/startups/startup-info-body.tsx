@@ -12,8 +12,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  BadgeCheck,
   Banknote,
   Building2,
+  ShieldCheck,
   Calendar,
   FileText,
   Globe,
@@ -28,6 +30,12 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import {
+  LICENCE_CATEGORIES,
+  LICENCE_COLORS,
+  sortLicences,
+  type RegulatoryLicence,
+} from "@/lib/compliance";
 
 export interface StartupInfoFounder {
   id: string;
@@ -56,7 +64,58 @@ export interface StartupInfoData {
   industry?: string[];
   productTags?: string[];
   marketTags?: string[];
+  regulatoryLicenses?: RegulatoryLicence[];
+  isoStandards?: string[];
   founders?: StartupInfoFounder[];
+}
+
+const MAX_PILLS = 8;
+
+/** Regulatory licences — one flowing colour-coded row, no category headings. */
+function LicenceRow({ licences }: { licences: RegulatoryLicence[] }) {
+  const sorted = sortLicences(licences);
+  const shown = sorted.slice(0, MAX_PILLS);
+  const overflow = sorted.length - shown.length;
+  const presentCategories = LICENCE_CATEGORIES.filter((c) =>
+    sorted.some((l) => l.category === c),
+  );
+  return (
+    <div>
+      <div className="flex flex-wrap gap-[6px]">
+        {shown.map((l) => {
+          const c = LICENCE_COLORS[l.category];
+          return (
+            <span
+              key={`${l.category}-${l.name}`}
+              title={l.number ? `${l.category} · Licence no. ${l.number}` : l.category}
+              className="rounded-full border px-[11px] py-[5px] text-[12.5px]"
+              style={{ color: c.text, backgroundColor: c.bg, borderColor: c.border }}
+            >
+              {l.name}
+            </span>
+          );
+        })}
+        {overflow > 0 && (
+          <span className="rounded-full border border-transparent bg-muted/50 px-[11px] py-[5px] text-[12.5px] text-muted-foreground">
+            +{overflow} more
+          </span>
+        )}
+      </div>
+      {presentCategories.length > 1 && (
+        <div className="mt-[9px] flex flex-wrap gap-x-[14px] gap-y-1 text-[11px] text-muted-foreground">
+          {presentCategories.map((c) => (
+            <span key={c} className="inline-flex items-center gap-[5px]">
+              <i
+                className="inline-block h-2 w-2 rounded-[2px]"
+                style={{ backgroundColor: LICENCE_COLORS[c].text }}
+              />
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 
@@ -135,6 +194,8 @@ export function StartupInfoBody({
   const industry = data.industry ?? [];
   const productTags = data.productTags ?? [];
   const marketTags = data.marketTags ?? [];
+  const licences = data.regulatoryLicenses ?? [];
+  const isoStandards = data.isoStandards ?? [];
   const founders = data.founders ?? [];
 
   const metaItems: { icon: typeof Calendar; value: React.ReactNode }[] = [];
@@ -246,6 +307,24 @@ export function StartupInfoBody({
       <StartupInfoSection icon={ShoppingCart} title="Market tags">
         <ChipRow tags={marketTags} tone="muted" />
       </StartupInfoSection>
+
+      {/* Omitted entirely — heading included — when there are no values. */}
+      {licences.length > 0 && (
+        <StartupInfoSection icon={ShieldCheck} title="Regulatory licenses">
+          <LicenceRow licences={licences} />
+        </StartupInfoSection>
+      )}
+
+      {isoStandards.length > 0 && (
+        <StartupInfoSection icon={BadgeCheck} title="International standards (ISO)">
+          <ChipRow tags={isoStandards.slice(0, MAX_PILLS)} tone="muted" />
+          {isoStandards.length > MAX_PILLS && (
+            <span className="mt-1 inline-block text-[11px] text-muted-foreground">
+              +{isoStandards.length - MAX_PILLS} more
+            </span>
+          )}
+        </StartupInfoSection>
+      )}
 
       <StartupInfoSection
         icon={UserCircle2}

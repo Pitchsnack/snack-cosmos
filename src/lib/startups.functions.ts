@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  ISO_STANDARDS,
+  LICENCE_CATEGORIES,
+  parseLicences,
+  type RegulatoryLicence,
+} from "@/lib/compliance";
 
 const STATUSES = [
   "Draft","Active","Fundraising","Due Diligence","Portfolio","Exited",
@@ -102,6 +108,8 @@ export interface StartupRow {
   investment_stage: InvestmentStage | null;
   product_tags: string[];
   market_tags: string[];
+  regulatory_licenses?: RegulatoryLicence[];
+  iso_standards?: string[];
   url_key: string | null;
   source_global_id: string | null;
   imported_at: string | null;
@@ -348,7 +356,7 @@ export const getStartup = createServerFn({ method: "GET" })
         short_description, long_description, status, visibility, created_at, updated_at,
         logo_url, company_type, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
-        product_tags, market_tags, url_key, source_global_id, imported_at,
+        product_tags, market_tags, regulatory_licenses, iso_standards, url_key, source_global_id, imported_at,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         startup_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -402,6 +410,8 @@ export const getStartup = createServerFn({ method: "GET" })
       ...r,
       product_tags: r.product_tags ?? [],
       market_tags: r.market_tags ?? [],
+      regulatory_licenses: parseLicences((r as unknown as Record<string, unknown>).regulatory_licenses),
+      iso_standards: ((r as unknown as Record<string, unknown>).iso_standards as string[] | null) ?? [],
       tenant_name: r.tenants.tenant_name,
       logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
       media,
@@ -482,6 +492,17 @@ const ProfileFields = {
   investmentStage: z.enum(STAGES).nullable().optional(),
   productTags: TagArray.optional(),
   marketTags: TagArray.optional(),
+  regulatoryLicenses: z
+    .array(
+      z.object({
+        category: z.enum(LICENCE_CATEGORIES),
+        name: z.string().min(1).max(160),
+        number: z.string().max(120).nullable().optional(),
+      }),
+    )
+    .max(50)
+    .optional(),
+  isoStandards: z.array(z.enum(ISO_STANDARDS)).max(20).optional(),
   founders: z.array(FounderInput).max(20).optional(),
   investorIds: z.array(z.string().uuid()).max(50).optional(),
   media: z.array(MediaInput).max(3).optional(),
@@ -638,6 +659,8 @@ export const createStartup = createServerFn({ method: "POST" })
         investment_stage: data.investmentStage ?? null,
         product_tags: data.productTags ?? [],
         market_tags: data.marketTags ?? [],
+        regulatory_licenses: data.regulatoryLicenses ?? [],
+        iso_standards: data.isoStandards ?? [],
         created_by: userId,
         updated_by: userId,
       })
@@ -737,6 +760,8 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.investmentStage !== undefined) patch.investment_stage = data.investmentStage;
     if (data.productTags !== undefined) patch.product_tags = data.productTags;
     if (data.marketTags !== undefined) patch.market_tags = data.marketTags;
+    if (data.regulatoryLicenses !== undefined) patch.regulatory_licenses = data.regulatoryLicenses;
+    if (data.isoStandards !== undefined) patch.iso_standards = data.isoStandards;
 
     const { error } = await supabase.from("startups").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -926,4 +951,37 @@ export const getStartupInvestors = createServerFn({ method: "GET" })
       },
       investors,
     };
+  });
+
+/**
+ * Licence-name suggestions for the Edit Startup combobox: every licence name
+ * already recorded in the chosen category, ordered by how many startups hold
+ * it. Reads the existing `startups.regulatory_licenses` column — no new table.
+ */
+export const listLicenceSuggestions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ category: z.enum(LICENCE_CATEGORIES) }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: rows, error } = await supabase
+      .from("startups")
+      .select("regulatory_licenses")
+      .limit(2000);
+    if (error) throw new Error(error.message);
+
+    const counts = new Map<string, { name: string; count: number }>();
+    for (const r of (rows ?? []) as Array<{ regulatory_licenses: unknown }>) {
+      for (const l of parseLicences(r.regulatory_licenses)) {
+        if (l.category !== data.category) continue;
+        const key = l.name.toLowerCase();
+        const hit = counts.get(key);
+        if (hit) hit.count += 1;
+        else counts.set(key, { name: l.name, count: 1 });
+      }
+    }
+    return [...counts.values()].sort(
+      (a, b) => b.count - a.count || a.name.localeCompare(b.name),
+    );
   });

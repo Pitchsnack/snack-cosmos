@@ -2383,6 +2383,7 @@ export type Database = {
           imported_at: string | null
           industry: string[]
           investment_stage: string | null
+          iso_standards: string[]
           last_year_revenue: string | null
           linkedin_url: string | null
           logo_url: string | null
@@ -2396,6 +2397,7 @@ export type Database = {
           registered_number: string | null
           registered_status: string | null
           registered_type: string | null
+          regulatory_licenses: Json
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -2421,6 +2423,7 @@ export type Database = {
           imported_at?: string | null
           industry?: string[]
           investment_stage?: string | null
+          iso_standards?: string[]
           last_year_revenue?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
@@ -2434,6 +2437,7 @@ export type Database = {
           registered_number?: string | null
           registered_status?: string | null
           registered_type?: string | null
+          regulatory_licenses?: Json
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -2459,6 +2463,7 @@ export type Database = {
           imported_at?: string | null
           industry?: string[]
           investment_stage?: string | null
+          iso_standards?: string[]
           last_year_revenue?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
@@ -2472,6 +2477,7 @@ export type Database = {
           registered_number?: string | null
           registered_status?: string | null
           registered_type?: string | null
+          regulatory_licenses?: Json
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string
