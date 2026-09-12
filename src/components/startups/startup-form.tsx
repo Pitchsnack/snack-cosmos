@@ -320,6 +320,10 @@ export function StartupForm({
   const [productTagDraft, setProductTagDraft] = useState("");
   const [marketTags, setMarketTags] = useState<string[]>(startup?.market_tags ?? []);
   const [marketTagDraft, setMarketTagDraft] = useState("");
+  const [regulatoryLicenses, setRegulatoryLicenses] = useState<RegulatoryLicence[]>(
+    startup?.regulatory_licenses ?? [],
+  );
+  const [isoStandards, setIsoStandards] = useState<string[]>(startup?.iso_standards ?? []);
   const initialIndustries = startup?.industry ?? [];
   const [industries, setIndustries] = useState<string[]>(initialIndustries);
   const [customIndustry, setCustomIndustry] = useState("");
@@ -492,6 +496,8 @@ export function StartupForm({
     investmentStage: (investmentStage as typeof STAGES[number]) || null,
     productTags,
     marketTags,
+    regulatoryLicenses,
+    isoStandards: isoStandards as ISOStandard[],
     investorIds,
     founders: founders.filter((f) => f.full_name.trim()),
   });
