@@ -19,6 +19,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CountryCombobox } from "@/components/ui/country-combobox";
+import { ComplianceFields } from "@/components/startups/compliance-fields";
+import { ISO_STANDARDS, type RegulatoryLicence } from "@/lib/compliance";
+
+type ISOStandard = (typeof ISO_STANDARDS)[number];
 import {
   createStartup,
   updateStartup,
@@ -1426,6 +1430,14 @@ export function StartupForm({
           <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>Add</Button>
         </div>
       </div>
+
+      {/* Compliance — regulatory licences and ISO standards */}
+      <ComplianceFields
+        licences={regulatoryLicenses}
+        onLicencesChange={setRegulatoryLicenses}
+        isoStandards={isoStandards}
+        onIsoChange={setIsoStandards}
+      />
 
       {/* Founders */}
       {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
