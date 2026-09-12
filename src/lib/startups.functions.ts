@@ -102,6 +102,8 @@ export interface StartupRow {
   investment_stage: InvestmentStage | null;
   product_tags: string[];
   market_tags: string[];
+  regulatory_licenses?: RegulatoryLicence[];
+  iso_standards?: string[];
   url_key: string | null;
   source_global_id: string | null;
   imported_at: string | null;
@@ -348,7 +350,7 @@ export const getStartup = createServerFn({ method: "GET" })
         short_description, long_description, status, visibility, created_at, updated_at,
         logo_url, company_type, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
-        product_tags, market_tags, url_key, source_global_id, imported_at,
+        product_tags, market_tags, regulatory_licenses, iso_standards, url_key, source_global_id, imported_at,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         startup_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -402,6 +404,8 @@ export const getStartup = createServerFn({ method: "GET" })
       ...r,
       product_tags: r.product_tags ?? [],
       market_tags: r.market_tags ?? [],
+      regulatory_licenses: parseLicences((r as Record<string, unknown>).regulatory_licenses),
+      iso_standards: ((r as Record<string, unknown>).iso_standards as string[] | null) ?? [],
       tenant_name: r.tenants.tenant_name,
       logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
       media,
@@ -482,6 +486,17 @@ const ProfileFields = {
   investmentStage: z.enum(STAGES).nullable().optional(),
   productTags: TagArray.optional(),
   marketTags: TagArray.optional(),
+  regulatoryLicenses: z
+    .array(
+      z.object({
+        category: z.enum(LICENCE_CATEGORIES),
+        name: z.string().min(1).max(160),
+        number: z.string().max(120).nullable().optional(),
+      }),
+    )
+    .max(50)
+    .optional(),
+  isoStandards: z.array(z.enum(ISO_STANDARDS)).max(20).optional(),
   founders: z.array(FounderInput).max(20).optional(),
   investorIds: z.array(z.string().uuid()).max(50).optional(),
   media: z.array(MediaInput).max(3).optional(),
