@@ -952,3 +952,36 @@ export const getStartupInvestors = createServerFn({ method: "GET" })
       investors,
     };
   });
+
+/**
+ * Licence-name suggestions for the Edit Startup combobox: every licence name
+ * already recorded in the chosen category, ordered by how many startups hold
+ * it. Reads the existing `startups.regulatory_licenses` column — no new table.
+ */
+export const listLicenceSuggestions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ category: z.enum(LICENCE_CATEGORIES) }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: rows, error } = await supabase
+      .from("startups")
+      .select("regulatory_licenses")
+      .limit(2000);
+    if (error) throw new Error(error.message);
+
+    const counts = new Map<string, { name: string; count: number }>();
+    for (const r of (rows ?? []) as Array<{ regulatory_licenses: unknown }>) {
+      for (const l of parseLicences(r.regulatory_licenses)) {
+        if (l.category !== data.category) continue;
+        const key = l.name.toLowerCase();
+        const hit = counts.get(key);
+        if (hit) hit.count += 1;
+        else counts.set(key, { name: l.name, count: 1 });
+      }
+    }
+    return [...counts.values()].sort(
+      (a, b) => b.count - a.count || a.name.localeCompare(b.name),
+    );
+  });
