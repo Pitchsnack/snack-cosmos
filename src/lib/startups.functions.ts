@@ -659,6 +659,8 @@ export const createStartup = createServerFn({ method: "POST" })
         investment_stage: data.investmentStage ?? null,
         product_tags: data.productTags ?? [],
         market_tags: data.marketTags ?? [],
+        regulatory_licenses: data.regulatoryLicenses ?? [],
+        iso_standards: data.isoStandards ?? [],
         created_by: userId,
         updated_by: userId,
       })
@@ -758,6 +760,8 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.investmentStage !== undefined) patch.investment_stage = data.investmentStage;
     if (data.productTags !== undefined) patch.product_tags = data.productTags;
     if (data.marketTags !== undefined) patch.market_tags = data.marketTags;
+    if (data.regulatoryLicenses !== undefined) patch.regulatory_licenses = data.regulatoryLicenses;
+    if (data.isoStandards !== undefined) patch.iso_standards = data.isoStandards;
 
     const { error } = await supabase.from("startups").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
