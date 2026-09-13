@@ -3,7 +3,7 @@
  * Values live on the startup record itself (same pattern as the tag fields).
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { toast } from "sonner";
@@ -21,7 +21,6 @@ import {
 import {
   ISO_STANDARDS,
   LICENCE_CATEGORIES,
-  LICENCE_COLORS,
   SEED_LICENCES,
   normaliseLicenceName,
   sortLicences,
@@ -46,6 +45,8 @@ export function ComplianceFields({
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [iso, setIso] = useState<string>("");
+  const [focused, setFocused] = useState(false);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: recorded = [] } = useQuery({
     queryKey: ["licence-suggestions", category],
@@ -67,6 +68,7 @@ export function ComplianceFields({
 
   const typed = normaliseLicenceName(name);
   const exactMatch = suggestions.some((s) => s.name.toLowerCase() === typed.toLowerCase());
+  const showSuggestions = focused && typed.length > 0;
 
   const addLicence = (licenceName: string) => {
     const clean = normaliseLicenceName(licenceName);
@@ -88,35 +90,45 @@ export function ComplianceFields({
 
   return (
     <>
-      {/* Regulatory Licenses */}
-      <div className="space-y-1.5">
-        <Label>Regulatory Licenses ({licences.length})</Label>
+      {/* Regulatory Licenses — boxed container */}
+      <div
+        className="my-5 rounded-xl border px-5 py-[18px]"
+        style={{ background: "#FAFBFC", borderColor: "#E5E7EB" }}
+      >
+        <div className="mb-[14px] text-[13.5px] font-semibold text-foreground">
+          Regulatory Licenses
+        </div>
+
         {licences.length > 0 && (
-          <div className="flex flex-wrap gap-[6px]">
-            {sortLicences(licences).map((l) => {
-              const c = LICENCE_COLORS[l.category];
-              return (
-                <button
-                  key={`${l.category}-${l.name}`}
-                  type="button"
-                  title={l.number ? `${l.category} · Licence no. ${l.number}` : l.category}
-                  onClick={() =>
-                    onLicencesChange(
-                      licences.filter((x) => !(x.category === l.category && x.name === l.name)),
-                    )
-                  }
-                  className="inline-flex items-center gap-1 rounded-full border px-[11px] py-[5px] text-[12.5px]"
-                  style={{ color: c.text, backgroundColor: c.bg, borderColor: c.border }}
-                >
-                  {l.name} <X className="h-3 w-3" />
-                </button>
-              );
-            })}
+          <div className="mb-[9px] text-[12.5px] text-muted-foreground">
+            {licences.length} added
           </div>
         )}
-        <div className="flex flex-wrap gap-2">
+
+        {licences.length > 0 && (
+          <div className="mb-[9px] flex flex-wrap gap-[7px]">
+            {sortLicences(licences).map((l) => (
+              <button
+                key={`${l.category}-${l.name}`}
+                type="button"
+                title={l.number ? `${l.category} · Licence no. ${l.number}` : l.category}
+                onClick={() =>
+                  onLicencesChange(
+                    licences.filter((x) => !(x.category === l.category && x.name === l.name)),
+                  )
+                }
+                className="inline-flex items-center gap-[9px] rounded-full border px-[13px] py-[6px] text-[12.5px]"
+                style={{ color: "#1D4ED8", backgroundColor: "#EFF4FE", borderColor: "#D3E0FB" }}
+              >
+                {l.name} <X className="h-3 w-3 opacity-65" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-[150px_1fr_160px_78px] gap-[9px]">
           <Select value={category} onValueChange={(v) => setCategory(v as LicenceCategory)}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -127,51 +139,72 @@ export function ComplianceFields({
               ))}
             </SelectContent>
           </Select>
-          <div className="relative min-w-[220px] flex-1">
-            <Input
-              value={name}
-              maxLength={160}
-              placeholder="Licence name, e.g. BOT — e-Money Licence"
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addLicence(name);
-                }
-              }}
-              list="licence-suggestions"
-            />
-            <datalist id="licence-suggestions">
-              {suggestions.map((s) => (
-                <option key={s.name} value={s.name}>
-                  {s.count > 0 ? `used by ${s.count} startup${s.count === 1 ? "" : "s"}` : "suggested"}
-                </option>
-              ))}
-            </datalist>
-          </div>
+          <Input
+            value={name}
+            maxLength={160}
+            placeholder="Licence name, e.g. BOT — e-Money Licence"
+            className="bg-white"
+            onFocus={() => {
+              if (blurTimer.current) clearTimeout(blurTimer.current);
+              setFocused(true);
+            }}
+            onBlur={() => {
+              blurTimer.current = setTimeout(() => setFocused(false), 150);
+            }}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addLicence(name);
+              }
+            }}
+          />
           <Input
             value={number}
             maxLength={120}
             placeholder="Licence no. (optional)"
+            className="bg-white"
             onChange={(e) => setNumber(e.target.value)}
-            className="w-[160px]"
           />
-          <Button type="button" variant="outline" size="sm" onClick={() => addLicence(name)}>
+          <Button type="button" onClick={() => addLicence(name)}>
             Add
           </Button>
         </div>
-        {typed && !exactMatch && (
-          <button
-            type="button"
-            onClick={() => addLicence(typed)}
-            className="text-xs text-primary hover:underline"
-          >
-            + Add &quot;{typed}&quot; as a new licence under {category}
-          </button>
+
+        {showSuggestions && (
+          <div className="mt-2 overflow-hidden rounded-[9px] border bg-white" style={{ borderColor: "#D7DBE2" }}>
+            {suggestions.map((s) => (
+              <button
+                key={s.name}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => addLicence(s.name)}
+                className="block w-full border-b px-3 py-2 text-left text-[12.5px] last:border-b-0 hover:bg-[#EFF4FE]"
+                style={{ borderColor: "#EFF1F4", color: "#1D4ED8" }}
+              >
+                {s.name}{" "}
+                <span className="text-[#9AA3AF]">
+                  {s.count > 0
+                    ? `· used by ${s.count} startup${s.count === 1 ? "" : "s"}`
+                    : "· suggested"}
+                </span>
+              </button>
+            ))}
+            {!exactMatch && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => addLicence(typed)}
+                className="block w-full px-3 py-2 text-left text-[12.5px] italic text-muted-foreground hover:bg-muted/50"
+              >
+                + Add &quot;{typed}&quot; as a new licence under {category}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
-      {/* International Standards (ISO) */}
+      {/* International Standards (ISO) — normal form section */}
       <div className="space-y-1.5">
         <Label>International Standards (ISO) ({isoStandards.length})</Label>
         {isoStandards.length > 0 && (
