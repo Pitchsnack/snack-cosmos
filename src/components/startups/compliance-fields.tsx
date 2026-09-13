@@ -92,7 +92,7 @@ export function ComplianceFields({
     <>
       {/* Regulatory Licenses — boxed container */}
       <div
-        className="my-5 rounded-xl border p-[18px_20px]"
+        className="my-5 rounded-xl border px-5 py-[18px]"
         style={{ background: "#FAFBFC", borderColor: "#E5E7EB" }}
       >
         <div className="mb-[14px] text-[13.5px] font-semibold text-foreground">
