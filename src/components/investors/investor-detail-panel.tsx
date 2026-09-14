@@ -38,6 +38,7 @@ import { useConnectionState } from "@/hooks/use-connection-state";
 import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
+import { PairedSection } from "@/components/shared/paired-section";
 
 function monogram(name: string) {
   return name
