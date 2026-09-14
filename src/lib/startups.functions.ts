@@ -985,3 +985,34 @@ export const listLicenceSuggestions = createServerFn({ method: "GET" })
       (a, b) => b.count - a.count || a.name.localeCompare(b.name),
     );
   });
+
+/**
+ * ISO-standard suggestions: every standard already recorded on any accessible
+ * startup, so a value one user adds becomes a suggestion for the next.
+ */
+export const listIsoSuggestions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data: rows, error } = await supabase
+      .from("startups")
+      .select("iso_standards")
+      .limit(2000);
+    if (error) throw new Error(error.message);
+
+    const counts = new Map<string, { name: string; count: number }>();
+    for (const r of (rows ?? []) as Array<{ iso_standards: unknown }>) {
+      const list = Array.isArray(r.iso_standards) ? r.iso_standards : [];
+      for (const raw of list) {
+        const name = String(raw ?? "").trim();
+        if (!name) continue;
+        const key = name.toLowerCase();
+        const hit = counts.get(key);
+        if (hit) hit.count += 1;
+        else counts.set(key, { name, count: 1 });
+      }
+    }
+    return [...counts.values()].sort(
+      (a, b) => b.count - a.count || a.name.localeCompare(b.name),
+    );
+  });
