@@ -502,7 +502,7 @@ const ProfileFields = {
     )
     .max(50)
     .optional(),
-  isoStandards: z.array(z.enum(ISO_STANDARDS)).max(20).optional(),
+  isoStandards: z.array(z.string().min(1).max(80)).max(20).optional(),
   founders: z.array(FounderInput).max(20).optional(),
   investorIds: z.array(z.string().uuid()).max(50).optional(),
   media: z.array(MediaInput).max(3).optional(),

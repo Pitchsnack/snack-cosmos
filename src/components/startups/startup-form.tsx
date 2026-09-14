@@ -22,7 +22,7 @@ import { CountryCombobox } from "@/components/ui/country-combobox";
 import { ComplianceFields } from "@/components/startups/compliance-fields";
 import { ISO_STANDARDS, type RegulatoryLicence } from "@/lib/compliance";
 
-type ISOStandard = (typeof ISO_STANDARDS)[number];
+type ISOStandard = string;
 import {
   createStartup,
   updateStartup,
