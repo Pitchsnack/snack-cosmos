@@ -1,14 +1,14 @@
 /**
  * Edit Startup inputs for Regulatory Licenses and International Standards.
  * Values live on the startup record itself (same pattern as the tag fields).
+ * Both name fields use the one shared SuggestCombobox control.
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,17 +18,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SuggestCombobox, type ComboOption } from "@/components/ui/suggest-combobox";
 import {
   ISO_STANDARDS,
+  ISO_SUBJECTS,
   LICENCE_CATEGORIES,
   SEED_LICENCES,
   normaliseLicenceName,
+  normaliseStandard,
   sortLicences,
   validateLicence,
+  validateStandard,
   type LicenceCategory,
   type RegulatoryLicence,
 } from "@/lib/compliance";
-import { listLicenceSuggestions } from "@/lib/startups.functions";
+import { listIsoSuggestions, listLicenceSuggestions } from "@/lib/startups.functions";
 
 export function ComplianceFields({
   licences,
@@ -42,11 +46,8 @@ export function ComplianceFields({
   onIsoChange: (v: string[]) => void;
 }) {
   const [category, setCategory] = useState<LicenceCategory>("Financial");
-  const [name, setName] = useState("");
   const [number, setNumber] = useState("");
-  const [iso, setIso] = useState<string>("");
-  const [focused, setFocused] = useState(false);
-  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [freshIso, setFreshIso] = useState<string[]>([]);
 
   const { data: recorded = [] } = useQuery({
     queryKey: ["licence-suggestions", category],
@@ -54,21 +55,43 @@ export function ComplianceFields({
     staleTime: 60_000,
   });
 
-  const suggestions = useMemo(() => {
-    const map = new Map<string, { name: string; count: number }>();
-    for (const s of recorded) map.set(s.name.toLowerCase(), s);
-    for (const seed of SEED_LICENCES[category])
-      if (!map.has(seed.toLowerCase())) map.set(seed.toLowerCase(), { name: seed, count: 0 });
-    const typed = normaliseLicenceName(name).toLowerCase();
-    return [...map.values()]
-      .filter((s) => !typed || s.name.toLowerCase().includes(typed))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-      .slice(0, 8);
-  }, [recorded, category, name]);
+  const { data: recordedIso = [] } = useQuery({
+    queryKey: ["iso-suggestions"],
+    queryFn: () => listIsoSuggestions(),
+    staleTime: 60_000,
+  });
 
-  const typed = normaliseLicenceName(name);
-  const exactMatch = suggestions.some((s) => s.name.toLowerCase() === typed.toLowerCase());
-  const showSuggestions = focused && typed.length > 0;
+  const licenceOptions = useMemo<ComboOption[]>(() => {
+    const map = new Map<string, ComboOption>();
+    for (const s of recorded)
+      map.set(s.name.toLowerCase(), {
+        value: s.name,
+        meta: `used by ${s.count} startup${s.count === 1 ? "" : "s"}`,
+      });
+    for (const seed of SEED_LICENCES[category])
+      if (!map.has(seed.toLowerCase())) map.set(seed.toLowerCase(), { value: seed, meta: "suggested" });
+    return [...map.values()].map((o) => ({
+      ...o,
+      added: licences.some(
+        (l) => l.category === category && l.name.toLowerCase() === o.value.toLowerCase(),
+      ),
+    }));
+  }, [recorded, category, licences]);
+
+  const isoOptions = useMemo<ComboOption[]>(() => {
+    const map = new Map<string, ComboOption>();
+    for (const s of ISO_STANDARDS) map.set(s.toLowerCase(), { value: s, meta: ISO_SUBJECTS[s] });
+    for (const s of recordedIso)
+      if (!map.has(s.name.toLowerCase()))
+        map.set(s.name.toLowerCase(), {
+          value: s.name,
+          meta: `used by ${s.count} startup${s.count === 1 ? "" : "s"}`,
+        });
+    return [...map.values()].map((o) => ({
+      ...o,
+      added: isoStandards.some((s) => s.toLowerCase() === o.value.toLowerCase()),
+    }));
+  }, [recordedIso, isoStandards]);
 
   const addLicence = (licenceName: string) => {
     const clean = normaliseLicenceName(licenceName);
@@ -78,14 +101,18 @@ export function ComplianceFields({
       return;
     }
     onLicencesChange([...licences, { category, name: clean, number: number.trim() || null }]);
-    setName("");
     setNumber("");
   };
 
-  const addIso = () => {
-    if (!iso || isoStandards.includes(iso)) return;
-    onIsoChange([...isoStandards, iso]);
-    setIso("");
+  const addIso = (raw: string, isNew: boolean) => {
+    const clean = normaliseStandard(raw);
+    const err = validateStandard(clean, isoStandards);
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    onIsoChange([...isoStandards, clean]);
+    if (isNew) setFreshIso((f) => [...f, clean]);
   };
 
   return (
@@ -126,9 +153,9 @@ export function ComplianceFields({
           </div>
         )}
 
-        <div className="grid grid-cols-[150px_1fr_160px_78px] gap-[9px]">
+        <div className="grid grid-cols-[150px_1fr_180px] items-start gap-[9px]">
           <Select value={category} onValueChange={(v) => setCategory(v as LicenceCategory)}>
-            <SelectTrigger className="bg-white">
+            <SelectTrigger className="h-[42px] bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -139,105 +166,57 @@ export function ComplianceFields({
               ))}
             </SelectContent>
           </Select>
-          <Input
-            value={name}
-            maxLength={160}
-            placeholder="Licence name, e.g. BOT — e-Money Licence"
-            className="bg-white"
-            onFocus={() => {
-              if (blurTimer.current) clearTimeout(blurTimer.current);
-              setFocused(true);
-            }}
-            onBlur={() => {
-              blurTimer.current = setTimeout(() => setFocused(false), 150);
-            }}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addLicence(name);
-              }
-            }}
+          <SuggestCombobox
+            id="licence-name"
+            options={licenceOptions}
+            noun="licence"
+            placeholder="Search licences…"
+            onSelect={(v) => addLicence(v)}
           />
           <Input
             value={number}
             maxLength={120}
             placeholder="Licence no. (optional)"
-            className="bg-white"
+            className="h-[42px] bg-white"
             onChange={(e) => setNumber(e.target.value)}
           />
-          <Button type="button" onClick={() => addLicence(name)}>
-            Add
-          </Button>
         </div>
-
-        {showSuggestions && (
-          <div className="mt-2 overflow-hidden rounded-[9px] border bg-white" style={{ borderColor: "#D7DBE2" }}>
-            {suggestions.map((s) => (
-              <button
-                key={s.name}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => addLicence(s.name)}
-                className="block w-full border-b px-3 py-2 text-left text-[12.5px] last:border-b-0 hover:bg-[#EFF4FE]"
-                style={{ borderColor: "#EFF1F4", color: "#1D4ED8" }}
-              >
-                {s.name}{" "}
-                <span className="text-[#9AA3AF]">
-                  {s.count > 0
-                    ? `· used by ${s.count} startup${s.count === 1 ? "" : "s"}`
-                    : "· suggested"}
-                </span>
-              </button>
-            ))}
-            {!exactMatch && (
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => addLicence(typed)}
-                className="block w-full px-3 py-2 text-left text-[12.5px] italic text-muted-foreground hover:bg-muted/50"
-              >
-                + Add &quot;{typed}&quot; as a new licence under {category}
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* International Standards (ISO) — normal form section */}
+      {/* International Standards (ISO) */}
       <div className="space-y-1.5">
-        <Label>International Standards (ISO) ({isoStandards.length})</Label>
+        <Label htmlFor="iso-standard">
+          International Standards (ISO) ({isoStandards.length})
+        </Label>
         {isoStandards.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {isoStandards.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => onIsoChange(isoStandards.filter((x) => x !== s))}
-                className="inline-flex items-center gap-1 rounded-full border border-primary bg-primary px-3 py-1 text-xs text-primary-foreground"
-              >
-                {s} <X className="h-3 w-3" />
-              </button>
-            ))}
+            {isoStandards.map((s) => {
+              const isNew = freshIso.includes(s);
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => onIsoChange(isoStandards.filter((x) => x !== s))}
+                  className="inline-flex items-center gap-2 rounded-full border px-[13px] py-[6px] text-[12.5px]"
+                  style={
+                    isNew
+                      ? { background: "#EAF7EE", color: "#15803D", borderColor: "#CFE8D8" }
+                      : { background: "#F4F5F7", color: "#374151", borderColor: "#E5E7EB" }
+                  }
+                >
+                  {s} <X className="h-3 w-3 opacity-65" />
+                </button>
+              );
+            })}
           </div>
         )}
-        <div className="flex gap-2">
-          <Select value={iso} onValueChange={setIso}>
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Select a standard" />
-            </SelectTrigger>
-            <SelectContent>
-              {ISO_STANDARDS.filter((s) => !isoStandards.includes(s)).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button type="button" variant="outline" size="sm" onClick={addIso} disabled={!iso}>
-            Add
-          </Button>
-        </div>
+        <SuggestCombobox
+          id="iso-standard"
+          options={isoOptions}
+          noun="standard"
+          placeholder="Search standards…"
+          onSelect={addIso}
+        />
       </div>
     </>
   );

@@ -30,18 +30,35 @@ export const LICENCE_COLORS: Record<LicenceCategory, { text: string; bg: string;
   "Raw Material": { text: "#0E7490", bg: "#E6F6FA", border: "#C7EAF2" },
 };
 
-export const ISO_STANDARDS = [
-  "ISO 9001",
-  "ISO 14001",
-  "ISO 22000",
-  "ISO 22301",
-  "ISO 27001",
-  "ISO 27701",
-  "ISO 45001",
-  "ISO 13485",
-  "ISO 50001",
-  "ISO 20000-1",
-] as const;
+/** Seeded standards with their subject area (shown muted in the combobox). */
+export const ISO_SUBJECTS: Record<string, string> = {
+  "ISO 9001": "Quality management",
+  "ISO 14001": "Environmental",
+  "ISO 22000": "Food safety",
+  "ISO 22301": "Business continuity",
+  "ISO 27001": "Information security",
+  "ISO 27701": "Privacy information",
+  "ISO 45001": "Occupational H&S",
+  "ISO 13485": "Medical devices",
+  "ISO 50001": "Energy management",
+  "ISO 20000-1": "IT service management",
+};
+
+export const ISO_STANDARDS = Object.keys(ISO_SUBJECTS);
+
+/** Trim + collapse double spaces. */
+export function normaliseStandard(raw: string): string {
+  return raw.trim().replace(/\s{2,}/g, " ");
+}
+
+/** Returns an error message or null. */
+export function validateStandard(name: string, existing: string[]): string | null {
+  const clean = normaliseStandard(name);
+  if (!clean) return "Enter a standard.";
+  if (existing.some((s) => s.toLowerCase() === clean.toLowerCase()))
+    return "That standard is already added.";
+  return null;
+}
 
 /** Seeded suggestions so the first users pick rather than type. */
 export const SEED_LICENCES: Record<LicenceCategory, string[]> = {
