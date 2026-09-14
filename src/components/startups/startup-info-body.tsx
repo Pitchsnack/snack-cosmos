@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { PairedSection } from "@/components/shared/paired-section";
 import {
   LICENCE_CATEGORIES,
   LICENCE_COLORS,
@@ -296,35 +297,66 @@ export function StartupInfoBody({
         )}
       </StartupInfoSection>
 
-      <StartupInfoSection icon={Layers} title="Industry">
-        <ChipRow tags={industry} tone="muted" />
-      </StartupInfoSection>
+      {/* Band 1 — Industry | Market tags */}
+      <PairedSection
+        left={{ icon: Layers, title: "Industry", content: <ChipRow tags={industry} tone="muted" /> }}
+        right={{
+          icon: ShoppingCart,
+          title: "Market tags",
+          content: <ChipRow tags={marketTags} tone="muted" />,
+        }}
+      />
 
+      {/* Band 2 — Product & service tags, full width (values are long) */}
       <StartupInfoSection icon={Layers} title="Product & service tags">
         <ChipRow tags={productTags} tone="primary" />
       </StartupInfoSection>
 
-      <StartupInfoSection icon={ShoppingCart} title="Market tags">
-        <ChipRow tags={marketTags} tone="muted" />
-      </StartupInfoSection>
+      {/* Band 3 — Regulatory licenses | ISO. Omitted entirely when both empty. */}
+      {(() => {
+        const hasLicences = licences.length > 0;
+        const hasIso = isoStandards.length > 0;
+        if (!hasLicences && !hasIso) return null;
 
-      {/* Omitted entirely — heading included — when there are no values. */}
-      {licences.length > 0 && (
-        <StartupInfoSection icon={ShieldCheck} title="Regulatory licenses">
-          <LicenceRow licences={licences} />
-        </StartupInfoSection>
-      )}
+        const licenceContent = <LicenceRow licences={licences} />;
+        const isoContent = (
+          <>
+            <ChipRow tags={isoStandards.slice(0, MAX_PILLS)} tone="muted" />
+            {isoStandards.length > MAX_PILLS && (
+              <span className="mt-1 inline-block text-[11px] text-muted-foreground">
+                +{isoStandards.length - MAX_PILLS} more
+              </span>
+            )}
+          </>
+        );
 
-      {isoStandards.length > 0 && (
-        <StartupInfoSection icon={BadgeCheck} title="International standards (ISO)">
-          <ChipRow tags={isoStandards.slice(0, MAX_PILLS)} tone="muted" />
-          {isoStandards.length > MAX_PILLS && (
-            <span className="mt-1 inline-block text-[11px] text-muted-foreground">
-              +{isoStandards.length - MAX_PILLS} more
-            </span>
-          )}
-        </StartupInfoSection>
-      )}
+        if (hasLicences && hasIso) {
+          return (
+            <PairedSection
+              left={{ icon: ShieldCheck, title: "Regulatory licenses", content: licenceContent }}
+              right={{
+                icon: BadgeCheck,
+                title: "International standards (ISO)",
+                content: isoContent,
+              }}
+            />
+          );
+        }
+
+        if (hasLicences) {
+          return (
+            <StartupInfoSection icon={ShieldCheck} title="Regulatory licenses">
+              {licenceContent}
+            </StartupInfoSection>
+          );
+        }
+
+        return (
+          <StartupInfoSection icon={BadgeCheck} title="International standards (ISO)">
+            {isoContent}
+          </StartupInfoSection>
+        );
+      })()}
 
       <StartupInfoSection
         icon={UserCircle2}
