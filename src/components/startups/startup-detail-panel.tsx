@@ -95,7 +95,7 @@ function FinancialsAction({
     <Button
       asChild
       size="sm"
-      variant={hasData ? "default" : "outline"}
+      variant="ghost"
       title={label}
       aria-label={label}
       onMouseEnter={prefetch}
