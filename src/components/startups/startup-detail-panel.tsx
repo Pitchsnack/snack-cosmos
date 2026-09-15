@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { autoEnrichFinancials, saveStartupFinancials } from "@/lib/financials.functions";
+import { autoEnrichFinancials, saveStartupFinancials } from "@/lib/financials-edit.functions";
 import {
   MapPin,
   Calendar,
