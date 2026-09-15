@@ -199,15 +199,16 @@ export function StartupInfoBody({
   const isoStandards = data.isoStandards ?? [];
   const founders = data.founders ?? [];
 
-  const metaItems: { icon: typeof Calendar; value: React.ReactNode }[] = [];
+  const metaItems: { icon: typeof Calendar; value: React.ReactNode; title?: string }[] = [];
   if (data.yearFounded) metaItems.push({ icon: Calendar, value: `Est. ${data.yearFounded}` });
   if (data.companyType) metaItems.push({ icon: Building2, value: data.companyType });
   if (data.investmentStage) metaItems.push({ icon: TrendingUp, value: data.investmentStage });
   if (data.companySize) metaItems.push({ icon: Users, value: data.companySize });
   if (data.revenue) metaItems.push({ icon: Banknote, value: data.revenue });
-  if (data.headquarters) metaItems.push({ icon: MapPin, value: data.headquarters });
-  if (data.city) metaItems.push({ icon: MapPin, value: data.city });
+  const location = [data.city, data.headquarters].filter(Boolean).join(", ");
+  if (location) metaItems.push({ icon: MapPin, value: location, title: location });
   if (data.region) metaItems.push({ icon: Globe, value: data.region });
+
   if (data.website)
     metaItems.push({
       icon: Globe,
