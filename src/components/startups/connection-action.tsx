@@ -72,11 +72,15 @@ export function ConnectionAction({
 
   return (
     <Button
+      variant="ghost"
       size={size}
       onClick={() => requestConnection(startupRef)}
-      className={cn("gap-1.5 rounded-full", className)}
+      className={cn(
+        "h-10 gap-2 rounded-[9px] border-[1.5px] border-transparent bg-transparent px-3 text-[13.5px] font-semibold text-[#12294F] shadow-none hover:bg-[#EDF1F8] hover:text-[#12294F] active:bg-[#DDE5F2]",
+        className,
+      )}
     >
-      <Link2 className="h-3.5 w-3.5" /> Connect
+      <Link2 className="h-4 w-4" /> Connect
     </Button>
   );
 }

@@ -95,17 +95,17 @@ function FinancialsAction({
     <Button
       asChild
       size="sm"
-      variant={hasData ? "default" : "outline"}
+      variant="ghost"
       title={label}
       aria-label={label}
       onMouseEnter={prefetch}
       onFocus={prefetch}
       onPointerDown={prefetch}
       className={cn(
-        "gap-1.5 rounded-full",
+        "h-10 gap-2 rounded-[9px] border-[1.5px] border-transparent bg-transparent px-3 text-[13.5px] font-semibold shadow-none",
         hasData
-          ? "bg-emerald-600 text-white hover:bg-emerald-700"
-          : "border-dashed border-muted-foreground/40 text-muted-foreground hover:text-foreground",
+          ? "text-[#15803D] hover:bg-[#E9F5EE] hover:text-[#15803D] active:bg-[#D6EDDF]"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
       )}
     >
       {isMyWorkspace ? (
@@ -284,7 +284,7 @@ export function StartupDetailPanel({
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-[2px]">
 
 
               {isMyWorkspace ? (
@@ -299,7 +299,7 @@ export function StartupDetailPanel({
                 <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
               <FinancialsAction id={id} isMyWorkspace={isMyWorkspace} onClose={onClose} />
-              <FavoriteToggle id={id} size="md" className="h-8 w-8" />
+              <FavoriteToggle id={id} size="md" className="ml-2 h-8 w-8" />
 
 
               <DropdownMenu>
