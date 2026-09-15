@@ -343,7 +343,7 @@ export function InvestorDetailPanel({
                   href={i.website_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 text-blue-900 hover:underline"
+                  className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">
@@ -356,7 +356,7 @@ export function InvestorDetailPanel({
                   href={i.linkedin_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 text-blue-900 hover:underline"
+                  className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <Linkedin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">LinkedIn</span>
@@ -365,7 +365,7 @@ export function InvestorDetailPanel({
               {i.email && (
                 <a
                   href={`mailto:${i.email}`}
-                  className="flex items-center gap-2 text-blue-900 hover:underline"
+                  className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">{i.email}</span>
