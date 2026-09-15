@@ -297,6 +297,11 @@ export function StartupInfoBody({
         )}
       </StartupInfoSection>
 
+      {/* Product & service tags, full width (values are long) */}
+      <StartupInfoSection icon={Layers} title="Product & service tags">
+        <ChipRow tags={productTags} tone="primary" />
+      </StartupInfoSection>
+
       {/* Band 1 — Industry | Market tags */}
       <PairedSection
         left={{ icon: Layers, title: "Industry", content: <ChipRow tags={industry} tone="muted" /> }}
@@ -306,11 +311,6 @@ export function StartupInfoBody({
           content: <ChipRow tags={marketTags} tone="muted" />,
         }}
       />
-
-      {/* Band 2 — Product & service tags, full width (values are long) */}
-      <StartupInfoSection icon={Layers} title="Product & service tags">
-        <ChipRow tags={productTags} tone="primary" />
-      </StartupInfoSection>
 
       {/* Band 3 — Regulatory licenses | ISO. Omitted entirely when both empty. */}
       {(() => {
