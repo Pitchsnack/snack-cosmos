@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
+import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { autoEnrichFinancials, saveStartupFinancials } from "@/lib/financials-edit.functions";
 import {
   MapPin,
   Calendar,
@@ -18,6 +22,8 @@ import {
   Check,
   Share2,
   BarChart3,
+  Clock,
+  Plus,
   Target,
 
 } from "lucide-react";
@@ -85,28 +91,96 @@ function FinancialsAction({
   onClose?: () => void;
 }) {
   const { hasData, prefetch } = useHasFinancials(id);
-  const label = hasData ? "Financials available" : "No financial data yet";
+  const queryClient = useQueryClient();
+  const enrichFinancials = useServerFn(autoEnrichFinancials);
+  const saveFinancials = useServerFn(saveStartupFinancials);
+
+  const importing = useIsMutating({ mutationKey: ["financials-import", id] }) > 0;
+
+  const runImport = useMutation({
+    mutationKey: ["financials-import", id],
+    mutationFn: async () => {
+      const result = await enrichFinancials({ data: { startupId: id } });
+      if (result.status !== "ok" || !result.years?.length) {
+        throw new Error(result.message ?? "Auto extraction returned no financial data.");
+      }
+      await saveFinancials({
+        data: {
+          startupId: id,
+          years: result.years,
+          ...(result.profile ? { profile: result.profile } : {}),
+          provenance: {
+            source: "DBD_DATA_WAREHOUSE",
+            sourceReference: result.sourceReference ?? null,
+            matchedRegisteredNumber: result.matchedRegisteredNumber ?? null,
+            matchedRegisteredName: result.matchedRegisteredName ?? null,
+            retrievedAt: result.retrievedAt ?? null,
+          },
+        },
+      });
+      return result.years.length;
+    },
+    onSuccess: async (count) => {
+      await queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
+      await queryClient.invalidateQueries({ queryKey: ["company-info-th", id] });
+      toast.success(`Imported ${count} fiscal year(s) from DBD.`);
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Financial import failed.");
+    },
+  });
+
+  const base =
+    "h-10 gap-2 rounded-[9px] border-[1.5px] border-transparent bg-transparent px-3 text-[13.5px] font-semibold shadow-none";
+
+  if (importing) {
+    return (
+      <Button
+        size="sm"
+        variant="ghost"
+        disabled
+        title="Importing financial data"
+        aria-label="Importing financial data"
+        className={cn(base, "!bg-[#FEF3E7] text-[#B45309] disabled:opacity-100")}
+      >
+        <Clock className="h-4 w-4 animate-pulse" /> Importing…
+      </Button>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <Button
+        size="sm"
+        variant="ghost"
+        title="No financials on record — import from DBD"
+        aria-label="Add financials"
+        onClick={() => runImport.mutate()}
+        className={cn(base, "text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#6B7280] active:bg-[#E7E9ED]")}
+      >
+        <Plus className="h-4 w-4" /> Add financials
+      </Button>
+    );
+  }
+
   const content = (
     <>
-      <BarChart3 className="h-3.5 w-3.5" /> Financials
+      <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#15803D]" />
+      <BarChart3 className="h-4 w-4" /> Financials
     </>
   );
+
   return (
     <Button
       asChild
       size="sm"
       variant="ghost"
-      title={label}
-      aria-label={label}
+      title="Financials available"
+      aria-label="Financials available"
       onMouseEnter={prefetch}
       onFocus={prefetch}
       onPointerDown={prefetch}
-      className={cn(
-        "h-10 gap-2 rounded-[9px] border-[1.5px] border-transparent bg-transparent px-3 text-[13.5px] font-semibold shadow-none",
-        hasData
-          ? "text-[#15803D] hover:bg-[#E9F5EE] hover:text-[#15803D] active:bg-[#D6EDDF]"
-          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-      )}
+      className={cn(base, "text-[#15803D] hover:bg-[#E9F5EE] hover:text-[#15803D] active:bg-[#D6EDDF]")}
     >
       {isMyWorkspace ? (
         <Link to="/my-startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
@@ -120,6 +194,7 @@ function FinancialsAction({
     </Button>
   );
 }
+
 
 
 export function StartupDetailPanel({
