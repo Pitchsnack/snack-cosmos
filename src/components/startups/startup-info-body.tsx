@@ -199,15 +199,16 @@ export function StartupInfoBody({
   const isoStandards = data.isoStandards ?? [];
   const founders = data.founders ?? [];
 
-  const metaItems: { icon: typeof Calendar; value: React.ReactNode }[] = [];
+  const metaItems: { icon: typeof Calendar; value: React.ReactNode; title?: string }[] = [];
   if (data.yearFounded) metaItems.push({ icon: Calendar, value: `Est. ${data.yearFounded}` });
   if (data.companyType) metaItems.push({ icon: Building2, value: data.companyType });
   if (data.investmentStage) metaItems.push({ icon: TrendingUp, value: data.investmentStage });
   if (data.companySize) metaItems.push({ icon: Users, value: data.companySize });
   if (data.revenue) metaItems.push({ icon: Banknote, value: data.revenue });
-  if (data.headquarters) metaItems.push({ icon: MapPin, value: data.headquarters });
-  if (data.city) metaItems.push({ icon: MapPin, value: data.city });
+  const location = [data.city, data.headquarters].filter(Boolean).join(", ");
+  if (location) metaItems.push({ icon: MapPin, value: location, title: location });
   if (data.region) metaItems.push({ icon: Globe, value: data.region });
+
   if (data.website)
     metaItems.push({
       icon: Globe,
@@ -225,12 +226,14 @@ export function StartupInfoBody({
   if (data.email)
     metaItems.push({
       icon: Mail,
+      title: data.email,
       value: (
         <a href={`mailto:${data.email}`} className="text-blue-900 hover:underline">
           {data.email}
         </a>
       ),
     });
+
   if (data.linkedinUrl)
     metaItems.push({
       icon: Linkedin,
@@ -258,9 +261,9 @@ export function StartupInfoBody({
 
       {/* Compact meta row — matches the investor panel */}
       {metaItems.length > 0 && (
-        <div className="grid grid-cols-1 gap-x-5 gap-y-[11px] border-y border-[#EFF1F4] py-[11px] text-[13.5px] sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-[18px] gap-y-[10px] border-y border-[#EFF1F4] py-[11px] text-[13.5px] sm:grid-cols-3 lg:grid-cols-4">
           {metaItems.map((item, i) => (
-            <div key={i} className="flex items-center gap-[9px] min-w-0">
+            <div key={i} className="flex min-w-0 items-center gap-[9px]" title={item.title}>
               <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground" strokeWidth={1.75} />
               <span className="truncate">{item.value}</span>
             </div>

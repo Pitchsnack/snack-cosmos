@@ -324,13 +324,17 @@ export function InvestorDetailPanel({
 
           {/* Meta grid */}
           {(metaItems.length > 0 || i.email || i.website_url || i.linkedin_url) && (
-            <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-x-[18px] gap-y-[10px] text-sm sm:grid-cols-3 lg:grid-cols-4">
               {metaItems.map((m, idx) => {
                 const Icon = m.icon;
                 return (
-                  <div key={idx} className="flex items-center gap-2 text-foreground/80">
+                  <div
+                    key={idx}
+                    className="flex min-w-0 items-center gap-2 text-foreground/80"
+                    title={typeof m.label === "string" ? m.label : undefined}
+                  >
                     <Icon className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-                    <span>{m.label}</span>
+                    <span className="truncate">{m.label}</span>
                   </div>
                 );
               })}
@@ -339,7 +343,7 @@ export function InvestorDetailPanel({
                   href={i.website_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 text-blue-900 hover:underline"
+                  className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">
@@ -352,7 +356,7 @@ export function InvestorDetailPanel({
                   href={i.linkedin_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 text-blue-900 hover:underline"
+                  className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <Linkedin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">LinkedIn</span>
@@ -361,7 +365,7 @@ export function InvestorDetailPanel({
               {i.email && (
                 <a
                   href={`mailto:${i.email}`}
-                  className="flex items-center gap-2 text-blue-900 hover:underline"
+                  className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">{i.email}</span>
