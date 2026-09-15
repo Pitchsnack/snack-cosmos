@@ -22,6 +22,8 @@ import {
   Check,
   Share2,
   BarChart3,
+  Clock,
+  Plus,
   Target,
 
 } from "lucide-react";
