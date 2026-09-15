@@ -226,12 +226,14 @@ export function StartupInfoBody({
   if (data.email)
     metaItems.push({
       icon: Mail,
+      title: data.email,
       value: (
         <a href={`mailto:${data.email}`} className="text-blue-900 hover:underline">
           {data.email}
         </a>
       ),
     });
+
   if (data.linkedinUrl)
     metaItems.push({
       icon: Linkedin,
