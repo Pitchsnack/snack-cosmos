@@ -229,9 +229,9 @@ export function InvestorDetailPanel({
             </Button>
           )}
           {compact && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-[2px]">
               <ConnectionAction startupRef={id} />
-              <FavoriteToggle id={id} entity="investors" size="md" className="h-8 w-8" />
+              <FavoriteToggle id={id} entity="investors" size="md" className="ml-2 h-8 w-8" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
