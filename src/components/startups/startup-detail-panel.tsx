@@ -268,17 +268,27 @@ function FinancialsAction({
                 <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Registered number
                 </dt>
-                <dd className="mt-0.5 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums text-foreground">
+                <dd className="mt-1 flex items-center gap-1.5">
                   <Hash className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  {number ?? (
-                    <span className="font-normal italic text-muted-foreground">Not recorded</span>
-                  )}
+                  <Input
+                    value={numberDraft}
+                    onChange={(e) => setNumberDraft(e.target.value)}
+                    disabled={importing}
+                    maxLength={64}
+                    inputMode="numeric"
+                    aria-label="Registered number"
+                    placeholder="e.g. 0105555078063"
+                    className="h-9 bg-background text-[14px] font-semibold tabular-nums"
+                  />
                 </dd>
+                <p className="mt-1 pl-5 text-[11.5px] text-muted-foreground">
+                  Saved to the startup record when you start the extraction.
+                </p>
               </div>
             </dl>
           </div>
 
-          {!number && (
+          {!numberDraft.trim() && (
             <p className="flex items-start gap-2 rounded-[10px] border border-amber-300/60 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Without a Registered Number the lookup matches on company name, which can return
