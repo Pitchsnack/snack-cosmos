@@ -483,7 +483,16 @@ export function StartupDetailPanel({
               ) : (
                 <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
-              <FinancialsAction id={id} isMyWorkspace={isMyWorkspace} onClose={onClose} />
+              <FinancialsAction
+                id={id}
+                isMyWorkspace={isMyWorkspace}
+                onClose={onClose}
+                startupName={s.startup_name}
+                registeredName={(s as unknown as { registered_name?: string | null }).registered_name}
+                registeredNumber={
+                  (s as unknown as { registered_number?: string | null }).registered_number
+                }
+              />
               <FavoriteToggle id={id} size="md" className="ml-2 h-8 w-8" />
 
 
