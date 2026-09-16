@@ -220,6 +220,7 @@ function FinancialsAction({
       aria-label="Add financials"
       onClick={() => {
         setImportError(null);
+        setNumberDraft(registeredNumber?.trim() ?? "");
         setConfirmOpen(true);
       }}
       className={cn(base, "text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#6B7280] active:bg-[#E7E9ED]")}
