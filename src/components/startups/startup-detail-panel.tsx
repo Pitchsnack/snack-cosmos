@@ -115,13 +115,22 @@ function FinancialsAction({
   const enrichFinancials = useServerFn(autoEnrichFinancials);
   const saveFinancials = useServerFn(saveStartupFinancials);
 
+  const saveStartup = useServerFn(updateStartup);
+
   const importing = useIsMutating({ mutationKey: ["financials-import", id] }) > 0;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  /** Editable Registered Number inside the import box. */
+  const [numberDraft, setNumberDraft] = useState("");
 
   const runImport = useMutation({
     mutationKey: ["financials-import", id],
     mutationFn: async () => {
+      const typed = numberDraft.trim();
+      if (typed !== (registeredNumber?.trim() ?? "")) {
+        await saveStartup({ data: { id, registeredNumber: typed || null } });
+        await queryClient.invalidateQueries({ queryKey: ["startup", id] });
+      }
       const result = await enrichFinancials({ data: { startupId: id } });
       if (result.status !== "ok" || !result.years?.length) {
         throw new Error(result.message ?? "Auto extraction returned no financial data.");
