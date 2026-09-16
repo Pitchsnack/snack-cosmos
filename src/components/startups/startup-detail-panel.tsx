@@ -170,7 +170,6 @@ function FinancialsAction({
 
   /** Registered name when the startup has one, otherwise the directory name. */
   const displayName = registeredName?.trim() || startupName;
-  const number = registeredNumber?.trim() || null;
 
   const content = (
     <>
