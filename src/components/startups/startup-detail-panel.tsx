@@ -25,10 +25,21 @@ import {
   Clock,
   Plus,
   Target,
+  Hash,
+  Info,
+  Loader2,
 
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,15 +91,24 @@ function monogram(name: string) {
 /**
  * Financials shortcut. Colour-coded: solid emerald when Auto Enrich has already
  * produced data for the startup, muted outline when there is nothing yet.
+ * The muted state first shows an information box with the company name and
+ * Registered Number, so the user sees which record is about to be extracted.
  */
 function FinancialsAction({
   id,
   isMyWorkspace,
   onClose,
+  startupName,
+  registeredName,
+  registeredNumber,
 }: {
   id: string;
   isMyWorkspace: boolean;
   onClose?: () => void;
+  /** Identity shown in the pre-import information box. */
+  startupName: string;
+  registeredName?: string | null;
+  registeredNumber?: string | null;
 }) {
   const { hasData, prefetch } = useHasFinancials(id);
   const queryClient = useQueryClient();
@@ -96,6 +116,8 @@ function FinancialsAction({
   const saveFinancials = useServerFn(saveStartupFinancials);
 
   const importing = useIsMutating({ mutationKey: ["financials-import", id] }) > 0;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const runImport = useMutation({
     mutationKey: ["financials-import", id],
@@ -120,48 +142,26 @@ function FinancialsAction({
       });
       return result.years.length;
     },
+    onMutate: () => setImportError(null),
     onSuccess: async (count) => {
       await queryClient.invalidateQueries({ queryKey: ["startup-financials", id] });
       await queryClient.invalidateQueries({ queryKey: ["company-info-th", id] });
       toast.success(`Imported ${count} fiscal year(s) from DBD.`);
+      setConfirmOpen(false);
     },
     onError: (e) => {
-      toast.error(e instanceof Error ? e.message : "Financial import failed.");
+      const message = e instanceof Error ? e.message : "Financial import failed.";
+      setImportError(message);
+      toast.error(message);
     },
   });
 
   const base =
     "h-10 gap-2 rounded-[9px] border-[1.5px] border-transparent bg-transparent px-3 text-[13.5px] font-semibold shadow-none";
 
-  if (importing) {
-    return (
-      <Button
-        size="sm"
-        variant="ghost"
-        disabled
-        title="Importing financial data"
-        aria-label="Importing financial data"
-        className={cn(base, "!bg-[#FEF3E7] text-[#B45309] disabled:opacity-100")}
-      >
-        <Clock className="h-4 w-4 animate-pulse" /> Importing…
-      </Button>
-    );
-  }
-
-  if (!hasData) {
-    return (
-      <Button
-        size="sm"
-        variant="ghost"
-        title="No financials on record — import from DBD"
-        aria-label="Add financials"
-        onClick={() => runImport.mutate()}
-        className={cn(base, "text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#6B7280] active:bg-[#E7E9ED]")}
-      >
-        <Plus className="h-4 w-4" /> Add financials
-      </Button>
-    );
-  }
+  /** Registered name when the startup has one, otherwise the directory name. */
+  const displayName = registeredName?.trim() || startupName;
+  const number = registeredNumber?.trim() || null;
 
   const content = (
     <>
@@ -170,7 +170,18 @@ function FinancialsAction({
     </>
   );
 
-  return (
+  const trigger = importing ? (
+    <Button
+      size="sm"
+      variant="ghost"
+      disabled
+      title="Importing financial data"
+      aria-label="Importing financial data"
+      className={cn(base, "!bg-[#FEF3E7] text-[#B45309] disabled:opacity-100")}
+    >
+      <Clock className="h-4 w-4 animate-pulse" /> Importing…
+    </Button>
+  ) : hasData ? (
     <Button
       asChild
       size="sm"
@@ -192,6 +203,105 @@ function FinancialsAction({
         </Link>
       )}
     </Button>
+  ) : (
+    <Button
+      size="sm"
+      variant="ghost"
+      title="No financials on record — import from DBD"
+      aria-label="Add financials"
+      onClick={() => {
+        setImportError(null);
+        setConfirmOpen(true);
+      }}
+      className={cn(base, "text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#6B7280] active:bg-[#E7E9ED]")}
+    >
+      <Plus className="h-4 w-4" /> Add financials
+    </Button>
+  );
+
+  return (
+    <>
+      {trigger}
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (importing) return;
+          setConfirmOpen(open);
+          if (!open) setImportError(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle>Import financial data</DialogTitle>
+            <DialogDescription>
+              Financial figures will be retrieved from the DBD Data Warehouse using the company
+              details below. Nothing is saved until the extraction returns data.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-[10px] border border-border/70 bg-muted/40 p-3">
+            <dl className="space-y-2.5">
+              <div>
+                <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Company name
+                </dt>
+                <dd className="mt-0.5 text-[14px] font-semibold leading-snug text-foreground">
+                  {displayName}
+                </dd>
+                {registeredName?.trim() && registeredName.trim() !== startupName && (
+                  <dd className="text-[12px] text-muted-foreground">
+                    Listed in SnackPortal2 as {startupName}
+                  </dd>
+                )}
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Registered number
+                </dt>
+                <dd className="mt-0.5 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums text-foreground">
+                  <Hash className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  {number ?? (
+                    <span className="font-normal italic text-muted-foreground">Not recorded</span>
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {!number && (
+            <p className="flex items-start gap-2 rounded-[10px] border border-amber-300/60 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              Without a Registered Number the lookup matches on company name, which can return
+              several companies or none.
+            </p>
+          )}
+
+          {importError && (
+            <p className="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12.5px] text-destructive">
+              {importError}
+            </p>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" disabled={importing} onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button disabled={importing} onClick={() => runImport.mutate()}>
+              {importing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="mr-2 h-4 w-4" /> Start extraction
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -373,7 +483,16 @@ export function StartupDetailPanel({
               ) : (
                 <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
-              <FinancialsAction id={id} isMyWorkspace={isMyWorkspace} onClose={onClose} />
+              <FinancialsAction
+                id={id}
+                isMyWorkspace={isMyWorkspace}
+                onClose={onClose}
+                startupName={s.startup_name}
+                registeredName={(s as unknown as { registered_name?: string | null }).registered_name}
+                registeredNumber={
+                  (s as unknown as { registered_number?: string | null }).registered_number
+                }
+              />
               <FavoriteToggle id={id} size="md" className="ml-2 h-8 w-8" />
 
 
