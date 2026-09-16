@@ -5,6 +5,8 @@ import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-quer
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { autoEnrichFinancials, saveStartupFinancials } from "@/lib/financials-edit.functions";
+import { updateStartup } from "@/lib/startups.functions";
+import { Input } from "@/components/ui/input";
 import {
   MapPin,
   Calendar,
