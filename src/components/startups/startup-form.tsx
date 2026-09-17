@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { ComplianceFields } from "@/components/startups/compliance-fields";
+import { SectorBusinessModelFields } from "@/components/startups/sector-fields";
 import { ISO_STANDARDS, type RegulatoryLicence } from "@/lib/compliance";
 
 type ISOStandard = string;
@@ -331,6 +332,11 @@ export function StartupForm({
   const initialIndustries = startup?.industry ?? [];
   const [industries, setIndustries] = useState<string[]>(initialIndustries);
   const [customIndustry, setCustomIndustry] = useState("");
+  // Sector + business model — optional, used only for financial benchmarking.
+  const [sector, setSector] = useState<string | null>(startup?.sector ?? null);
+  const [businessModel, setBusinessModel] = useState<string | null>(
+    startup?.business_model ?? null,
+  );
   const [investmentStage, setInvestmentStage] = useState<string>(startup?.investment_stage ?? "");
 
   // Status/visibility (create only)
@@ -487,6 +493,8 @@ export function StartupForm({
   }
 
   const buildProfileBase = () => ({
+    sector: sector || null,
+    businessModel: businessModel || null,
     companyType: companyType || null,
     registeredName: registeredName || null,
     registeredNumber: registeredNumber || null,
@@ -955,6 +963,7 @@ export function StartupForm({
           <h2 className="text-sm font-semibold">
             Industry <span className="ml-1 text-xs font-normal text-muted-foreground">(Select one or more)</span>
           </h2>
+          <p className="text-xs text-muted-foreground">how the market describes this company</p>
           <div className="flex flex-wrap gap-2">
             {INDUSTRIES.map((i) => (
               <Pill key={i} active={industries.includes(i)} onClick={() => setIndustries(toggle(industries, i))}>
@@ -974,6 +983,16 @@ export function StartupForm({
             <Button type="button" variant="outline" onClick={addCustomIndustry}>Add</Button>
           </div>
         </div>
+
+        <div className="rounded-lg border border-border bg-card p-6 shadow-card">
+          <SectorBusinessModelFields
+            sector={sector}
+            onSectorChange={setSector}
+            businessModel={businessModel}
+            onBusinessModelChange={setBusinessModel}
+          />
+        </div>
+
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
           <p className="text-xs text-muted-foreground">
@@ -1363,6 +1382,7 @@ export function StartupForm({
       {/* Industry pills */}
       <div className="space-y-1.5">
         <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
+        <p className="text-xs text-muted-foreground">how the market describes this company</p>
         {miss(industries.length === 0) && (
           <p className="text-xs text-destructive">⚠ Missing: pick at least one industry</p>
         )}
@@ -1386,6 +1406,15 @@ export function StartupForm({
           <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
         </div>
       </div>
+
+      {/* Sector + business model — financial benchmarking pair */}
+      <SectorBusinessModelFields
+        sector={sector}
+        onSectorChange={setSector}
+        businessModel={businessModel}
+        onBusinessModelChange={setBusinessModel}
+      />
+
 
       {/* Product tags */}
       <div className="space-y-1.5">

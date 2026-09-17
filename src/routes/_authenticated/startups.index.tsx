@@ -32,6 +32,7 @@ import {
 } from "@/lib/publication";
 import { usePreviewPublicationVersion } from "@/hooks/use-publication";
 import { cn } from "@/lib/utils";
+import { SECTORS, BUSINESS_MODELS, businessModelLabel } from "@/lib/sectors";
 
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
@@ -44,6 +45,8 @@ const searchSchema = z.object({
   q: z.string().optional(),
   stage: z.string().optional(),
   industry: z.string().optional(),
+  sector: z.string().optional(),
+  bmodel: z.string().optional(),
   hq: z.string().optional(),
   ct: z.string().optional(),
   ptag: z.string().optional(),
@@ -116,6 +119,7 @@ function StartupsPageInner() {
 
   const { data, isLoading, isFetching, refetch } = useStartups({
     search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
+    sector: s.sector, businessModel: s.bmodel,
     companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
     sort, page: favOnly ? 1 : page, pageSize,
     // Directory read model: Private records are excluded by the query itself,
@@ -145,7 +149,7 @@ function StartupsPageInner() {
   const update = (patch: Partial<typeof s>) =>
     navigate({ search: (prev: typeof s) => ({ ...prev, ...patch, page: 1 }) });
 
-  const hasFilter = !!(s.q || s.stage || s.industry || s.hq || s.ct || s.ptag || s.mtag);
+  const hasFilter = !!(s.q || s.stage || s.industry || s.sector || s.bmodel || s.hq || s.ct || s.ptag || s.mtag);
 
   return (
     <div className="space-y-6">
@@ -223,6 +227,14 @@ function StartupsPageInner() {
         <FilterSelect label="Stage" value={s.stage} options={STAGES} onChange={(v) => update({ stage: v })} />
         <FilterSelect label="Type" value={s.ct} options={COMPANY_TYPES} onChange={(v) => update({ ct: v })} />
         <Input value={s.industry ?? ""} onChange={(e) => update({ industry: e.target.value || undefined })} placeholder="Industry" className="h-9 w-36" />
+        <FilterSelect label="Sector" value={s.sector} options={SECTORS} onChange={(v) => update({ sector: v })} />
+        <FilterSelect
+          label="Business model"
+          value={s.bmodel}
+          options={BUSINESS_MODELS.map((b) => b.value)}
+          optionLabel={(v) => businessModelLabel(v) ?? v}
+          onChange={(v) => update({ bmodel: v })}
+        />
         <Input value={s.hq ?? ""} onChange={(e) => update({ hq: e.target.value || undefined })} placeholder="HQ" className="h-9 w-32" />
         <Select value={sort} onValueChange={(v) => navigate({ search: (prev: typeof s) => ({ ...prev, sort: v as typeof SORT[number] }) })}>
           <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
@@ -478,13 +490,13 @@ function StartupPanelModalBody({
   );
 }
 
-function FilterSelect({ label, value, options, onChange }: { label: string; value?: string; options: string[]; onChange: (v: string | undefined) => void }) {
+function FilterSelect({ label, value, options, onChange, optionLabel }: { label: string; value?: string; options: string[]; onChange: (v: string | undefined) => void; optionLabel?: (v: string) => string }) {
   return (
     <Select value={value ?? "__all"} onValueChange={(v) => onChange(v === "__all" ? undefined : v)}>
       <SelectTrigger className="h-9 w-36"><SelectValue placeholder={label} /></SelectTrigger>
       <SelectContent>
         <SelectItem value="__all">All {label.toLowerCase()}s</SelectItem>
-        {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+        {options.map((o) => <SelectItem key={o} value={o}>{optionLabel ? optionLabel(o) : o}</SelectItem>)}
       </SelectContent>
     </Select>
   );

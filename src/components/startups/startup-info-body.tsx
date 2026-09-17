@@ -14,7 +14,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   BadgeCheck,
   Banknote,
+  Briefcase,
   Building2,
+  Landmark,
   ShieldCheck,
   Calendar,
   FileText,
@@ -31,6 +33,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { PairedSection } from "@/components/shared/paired-section";
+import { businessModelLabel } from "@/lib/sectors";
 import {
   LICENCE_CATEGORIES,
   LICENCE_COLORS,
@@ -63,6 +66,10 @@ export interface StartupInfoData {
   shortDescription?: string | null;
   longDescription?: string | null;
   industry?: string[];
+  /** SET sector — optional, omitted from the panel when not set. */
+  sector?: string | null;
+  /** Business model value — optional, omitted from the panel when not set. */
+  businessModel?: string | null;
   productTags?: string[];
   marketTags?: string[];
   regulatoryLicenses?: RegulatoryLicence[];
@@ -202,6 +209,9 @@ export function StartupInfoBody({
   const metaItems: { icon: typeof Calendar; value: React.ReactNode; title?: string }[] = [];
   if (data.yearFounded) metaItems.push({ icon: Calendar, value: `Est. ${data.yearFounded}` });
   if (data.companyType) metaItems.push({ icon: Building2, value: data.companyType });
+  if (data.sector) metaItems.push({ icon: Landmark, value: data.sector, title: data.sector });
+  if (businessModelLabel(data.businessModel))
+    metaItems.push({ icon: Briefcase, value: businessModelLabel(data.businessModel) });
   if (data.investmentStage) metaItems.push({ icon: TrendingUp, value: data.investmentStage });
   if (data.companySize) metaItems.push({ icon: Users, value: data.companySize });
   if (data.revenue) metaItems.push({ icon: Banknote, value: data.revenue });

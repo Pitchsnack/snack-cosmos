@@ -89,6 +89,8 @@ export interface StartupRow {
   linkedin_url: string | null;
   city: string | null;
   industry: string[];
+  sector: string | null;
+  business_model: string | null;
   short_description: string | null;
   long_description: string | null;
   status: StartupStatus;
@@ -182,7 +184,7 @@ async function logActivity(
 }
 
 const SELECT_LIST = `
-  id, tenant_id, startup_name, website_url, city, industry,
+  id, tenant_id, startup_name, website_url, city, industry, sector, business_model,
   short_description, long_description, status, visibility, created_at, updated_at,
   logo_url, company_type, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
@@ -197,6 +199,8 @@ const ListInput = z.object({
   search: z.string().optional(),
   stage: z.string().optional(),
   industry: z.string().optional(),
+  sector: z.string().optional(),
+  businessModel: z.string().optional(),
   headquarters: z.string().optional(),
   companyType: z.string().optional(),
   productTag: z.string().optional(),
@@ -249,6 +253,8 @@ export const listStartups = createServerFn({ method: "GET" })
     }
     if (data.stage) q = q.eq("investment_stage", data.stage);
     if (data.industry) q = q.contains("industry", [data.industry]);
+    if (data.sector) q = q.eq("sector", data.sector);
+    if (data.businessModel) q = q.eq("business_model", data.businessModel);
     if (data.headquarters) q = q.eq("headquarters", data.headquarters);
     if (data.companyType) q = q.eq("company_type", data.companyType);
     if (data.productTag) q = q.contains("product_tags", [data.productTag]);
@@ -352,7 +358,7 @@ export const getStartup = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("startups")
       .select(`
-        id, tenant_id, startup_name, website_url, linkedin_url, city, industry,
+        id, tenant_id, startup_name, website_url, linkedin_url, city, industry, sector, business_model,
         short_description, long_description, status, visibility, created_at, updated_at,
         logo_url, company_type, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
@@ -515,6 +521,8 @@ const CreateInput = z.object({
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
   city: z.string().max(100).optional().nullable(),
   industry: z.array(z.string().min(1).max(100)).max(20).optional(),
+  sector: z.string().max(100).nullable().optional(),
+  businessModel: z.string().max(60).nullable().optional(),
   shortDescription: z.string().max(500).optional().nullable(),
   longDescription: z.string().max(5000).optional().nullable(),
   status: z.enum(STATUSES).default("Draft"),
@@ -641,6 +649,8 @@ export const createStartup = createServerFn({ method: "POST" })
         website_url: emptyToNull(data.websiteUrl),
         city: emptyToNull(data.city),
         industry: data.industry ?? [],
+        sector: emptyToNull(data.sector),
+        business_model: emptyToNull(data.businessModel),
         short_description: emptyToNull(data.shortDescription),
         long_description: emptyToNull(data.longDescription),
         status: data.status,
@@ -715,6 +725,8 @@ const UpdateInput = z.object({
   websiteUrl: z.string().max(2048).nullable().optional(),
   city: z.string().max(100).nullable().optional(),
   industry: z.array(z.string().min(1).max(100)).max(20).optional(),
+  sector: z.string().max(100).nullable().optional(),
+  businessModel: z.string().max(60).nullable().optional(),
   shortDescription: z.string().max(500).nullable().optional(),
   longDescription: z.string().max(5000).nullable().optional(),
   status: z.enum(STATUSES).optional(),
@@ -737,6 +749,8 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.websiteUrl !== undefined) patch.website_url = data.websiteUrl;
     if (data.city !== undefined) patch.city = data.city;
     if (data.industry !== undefined) patch.industry = data.industry;
+    if (data.sector !== undefined) patch.sector = emptyToNull(data.sector);
+    if (data.businessModel !== undefined) patch.business_model = emptyToNull(data.businessModel);
     if (data.shortDescription !== undefined) patch.short_description = data.shortDescription;
     if (data.longDescription !== undefined) patch.long_description = data.longDescription;
     if (data.status !== undefined) patch.status = data.status;

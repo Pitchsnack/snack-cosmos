@@ -7,6 +7,10 @@ export interface UseStartupsParams {
   search?: string;
   stage?: string;
   industry?: string;
+  /** SET sector — filtered independently of industry. */
+  sector?: string;
+  /** Business model — filtered independently of industry. */
+  businessModel?: string;
   headquarters?: string;
   companyType?: string;
   productTag?: string;
