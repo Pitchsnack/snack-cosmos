@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { ComplianceFields } from "@/components/startups/compliance-fields";
+import { SectorBusinessModelFields } from "@/components/startups/sector-fields";
 import { ISO_STANDARDS, type RegulatoryLicence } from "@/lib/compliance";
 
 type ISOStandard = string;

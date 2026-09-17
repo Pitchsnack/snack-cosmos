@@ -752,6 +752,8 @@ export function StartupDetailPanel({
           shortDescription: s.short_description,
           longDescription: s.long_description,
           industry: s.industry ?? [],
+          sector: s.sector ?? null,
+          businessModel: s.business_model ?? null,
           productTags: s.product_tags,
           marketTags: s.market_tags,
           regulatoryLicenses: s.regulatory_licenses ?? [],
