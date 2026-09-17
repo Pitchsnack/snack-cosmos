@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, Layers, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Download, Layers, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -559,10 +559,6 @@ function PeerSetEditor({ industryTag }: { industryTag: string }) {
           </p>
           {!isControl && <p>You can view this set but only administrators can save changes.</p>}
         </div>
-      </div>
-
-      <div className="hidden">
-        <Trash2 />
       </div>
     </div>
   );
