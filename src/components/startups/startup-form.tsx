@@ -1381,6 +1381,7 @@ export function StartupForm({
       {/* Industry pills */}
       <div className="space-y-1.5">
         <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
+        <p className="text-xs text-muted-foreground">how the market describes this company</p>
         {miss(industries.length === 0) && (
           <p className="text-xs text-destructive">⚠ Missing: pick at least one industry</p>
         )}
@@ -1404,6 +1405,15 @@ export function StartupForm({
           <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
         </div>
       </div>
+
+      {/* Sector + business model — financial benchmarking pair */}
+      <SectorBusinessModelFields
+        sector={sector}
+        onSectorChange={setSector}
+        businessModel={businessModel}
+        onBusinessModelChange={setBusinessModel}
+      />
+
 
       {/* Product tags */}
       <div className="space-y-1.5">
