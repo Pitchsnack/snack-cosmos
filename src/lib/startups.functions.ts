@@ -521,6 +521,8 @@ const CreateInput = z.object({
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
   city: z.string().max(100).optional().nullable(),
   industry: z.array(z.string().min(1).max(100)).max(20).optional(),
+  sector: z.string().max(100).nullable().optional(),
+  businessModel: z.string().max(60).nullable().optional(),
   shortDescription: z.string().max(500).optional().nullable(),
   longDescription: z.string().max(5000).optional().nullable(),
   status: z.enum(STATUSES).default("Draft"),
@@ -647,6 +649,8 @@ export const createStartup = createServerFn({ method: "POST" })
         website_url: emptyToNull(data.websiteUrl),
         city: emptyToNull(data.city),
         industry: data.industry ?? [],
+        sector: emptyToNull(data.sector),
+        business_model: emptyToNull(data.businessModel),
         short_description: emptyToNull(data.shortDescription),
         long_description: emptyToNull(data.longDescription),
         status: data.status,
@@ -721,6 +725,8 @@ const UpdateInput = z.object({
   websiteUrl: z.string().max(2048).nullable().optional(),
   city: z.string().max(100).nullable().optional(),
   industry: z.array(z.string().min(1).max(100)).max(20).optional(),
+  sector: z.string().max(100).nullable().optional(),
+  businessModel: z.string().max(60).nullable().optional(),
   shortDescription: z.string().max(500).nullable().optional(),
   longDescription: z.string().max(5000).nullable().optional(),
   status: z.enum(STATUSES).optional(),
@@ -743,6 +749,8 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.websiteUrl !== undefined) patch.website_url = data.websiteUrl;
     if (data.city !== undefined) patch.city = data.city;
     if (data.industry !== undefined) patch.industry = data.industry;
+    if (data.sector !== undefined) patch.sector = emptyToNull(data.sector);
+    if (data.businessModel !== undefined) patch.business_model = emptyToNull(data.businessModel);
     if (data.shortDescription !== undefined) patch.short_description = data.shortDescription;
     if (data.longDescription !== undefined) patch.long_description = data.longDescription;
     if (data.status !== undefined) patch.status = data.status;
