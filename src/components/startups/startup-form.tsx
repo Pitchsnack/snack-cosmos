@@ -962,6 +962,7 @@ export function StartupForm({
           <h2 className="text-sm font-semibold">
             Industry <span className="ml-1 text-xs font-normal text-muted-foreground">(Select one or more)</span>
           </h2>
+          <p className="text-xs text-muted-foreground">how the market describes this company</p>
           <div className="flex flex-wrap gap-2">
             {INDUSTRIES.map((i) => (
               <Pill key={i} active={industries.includes(i)} onClick={() => setIndustries(toggle(industries, i))}>
@@ -981,6 +982,16 @@ export function StartupForm({
             <Button type="button" variant="outline" onClick={addCustomIndustry}>Add</Button>
           </div>
         </div>
+
+        <div className="rounded-lg border border-border bg-card p-6 shadow-card">
+          <SectorBusinessModelFields
+            sector={sector}
+            onSectorChange={setSector}
+            businessModel={businessModel}
+            onBusinessModelChange={setBusinessModel}
+          />
+        </div>
+
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
           <p className="text-xs text-muted-foreground">
