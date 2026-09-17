@@ -63,6 +63,10 @@ export interface StartupInfoData {
   shortDescription?: string | null;
   longDescription?: string | null;
   industry?: string[];
+  /** SET sector — optional, omitted from the panel when not set. */
+  sector?: string | null;
+  /** Business model value — optional, omitted from the panel when not set. */
+  businessModel?: string | null;
   productTags?: string[];
   marketTags?: string[];
   regulatoryLicenses?: RegulatoryLicence[];
