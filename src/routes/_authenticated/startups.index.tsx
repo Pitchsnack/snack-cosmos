@@ -44,6 +44,8 @@ const searchSchema = z.object({
   q: z.string().optional(),
   stage: z.string().optional(),
   industry: z.string().optional(),
+  sector: z.string().optional(),
+  bmodel: z.string().optional(),
   hq: z.string().optional(),
   ct: z.string().optional(),
   ptag: z.string().optional(),
