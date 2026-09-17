@@ -490,13 +490,13 @@ function StartupPanelModalBody({
   );
 }
 
-function FilterSelect({ label, value, options, onChange }: { label: string; value?: string; options: string[]; onChange: (v: string | undefined) => void }) {
+function FilterSelect({ label, value, options, onChange, optionLabel }: { label: string; value?: string; options: string[]; onChange: (v: string | undefined) => void; optionLabel?: (v: string) => string }) {
   return (
     <Select value={value ?? "__all"} onValueChange={(v) => onChange(v === "__all" ? undefined : v)}>
       <SelectTrigger className="h-9 w-36"><SelectValue placeholder={label} /></SelectTrigger>
       <SelectContent>
         <SelectItem value="__all">All {label.toLowerCase()}s</SelectItem>
-        {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+        {options.map((o) => <SelectItem key={o} value={o}>{optionLabel ? optionLabel(o) : o}</SelectItem>)}
       </SelectContent>
     </Select>
   );
