@@ -2451,6 +2451,7 @@ export type Database = {
       }
       startups: {
         Row: {
+          business_model: string | null
           business_size: string | null
           city: string | null
           company_size: string | null
@@ -2478,6 +2479,7 @@ export type Database = {
           registered_status: string | null
           registered_type: string | null
           regulatory_licenses: Json
+          sector: string | null
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -2491,6 +2493,7 @@ export type Database = {
           year_founded: number | null
         }
         Insert: {
+          business_model?: string | null
           business_size?: string | null
           city?: string | null
           company_size?: string | null
@@ -2518,6 +2521,7 @@ export type Database = {
           registered_status?: string | null
           registered_type?: string | null
           regulatory_licenses?: Json
+          sector?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -2531,6 +2535,7 @@ export type Database = {
           year_founded?: number | null
         }
         Update: {
+          business_model?: string | null
           business_size?: string | null
           city?: string | null
           company_size?: string | null
@@ -2558,6 +2563,7 @@ export type Database = {
           registered_status?: string | null
           registered_type?: string | null
           regulatory_licenses?: Json
+          sector?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string
