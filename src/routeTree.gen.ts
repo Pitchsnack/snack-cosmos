@@ -22,6 +22,7 @@ import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_auth
 import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
+import { Route as AuthenticatedPeerComparablesRouteImport } from './routes/_authenticated/peer-comparables'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
@@ -135,6 +136,12 @@ const AuthenticatedPreferencesRoute =
   AuthenticatedPreferencesRouteImport.update({
     id: '/preferences',
     path: '/preferences',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPeerComparablesRoute =
+  AuthenticatedPeerComparablesRouteImport.update({
+    id: '/peer-comparables',
+    path: '/peer-comparables',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedNotificationsRoute =
@@ -428,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
@@ -485,6 +493,7 @@ export interface FileRoutesByTo {
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
@@ -542,6 +551,7 @@ export interface FileRoutesById {
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/peer-comparables': typeof AuthenticatedPeerComparablesRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
@@ -606,6 +616,7 @@ export interface FileRouteTypes {
     | '/investors'
     | '/my-page'
     | '/notifications'
+    | '/peer-comparables'
     | '/preferences'
     | '/security'
     | '/shared-deals'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/intake-queue'
     | '/my-page'
     | '/notifications'
+    | '/peer-comparables'
     | '/preferences'
     | '/security'
     | '/startup-activity'
@@ -719,6 +731,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investors'
     | '/_authenticated/my-page'
     | '/_authenticated/notifications'
+    | '/_authenticated/peer-comparables'
     | '/_authenticated/preferences'
     | '/_authenticated/security'
     | '/_authenticated/shared-deals'
@@ -863,6 +876,13 @@ declare module '@tanstack/react-router' {
       path: '/preferences'
       fullPath: '/preferences'
       preLoaderRoute: typeof AuthenticatedPreferencesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/peer-comparables': {
+      id: '/_authenticated/peer-comparables'
+      path: '/peer-comparables'
+      fullPath: '/peer-comparables'
+      preLoaderRoute: typeof AuthenticatedPeerComparablesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/notifications': {
@@ -1370,6 +1390,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedPeerComparablesRoute: typeof AuthenticatedPeerComparablesRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedSharedDealsRoute: typeof AuthenticatedSharedDealsRouteWithChildren
@@ -1400,6 +1421,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedPeerComparablesRoute: AuthenticatedPeerComparablesRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedSharedDealsRoute: AuthenticatedSharedDealsRouteWithChildren,

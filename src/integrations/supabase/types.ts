@@ -1864,6 +1864,86 @@ export type Database = {
         }
         Relationships: []
       }
+      peer_sets: {
+        Row: {
+          created_at: string
+          id: string
+          industry_tag: string
+          last_refreshed_at: string | null
+          owner_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          industry_tag: string
+          last_refreshed_at?: string | null
+          owner_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          industry_tag?: string
+          last_refreshed_at?: string | null
+          owner_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      peers: {
+        Row: {
+          company_name: string
+          created_at: string
+          ebitda_margin_pct: number | null
+          ev_ebitda: number | null
+          id: string
+          market: Database["public"]["Enums"]["peer_market"]
+          pbv: number | null
+          pe: number | null
+          peer_set_id: string
+          revenue_thb_m: number | null
+          ticker: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          ebitda_margin_pct?: number | null
+          ev_ebitda?: number | null
+          id?: string
+          market: Database["public"]["Enums"]["peer_market"]
+          pbv?: number | null
+          pe?: number | null
+          peer_set_id: string
+          revenue_thb_m?: number | null
+          ticker?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          ebitda_margin_pct?: number | null
+          ev_ebitda?: number | null
+          id?: string
+          market?: Database["public"]["Enums"]["peer_market"]
+          pbv?: number | null
+          pe?: number | null
+          peer_set_id?: string
+          revenue_thb_m?: number | null
+          ticker?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peers_peer_set_id_fkey"
+            columns: ["peer_set_id"]
+            isOneToOne: false
+            referencedRelation: "peer_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string
@@ -3014,6 +3094,7 @@ export type Database = {
         | "TENANT_DEAL_AI"
         | "STARTUP_USER"
         | "INVESTOR_USER"
+      peer_market: "SET" | "mai"
       security_event_type:
         | "LOGIN"
         | "LOGOUT"
@@ -3182,6 +3263,7 @@ export const Constants = {
         "STARTUP_USER",
         "INVESTOR_USER",
       ],
+      peer_market: ["SET", "mai"],
       security_event_type: [
         "LOGIN",
         "LOGOUT",

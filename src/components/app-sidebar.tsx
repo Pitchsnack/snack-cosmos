@@ -25,6 +25,7 @@ import {
   UserCircle,
   Contact as ContactIcon,
   Database,
+  Layers,
   Bot,
 } from "lucide-react";
 
@@ -52,6 +53,7 @@ type NavPath =
   | "/audit"
   | "/users"
   | "/access-management"
+  | "/peer-comparables"
   | "/security"
   | "/notifications"
   | "/preferences"
@@ -130,6 +132,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Tenants",
       "Users",
       "Access Management",
+      "Peer Comparables",
       "Audit Logs",
       "Security",
     ],
@@ -215,6 +218,13 @@ const NAV_ITEMS: NavItem[] = [
     label: "Access Management",
     icon: ShieldCheck,
     path: "/access-management",
+    exact: false,
+    controlOnly: true,
+  },
+  {
+    label: "Peer Comparables",
+    icon: Layers,
+    path: "/peer-comparables",
     exact: false,
     controlOnly: true,
   },
