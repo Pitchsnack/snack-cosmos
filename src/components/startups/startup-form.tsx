@@ -331,6 +331,11 @@ export function StartupForm({
   const initialIndustries = startup?.industry ?? [];
   const [industries, setIndustries] = useState<string[]>(initialIndustries);
   const [customIndustry, setCustomIndustry] = useState("");
+  // Sector + business model — optional, used only for financial benchmarking.
+  const [sector, setSector] = useState<string | null>(startup?.sector ?? null);
+  const [businessModel, setBusinessModel] = useState<string | null>(
+    startup?.business_model ?? null,
+  );
   const [investmentStage, setInvestmentStage] = useState<string>(startup?.investment_stage ?? "");
 
   // Status/visibility (create only)
@@ -487,6 +492,8 @@ export function StartupForm({
   }
 
   const buildProfileBase = () => ({
+    sector: sector || null,
+    businessModel: businessModel || null,
     companyType: companyType || null,
     registeredName: registeredName || null,
     registeredNumber: registeredNumber || null,
