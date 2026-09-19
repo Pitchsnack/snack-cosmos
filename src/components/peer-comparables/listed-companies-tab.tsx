@@ -44,6 +44,7 @@ import {
   listedCsvFilename,
   MARKET_TABS,
   parseListedCsv,
+  todayIso,
   type ListedCompany,
   type ListedCompanyInput,
   type MarketTab,
@@ -51,6 +52,7 @@ import {
 import {
   deleteListedCompany,
   importListedCompanies,
+  saveListedCompany,
 } from "@/lib/listed-companies.functions";
 
 const MARKET_PILL: Record<MarketTab, string> = {
@@ -58,6 +60,26 @@ const MARKET_PILL: Record<MarketTab, string> = {
   SET: "bg-info/10 text-info border-info/30",
   mai: "bg-success/10 text-success border-success/30",
 };
+
+const NO_SECTOR = "__none__";
+
+/** Metric columns, in table order. Empty input clears to null — never zero. */
+const METRIC_KEYS = ["revenueThbM", "ebitdaMarginPct", "evEbitda", "pe", "pbv"] as const;
+type MetricKey = (typeof METRIC_KEYS)[number];
+
+const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
+  id: c.id,
+  ticker: c.ticker,
+  name: c.name,
+  market: c.market,
+  sector: c.sector,
+  revenueThbM: c.revenueThbM,
+  ebitdaMarginPct: c.ebitdaMarginPct,
+  evEbitda: c.evEbitda,
+  pe: c.pe,
+  pbv: c.pbv,
+  asAt: c.asAt,
+});
 
 export function ListedCompaniesTab({
   tabs,
