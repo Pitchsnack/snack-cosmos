@@ -2,11 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  INDUSTRY_TAGS,
+  peerSetLabel,
   type Peer,
+  type PeerMatchResult,
   type PeerSetDetail,
   type PeerSetSummary,
 } from "@/lib/peer-comparables";
+import { businessModelLabel } from "@/lib/sectors";
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -18,6 +20,11 @@ async function assertControl(ctx: Ctx) {
   const { data, error } = await ctx.supabase.rpc("is_control", { _user_id: ctx.userId });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Only Control administrators can maintain peer sets.");
+}
+
+/** peer_sets.industry_tag predates sector keying; it stays as a stable unique key. */
+function legacyKey(sector: string, businessModel: string | null) {
+  return `${sector}::${businessModel ?? "all"}`;
 }
 
 async function ownerNames(ctx: Ctx, ids: string[]): Promise<Map<string, string>> {
@@ -55,8 +62,13 @@ function rowToPeer(r: any): Peer {
   };
 }
 
+const keyInput = z.object({
+  sector: z.string().min(1).max(200),
+  businessModel: z.string().min(1).max(60).nullable().optional(),
+});
+
 /* ------------------------------------------------------------------ */
-/* List — every industry tag, whether or not a peer set exists         */
+/* List — every peer set that exists, keyed on sector + model          */
 /* ------------------------------------------------------------------ */
 
 export const listPeerSets = createServerFn({ method: "GET" })
@@ -64,15 +76,16 @@ export const listPeerSets = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<PeerSetSummary[]> => {
     const ctx = context as unknown as Ctx;
 
-    const [{ data: sets, error: setErr }, { data: startups }] = await Promise.all([
-      ctx.supabase.from("peer_sets").select("id, industry_tag, last_refreshed_at, owner_user_id"),
-      ctx.supabase.from("startups").select("industry"),
-    ]);
-    if (setErr) throw new Error(setErr.message);
+    const { data: sets, error } = await ctx.supabase
+      .from("peer_sets")
+      .select("id, sector, business_model, last_refreshed_at, owner_user_id")
+      .not("sector", "is", null);
+    if (error) throw new Error(error.message);
 
     const setRows = (sets ?? []) as {
       id: string;
-      industry_tag: string;
+      sector: string;
+      business_model: string | null;
       last_refreshed_at: string | null;
       owner_user_id: string | null;
     }[];
@@ -92,51 +105,62 @@ export const listPeerSets = createServerFn({ method: "GET" })
       setRows.map((s) => s.owner_user_id).filter((v): v is string => !!v),
     );
 
-    const tags = new Set<string>(INDUSTRY_TAGS);
-    for (const s of (startups ?? []) as { industry: string[] | null }[]) {
-      for (const t of s.industry ?? []) if (t.trim()) tags.add(t.trim());
-    }
-    for (const s of setRows) tags.add(s.industry_tag);
-
-    return [...tags]
-      .sort((a, b) => a.localeCompare(b))
-      .map((tag) => {
-        const row = setRows.find((s) => s.industry_tag === tag);
-        const c = row ? counts.get(row.id) : undefined;
+    return setRows
+      .map((row) => {
+        const c = counts.get(row.id);
         return {
-          industryTag: tag,
-          exists: !!row,
+          sector: row.sector,
+          businessModel: row.business_model,
+          exists: true,
           peerCount: c?.total ?? 0,
           setCount: c?.set ?? 0,
           maiCount: c?.mai ?? 0,
-          lastRefreshedAt: row?.last_refreshed_at ?? null,
-          ownerName: row?.owner_user_id ? (names.get(row.owner_user_id) ?? null) : null,
+          lastRefreshedAt: row.last_refreshed_at,
+          ownerName: row.owner_user_id ? (names.get(row.owner_user_id) ?? null) : null,
         };
-      });
+      })
+      .sort(
+        (a, b) =>
+          a.sector.localeCompare(b.sector) ||
+          (a.businessModel ?? "").localeCompare(b.businessModel ?? ""),
+      );
   });
 
 /* ------------------------------------------------------------------ */
 /* Detail                                                              */
 /* ------------------------------------------------------------------ */
 
+async function findSet(ctx: Ctx, sector: string, businessModel: string | null) {
+  let q = ctx.supabase
+    .from("peer_sets")
+    .select("id, sector, business_model, last_refreshed_at, owner_user_id")
+    .eq("sector", sector);
+  q = businessModel ? q.eq("business_model", businessModel) : q.is("business_model", null);
+  const { data, error } = await q.maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as {
+    id: string;
+    sector: string;
+    business_model: string | null;
+    last_refreshed_at: string | null;
+    owner_user_id: string | null;
+  } | null;
+}
+
 export const getPeerSet = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ industryTag: z.string().min(1).max(200) }).parse(input))
+  .inputValidator((input) => keyInput.parse(input))
   .handler(async ({ context, data }): Promise<PeerSetDetail> => {
     const ctx = context as unknown as Ctx;
-
-    const { data: row, error } = await ctx.supabase
-      .from("peer_sets")
-      .select("id, industry_tag, last_refreshed_at, owner_user_id")
-      .eq("industry_tag", data.industryTag)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+    const model = data.businessModel ?? null;
+    const row = await findSet(ctx, data.sector, model);
 
     if (!row) {
       return {
         exists: false,
         id: null,
-        industryTag: data.industryTag,
+        sector: data.sector,
+        businessModel: model,
         lastRefreshedAt: null,
         ownerName: null,
         peers: [],
@@ -144,18 +168,15 @@ export const getPeerSet = createServerFn({ method: "GET" })
     }
 
     const [{ data: peers }, names] = await Promise.all([
-      ctx.supabase
-        .from("peers")
-        .select("*")
-        .eq("peer_set_id", row.id)
-        .order("company_name"),
+      ctx.supabase.from("peers").select("*").eq("peer_set_id", row.id).order("company_name"),
       ownerNames(ctx, row.owner_user_id ? [row.owner_user_id] : []),
     ]);
 
     return {
       exists: true,
       id: row.id,
-      industryTag: row.industry_tag,
+      sector: row.sector,
+      businessModel: row.business_model,
       lastRefreshedAt: row.last_refreshed_at,
       ownerName: row.owner_user_id ? (names.get(row.owner_user_id) ?? null) : null,
       peers: ((peers ?? []) as any[]).map(rowToPeer),
@@ -171,9 +192,8 @@ const metric = z.number().finite().nullable().optional();
 export const savePeerSet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z
-      .object({
-        industryTag: z.string().min(1).max(200),
+    keyInput
+      .extend({
         peers: z
           .array(
             z.object({
@@ -194,6 +214,7 @@ export const savePeerSet = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const ctx = context as unknown as Ctx;
     await assertControl(ctx);
+    const model = data.businessModel ?? null;
 
     const seen = new Set<string>();
     for (const p of data.peers) {
@@ -202,13 +223,8 @@ export const savePeerSet = createServerFn({ method: "POST" })
       seen.add(key);
     }
 
-    const { data: existing } = await ctx.supabase
-      .from("peer_sets")
-      .select("id")
-      .eq("industry_tag", data.industryTag)
-      .maybeSingle();
-
-    let setId = existing?.id as string | undefined;
+    const existing = await findSet(ctx, data.sector, model);
+    let setId = existing?.id;
     let action: "CREATE" | "UPDATE" = "UPDATE";
 
     const now = new Date().toISOString();
@@ -217,7 +233,9 @@ export const savePeerSet = createServerFn({ method: "POST" })
       const { data: created, error } = await ctx.supabase
         .from("peer_sets")
         .insert({
-          industry_tag: data.industryTag,
+          industry_tag: legacyKey(data.sector, model),
+          sector: data.sector,
+          business_model: model,
           last_refreshed_at: now,
           owner_user_id: ctx.userId,
         })
@@ -263,8 +281,8 @@ export const savePeerSet = createServerFn({ method: "POST" })
       entity_type: "peer_set",
       entity_id: setId,
       action,
-      old_value: { industry_tag: data.industryTag, peers: before ?? [] } as never,
-      new_value: { industry_tag: data.industryTag, peers: data.peers } as never,
+      old_value: { key: peerSetLabel(data.sector, model), peers: before ?? [] } as never,
+      new_value: { key: peerSetLabel(data.sector, model), peers: data.peers } as never,
     });
 
     return { ok: true, lastRefreshedAt: now };
@@ -276,16 +294,13 @@ export const savePeerSet = createServerFn({ method: "POST" })
 
 export const deletePeerSet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ industryTag: z.string().min(1).max(200) }).parse(input))
+  .inputValidator((input) => keyInput.parse(input))
   .handler(async ({ context, data }) => {
     const ctx = context as unknown as Ctx;
     await assertControl(ctx);
+    const model = data.businessModel ?? null;
 
-    const { data: row } = await ctx.supabase
-      .from("peer_sets")
-      .select("id")
-      .eq("industry_tag", data.industryTag)
-      .maybeSingle();
+    const row = await findSet(ctx, data.sector, model);
     if (!row) return { ok: true };
 
     const { data: before } = await ctx.supabase
@@ -301,9 +316,118 @@ export const deletePeerSet = createServerFn({ method: "POST" })
       entity_type: "peer_set",
       entity_id: row.id,
       action: "DELETE",
-      old_value: { industry_tag: data.industryTag, peers: before ?? [] } as never,
+      old_value: { key: peerSetLabel(data.sector, model), peers: before ?? [] } as never,
       new_value: null,
     });
 
     return { ok: true };
+  });
+
+/* ------------------------------------------------------------------ */
+/* Valuation matching — Sector and Business model ONLY                 */
+/* ------------------------------------------------------------------ */
+
+export const getPeerMatch = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ startupId: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }): Promise<PeerMatchResult> => {
+    const ctx = context as unknown as Ctx;
+
+    const { data: startup, error } = await ctx.supabase
+      .from("startups")
+      .select("sector, business_model")
+      .eq("id", data.startupId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+
+    const sector: string | null = startup?.sector ?? null;
+    const businessModel: string | null = startup?.business_model ?? null;
+
+    if (!sector) {
+      return { state: "no-sector", sector: null, businessModel, applied: null, narrower: null };
+    }
+
+    const { data: sets } = await ctx.supabase
+      .from("peer_sets")
+      .select("id, sector, business_model, last_refreshed_at")
+      .eq("sector", sector);
+
+    const rows = (sets ?? []) as {
+      id: string;
+      sector: string;
+      business_model: string | null;
+      last_refreshed_at: string | null;
+    }[];
+
+    const counts = new Map<string, number>();
+    if (rows.length > 0) {
+      const { data: peerRows } = await ctx.supabase
+        .from("peers")
+        .select("peer_set_id")
+        .in(
+          "peer_set_id",
+          rows.map((r) => r.id),
+        );
+      for (const p of (peerRows ?? []) as { peer_set_id: string }[]) {
+        counts.set(p.peer_set_id, (counts.get(p.peer_set_id) ?? 0) + 1);
+      }
+    }
+
+    const exact = businessModel
+      ? rows.find((r) => r.business_model === businessModel)
+      : undefined;
+    const wide = rows.find((r) => r.business_model === null);
+
+    if (exact) {
+      return {
+        state: "exact",
+        sector,
+        businessModel,
+        applied: {
+          sector,
+          businessModel,
+          peerCount: counts.get(exact.id) ?? 0,
+          lastRefreshedAt: exact.last_refreshed_at,
+        },
+        narrower: null,
+      };
+    }
+
+    if (wide) {
+      // Only suggest a business model when a narrower set really exists.
+      const candidates = rows.filter((r) => r.business_model !== null);
+      const best = candidates.sort(
+        (a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0),
+      )[0];
+      const narrower =
+        !businessModel && best
+          ? {
+              businessModel: best.business_model as string,
+              label: peerSetLabel(sector, best.business_model),
+              peerCount: counts.get(best.id) ?? 0,
+            }
+          : null;
+      return {
+        state: "sector-only",
+        sector,
+        businessModel,
+        applied: {
+          sector,
+          businessModel: null,
+          peerCount: counts.get(wide.id) ?? 0,
+          lastRefreshedAt: wide.last_refreshed_at,
+        },
+        narrower,
+      };
+    }
+
+    return {
+      state: "no-peer-set",
+      sector,
+      businessModel: businessModel
+        ? (businessModelLabel(businessModel) ?? businessModel)
+        : null,
+      applied: null,
+      narrower: null,
+    };
   });

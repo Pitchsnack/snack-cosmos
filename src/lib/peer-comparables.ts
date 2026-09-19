@@ -1,28 +1,18 @@
 /**
- * Shared, client-safe types and helpers for Peer Comparables (Phase 1).
- * Peer sets are reference data: one peer set per industry tag.
+ * Shared, client-safe types and helpers for Peer Comparables.
+ * Peer sets are reference data keyed on Sector + Business model.
+ * Industry plays no part in peer matching.
  */
+
+import { businessModelLabel } from "@/lib/sectors";
 
 export const PEER_MARKETS = ["SET", "mai"] as const;
 export type PeerMarket = (typeof PEER_MARKETS)[number];
 
-/** Canonical industry tags used across startup records. */
-export const INDUSTRY_TAGS = [
-  "FinTech",
-  "eCommerce & Marketplace",
-  "MarTech",
-  "HealthTech",
-  "Sustainability",
-  "Mobility & Logistics",
-  "DeepTech",
-  "Defense",
-  "EdTech",
-  "Gaming",
-  "PropTech",
-  "AgriTech",
-  "FMCG",
-  "Others",
-];
+/** A peer set is either sector-wide (null model) or model-specific. */
+export function peerSetLabel(sector: string, businessModel: string | null): string {
+  return `${sector} · ${businessModel ? (businessModelLabel(businessModel) ?? businessModel) : "All business models"}`;
+}
 
 export interface Peer {
   id?: string;
@@ -39,20 +29,38 @@ export interface Peer {
 export interface PeerSetDetail {
   exists: boolean;
   id: string | null;
-  industryTag: string;
+  sector: string;
+  businessModel: string | null;
   lastRefreshedAt: string | null;
   ownerName: string | null;
   peers: Peer[];
 }
 
 export interface PeerSetSummary {
-  industryTag: string;
+  sector: string;
+  businessModel: string | null;
   exists: boolean;
   peerCount: number;
   setCount: number;
   maiCount: number;
   lastRefreshedAt: string | null;
   ownerName: string | null;
+}
+
+/** What the valuation view needs to pick a state. */
+export interface PeerMatchResult {
+  /** "no-sector" | "no-peer-set" | "sector-only" | "exact" */
+  state: "no-sector" | "no-peer-set" | "sector-only" | "exact";
+  sector: string | null;
+  businessModel: string | null;
+  applied: {
+    sector: string;
+    businessModel: string | null;
+    peerCount: number;
+    lastRefreshedAt: string | null;
+  } | null;
+  /** Only in "sector-only": a narrower set exists that the user could unlock. */
+  narrower: { businessModel: string; label: string; peerCount: number } | null;
 }
 
 export type PeerSetStatus = "not built" | "current" | "stale";

@@ -33,20 +33,24 @@ import {
   fmtMetric,
   median,
   parsePeerCsv,
+  peerSetLabel,
   peerSetStatus,
   type Peer,
   type PeerMarket,
   type PeerSetStatus,
   type PeerSetSummary,
 } from "@/lib/peer-comparables";
+import { BUSINESS_MODELS, SECTORS } from "@/lib/sectors";
 import {
   getPeerSet,
   listPeerSets,
   savePeerSet,
 } from "@/lib/peer-comparables.functions";
 
+const ALL_MODELS = "__all__";
+
 export const Route = createFileRoute("/_authenticated/peer-comparables")({
-  validateSearch: z.object({ tag: z.string().optional() }),
+  validateSearch: z.object({ sector: z.string().optional(), model: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "Peer Comparables — SnackPortal2" },
@@ -114,8 +118,12 @@ function fmtDate(iso: string | null) {
 /* ------------------------------------------------------------------ */
 
 function PeerComparablesPage() {
-  const { tag } = Route.useSearch();
-  return tag ? <PeerSetEditor industryTag={tag} /> : <PeerSetList />;
+  const { sector, model } = Route.useSearch();
+  return sector ? (
+    <PeerSetEditor sector={sector} businessModel={model ?? null} />
+  ) : (
+    <PeerSetList />
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -131,9 +139,14 @@ function PeerSetList() {
   });
   const [newOpen, setNewOpen] = useState(false);
   const [picked, setPicked] = useState<string>("");
+  const [pickedModel, setPickedModel] = useState<string>(ALL_MODELS);
 
   const rows = data ?? [];
-  const open = (t: string) => navigate({ to: "/peer-comparables", search: { tag: t } });
+  const open = (sector: string, businessModel: string | null) =>
+    navigate({
+      to: "/peer-comparables",
+      search: businessModel ? { sector, model: businessModel } : { sector },
+    });
 
   return (
     <div className="space-y-5">
@@ -144,13 +157,14 @@ function PeerSetList() {
         </div>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Peer Comparables</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          One peer set per industry tag. This is reference data — every valuation reads it.
+          Peer sets are keyed on Sector and Business model. A sector-wide set applies to every
+          business model; a model-specific set takes priority when it exists.
         </p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
-          <h2 className="text-sm font-semibold">Industry tags</h2>
+          <h2 className="text-sm font-semibold">Peer sets</h2>
           <div className="flex-1" />
           <Button size="sm" onClick={() => setNewOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
@@ -163,7 +177,7 @@ function PeerSetList() {
             <thead>
               <tr className="bg-[hsl(222_47%_23%)] text-white">
                 <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                  Industry tag
+                  Peer set
                 </th>
                 <th className="w-20 px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                   Peers
@@ -191,12 +205,24 @@ function PeerSetList() {
                   </td>
                 </tr>
               )}
+              {!isLoading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    No peer sets yet. Build one for a sector to make valuations available.
+                  </td>
+                </tr>
+              )}
               {!isLoading &&
                 rows.map((r) => {
                   const status = peerSetStatus(r);
                   return (
-                    <tr key={r.industryTag} className="border-t border-border/50">
-                      <td className="px-4 py-2.5 font-medium text-foreground">{r.industryTag}</td>
+                    <tr
+                      key={`${r.sector}::${r.businessModel ?? "all"}`}
+                      className="border-t border-border/50"
+                    >
+                      <td className="px-4 py-2.5 font-medium text-foreground">
+                        {peerSetLabel(r.sector, r.businessModel)}
+                      </td>
                       <td className="px-4 py-2.5 text-center tabular-nums">
                         {r.exists ? r.peerCount : EMPTY_CELL}
                       </td>
@@ -228,7 +254,11 @@ function PeerSetList() {
                         {r.ownerName ?? EMPTY_CELL}
                       </td>
                       <td className="px-4 py-2.5 text-center">
-                        <Button size="sm" variant="outline" onClick={() => open(r.industryTag)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => open(r.sector, r.businessModel)}
+                        >
                           {r.exists ? "Edit" : "Build"}
                         </Button>
                       </td>
@@ -239,7 +269,7 @@ function PeerSetList() {
           </table>
         </div>
         <p className="border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
-          Every industry tag appears here. <strong>Not built</strong> is a legitimate state.
+          A sector with no peer set simply has no valuation yet — that is a legitimate state.
         </p>
       </div>
 
@@ -248,28 +278,52 @@ function PeerSetList() {
           <DialogHeader>
             <DialogTitle>New peer set</DialogTitle>
             <DialogDescription>
-              Pick the industry tag this peer set belongs to.
+              Choose the sector, and optionally the business model this set is narrowed to.
             </DialogDescription>
           </DialogHeader>
-          <Select value={picked} onValueChange={setPicked}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an industry tag" />
-            </SelectTrigger>
-            <SelectContent>
-              {rows
-                .filter((r) => !r.exists)
-                .map((r) => (
-                  <SelectItem key={r.industryTag} value={r.industryTag}>
-                    {r.industryTag}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Sector</span>
+              <Select value={picked} onValueChange={setPicked}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a sector" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SECTORS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">
+                Business model (optional)
+              </span>
+              <Select value={pickedModel} onValueChange={setPickedModel}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_MODELS}>All business models</SelectItem>
+                  {BUSINESS_MODELS.map((b) => (
+                    <SelectItem key={b.value} value={b.value}>
+                      {b.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewOpen(false)}>
               Cancel
             </Button>
-            <Button disabled={!picked} onClick={() => open(picked)}>
+            <Button
+              disabled={!picked}
+              onClick={() => open(picked, pickedModel === ALL_MODELS ? null : pickedModel)}
+            >
               Build peer set
             </Button>
           </DialogFooter>
@@ -293,17 +347,24 @@ const METRICS = [
 
 type MetricKey = (typeof METRICS)[number]["key"];
 
-function PeerSetEditor({ industryTag }: { industryTag: string }) {
+function PeerSetEditor({
+  sector,
+  businessModel,
+}: {
+  sector: string;
+  businessModel: string | null;
+}) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { isControl } = usePermissions();
   const getFn = useServerFn(getPeerSet);
   const saveFn = useServerFn(savePeerSet);
   const fileRef = useRef<HTMLInputElement>(null);
+  const label = peerSetLabel(sector, businessModel);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["peer-set", industryTag],
-    queryFn: () => getFn({ data: { industryTag } }),
+    queryKey: ["peer-set", sector, businessModel],
+    queryFn: () => getFn({ data: { sector, businessModel } }),
   });
 
   const [peers, setPeers] = useState<Peer[]>([]);
@@ -320,7 +381,8 @@ function PeerSetEditor({ industryTag }: { industryTag: string }) {
     mutationFn: () =>
       saveFn({
         data: {
-          industryTag,
+          sector,
+          businessModel,
           peers: peers
             .filter((p) => p.companyName.trim().length > 0)
             .map((p) => ({
@@ -338,7 +400,7 @@ function PeerSetEditor({ industryTag }: { industryTag: string }) {
     onSuccess: () => {
       toast.success("Peer set saved.");
       qc.invalidateQueries({ queryKey: ["peer-sets"] });
-      qc.invalidateQueries({ queryKey: ["peer-set", industryTag] });
+      qc.invalidateQueries({ queryKey: ["peer-set", sector, businessModel] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -381,13 +443,13 @@ function PeerSetEditor({ industryTag }: { industryTag: string }) {
           onClick={() => navigate({ to: "/peer-comparables", search: {} })}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          All tags
+          All peer sets
         </Button>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex flex-wrap items-center gap-3 border-b border-border/60 px-4 py-3">
-          <h1 className="text-base font-semibold">{industryTag}</h1>
+          <h1 className="text-base font-semibold">{label}</h1>
           <StatusTag status={status} />
           {data?.lastRefreshedAt && (
             <span className="text-xs text-muted-foreground">

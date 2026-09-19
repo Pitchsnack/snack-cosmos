@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
     page: z.coerce.number().int().optional(),
     fav: z.coerce.boolean().optional(),
     tab: z.enum(["edit", "basic-restrictions"]).optional(),
+    focus: z.literal("sector").optional(),
   }),
   head: () => ({
     meta: [

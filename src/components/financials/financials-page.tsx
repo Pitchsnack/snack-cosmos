@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StatementTable } from "@/components/financials/statement-table";
 import { RatiosTable } from "@/components/financials/ratios-table";
+import { ValuationTab } from "@/components/financials/valuation-tab";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
 import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { FinIcon } from "@/components/financials/fin-icon";
@@ -361,6 +362,7 @@ export function StartupFinancialsPage({
               ["position", "Financial Position"],
               ["cash-flow", "Cash Flow Statement"],
               ["ratios", "Financial Ratios"],
+              ["valuation", "Valuation"],
             ].map(([value, label]) => (
               <TabsTrigger
                 key={value}
@@ -430,6 +432,17 @@ export function StartupFinancialsPage({
           <TabsContent value="ratios" className="mt-4 space-y-3">
             <h2 className="text-lg font-semibold">Major Financial Ratios for the year {range}</h2>
             <RatiosTable years={years} ratios={data.ratios} />
+          </TabsContent>
+
+          <TabsContent value="valuation" className="mt-4">
+            <ValuationTab
+              startupId={id}
+              startupName={data.startupName}
+              workspace={workspace}
+              year={activeYear}
+              ratios={data.ratios}
+              income={data.income}
+            />
           </TabsContent>
         </Tabs>
       )}
