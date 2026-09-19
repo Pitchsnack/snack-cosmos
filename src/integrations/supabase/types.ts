@@ -1866,27 +1866,33 @@ export type Database = {
       }
       peer_sets: {
         Row: {
+          business_model: string | null
           created_at: string
           id: string
           industry_tag: string
           last_refreshed_at: string | null
           owner_user_id: string | null
+          sector: string | null
           updated_at: string
         }
         Insert: {
+          business_model?: string | null
           created_at?: string
           id?: string
           industry_tag: string
           last_refreshed_at?: string | null
           owner_user_id?: string | null
+          sector?: string | null
           updated_at?: string
         }
         Update: {
+          business_model?: string | null
           created_at?: string
           id?: string
           industry_tag?: string
           last_refreshed_at?: string | null
           owner_user_id?: string | null
+          sector?: string | null
           updated_at?: string
         }
         Relationships: []
