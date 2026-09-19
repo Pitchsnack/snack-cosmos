@@ -47,11 +47,13 @@ async function ownerNames(ctx: Ctx, ids: string[]): Promise<Map<string, string>>
   return map;
 }
 
-function rowToPeer(r: any): Peer {
+/** A member row carries no figures of its own — they come from the master table. */
+function companyToPeer(r: any): Peer {
   const n = (v: unknown) => (v === null || v === undefined ? null : Number(v));
   return {
     id: r.id,
-    companyName: r.company_name,
+    listedCompanyId: r.id,
+    companyName: r.name,
     ticker: r.ticker ?? null,
     market: r.market,
     revenueThbM: n(r.revenue_thb_m),
@@ -90,12 +92,17 @@ export const listPeerSets = createServerFn({ method: "GET" })
       owner_user_id: string | null;
     }[];
 
-    const { data: peerRows } = await ctx.supabase.from("peers").select("peer_set_id, market");
+    const { data: memberRows } = await ctx.supabase
+      .from("peer_set_members")
+      .select("peer_set_id, listed_companies(market)");
     const counts = new Map<string, { total: number; set: number; mai: number }>();
-    for (const p of (peerRows ?? []) as { peer_set_id: string; market: string }[]) {
+    for (const p of (memberRows ?? []) as {
+      peer_set_id: string;
+      listed_companies: { market: string } | null;
+    }[]) {
       const c = counts.get(p.peer_set_id) ?? { total: 0, set: 0, mai: 0 };
       c.total += 1;
-      if (p.market === "mai") c.mai += 1;
+      if (p.listed_companies?.market === "mai") c.mai += 1;
       else c.set += 1;
       counts.set(p.peer_set_id, c);
     }
@@ -167,10 +174,19 @@ export const getPeerSet = createServerFn({ method: "GET" })
       };
     }
 
-    const [{ data: peers }, names] = await Promise.all([
-      ctx.supabase.from("peers").select("*").eq("peer_set_id", row.id).order("company_name"),
+    const [{ data: members }, names] = await Promise.all([
+      ctx.supabase
+        .from("peer_set_members")
+        .select("listed_companies(*)")
+        .eq("peer_set_id", row.id),
       ownerNames(ctx, row.owner_user_id ? [row.owner_user_id] : []),
     ]);
+
+    const peers = ((members ?? []) as any[])
+      .map((m) => m.listed_companies)
+      .filter(Boolean)
+      .map(companyToPeer)
+      .sort((a, b) => a.companyName.localeCompare(b.companyName));
 
     return {
       exists: true,
@@ -179,7 +195,7 @@ export const getPeerSet = createServerFn({ method: "GET" })
       businessModel: row.business_model,
       lastRefreshedAt: row.last_refreshed_at,
       ownerName: row.owner_user_id ? (names.get(row.owner_user_id) ?? null) : null,
-      peers: ((peers ?? []) as any[]).map(rowToPeer),
+      peers,
     };
   });
 
@@ -187,27 +203,12 @@ export const getPeerSet = createServerFn({ method: "GET" })
 /* Save                                                                */
 /* ------------------------------------------------------------------ */
 
-const metric = z.number().finite().nullable().optional();
-
 export const savePeerSet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     keyInput
       .extend({
-        peers: z
-          .array(
-            z.object({
-              companyName: z.string().min(1).max(200),
-              ticker: z.string().max(40).nullable().optional(),
-              market: z.enum(["SET", "mai"]),
-              revenueThbM: metric,
-              ebitdaMarginPct: metric,
-              evEbitda: metric,
-              pe: metric,
-              pbv: metric,
-            }),
-          )
-          .max(100),
+        listedCompanyIds: z.array(z.string().uuid()).max(100),
       })
       .parse(input),
   )
@@ -217,11 +218,11 @@ export const savePeerSet = createServerFn({ method: "POST" })
     const model = data.businessModel ?? null;
 
     const seen = new Set<string>();
-    for (const p of data.peers) {
-      const key = p.companyName.trim().toLowerCase();
-      if (seen.has(key)) throw new Error(`"${p.companyName}" appears twice in this peer set.`);
-      seen.add(key);
+    for (const id of data.listedCompanyIds) {
+      if (seen.has(id)) throw new Error("A company cannot appear twice in the same peer set.");
+      seen.add(id);
     }
+    const ids = [...seen];
 
     const existing = await findSet(ctx, data.sector, model);
     let setId = existing?.id;
@@ -252,27 +253,20 @@ export const savePeerSet = createServerFn({ method: "POST" })
     }
 
     const { data: before } = await ctx.supabase
-      .from("peers")
-      .select("company_name, market, revenue_thb_m, ebitda_margin_pct, ev_ebitda, pe, pbv")
+      .from("peer_set_members")
+      .select("listed_companies(ticker, name)")
       .eq("peer_set_id", setId);
 
-    const { error: delErr } = await ctx.supabase.from("peers").delete().eq("peer_set_id", setId);
+    const { error: delErr } = await ctx.supabase
+      .from("peer_set_members")
+      .delete()
+      .eq("peer_set_id", setId);
     if (delErr) throw new Error(delErr.message);
 
-    if (data.peers.length > 0) {
-      const { error: insErr } = await ctx.supabase.from("peers").insert(
-        data.peers.map((p) => ({
-          peer_set_id: setId,
-          company_name: p.companyName.trim(),
-          ticker: p.ticker?.trim() || null,
-          market: p.market,
-          revenue_thb_m: p.revenueThbM ?? null,
-          ebitda_margin_pct: p.ebitdaMarginPct ?? null,
-          ev_ebitda: p.evEbitda ?? null,
-          pe: p.pe ?? null,
-          pbv: p.pbv ?? null,
-        })),
-      );
+    if (ids.length > 0) {
+      const { error: insErr } = await ctx.supabase
+        .from("peer_set_members")
+        .insert(ids.map((id) => ({ peer_set_id: setId, listed_company_id: id })));
       if (insErr) throw new Error(insErr.message);
     }
 
@@ -282,7 +276,7 @@ export const savePeerSet = createServerFn({ method: "POST" })
       entity_id: setId,
       action,
       old_value: { key: peerSetLabel(data.sector, model), peers: before ?? [] } as never,
-      new_value: { key: peerSetLabel(data.sector, model), peers: data.peers } as never,
+      new_value: { key: peerSetLabel(data.sector, model), peers: ids } as never,
     });
 
     return { ok: true, lastRefreshedAt: now };
@@ -304,8 +298,8 @@ export const deletePeerSet = createServerFn({ method: "POST" })
     if (!row) return { ok: true };
 
     const { data: before } = await ctx.supabase
-      .from("peers")
-      .select("company_name, market")
+      .from("peer_set_members")
+      .select("listed_companies(ticker, name)")
       .eq("peer_set_id", row.id);
 
     const { error } = await ctx.supabase.from("peer_sets").delete().eq("id", row.id);
@@ -362,7 +356,7 @@ export const getPeerMatch = createServerFn({ method: "GET" })
     const counts = new Map<string, number>();
     if (rows.length > 0) {
       const { data: peerRows } = await ctx.supabase
-        .from("peers")
+        .from("peer_set_members")
         .select("peer_set_id")
         .in(
           "peer_set_id",

@@ -16,6 +16,8 @@ export function peerSetLabel(sector: string, businessModel: string | null): stri
 
 export interface Peer {
   id?: string;
+  /** Row in listed_companies this peer points at. Figures are read from there. */
+  listedCompanyId?: string;
   companyName: string;
   ticker: string | null;
   market: PeerMarket;
@@ -165,4 +167,57 @@ export function parsePeerCsv(text: string): { peers: Peer[]; errors: string[] } 
   });
 
   return { peers, errors };
+}
+
+/* ------------------------------------------------------------------ */
+/* CSV export                                                          */
+/* ------------------------------------------------------------------ */
+
+/** Header matches what `parsePeerCsv` accepts, so exports re-import cleanly. */
+export const PEER_CSV_HEADER =
+  "company,ticker,market,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv";
+
+function cell(v: string | number | null | undefined): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** Peers only — the median row is never exported. Empty metrics stay empty. */
+export function peersToCsv(peers: Peer[]): string {
+  return [
+    PEER_CSV_HEADER,
+    ...peers.map((p) =>
+      [
+        p.companyName,
+        p.ticker,
+        p.market,
+        p.revenueThbM,
+        p.ebitdaMarginPct,
+        p.evEbitda,
+        p.pe,
+        p.pbv,
+      ]
+        .map(cell)
+        .join(","),
+    ),
+  ].join("\n");
+}
+
+function slug(v: string): string {
+  return (
+    v
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "all"
+  );
+}
+
+/** peer-set_<sector>_<model>_<yyyy-mm-dd>.csv — "all" when sector-wide. */
+export function peerSetCsvFilename(
+  sector: string,
+  businessModel: string | null,
+  date = new Date().toISOString().slice(0, 10),
+): string {
+  return `peer-set_${slug(sector)}_${businessModel ? slug(businessModel) : "all"}_${date}.csv`;
 }

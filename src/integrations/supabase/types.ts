@@ -1772,6 +1772,54 @@ export type Database = {
           },
         ]
       }
+      listed_companies: {
+        Row: {
+          as_at: string | null
+          created_at: string
+          ebitda_margin_pct: number | null
+          ev_ebitda: number | null
+          id: string
+          market: Database["public"]["Enums"]["peer_market"]
+          name: string
+          pbv: number | null
+          pe: number | null
+          revenue_thb_m: number | null
+          sector: string | null
+          ticker: string
+          updated_at: string
+        }
+        Insert: {
+          as_at?: string | null
+          created_at?: string
+          ebitda_margin_pct?: number | null
+          ev_ebitda?: number | null
+          id?: string
+          market: Database["public"]["Enums"]["peer_market"]
+          name: string
+          pbv?: number | null
+          pe?: number | null
+          revenue_thb_m?: number | null
+          sector?: string | null
+          ticker: string
+          updated_at?: string
+        }
+        Update: {
+          as_at?: string | null
+          created_at?: string
+          ebitda_margin_pct?: number | null
+          ev_ebitda?: number | null
+          id?: string
+          market?: Database["public"]["Enums"]["peer_market"]
+          name?: string
+          pbv?: number | null
+          pe?: number | null
+          revenue_thb_m?: number | null
+          sector?: string | null
+          ticker?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       master_agent_tenants: {
         Row: {
           created_at: string
@@ -1863,6 +1911,42 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      peer_set_members: {
+        Row: {
+          created_at: string
+          id: string
+          listed_company_id: string
+          peer_set_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listed_company_id: string
+          peer_set_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listed_company_id?: string
+          peer_set_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peer_set_members_listed_company_id_fkey"
+            columns: ["listed_company_id"]
+            isOneToOne: false
+            referencedRelation: "listed_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peer_set_members_peer_set_id_fkey"
+            columns: ["peer_set_id"]
+            isOneToOne: false
+            referencedRelation: "peer_sets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       peer_sets: {
         Row: {
