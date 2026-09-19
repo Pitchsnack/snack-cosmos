@@ -258,8 +258,30 @@ export function SectorBusinessModelFields({
   businessModel: string | null;
   onBusinessModelChange: (v: string | null) => void;
 }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [highlight, setHighlight] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const wanted = new URLSearchParams(window.location.search).get("focus") === "sector";
+    if (!wanted) return;
+    const t = window.setTimeout(() => {
+      boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlight(true);
+      window.setTimeout(() => setHighlight(false), 2400);
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
-    <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+    <div
+      ref={boxRef}
+      id="sector-fields"
+      className={cn(
+        "space-y-4 rounded-lg border border-border bg-muted/20 p-4 transition-shadow",
+        highlight && "border-warning ring-2 ring-warning/40",
+      )}
+    >
       <div className="space-y-1.5">
         <div className="text-[13px] font-medium text-foreground">
           Sector <span className="text-muted-foreground">(optional)</span>
