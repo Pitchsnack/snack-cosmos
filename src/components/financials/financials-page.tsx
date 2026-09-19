@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StatementTable } from "@/components/financials/statement-table";
 import { RatiosTable } from "@/components/financials/ratios-table";
+import { ValuationTab } from "@/components/financials/valuation-tab";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
 import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { FinIcon } from "@/components/financials/fin-icon";
