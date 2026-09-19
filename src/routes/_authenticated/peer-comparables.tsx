@@ -347,17 +347,24 @@ const METRICS = [
 
 type MetricKey = (typeof METRICS)[number]["key"];
 
-function PeerSetEditor({ industryTag }: { industryTag: string }) {
+function PeerSetEditor({
+  sector,
+  businessModel,
+}: {
+  sector: string;
+  businessModel: string | null;
+}) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { isControl } = usePermissions();
   const getFn = useServerFn(getPeerSet);
   const saveFn = useServerFn(savePeerSet);
   const fileRef = useRef<HTMLInputElement>(null);
+  const label = peerSetLabel(sector, businessModel);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["peer-set", industryTag],
-    queryFn: () => getFn({ data: { industryTag } }),
+    queryKey: ["peer-set", sector, businessModel],
+    queryFn: () => getFn({ data: { sector, businessModel } }),
   });
 
   const [peers, setPeers] = useState<Peer[]>([]);
@@ -374,7 +381,8 @@ function PeerSetEditor({ industryTag }: { industryTag: string }) {
     mutationFn: () =>
       saveFn({
         data: {
-          industryTag,
+          sector,
+          businessModel,
           peers: peers
             .filter((p) => p.companyName.trim().length > 0)
             .map((p) => ({
@@ -392,7 +400,7 @@ function PeerSetEditor({ industryTag }: { industryTag: string }) {
     onSuccess: () => {
       toast.success("Peer set saved.");
       qc.invalidateQueries({ queryKey: ["peer-sets"] });
-      qc.invalidateQueries({ queryKey: ["peer-set", industryTag] });
+      qc.invalidateQueries({ queryKey: ["peer-set", sector, businessModel] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
