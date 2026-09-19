@@ -370,7 +370,7 @@ export function ListedCompaniesTab({
 
                 if (d) {
                   // Any ratio moved -> As at follows to today, unless the user set it.
-                  const setField = (patch: Partial<ListedCompanyInput>) =>
+                  const setField = (patch: Partial<Omit<ListedCompanyInput, "id">>) =>
                     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
                   const setMetric = (key: MetricKey, raw: string) => {
                     const t = raw.trim();
