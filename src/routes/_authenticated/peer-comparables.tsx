@@ -334,7 +334,7 @@ function PeerSetList() {
 }
 
 /* ------------------------------------------------------------------ */
-/* 2 · Editor                                                          */
+/* 2 · Editor — a list of companies linked from the master table       */
 /* ------------------------------------------------------------------ */
 
 const METRICS = [
@@ -359,6 +359,8 @@ function PeerSetEditor({
   const { isControl } = usePermissions();
   const getFn = useServerFn(getPeerSet);
   const saveFn = useServerFn(savePeerSet);
+  const listFn = useServerFn(listListedCompanies);
+  const importFn = useServerFn(importListedCompanies);
   const fileRef = useRef<HTMLInputElement>(null);
   const label = peerSetLabel(sector, businessModel);
 
@@ -367,12 +369,19 @@ function PeerSetEditor({
     queryFn: () => getFn({ data: { sector, businessModel } }),
   });
 
+  const { data: master } = useQuery<ListedCompany[]>({
+    queryKey: ["listed-companies"],
+    queryFn: () => listFn(),
+  });
+
   const [peers, setPeers] = useState<Peer[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [newCompanyOpen, setNewCompanyOpen] = useState(false);
+  const [typedName, setTypedName] = useState("");
 
   useEffect(() => {
     if (data && !loaded) {
-      setPeers(data.peers.length ? data.peers : [emptyPeer()]);
+      setPeers(data.peers);
       setLoaded(true);
     }
   }, [data, loaded]);
@@ -383,41 +392,51 @@ function PeerSetEditor({
         data: {
           sector,
           businessModel,
-          peers: peers
-            .filter((p) => p.companyName.trim().length > 0)
-            .map((p) => ({
-              companyName: p.companyName.trim(),
-              ticker: p.ticker,
-              market: p.market,
-              revenueThbM: p.revenueThbM,
-              ebitdaMarginPct: p.ebitdaMarginPct,
-              evEbitda: p.evEbitda,
-              pe: p.pe,
-              pbv: p.pbv,
-            })),
+          listedCompanyIds: peers
+            .map((p) => p.listedCompanyId ?? p.id)
+            .filter((v): v is string => !!v),
         },
       }),
     onSuccess: () => {
       toast.success("Peer set saved.");
       qc.invalidateQueries({ queryKey: ["peer-sets"] });
       qc.invalidateQueries({ queryKey: ["peer-set", sector, businessModel] });
+      qc.invalidateQueries({ queryKey: ["listed-companies"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const update = (i: number, patch: Partial<Peer>) =>
-    setPeers((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const inSet = useMemo(
+    () => new Set(peers.map((p) => p.listedCompanyId ?? p.id).filter(Boolean) as string[]),
+    [peers],
+  );
 
-  const named = peers.filter((p) => p.companyName.trim().length > 0);
-  const duplicate = useMemo(() => {
-    const seen = new Set<string>();
-    for (const p of named) {
-      const k = p.companyName.trim().toLowerCase();
-      if (seen.has(k)) return p.companyName.trim();
-      seen.add(k);
+  /** One searchable line per company so ticker and name both match. */
+  const options: ComboOption[] = useMemo(
+    () =>
+      (master ?? []).map((c) => ({
+        value: `${c.ticker} — ${c.name}`,
+        meta: c.market,
+        added: inSet.has(c.id),
+      })),
+    [master, inSet],
+  );
+
+  const addById = (id: string) => {
+    const c = (master ?? []).find((m) => m.id === id);
+    if (!c || inSet.has(id)) return;
+    setPeers((rows) => [...rows, listedToPeer(c)]);
+  };
+
+  const onPick = (value: string, isNew: boolean) => {
+    if (isNew) {
+      setTypedName(value);
+      setNewCompanyOpen(true);
+      return;
     }
-    return null;
-  }, [named]);
+    const c = (master ?? []).find((m) => `${m.ticker} — ${m.name}` === value);
+    if (c) addById(c.id);
+  };
 
   const status = peerSetStatus({
     exists: !!data?.exists,
@@ -428,9 +447,40 @@ function PeerSetEditor({
     const text = await file.text();
     const { peers: parsed, errors } = parsePeerCsv(text);
     if (errors.length) toast.warning(errors.slice(0, 3).join(" "));
-    if (parsed.length) {
-      setPeers((rows) => [...rows.filter((r) => r.companyName.trim()), ...parsed]);
-      toast.success(`${parsed.length} peers added from the file.`);
+    if (!parsed.length) return;
+    try {
+      const res = await importFn({
+        data: {
+          rows: parsed.map((p) => ({
+            ticker: (p.ticker || p.companyName).trim(),
+            name: p.companyName.trim(),
+            market: p.market,
+            sector: null,
+            revenueThbM: p.revenueThbM,
+            ebitdaMarginPct: p.ebitdaMarginPct,
+            evEbitda: p.evEbitda,
+            pe: p.pe,
+            pbv: p.pbv,
+            asAt: null,
+          })),
+        },
+      });
+      const fresh = await qc.fetchQuery<ListedCompany[]>({
+        queryKey: ["listed-companies"],
+        queryFn: () => listFn(),
+      });
+      setPeers((rows) => {
+        const have = new Set(rows.map((r) => r.listedCompanyId ?? r.id));
+        const added = res.ids
+          .filter((id) => !have.has(id))
+          .map((id) => fresh.find((c) => c.id === id))
+          .filter((c): c is ListedCompany => !!c)
+          .map(listedToPeer);
+        return [...rows, ...added];
+      });
+      toast.success(`${res.ids.length} companies linked from the file.`);
+    } catch (e) {
+      toast.error((e as Error).message);
     }
   };
 
@@ -469,24 +519,40 @@ function PeerSetEditor({
             }}
           />
           <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-            <Download className="mr-1.5 h-4 w-4" />
+            <Upload className="mr-1.5 h-4 w-4" />
             Import CSV
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPeers((r) => [...r, emptyPeer()])}
+            onClick={() =>
+              downloadCsv(peerSetCsvFilename(sector, businessModel), peersToCsv(peers))
+            }
           >
-            <Plus className="mr-1.5 h-4 w-4" />
-            Add peer
+            <Download className="mr-1.5 h-4 w-4" />
+            Export CSV
           </Button>
           <Button
             size="sm"
-            disabled={!isControl || save.isPending || !!duplicate}
+            disabled={!isControl || save.isPending}
             onClick={() => save.mutate()}
           >
             {save.isPending ? "Saving…" : "Save"}
           </Button>
+        </div>
+
+        <div className="border-b border-border/60 px-4 py-3">
+          <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            Add peer — search by ticker or company name
+          </span>
+          <SuggestCombobox
+            id="add-peer"
+            className="max-w-[520px]"
+            options={options}
+            noun="listed company"
+            placeholder="e.g. TU, or Thai Union"
+            onSelect={onPick}
+          />
         </div>
 
         <div className="overflow-x-auto">
@@ -499,7 +565,7 @@ function PeerSetEditor({
                 <th className="w-28 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
                   Ticker
                 </th>
-                <th className="w-28 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
+                <th className="w-24 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                   Market
                 </th>
                 {METRICS.map((m) => (
@@ -521,60 +587,32 @@ function PeerSetEditor({
                   </td>
                 </tr>
               )}
+              {!isLoading && peers.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                    No companies in this set yet. Search above to add one.
+                  </td>
+                </tr>
+              )}
               {!isLoading &&
                 peers.map((p, i) => (
-                  <tr key={i} className="border-t border-border/50">
-                    <td className="px-3 py-2">
-                      <Input
-                        value={p.companyName}
-                        placeholder="Company name"
-                        onChange={(e) => update(i, { companyName: e.target.value })}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        value={p.ticker ?? ""}
-                        placeholder="—"
-                        onChange={(e) => update(i, { ticker: e.target.value || null })}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Select
-                        value={p.market}
-                        onValueChange={(v) => update(i, { market: v as PeerMarket })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="SET">SET</SelectItem>
-                          <SelectItem value="mai">mai</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
+                  <tr key={p.listedCompanyId ?? p.id ?? i} className="border-t border-border/50">
+                    <td className="px-3 py-2.5 font-medium">{p.companyName}</td>
+                    <td className="px-3 py-2.5">{p.ticker ?? EMPTY_CELL}</td>
+                    <td className="px-3 py-2.5 text-center">{p.market}</td>
                     {METRICS.map((m) => (
-                      <td key={m.key} className="px-3 py-2">
-                        <Input
-                          inputMode="decimal"
-                          className="text-right tabular-nums"
-                          placeholder={EMPTY_CELL}
-                          value={p[m.key as MetricKey] === null ? "" : String(p[m.key as MetricKey])}
-                          onChange={(e) => {
-                            const raw = e.target.value.trim();
-                            const num = raw === "" || raw === "-" ? null : Number(raw);
-                            update(i, {
-                              [m.key]: num !== null && Number.isFinite(num) ? num : null,
-                            } as Partial<Peer>);
-                          }}
-                        />
+                      <td key={m.key} className="px-3 py-2.5 text-right tabular-nums">
+                        {fmtMetric(p[m.key as MetricKey], m.suffix)}
                       </td>
                     ))}
-                    <td className="px-3 py-2 text-center">
+                    <td className="px-3 py-2.5 text-center">
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label={`Remove ${p.companyName || "peer"}`}
-                        onClick={() => setPeers((rows) => rows.filter((_, idx) => idx !== i))}
+                        aria-label={`Remove ${p.companyName}`}
+                        onClick={() =>
+                          setPeers((rows) => rows.filter((_, idx) => idx !== i))
+                        }
                       >
                         <X className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -587,10 +625,7 @@ function PeerSetEditor({
                 <td className="px-3 py-2.5 text-center text-muted-foreground">{EMPTY_CELL}</td>
                 {METRICS.map((m) => (
                   <td key={m.key} className="px-3 py-2.5 text-right tabular-nums">
-                    {fmtMetric(
-                      median(named.map((p) => p[m.key as MetricKey])),
-                      m.suffix,
-                    )}
+                    {fmtMetric(median(peers.map((p) => p[m.key as MetricKey])), m.suffix)}
                   </td>
                 ))}
                 <td />
@@ -600,28 +635,53 @@ function PeerSetEditor({
         </div>
 
         <div className="space-y-1.5 border-t border-border/60 px-4 py-3 text-xs text-muted-foreground">
-          {duplicate && (
-            <p className="text-destructive">
-              “{duplicate}” appears twice — remove the duplicate before saving.
-            </p>
-          )}
-          {!duplicate && named.length > 0 && named.length < 4 && (
+          {peers.length > 0 && peers.length < 4 && (
             <p className="text-warning">
               Fewer than 4 peers — the median may be distorted by one outlier.
             </p>
           )}
-          {!duplicate && named.length > 10 && (
+          {peers.length > 10 && (
             <p className="text-warning">
               More than 10 peers — large sets dilute the comparison.
             </p>
           )}
           <p>
-            Median is computed, not entered. Changes are written to Audit Logs, because they
-            silently change every valuation that uses this set.
+            Ratios come from the Listed Companies table and are read-only here. Edit a company
+            there to update every set that uses it.
           </p>
           {!isControl && <p>You can view this set but only administrators can save changes.</p>}
         </div>
       </div>
+
+      <ListedCompanyDialog
+        open={newCompanyOpen}
+        onOpenChange={setNewCompanyOpen}
+        defaultMarket="SET"
+        prefillName={typedName}
+        onSaved={async (id) => {
+          const fresh = await qc.fetchQuery<ListedCompany[]>({
+            queryKey: ["listed-companies"],
+            queryFn: () => listFn(),
+          });
+          const c = fresh.find((m) => m.id === id);
+          if (c) setPeers((rows) => [...rows, listedToPeer(c)]);
+        }}
+      />
     </div>
   );
+}
+
+function listedToPeer(c: ListedCompany): Peer {
+  return {
+    id: c.id,
+    listedCompanyId: c.id,
+    companyName: c.name,
+    ticker: c.ticker,
+    market: c.market,
+    revenueThbM: c.revenueThbM,
+    ebitdaMarginPct: c.ebitdaMarginPct,
+    evEbitda: c.evEbitda,
+    pe: c.pe,
+    pbv: c.pbv,
+  };
 }
