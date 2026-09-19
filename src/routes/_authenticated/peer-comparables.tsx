@@ -118,8 +118,12 @@ function fmtDate(iso: string | null) {
 /* ------------------------------------------------------------------ */
 
 function PeerComparablesPage() {
-  const { tag } = Route.useSearch();
-  return tag ? <PeerSetEditor industryTag={tag} /> : <PeerSetList />;
+  const { sector, model } = Route.useSearch();
+  return sector ? (
+    <PeerSetEditor sector={sector} businessModel={model ?? null} />
+  ) : (
+    <PeerSetList />
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -135,9 +139,14 @@ function PeerSetList() {
   });
   const [newOpen, setNewOpen] = useState(false);
   const [picked, setPicked] = useState<string>("");
+  const [pickedModel, setPickedModel] = useState<string>(ALL_MODELS);
 
   const rows = data ?? [];
-  const open = (t: string) => navigate({ to: "/peer-comparables", search: { tag: t } });
+  const open = (sector: string, businessModel: string | null) =>
+    navigate({
+      to: "/peer-comparables",
+      search: businessModel ? { sector, model: businessModel } : { sector },
+    });
 
   return (
     <div className="space-y-5">
