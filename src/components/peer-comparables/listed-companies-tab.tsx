@@ -333,7 +333,7 @@ export function ListedCompaniesTab({
               <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                 Used in
               </th>
-              <th className="w-12 px-3 py-2.5" />
+              <th className="w-24 px-3 py-2.5" />
             </tr>
           </thead>
           <tbody>
