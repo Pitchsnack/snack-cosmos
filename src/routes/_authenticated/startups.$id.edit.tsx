@@ -26,6 +26,7 @@ const editSearchSchema = z.object({
   fav: z.coerce.boolean().optional(),
   from: z.literal("entity-control").optional(),
   tab: z.enum(["startups", "investors", "drafts"]).optional(),
+  focus: z.literal("sector").optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/startups/$id/edit")({
