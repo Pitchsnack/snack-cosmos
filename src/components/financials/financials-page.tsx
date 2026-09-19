@@ -361,6 +361,7 @@ export function StartupFinancialsPage({
               ["position", "Financial Position"],
               ["cash-flow", "Cash Flow Statement"],
               ["ratios", "Financial Ratios"],
+              ["valuation", "Valuation"],
             ].map(([value, label]) => (
               <TabsTrigger
                 key={value}
