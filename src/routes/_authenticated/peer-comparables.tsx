@@ -254,7 +254,11 @@ function PeerSetList() {
                         {r.ownerName ?? EMPTY_CELL}
                       </td>
                       <td className="px-4 py-2.5 text-center">
-                        <Button size="sm" variant="outline" onClick={() => open(r.industryTag)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => open(r.sector, r.businessModel)}
+                        >
                           {r.exists ? "Edit" : "Build"}
                         </Button>
                       </td>
@@ -265,7 +269,7 @@ function PeerSetList() {
           </table>
         </div>
         <p className="border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
-          Every industry tag appears here. <strong>Not built</strong> is a legitimate state.
+          A sector with no peer set simply has no valuation yet — that is a legitimate state.
         </p>
       </div>
 
@@ -274,28 +278,52 @@ function PeerSetList() {
           <DialogHeader>
             <DialogTitle>New peer set</DialogTitle>
             <DialogDescription>
-              Pick the industry tag this peer set belongs to.
+              Choose the sector, and optionally the business model this set is narrowed to.
             </DialogDescription>
           </DialogHeader>
-          <Select value={picked} onValueChange={setPicked}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an industry tag" />
-            </SelectTrigger>
-            <SelectContent>
-              {rows
-                .filter((r) => !r.exists)
-                .map((r) => (
-                  <SelectItem key={r.industryTag} value={r.industryTag}>
-                    {r.industryTag}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Sector</span>
+              <Select value={picked} onValueChange={setPicked}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a sector" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SECTORS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">
+                Business model (optional)
+              </span>
+              <Select value={pickedModel} onValueChange={setPickedModel}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_MODELS}>All business models</SelectItem>
+                  {BUSINESS_MODELS.map((b) => (
+                    <SelectItem key={b.value} value={b.value}>
+                      {b.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewOpen(false)}>
               Cancel
             </Button>
-            <Button disabled={!picked} onClick={() => open(picked)}>
+            <Button
+              disabled={!picked}
+              onClick={() => open(picked, pickedModel === ALL_MODELS ? null : pickedModel)}
+            >
               Build peer set
             </Button>
           </DialogFooter>
