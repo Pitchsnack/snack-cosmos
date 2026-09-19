@@ -228,6 +228,13 @@ const NAV_ITEMS: NavItem[] = [
     exact: false,
     controlOnly: true,
   },
+  {
+    label: "Listed Companies",
+    icon: Layers,
+    path: "/listed-companies",
+    exact: false,
+    controlOnly: true,
+  },
   { label: "Notifications", icon: Bell, path: "/notifications", exact: false },
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
