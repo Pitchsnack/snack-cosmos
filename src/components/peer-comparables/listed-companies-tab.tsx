@@ -365,63 +365,212 @@ export function ListedCompaniesTab({
               </tr>
             )}
             {!isLoading &&
-              rows.map((c) => (
-                <tr
-                  key={c.id}
-                  className="cursor-pointer border-t border-border/50 hover:bg-muted/40"
-                  onClick={() => {
-                    setEditing({
-                      id: c.id,
-                      ticker: c.ticker,
-                      name: c.name,
-                      market: c.market,
-                      sector: c.sector,
-                      revenueThbM: c.revenueThbM,
-                      ebitdaMarginPct: c.ebitdaMarginPct,
-                      evEbitda: c.evEbitda,
-                      pe: c.pe,
-                      pbv: c.pbv,
-                      asAt: c.asAt,
-                    });
-                    setDialogOpen(true);
-                  }}
-                >
-                  <td className="px-3 py-2.5 font-semibold">
-                    <Highlight text={c.ticker} term={search} />
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <Highlight text={c.name} term={search} />
-                  </td>
-                  <td className="px-3 py-2.5 text-center">{c.market}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{c.sector ?? EMPTY_CELL}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">
-                    {fmtMetric(c.revenueThbM)}
-                  </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">
-                    {fmtMetric(c.ebitdaMarginPct, "%")}
-                  </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">
-                    {fmtMetric(c.evEbitda, "×")}
-                  </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pe, "×")}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pbv, "×")}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{c.asAt ?? EMPTY_CELL}</td>
-                  <td className="px-3 py-2.5 text-center tabular-nums">{c.usedIn}</td>
-                  <td className="px-3 py-2.5 text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Delete ${c.ticker}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPendingDelete(c);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              rows.map((c) => {
+                const d = draft && draft.id === c.id ? draft : null;
+
+                if (d) {
+                  // Any ratio moved -> As at follows to today, unless the user set it.
+                  const setField = (patch: Partial<ListedCompanyInput>) =>
+                    setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
+                  const setMetric = (key: MetricKey, raw: string) => {
+                    const t = raw.trim();
+                    const n = t === "" || t === "-" ? null : Number(t);
+                    const value = n !== null && Number.isFinite(n) ? n : null;
+                    setDraft((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            [key]: value,
+                            ...(dateTouched || value === c[key] ? {} : { asAt: todayIso() }),
+                          }
+                        : prev,
+                    );
+                  };
+                  const keys = (e: React.KeyboardEvent) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (d.name.trim()) saveRow.mutate(d);
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      cancelEdit();
+                    }
+                  };
+
+                  return (
+                    <Fragment key={c.id}>
+                      {c.usedIn > 0 && (
+                        <tr className="border-t border-warning/30">
+                          <td colSpan={12} className="bg-warning/10 px-3 py-2">
+                            <span className="flex items-center gap-2 text-xs text-warning-foreground">
+                              <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
+                              <span>
+                                <b className="font-semibold">
+                                  Used in {c.usedIn} peer set{c.usedIn === 1 ? "" : "s"}
+                                </b>{" "}
+                                — changes apply to all of them.
+                              </span>
+                            </span>
+                          </td>
+                        </tr>
+                      )}
+                      <tr className="border-t border-border/50 bg-info/5" onKeyDown={keys}>
+                        <td className="px-2 py-2">
+                          <Input
+                            value={d.ticker}
+                            disabled
+                            aria-label="Ticker (locked)"
+                            className="h-8 cursor-not-allowed border-dashed text-muted-foreground"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <Input
+                            autoFocus
+                            className="h-8"
+                            value={d.name}
+                            onChange={(e) => setField({ name: e.target.value })}
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <Select
+                            value={d.market}
+                            onValueChange={(v) => setField({ market: v as ListedCompany["market"] })}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="SET">SET</SelectItem>
+                              <SelectItem value="mai">mai</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-2 py-2">
+                          <Select
+                            value={d.sector ?? NO_SECTOR}
+                            onValueChange={(v) =>
+                              setField({ sector: v === NO_SECTOR ? null : v })
+                            }
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="No sector" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={NO_SECTOR}>No sector</SelectItem>
+                              {SECTORS.map((s) => (
+                                <SelectItem key={s} value={s}>
+                                  {s}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        {METRIC_KEYS.map((k) => (
+                          <td key={k} className="px-2 py-2">
+                            <Input
+                              inputMode="decimal"
+                              placeholder="—"
+                              className="h-8 text-right tabular-nums"
+                              value={d[k] === null || d[k] === undefined ? "" : String(d[k])}
+                              onChange={(e) => setMetric(k, e.target.value)}
+                            />
+                          </td>
+                        ))}
+                        <td className="px-2 py-2">
+                          <Input
+                            type="date"
+                            className="h-8"
+                            value={d.asAt ?? ""}
+                            onChange={(e) => {
+                              setDateTouched(true);
+                              setField({ asAt: e.target.value || null });
+                            }}
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-center tabular-nums">{c.usedIn}</td>
+                        <td className="px-2 py-2 text-center">
+                          <Button
+                            size="sm"
+                            className="h-7 px-3"
+                            disabled={!d.name.trim() || saveRow.isPending}
+                            onClick={() => saveRow.mutate(d)}
+                          >
+                            {saveRow.isPending ? "Saving…" : "Save"}
+                          </Button>
+                        </td>
+                      </tr>
+                      <tr className="bg-info/5">
+                        <td colSpan={12} className="px-3 pb-2.5">
+                          <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-3"
+                              onClick={cancelEdit}
+                            >
+                              Cancel
+                            </Button>
+                            <span>
+                              Enter saves · Escape cancels · empty clears a value to null, it does
+                              not set zero
+                            </span>
+                            {!dateTouched && d.asAt !== c.asAt && (
+                              <span className="ml-auto font-semibold text-info">
+                                As at updated to today automatically
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    </Fragment>
+                  );
+                }
+
+                return (
+                  <tr key={c.id} className="border-t border-border/50 hover:bg-muted/40">
+                    <td className="px-3 py-2.5 font-semibold">
+                      <Highlight text={c.ticker} term={search} />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <Highlight text={c.name} term={search} />
+                    </td>
+                    <td className="px-3 py-2.5 text-center">{c.market}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{c.sector ?? EMPTY_CELL}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.revenueThbM)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.ebitdaMarginPct, "%")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.evEbitda, "×")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pe, "×")}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pbv, "×")}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{c.asAt ?? EMPTY_CELL}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{c.usedIn}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Edit ${c.ticker}`}
+                          onClick={() => startEdit(c)}
+                        >
+                          <Pencil className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Delete ${c.ticker}`}
+                          onClick={() => setPendingDelete(c)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
