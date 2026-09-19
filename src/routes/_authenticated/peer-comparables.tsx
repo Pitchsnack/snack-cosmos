@@ -443,13 +443,13 @@ function PeerSetEditor({
           onClick={() => navigate({ to: "/peer-comparables", search: {} })}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          All tags
+          All peer sets
         </Button>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex flex-wrap items-center gap-3 border-b border-border/60 px-4 py-3">
-          <h1 className="text-base font-semibold">{industryTag}</h1>
+          <h1 className="text-base font-semibold">{label}</h1>
           <StatusTag status={status} />
           {data?.lastRefreshedAt && (
             <span className="text-xs text-muted-foreground">
