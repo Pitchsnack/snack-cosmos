@@ -54,7 +54,6 @@ type NavPath =
   | "/users"
   | "/access-management"
   | "/peer-comparables"
-  | "/listed-companies"
   | "/security"
   | "/notifications"
   | "/preferences"
@@ -134,7 +133,6 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Users",
       "Access Management",
       "Peer Comparables",
-      "Listed Companies",
       "Audit Logs",
       "Security",
     ],
@@ -227,13 +225,6 @@ const NAV_ITEMS: NavItem[] = [
     label: "Peer Comparables",
     icon: Layers,
     path: "/peer-comparables",
-    exact: false,
-    controlOnly: true,
-  },
-  {
-    label: "Listed Companies",
-    icon: Layers,
-    path: "/listed-companies",
     exact: false,
     controlOnly: true,
   },
