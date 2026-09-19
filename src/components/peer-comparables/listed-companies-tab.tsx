@@ -110,6 +110,47 @@ export function ListedCompaniesTab({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<ListedCompany | null>(null);
 
+  // ---- inline row editing -------------------------------------------------
+  const saveRowFn = useServerFn(saveListedCompany);
+  const [draft, setDraft] = useState<(ListedCompanyInput & { id: string }) | null>(null);
+  const [dateTouched, setDateTouched] = useState(false);
+
+  const startEdit = (c: ListedCompany) => {
+    setDraft(toDraft(c));
+    setDateTouched(false);
+  };
+  const cancelEdit = () => {
+    setDraft(null);
+    setDateTouched(false);
+  };
+
+  const saveRow = useMutation({
+    mutationFn: (d: ListedCompanyInput & { id: string }) =>
+      saveRowFn({
+        data: {
+          id: d.id,
+          ticker: d.ticker,
+          name: d.name.trim(),
+          market: d.market,
+          sector: d.sector,
+          revenueThbM: d.revenueThbM,
+          ebitdaMarginPct: d.ebitdaMarginPct,
+          evEbitda: d.evEbitda,
+          pe: d.pe,
+          pbv: d.pbv,
+          asAt: d.asAt,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Company updated.");
+      cancelEdit();
+      qc.invalidateQueries({ queryKey: ["listed-companies"] });
+      qc.invalidateQueries({ queryKey: ["peer-sets"] });
+      qc.invalidateQueries({ queryKey: ["peer-set"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   // Arriving from the peer picker with a typed name opens the form straight away.
   useEffect(() => {
     if (prefillName) {
