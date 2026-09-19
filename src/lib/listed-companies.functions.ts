@@ -120,11 +120,44 @@ export const saveListedCompany = createServerFn({ method: "POST" })
     }
 
     if (data.id) {
+      const { data: before } = await ctx.supabase
+        .from("listed_companies")
+        .select("*")
+        .eq("id", data.id)
+        .maybeSingle();
+
+      const next = toRow(data);
       const { error } = await ctx.supabase
         .from("listed_companies")
-        .update(toRow(data))
+        .update(next)
         .eq("id", data.id);
       if (error) throw new Error(error.message);
+
+      // Audit: only the fields that actually changed, old and new.
+      if (before) {
+        const oldValue: Record<string, unknown> = {};
+        const newValue: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(next)) {
+          if (k === "updated_at") continue;
+          const prev = (before as Record<string, unknown>)[k] ?? null;
+          const now = v ?? null;
+          if (String(prev) !== String(now)) {
+            oldValue[k] = prev;
+            newValue[k] = now;
+          }
+        }
+        if (Object.keys(newValue).length > 0) {
+          await ctx.supabase.from("audit_logs").insert({
+            tenant_id: null,
+            entity_type: "listed_company",
+            entity_id: data.id,
+            action: "UPDATE",
+            old_value: { ticker: before.ticker, ...oldValue } as never,
+            new_value: { ticker: next.ticker, ...newValue } as never,
+          });
+        }
+      }
+
       return { id: data.id };
     }
 
