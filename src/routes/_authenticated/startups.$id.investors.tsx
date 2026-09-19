@@ -147,10 +147,7 @@ function StartupInvestorsPage() {
         <div className="space-y-4">
           <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 shadow-card">
             <Users className="mt-0.5 h-5 w-5 shrink-0 text-accent" strokeWidth={1.75} />
-            <p className="text-sm text-muted-foreground">
-              {investors.length} investor{investors.length === 1 ? "" : "s"} connected to{" "}
-              {s.startup_name}. Search and filter by type or country to explore the cap-table network.
-            </p>
+            <p className="text-sm text-muted-foreground">1 investor</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-card">
