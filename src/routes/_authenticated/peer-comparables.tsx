@@ -205,12 +205,24 @@ function PeerSetList() {
                   </td>
                 </tr>
               )}
+              {!isLoading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    No peer sets yet. Build one for a sector to make valuations available.
+                  </td>
+                </tr>
+              )}
               {!isLoading &&
                 rows.map((r) => {
                   const status = peerSetStatus(r);
                   return (
-                    <tr key={r.industryTag} className="border-t border-border/50">
-                      <td className="px-4 py-2.5 font-medium text-foreground">{r.industryTag}</td>
+                    <tr
+                      key={`${r.sector}::${r.businessModel ?? "all"}`}
+                      className="border-t border-border/50"
+                    >
+                      <td className="px-4 py-2.5 font-medium text-foreground">
+                        {peerSetLabel(r.sector, r.businessModel)}
+                      </td>
                       <td className="px-4 py-2.5 text-center tabular-nums">
                         {r.exists ? r.peerCount : EMPTY_CELL}
                       </td>
