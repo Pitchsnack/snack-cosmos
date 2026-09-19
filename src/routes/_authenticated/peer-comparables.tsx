@@ -172,6 +172,12 @@ function PeerSetList() {
         <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
           <h2 className="text-sm font-semibold">Peer sets</h2>
           <div className="flex-1" />
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/listed-companies">
+              <Table2 className="mr-1.5 h-4 w-4" />
+              Listed companies
+            </Link>
+          </Button>
           <Button size="sm" onClick={() => setNewOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
             New peer set
