@@ -157,13 +157,14 @@ function PeerSetList() {
         </div>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Peer Comparables</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          One peer set per industry tag. This is reference data — every valuation reads it.
+          Peer sets are keyed on Sector and Business model. A sector-wide set applies to every
+          business model; a model-specific set takes priority when it exists.
         </p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
-          <h2 className="text-sm font-semibold">Industry tags</h2>
+          <h2 className="text-sm font-semibold">Peer sets</h2>
           <div className="flex-1" />
           <Button size="sm" onClick={() => setNewOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
@@ -176,7 +177,7 @@ function PeerSetList() {
             <thead>
               <tr className="bg-[hsl(222_47%_23%)] text-white">
                 <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                  Industry tag
+                  Peer set
                 </th>
                 <th className="w-20 px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                   Peers
