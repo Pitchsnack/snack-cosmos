@@ -1,31 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, Layers, Plus, Table2, Upload, X } from "lucide-react";
+import { ArrowLeft, Download, Layers, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { SuggestCombobox, type ComboOption } from "@/components/ui/suggest-combobox";
 import { PermissionGuard } from "@/components/permission-guard";
-import { ListedCompanyDialog } from "@/components/peer-comparables/listed-company-dialog";
+import { ListedCompaniesTab } from "@/components/peer-comparables/listed-companies-tab";
+import { PeerSetsTab } from "@/components/peer-comparables/peer-sets-tab";
 import { usePermissions } from "@/hooks/use-session-context";
 import { cn } from "@/lib/utils";
 import {
@@ -46,30 +31,35 @@ import {
   importListedCompanies,
   listListedCompanies,
 } from "@/lib/listed-companies.functions";
-import { BUSINESS_MODELS, SECTORS } from "@/lib/sectors";
-import {
-  getPeerSet,
-  listPeerSets,
-  savePeerSet,
-} from "@/lib/peer-comparables.functions";
+import { getPeerSet, listPeerSets, savePeerSet } from "@/lib/peer-comparables.functions";
 
-const ALL_MODELS = "__all__";
+const searchSchema = z.object({
+  tab: z.enum(["sets", "companies"]).optional(),
+  /** Editor: an open peer set. */
+  sector: z.string().optional(),
+  model: z.string().optional(),
+  /** Round trip from the peer picker to the company form and back. */
+  addName: z.string().optional(),
+  fromSector: z.string().optional(),
+  fromModel: z.string().optional(),
+  add: z.string().optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/peer-comparables")({
-  validateSearch: z.object({ sector: z.string().optional(), model: z.string().optional() }),
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Peer Comparables — SnackPortal2" },
       {
         name: "description",
         content:
-          "Maintain one listed-peer set per industry tag: tickers, market, revenue and valuation ratios.",
+          "Peer sets keyed on sector and business model, and the listed companies behind them.",
       },
       { property: "og:title", content: "Peer Comparables — SnackPortal2" },
       {
         property: "og:description",
         content:
-          "Reference peer sets per industry tag, used by every valuation on the platform.",
+          "Maintain peer sets and the master list of SET and mai listed companies used in valuations.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -90,9 +80,10 @@ function PeerComparablesRoute() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Shared bits                                                         */
-/* ------------------------------------------------------------------ */
+function fmtDate(iso: string | null) {
+  if (!iso) return EMPTY_CELL;
+  return new Date(iso).toISOString().slice(0, 10);
+}
 
 const STATUS_STYLE: Record<PeerSetStatus, string> = {
   current: "bg-success/10 text-success border-success/30",
@@ -114,45 +105,73 @@ function StatusTag({ status }: { status: PeerSetStatus }) {
   );
 }
 
-function fmtDate(iso: string | null) {
-  if (!iso) return EMPTY_CELL;
-  return new Date(iso).toISOString().slice(0, 10);
-}
-
 /* ------------------------------------------------------------------ */
-/* Page                                                                */
+/* Page — two tabs over one heading                                    */
 /* ------------------------------------------------------------------ */
 
 function PeerComparablesPage() {
-  const { sector, model } = Route.useSearch();
-  return sector ? (
-    <PeerSetEditor sector={sector} businessModel={model ?? null} />
-  ) : (
-    <PeerSetList />
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* 1 · List                                                            */
-/* ------------------------------------------------------------------ */
-
-function PeerSetList() {
+  const search = Route.useSearch();
   const navigate = useNavigate();
-  const fn = useServerFn(listPeerSets);
-  const { data, isLoading } = useQuery<PeerSetSummary[]>({
-    queryKey: ["peer-sets"],
-    queryFn: () => fn(),
-  });
-  const [newOpen, setNewOpen] = useState(false);
-  const [picked, setPicked] = useState<string>("");
-  const [pickedModel, setPickedModel] = useState<string>(ALL_MODELS);
+  const listSetsFn = useServerFn(listPeerSets);
+  const listCompaniesFn = useServerFn(listListedCompanies);
 
-  const rows = data ?? [];
-  const open = (sector: string, businessModel: string | null) =>
-    navigate({
-      to: "/peer-comparables",
-      search: businessModel ? { sector, model: businessModel } : { sector },
-    });
+  const { data: sets, isLoading: setsLoading } = useQuery<PeerSetSummary[]>({
+    queryKey: ["peer-sets"],
+    queryFn: () => listSetsFn(),
+  });
+  const { data: companies, isLoading: companiesLoading } = useQuery<ListedCompany[]>({
+    queryKey: ["listed-companies"],
+    queryFn: () => listCompaniesFn(),
+  });
+
+  if (search.sector) {
+    return (
+      <PeerSetEditor
+        sector={search.sector}
+        businessModel={search.model ?? null}
+        addId={search.add ?? null}
+      />
+    );
+  }
+
+  const tab = search.tab === "companies" ? "companies" : "sets";
+  const go = (next: "sets" | "companies") => navigate({ to: "/peer-comparables", search: { tab: next } });
+
+  const tabs = (
+    <div className="flex items-center gap-6">
+      {(
+        [
+          { key: "sets" as const, label: "Peer Sets", count: sets?.length ?? 0 },
+          { key: "companies" as const, label: "Listed Companies", count: companies?.length ?? 0 },
+        ]
+      ).map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => go(t.key)}
+          aria-current={tab === t.key}
+          className={cn(
+            "flex items-center gap-2 border-b-[2.5px] py-2.5 text-sm transition-colors",
+            tab === t.key
+              ? "border-[hsl(222_47%_23%)] font-bold text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {t.label}
+          <span
+            className={cn(
+              "rounded-full px-1.5 text-[11px] font-bold tabular-nums",
+              tab === t.key
+                ? "bg-[hsl(222_47%_23%)] text-white"
+                : "bg-muted text-muted-foreground",
+            )}
+          >
+            {t.count}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-5">
@@ -163,190 +182,55 @@ function PeerSetList() {
         </div>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Peer Comparables</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Peer sets are keyed on Sector and Business model. A sector-wide set applies to every
-          business model; a model-specific set takes priority when it exists.
+          Listed-company comparables used for financial benchmarking. Peer sets are keyed on
+          sector and business model; listed companies are the reference data behind them.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
-          <h2 className="text-sm font-semibold">Peer sets</h2>
-          <div className="flex-1" />
-          <Button size="sm" variant="outline" asChild>
-            <Link to="/listed-companies">
-              <Table2 className="mr-1.5 h-4 w-4" />
-              Listed companies
-            </Link>
-          </Button>
-          <Button size="sm" onClick={() => setNewOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            New peer set
-          </Button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] border-collapse text-sm">
-            <thead>
-              <tr className="bg-[hsl(222_47%_23%)] text-white">
-                <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                  Peer set
-                </th>
-                <th className="w-20 px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
-                  Peers
-                </th>
-                <th className="w-32 px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
-                  Market mix
-                </th>
-                <th className="w-32 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                  Last refreshed
-                </th>
-                <th className="w-28 px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
-                  Status
-                </th>
-                <th className="w-40 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                  Owner
-                </th>
-                <th className="w-24 px-4 py-2.5" />
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    Loading…
-                  </td>
-                </tr>
-              )}
-              {!isLoading && rows.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    No peer sets yet. Build one for a sector to make valuations available.
-                  </td>
-                </tr>
-              )}
-              {!isLoading &&
-                rows.map((r) => {
-                  const status = peerSetStatus(r);
-                  return (
-                    <tr
-                      key={`${r.sector}::${r.businessModel ?? "all"}`}
-                      className="border-t border-border/50"
-                    >
-                      <td className="px-4 py-2.5 font-medium text-foreground">
-                        {peerSetLabel(r.sector, r.businessModel)}
-                      </td>
-                      <td className="px-4 py-2.5 text-center tabular-nums">
-                        {r.exists ? r.peerCount : EMPTY_CELL}
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        {r.exists && r.peerCount > 0 ? (
-                          <span className="inline-flex gap-1">
-                            {r.maiCount > 0 && (
-                              <Badge variant="outline" className="bg-success/10 text-success">
-                                mai {r.maiCount}
-                              </Badge>
-                            )}
-                            {r.setCount > 0 && (
-                              <Badge variant="outline" className="bg-info/10 text-info">
-                                SET {r.setCount}
-                              </Badge>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">{EMPTY_CELL}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground">
-                        {fmtDate(r.lastRefreshedAt)}
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        <StatusTag status={status} />
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground">
-                        {r.ownerName ?? EMPTY_CELL}
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => open(r.sector, r.businessModel)}
-                        >
-                          {r.exists ? "Edit" : "Build"}
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
-        <p className="border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
-          A sector with no peer set simply has no valuation yet — that is a legitimate state.
-        </p>
-      </div>
-
-      <Dialog open={newOpen} onOpenChange={setNewOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>New peer set</DialogTitle>
-            <DialogDescription>
-              Choose the sector, and optionally the business model this set is narrowed to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Sector</span>
-              <Select value={picked} onValueChange={setPicked}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a sector" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SECTORS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <span className="text-xs font-medium text-muted-foreground">
-                Business model (optional)
-              </span>
-              <Select value={pickedModel} onValueChange={setPickedModel}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_MODELS}>All business models</SelectItem>
-                  {BUSINESS_MODELS.map((b) => (
-                    <SelectItem key={b.value} value={b.value}>
-                      {b.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={!picked}
-              onClick={() => open(picked, pickedModel === ALL_MODELS ? null : pickedModel)}
-            >
-              Build peer set
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {tab === "sets" ? (
+        <PeerSetsTab
+          key="sets"
+          tabs={tabs}
+          sets={sets ?? []}
+          isLoading={setsLoading}
+          onOpen={(sector, model) =>
+            navigate({
+              to: "/peer-comparables",
+              search: model ? { sector, model } : { sector },
+            })
+          }
+        />
+      ) : (
+        <ListedCompaniesTab
+          key="companies"
+          tabs={tabs}
+          companies={companies ?? []}
+          isLoading={companiesLoading}
+          prefillName={search.addName}
+          onDialogClosed={() =>
+            search.addName &&
+            navigate({ to: "/peer-comparables", search: { tab: "companies" } })
+          }
+          onSavedReturn={(id) => {
+            if (search.fromSector) {
+              navigate({
+                to: "/peer-comparables",
+                search: {
+                  sector: search.fromSector,
+                  ...(search.fromModel ? { model: search.fromModel } : {}),
+                  add: id,
+                },
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* 2 · Editor — a list of companies linked from the master table       */
+/* Editor — a list of companies linked from the master table           */
 /* ------------------------------------------------------------------ */
 
 const METRICS = [
@@ -362,9 +246,11 @@ type MetricKey = (typeof METRICS)[number]["key"];
 function PeerSetEditor({
   sector,
   businessModel,
+  addId,
 }: {
   sector: string;
   businessModel: string | null;
+  addId: string | null;
 }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -388,8 +274,7 @@ function PeerSetEditor({
 
   const [peers, setPeers] = useState<Peer[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [newCompanyOpen, setNewCompanyOpen] = useState(false);
-  const [typedName, setTypedName] = useState("");
+  const [merged, setMerged] = useState(false);
 
   useEffect(() => {
     if (data && !loaded) {
@@ -397,6 +282,23 @@ function PeerSetEditor({
       setLoaded(true);
     }
   }, [data, loaded]);
+
+  /** Coming back from the company form: link the company just created. */
+  useEffect(() => {
+    if (!loaded || merged || !addId || !master) return;
+    const c = master.find((m) => m.id === addId);
+    setMerged(true);
+    if (c) {
+      setPeers((rows) =>
+        rows.some((r) => (r.listedCompanyId ?? r.id) === c.id) ? rows : [...rows, listedToPeer(c)],
+      );
+    }
+    navigate({
+      to: "/peer-comparables",
+      search: businessModel ? { sector, model: businessModel } : { sector },
+      replace: true,
+    });
+  }, [loaded, merged, addId, master, navigate, sector, businessModel]);
 
   const save = useMutation({
     mutationFn: () =>
@@ -434,20 +336,22 @@ function PeerSetEditor({
     [master, inSet],
   );
 
-  const addById = (id: string) => {
-    const c = (master ?? []).find((m) => m.id === id);
-    if (!c || inSet.has(id)) return;
-    setPeers((rows) => [...rows, listedToPeer(c)]);
-  };
-
   const onPick = (value: string, isNew: boolean) => {
     if (isNew) {
-      setTypedName(value);
-      setNewCompanyOpen(true);
+      // Open the Listed Companies tab, and come back to this set afterwards.
+      navigate({
+        to: "/peer-comparables",
+        search: {
+          tab: "companies",
+          addName: value,
+          fromSector: sector,
+          ...(businessModel ? { fromModel: businessModel } : {}),
+        },
+      });
       return;
     }
     const c = (master ?? []).find((m) => `${m.ticker} — ${m.name}` === value);
-    if (c) addById(c.id);
+    if (c && !inSet.has(c.id)) setPeers((rows) => [...rows, listedToPeer(c)]);
   };
 
   const status = peerSetStatus({
@@ -502,7 +406,7 @@ function PeerSetEditor({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate({ to: "/peer-comparables", search: {} })}
+          onClick={() => navigate({ to: "/peer-comparables", search: { tab: "sets" } })}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
           All peer sets
@@ -544,11 +448,7 @@ function PeerSetEditor({
             <Download className="mr-1.5 h-4 w-4" />
             Export CSV
           </Button>
-          <Button
-            size="sm"
-            disabled={!isControl || save.isPending}
-            onClick={() => save.mutate()}
-          >
+          <Button size="sm" disabled={!isControl || save.isPending} onClick={() => save.mutate()}>
             {save.isPending ? "Saving…" : "Save"}
           </Button>
         </div>
@@ -622,9 +522,7 @@ function PeerSetEditor({
                         variant="ghost"
                         size="icon"
                         aria-label={`Remove ${p.companyName}`}
-                        onClick={() =>
-                          setPeers((rows) => rows.filter((_, idx) => idx !== i))
-                        }
+                        onClick={() => setPeers((rows) => rows.filter((_, idx) => idx !== i))}
                       >
                         <X className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -653,32 +551,15 @@ function PeerSetEditor({
             </p>
           )}
           {peers.length > 10 && (
-            <p className="text-warning">
-              More than 10 peers — large sets dilute the comparison.
-            </p>
+            <p className="text-warning">More than 10 peers — large sets dilute the comparison.</p>
           )}
           <p>
-            Ratios come from the Listed Companies table and are read-only here. Edit a company
-            there to update every set that uses it.
+            Ratios come from the Listed Companies tab and are read-only here. Edit a company there
+            to update every set that uses it.
           </p>
           {!isControl && <p>You can view this set but only administrators can save changes.</p>}
         </div>
       </div>
-
-      <ListedCompanyDialog
-        open={newCompanyOpen}
-        onOpenChange={setNewCompanyOpen}
-        defaultMarket="SET"
-        prefillName={typedName}
-        onSaved={async (id) => {
-          const fresh = await qc.fetchQuery<ListedCompany[]>({
-            queryKey: ["listed-companies"],
-            queryFn: () => listFn(),
-          });
-          const c = fresh.find((m) => m.id === id);
-          if (c) setPeers((rows) => [...rows, listedToPeer(c)]);
-        }}
-      />
     </div>
   );
 }
