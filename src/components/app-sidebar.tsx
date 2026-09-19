@@ -54,6 +54,7 @@ type NavPath =
   | "/users"
   | "/access-management"
   | "/peer-comparables"
+  | "/listed-companies"
   | "/security"
   | "/notifications"
   | "/preferences"
@@ -133,6 +134,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Users",
       "Access Management",
       "Peer Comparables",
+      "Listed Companies",
       "Audit Logs",
       "Security",
     ],
