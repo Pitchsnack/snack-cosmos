@@ -432,6 +432,17 @@ export function StartupFinancialsPage({
             <h2 className="text-lg font-semibold">Major Financial Ratios for the year {range}</h2>
             <RatiosTable years={years} ratios={data.ratios} />
           </TabsContent>
+
+          <TabsContent value="valuation" className="mt-4">
+            <ValuationTab
+              startupId={id}
+              startupName={data.startupName}
+              workspace={workspace}
+              year={activeYear}
+              ratios={data.ratios}
+              income={data.income}
+            />
+          </TabsContent>
         </Tabs>
       )}
     </div>
