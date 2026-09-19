@@ -33,20 +33,24 @@ import {
   fmtMetric,
   median,
   parsePeerCsv,
+  peerSetLabel,
   peerSetStatus,
   type Peer,
   type PeerMarket,
   type PeerSetStatus,
   type PeerSetSummary,
 } from "@/lib/peer-comparables";
+import { BUSINESS_MODELS, SECTORS } from "@/lib/sectors";
 import {
   getPeerSet,
   listPeerSets,
   savePeerSet,
 } from "@/lib/peer-comparables.functions";
 
+const ALL_MODELS = "__all__";
+
 export const Route = createFileRoute("/_authenticated/peer-comparables")({
-  validateSearch: z.object({ tag: z.string().optional() }),
+  validateSearch: z.object({ sector: z.string().optional(), model: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "Peer Comparables — SnackPortal2" },
