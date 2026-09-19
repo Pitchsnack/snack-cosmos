@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, Layers, Plus, X } from "lucide-react";
+import { ArrowLeft, Download, Layers, Plus, Table2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -24,22 +23,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SuggestCombobox, type ComboOption } from "@/components/ui/suggest-combobox";
 import { PermissionGuard } from "@/components/permission-guard";
+import { ListedCompanyDialog } from "@/components/peer-comparables/listed-company-dialog";
 import { usePermissions } from "@/hooks/use-session-context";
 import { cn } from "@/lib/utils";
 import {
   EMPTY_CELL,
-  emptyPeer,
   fmtMetric,
   median,
   parsePeerCsv,
+  peerSetCsvFilename,
   peerSetLabel,
   peerSetStatus,
+  peersToCsv,
   type Peer,
-  type PeerMarket,
   type PeerSetStatus,
   type PeerSetSummary,
 } from "@/lib/peer-comparables";
+import { downloadCsv, type ListedCompany } from "@/lib/listed-companies";
+import {
+  importListedCompanies,
+  listListedCompanies,
+} from "@/lib/listed-companies.functions";
 import { BUSINESS_MODELS, SECTORS } from "@/lib/sectors";
 import {
   getPeerSet,
