@@ -314,6 +314,15 @@ export function ValuationTab({
         </>
       )}
 
+      {filingStale && (
+        <div className="mt-3.5 flex items-center gap-2.5 rounded-[10px] border border-[#F6DFB4] bg-[#FEF3E7] px-3.5 py-2.5 text-[12.5px] text-[#7C4A0B]">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>
+            <b>Filing is from FY{year}</b> — figures may not reflect current trading.
+          </span>
+        </div>
+      )}
+
       <Benchmarking
         name={startupName}
         year={year}
