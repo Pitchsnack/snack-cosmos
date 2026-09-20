@@ -280,6 +280,13 @@ export function ValuationTab({
     : null;
   const suggestion = data.narrower && data.state !== "exact" ? data.narrower : null;
 
+  const peers = peerSet?.peers ?? [];
+  const inputs = readFilingInputs(year, income, position, cashFlow, ratios);
+  const result = computeValuation(inputs, peers, discounts);
+  const hasPeers = !!data.applied && peers.length > 0;
+  const flag = result.blocked || result.lowConfidence;
+
+
   return (
     <div>
       {/* Matching panel — shown in every state */}
