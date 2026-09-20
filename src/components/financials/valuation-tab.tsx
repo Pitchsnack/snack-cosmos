@@ -15,11 +15,19 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SectorPicker, BusinessModelPicker } from "@/components/startups/sector-fields";
 import { usePermissions } from "@/hooks/use-session-context";
-import { getPeerMatch } from "@/lib/peer-comparables.functions";
+import { getPeerMatch, getPeerSet } from "@/lib/peer-comparables.functions";
 import { peerSetLabel } from "@/lib/peer-comparables";
 import { businessModelLabel } from "@/lib/sectors";
 import { updateStartup } from "@/lib/startups.functions";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
+import { ValuationSummary } from "@/components/financials/valuation-summary";
+import { ValuationMethods } from "@/components/financials/valuation-methods";
+import {
+  DEFAULT_DISCOUNTS,
+  computeValuation,
+  readFilingInputs,
+  type Discounts,
+} from "@/lib/valuation";
 
 const DASH = "—";
 
