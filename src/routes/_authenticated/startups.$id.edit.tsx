@@ -40,7 +40,7 @@ function EditStartupPage() {
   const { id } = Route.useParams();
   const search = Route.useSearch();
   const fromControl = search.from === "entity-control";
-  const { from: _from, tab: _tab, ...listSearch } = search;
+  const { from: _from, tab: _tab, returnTo: _returnTo, ...listSearch } = search;
   const validId = isUuid(id);
   const { data, isLoading, error } = useStartup(validId ? id : undefined);
 
