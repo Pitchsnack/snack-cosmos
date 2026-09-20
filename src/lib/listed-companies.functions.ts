@@ -97,7 +97,10 @@ export const listListedCompanies = createServerFn({ method: "GET" })
       evEbitda: num(r.ev_ebitda),
       pe: num(r.pe),
       pbv: num(r.pbv),
+      statementPeriod: r.statement_period ?? null,
+      tag: r.tag ?? null,
       asAt: r.as_at ?? null,
+
       usedIn: usage.get(r.id)?.length ?? 0,
       usedInSets: usage.get(r.id) ?? [],
     }));
