@@ -346,7 +346,7 @@ export function ListedCompaniesTab({
               <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                 Used in
               </th>
-              <th className="w-24 px-3 py-2.5" />
+              <th className="sticky right-0 z-20 w-24 bg-[hsl(222_47%_23%)] px-3 py-2.5 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.25)]" />
             </tr>
           </thead>
           <tbody>
@@ -519,7 +519,7 @@ export function ListedCompaniesTab({
                           />
                         </td>
                         <td className="px-3 py-2 text-center tabular-nums">{c.usedIn}</td>
-                        <td className="px-2 py-2 text-center">
+                        <td className="sticky right-0 z-10 bg-info/5 px-2 py-2 text-center shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]">
                           <Button
                             size="sm"
                             className="h-7 px-3"
@@ -587,7 +587,7 @@ export function ListedCompaniesTab({
                     <td className="px-3 py-2.5 text-muted-foreground">{c.asAt ?? EMPTY_CELL}</td>
 
                     <td className="px-3 py-2.5 text-center tabular-nums">{c.usedIn}</td>
-                    <td className="px-3 py-2.5">
+                    <td className="sticky right-0 z-10 bg-card px-3 py-2.5 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]">
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
