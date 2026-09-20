@@ -106,6 +106,7 @@ function EditStartupPage() {
                   startup={data as unknown as StartupDetail}
                   directoryReturnSearch={listSearch}
                   controlReturn={fromControl ? { tab: search.tab ?? "startups" } : undefined}
+                  valuationReturn={search.returnTo === "valuation"}
                 />
 
               </div>

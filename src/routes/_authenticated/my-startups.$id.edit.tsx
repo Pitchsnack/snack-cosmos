@@ -95,6 +95,7 @@ function EditMyStartupPage() {
                       startup={data as unknown as StartupDetail}
                       workspace="my-startups"
                       myStartupsReturnSearch={returnSearch}
+                      valuationReturn={returnSearch.returnTo === "valuation"}
                     />
                   </div>
                 </TabsContent>
