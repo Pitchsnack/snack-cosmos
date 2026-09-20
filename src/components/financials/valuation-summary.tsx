@@ -94,13 +94,11 @@ export function ValuationSummary({
   discounts,
   setDiscounts,
   peers,
-  peerLabel,
   refreshText,
-  refreshStale,
-  matchBasis,
   ratios,
   income,
   onMethods,
+  renderMatching,
 }: {
   startupName: string;
   year: number | undefined;
@@ -108,17 +106,16 @@ export function ValuationSummary({
   discounts: Discounts;
   setDiscounts: (d: Discounts) => void;
   peers: Peer[];
-  peerLabel: string;
   refreshText: string | null;
-  refreshStale: boolean;
-  matchBasis: string;
   ratios: RatioItem[];
   income: StatementItem[];
   onMethods: () => void;
+  /** The one matching row; receives the peers toggle for its right edge. */
+  renderMatching: (toggle: React.ReactNode) => React.ReactNode;
 }) {
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
-  const thin = peers.length < 5;
+
 
   const ratio = (code: string) =>
     ratios.find((r) => r.ratio_code === code && r.fiscal_year === year)?.value ?? null;
