@@ -27,6 +27,8 @@ const companyInput = z.object({
   evEbitda: metric,
   pe: metric,
   pbv: metric,
+  statementPeriod: z.string().max(40).nullable().optional(),
+  tag: z.string().max(120).nullable().optional(),
   asAt: z.string().max(20).nullable().optional(),
 });
 
@@ -41,10 +43,13 @@ function toRow(c: z.infer<typeof companyInput>) {
     ev_ebitda: c.evEbitda ?? null,
     pe: c.pe ?? null,
     pbv: c.pbv ?? null,
+    statement_period: c.statementPeriod?.trim() || null,
+    tag: c.tag?.trim() || null,
     as_at: c.asAt?.trim() || null,
     updated_at: new Date().toISOString(),
   };
 }
+
 
 /* ------------------------------------------------------------------ */
 /* List — the master table, with peer-set usage                        */
