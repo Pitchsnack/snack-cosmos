@@ -17,6 +17,10 @@ export interface ListedCompany {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  /** Fiscal statement end, as entered — "Dec-25" or "Dec-2025". */
+  statementPeriod: string | null;
+  /** Short business descriptor — "Telecom". */
+  tag: string | null;
   asAt: string | null;
   /** Number of peer sets referencing this company. Unused (0) is fine. */
   usedIn: number;
@@ -35,6 +39,8 @@ export interface ListedCompanyInput {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  statementPeriod: string | null;
+  tag: string | null;
   asAt: string | null;
 }
 
@@ -57,9 +63,12 @@ export function emptyListedCompany(market: PeerMarket): ListedCompanyInput {
     evEbitda: null,
     pe: null,
     pbv: null,
+    statementPeriod: null,
+    tag: null,
     asAt: null,
   };
 }
+
 
 /* ------------------------------------------------------------------ */
 /* CSV                                                                 */
