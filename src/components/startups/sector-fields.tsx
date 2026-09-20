@@ -26,9 +26,12 @@ function norm(s: string) {
 export function SectorPicker({
   value,
   onChange,
+  compact = false,
 }: {
   value: string | null;
   onChange: (v: string | null) => void;
+  /** Inline 28px trigger, no pill beneath. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
