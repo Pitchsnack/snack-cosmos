@@ -221,6 +221,16 @@ export function StartupForm({
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
   const isMyStartupsCreate = !isEdit && redirectAfterCreate === "my-startups";
   const navigate = useNavigate();
+  /** Opened from the Valuation tab — send the user straight back to it. */
+  const goValuation = () => {
+    if (!startup) return false;
+    navigate({
+      to: isMyWorkspace ? "/my-startups/$id/financials" : "/startups/$id/financials",
+      params: { id: startup.id },
+      search: { tab: "valuation" },
+    });
+    return true;
+  };
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
   const create = useServerFn(createStartup);
