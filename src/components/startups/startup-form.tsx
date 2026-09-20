@@ -178,6 +178,8 @@ interface Props {
   };
   /** When set, the form was opened from Control → Data Intelligence; return there. */
   controlReturn?: { tab: "startups" | "investors" | "drafts" };
+  /** When set, the form was opened from the Valuation tab; save/cancel return there. */
+  valuationReturn?: boolean;
 }
 
 
@@ -213,6 +215,7 @@ export function StartupForm({
   myStartupsReturnSearch,
   directoryReturnSearch,
   controlReturn,
+  valuationReturn,
 }: Props) {
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
