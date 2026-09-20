@@ -163,6 +163,20 @@ export function csvNumber(raw: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** Accepts ISO (yyyy-mm-dd) and DD/MM/YYYY; stores ISO. Empty is null. */
+export function csvDate(raw: string | undefined): string | null {
+  const t = raw?.trim();
+  if (!t) return null;
+  const slash = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t);
+  if (slash) {
+    const [, d, m, y] = slash;
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return t;
+}
+
+
+
 /** Parses a listed-companies CSV. Header row required; unknown columns ignored. */
 export function parseListedCsv(text: string): {
   rows: ListedCompanyInput[];
