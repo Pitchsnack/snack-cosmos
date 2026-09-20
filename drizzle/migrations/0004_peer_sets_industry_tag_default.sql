@@ -1,0 +1,1 @@
+ALTER TABLE public.peer_sets ALTER COLUMN industry_tag SET DEFAULT '';
