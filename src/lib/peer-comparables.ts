@@ -26,7 +26,10 @@ export interface Peer {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  /** Fiscal statement end of the underlying figures, as entered. */
+  statementPeriod?: string | null;
 }
+
 
 export interface PeerSetDetail {
   exists: boolean;

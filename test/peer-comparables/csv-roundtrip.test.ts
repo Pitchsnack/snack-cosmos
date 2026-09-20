@@ -59,7 +59,7 @@ describe("peer set CSV", () => {
 });
 
 describe("listed companies CSV", () => {
-  it("round-trips sector and as-at", () => {
+  it("round-trips sector, period, tag and as-at", () => {
     const csv = listedCompaniesToCsv([
       {
         id: "1",
@@ -72,11 +72,16 @@ describe("listed companies CSV", () => {
         evEbitda: null,
         pe: 14.2,
         pbv: 1.1,
+        statementPeriod: "Dec-25",
+        tag: "Seafood",
         asAt: "2026-01-31",
         usedIn: 2,
         usedInSets: ["a", "b"],
       },
     ]);
+    expect(csv.split("\n")[0]).toBe(
+      "company,ticker,market,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at",
+    );
     const { rows, errors } = parseListedCsv(csv);
     expect(errors).toEqual([]);
     expect(rows[0]).toMatchObject({
@@ -85,7 +90,34 @@ describe("listed companies CSV", () => {
       market: "SET",
       sector: "Food & Beverage",
       evEbitda: null,
+      statementPeriod: "Dec-25",
+      tag: "Seafood",
       asAt: "2026-01-31",
     });
   });
+
+  it("imports a file without the new columns, leaving them null", () => {
+    const { rows, errors } = parseListedCsv(
+      "company,ticker,market,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,as_at\nPTT,PTT,SET,Energy,100,,,,,2026-01-01",
+    );
+    expect(errors).toEqual([]);
+    expect(rows[0].statementPeriod).toBeNull();
+    expect(rows[0].tag).toBeNull();
+    expect(rows[0].ebitdaMarginPct).toBeNull();
+  });
+
+  it("accepts Dec-2025 and DD/MM/YYYY dates", () => {
+    const { rows } = parseListedCsv(
+      "company,ticker,statement_period,as_at\nADVANC,ADVANC,Dec-2025,20/09/2026",
+    );
+    expect(rows[0].statementPeriod).toBe("Dec-2025");
+    expect(rows[0].asAt).toBe("2026-09-20");
+  });
+
+  it("warns about an unknown column instead of failing", () => {
+    const { rows, errors } = parseListedCsv("company,ticker,wibble\nPTT,PTT,x");
+    expect(rows).toHaveLength(1);
+    expect(errors.join(" ")).toMatch(/wibble/);
+  });
 });
+

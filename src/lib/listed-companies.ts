@@ -17,6 +17,10 @@ export interface ListedCompany {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  /** Fiscal statement end, as entered — "Dec-25" or "Dec-2025". */
+  statementPeriod: string | null;
+  /** Short business descriptor — "Telecom". */
+  tag: string | null;
   asAt: string | null;
   /** Number of peer sets referencing this company. Unused (0) is fine. */
   usedIn: number;
@@ -35,6 +39,8 @@ export interface ListedCompanyInput {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  statementPeriod: string | null;
+  tag: string | null;
   asAt: string | null;
 }
 
@@ -57,9 +63,12 @@ export function emptyListedCompany(market: PeerMarket): ListedCompanyInput {
     evEbitda: null,
     pe: null,
     pbv: null,
+    statementPeriod: null,
+    tag: null,
     asAt: null,
   };
 }
+
 
 /* ------------------------------------------------------------------ */
 /* CSV                                                                 */
@@ -76,7 +85,7 @@ export function csvRow(cells: (string | number | null | undefined)[]): string {
 }
 
 export const LISTED_CSV_HEADER =
-  "company,ticker,market,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,as_at";
+  "company,ticker,market,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at";
 
 export function listedCompaniesToCsv(rows: ListedCompany[]): string {
   return [
@@ -92,11 +101,14 @@ export function listedCompaniesToCsv(rows: ListedCompany[]): string {
         r.evEbitda,
         r.pe,
         r.pbv,
+        r.statementPeriod,
+        r.tag,
         r.asAt,
       ]),
     ),
   ].join("\n");
 }
+
 
 export function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -151,6 +163,20 @@ export function csvNumber(raw: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** Accepts ISO (yyyy-mm-dd) and DD/MM/YYYY; stores ISO. Empty is null. */
+export function csvDate(raw: string | undefined): string | null {
+  const t = raw?.trim();
+  if (!t) return null;
+  const slash = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t);
+  if (slash) {
+    const [, d, m, y] = slash;
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return t;
+}
+
+
+
 /** Parses a listed-companies CSV. Header row required; unknown columns ignored. */
 export function parseListedCsv(text: string): {
   rows: ListedCompanyInput[];
@@ -177,10 +203,32 @@ export function parseListedCsv(text: string): {
   const cEv = idx("evebitda");
   const cPe = idx("pe");
   const cPbv = idx("pbv");
+  const cPeriod = idx("statementperiod", "period");
+  const cTag = idx("tag");
   const cAsAt = idx("asat");
 
   if (cTicker < 0 && cName < 0)
     return { rows: [], errors: ["No 'Company' or 'Ticker' column found in the file."] };
+
+  // Unknown columns are ignored, but named so the user knows they were skipped.
+  const known = new Set([
+    cName,
+    cTicker,
+    cMarket,
+    cSector,
+    cRev,
+    cMargin,
+    cEv,
+    cPe,
+    cPbv,
+    cPeriod,
+    cTag,
+    cAsAt,
+  ]);
+  const rawHeader = splitCsvLine(lines[0]);
+  const unknown = rawHeader.filter((h, i) => h.trim() !== "" && !known.has(i));
+  if (unknown.length)
+    errors.push(`Ignored unknown column${unknown.length === 1 ? "" : "s"}: ${unknown.join(", ")}.`);
 
   const rows: ListedCompanyInput[] = [];
   lines.slice(1).forEach((line, i) => {
@@ -202,9 +250,12 @@ export function parseListedCsv(text: string): {
       evEbitda: csvNumber(cEv >= 0 ? cells[cEv] : undefined),
       pe: csvNumber(cPe >= 0 ? cells[cPe] : undefined),
       pbv: csvNumber(cPbv >= 0 ? cells[cPbv] : undefined),
-      asAt: (cAsAt >= 0 ? cells[cAsAt]?.trim() : "") || null,
+      statementPeriod: (cPeriod >= 0 ? cells[cPeriod]?.trim() : "") || null,
+      tag: (cTag >= 0 ? cells[cTag]?.trim() : "") || null,
+      asAt: csvDate(cAsAt >= 0 ? cells[cAsAt] : undefined),
     });
   });
+
 
   return { rows, errors };
 }

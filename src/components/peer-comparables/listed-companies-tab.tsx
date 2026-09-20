@@ -78,8 +78,11 @@ const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
   evEbitda: c.evEbitda,
   pe: c.pe,
   pbv: c.pbv,
+  statementPeriod: c.statementPeriod,
+  tag: c.tag,
   asAt: c.asAt,
 });
+
 
 export function ListedCompaniesTab({
   tabs,
@@ -138,7 +141,10 @@ export function ListedCompaniesTab({
           evEbitda: d.evEbitda,
           pe: d.pe,
           pbv: d.pbv,
+          statementPeriod: d.statementPeriod,
+          tag: d.tag,
           asAt: d.asAt,
+
         },
       }),
     onSuccess: () => {
@@ -179,7 +185,7 @@ export function ListedCompaniesTab({
   const inMarket = market === "all" ? companies : companies.filter((c) => c.market === market);
   const rows = inMarket.filter(
     (c) =>
-      matchesTerm(search, c.ticker, c.name) &&
+      matchesTerm(search, c.ticker, c.name, c.tag) &&
       (sectorFilter === ALL_SECTORS || c.sector === sectorFilter),
   );
 
@@ -220,7 +226,7 @@ export function ListedCompaniesTab({
         <TabToolbar
           search={search}
           onSearch={setSearch}
-          placeholder="Search ticker or company…"
+          placeholder="Search ticker, company or tag…"
           sector={sectorFilter}
           onSector={setSectorFilter}
           sectors={sectors}
@@ -327,9 +333,16 @@ export function ListedCompaniesTab({
                   {h}
                 </th>
               ))}
+              <th className="w-20 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
+                Period
+              </th>
+              <th className="w-40 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
+                Tag
+              </th>
               <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
                 As at
               </th>
+
               <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                 Used in
               </th>
@@ -339,14 +352,14 @@ export function ListedCompaniesTab({
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">
                   Loading…
                 </td>
               </tr>
             )}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">
                   {search.trim() || sectorFilter !== ALL_SECTORS ? (
                     <>
                       No companies match “{search.trim() || sectorFilter}”.{" "}
@@ -400,7 +413,7 @@ export function ListedCompaniesTab({
                     <Fragment key={c.id}>
                       {c.usedIn > 0 && (
                         <tr className="border-t border-warning/30">
-                          <td colSpan={12} className="bg-warning/10 px-3 py-2">
+                          <td colSpan={14} className="bg-warning/10 px-3 py-2">
                             <span className="flex items-center gap-2 text-xs text-warning-foreground">
                               <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
                               <span>
@@ -477,6 +490,25 @@ export function ListedCompaniesTab({
                         ))}
                         <td className="px-2 py-2">
                           <Input
+                            className="h-8"
+                            placeholder="Dec-25"
+                            value={d.statementPeriod ?? ""}
+                            onChange={(e) =>
+                              setField({ statementPeriod: e.target.value || null })
+                            }
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <Input
+                            className="h-8"
+                            placeholder="e.g. Telecom"
+                            value={d.tag ?? ""}
+                            onChange={(e) => setField({ tag: e.target.value || null })}
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+
+                          <Input
                             type="date"
                             className="h-8"
                             value={d.asAt ?? ""}
@@ -499,7 +531,7 @@ export function ListedCompaniesTab({
                         </td>
                       </tr>
                       <tr className="bg-info/5">
-                        <td colSpan={12} className="px-3 pb-2.5">
+                        <td colSpan={14} className="px-3 pb-2.5">
                           <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
                             <Button
                               variant="outline"
@@ -546,7 +578,14 @@ export function ListedCompaniesTab({
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pe, "×")}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pbv, "×")}</td>
+                    <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
+                      {c.statementPeriod ?? EMPTY_CELL}
+                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground" title={c.tag ?? undefined}>
+                      <span className="block max-w-[190px] truncate">{c.tag ?? EMPTY_CELL}</span>
+                    </td>
                     <td className="px-3 py-2.5 text-muted-foreground">{c.asAt ?? EMPTY_CELL}</td>
+
                     <td className="px-3 py-2.5 text-center tabular-nums">{c.usedIn}</td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center justify-end gap-1">

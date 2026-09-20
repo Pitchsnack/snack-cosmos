@@ -58,8 +58,10 @@ function companyToPeer(r: any): Peer {
     evEbitda: n(r.ev_ebitda),
     pe: n(r.pe),
     pbv: n(r.pbv),
+    statementPeriod: r.statement_period ?? null,
   };
 }
+
 
 const keyInput = z.object({
   sector: z.string().min(1).max(200),

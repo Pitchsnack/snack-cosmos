@@ -84,7 +84,10 @@ export function ListedCompanyDialog({
           evEbitda: form.evEbitda,
           pe: form.pe,
           pbv: form.pbv,
+          statementPeriod: form.statementPeriod,
+          tag: form.tag,
           asAt: form.asAt,
+
         },
       }),
     onSuccess: (r) => {
@@ -179,6 +182,22 @@ export function ListedCompanyDialog({
             </label>
           ))}
           <label className="space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Period</span>
+            <Input
+              placeholder="Dec-25"
+              value={form.statementPeriod ?? ""}
+              onChange={(e) => set({ statementPeriod: e.target.value || null })}
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Tag</span>
+            <Input
+              placeholder="e.g. Telecom"
+              value={form.tag ?? ""}
+              onChange={(e) => set({ tag: e.target.value || null })}
+            />
+          </label>
+          <label className="space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">As at</span>
             <Input
               type="date"
@@ -186,6 +205,7 @@ export function ListedCompanyDialog({
               onChange={(e) => set({ asAt: e.target.value || null })}
             />
           </label>
+
         </div>
 
         <DialogFooter>
