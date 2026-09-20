@@ -342,18 +342,24 @@ export function ValuationSummary({
             <table className="w-full border-collapse text-[12.5px]">
               <thead>
                 <tr>
-                  {["Company", "Revenue THB m", "EBITDA margin", "EV/EBITDA", "P/E", "P/BV"].map(
-                    (h, i) => (
-                      <th
-                        key={h}
-                        className={`border-b border-[#EAECEF] bg-[#FAFBFC] px-2.5 py-[7px] text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground ${
-                          i === 0 ? "text-left" : "text-right"
-                        }`}
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Company",
+                    "Period",
+                    "Revenue THB m",
+                    "EBITDA margin",
+                    "EV/EBITDA",
+                    "P/E",
+                    "P/BV",
+                  ].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`border-b border-[#EAECEF] bg-[#FAFBFC] px-2.5 py-[7px] text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground ${
+                        i === 0 ? "text-left" : i === 1 ? "text-left" : "text-right"
+                      }`}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -371,6 +377,9 @@ export function ValuationSummary({
                         {p.market}
                       </span>
                     </td>
+                    <td className="whitespace-nowrap border-b border-[#F2F4F6] px-2.5 py-[7px] text-muted-foreground">
+                      {p.statementPeriod ?? "—"}
+                    </td>
                     <Num v={p.revenueThbM} />
                     <Num v={p.ebitdaMarginPct} suffix="%" />
                     <Num v={p.evEbitda} suffix="×" />
@@ -380,7 +389,7 @@ export function ValuationSummary({
                 ))}
                 {peers.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-2.5 py-4 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-2.5 py-4 text-center text-muted-foreground">
                       This peer set holds no companies yet.
                     </td>
                   </tr>
@@ -390,6 +399,7 @@ export function ValuationSummary({
                     <td className="border-t border-[#DDE3F2] px-2.5 py-[7px]">
                       Median · {peers.length} peer{peers.length === 1 ? "" : "s"}
                     </td>
+                    <td className="border-t border-[#DDE3F2] px-2.5 py-[7px]" />
                     <Num v={result.medians.revenueThbM} median />
                     <Num v={result.medians.ebitdaMarginPct} suffix="%" median />
                     <Num v={result.medians.evEbitda} suffix="×" median />
@@ -401,6 +411,9 @@ export function ValuationSummary({
             </table>
           </div>
         )}
+        {periodNote && (
+          <div className="mt-2 text-[11.5px] text-muted-foreground">{periodNote}</div>
+        )}
         {peers.length > 0 && peers.length < 5 && (
           <div className="mt-2 border-t border-[#F2F4F6] pt-2 text-[11.5px] text-[#B45309]">
             <b>
@@ -409,6 +422,7 @@ export function ValuationSummary({
             — a median this thin is easily moved by one company.
           </div>
         )}
+
       </Block>
 
       {/* 5 · By method */}
