@@ -6,8 +6,9 @@
  * the group of each match. Both fields are optional and never block a save.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown, Search, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   BUSINESS_MODELS,
   SECTOR_GROUPS,
@@ -34,16 +35,8 @@ export function SectorPicker({
   const [group, setGroup] = useState<string>(
     () => sectorGroupOf(value) ?? SECTOR_GROUPS[0]!.group,
   );
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const optionListRef = useRef<HTMLDivElement>(null);
 
   const typed = query.trim();
   const searchMatches = useMemo(() => {
@@ -59,6 +52,20 @@ export function SectorPicker({
   }, [typed]);
 
   const activeGroup = SECTOR_GROUPS.find((g) => g.group === group) ?? SECTOR_GROUPS[0]!;
+  const visibleSectors = searchMatches?.map((match) => match.sector) ?? activeGroup.sectors;
+
+  useEffect(() => {
+    if (!open) return;
+    const selectedIndex = visibleSectors.indexOf(value ?? "");
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+  }, [group, open, query, value]);
+
+  useEffect(() => {
+    if (!open) return;
+    optionListRef.current
+      ?.querySelector<HTMLElement>(`[data-option-index="${activeIndex}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, open]);
 
   const pick = (s: string) => {
     onChange(s);
@@ -67,41 +74,72 @@ export function SectorPicker({
     setGroup(sectorGroupOf(s) ?? group);
   };
 
-  return (
-    <div ref={wrapRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex h-[42px] w-full items-center gap-2 rounded-[9px] border border-[#D7DBE2] bg-background px-3 text-left text-[13.5px] focus:border-[#2563EB] focus:outline-none focus:shadow-[0_0_0_3px_#EFF4FE]"
-      >
-        <Search className="h-[15px] w-[15px] shrink-0 text-[#9AA3AF]" />
-        <span className={cn("truncate", !value && "text-muted-foreground")}>
-          {value ?? "Search or pick a sector…"}
-        </span>
-        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
-      </button>
+  const handleOptionKeys = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (visibleSectors.length === 0) return;
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      setActiveIndex((current) =>
+        (current + direction + visibleSectors.length) % visibleSectors.length,
+      );
+      return;
+    }
+    if (event.key === "Enter" && visibleSectors[activeIndex]) {
+      event.preventDefault();
+      pick(visibleSectors[activeIndex]);
+    }
+  };
 
-      {open && (
-        <div className="absolute z-50 mt-[6px] w-full overflow-hidden rounded-[10px] border border-[#D7DBE2] bg-background shadow-[0_10px_24px_rgba(15,23,42,.10)]">
+  return (
+    <div>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            role="combobox"
+            aria-expanded={open}
+            aria-label="Choose sector"
+            className="flex h-[42px] w-full items-center gap-2 rounded-[9px] border border-[#D7DBE2] bg-background px-3 text-left text-[13.5px] focus:border-[#2563EB] focus:outline-none focus:shadow-[0_0_0_3px_#EFF4FE]"
+          >
+            <Search className="h-[15px] w-[15px] shrink-0 text-[#9AA3AF]" />
+            <span className={cn("truncate", !value && "text-muted-foreground")}>
+              {value ?? "Search or pick a sector…"}
+            </span>
+            <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          align="start"
+          sideOffset={6}
+          collisionPadding={16}
+          className="w-[var(--radix-popover-trigger-width)] min-w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-[10px] border-[#D7DBE2] p-0 shadow-[0_10px_24px_rgba(15,23,42,.10)]"
+        >
           <div className="flex items-center gap-2 border-b border-[#EFF1F4] px-3 py-2">
             <Search className="h-[14px] w-[14px] text-[#9AA3AF]" />
             <input
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpen(false);
-                }
-              }}
+              onKeyDown={handleOptionKeys}
               placeholder="Search sectors…"
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-[#9AA3AF]"
             />
           </div>
 
           {searchMatches ? (
-            <div className="max-h-[330px] overflow-y-auto">
+            <div
+              ref={optionListRef}
+              role="listbox"
+              aria-label="Sectors"
+              className="max-h-[min(330px,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto"
+              onKeyDown={handleOptionKeys}
+            >
               {searchMatches.length === 0 && (
                 <div className="px-3 py-3 text-[13px] italic text-muted-foreground">
                   No sector matches “{typed}”
@@ -111,8 +149,15 @@ export function SectorPicker({
                 <button
                   key={m.sector}
                   type="button"
+                  role="option"
+                  aria-selected={m.sector === value}
+                  data-option-index={searchMatches.indexOf(m)}
                   onClick={() => pick(m.sector)}
-                  className="flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]"
+                  onMouseMove={() => setActiveIndex(searchMatches.indexOf(m))}
+                  className={cn(
+                    "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]",
+                    searchMatches.indexOf(m) === activeIndex && "bg-[#F8FAFD]",
+                  )}
                 >
                   <span className="truncate">{m.sector}</span>
                   {SECTOR_HINTS[m.sector] && (
@@ -128,7 +173,7 @@ export function SectorPicker({
             </div>
           ) : (
             <div className="grid grid-cols-[1fr_1.15fr]">
-              <div className="max-h-[330px] overflow-y-auto border-r border-[#EFF1F4] bg-muted/30">
+              <div className="max-h-[min(330px,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto border-r border-[#EFF1F4] bg-muted/30">
                 {SECTOR_GROUPS.map((g) => (
                   <button
                     key={g.group}
@@ -145,15 +190,27 @@ export function SectorPicker({
                   </button>
                 ))}
               </div>
-              <div className="max-h-[330px] overflow-y-auto">
-                {activeGroup.sectors.map((s) => (
+              <div
+                ref={optionListRef}
+                role="listbox"
+                aria-label={`${activeGroup.group} sectors`}
+                tabIndex={0}
+                onKeyDown={handleOptionKeys}
+                className="max-h-[min(330px,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto outline-none"
+              >
+                {activeGroup.sectors.map((s, index) => (
                   <button
                     key={s}
                     type="button"
+                    role="option"
+                    aria-selected={s === value}
+                    data-option-index={index}
                     onClick={() => pick(s)}
+                    onMouseMove={() => setActiveIndex(index)}
                     className={cn(
                       "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]",
                       s === value && "bg-[#EFF4FE] font-semibold text-[#1D4ED8]",
+                      index === activeIndex && s !== value && "bg-[#F8FAFD]",
                     )}
                   >
                     <span className="truncate">{s}</span>
@@ -168,8 +225,8 @@ export function SectorPicker({
               </div>
             </div>
           )}
-        </div>
-      )}
+        </PopoverContent>
+      </Popover>
 
       {value && (
         <span className="mt-[10px] inline-flex items-center gap-[7px] rounded-full border border-[#D3E0FB] bg-[#EFF4FE] px-3 py-[5px] text-[12.5px] font-semibold text-[#1D4ED8]">
@@ -214,68 +271,121 @@ export function BusinessModelPicker({
   sector?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const optionListRef = useRef<HTMLDivElement>(null);
   const selected = BUSINESS_MODELS.find((b) => b.value === value) ?? null;
   const { data: availability } = usePeerAvailability(!!sector);
+  const options = [null, ...BUSINESS_MODELS.map((model) => model.value)] as const;
 
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+    const selectedIndex = options.findIndex((option) => option === value);
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+  }, [open, value]);
+
+  useEffect(() => {
+    if (!open) return;
+    optionListRef.current
+      ?.querySelector<HTMLElement>(`[data-option-index="${activeIndex}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, open]);
 
   const badgeFor = (model: string | null) => modelAvailability(availability, sector, model);
   const notSetBadge = badgeFor(null);
 
+  const pick = (next: string | null) => {
+    onChange(next);
+    setOpen(false);
+  };
+
+  const handleOptionKeys = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      setActiveIndex((current) => (current + direction + options.length) % options.length);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      pick(options[activeIndex] ?? null);
+    }
+  };
+
   return (
     <div>
-      <div ref={wrapRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-[42px] w-full items-center gap-2 rounded-[9px] border border-[#D7DBE2] bg-background px-3 text-left text-[13.5px] focus:border-[#2563EB] focus:outline-none focus:shadow-[0_0_0_3px_#EFF4FE]"
-        >
-          <span className={cn("truncate", !selected && "text-muted-foreground")}>
-            {selected?.label ?? "Choose a business model…"}
-          </span>
-          {selected && (
-            <span className="truncate text-[11.5px] text-[#9AA3AF]">{selected.hint}</span>
-          )}
-          <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
-        </button>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            role="combobox"
+            aria-expanded={open}
+            aria-label="Choose business model"
+            className="flex h-[42px] w-full items-center gap-2 rounded-[9px] border border-[#D7DBE2] bg-background px-3 text-left text-[13.5px] focus:border-[#2563EB] focus:outline-none focus:shadow-[0_0_0_3px_#EFF4FE]"
+          >
+            <span className={cn("truncate", !selected && "text-muted-foreground")}>
+              {selected?.label ?? "Choose a business model…"}
+            </span>
+            {selected && (
+              <span className="truncate text-[11.5px] text-[#9AA3AF]">{selected.hint}</span>
+            )}
+            <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
 
-        {open && (
-          <div className="absolute z-50 mt-[6px] w-full overflow-hidden rounded-[10px] border border-[#D7DBE2] bg-background shadow-[0_10px_24px_rgba(15,23,42,.10)]">
+        <PopoverContent
+          align="start"
+          sideOffset={6}
+          collisionPadding={16}
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            optionListRef.current?.focus();
+          }}
+          className="w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-[10px] border-[#D7DBE2] p-0 shadow-[0_10px_24px_rgba(15,23,42,.10)]"
+        >
+          <div
+            ref={optionListRef}
+            role="listbox"
+            aria-label="Business models"
+            tabIndex={0}
+            onKeyDown={handleOptionKeys}
+            className="max-h-[min(280px,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto outline-none"
+          >
             <button
               type="button"
-              onClick={() => {
-                onChange(null);
-                setOpen(false);
-              }}
+              role="option"
+              aria-selected={!value}
+              data-option-index={0}
+              onClick={() => pick(null)}
+              onMouseMove={() => setActiveIndex(0)}
               className={cn(
                 "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] hover:bg-[#F8FAFD]",
                 !value && "bg-[#EFF4FE] font-semibold text-[#1D4ED8]",
+                activeIndex === 0 && value && "bg-[#F8FAFD]",
               )}
             >
               <span className="shrink-0">Not set</span>
               {notSetBadge && <AvailabilityBadgePill badge={notSetBadge} />}
             </button>
-            {BUSINESS_MODELS.map((b) => {
+            {BUSINESS_MODELS.map((b, index) => {
               const badge = badgeFor(b.value);
               return (
                 <button
                   key={b.value}
                   type="button"
-                  onClick={() => {
-                    onChange(b.value === value ? null : b.value);
-                    setOpen(false);
-                  }}
+                  role="option"
+                  aria-selected={b.value === value}
+                  data-option-index={index + 1}
+                  onClick={() => pick(b.value === value ? null : b.value)}
+                  onMouseMove={() => setActiveIndex(index + 1)}
                   className={cn(
                     "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]",
                     b.value === value && "bg-[#EFF4FE] font-semibold text-[#1D4ED8]",
+                    activeIndex === index + 1 && b.value !== value && "bg-[#F8FAFD]",
                   )}
                 >
                   <span className="shrink-0">{b.label}</span>
@@ -291,8 +401,8 @@ export function BusinessModelPicker({
               );
             })}
           </div>
-        )}
-      </div>
+        </PopoverContent>
+      </Popover>
 
       {sector && (
         <div className="mt-[10px] rounded-[10px] border border-[#F6DFB4] bg-[#FEF3E7] px-[15px] py-[11px] text-[12.5px] text-[#7C4A0B]">
