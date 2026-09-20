@@ -226,7 +226,7 @@ export function ListedCompaniesTab({
         <TabToolbar
           search={search}
           onSearch={setSearch}
-          placeholder="Search ticker or company…"
+          placeholder="Search ticker, company or tag…"
           sector={sectorFilter}
           onSector={setSectorFilter}
           sectors={sectors}
@@ -333,9 +333,16 @@ export function ListedCompaniesTab({
                   {h}
                 </th>
               ))}
+              <th className="w-20 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
+                Period
+              </th>
+              <th className="w-40 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
+                Tag
+              </th>
               <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
                 As at
               </th>
+
               <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                 Used in
               </th>
