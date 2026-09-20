@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
 import { isUuid } from "@/lib/uuid";
 import { StartupNotFound } from "@/components/startups/startup-not-found";
