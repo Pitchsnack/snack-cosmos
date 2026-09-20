@@ -611,7 +611,9 @@ export function StartupForm({
         qc.invalidateQueries({ queryKey: ["startups"] }),
       ]);
       guard.markSaved();
-      if (controlReturn) {
+      if (valuationReturn && goValuation()) {
+        // returned to the Valuation tab
+      } else if (controlReturn) {
         navigate({ to: "/entity-control", search: { tab: controlReturn.tab } });
       } else if (isMyWorkspace) {
         navigate({
