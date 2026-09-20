@@ -99,7 +99,7 @@ export function SectorPicker({
   };
 
   return (
-    <div>
+    <div className={compact ? "inline-block" : undefined}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -107,15 +107,27 @@ export function SectorPicker({
             role="combobox"
             aria-expanded={open}
             aria-label="Choose sector"
-            className="flex h-[42px] w-full items-center gap-2 rounded-[9px] border border-[#D7DBE2] bg-background px-3 text-left text-[13.5px] focus:border-[#2563EB] focus:outline-none focus:shadow-[0_0_0_3px_#EFF4FE]"
+            className={cn(
+              "items-center gap-2 border text-left focus:outline-none",
+              compact
+                ? "inline-flex h-7 max-w-[240px] rounded-[6px] border-[#D3D9E2] bg-white px-[9px] text-[12.5px] font-medium text-[#0F1B33]"
+                : "flex h-[42px] w-full rounded-[9px] border-[#D7DBE2] bg-background px-3 text-[13.5px] focus:border-[#2563EB] focus:shadow-[0_0_0_3px_#EFF4FE]",
+              compact && !value && "border-[#E9D4B4] bg-[#FDF9F3] font-normal text-[#B45309]",
+            )}
           >
-            <Search className="h-[15px] w-[15px] shrink-0 text-[#9AA3AF]" />
-            <span className={cn("truncate", !value && "text-muted-foreground")}>
-              {value ?? "Search or pick a sector…"}
+            {!compact && <Search className="h-[15px] w-[15px] shrink-0 text-[#9AA3AF]" />}
+            <span className={cn("truncate", !value && !compact && "text-muted-foreground")}>
+              {value ?? (compact ? "Not set" : "Search or pick a sector…")}
             </span>
-            <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+            <ChevronDown
+              className={cn(
+                "ml-auto shrink-0 text-muted-foreground",
+                compact ? "h-3.5 w-3.5" : "h-4 w-4",
+              )}
+            />
           </button>
         </PopoverTrigger>
+
 
         <PopoverContent
           align="start"
