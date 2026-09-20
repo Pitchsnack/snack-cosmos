@@ -167,38 +167,6 @@ function Benchmarking({
   );
 }
 
-/** One row of the matching panel: label, value (editable or read-only), marking. */
-function MatchRow({
-  label,
-  marking,
-  children,
-}: {
-  label: string;
-  marking: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-3.5 border-b border-[#EFF1F4] px-[15px] py-[13px] last:border-b-0">
-      <span className="w-[130px] shrink-0 text-[12.5px] text-muted-foreground">{label}</span>
-      <div className="min-w-[240px] flex-1">{children}</div>
-      {marking}
-    </div>
-  );
-}
-
-function ReadOnlyValue({ value }: { value: string | null }) {
-  return (
-    <span
-      className={`inline-flex h-[34px] min-w-[230px] items-center rounded-[8px] border px-[11px] text-[13px] ${
-        value
-          ? "border-[#C7D3E6] bg-white text-[#0F1B33]"
-          : "border-[#F6DFB4] bg-[#FEF3E7] font-semibold text-[#B45309]"
-      }`}
-    >
-      {value ?? "Not set"}
-    </span>
-  );
-}
 
 export function ValuationTab({
   startupId,
