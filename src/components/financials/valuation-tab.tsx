@@ -372,34 +372,42 @@ export function ValuationTab({
                 discounts={discounts}
                 setDiscounts={setDiscounts}
                 peers={peers}
-                peerLabel={peerSetLabel(data.applied!.sector, data.applied!.businessModel)}
                 refreshText={age?.text ?? null}
-                refreshStale={!!age?.stale}
-                matchBasis={
-                  data.state === "exact"
-                    ? "matched on sector + business model"
-                    : "matched on sector only"
-                }
                 ratios={ratios}
                 income={income}
                 onMethods={() => setSubTab("methods")}
+                renderMatching={matching}
               />
             ) : (
-              <Benchmarking
-                name={startupName}
-                year={year}
-                ratios={ratios}
-                income={income}
-                reason={
-                  data.state === "no-sector"
-                    ? "— needs a sector"
-                    : data.state === "no-peer-set"
-                      ? "— no peer set"
-                      : "— peer set is empty"
-                }
-              />
+              <>
+                <Benchmarking
+                  name={startupName}
+                  year={year}
+                  ratios={ratios}
+                  income={income}
+                  reason={
+                    data.state === "no-sector"
+                      ? "— needs a sector"
+                      : data.state === "no-peer-set"
+                        ? "— no peer set"
+                        : "— peer set is empty"
+                  }
+                />
+                <div className="mt-4 overflow-hidden rounded-[8px] border border-[#EAECEF]">
+                  <div className="flex items-baseline gap-[9px] bg-[#1E3A8A] px-3 py-2">
+                    <h3 className="m-0 text-[11px] font-bold uppercase tracking-[0.07em] text-white">
+                      Compared against
+                    </h3>
+                    <span className="text-[11px] text-[#B9C6E4]">
+                      {appliedLabel ? "the peer set behind every figure" : "no peer set matched"}
+                    </span>
+                  </div>
+                  <div className="p-3">{matching()}</div>
+                </div>
+              </>
             )
           ) : (
+
             <ValuationMethods result={result} inputs={inputs} />
           )}
         </div>
