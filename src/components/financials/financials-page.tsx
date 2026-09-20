@@ -160,7 +160,7 @@ export function StartupFinancialsPage({
   const queryClient = useQueryClient();
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState(initialTab ?? "overview");
   const [editing, setEditing] = useState(false);
   const [year, setYear] = useState<number | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
