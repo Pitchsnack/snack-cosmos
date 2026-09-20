@@ -515,19 +515,76 @@ export function ValuationTab({
         </div>
       )}
 
-      <Benchmarking
-        name={startupName}
-        year={year}
-        ratios={ratios}
-        income={income}
-        reason={
-          data.state === "no-sector"
-            ? "— needs a sector"
-            : data.state === "no-peer-set"
-              ? "— no peer set"
-              : null
-        }
-      />
+      {/* Summary / Methods */}
+      <div className="mt-4 rounded-[9px] border border-[#EAECEF] bg-white">
+        <div className="flex gap-5 border-b border-[#EAECEF] px-[18px]">
+          {([
+            ["summary", "Summary"],
+            ["methods", "Methods"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSubTab(value)}
+              className={`flex items-center gap-[7px] border-b-[1.5px] py-2.5 text-[12.5px] ${
+                subTab === value
+                  ? "border-[#1E3A8A] font-semibold text-[#1E3A8A]"
+                  : "border-transparent text-muted-foreground"
+              }`}
+            >
+              {value === "methods" && (
+                <span
+                  className={`h-[5px] w-[5px] rounded-full ${
+                    flag ? "bg-[#B45309]" : "bg-[#C7CDD6]"
+                  }`}
+                />
+              )}
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="px-[18px] pb-[18px] pt-4">
+          {subTab === "summary" ? (
+            hasPeers ? (
+              <ValuationSummary
+                startupName={startupName}
+                year={year}
+                result={result}
+                discounts={discounts}
+                setDiscounts={setDiscounts}
+                peers={peers}
+                peerLabel={peerSetLabel(data.applied!.sector, data.applied!.businessModel)}
+                refreshText={age?.text ?? null}
+                refreshStale={!!age?.stale}
+                matchBasis={
+                  data.state === "exact"
+                    ? "matched on sector + business model"
+                    : "matched on sector only"
+                }
+                ratios={ratios}
+                income={income}
+                onMethods={() => setSubTab("methods")}
+              />
+            ) : (
+              <Benchmarking
+                name={startupName}
+                year={year}
+                ratios={ratios}
+                income={income}
+                reason={
+                  data.state === "no-sector"
+                    ? "— needs a sector"
+                    : data.state === "no-peer-set"
+                      ? "— no peer set"
+                      : "— peer set is empty"
+                }
+              />
+            )
+          ) : (
+            <ValuationMethods result={result} inputs={inputs} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
