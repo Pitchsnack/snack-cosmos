@@ -1672,7 +1672,9 @@ export function StartupForm({
           variant="outline"
           onClick={() =>
             guard.confirmNavigate(() =>
-              controlReturn
+              valuationReturn && goValuation()
+                ? undefined
+                : controlReturn
                 ? navigate({ to: "/entity-control", search: { tab: controlReturn.tab } })
                 : isMyWorkspace
                 ? navigate({
