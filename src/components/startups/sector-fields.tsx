@@ -15,6 +15,8 @@ import {
   sectorGroupOf,
 } from "@/lib/sectors";
 import { cn } from "@/lib/utils";
+import { usePeerAvailability } from "@/hooks/use-peer-availability";
+import { modelAvailability, type AvailabilityBadge } from "@/lib/peer-comparables";
 
 function norm(s: string) {
   return s.toLowerCase().replace(/[\s\-—–._&/]/g, "");
@@ -355,7 +357,11 @@ export function SectorBusinessModelFields({
         <div className="text-[13px] font-medium text-foreground">
           Business model <span className="text-muted-foreground">(optional)</span>
         </div>
-        <BusinessModelPicker value={businessModel} onChange={onBusinessModelChange} />
+        <BusinessModelPicker
+          value={businessModel}
+          onChange={onBusinessModelChange}
+          sector={sector}
+        />
       </div>
     </div>
   );
