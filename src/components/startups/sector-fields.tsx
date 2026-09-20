@@ -294,6 +294,7 @@ export function BusinessModelPicker({
   value,
   onChange,
   sector = null,
+  compact = false,
 }: {
   value: string | null;
   onChange: (v: string | null) => void;
