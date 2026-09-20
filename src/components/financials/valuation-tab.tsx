@@ -158,6 +158,10 @@ export function ValuationTab({
 
   const editTo =
     workspace === "my-startups" ? "/my-startups/$id/edit" : "/startups/$id/edit";
+  /** Saving or cancelling the edit form comes back to this tab. */
+  const editSearch = { focus: "sector", returnTo: "valuation" } as const;
+  const age = data?.applied ? refreshAge(data.applied.lastRefreshedAt) : null;
+  const filingStale = filingIsStale(year);
 
   if (isLoading || !data) {
     return (
