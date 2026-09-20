@@ -116,6 +116,21 @@ export function ValuationSummary({
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
 
+  // Mixed fiscal year-ends are normal in Thailand — worth stating, not warning about.
+  const periodNote = (() => {
+    const counts = new Map<string, number>();
+    for (const p of peers) {
+      const key = p.statementPeriod?.trim();
+      if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    if (counts.size < 2) return null;
+    const parts = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([period, n]) => `${n} peer${n === 1 ? "" : "s"} ${period}`);
+    return `Periods differ: ${parts.join(", ")}.`;
+  })();
+
+
 
   const ratio = (code: string) =>
     ratios.find((r) => r.ratio_code === code && r.fiscal_year === year)?.value ?? null;
