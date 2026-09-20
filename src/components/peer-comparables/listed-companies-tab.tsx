@@ -185,7 +185,7 @@ export function ListedCompaniesTab({
   const inMarket = market === "all" ? companies : companies.filter((c) => c.market === market);
   const rows = inMarket.filter(
     (c) =>
-      matchesTerm(search, c.ticker, c.name) &&
+      matchesTerm(search, c.ticker, c.name, c.tag) &&
       (sectorFilter === ALL_SECTORS || c.sector === sectorFilter),
   );
 
