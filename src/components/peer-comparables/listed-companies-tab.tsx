@@ -490,6 +490,25 @@ export function ListedCompaniesTab({
                         ))}
                         <td className="px-2 py-2">
                           <Input
+                            className="h-8"
+                            placeholder="Dec-25"
+                            value={d.statementPeriod ?? ""}
+                            onChange={(e) =>
+                              setField({ statementPeriod: e.target.value || null })
+                            }
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <Input
+                            className="h-8"
+                            placeholder="e.g. Telecom"
+                            value={d.tag ?? ""}
+                            onChange={(e) => setField({ tag: e.target.value || null })}
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+
+                          <Input
                             type="date"
                             className="h-8"
                             value={d.asAt ?? ""}
