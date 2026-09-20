@@ -60,40 +60,6 @@ function filingIsStale(year: number | undefined): boolean {
   return months > FILING_STALE_MONTHS;
 }
 
-function Pill({ tone, children }: { tone: "blue" | "green"; children: React.ReactNode }) {
-  const styles =
-    tone === "blue"
-      ? "bg-[#EFF4FE] text-[#1D4ED8] border-[#D3E0FB]"
-      : "bg-[#EAF7EE] text-[#15803D] border-[#CFE8D8]";
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.09em] ${styles}`}
-    >
-      {children}
-    </span>
-  );
-}
-
-function Dot({ tone }: { tone: "no" | "yes" | "warn" }) {
-  const bg =
-    tone === "yes" ? "bg-[#15803D]" : tone === "warn" ? "bg-[#B45309]" : "bg-[#C7CDD6]";
-  return <span className={`mt-[6px] h-[7px] w-[7px] shrink-0 rounded-full ${bg}`} />;
-}
-
-function Step({ tone, children }: { tone: "no" | "yes" | "warn"; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-[9px] py-[3px] text-[12.5px]">
-      <Dot tone={tone} />
-      <span>{children}</span>
-    </div>
-  );
-}
-
-function Mono({ children }: { children: React.ReactNode }) {
-  return (
-    <code className="rounded-[5px] bg-[#F3F4F6] px-[5px] py-[1px] text-[11.5px]">{children}</code>
-  );
-}
 
 function Benchmarking({
   name,
