@@ -315,6 +315,9 @@ export function PeerSetsTab({
       <p className="border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
         A sector with no peer set simply has no valuation yet — that is a legitimate state.
       </p>
+        </>
+      )}
+
 
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent>
