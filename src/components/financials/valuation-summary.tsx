@@ -1,0 +1,743 @@
+/**
+ * Valuation → Summary. The answer first, the working beneath it.
+ * All bars and the axis are CSS; no charting library.
+ */
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+
+import type { Peer } from "@/lib/peer-comparables";
+import type { RatioItem, StatementItem } from "@/lib/financials.functions";
+import {
+  BAND_PCT,
+  fmtMoney,
+  fmtMult,
+  fmtPct,
+  ladderFactors,
+  scalePos,
+  type Discounts,
+  type ValuationResult,
+} from "@/lib/valuation";
+
+const ACC = "#1E3A8A";
+
+/* ------------------------------------------------------------------ */
+/* Block framing                                                       */
+/* ------------------------------------------------------------------ */
+
+function Block({
+  label,
+  hint,
+  right,
+  children,
+}: {
+  label: string;
+  hint: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mb-[13px] overflow-hidden rounded-[8px] border border-[#EAECEF]">
+      <div className="flex items-baseline gap-[9px] bg-[#1E3A8A] px-3 py-2">
+        <h3 className="m-0 text-[11px] font-bold uppercase tracking-[0.07em] text-white">
+          {label}
+        </h3>
+        <span className="text-[11px] font-normal text-[#B9C6E4]">{hint}</span>
+        {right && <span className="ml-auto text-[11px] text-[#B9C6E4]">{right}</span>}
+      </div>
+      <div className="p-3">{children}</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Assumption value — editable                                         */
+/* ------------------------------------------------------------------ */
+
+function AdjInput({
+  value,
+  onChange,
+  sign,
+  off,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  sign: "minus" | "plus";
+  off?: boolean;
+}) {
+  return (
+    <span
+      className={`inline-flex items-baseline gap-0.5 border-b border-dashed border-[#C3CBDA] px-1 py-[1px] font-semibold ${
+        off ? "font-normal text-muted-foreground" : "text-[#1E3A8A]"
+      }`}
+    >
+      {sign === "minus" ? "−" : "+"}
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-[42px] bg-transparent text-right tabular-nums outline-none"
+        aria-label="adjustment percent"
+      />
+      %
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Summary                                                             */
+/* ------------------------------------------------------------------ */
+
+export function ValuationSummary({
+  startupName,
+  year,
+  result,
+  discounts,
+  setDiscounts,
+  peers,
+  peerLabel,
+  refreshText,
+  refreshStale,
+  matchBasis,
+  ratios,
+  income,
+  onMethods,
+}: {
+  startupName: string;
+  year: number | undefined;
+  result: ValuationResult;
+  discounts: Discounts;
+  setDiscounts: (d: Discounts) => void;
+  peers: Peer[];
+  peerLabel: string;
+  refreshText: string | null;
+  refreshStale: boolean;
+  matchBasis: string;
+  ratios: RatioItem[];
+  income: StatementItem[];
+  onMethods: () => void;
+}) {
+  const [showPeers, setShowPeers] = useState(true);
+  const { indicative, spread } = result;
+  const thin = peers.length < 5;
+
+  const ratio = (code: string) =>
+    ratios.find((r) => r.ratio_code === code && r.fiscal_year === year)?.value ?? null;
+  const revenueGrowth =
+    income.find((i) => i.item_code === "revenue_sales_services" && i.fiscal_year === year)
+      ?.percent_change ?? null;
+
+  const f = ladderFactors(discounts);
+  const m = result.medians;
+  const step = (cumulative: number, base: number | null) =>
+    base === null ? null : base * cumulative;
+
+  const ladder: { step: string; adj: React.ReactNode; pbv: number | null; evs: number | null }[] = [
+    {
+      step: "Peer median",
+      adj: <span className="text-muted-foreground">—</span>,
+      pbv: m.pbv,
+      evs: m.evSales,
+    },
+    {
+      step: "Marketability",
+      adj: (
+        <AdjInput
+          sign="minus"
+          value={discounts.marketability}
+          onChange={(v) => setDiscounts({ ...discounts, marketability: v })}
+        />
+      ),
+      pbv: step(f.marketability, m.pbv),
+      evs: step(f.marketability, m.evSales),
+    },
+    {
+      step: "Size",
+      adj: (
+        <AdjInput
+          sign="minus"
+          value={discounts.size}
+          onChange={(v) => setDiscounts({ ...discounts, size: v })}
+        />
+      ),
+      pbv: step(f.marketability * f.size, m.pbv),
+      evs: step(f.marketability * f.size, m.evSales),
+    },
+    {
+      step: "Growth differential",
+      adj: (
+        <AdjInput
+          sign="plus"
+          value={discounts.growth}
+          onChange={(v) => setDiscounts({ ...discounts, growth: v })}
+        />
+      ),
+      pbv: step(f.marketability * f.size * f.growth, m.pbv),
+      evs: step(f.marketability * f.size * f.growth, m.evSales),
+    },
+    {
+      step: "Control premium",
+      adj:
+        discounts.control === null ? (
+          <button
+            type="button"
+            onClick={() => setDiscounts({ ...discounts, control: 20 })}
+            className="border-b border-dashed border-[#C3CBDA] px-1 py-[1px] text-muted-foreground"
+          >
+            not applied
+          </button>
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <AdjInput
+              sign="plus"
+              value={discounts.control}
+              onChange={(v) => setDiscounts({ ...discounts, control: v })}
+            />
+            <button
+              type="button"
+              onClick={() => setDiscounts({ ...discounts, control: null })}
+              className="text-[11px] text-muted-foreground underline"
+            >
+              remove
+            </button>
+          </span>
+        ),
+      pbv: step(f.total, m.pbv),
+      evs: step(f.total, m.evSales),
+    },
+  ];
+
+  return (
+    <div>
+      {/* 1 · Headline */}
+      <div className="mb-[13px] rounded-[8px] border border-[#DDE3F2] bg-[#F5F7FD] px-3.5 pb-3 pt-3.5">
+        {indicative ? (
+          <>
+            <div className="text-[23px] font-normal leading-[1.22] tracking-[-0.01em] text-[#0F1B33]">
+              Between <b className="font-semibold text-[#1E3A8A]">{fmtMoney(indicative.low)}</b> and{" "}
+              <b className="font-semibold text-[#1E3A8A]">{fmtMoney(indicative.high)} THB</b>
+            </div>
+            <div className="mt-[3px] text-[12px] text-muted-foreground">
+              Where {result.agreeCount} of {result.totalCount} methods agree
+              {year ? ` · filing FY${year}` : ""}
+            </div>
+            {spread && <Axis spread={spread} indicative={indicative} />}
+            <div className="mt-2.5 flex flex-wrap gap-4 text-[11px] text-muted-foreground">
+              <span>
+                <i
+                  className="mr-[7px] inline-block h-[5px] w-4 rounded-[3px] align-[1px]"
+                  style={{ background: "linear-gradient(90deg,#2D4B9E,#16296A)" }}
+                />
+                Indicative valuation — where reliable methods agree
+              </span>
+              <span>
+                <i
+                  className="mr-[7px] inline-block h-[5px] w-4 rounded-[3px] align-[1px]"
+                  style={{ background: "linear-gradient(90deg,#D8E6F6,#4A66A8)" }}
+                />
+                Full spread, including low-confidence methods
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-[23px] font-normal leading-[1.22] text-[#0F1B33]">
+              {spread ? (
+                <>
+                  No agreed range — methods span{" "}
+                  <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.low)}</b> to{" "}
+                  <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.high)} THB</b>
+                </>
+              ) : (
+                "No indicative range"
+              )}
+            </div>
+            <div className="mt-[3px] text-[12px] text-muted-foreground">
+              {spread
+                ? "No two reliable methods overlap, so no single range can be quoted"
+                : "No reliable method could be computed"}
+              {year ? ` · filing FY${year}` : ""} — see Methods for what is missing.
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* 2 · Notice */}
+      {result.blocked && (
+        <div className="mb-3.5 flex items-baseline gap-[9px] rounded-[7px] border border-[#F2E3CE] bg-[#FDF7EF] px-[11px] py-2 text-[12px] text-[#B45309]">
+          <span>
+            {result.blocked.name} unavailable — {result.blocked.reason.replace(/^Unavailable — /, "")}
+          </span>
+          <button type="button" onClick={onMethods} className="ml-auto whitespace-nowrap text-[#9A6B2E]">
+            Methods →
+          </button>
+        </div>
+      )}
+
+      {/* 3 · Benchmark */}
+      <Block label="Benchmark" hint="against the peer median" right="no assumptions applied">
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead>
+            <tr>
+              {["Metric", startupName, "Peer median", "", "Gap"].map((h, i) => (
+                <th
+                  key={i}
+                  className={`border-b border-[#F2F4F6] pb-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] ${
+                    i === 0 ? "text-left text-muted-foreground" : "text-right"
+                  } ${i === 1 ? "text-[#0F1B33]" : i === 0 ? "" : "text-muted-foreground"} ${
+                    i === 3 ? "w-[56px]" : i === 4 ? "w-[88px]" : ""
+                  }`}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <BenchRow label="Gross margin" own={ratio("gross_profit_margin")} peer={null} />
+            <BenchRow
+              label="EBITDA margin"
+              own={null}
+              blocked={result.methods.find((x) => x.key === "evebitda")?.status === "blocked"}
+              blockedNote="needs D&A"
+              peer={result.medians.ebitdaMarginPct}
+            />
+            <BenchRow label="Net margin" own={ratio("net_profit_margin")} peer={null} />
+            <BenchRow label="Return on equity" own={ratio("return_on_equity")} peer={null} />
+            <BenchRow
+              label="Debt to equity"
+              own={ratio("debt_to_equity_ratio")}
+              peer={null}
+              unit="×"
+              lowerIsBetter
+            />
+            <BenchRow label="Revenue growth" own={revenueGrowth} peer={null} />
+          </tbody>
+        </table>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          A peer median shows only where the peer set carries that metric. Blank means the
+          reference is not held, not that the company was not measured.
+        </p>
+      </Block>
+
+      {/* 4 · Compared against */}
+      <Block
+        label="Compared against"
+        hint="the peer set behind every figure above"
+        right={
+          <Link to="/peer-comparables" search={{}} className="font-semibold text-white">
+            Peer set →
+          </Link>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2 rounded-[7px] border border-[#DDE3F2] bg-[#F5F7FD] px-[11px] py-2 text-[12px]">
+          <b className="text-[#0F1B33]">{peerLabel}</b>
+          <span className="text-[#A8B8DC]">·</span>
+          <span className={thin ? "text-[#B45309]" : undefined}>
+            {peers.length} peer{peers.length === 1 ? "" : "s"}
+            {thin ? " — thin" : ""}
+          </span>
+          {refreshText && (
+            <>
+              <span className="text-[#A8B8DC]">·</span>
+              <span className={refreshStale ? "text-[#B45309]" : undefined}>{refreshText}</span>
+            </>
+          )}
+          <span className="text-[#A8B8DC]">·</span>
+          <span>{matchBasis}</span>
+        </div>
+
+        {showPeers && (
+          <div className="mt-[9px] overflow-hidden rounded-[6px] border border-[#EAECEF]">
+            <table className="w-full border-collapse text-[12.5px]">
+              <thead>
+                <tr>
+                  {["Company", "Revenue THB m", "EBITDA margin", "EV/EBITDA", "P/E", "P/BV"].map(
+                    (h, i) => (
+                      <th
+                        key={h}
+                        className={`border-b border-[#EAECEF] bg-[#FAFBFC] px-2.5 py-[7px] text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground ${
+                          i === 0 ? "text-left" : "text-right"
+                        }`}
+                      >
+                        {h}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {peers.map((p) => (
+                  <tr key={p.id ?? p.companyName}>
+                    <td className="border-b border-[#F2F4F6] px-2.5 py-[7px] font-medium text-[#0F1B33]">
+                      {p.ticker ?? p.companyName}
+                      <span
+                        className={`ml-1.5 rounded-[3px] px-[5px] py-[1px] text-[9.5px] font-bold ${
+                          p.market === "mai"
+                            ? "bg-[#EAF7EE] text-[#15803D]"
+                            : "bg-[#EEF2FB] text-[#1E3A8A]"
+                        }`}
+                      >
+                        {p.market}
+                      </span>
+                    </td>
+                    <Num v={p.revenueThbM} />
+                    <Num v={p.ebitdaMarginPct} suffix="%" />
+                    <Num v={p.evEbitda} suffix="×" />
+                    <Num v={p.pe} suffix="×" />
+                    <Num v={p.pbv} suffix="×" />
+                  </tr>
+                ))}
+                {peers.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-2.5 py-4 text-center text-muted-foreground">
+                      This peer set holds no companies yet.
+                    </td>
+                  </tr>
+                )}
+                {peers.length > 0 && (
+                  <tr className="bg-[#F5F7FD] font-semibold text-[#1E3A8A]">
+                    <td className="border-t border-[#DDE3F2] px-2.5 py-[7px]">
+                      Median · {peers.length} peer{peers.length === 1 ? "" : "s"}
+                    </td>
+                    <Num v={result.medians.revenueThbM} median />
+                    <Num v={result.medians.ebitdaMarginPct} suffix="%" median />
+                    <Num v={result.medians.evEbitda} suffix="×" median />
+                    <Num v={result.medians.pe} suffix="×" median />
+                    <Num v={result.medians.pbv} suffix="×" median />
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => setShowPeers((v) => !v)}
+          className="mt-[7px] inline-block text-[11.5px] text-[#1E3A8A]"
+        >
+          {showPeers ? "Hide peers ▴" : "Show peers ▾"}
+        </button>
+      </Block>
+
+      {/* 5 · By method */}
+      <Block label="By method" hint="each range, on one scale">
+        {result.drawn.length === 0 ? (
+          <p className="text-[12px] text-muted-foreground">
+            No method could be computed from this filing and peer set.
+          </p>
+        ) : (
+          <>
+            {result.drawn.map((row) => (
+              <MethodRow key={row.key} row={row} spread={spread!} />
+            ))}
+            {indicative && (
+              <div className="-mx-3 -mb-3 mt-1 grid grid-cols-[132px_1fr_128px] items-center gap-3.5 rounded-b-[7px] border-t border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
+                <div className="text-[12.5px] font-semibold text-[#1E3A8A]">
+                  Indicative valuation
+                </div>
+                <div className="relative h-1.5 rounded-[3px] bg-[#E3E8F4]">
+                  <div
+                    className="absolute top-0 h-1.5 rounded-[3px]"
+                    style={{
+                      left: `${scalePos(indicative.low, spread!.low, spread!.high)}%`,
+                      width: `${Math.max(
+                        2,
+                        scalePos(indicative.high, spread!.low, spread!.high) -
+                          scalePos(indicative.low, spread!.low, spread!.high),
+                      )}%`,
+                      background: "linear-gradient(90deg,#2D4B9E 0%,#1E3A8A 50%,#16296A 100%)",
+                    }}
+                  />
+                </div>
+                <div className="text-right text-[12.5px] font-semibold tabular-nums text-[#1E3A8A]">
+                  {fmtMoney(indicative.low)} – {fmtMoney(indicative.high)}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </Block>
+
+      {/* 6 · Assumptions */}
+      <Block label="Assumptions" hint="every value editable" right="applied to the peer medians">
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead>
+            <tr>
+              {["Step", "Adjustment", "P/BV", "EV/Sales"].map((h, i) => (
+                <th
+                  key={h}
+                  className={`border-b border-[#F2F4F6] pb-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground ${
+                    i === 0 ? "text-left" : "text-right"
+                  } ${i === 1 ? "w-[150px]" : i > 1 ? "w-[106px]" : ""}`}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {ladder.map((r) => (
+              <tr key={r.step}>
+                <td className="border-b border-[#F2F4F6] py-[7px] font-medium text-[#0F1B33]">
+                  {r.step}
+                </td>
+                <td className="border-b border-[#F2F4F6] py-[7px] text-right">{r.adj}</td>
+                <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums">
+                  {fmtMult(r.pbv)}
+                </td>
+                <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums">
+                  {fmtMult(r.evs)}
+                </td>
+              </tr>
+            ))}
+            <tr>
+              <td className="rounded-l-[7px] border-t border-[#DDE3F2] bg-[#F5F7FD] py-[9px] pl-2.5 font-semibold text-[#1E3A8A]">
+                Effective multiple
+              </td>
+              <td className="border-t border-[#DDE3F2] bg-[#F5F7FD] py-[9px] text-right text-muted-foreground">
+                ±{BAND_PCT}%
+              </td>
+              <td className="border-t border-[#DDE3F2] bg-[#F5F7FD] py-[9px] text-right font-semibold tabular-nums text-[#1E3A8A]">
+                {result.effective.pbv
+                  ? `${fmtMult(result.effective.pbv.low)} – ${fmtMult(result.effective.pbv.high)}`
+                  : "—"}
+              </td>
+              <td className="rounded-r-[7px] border-t border-[#DDE3F2] bg-[#F5F7FD] py-[9px] pr-2.5 text-right font-semibold tabular-nums text-[#1E3A8A]">
+                {result.effective.evSales
+                  ? `${fmtMult(result.effective.evSales.low)} – ${fmtMult(result.effective.evSales.high)}`
+                  : "—"}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Every adjustment is editable. Control premium is off by default — apply it only when
+          valuing a controlling stake.
+        </p>
+      </Block>
+
+      {/* 7 · Footer */}
+      <div className="mt-[13px] border-t border-[#F2F4F6] pt-2.5 text-[11px] leading-[1.5] text-muted-foreground">
+        Indicative range on stated assumptions — not a valuation, not financial advice.
+        <br />
+        {year ? `Filing FY${year} · ` : ""}
+        {refreshText ? `peer set ${refreshText} · ` : ""}
+        discounts: {discounts.marketability}% marketability, {discounts.size}% size,{" "}
+        {discounts.growth !== 0 ? `${discounts.growth}% growth differential, ` : ""}
+        {discounts.control === null
+          ? "no control premium"
+          : `${discounts.control}% control premium`}
+        .
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+function Num({
+  v,
+  suffix = "",
+  median,
+}: {
+  v: number | null;
+  suffix?: string;
+  median?: boolean;
+}) {
+  return (
+    <td
+      className={`px-2.5 py-[7px] text-right tabular-nums ${
+        median ? "border-t border-[#DDE3F2]" : "border-b border-[#F2F4F6]"
+      }`}
+    >
+      {v === null || v === undefined
+        ? "—"
+        : `${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}${suffix}`}
+    </td>
+  );
+}
+
+function Axis({
+  spread,
+  indicative,
+}: {
+  spread: { low: number; high: number };
+  indicative: { low: number; high: number };
+}) {
+  const pos = (v: number) => scalePos(v, spread.low, spread.high) * 0.9 + 4;
+  const coreLeft = pos(indicative.low);
+  const coreWidth = Math.max(2, pos(indicative.high) - coreLeft);
+  return (
+    <div className="relative mt-3 h-[62px]">
+      <div className="absolute left-0 right-0 top-10 h-px bg-[#EAECEF]" />
+      <div
+        className="absolute top-[37px] h-[7px] rounded-[4px]"
+        style={{
+          left: `${pos(spread.low)}%`,
+          width: `${pos(spread.high) - pos(spread.low)}%`,
+          background: "linear-gradient(90deg,#D8E6F6 0%,#A8C1E4 50%,#7891C6 100%)",
+        }}
+      />
+      <div
+        className="absolute top-[37px] h-[7px] rounded-[4px]"
+        style={{
+          left: `${coreLeft}%`,
+          width: `${coreWidth}%`,
+          background: "linear-gradient(90deg,#2D4B9E,#16296A)",
+        }}
+      />
+      <div
+        className="absolute top-1.5 -translate-x-1/2 whitespace-nowrap text-center text-[11.5px] font-medium text-[#1E3A8A]"
+        style={{ left: `${coreLeft + coreWidth / 2}%` }}
+      >
+        indicative valuation
+        <i className="mx-auto mt-[3px] block h-3 w-px bg-[#A8B8DC]" />
+      </div>
+      {[
+        { v: spread.low, on: false },
+        { v: indicative.low, on: true },
+        { v: indicative.high, on: true },
+        { v: spread.high, on: false },
+      ].map((t, i) => (
+        <div
+          key={i}
+          className={`absolute top-12 -translate-x-1/2 whitespace-nowrap text-[11px] ${
+            t.on ? "font-semibold text-[#1E3A8A]" : "text-muted-foreground"
+          }`}
+          style={{ left: `${pos(t.v)}%` }}
+        >
+          {fmtMoney(t.v)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MethodRow({
+  row,
+  spread,
+}: {
+  row: { name: string; input: string | null; low: number | null; high: number | null; status: string; point: boolean };
+  spread: { low: number; high: number };
+}) {
+  const left = scalePos(row.low!, spread.low, spread.high);
+  const width = Math.max(1.5, scalePos(row.high!, spread.low, spread.high) - left);
+  const pale = row.status === "low confidence";
+  return (
+    <div className="grid grid-cols-[132px_1fr_128px] items-center gap-3.5 border-b border-[#F2F4F6] py-2.5 last:border-b-0">
+      <div className="text-[12.5px] font-medium leading-[1.3] text-[#0F1B33]">
+        {row.name}
+        {row.input && (
+          <small className="block text-[11px] font-normal leading-[1.35] text-muted-foreground">
+            {row.input}
+          </small>
+        )}
+      </div>
+      <div className="relative h-[5px] rounded-[3px] bg-[#EFF1F5]">
+        <div
+          className="absolute top-0 h-[5px] rounded-[3px]"
+          style={{
+            left: `${left}%`,
+            width: `${width}%`,
+            background: pale
+              ? "linear-gradient(90deg,#D8E6F6 0%,#9DB8DE 50%,#4A66A8 100%)"
+              : "linear-gradient(90deg,#BBD3F0 0%,#6E93CF 50%,#1E3A8A 100%)",
+            opacity: pale ? 0.72 : 1,
+          }}
+        />
+        {!pale && (
+          <>
+            <Cap left={left} />
+            <Cap left={left + width} />
+          </>
+        )}
+      </div>
+      <div className="text-right text-[12.5px] leading-[1.3] tabular-nums text-[#0F1B33]">
+        {row.point ? fmtMoney(row.low) : `${fmtMoney(row.low)} – ${fmtMoney(row.high)}`}
+        {pale && <small className="block text-[10.5px] text-[#B45309]">low confidence</small>}
+      </div>
+    </div>
+  );
+}
+
+function Cap({ left }: { left: number }) {
+  return (
+    <div
+      className="absolute -top-[3px] h-[11px] w-[1.5px] rounded-[1px] opacity-65"
+      style={{ left: `${left}%`, background: ACC }}
+    />
+  );
+}
+
+function BenchRow({
+  label,
+  own,
+  peer,
+  unit = "%",
+  blocked,
+  blockedNote,
+  lowerIsBetter,
+}: {
+  label: string;
+  own: number | null;
+  peer: number | null;
+  unit?: string;
+  blocked?: boolean;
+  blockedNote?: string;
+  lowerIsBetter?: boolean;
+}) {
+  const fmt = (v: number | null) =>
+    v === null ? "—" : unit === "%" ? fmtPct(v) : `${v.toFixed(2)}${unit}`;
+  const gap = own !== null && peer !== null ? own - peer : null;
+  const good = gap === null ? null : lowerIsBetter ? gap < 0 : gap > 0;
+  const maxV = Math.max(Math.abs(own ?? 0), Math.abs(peer ?? 0), 1);
+
+  return (
+    <tr>
+      <td
+        className={`border-b border-[#F2F4F6] py-[7px] font-medium ${
+          blocked ? "text-muted-foreground" : "text-[#0F1B33]"
+        }`}
+      >
+        {label}
+      </td>
+      <td
+        className={`border-b border-[#F2F4F6] py-[7px] text-right font-semibold tabular-nums ${
+          blocked ? "text-[#B45309]" : "text-[#0F1B33]"
+        }`}
+      >
+        {blocked ? "blocked" : fmt(own)}
+      </td>
+      <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums text-muted-foreground">
+        {fmt(peer)}
+      </td>
+      <td className="border-b border-[#F2F4F6] py-[7px] text-right">
+        {!blocked && own !== null && peer !== null && (
+          <span className="relative inline-block h-[3px] w-12 rounded-[2px] bg-[#F2F4F6]">
+            <i
+              className="absolute top-0 h-[3px] rounded-[2px] bg-[#1E3A8A]"
+              style={{ width: `${Math.min(100, (Math.abs(own) / maxV) * 100)}%` }}
+            />
+            <i
+              className="absolute h-[3px] rounded-[2px] bg-[#D5DAE0] opacity-55"
+              style={{ top: "-5px", width: `${Math.min(100, (Math.abs(peer) / maxV) * 100)}%` }}
+            />
+          </span>
+        )}
+      </td>
+      <td
+        className={`border-b border-[#F2F4F6] py-[7px] text-right text-[12px] font-semibold ${
+          blocked ? "text-[#B45309]" : good === null ? "text-muted-foreground" : good ? "text-[#15803D]" : "text-[#B91C1C]"
+        }`}
+      >
+        {blocked
+          ? blockedNote
+          : gap === null
+            ? "—"
+            : unit === "%"
+              ? `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(1)} pts`
+              : `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(2)}×`}
+      </td>
+    </tr>
+  );
+}

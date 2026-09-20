@@ -15,11 +15,19 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SectorPicker, BusinessModelPicker } from "@/components/startups/sector-fields";
 import { usePermissions } from "@/hooks/use-session-context";
-import { getPeerMatch } from "@/lib/peer-comparables.functions";
+import { getPeerMatch, getPeerSet } from "@/lib/peer-comparables.functions";
 import { peerSetLabel } from "@/lib/peer-comparables";
 import { businessModelLabel } from "@/lib/sectors";
 import { updateStartup } from "@/lib/startups.functions";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
+import { ValuationSummary } from "@/components/financials/valuation-summary";
+import { ValuationMethods } from "@/components/financials/valuation-methods";
+import {
+  DEFAULT_DISCOUNTS,
+  computeValuation,
+  readFilingInputs,
+  type Discounts,
+} from "@/lib/valuation";
 
 const DASH = "—";
 
@@ -199,6 +207,8 @@ export function ValuationTab({
   year,
   ratios,
   income,
+  position = [],
+  cashFlow = [],
 }: {
   startupId: string;
   startupName: string;
@@ -206,10 +216,13 @@ export function ValuationTab({
   year: number | undefined;
   ratios: RatioItem[];
   income: StatementItem[];
+  position?: StatementItem[];
+  cashFlow?: StatementItem[];
 }) {
   const { has, isControl } = usePermissions();
   const canEdit = isControl || has("startups.write");
   const fetchMatch = useServerFn(getPeerMatch);
+  const fetchPeerSet = useServerFn(getPeerSet);
   const saveStartup = useServerFn(updateStartup);
   const queryClient = useQueryClient();
 
@@ -218,8 +231,20 @@ export function ValuationTab({
     queryFn: () => fetchMatch({ data: { startupId } }),
   });
 
+  const appliedSector = data?.applied?.sector ?? null;
+  const appliedModel = data?.applied?.businessModel ?? null;
+  const { data: peerSet } = useQuery({
+    queryKey: ["peer-set", appliedSector, appliedModel],
+    enabled: !!appliedSector,
+    queryFn: () =>
+      fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
+  });
+
+  const [subTab, setSubTab] = useState<"summary" | "methods">("summary");
+  const [discounts, setDiscounts] = useState<Discounts>(DEFAULT_DISCOUNTS);
   const [sector, setSector] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!data) return;
@@ -254,6 +279,13 @@ export function ValuationTab({
     ? (businessModelLabel(data.businessModel) ?? data.businessModel)
     : null;
   const suggestion = data.narrower && data.state !== "exact" ? data.narrower : null;
+
+  const peers = peerSet?.peers ?? [];
+  const inputs = readFilingInputs(year, income, position, cashFlow, ratios);
+  const result = computeValuation(inputs, peers, discounts);
+  const hasPeers = !!data.applied && peers.length > 0;
+  const flag = result.blocked || result.lowConfidence;
+
 
   return (
     <div>
@@ -483,19 +515,76 @@ export function ValuationTab({
         </div>
       )}
 
-      <Benchmarking
-        name={startupName}
-        year={year}
-        ratios={ratios}
-        income={income}
-        reason={
-          data.state === "no-sector"
-            ? "— needs a sector"
-            : data.state === "no-peer-set"
-              ? "— no peer set"
-              : null
-        }
-      />
+      {/* Summary / Methods */}
+      <div className="mt-4 rounded-[9px] border border-[#EAECEF] bg-white">
+        <div className="flex gap-5 border-b border-[#EAECEF] px-[18px]">
+          {([
+            ["summary", "Summary"],
+            ["methods", "Methods"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSubTab(value)}
+              className={`flex items-center gap-[7px] border-b-[1.5px] py-2.5 text-[12.5px] ${
+                subTab === value
+                  ? "border-[#1E3A8A] font-semibold text-[#1E3A8A]"
+                  : "border-transparent text-muted-foreground"
+              }`}
+            >
+              {value === "methods" && (
+                <span
+                  className={`h-[5px] w-[5px] rounded-full ${
+                    flag ? "bg-[#B45309]" : "bg-[#C7CDD6]"
+                  }`}
+                />
+              )}
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="px-[18px] pb-[18px] pt-4">
+          {subTab === "summary" ? (
+            hasPeers ? (
+              <ValuationSummary
+                startupName={startupName}
+                year={year}
+                result={result}
+                discounts={discounts}
+                setDiscounts={setDiscounts}
+                peers={peers}
+                peerLabel={peerSetLabel(data.applied!.sector, data.applied!.businessModel)}
+                refreshText={age?.text ?? null}
+                refreshStale={!!age?.stale}
+                matchBasis={
+                  data.state === "exact"
+                    ? "matched on sector + business model"
+                    : "matched on sector only"
+                }
+                ratios={ratios}
+                income={income}
+                onMethods={() => setSubTab("methods")}
+              />
+            ) : (
+              <Benchmarking
+                name={startupName}
+                year={year}
+                ratios={ratios}
+                income={income}
+                reason={
+                  data.state === "no-sector"
+                    ? "— needs a sector"
+                    : data.state === "no-peer-set"
+                      ? "— no peer set"
+                      : "— peer set is empty"
+                }
+              />
+            )
+          ) : (
+            <ValuationMethods result={result} inputs={inputs} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
