@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   peerSetLabel,
+  type PeerAvailability,
   type Peer,
   type PeerMatchResult,
   type PeerSetDetail,
@@ -418,5 +419,46 @@ export const getPeerMatch = createServerFn({ method: "GET" })
       businessModel,
       applied: null,
       narrower,
+    };
+  });
+
+/* ------------------------------------------------------------------ */
+/* Availability — read-only coverage for pickers and the admin grid     */
+/* ------------------------------------------------------------------ */
+
+export const getPeerAvailability = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PeerAvailability> => {
+    const ctx = context as unknown as Ctx;
+
+    const [{ data: sets, error }, { data: members }, { data: startups }] = await Promise.all([
+      ctx.supabase.from("peer_sets").select("id, sector, business_model").not("sector", "is", null),
+      ctx.supabase.from("peer_set_members").select("peer_set_id"),
+      ctx.supabase.from("startups").select("sector").not("sector", "is", null),
+    ]);
+    if (error) throw new Error(error.message);
+
+    const counts = new Map<string, number>();
+    for (const m of (members ?? []) as { peer_set_id: string }[]) {
+      counts.set(m.peer_set_id, (counts.get(m.peer_set_id) ?? 0) + 1);
+    }
+
+    const startupCountMap = new Map<string, number>();
+    for (const s of (startups ?? []) as { sector: string | null }[]) {
+      if (!s.sector) continue;
+      startupCountMap.set(s.sector, (startupCountMap.get(s.sector) ?? 0) + 1);
+    }
+
+    return {
+      sets: ((sets ?? []) as { id: string; sector: string; business_model: string | null }[]).map(
+        (r) => ({
+          sector: r.sector,
+          businessModel: r.business_model,
+          peerCount: counts.get(r.id) ?? 0,
+        }),
+      ),
+      startupCounts: [...startupCountMap.entries()]
+        .map(([sector, count]) => ({ sector, count }))
+        .sort((a, b) => b.count - a.count),
     };
   });

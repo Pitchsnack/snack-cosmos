@@ -31,6 +31,7 @@ import {
   TabToolbar,
 } from "@/components/peer-comparables/tab-toolbar";
 import { cn } from "@/lib/utils";
+import { CoverageGrid } from "@/components/peer-comparables/coverage-grid";
 import { downloadCsv } from "@/lib/listed-companies";
 import {
   EMPTY_CELL,
@@ -87,6 +88,7 @@ export function PeerSetsTab({
   const [newOpen, setNewOpen] = useState(false);
   const [picked, setPicked] = useState("");
   const [pickedModel, setPickedModel] = useState(ALL_MODELS);
+  const [view, setView] = useState<"list" | "coverage">("list");
 
   const sectors = useMemo(
     () => [...new Set(sets.map((s) => s.sector))].sort((a, b) => a.localeCompare(b)),
@@ -160,6 +162,28 @@ export function PeerSetsTab({
         />
       </div>
 
+      <div className="flex items-center gap-1 px-5 pt-3">
+        {(["list", "coverage"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            className={cn(
+              "rounded-full border px-3 py-[3px] text-[12px] font-semibold",
+              view === v
+                ? "border-info/40 bg-info/10 text-info"
+                : "border-transparent text-muted-foreground hover:bg-muted",
+            )}
+          >
+            {v === "list" ? "Peer set list" : "Coverage"}
+          </button>
+        ))}
+      </div>
+
+      {view === "coverage" ? (
+        <CoverageGrid />
+      ) : (
+        <>
       <ResultCount
         shown={rows.length}
         total={sets.length}
@@ -293,6 +317,9 @@ export function PeerSetsTab({
       <p className="border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
         A sector with no peer set simply has no valuation yet — that is a legitimate state.
       </p>
+        </>
+      )}
+
 
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent>

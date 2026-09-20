@@ -294,6 +294,7 @@ export function ValuationTab({
         >
           {canEdit ? (
             <BusinessModelPicker
+              sector={sector}
               value={model}
               onChange={(v) => {
                 setModel(v);

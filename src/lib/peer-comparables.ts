@@ -221,3 +221,48 @@ export function peerSetCsvFilename(
 ): string {
   return `peer-set_${slug(sector)}_${businessModel ? slug(businessModel) : "all"}_${date}.csv`;
 }
+
+/* ------------------------------------------------------------------ */
+/* Availability — which sector + model combinations have peer data      */
+/* ------------------------------------------------------------------ */
+
+export interface PeerAvailabilityRow {
+  sector: string;
+  businessModel: string | null;
+  peerCount: number;
+}
+
+export interface PeerAvailability {
+  sets: PeerAvailabilityRow[];
+  /** How many startups carry each sector. */
+  startupCounts: { sector: string; count: number }[];
+}
+
+export type AvailabilityBadge =
+  | { kind: "yes"; text: string }
+  | { kind: "no"; text: string }
+  | { kind: "partial"; text: string };
+
+/**
+ * Availability for one option of the business model picker, scoped to the
+ * sector already chosen. `model === null` is the "Not set" option: it matches
+ * only a sector-wide set.
+ */
+export function modelAvailability(
+  availability: PeerAvailability | undefined,
+  sector: string | null,
+  model: string | null,
+): AvailabilityBadge | null {
+  if (!availability || !sector) return null;
+  const inSector = availability.sets.filter((s) => s.sector === sector);
+  const own = inSector.find((s) => (s.businessModel ?? null) === model);
+  if (own) return { kind: "yes", text: `${own.peerCount} peers` };
+  if (model === null) {
+    // Sets exist for this sector, but none is sector-wide — leaving the model
+    // blank will not match anything. That is the amber state.
+    return inSector.length > 0
+      ? { kind: "partial", text: "no sector-wide set" }
+      : { kind: "no", text: "no peer set" };
+  }
+  return { kind: "no", text: "no set" };
+}

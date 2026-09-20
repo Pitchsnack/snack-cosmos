@@ -15,6 +15,8 @@ import {
   sectorGroupOf,
 } from "@/lib/sectors";
 import { cn } from "@/lib/utils";
+import { usePeerAvailability } from "@/hooks/use-peer-availability";
+import { modelAvailability, type AvailabilityBadge } from "@/lib/peer-comparables";
 
 function norm(s: string) {
   return s.toLowerCase().replace(/[\s\-—–._&/]/g, "");
@@ -181,16 +183,40 @@ export function SectorPicker({
   );
 }
 
+function AvailabilityBadgePill({ badge }: { badge: AvailabilityBadge }) {
+  return (
+    <span
+      className={cn(
+        "ml-auto shrink-0 whitespace-nowrap rounded-full border px-2 py-[2px] text-[10.5px] font-bold",
+        badge.kind === "yes" && "border-[#CFE8D8] bg-[#EAF7EE] text-[#15803D]",
+        badge.kind === "partial" && "border-[#F6DFB4] bg-[#FEF3E7] text-[#B45309]",
+        badge.kind === "no" && "border-[#E5E7EB] bg-[#F3F4F6] text-[#9AA3AF]",
+      )}
+    >
+      {badge.text}
+    </span>
+  );
+}
+
+/**
+ * Business model picker. When a sector is given, each option carries a live
+ * peer-set availability badge scoped to that sector — including the amber
+ * "no sector-wide set" state on "Not set".
+ */
 export function BusinessModelPicker({
   value,
   onChange,
+  sector = null,
 }: {
   value: string | null;
   onChange: (v: string | null) => void;
+  /** Scopes availability badges. No sector → no badges. */
+  sector?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const selected = BUSINESS_MODELS.find((b) => b.value === value) ?? null;
+  const { data: availability } = usePeerAvailability(!!sector);
 
   useEffect(() => {
     if (!open) return;
@@ -201,42 +227,78 @@ export function BusinessModelPicker({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open]);
 
-  return (
-    <div ref={wrapRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex h-[42px] w-full items-center gap-2 rounded-[9px] border border-[#D7DBE2] bg-background px-3 text-left text-[13.5px] focus:border-[#2563EB] focus:outline-none focus:shadow-[0_0_0_3px_#EFF4FE]"
-      >
-        <span className={cn("truncate", !selected && "text-muted-foreground")}>
-          {selected?.label ?? "Choose a business model…"}
-        </span>
-        {selected && (
-          <span className="truncate text-[11.5px] text-[#9AA3AF]">{selected.hint}</span>
-        )}
-        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
-      </button>
+  const badgeFor = (model: string | null) => modelAvailability(availability, sector, model);
+  const notSetBadge = badgeFor(null);
 
-      {open && (
-        <div className="absolute z-50 mt-[6px] w-full overflow-hidden rounded-[10px] border border-[#D7DBE2] bg-background shadow-[0_10px_24px_rgba(15,23,42,.10)]">
-          {BUSINESS_MODELS.map((b) => (
+  return (
+    <div>
+      <div ref={wrapRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex h-[42px] w-full items-center gap-2 rounded-[9px] border border-[#D7DBE2] bg-background px-3 text-left text-[13.5px] focus:border-[#2563EB] focus:outline-none focus:shadow-[0_0_0_3px_#EFF4FE]"
+        >
+          <span className={cn("truncate", !selected && "text-muted-foreground")}>
+            {selected?.label ?? "Choose a business model…"}
+          </span>
+          {selected && (
+            <span className="truncate text-[11.5px] text-[#9AA3AF]">{selected.hint}</span>
+          )}
+          <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
+
+        {open && (
+          <div className="absolute z-50 mt-[6px] w-full overflow-hidden rounded-[10px] border border-[#D7DBE2] bg-background shadow-[0_10px_24px_rgba(15,23,42,.10)]">
             <button
-              key={b.value}
               type="button"
               onClick={() => {
-                onChange(b.value === value ? null : b.value);
+                onChange(null);
                 setOpen(false);
               }}
               className={cn(
-                "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]",
-                b.value === value && "bg-[#EFF4FE] font-semibold text-[#1D4ED8]",
+                "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] hover:bg-[#F8FAFD]",
+                !value && "bg-[#EFF4FE] font-semibold text-[#1D4ED8]",
               )}
             >
-              <span className="shrink-0">{b.label}</span>
-              <span className="truncate text-[11.5px] text-[#9AA3AF]">{b.hint}</span>
-              {b.value === value && <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-[#15803D]" />}
+              <span className="shrink-0">Not set</span>
+              {notSetBadge && <AvailabilityBadgePill badge={notSetBadge} />}
             </button>
-          ))}
+            {BUSINESS_MODELS.map((b) => {
+              const badge = badgeFor(b.value);
+              return (
+                <button
+                  key={b.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(b.value === value ? null : b.value);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]",
+                    b.value === value && "bg-[#EFF4FE] font-semibold text-[#1D4ED8]",
+                  )}
+                >
+                  <span className="shrink-0">{b.label}</span>
+                  <span className="truncate text-[11.5px] text-[#9AA3AF]">{b.hint}</span>
+                  {badge ? (
+                    <AvailabilityBadgePill badge={badge} />
+                  ) : (
+                    b.value === value && (
+                      <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-[#15803D]" />
+                    )
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {sector && (
+        <div className="mt-[10px] rounded-[10px] border border-[#F6DFB4] bg-[#FEF3E7] px-[15px] py-[11px] text-[12.5px] text-[#7C4A0B]">
+          ⚠ <b className="font-bold">Availability is information, not a recommendation.</b> Pick
+          the model that describes the company. If the only set with data does not fit, the right
+          fix is to build the set that does — not to re-tag the startup.
         </div>
       )}
     </div>
@@ -295,7 +357,11 @@ export function SectorBusinessModelFields({
         <div className="text-[13px] font-medium text-foreground">
           Business model <span className="text-muted-foreground">(optional)</span>
         </div>
-        <BusinessModelPicker value={businessModel} onChange={onBusinessModelChange} />
+        <BusinessModelPicker
+          value={businessModel}
+          onChange={onBusinessModelChange}
+          sector={sector}
+        />
       </div>
     </div>
   );
