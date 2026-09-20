@@ -404,13 +404,14 @@ export function ValuationSummary({
             </table>
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => setShowPeers((v) => !v)}
-          className="mt-[7px] inline-block text-[11.5px] text-[#1E3A8A]"
-        >
-          {showPeers ? "Hide peers ▴" : "Show peers ▾"}
-        </button>
+        {peers.length > 0 && peers.length < 5 && (
+          <div className="mt-2 border-t border-[#F2F4F6] pt-2 text-[11.5px] text-[#B45309]">
+            <b>
+              {peers.length} peer{peers.length === 1 ? "" : "s"}
+            </b>{" "}
+            — a median this thin is easily moved by one company.
+          </div>
+        )}
       </Block>
 
       {/* 5 · By method */}
