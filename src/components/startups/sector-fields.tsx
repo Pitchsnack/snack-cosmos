@@ -300,6 +300,8 @@ export function BusinessModelPicker({
   onChange: (v: string | null) => void;
   /** Scopes availability badges. No sector → no badges. */
   sector?: string | null;
+  /** Inline 28px trigger, no caution block beneath. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
