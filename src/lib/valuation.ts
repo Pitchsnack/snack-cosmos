@@ -337,13 +337,8 @@ export function computeValuation(
   if (reliable.length) {
     const low = Math.max(...reliable.map((m) => m.low!));
     const high = Math.min(...reliable.map((m) => m.high!));
-    indicative =
-      low <= high
-        ? { low, high }
-        : {
-            low: Math.min(...reliable.map((m) => m.low!)),
-            high: Math.max(...reliable.map((m) => m.high!)),
-          };
+    // No overlap means the methods disagree; inventing a range would hide that.
+    if (low <= high) indicative = { low, high };
   }
 
   const agreeCount = indicative
