@@ -18,9 +18,34 @@ import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 
 const DASH = "—";
 
+/** A peer set older than this reads as stale. Warning only, never a block. */
+const PEER_SET_STALE_DAYS = 90;
+/** A filing older than this reads as stale. Warning only, never a block. */
+const FILING_STALE_MONTHS = 24;
+
 function pct(v: number | null | undefined): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return DASH;
   return `${v.toFixed(2)}%`;
+}
+
+function refreshAge(iso: string | null): { text: string; stale: boolean } | null {
+  if (!iso) return null;
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return null;
+  const days = (Date.now() - then.getTime()) / 86_400_000;
+  return {
+    text: `refreshed ${formatDistanceToNow(then)} ago`,
+    stale: days > PEER_SET_STALE_DAYS,
+  };
+}
+
+/** Fiscal year end is taken as 31 December of that year. */
+function filingIsStale(year: number | undefined): boolean {
+  if (!year) return false;
+  const end = new Date(Date.UTC(year, 11, 31));
+  const months =
+    (Date.now() - end.getTime()) / (30.436875 * 86_400_000);
+  return months > FILING_STALE_MONTHS;
 }
 
 function Pill({ tone, children }: { tone: "blue" | "green"; children: React.ReactNode }) {
