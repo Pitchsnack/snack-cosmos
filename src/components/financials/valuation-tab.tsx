@@ -207,6 +207,8 @@ export function ValuationTab({
   year,
   ratios,
   income,
+  position = [],
+  cashFlow = [],
 }: {
   startupId: string;
   startupName: string;
@@ -214,10 +216,13 @@ export function ValuationTab({
   year: number | undefined;
   ratios: RatioItem[];
   income: StatementItem[];
+  position?: StatementItem[];
+  cashFlow?: StatementItem[];
 }) {
   const { has, isControl } = usePermissions();
   const canEdit = isControl || has("startups.write");
   const fetchMatch = useServerFn(getPeerMatch);
+  const fetchPeerSet = useServerFn(getPeerSet);
   const saveStartup = useServerFn(updateStartup);
   const queryClient = useQueryClient();
 
@@ -226,8 +231,20 @@ export function ValuationTab({
     queryFn: () => fetchMatch({ data: { startupId } }),
   });
 
+  const appliedSector = data?.applied?.sector ?? null;
+  const appliedModel = data?.applied?.businessModel ?? null;
+  const { data: peerSet } = useQuery({
+    queryKey: ["peer-set", appliedSector, appliedModel],
+    enabled: !!appliedSector,
+    queryFn: () =>
+      fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
+  });
+
+  const [subTab, setSubTab] = useState<"summary" | "methods">("summary");
+  const [discounts, setDiscounts] = useState<Discounts>(DEFAULT_DISCOUNTS);
   const [sector, setSector] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!data) return;
