@@ -262,15 +262,21 @@ export function ValuationTab({
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{data.applied.peerCount}</td>
                   <td className="px-3 py-2 text-right">
-                    {data.state === "exact" ? (
-                      data.applied.lastRefreshedAt ? (
-                        new Date(data.applied.lastRefreshedAt).toISOString().slice(0, 10)
+                    <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                      {data.state === "sector-only" && <Pill tone="blue">sector only</Pill>}
+                      {age ? (
+                        <>
+                          <span className="text-[#6B7280]">{age.text}</span>
+                          {age.stale && (
+                            <span className="rounded-full border border-[#F6DFB4] bg-[#FEF3E7] px-2 py-0.5 text-[10.5px] font-bold text-[#B45309]">
+                              stale
+                            </span>
+                          )}
+                        </>
                       ) : (
-                        <span className="text-[#9AA3AF]">{DASH}</span>
-                      )
-                    ) : (
-                      <Pill tone="blue">sector only</Pill>
-                    )}
+                        data.state === "exact" && <span className="text-[#9AA3AF]">{DASH}</span>
+                      )}
+                    </span>
                   </td>
                 </tr>
               </tbody>
