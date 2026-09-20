@@ -230,7 +230,6 @@ export const savePeerSet = createServerFn({ method: "POST" })
       const { data: created, error } = await ctx.supabase
         .from("peer_sets")
         .insert({
-          industry_tag: legacyKey(data.sector, model),
           sector: data.sector,
           business_model: model,
           last_refreshed_at: now,
