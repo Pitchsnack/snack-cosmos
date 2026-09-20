@@ -141,7 +141,10 @@ export function ListedCompaniesTab({
           evEbitda: d.evEbitda,
           pe: d.pe,
           pbv: d.pbv,
+          statementPeriod: d.statementPeriod,
+          tag: d.tag,
           asAt: d.asAt,
+
         },
       }),
     onSuccess: () => {
