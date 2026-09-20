@@ -178,6 +178,8 @@ interface Props {
   };
   /** When set, the form was opened from Control → Data Intelligence; return there. */
   controlReturn?: { tab: "startups" | "investors" | "drafts" };
+  /** When set, the form was opened from the Valuation tab; save/cancel return there. */
+  valuationReturn?: boolean;
 }
 
 
@@ -213,11 +215,22 @@ export function StartupForm({
   myStartupsReturnSearch,
   directoryReturnSearch,
   controlReturn,
+  valuationReturn,
 }: Props) {
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
   const isMyStartupsCreate = !isEdit && redirectAfterCreate === "my-startups";
   const navigate = useNavigate();
+  /** Opened from the Valuation tab — send the user straight back to it. */
+  const goValuation = () => {
+    if (!startup) return false;
+    navigate({
+      to: isMyWorkspace ? "/my-startups/$id/financials" : "/startups/$id/financials",
+      params: { id: startup.id },
+      search: { tab: "valuation" },
+    });
+    return true;
+  };
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
   const create = useServerFn(createStartup);
@@ -598,7 +611,9 @@ export function StartupForm({
         qc.invalidateQueries({ queryKey: ["startups"] }),
       ]);
       guard.markSaved();
-      if (controlReturn) {
+      if (valuationReturn && goValuation()) {
+        // returned to the Valuation tab
+      } else if (controlReturn) {
         navigate({ to: "/entity-control", search: { tab: controlReturn.tab } });
       } else if (isMyWorkspace) {
         navigate({
@@ -1004,7 +1019,9 @@ export function StartupForm({
               variant="outline"
               onClick={() => {
                 guard.bypassOnce();
-                if (controlReturn) {
+                if (valuationReturn && goValuation()) {
+                  // returned to the Valuation tab
+                } else if (controlReturn) {
                   navigate({ to: "/entity-control", search: { tab: controlReturn.tab } });
                 } else {
                   navigate({ to: isMyWorkspace ? "/my-startups" : "/startups" });
@@ -1655,7 +1672,9 @@ export function StartupForm({
           variant="outline"
           onClick={() =>
             guard.confirmNavigate(() =>
-              controlReturn
+              valuationReturn && goValuation()
+                ? undefined
+                : controlReturn
                 ? navigate({ to: "/entity-control", search: { tab: controlReturn.tab } })
                 : isMyWorkspace
                 ? navigate({

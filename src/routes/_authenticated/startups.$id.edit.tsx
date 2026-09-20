@@ -27,6 +27,7 @@ const editSearchSchema = z.object({
   from: z.literal("entity-control").optional(),
   tab: z.enum(["startups", "investors", "drafts"]).optional(),
   focus: z.literal("sector").optional(),
+  returnTo: z.literal("valuation").optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/startups/$id/edit")({
@@ -39,7 +40,7 @@ function EditStartupPage() {
   const { id } = Route.useParams();
   const search = Route.useSearch();
   const fromControl = search.from === "entity-control";
-  const { from: _from, tab: _tab, ...listSearch } = search;
+  const { from: _from, tab: _tab, returnTo: _returnTo, ...listSearch } = search;
   const validId = isUuid(id);
   const { data, isLoading, error } = useStartup(validId ? id : undefined);
 
@@ -105,6 +106,7 @@ function EditStartupPage() {
                   startup={data as unknown as StartupDetail}
                   directoryReturnSearch={listSearch}
                   controlReturn={fromControl ? { tab: search.tab ?? "startups" } : undefined}
+                  valuationReturn={search.returnTo === "valuation"}
                 />
 
               </div>

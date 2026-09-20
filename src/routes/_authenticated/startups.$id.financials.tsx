@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
 import { isUuid } from "@/lib/uuid";
 import { StartupNotFound } from "@/components/startups/startup-not-found";
@@ -22,11 +23,13 @@ export const Route = createFileRoute("/_authenticated/startups/$id/financials")(
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: z.object({ tab: z.string().optional() }),
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { id } = Route.useParams();
+  const { tab } = Route.useSearch();
   if (!isUuid(id)) return <StartupNotFound reason="invalid" workspace="startups" />;
-  return <StartupFinancialsPage id={id} workspace="startups" />;
+  return <StartupFinancialsPage id={id} workspace="startups" initialTab={tab} />;
 }

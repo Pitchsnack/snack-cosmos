@@ -7,7 +7,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CircleSlash, Target } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { AlertTriangle, CircleSlash, Target } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/hooks/use-session-context";
@@ -17,9 +18,34 @@ import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 
 const DASH = "—";
 
+/** A peer set older than this reads as stale. Warning only, never a block. */
+const PEER_SET_STALE_DAYS = 90;
+/** A filing older than this reads as stale. Warning only, never a block. */
+const FILING_STALE_MONTHS = 24;
+
 function pct(v: number | null | undefined): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return DASH;
   return `${v.toFixed(2)}%`;
+}
+
+function refreshAge(iso: string | null): { text: string; stale: boolean } | null {
+  if (!iso) return null;
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return null;
+  const days = (Date.now() - then.getTime()) / 86_400_000;
+  return {
+    text: `refreshed ${formatDistanceToNow(then)} ago`,
+    stale: days > PEER_SET_STALE_DAYS,
+  };
+}
+
+/** Fiscal year end is taken as 31 December of that year. */
+function filingIsStale(year: number | undefined): boolean {
+  if (!year) return false;
+  const end = new Date(Date.UTC(year, 11, 31));
+  const months =
+    (Date.now() - end.getTime()) / (30.436875 * 86_400_000);
+  return months > FILING_STALE_MONTHS;
 }
 
 function Pill({ tone, children }: { tone: "blue" | "green"; children: React.ReactNode }) {
@@ -132,6 +158,10 @@ export function ValuationTab({
 
   const editTo =
     workspace === "my-startups" ? "/my-startups/$id/edit" : "/startups/$id/edit";
+  /** Saving or cancelling the edit form comes back to this tab. */
+  const editSearch = { focus: "sector", returnTo: "valuation" } as const;
+  const age = data?.applied ? refreshAge(data.applied.lastRefreshedAt) : null;
+  const filingStale = filingIsStale(year);
 
   if (isLoading || !data) {
     return (
@@ -156,7 +186,7 @@ export function ValuationTab({
           </p>
           <div className="mt-4 flex items-center justify-center gap-1.5">
             <Button asChild className="h-[38px] rounded-[9px] bg-[#12294F] px-4 text-[13.5px] font-semibold hover:bg-[#12294F]/90">
-              <Link to={editTo} params={{ id: startupId }} search={{ focus: "sector" }}>
+              <Link to={editTo} params={{ id: startupId }} search={editSearch}>
                 Add Sector
               </Link>
             </Button>
@@ -165,7 +195,7 @@ export function ValuationTab({
               variant="ghost"
               className="h-[38px] rounded-[9px] px-4 text-[13.5px] font-semibold text-[#1D4ED8] hover:bg-[#EFF4FE]"
             >
-              <Link to={editTo} params={{ id: startupId }} search={{ focus: "sector" }}>
+              <Link to={editTo} params={{ id: startupId }} search={editSearch}>
                 Add both →
               </Link>
             </Button>
@@ -236,15 +266,21 @@ export function ValuationTab({
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{data.applied.peerCount}</td>
                   <td className="px-3 py-2 text-right">
-                    {data.state === "exact" ? (
-                      data.applied.lastRefreshedAt ? (
-                        new Date(data.applied.lastRefreshedAt).toISOString().slice(0, 10)
+                    <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                      {data.state === "sector-only" && <Pill tone="blue">sector only</Pill>}
+                      {age ? (
+                        <>
+                          <span className="text-[#6B7280]">{age.text}</span>
+                          {age.stale && (
+                            <span className="rounded-full border border-[#F6DFB4] bg-[#FEF3E7] px-2 py-0.5 text-[10.5px] font-bold text-[#B45309]">
+                              stale
+                            </span>
+                          )}
+                        </>
                       ) : (
-                        <span className="text-[#9AA3AF]">{DASH}</span>
-                      )
-                    ) : (
-                      <Pill tone="blue">sector only</Pill>
-                    )}
+                        data.state === "exact" && <span className="text-[#9AA3AF]">{DASH}</span>
+                      )}
+                    </span>
                   </td>
                 </tr>
               </tbody>
@@ -269,13 +305,22 @@ export function ValuationTab({
                 variant="ghost"
                 className="h-8 rounded-[9px] px-3 text-[12.5px] font-semibold text-[#1D4ED8] hover:bg-white"
               >
-                <Link to={editTo} params={{ id: startupId }} search={{ focus: "sector" }}>
+                <Link to={editTo} params={{ id: startupId }} search={editSearch}>
                   Add Business model
                 </Link>
               </Button>
             </div>
           )}
         </>
+      )}
+
+      {filingStale && (
+        <div className="mt-3.5 flex items-center gap-2.5 rounded-[10px] border border-[#F6DFB4] bg-[#FEF3E7] px-3.5 py-2.5 text-[12.5px] text-[#7C4A0B]">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>
+            <b>Filing is from FY{year}</b> — figures may not reflect current trading.
+          </span>
+        </div>
       )}
 
       <Benchmarking

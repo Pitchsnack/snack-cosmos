@@ -22,10 +22,6 @@ async function assertControl(ctx: Ctx) {
   if (!data) throw new Error("Only Control administrators can maintain peer sets.");
 }
 
-/** peer_sets.industry_tag predates sector keying; it stays as a stable unique key. */
-function legacyKey(sector: string, businessModel: string | null) {
-  return `${sector}::${businessModel ?? "all"}`;
-}
 
 async function ownerNames(ctx: Ctx, ids: string[]): Promise<Map<string, string>> {
   const unique = [...new Set(ids.filter(Boolean))];
@@ -234,7 +230,6 @@ export const savePeerSet = createServerFn({ method: "POST" })
       const { data: created, error } = await ctx.supabase
         .from("peer_sets")
         .insert({
-          industry_tag: legacyKey(data.sector, model),
           sector: data.sector,
           business_model: model,
           last_refreshed_at: now,
