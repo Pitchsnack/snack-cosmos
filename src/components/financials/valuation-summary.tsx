@@ -329,22 +329,16 @@ export function ValuationSummary({
           </Link>
         }
       >
-        <div className="flex flex-wrap items-center gap-2 rounded-[7px] border border-[#DDE3F2] bg-[#F5F7FD] px-[11px] py-2 text-[12px]">
-          <b className="text-[#0F1B33]">{peerLabel}</b>
-          <span className="text-[#A8B8DC]">·</span>
-          <span className={thin ? "text-[#B45309]" : undefined}>
-            {peers.length} peer{peers.length === 1 ? "" : "s"}
-            {thin ? " — thin" : ""}
-          </span>
-          {refreshText && (
-            <>
-              <span className="text-[#A8B8DC]">·</span>
-              <span className={refreshStale ? "text-[#B45309]" : undefined}>{refreshText}</span>
-            </>
-          )}
-          <span className="text-[#A8B8DC]">·</span>
-          <span>{matchBasis}</span>
-        </div>
+        {renderMatching(
+          <button
+            type="button"
+            onClick={() => setShowPeers((v) => !v)}
+            className="text-[12px] font-medium text-[#1E3A8A]"
+          >
+            {showPeers ? "Hide peers ▴" : "Show peers ▾"}
+          </button>,
+        )}
+
 
         {showPeers && (
           <div className="mt-[9px] overflow-hidden rounded-[6px] border border-[#EAECEF]">
