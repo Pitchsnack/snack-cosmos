@@ -444,6 +444,8 @@ export function StartupFinancialsPage({
               year={activeYear}
               ratios={data.ratios}
               income={data.income}
+              position={data.position}
+              cashFlow={data.cashFlow}
             />
           </TabsContent>
         </Tabs>
