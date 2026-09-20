@@ -189,10 +189,32 @@ export function parseListedCsv(text: string): {
   const cEv = idx("evebitda");
   const cPe = idx("pe");
   const cPbv = idx("pbv");
+  const cPeriod = idx("statementperiod", "period");
+  const cTag = idx("tag");
   const cAsAt = idx("asat");
 
   if (cTicker < 0 && cName < 0)
     return { rows: [], errors: ["No 'Company' or 'Ticker' column found in the file."] };
+
+  // Unknown columns are ignored, but named so the user knows they were skipped.
+  const known = new Set([
+    cName,
+    cTicker,
+    cMarket,
+    cSector,
+    cRev,
+    cMargin,
+    cEv,
+    cPe,
+    cPbv,
+    cPeriod,
+    cTag,
+    cAsAt,
+  ]);
+  const rawHeader = splitCsvLine(lines[0]);
+  const unknown = rawHeader.filter((h, i) => h.trim() !== "" && !known.has(i));
+  if (unknown.length)
+    errors.push(`Ignored unknown column${unknown.length === 1 ? "" : "s"}: ${unknown.join(", ")}.`);
 
   const rows: ListedCompanyInput[] = [];
   lines.slice(1).forEach((line, i) => {
@@ -214,9 +236,12 @@ export function parseListedCsv(text: string): {
       evEbitda: csvNumber(cEv >= 0 ? cells[cEv] : undefined),
       pe: csvNumber(cPe >= 0 ? cells[cPe] : undefined),
       pbv: csvNumber(cPbv >= 0 ? cells[cPbv] : undefined),
+      statementPeriod: (cPeriod >= 0 ? cells[cPeriod]?.trim() : "") || null,
+      tag: (cTag >= 0 ? cells[cTag]?.trim() : "") || null,
       asAt: (cAsAt >= 0 ? cells[cAsAt]?.trim() : "") || null,
     });
   });
+
 
   return { rows, errors };
 }
