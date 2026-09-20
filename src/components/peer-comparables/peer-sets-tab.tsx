@@ -160,6 +160,28 @@ export function PeerSetsTab({
         />
       </div>
 
+      <div className="flex items-center gap-1 px-5 pt-3">
+        {(["list", "coverage"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            className={cn(
+              "rounded-full border px-3 py-[3px] text-[12px] font-semibold",
+              view === v
+                ? "border-info/40 bg-info/10 text-info"
+                : "border-transparent text-muted-foreground hover:bg-muted",
+            )}
+          >
+            {v === "list" ? "Peer set list" : "Coverage"}
+          </button>
+        ))}
+      </div>
+
+      {view === "coverage" ? (
+        <CoverageGrid />
+      ) : (
+        <>
       <ResultCount
         shown={rows.length}
         total={sets.length}
