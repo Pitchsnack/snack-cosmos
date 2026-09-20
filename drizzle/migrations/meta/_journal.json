@@ -29,6 +29,13 @@
       "when": 1789831443989,
       "tag": "0003_listed_companies_and_peer_set_members",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789890476344,
+      "tag": "0004_peer_sets_industry_tag_default",
+      "breakpoints": true
     }
   ]
 }

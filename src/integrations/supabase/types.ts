@@ -1963,7 +1963,7 @@ export type Database = {
           business_model?: string | null
           created_at?: string
           id?: string
-          industry_tag: string
+          industry_tag?: string
           last_refreshed_at?: string | null
           owner_user_id?: string | null
           sector?: string | null
