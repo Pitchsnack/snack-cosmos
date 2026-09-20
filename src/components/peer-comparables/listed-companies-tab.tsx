@@ -78,8 +78,11 @@ const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
   evEbitda: c.evEbitda,
   pe: c.pe,
   pbv: c.pbv,
+  statementPeriod: c.statementPeriod,
+  tag: c.tag,
   asAt: c.asAt,
 });
+
 
 export function ListedCompaniesTab({
   tabs,

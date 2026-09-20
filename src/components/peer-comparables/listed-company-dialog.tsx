@@ -84,7 +84,10 @@ export function ListedCompanyDialog({
           evEbitda: form.evEbitda,
           pe: form.pe,
           pbv: form.pbv,
+          statementPeriod: form.statementPeriod,
+          tag: form.tag,
           asAt: form.asAt,
+
         },
       }),
     onSuccess: (r) => {
