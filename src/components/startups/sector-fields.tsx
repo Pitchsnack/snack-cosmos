@@ -393,7 +393,7 @@ export function BusinessModelPicker({
           className={cn(
             "overflow-hidden rounded-[10px] border-[#D7DBE2] p-0 shadow-[0_10px_24px_rgba(15,23,42,.10)]",
             compact
-              ? "w-[320px] max-w-[calc(100vw-32px)]"
+              ? "w-[430px] max-w-[calc(100vw-32px)]"
               : "w-[var(--radix-popover-trigger-width)]",
           )}
         >
