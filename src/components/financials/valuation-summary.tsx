@@ -241,10 +241,20 @@ export function ValuationSummary({
         ) : (
           <>
             <div className="text-[23px] font-normal leading-[1.22] text-[#0F1B33]">
-              No indicative range
+              {spread ? (
+                <>
+                  No agreed range — methods span{" "}
+                  <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.low)}</b> to{" "}
+                  <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.high)} THB</b>
+                </>
+              ) : (
+                "No indicative range"
+              )}
             </div>
             <div className="mt-[3px] text-[12px] text-muted-foreground">
-              No reliable method could be computed
+              {spread
+                ? "No two reliable methods overlap, so no single range can be quoted"
+                : "No reliable method could be computed"}
               {year ? ` · filing FY${year}` : ""} — see Methods for what is missing.
             </div>
           </>
