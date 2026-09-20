@@ -31,6 +31,7 @@ import {
   TabToolbar,
 } from "@/components/peer-comparables/tab-toolbar";
 import { cn } from "@/lib/utils";
+import { CoverageGrid } from "@/components/peer-comparables/coverage-grid";
 import { downloadCsv } from "@/lib/listed-companies";
 import {
   EMPTY_CELL,
@@ -87,6 +88,7 @@ export function PeerSetsTab({
   const [newOpen, setNewOpen] = useState(false);
   const [picked, setPicked] = useState("");
   const [pickedModel, setPickedModel] = useState(ALL_MODELS);
+  const [view, setView] = useState<"list" | "coverage">("list");
 
   const sectors = useMemo(
     () => [...new Set(sets.map((s) => s.sector))].sort((a, b) => a.localeCompare(b)),
