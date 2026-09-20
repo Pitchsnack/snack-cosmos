@@ -23,11 +23,13 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/financials
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: z.object({ tab: z.string().optional() }),
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { id } = Route.useParams();
+  const { tab } = Route.useSearch();
   if (!isUuid(id)) return <StartupNotFound reason="invalid" workspace="my-startups" />;
-  return <StartupFinancialsPage id={id} workspace="my-startups" />;
+  return <StartupFinancialsPage id={id} workspace="my-startups" initialTab={tab} />;
 }
