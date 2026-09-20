@@ -449,7 +449,7 @@ export function BusinessModelPicker({
         </PopoverContent>
       </Popover>
 
-      {sector && (
+      {!compact && sector && (
         <div className="mt-[10px] rounded-[10px] border border-[#F6DFB4] bg-[#FEF3E7] px-[15px] py-[11px] text-[12.5px] text-[#7C4A0B]">
           ⚠ <b className="font-bold">Availability is information, not a recommendation.</b> Pick
           the model that describes the company. If the only set with data does not fit, the right
