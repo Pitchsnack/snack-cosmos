@@ -243,7 +243,7 @@ export function SectorPicker({
         </PopoverContent>
       </Popover>
 
-      {value && (
+      {!compact && value && (
         <span className="mt-[10px] inline-flex items-center gap-[7px] rounded-full border border-[#D3E0FB] bg-[#EFF4FE] px-3 py-[5px] text-[12.5px] font-semibold text-[#1D4ED8]">
           {value}
           <button type="button" onClick={() => onChange(null)} aria-label="Remove sector">
