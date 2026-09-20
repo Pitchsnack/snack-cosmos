@@ -286,234 +286,53 @@ export function ValuationTab({
   const hasPeers = !!data.applied && peers.length > 0;
   const flag = result.blocked || result.lowConfidence;
 
+  const appliedLabel = data.applied
+    ? peerSetLabel(data.applied.sector, data.applied.businessModel)
+    : null;
+
+  const matching = (right?: React.ReactNode) => (
+    <MatchingRow
+      sector={sector}
+      model={model}
+      canEdit={canEdit}
+      isControl={isControl}
+      onSector={(v) => {
+        setSector(v);
+        save.mutate({ sector: v });
+      }}
+      onModel={(v) => {
+        setModel(v);
+        save.mutate({ businessModel: v });
+      }}
+      appliedLabel={appliedLabel}
+      peerCount={data.applied?.peerCount ?? null}
+      refreshText={age?.text ?? null}
+      suggestion={
+        suggestion
+          ? {
+              label: suggestion.label,
+              peerCount: suggestion.peerCount,
+              model: suggestion.businessModel,
+              modelLabel:
+                businessModelLabel(suggestion.businessModel) ?? suggestion.businessModel,
+            }
+          : null
+      }
+      right={right}
+    />
+  );
 
   return (
     <div>
-      {/* Matching panel — shown in every state */}
-      <div className="overflow-hidden rounded-xl border border-[#E5E7EB]">
-        <div className="border-b border-[#EFF1F4] bg-[#FAFBFD] px-[15px] py-[10px] text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-          Matching on
-        </div>
-
-        <MatchRow
-          label="Sector"
-          marking={
-            <span className="rounded-full border border-[#F6CDCD] bg-[#FDECEC] px-[7px] py-[2px] text-[10px] font-bold uppercase tracking-[0.04em] text-[#B91C1C]">
-              required
-            </span>
-          }
-        >
-          {canEdit ? (
-            <SectorPicker
-              value={sector}
-              onChange={(v) => {
-                setSector(v);
-                save.mutate({ sector: v });
-              }}
-            />
-          ) : (
-            <ReadOnlyValue value={data.sector} />
-          )}
-        </MatchRow>
-
-        <MatchRow
-          label="Business model"
-          marking={
-            <span className="text-[11px] text-muted-foreground">
-              optional — narrows the match
-            </span>
-          }
-        >
-          {canEdit ? (
-            <BusinessModelPicker
-              sector={sector}
-              value={model}
-              onChange={(v) => {
-                setModel(v);
-                save.mutate({ businessModel: v });
-              }}
-            />
-          ) : (
-            <ReadOnlyValue value={modelLabel} />
-          )}
-        </MatchRow>
-
-        {/* The ladder — one line per step, with the reason */}
-        <div className="border-t border-[#EFF1F4] bg-[#F7F8FA] px-[15px] py-[13px]">
-          {data.state === "no-sector" ? (
-            <Step tone="warn">
-              <b>Result</b> — a sector is required before anything can be matched. Benchmarking
-              below still works.
-            </Step>
-          ) : (
-            <>
-              <Step tone={data.state === "exact" ? "yes" : "no"}>
-                <b>Sector + business model</b>{" "}
-                {data.state === "exact" ? (
-                  <>
-                    — matched <Mono>{peerSetLabel(data.sector!, data.businessModel)}</Mono>
-                  </>
-                ) : data.businessModel ? (
-                  <>
-                    — no <Mono>{peerSetLabel(data.sector!, data.businessModel)}</Mono> set exists
-                  </>
-                ) : (
-                  <>— no business model set, so this step is skipped</>
-                )}
-              </Step>
-
-              {data.state !== "exact" && (
-                <Step tone={data.state === "sector-only" ? "yes" : "no"}>
-                  <b>Sector-wide set</b>{" "}
-                  {data.state === "sector-only" ? (
-                    <>
-                      — matched <Mono>{peerSetLabel(data.sector!, null)}</Mono>
-                    </>
-                  ) : (
-                    <>
-                      — no <Mono>{peerSetLabel(data.sector!, null)}</Mono> set exists
-                    </>
-                  )}
-                </Step>
-              )}
-
-              <Step tone={data.applied ? "yes" : "warn"}>
-                {data.applied ? (
-                  <>
-                    <b>Result</b> — {data.applied.peerCount} peer
-                    {data.applied.peerCount === 1 ? "" : "s"}
-                    {age ? ` · ${age.text}` : ""}
-                  </>
-                ) : (
-                  <>
-                    <b>Result</b> — no peer set matched. Multiples unavailable; benchmarking below
-                    still works.
-                  </>
-                )}
-              </Step>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Suggestion — never without its caution */}
-      {suggestion && (
-        <>
-          <div className="mt-3.5 flex flex-wrap items-center gap-3 rounded-[10px] border border-[#D3E0FB] bg-[#EFF4FE] px-[15px] py-[13px] text-[12.5px] text-[#1E3A8A]">
-            <span className="flex-1">
-              A <b>{suggestion.label}</b> set exists with {suggestion.peerCount} peer
-              {suggestion.peerCount === 1 ? "" : "s"}. Setting this startup's business model to{" "}
-              <b>{businessModelLabel(suggestion.businessModel) ?? suggestion.businessModel}</b>{" "}
-              would match it.
-            </span>
-            {canEdit && (
-              <Button
-                variant="outline"
-                className="h-8 rounded-[8px] px-3 text-[12.5px] font-semibold"
-                disabled={save.isPending}
-                onClick={() => {
-                  setModel(suggestion.businessModel);
-                  save.mutate({ businessModel: suggestion.businessModel });
-                }}
-              >
-                Set to {businessModelLabel(suggestion.businessModel) ?? suggestion.businessModel}
-              </Button>
-            )}
-          </div>
-          <div className="mt-2.5 flex items-start gap-[7px] text-[11.5px] text-[#B45309]">
-            <AlertTriangle className="mt-[1px] h-3.5 w-3.5 shrink-0" />
-            <span>
-              Only if that describes the company. Tagging it to force a match would compare it
-              against the wrong companies.
-            </span>
-          </div>
-        </>
-      )}
-
-      {/* Admin route — creating a set is often the right fix */}
-      {isControl && data.state !== "exact" && (
-        <div className="mt-4 flex flex-wrap gap-2.5">
-          {data.sector && data.state === "no-peer-set" && (
-            <Button
-              asChild
-              className="h-8 rounded-[8px] bg-[#12294F] px-3.5 text-[12.5px] font-semibold hover:bg-[#12294F]/90"
-            >
-              <Link to="/peer-comparables" search={{ sector: data.sector }}>
-                Create a sector-wide peer set
-              </Link>
-            </Button>
-          )}
-          <Button
-            asChild
-            variant="ghost"
-            className="h-8 rounded-[8px] px-3 text-[12.5px] font-semibold text-[#1D4ED8] hover:bg-[#EFF4FE]"
-          >
-            <Link to="/peer-comparables" search={{}}>
-              Manage peer sets →
-            </Link>
-          </Button>
-        </div>
-      )}
-
-      {/* Applied set */}
-      {(data.state === "sector-only" || data.state === "exact") && data.applied && (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full border-collapse text-[12.5px]">
-            <thead>
-              <tr className="bg-[#12294F] text-white">
-                <th className="px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-[0.04em]">
-                  Peer set applied
-                </th>
-                <th className="w-[110px] px-3 py-2 text-right text-[10.5px] font-semibold uppercase tracking-[0.04em]">
-                  Peers
-                </th>
-                <th className="w-[160px] px-3 py-2 text-right text-[10.5px] font-semibold uppercase tracking-[0.04em]">
-                  {data.state === "exact" ? "Refreshed" : "Match"}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="px-3 py-2 font-bold text-[#0F1B33]">
-                  {peerSetLabel(data.applied.sector, data.applied.businessModel)}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">{data.applied.peerCount}</td>
-                <td className="px-3 py-2 text-right">
-                  <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
-                    {data.state === "sector-only" && <Pill tone="blue">sector only</Pill>}
-                    {age ? (
-                      <>
-                        <span className="text-[#6B7280]">{age.text}</span>
-                        {age.stale && (
-                          <span className="rounded-full border border-[#F6DFB4] bg-[#FEF3E7] px-2 py-0.5 text-[10.5px] font-bold text-[#B45309]">
-                            stale
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      data.state === "exact" && <span className="text-[#9AA3AF]">{DASH}</span>
-                    )}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          {data.state === "exact" && (
-            <p className="mt-2 text-[11.5px] text-muted-foreground">
-              Matched on <b>Sector + Business model</b>. Industry played no part.
-            </p>
-          )}
-        </div>
-      )}
-
       {filingStale && (
-        <div className="mt-3.5 flex items-center gap-2.5 rounded-[10px] border border-[#F6DFB4] bg-[#FEF3E7] px-3.5 py-2.5 text-[12.5px] text-[#7C4A0B]">
+        <div className="mb-3.5 flex items-center gap-2.5 rounded-[10px] border border-[#F6DFB4] bg-[#FEF3E7] px-3.5 py-2.5 text-[12.5px] text-[#7C4A0B]">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>
             <b>Filing is from FY{year}</b> — figures may not reflect current trading.
           </span>
         </div>
       )}
+
 
       {/* Summary / Methods */}
       <div className="mt-4 rounded-[9px] border border-[#EAECEF] bg-white">
