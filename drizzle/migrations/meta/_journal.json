@@ -36,6 +36,13 @@
       "when": 1789890476344,
       "tag": "0004_peer_sets_industry_tag_default",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789926762236,
+      "tag": "0005_listed_companies_period_tag",
+      "breakpoints": true
     }
   ]
 }

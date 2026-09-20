@@ -1785,6 +1785,8 @@ export type Database = {
           pe: number | null
           revenue_thb_m: number | null
           sector: string | null
+          statement_period: string | null
+          tag: string | null
           ticker: string
           updated_at: string
         }
@@ -1800,6 +1802,8 @@ export type Database = {
           pe?: number | null
           revenue_thb_m?: number | null
           sector?: string | null
+          statement_period?: string | null
+          tag?: string | null
           ticker: string
           updated_at?: string
         }
@@ -1815,6 +1819,8 @@ export type Database = {
           pe?: number | null
           revenue_thb_m?: number | null
           sector?: string | null
+          statement_period?: string | null
+          tag?: string | null
           ticker?: string
           updated_at?: string
         }
