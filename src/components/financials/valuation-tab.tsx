@@ -186,7 +186,7 @@ export function ValuationTab({
           </p>
           <div className="mt-4 flex items-center justify-center gap-1.5">
             <Button asChild className="h-[38px] rounded-[9px] bg-[#12294F] px-4 text-[13.5px] font-semibold hover:bg-[#12294F]/90">
-              <Link to={editTo} params={{ id: startupId }} search={{ focus: "sector" }}>
+              <Link to={editTo} params={{ id: startupId }} search={editSearch}>
                 Add Sector
               </Link>
             </Button>
@@ -195,7 +195,7 @@ export function ValuationTab({
               variant="ghost"
               className="h-[38px] rounded-[9px] px-4 text-[13.5px] font-semibold text-[#1D4ED8] hover:bg-[#EFF4FE]"
             >
-              <Link to={editTo} params={{ id: startupId }} search={{ focus: "sector" }}>
+              <Link to={editTo} params={{ id: startupId }} search={editSearch}>
                 Add both →
               </Link>
             </Button>
@@ -305,7 +305,7 @@ export function ValuationTab({
                 variant="ghost"
                 className="h-8 rounded-[9px] px-3 text-[12.5px] font-semibold text-[#1D4ED8] hover:bg-white"
               >
-                <Link to={editTo} params={{ id: startupId }} search={{ focus: "sector" }}>
+                <Link to={editTo} params={{ id: startupId }} search={editSearch}>
                   Add Business model
                 </Link>
               </Button>
