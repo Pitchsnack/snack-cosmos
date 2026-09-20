@@ -1,25 +1,23 @@
 /**
- * Valuation tab — matching panel, peer matching and benchmarking.
+ * Valuation tab — matching, peer comparison and benchmarking.
  *
  * Peer matching uses Sector and Business model ONLY. Industry is never
  * consulted, not even as a fallback.
  */
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { SectorPicker, BusinessModelPicker } from "@/components/startups/sector-fields";
 import { usePermissions } from "@/hooks/use-session-context";
 import { getPeerMatch, getPeerSet } from "@/lib/peer-comparables.functions";
 import { peerSetLabel } from "@/lib/peer-comparables";
 import { businessModelLabel } from "@/lib/sectors";
 import { updateStartup } from "@/lib/startups.functions";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
+import { MatchingRow } from "@/components/financials/matching-row";
 import { ValuationSummary } from "@/components/financials/valuation-summary";
 import { ValuationMethods } from "@/components/financials/valuation-methods";
 import {
@@ -28,6 +26,7 @@ import {
   readFilingInputs,
   type Discounts,
 } from "@/lib/valuation";
+
 
 const DASH = "—";
 
