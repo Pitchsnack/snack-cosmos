@@ -238,7 +238,7 @@ export function parseListedCsv(text: string): {
       pbv: csvNumber(cPbv >= 0 ? cells[cPbv] : undefined),
       statementPeriod: (cPeriod >= 0 ? cells[cPeriod]?.trim() : "") || null,
       tag: (cTag >= 0 ? cells[cTag]?.trim() : "") || null,
-      asAt: (cAsAt >= 0 ? cells[cAsAt]?.trim() : "") || null,
+      asAt: csvDate(cAsAt >= 0 ? cells[cAsAt] : undefined),
     });
   });
 
