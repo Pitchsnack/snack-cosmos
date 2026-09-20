@@ -1019,7 +1019,9 @@ export function StartupForm({
               variant="outline"
               onClick={() => {
                 guard.bypassOnce();
-                if (controlReturn) {
+                if (valuationReturn && goValuation()) {
+                  // returned to the Valuation tab
+                } else if (controlReturn) {
                   navigate({ to: "/entity-control", search: { tab: controlReturn.tab } });
                 } else {
                   navigate({ to: isMyWorkspace ? "/my-startups" : "/startups" });
