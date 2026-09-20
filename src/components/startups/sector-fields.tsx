@@ -147,6 +147,21 @@ export function SectorPicker({
             />
           </div>
 
+          {compact && value && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null);
+                setOpen(false);
+              }}
+              className="flex w-full items-center border-b border-[#EFF1F4] px-3 py-2 text-left text-[13px] text-muted-foreground hover:bg-[#F8FAFD]"
+            >
+              Not set
+            </button>
+          )}
+
+
+
           {searchMatches ? (
             <div
               ref={optionListRef}
