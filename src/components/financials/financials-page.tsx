@@ -147,9 +147,11 @@ function CompanyProfileCard({
 export function StartupFinancialsPage({
   id,
   workspace = "startups",
+  initialTab,
 }: {
   id: string;
   workspace?: "startups" | "my-startups";
+  initialTab?: string;
 }) {
   const fetchFinancials = useServerFn(getStartupFinancials);
   const clearFinancials = useServerFn(clearStartupFinancials);
