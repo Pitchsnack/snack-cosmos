@@ -382,20 +382,22 @@ export const getPeerMatch = createServerFn({ method: "GET" })
       };
     }
 
+    // Only suggest a business model when a narrower set really exists.
+    const candidates = rows.filter(
+      (r) => r.business_model !== null && r.business_model !== businessModel,
+    );
+    const best = candidates.sort(
+      (a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0),
+    )[0];
+    const narrower = best
+      ? {
+          businessModel: best.business_model as string,
+          label: peerSetLabel(sector, best.business_model),
+          peerCount: counts.get(best.id) ?? 0,
+        }
+      : null;
+
     if (wide) {
-      // Only suggest a business model when a narrower set really exists.
-      const candidates = rows.filter((r) => r.business_model !== null);
-      const best = candidates.sort(
-        (a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0),
-      )[0];
-      const narrower =
-        !businessModel && best
-          ? {
-              businessModel: best.business_model as string,
-              label: peerSetLabel(sector, best.business_model),
-              peerCount: counts.get(best.id) ?? 0,
-            }
-          : null;
       return {
         state: "sector-only",
         sector,
@@ -406,17 +408,15 @@ export const getPeerMatch = createServerFn({ method: "GET" })
           peerCount: counts.get(wide.id) ?? 0,
           lastRefreshedAt: wide.last_refreshed_at,
         },
-        narrower,
+        narrower: businessModel ? null : narrower,
       };
     }
 
     return {
       state: "no-peer-set",
       sector,
-      businessModel: businessModel
-        ? (businessModelLabel(businessModel) ?? businessModel)
-        : null,
+      businessModel,
       applied: null,
-      narrower: null,
+      narrower,
     };
   });
