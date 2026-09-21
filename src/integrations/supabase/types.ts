@@ -1963,6 +1963,7 @@ export type Database = {
           created_at: string
           id: string
           industry_tag: string
+          is_baseline: boolean
           last_refreshed_at: string | null
           owner_user_id: string | null
           sector: string | null
@@ -1973,6 +1974,7 @@ export type Database = {
           created_at?: string
           id?: string
           industry_tag?: string
+          is_baseline?: boolean
           last_refreshed_at?: string | null
           owner_user_id?: string | null
           sector?: string | null
@@ -1983,6 +1985,7 @@ export type Database = {
           created_at?: string
           id?: string
           industry_tag?: string
+          is_baseline?: boolean
           last_refreshed_at?: string | null
           owner_user_id?: string | null
           sector?: string | null

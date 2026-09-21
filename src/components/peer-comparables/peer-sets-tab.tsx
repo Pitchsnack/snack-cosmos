@@ -1,5 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, Plus, RefreshCw, Upload } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -31,9 +33,12 @@ import {
   TabToolbar,
 } from "@/components/peer-comparables/tab-toolbar";
 import { cn } from "@/lib/utils";
+import { LoadingOverlay } from "@/components/ui/PitchSnackLoader";
+import { regenerateBaselineSets } from "@/lib/peer-comparables.functions";
 import { CoverageGrid } from "@/components/peer-comparables/coverage-grid";
 import { downloadCsv } from "@/lib/listed-companies";
 import {
+  BASELINE_LABEL,
   EMPTY_CELL,
   peerSetStatus,
   type PeerSetStatus,
@@ -41,7 +46,13 @@ import {
 } from "@/lib/peer-comparables";
 import { BUSINESS_MODELS, businessModelLabel, SECTORS } from "@/lib/sectors";
 
-const ALL_MODELS = "__all__";
+type BaselineSummary = {
+  created: number;
+  updated: number;
+  unchanged: number;
+  removed: string[];
+  skipped: string[];
+};
 
 const STATUS_STYLE: Record<PeerSetStatus, string> = {
   current: "bg-success/10 text-success border-success/30",
@@ -69,7 +80,7 @@ function fmtDate(iso: string | null) {
 }
 
 function modelText(model: string | null) {
-  return model ? (businessModelLabel(model) ?? model) : "All business models";
+  return model ? (businessModelLabel(model) ?? model) : BASELINE_LABEL;
 }
 
 export function PeerSetsTab({
@@ -87,8 +98,22 @@ export function PeerSetsTab({
   const [sectorFilter, setSectorFilter] = useState<string>(ALL_SECTORS);
   const [newOpen, setNewOpen] = useState(false);
   const [picked, setPicked] = useState("");
-  const [pickedModel, setPickedModel] = useState(ALL_MODELS);
+  const [pickedModel, setPickedModel] = useState("");
   const [view, setView] = useState<"list" | "coverage">("list");
+  const [summary, setSummary] = useState<BaselineSummary | null>(null);
+  const [details, setDetails] = useState(false);
+
+  const qc = useQueryClient();
+  const regenFn = useServerFn(regenerateBaselineSets);
+  const regen = useMutation({
+    mutationFn: () => regenFn(),
+    onSuccess: (res: BaselineSummary) => {
+      setSummary(res);
+      setDetails(false);
+      qc.invalidateQueries({ queryKey: ["peer-sets"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const sectors = useMemo(
     () => [...new Set(sets.map((s) => s.sector))].sort((a, b) => a.localeCompare(b)),
@@ -142,7 +167,14 @@ export function PeerSetsTab({
                 onSelect={() => setNewOpen(true)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                New peer set
+                New business-model set
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={regen.isPending}
+                onSelect={() => regen.mutate()}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerate baseline sets
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -179,6 +211,47 @@ export function PeerSetsTab({
           </button>
         ))}
       </div>
+
+      {regen.isPending && <LoadingOverlay message="Generating baseline sets" delay={0} />}
+
+      {summary && (
+        <div className="mx-5 mt-3 rounded-lg border border-info/30 bg-info/5 px-4 py-3 text-sm">
+          <p className="font-semibold text-foreground">Baseline sets generated</p>
+          <p className="mt-0.5 text-muted-foreground">
+            Created {summary.created} · Updated {summary.updated} · Unchanged {summary.unchanged} ·
+            Removed {summary.removed.length} · Skipped {summary.skipped.length} with fewer than 3
+            SET companies
+          </p>
+          <div className="mt-1.5 flex items-center gap-3">
+            <button
+              type="button"
+              className="text-xs font-medium text-info hover:underline"
+              onClick={() => setDetails((d) => !d)}
+            >
+              {details ? "Hide details" : "View details"}
+            </button>
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:underline"
+              onClick={() => setSummary(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+          {details && (
+            <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">Removed:</span>{" "}
+                {summary.removed.length ? summary.removed.join(", ") : "none"}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Skipped (fewer than 3):</span>{" "}
+                {summary.skipped.length ? summary.skipped.join(", ") : "none"}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {view === "coverage" ? (
         <CoverageGrid />
@@ -324,9 +397,10 @@ export function PeerSetsTab({
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New peer set</DialogTitle>
+            <DialogTitle>New business-model set</DialogTitle>
             <DialogDescription>
-              Choose the sector, and optionally the business model this set is narrowed to.
+              Choose the sector and the business model this set is narrowed to. Sector-wide
+              Baseline sets are generated automatically and cannot be created by hand.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -346,15 +420,12 @@ export function PeerSetsTab({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <span className="text-xs font-medium text-muted-foreground">
-                Business model (optional)
-              </span>
+              <span className="text-xs font-medium text-muted-foreground">Business model</span>
               <Select value={pickedModel} onValueChange={setPickedModel}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select a business model" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL_MODELS}>All business models</SelectItem>
                   {BUSINESS_MODELS.map((b) => (
                     <SelectItem key={b.value} value={b.value}>
                       {b.label}
@@ -369,8 +440,8 @@ export function PeerSetsTab({
               Cancel
             </Button>
             <Button
-              disabled={!picked}
-              onClick={() => onOpen(picked, pickedModel === ALL_MODELS ? null : pickedModel)}
+              disabled={!picked || !pickedModel}
+              onClick={() => onOpen(picked, pickedModel)}
             >
               Build peer set
             </Button>

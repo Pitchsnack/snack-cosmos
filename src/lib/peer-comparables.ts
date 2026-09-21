@@ -11,8 +11,11 @@ export type PeerMarket = (typeof PEER_MARKETS)[number];
 
 /** A peer set is either sector-wide (null model) or model-specific. */
 export function peerSetLabel(sector: string, businessModel: string | null): string {
-  return `${sector} · ${businessModel ? (businessModelLabel(businessModel) ?? businessModel) : "All business models"}`;
+  return `${sector} · ${businessModel ? (businessModelLabel(businessModel) ?? businessModel) : BASELINE_LABEL}`;
 }
+
+/** Sector-wide sets are generated from SET listings and shown as "Baseline". */
+export const BASELINE_LABEL = "Baseline";
 
 export interface Peer {
   id?: string;
@@ -36,6 +39,7 @@ export interface PeerSetDetail {
   id: string | null;
   sector: string;
   businessModel: string | null;
+  isBaseline: boolean;
   lastRefreshedAt: string | null;
   ownerName: string | null;
   peers: Peer[];
@@ -44,6 +48,7 @@ export interface PeerSetDetail {
 export interface PeerSetSummary {
   sector: string;
   businessModel: string | null;
+  isBaseline: boolean;
   exists: boolean;
   peerCount: number;
   setCount: number;
