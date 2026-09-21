@@ -978,6 +978,7 @@ function BenchRow({
   sub,
   tooltip,
   peer,
+  peerCount,
   unit = "%",
   blocked,
   blockedNote,
