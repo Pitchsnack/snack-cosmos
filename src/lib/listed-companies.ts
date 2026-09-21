@@ -229,7 +229,13 @@ export function parseListedCsv(text: string): {
   const cName = idx("company", "companyname", "name");
   const cTicker = idx("ticker");
   const cMarket = idx("market");
-  const cGroup = idx("exchangeindustry", "exchangegroup", "setgroup");
+  // The group column arrives as SET_Group now and Exchange_Industry in older
+  // files. SET_Group wins when both are present.
+  const cSetGroup = idx("setgroup");
+  const cLegacyGroup = idx("exchangeindustry", "exchangegroup");
+  const cGroup = cSetGroup >= 0 ? cSetGroup : cLegacyGroup;
+  if (cSetGroup >= 0 && cLegacyGroup >= 0)
+    errors.push("Both SET_Group and Exchange_Industry are present — SET_Group was used.");
   const cSector = idx("sector");
 
   const cRev = idx("revenuethbm", "revenue");
@@ -237,6 +243,11 @@ export function parseListedCsv(text: string): {
   const cEv = idx("evebitda");
   const cPe = idx("pe");
   const cPbv = idx("pbv");
+  const cGross = idx("grossmargin", "grossmarginpct");
+  const cNet = idx("netmargin", "netmarginpct");
+  const cRoe = idx("roe", "roepct");
+  const cDe = idx("debtequity", "de");
+  const cGrowth = idx("revenuegrowth", "revenuegrowthpct");
   const cPeriod = idx("statementperiod", "period");
   const cTag = idx("tag");
   const cAsAt = idx("asat");
