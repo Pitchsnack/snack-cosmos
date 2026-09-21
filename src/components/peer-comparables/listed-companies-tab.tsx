@@ -186,16 +186,48 @@ export function ListedCompaniesTab({
   );
 
   const inMarket = market === "all" ? companies : companies.filter((c) => c.market === market);
+
+  const colOptions = useMemo(() => {
+    const uniq = (get: (c: ListedCompany) => string | null) =>
+      [...new Set(inMarket.map((c) => (get(c)?.trim() ? (get(c) as string) : EMPTY_LABEL)))].sort(
+        (a, b) => a.localeCompare(b),
+      );
+    return {
+      ticker: uniq((c) => c.ticker),
+      name: uniq((c) => c.name),
+      market: uniq((c) => c.market),
+      sector: uniq((c) => c.sector),
+      statementPeriod: uniq((c) => c.statementPeriod),
+      tag: uniq((c) => c.tag),
+      asAt: uniq((c) => c.asAt),
+    };
+  }, [inMarket]);
+
   const rows = inMarket.filter(
     (c) =>
       matchesTerm(search, c.ticker, c.name, c.tag) &&
-      (sectorFilter === ALL_SECTORS || c.sector === sectorFilter),
+      (sectorFilter === ALL_SECTORS || c.sector === sectorFilter) &&
+      matchesValueFilter(valueFilters.ticker, c.ticker) &&
+      matchesValueFilter(valueFilters.name, c.name) &&
+      matchesValueFilter(valueFilters.market, c.market) &&
+      matchesValueFilter(valueFilters.sector, c.sector) &&
+      matchesValueFilter(valueFilters.statementPeriod, c.statementPeriod) &&
+      matchesValueFilter(valueFilters.tag, c.tag) &&
+      matchesValueFilter(valueFilters.asAt, c.asAt) &&
+      NUMERIC_COLUMNS.every(({ key, get }) => matchesRangeFilter(rangeFilters[key], get(c))),
   );
+
+  const columnFilterCount =
+    Object.values(valueFilters).filter((v) => v.length > 0).length +
+    Object.values(rangeFilters).filter((r) => r.min !== null || r.max !== null).length;
 
   const clearAll = () => {
     setSearch("");
     setSectorFilter(ALL_SECTORS);
+    setValueFilters({});
+    setRangeFilters({});
   };
+
 
   // ---- multi-select -------------------------------------------------------
   const selectedCompanies = companies.filter((c) => selected.has(c.id));
