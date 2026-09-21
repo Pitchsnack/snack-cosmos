@@ -18,8 +18,22 @@ export function ValuationMethods({
   result: ValuationResult;
   inputs: FilingInputs;
 }) {
-  const rows: [string, string | null][] = [
+  const daText =
+    inputs.daLow === null || inputs.daHigh === null
+      ? null
+      : inputs.ebitdaEstimated
+        ? `estimated, ${fmtMoney(inputs.daLow)} – ${fmtMoney(inputs.daHigh)}`
+        : `reported, ${fmtMoney(inputs.daLow)}`;
+  const ebitdaText =
+    inputs.ebitdaLow === null || inputs.ebitdaHigh === null
+      ? null
+      : inputs.ebitdaEstimated
+        ? `${fmtMoney(inputs.ebitdaLow)} – ${fmtMoney(inputs.ebitdaHigh)}`
+        : fmtMoney(inputs.ebitdaLow);
+
+  const rows: [string, string | null, boolean?][] = [
     ["Revenue", inputs.revenue === null ? null : fmtMoney(inputs.revenue)],
+    ["Gross profit", inputs.grossProfit === null ? null : fmtMoney(inputs.grossProfit)],
     ["Net profit", inputs.netProfit === null ? null : fmtMoney(inputs.netProfit)],
     ["Equity", inputs.equity === null ? null : fmtMoney(inputs.equity)],
     ["Total assets", inputs.totalAssets === null ? null : fmtMoney(inputs.totalAssets)],
@@ -27,10 +41,26 @@ export function ValuationMethods({
       "Total liabilities",
       inputs.totalLiabilities === null ? null : fmtMoney(inputs.totalLiabilities),
     ],
-    ["Depreciation & amortisation", inputs.da === null ? null : fmtMoney(inputs.da)],
-    ["EBITDA (derived)", inputs.ebitda === null ? null : fmtMoney(inputs.ebitda)],
+    ["Depreciation & amortisation", daText, inputs.ebitdaEstimated],
+    ["EBIT", inputs.ebit === null ? null : fmtMoney(inputs.ebit)],
+    ["EBITDA (derived)", ebitdaText, inputs.ebitdaEstimated],
     ["Net margin", inputs.netMarginPct === null ? null : fmtPct(inputs.netMarginPct)],
   ];
+
+  const notes: string[] = [];
+  if (inputs.reconciliationDiff !== null) {
+    notes.push(
+      `Profit before tax is ${fmtMoney(Math.abs(inputs.reconciliationDiff))} ${
+        inputs.reconciliationDiff > 0 ? "higher" : "lower"
+      } than revenue minus expenses — likely other income or an associate's share of profit, which the filing doesn't break out. EBIT is taken from reported profit before tax.`,
+    );
+  }
+  if (inputs.revenueOrderNote) {
+    notes.push(
+      "Total revenue is below sales revenue in this filing. Sales revenue is used as the denominator.",
+    );
+  }
+
 
   return (
     <div className="grid gap-7 md:grid-cols-2">
