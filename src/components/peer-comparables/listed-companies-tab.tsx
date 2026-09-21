@@ -489,7 +489,7 @@ export function ListedCompaniesTab({
       {importCsv.isPending && <LoadingOverlay message="Importing CSV…" delay={0} />}
 
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[1420px] border-collapse text-sm">
+        <table className="w-full min-w-[1980px] border-collapse text-sm">
           <thead>
             <tr className="bg-[hsl(222_47%_23%)] text-white">
               <th className="w-10 px-3 py-2.5 text-left">
@@ -579,14 +579,14 @@ export function ListedCompaniesTab({
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={16} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={COL_COUNT} className="px-4 py-8 text-center text-muted-foreground">
                   Loading…
                 </td>
               </tr>
             )}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={16} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={COL_COUNT} className="px-4 py-8 text-center text-muted-foreground">
                   {search.trim() || sectorFilter !== ALL_SECTORS || columnFilterCount > 0 ? (
                     <>
                       No companies match{" "}
@@ -645,7 +645,7 @@ export function ListedCompaniesTab({
                     <Fragment key={c.id}>
                       {c.usedIn > 0 && (
                         <tr className="border-t border-warning/30">
-                          <td colSpan={16} className="bg-warning/10 px-3 py-2">
+                          <td colSpan={COL_COUNT} className="bg-warning/10 px-3 py-2">
                             <span className="flex items-center gap-2 text-xs text-warning-foreground">
                               <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
                               <span>
@@ -774,7 +774,7 @@ export function ListedCompaniesTab({
                         </td>
                       </tr>
                       <tr className="bg-info/5">
-                        <td colSpan={16} className="px-3 pb-2.5">
+                        <td colSpan={COL_COUNT} className="px-3 pb-2.5">
                           <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
                             <Button
                               variant="outline"
