@@ -52,6 +52,11 @@ export interface ListedCompanyInput {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  grossMarginPct: number | null;
+  netMarginPct: number | null;
+  roePct: number | null;
+  debtEquity: number | null;
+  revenueGrowthPct: number | null;
   statementPeriod: string | null;
   tag: string | null;
   asAt: string | null;
