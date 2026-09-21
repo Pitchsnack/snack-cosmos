@@ -15,6 +15,7 @@ import {
   ladderFactors,
   scalePos,
   type Discounts,
+  type FilingInputs,
   type ValuationResult,
 } from "@/lib/valuation";
 
@@ -97,6 +98,7 @@ export function ValuationSummary({
   refreshText,
   ratios,
   income,
+  inputs,
   onMethods,
   renderMatching,
 }: {
@@ -109,6 +111,7 @@ export function ValuationSummary({
   refreshText: string | null;
   ratios: RatioItem[];
   income: StatementItem[];
+  inputs: FilingInputs;
   onMethods: () => void;
   /** The one matching row; receives the peers toggle for its right edge. */
   renderMatching: (toggle: React.ReactNode) => React.ReactNode;
@@ -305,14 +308,31 @@ export function ValuationSummary({
             </tr>
           </thead>
           <tbody>
-            <BenchRow label="Gross margin" own={ratio("gross_profit_margin")} peer={null} />
+            <BenchRow
+              label="Gross margin"
+              own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
+              peer={null}
+            />
             <BenchRow
               label="EBITDA margin"
               own={null}
-              blocked={result.methods.find((x) => x.key === "evebitda")?.status === "blocked"}
+              ownRange={
+                inputs.ebitdaMarginLowPct !== null && inputs.ebitdaMarginHighPct !== null
+                  ? { low: inputs.ebitdaMarginLowPct, high: inputs.ebitdaMarginHighPct }
+                  : null
+              }
+              estimated={inputs.ebitdaEstimated}
+              sub={
+                inputs.ebitMarginPct !== null
+                  ? `floor ${fmtPct(inputs.ebitMarginPct, 1)} (EBIT margin)`
+                  : null
+              }
+              tooltip="Estimated. The cash flow statement is empty, so D&A is bracketed from the balance sheet: equipment depreciated over 3–5 years, with other non-current assets amortised over 5 years at most. EBIT is exact."
+              blocked={inputs.ebitdaLow === null}
               blockedNote="needs D&A"
               peer={result.medians.ebitdaMarginPct}
             />
+
             <BenchRow label="Net margin" own={ratio("net_profit_margin")} peer={null} />
             <BenchRow label="Return on equity" own={ratio("return_on_equity")} peer={null} />
             <BenchRow
@@ -693,6 +713,10 @@ function Cap({ left }: { left: number }) {
 function BenchRow({
   label,
   own,
+  ownRange,
+  estimated,
+  sub,
+  tooltip,
   peer,
   unit = "%",
   blocked,
@@ -701,6 +725,11 @@ function BenchRow({
 }: {
   label: string;
   own: number | null;
+  /** An estimated bracket shown in place of a single figure. */
+  ownRange?: { low: number; high: number } | null;
+  estimated?: boolean;
+  sub?: string | null;
+  tooltip?: string;
   peer: number | null;
   unit?: string;
   blocked?: boolean;
@@ -711,7 +740,16 @@ function BenchRow({
     v === null ? "—" : unit === "%" ? fmtPct(v) : `${v.toFixed(2)}${unit}`;
   const gap = own !== null && peer !== null ? own - peer : null;
   const good = gap === null ? null : lowerIsBetter ? gap < 0 : gap > 0;
-  const maxV = Math.max(Math.abs(own ?? 0), Math.abs(peer ?? 0), 1);
+  const maxV = Math.max(Math.abs(own ?? ownRange?.high ?? 0), Math.abs(peer ?? 0), 1);
+
+  // A range never overstates the difference: the nearest bound is used, so the
+  // gap is the smallest one the estimate allows.
+  const rangeGap = (() => {
+    if (!ownRange || peer === null) return null;
+    if (ownRange.high < peer) return `≥ ${(peer - ownRange.high).toFixed(1)} pts below`;
+    if (ownRange.low > peer) return `≥ ${(ownRange.low - peer).toFixed(1)} pts above`;
+    return "overlaps peer median";
+  })();
 
   return (
     <tr>
@@ -724,10 +762,22 @@ function BenchRow({
       </td>
       <td
         className={`border-b border-[#F2F4F6] py-[7px] text-right font-semibold tabular-nums ${
-          blocked ? "text-[#B45309]" : "text-[#0F1B33]"
+          blocked || ownRange ? "text-[#B45309]" : "text-[#0F1B33]"
         }`}
       >
-        {blocked ? "blocked" : fmt(own)}
+        {blocked ? (
+          "blocked"
+        ) : ownRange ? (
+          <span title={tooltip} className="cursor-help">
+            {estimated ? "est. " : ""}
+            {ownRange.low.toFixed(1)} – {ownRange.high.toFixed(1)}%
+            {sub && (
+              <small className="block text-[10.5px] font-normal text-muted-foreground">{sub}</small>
+            )}
+          </span>
+        ) : (
+          fmt(own)
+        )}
       </td>
       <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums text-muted-foreground">
         {fmt(peer)}
@@ -748,17 +798,26 @@ function BenchRow({
       </td>
       <td
         className={`border-b border-[#F2F4F6] py-[7px] text-right text-[12px] font-semibold ${
-          blocked ? "text-[#B45309]" : good === null ? "text-muted-foreground" : good ? "text-[#15803D]" : "text-[#B91C1C]"
+          blocked || rangeGap
+            ? "text-[#B45309]"
+            : good === null
+              ? "text-muted-foreground"
+              : good
+                ? "text-[#15803D]"
+                : "text-[#B91C1C]"
         }`}
       >
         {blocked
           ? blockedNote
-          : gap === null
-            ? "—"
-            : unit === "%"
-              ? `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(1)} pts`
-              : `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(2)}×`}
+          : rangeGap
+            ? rangeGap
+            : gap === null
+              ? "—"
+              : unit === "%"
+                ? `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(1)} pts`
+                : `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(2)}×`}
       </td>
     </tr>
   );
 }
+
