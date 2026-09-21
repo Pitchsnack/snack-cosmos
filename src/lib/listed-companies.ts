@@ -206,7 +206,9 @@ export function parseListedCsv(text: string): {
   const cName = idx("company", "companyname", "name");
   const cTicker = idx("ticker");
   const cMarket = idx("market");
+  const cGroup = idx("exchangeindustry", "exchangegroup", "setgroup");
   const cSector = idx("sector");
+
   const cRev = idx("revenuethbm", "revenue");
   const cMargin = idx("ebitdamarginpct", "ebitdamargin");
   const cEv = idx("evebitda");
