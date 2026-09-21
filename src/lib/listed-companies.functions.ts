@@ -21,7 +21,9 @@ const companyInput = z.object({
   ticker: z.string().min(1).max(40),
   name: z.string().min(1).max(200),
   market: z.enum(["SET", "mai"]),
+  exchangeGroup: z.string().max(120).nullable().optional(),
   sector: z.string().max(200).nullable().optional(),
+
   revenueThbM: metric,
   ebitdaMarginPct: metric,
   evEbitda: metric,
