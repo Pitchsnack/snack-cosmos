@@ -359,7 +359,7 @@ export function ListedCompaniesTab({
             )}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={15} className="px-4 py-8 text-center text-muted-foreground">
                   {search.trim() || sectorFilter !== ALL_SECTORS ? (
                     <>
                       No companies match “{search.trim() || sectorFilter}”.{" "}
