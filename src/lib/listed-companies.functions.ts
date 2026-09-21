@@ -95,7 +95,9 @@ export const listListedCompanies = createServerFn({ method: "GET" })
       ticker: r.ticker,
       name: r.name,
       market: r.market,
+      exchangeGroup: r.exchange_group ?? null,
       sector: r.sector ?? null,
+
       revenueThbM: num(r.revenue_thb_m),
       ebitdaMarginPct: num(r.ebitda_margin_pct),
       evEbitda: num(r.ev_ebitda),
