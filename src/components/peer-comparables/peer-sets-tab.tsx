@@ -219,8 +219,7 @@ export function PeerSetsTab({
           <p className="font-semibold text-foreground">Baseline sets generated</p>
           <p className="mt-0.5 text-muted-foreground">
             Created {summary.created} · Updated {summary.updated} · Unchanged {summary.unchanged} ·
-            Removed {summary.removed.length} · Skipped {summary.skipped.length} with fewer than 3
-            SET companies
+            Removed {summary.removed.length}
           </p>
           <div className="mt-1.5 flex items-center gap-3">
             <button
