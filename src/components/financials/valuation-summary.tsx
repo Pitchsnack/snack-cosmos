@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
-import type { Peer } from "@/lib/peer-comparables";
+import { benchmarkMedians, type Peer } from "@/lib/peer-comparables";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 import {
   BAND_PCT,
