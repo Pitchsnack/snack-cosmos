@@ -354,6 +354,8 @@ function PeerSetEditor({
     if (c && !inSet.has(c.id)) setPeers((rows) => [...rows, listedToPeer(c)]);
   };
 
+  const isBaseline = !!data?.isBaseline;
+
   const status = peerSetStatus({
     exists: !!data?.exists,
     lastRefreshedAt: data?.lastRefreshedAt ?? null,
@@ -423,6 +425,8 @@ function PeerSetEditor({
             </span>
           )}
           <div className="flex-1" />
+          {isBaseline ? null : (
+          <>
           <input
             ref={fileRef}
             type="file"
@@ -438,6 +442,8 @@ function PeerSetEditor({
             <Upload className="mr-1.5 h-4 w-4" />
             Import CSV
           </Button>
+          </>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -448,11 +454,21 @@ function PeerSetEditor({
             <Download className="mr-1.5 h-4 w-4" />
             Export CSV
           </Button>
-          <Button size="sm" disabled={!isControl || save.isPending} onClick={() => save.mutate()}>
-            {save.isPending ? "Saving…" : "Save"}
-          </Button>
+          {!isBaseline && (
+            <Button size="sm" disabled={!isControl || save.isPending} onClick={() => save.mutate()}>
+              {save.isPending ? "Saving…" : "Save"}
+            </Button>
+          )}
         </div>
 
+        {isBaseline && (
+          <div className="border-b border-border/60 bg-info/5 px-4 py-3 text-xs text-foreground">
+            <strong>Baseline set</strong> — generated automatically from SET listings in this
+            sector. To customise the comparables, create a business-model set.
+          </div>
+        )}
+
+        {!isBaseline && (
         <div className="border-b border-border/60 px-4 py-3">
           <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
             Add peer — search by ticker or company name
@@ -466,6 +482,7 @@ function PeerSetEditor({
             onSelect={onPick}
           />
         </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-sm">
@@ -502,7 +519,9 @@ function PeerSetEditor({
               {!isLoading && peers.length === 0 && (
                 <tr>
                   <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
-                    No companies in this set yet. Search above to add one.
+                    {isBaseline
+                      ? "No companies in this baseline set."
+                      : "No companies in this set yet. Search above to add one."}
                   </td>
                 </tr>
               )}
@@ -518,6 +537,7 @@ function PeerSetEditor({
                       </td>
                     ))}
                     <td className="px-3 py-2.5 text-center">
+                      {!isBaseline && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -526,6 +546,7 @@ function PeerSetEditor({
                       >
                         <X className="h-4 w-4 text-muted-foreground" />
                       </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -557,7 +578,9 @@ function PeerSetEditor({
             Ratios come from the Listed Companies tab and are read-only here. Edit a company there
             to update every set that uses it.
           </p>
-          {!isControl && <p>You can view this set but only administrators can save changes.</p>}
+          {!isControl && !isBaseline && (
+            <p>You can view this set but only administrators can save changes.</p>
+          )}
         </div>
       </div>
     </div>

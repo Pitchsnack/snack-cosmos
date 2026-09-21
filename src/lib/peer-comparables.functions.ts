@@ -79,7 +79,7 @@ export const listPeerSets = createServerFn({ method: "GET" })
 
     const { data: sets, error } = await ctx.supabase
       .from("peer_sets")
-      .select("id, sector, business_model, last_refreshed_at, owner_user_id")
+      .select("id, sector, business_model, is_baseline, last_refreshed_at, owner_user_id")
       .not("sector", "is", null);
     if (error) throw new Error(error.message);
 
@@ -87,6 +87,7 @@ export const listPeerSets = createServerFn({ method: "GET" })
       id: string;
       sector: string;
       business_model: string | null;
+      is_baseline: boolean | null;
       last_refreshed_at: string | null;
       owner_user_id: string | null;
     }[];
@@ -117,6 +118,7 @@ export const listPeerSets = createServerFn({ method: "GET" })
         return {
           sector: row.sector,
           businessModel: row.business_model,
+          isBaseline: !!row.is_baseline,
           exists: true,
           peerCount: c?.total ?? 0,
           setCount: c?.set ?? 0,
@@ -139,7 +141,7 @@ export const listPeerSets = createServerFn({ method: "GET" })
 async function findSet(ctx: Ctx, sector: string, businessModel: string | null) {
   let q = ctx.supabase
     .from("peer_sets")
-    .select("id, sector, business_model, last_refreshed_at, owner_user_id")
+    .select("id, sector, business_model, is_baseline, last_refreshed_at, owner_user_id")
     .eq("sector", sector);
   q = businessModel ? q.eq("business_model", businessModel) : q.is("business_model", null);
   const { data, error } = await q.maybeSingle();
@@ -148,6 +150,7 @@ async function findSet(ctx: Ctx, sector: string, businessModel: string | null) {
     id: string;
     sector: string;
     business_model: string | null;
+    is_baseline: boolean | null;
     last_refreshed_at: string | null;
     owner_user_id: string | null;
   } | null;
@@ -167,6 +170,7 @@ export const getPeerSet = createServerFn({ method: "GET" })
         id: null,
         sector: data.sector,
         businessModel: model,
+        isBaseline: false,
         lastRefreshedAt: null,
         ownerName: null,
         peers: [],
@@ -192,6 +196,7 @@ export const getPeerSet = createServerFn({ method: "GET" })
       id: row.id,
       sector: row.sector,
       businessModel: row.business_model,
+      isBaseline: !!row.is_baseline,
       lastRefreshedAt: row.last_refreshed_at,
       ownerName: row.owner_user_id ? (names.get(row.owner_user_id) ?? null) : null,
       peers,
@@ -224,6 +229,9 @@ export const savePeerSet = createServerFn({ method: "POST" })
     const ids = [...seen];
 
     const existing = await findSet(ctx, data.sector, model);
+    if (existing?.is_baseline) {
+      throw new Error("Baseline sets are generated automatically and cannot be edited.");
+    }
     let setId = existing?.id;
     let action: "CREATE" | "UPDATE" = "UPDATE";
 
@@ -294,6 +302,9 @@ export const deletePeerSet = createServerFn({ method: "POST" })
 
     const row = await findSet(ctx, data.sector, model);
     if (!row) return { ok: true };
+    if (row.is_baseline) {
+      throw new Error("Baseline sets are generated automatically and cannot be deleted.");
+    }
 
     const { data: before } = await ctx.supabase
       .from("peer_set_members")
@@ -463,4 +474,17 @@ export const getPeerAvailability = createServerFn({ method: "GET" })
         .map(([sector, count]) => ({ sector, count }))
         .sort((a, b) => b.count - a.count),
     };
+  });
+
+/* ------------------------------------------------------------------ */
+/* Baseline generation — SET listings only                             */
+/* ------------------------------------------------------------------ */
+
+export const regenerateBaselineSets = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const ctx = context as unknown as Ctx;
+    await assertControl(ctx);
+    const { generateBaselineSets } = await import("@/lib/baseline-sets.server");
+    return generateBaselineSets(ctx.supabase, ctx.userId);
   });

@@ -50,6 +50,20 @@
       "when": 1789968002841,
       "tag": "0006_listed_companies_exchange_group",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789984790000,
+      "tag": "0007_peer_sets_is_baseline",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789985235571,
+      "tag": "0008_drop_peer_sets_industry_tag_unique",
+      "breakpoints": true
     }
   ]
 }

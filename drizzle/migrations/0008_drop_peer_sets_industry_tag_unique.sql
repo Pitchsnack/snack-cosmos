@@ -1,0 +1,1 @@
+ALTER TABLE public.peer_sets DROP CONSTRAINT IF EXISTS peer_sets_industry_tag_key;

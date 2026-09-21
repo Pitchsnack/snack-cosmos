@@ -295,7 +295,14 @@ export function ListedCompaniesTab({
     },
     onSuccess: (r) => {
       toast.success(`${r.created} added, ${r.updated} updated.`);
+      const b = r.baseline;
+      if (b) {
+        toast.info("Baseline sets generated", {
+          description: `Created ${b.created} · Updated ${b.updated} · Unchanged ${b.unchanged} · Removed ${b.removed.length} · Skipped ${b.skipped.length} with fewer than 3 SET companies`,
+        });
+      }
       qc.invalidateQueries({ queryKey: ["listed-companies"] });
+      qc.invalidateQueries({ queryKey: ["peer-sets"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

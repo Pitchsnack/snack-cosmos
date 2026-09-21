@@ -193,7 +193,7 @@ export const importListedCompanies = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({ rows: z.array(companyInput).max(1000) }).parse(input),
   )
-  .handler(async ({ context, data }): Promise<{ created: number; updated: number; ids: string[] }> => {
+  .handler(async ({ context, data }) => {
     const ctx = context as unknown as Ctx;
     await assertControl(ctx);
 
@@ -236,7 +236,11 @@ export const importListedCompanies = createServerFn({ method: "POST" })
       }
     }
 
-    return { created, updated, ids };
+    // The baseline sets always reflect the latest SET listings.
+    const { generateBaselineSets } = await import("@/lib/baseline-sets.server");
+    const baseline = await generateBaselineSets(ctx.supabase, ctx.userId);
+
+    return { created, updated, ids, baseline };
   });
 
 /* ------------------------------------------------------------------ */
