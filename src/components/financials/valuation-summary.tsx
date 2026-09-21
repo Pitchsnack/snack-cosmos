@@ -1041,8 +1041,23 @@ function BenchRow({
           fmt(own)
         )}
       </td>
-      <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums text-muted-foreground">
+      <td
+        className={`border-b border-[#F2F4F6] py-[7px] text-right tabular-nums ${
+          thin ? "text-[#B45309]" : "text-muted-foreground"
+        }`}
+      >
         {fmt(peer)}
+        {peer !== null && peerCount !== undefined && (
+          <small
+            className={`block text-[10.5px] font-normal ${
+              thin ? "text-[#B45309]" : "text-muted-foreground"
+            }`}
+          >
+            {thin
+              ? `thin · ${peerCount} value${peerCount === 1 ? "" : "s"}`
+              : `median of ${peerCount}`}
+          </small>
+        )}
       </td>
       <td className="border-b border-[#F2F4F6] py-[7px] text-right">
         {!blocked && own !== null && peer !== null && (
