@@ -551,7 +551,11 @@ function PeerSetEditor({
                   </tr>
                 ))}
               <tr className="border-t border-border bg-info/5 font-semibold">
-                <td className="px-3 py-2.5">Median</td>
+                <td className="px-3 py-2.5">
+                  Median
+                  {peers.length > 0 &&
+                    ` · ${peers.length} ${peers.length === 1 ? "company" : "companies"}`}
+                </td>
                 <td className="px-3 py-2.5 text-muted-foreground">{EMPTY_CELL}</td>
                 <td className="px-3 py-2.5 text-center text-muted-foreground">{EMPTY_CELL}</td>
                 {METRICS.map((m) => (
