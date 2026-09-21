@@ -36,7 +36,9 @@ export interface ListedCompanyInput {
   ticker: string;
   name: string;
   market: PeerMarket;
+  exchangeGroup: string | null;
   sector: string | null;
+
   revenueThbM: number | null;
   ebitdaMarginPct: number | null;
   evEbitda: number | null;
