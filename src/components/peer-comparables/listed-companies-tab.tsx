@@ -808,12 +808,7 @@ export function ListedCompaniesTab({
                       selected.has(c.id) && "bg-info/5",
                     )}
                   >
-                    <td
-                      className={cn(
-                        "sticky left-0 z-10 bg-card px-3 py-2.5",
-                        selected.has(c.id) && "bg-[hsl(var(--card))]",
-                      )}
-                    >
+                    <td className="sticky left-0 z-10 bg-card px-3 py-2.5">
                       <Checkbox
                         checked={selected.has(c.id)}
                         aria-label={`Select ${c.ticker}`}
