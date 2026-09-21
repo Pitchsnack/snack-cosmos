@@ -37,8 +37,18 @@ import {
   ResultCount,
   TabToolbar,
 } from "@/components/peer-comparables/tab-toolbar";
+import {
+  EMPTY_LABEL,
+  matchesRangeFilter,
+  matchesValueFilter,
+  RangeColumnFilter,
+  ValueColumnFilter,
+  type RangeFilters,
+  type ValueFilters,
+} from "@/components/peer-comparables/column-filter";
 import { cn } from "@/lib/utils";
 import { EMPTY_CELL, fmtMetric } from "@/lib/peer-comparables";
+
 import {
   downloadCsv,
   listedCompaniesToCsv,
