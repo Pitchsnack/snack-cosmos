@@ -225,56 +225,83 @@ export function ValuationSummary({
     <div>
       {/* 1 · Headline */}
       <div className="mb-[13px] rounded-[8px] border border-[#DDE3F2] bg-[#F5F7FD] px-3.5 pb-3 pt-3.5">
-        {indicative ? (
-          <>
-            <div className="text-[23px] font-normal leading-[1.22] tracking-[-0.01em] text-[#0F1B33]">
+        <div className="text-[23px] font-normal leading-[1.22] tracking-[-0.01em] text-[#0F1B33]">
+          {indicative ? (
+            <>
               Between <b className="font-semibold text-[#1E3A8A]">{fmtMoney(indicative.low)}</b> and{" "}
               <b className="font-semibold text-[#1E3A8A]">{fmtMoney(indicative.high)} THB</b>
-            </div>
-            <div className="mt-[3px] text-[12px] text-muted-foreground">
-              Where {result.agreeCount} of {result.totalCount} methods agree
-              {year ? ` · filing FY${year}` : ""}
-            </div>
-            {spread && <Axis spread={spread} indicative={indicative} />}
-            <div className="mt-2.5 flex flex-wrap gap-4 text-[11px] text-muted-foreground">
-              <span>
-                <i
-                  className="mr-[7px] inline-block h-[5px] w-4 rounded-[3px] align-[1px]"
-                  style={{ background: "linear-gradient(90deg,#2D4B9E,#16296A)" }}
-                />
-                Indicative valuation — where reliable methods agree
-              </span>
-              <span>
-                <i
-                  className="mr-[7px] inline-block h-[5px] w-4 rounded-[3px] align-[1px]"
-                  style={{ background: "linear-gradient(90deg,#D8E6F6,#4A66A8)" }}
-                />
-                Full spread, including low-confidence methods
-              </span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-[23px] font-normal leading-[1.22] text-[#0F1B33]">
-              {spread ? (
-                <>
-                  No agreed range — methods span{" "}
-                  <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.low)}</b> to{" "}
-                  <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.high)} THB</b>
-                </>
-              ) : (
-                "No indicative range"
-              )}
-            </div>
-            <div className="mt-[3px] text-[12px] text-muted-foreground">
-              {spread
-                ? "No two reliable methods overlap, so no single range can be quoted"
-                : "No reliable method could be computed"}
-              {year ? ` · filing FY${year}` : ""} — see Methods for what is missing.
-            </div>
-          </>
+            </>
+          ) : spread ? (
+            <>
+              Methods do not agree — they span{" "}
+              <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.low)}</b> to{" "}
+              <b className="font-semibold text-[#1E3A8A]">{fmtMoney(spread.high)} THB</b>
+            </>
+          ) : (
+            "No indicative range"
+          )}
+        </div>
+        <div className="mt-[3px] text-[12px] text-muted-foreground">
+          {indicative
+            ? result.singleMethod
+              ? `${result.agreeNames[0]} only — single method`
+              : `Where ${listNames(result.agreeNames)} agree`
+            : spread
+              ? "The remaining methods do not overlap, so no single range can be quoted"
+              : "No method could be computed"}
+          {result.tails.map((t) => (
+            <span key={t.key} className="text-[#B45309]">
+              {" · "}
+              {t.name.toLowerCase()} excluded as a tail (
+              {t.ratio === null ? "—" : `${t.ratio.toFixed(1)}×`} the median)
+            </span>
+          ))}
+          {result.included
+            .filter((m) => m.status === "low confidence")
+            .map((m) => (
+              <span key={m.key}>{` · ${m.name} is low confidence`}</span>
+            ))}
+          {year ? ` · filing FY${year}` : ""}
+        </div>
+        {spread && (
+          <Axis
+            spread={spread}
+            indicative={indicative}
+            book={result.bookValue}
+            tails={result.tails.map((t) => {
+              const row = result.drawn.find((d) => d.key === t.key)!;
+              return { name: t.name, low: row.low!, high: row.high! };
+            })}
+          />
         )}
+        <div className="mt-2.5 flex flex-wrap gap-4 text-[11px] text-muted-foreground">
+          <span>
+            <i
+              className="mr-[7px] inline-block h-[5px] w-4 rounded-[3px] align-[1px]"
+              style={{ background: "linear-gradient(90deg,#2D4B9E,#16296A)" }}
+            />
+            agreed range
+          </span>
+          <span>
+            <i
+              className="mr-[7px] inline-block h-[5px] w-4 rounded-[3px] align-[1px]"
+              style={{ background: "linear-gradient(90deg,#D8E6F6,#A8BFE2)" }}
+            />
+            span of included methods
+          </span>
+          {result.bookValue !== null && (
+            <span>
+              <i className="mr-[7px] inline-block h-[10px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0] align-[-1px]" />
+              book value — reference only
+            </span>
+          )}
+        </div>
+        <p className="mt-2 text-[11.5px] text-muted-foreground">
+          The axis fits the included methods. A tail is named at the edge rather than stretching the
+          scale.
+        </p>
       </div>
+
 
       {/* 2 · Notice */}
       {result.blocked && (
