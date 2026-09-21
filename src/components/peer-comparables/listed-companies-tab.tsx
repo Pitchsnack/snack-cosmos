@@ -76,7 +76,18 @@ const MARKET_PILL: Record<MarketTab, string> = {
 const NO_SECTOR = "__none__";
 
 /** Metric columns, in table order. Empty input clears to null — never zero. */
-const METRIC_KEYS = ["revenueThbM", "ebitdaMarginPct", "evEbitda", "pe", "pbv"] as const;
+const METRIC_KEYS = [
+  "revenueThbM",
+  "ebitdaMarginPct",
+  "evEbitda",
+  "pe",
+  "pbv",
+  "grossMarginPct",
+  "netMarginPct",
+  "roePct",
+  "debtEquity",
+  "revenueGrowthPct",
+] as const;
 type MetricKey = (typeof METRIC_KEYS)[number];
 
 /** Numeric columns with range filters, in table order. */
@@ -87,7 +98,15 @@ const NUMERIC_COLUMNS: { key: MetricKey; label: string; get: (c: ListedCompany) 
     { key: "evEbitda", label: "EV/EBITDA", get: (c) => c.evEbitda },
     { key: "pe", label: "P/E", get: (c) => c.pe },
     { key: "pbv", label: "P/BV", get: (c) => c.pbv },
+    { key: "grossMarginPct", label: "Gross margin", get: (c) => c.grossMarginPct },
+    { key: "netMarginPct", label: "Net margin", get: (c) => c.netMarginPct },
+    { key: "roePct", label: "ROE", get: (c) => c.roePct },
+    { key: "debtEquity", label: "D/E", get: (c) => c.debtEquity },
+    { key: "revenueGrowthPct", label: "Rev. growth", get: (c) => c.revenueGrowthPct },
   ];
+
+/** Total columns in the table — used by the full-width message rows. */
+const COL_COUNT = 21;
 
 
 
@@ -104,6 +123,11 @@ const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
   evEbitda: c.evEbitda,
   pe: c.pe,
   pbv: c.pbv,
+  grossMarginPct: c.grossMarginPct,
+  netMarginPct: c.netMarginPct,
+  roePct: c.roePct,
+  debtEquity: c.debtEquity,
+  revenueGrowthPct: c.revenueGrowthPct,
   statementPeriod: c.statementPeriod,
   tag: c.tag,
   asAt: c.asAt,
@@ -178,6 +202,11 @@ export function ListedCompaniesTab({
           evEbitda: d.evEbitda,
           pe: d.pe,
           pbv: d.pbv,
+          grossMarginPct: d.grossMarginPct,
+          netMarginPct: d.netMarginPct,
+          roePct: d.roePct,
+          debtEquity: d.debtEquity,
+          revenueGrowthPct: d.revenueGrowthPct,
           statementPeriod: d.statementPeriod,
           tag: d.tag,
           asAt: d.asAt,
@@ -299,6 +328,23 @@ export function ListedCompaniesTab({
       if (b) {
         toast.info("Baseline sets generated", {
           description: `Created ${b.created} · Updated ${b.updated} · Unchanged ${b.unchanged} · Removed ${b.removed.length} · Skipped ${b.skipped.length} with fewer than 3 SET companies`,
+        });
+      }
+      /** Per-metric coverage, plus anything the median rules will ignore. */
+      const rs = r.ratioSummary ?? [];
+      if (rs.length) {
+        toast.info("Ratio columns", {
+          duration: 12_000,
+          description: rs
+            .map(
+              (s) =>
+                `${s.label}: ${s.withValue} with a value${
+                  s.excluded.length
+                    ? ` · ${s.excluded.length} excluded from medians (${s.excluded.join(", ")})`
+                    : ""
+                }`,
+            )
+            .join("\n"),
         });
       }
       qc.invalidateQueries({ queryKey: ["listed-companies"] });
@@ -460,10 +506,10 @@ export function ListedCompaniesTab({
       {importCsv.isPending && <LoadingOverlay message="Importing CSV…" delay={0} />}
 
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[1420px] border-collapse text-sm">
+        <table className="w-full min-w-[1980px] border-collapse text-sm">
           <thead>
             <tr className="bg-[hsl(222_47%_23%)] text-white">
-              <th className="w-10 px-3 py-2.5 text-left">
+              <th className="sticky left-0 z-30 w-10 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
                 <Checkbox
                   aria-label="Select all companies"
                   className="border-white/60 data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-[hsl(222_47%_23%)]"
@@ -471,7 +517,7 @@ export function ListedCompaniesTab({
                   onCheckedChange={toggleAll}
                 />
               </th>
-              <th className="w-24 px-3 py-2.5 text-left">
+              <th className="sticky left-10 z-30 w-24 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
                 <ValueColumnFilter
                   label="Ticker"
                   options={colOptions.ticker}
@@ -479,7 +525,7 @@ export function ListedCompaniesTab({
                   onChange={(v) => setValueFilter("ticker", v)}
                 />
               </th>
-              <th className="px-3 py-2.5 text-left">
+              <th className="sticky left-[136px] z-30 w-56 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)]">
                 <ValueColumnFilter
                   label="Company"
                   options={colOptions.name}
@@ -550,14 +596,14 @@ export function ListedCompaniesTab({
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={16} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={COL_COUNT} className="px-4 py-8 text-center text-muted-foreground">
                   Loading…
                 </td>
               </tr>
             )}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={16} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={COL_COUNT} className="px-4 py-8 text-center text-muted-foreground">
                   {search.trim() || sectorFilter !== ALL_SECTORS || columnFilterCount > 0 ? (
                     <>
                       No companies match{" "}
@@ -616,7 +662,7 @@ export function ListedCompaniesTab({
                     <Fragment key={c.id}>
                       {c.usedIn > 0 && (
                         <tr className="border-t border-warning/30">
-                          <td colSpan={16} className="bg-warning/10 px-3 py-2">
+                          <td colSpan={COL_COUNT} className="bg-warning/10 px-3 py-2">
                             <span className="flex items-center gap-2 text-xs text-warning-foreground">
                               <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
                               <span>
@@ -745,7 +791,7 @@ export function ListedCompaniesTab({
                         </td>
                       </tr>
                       <tr className="bg-info/5">
-                        <td colSpan={16} className="px-3 pb-2.5">
+                        <td colSpan={COL_COUNT} className="px-3 pb-2.5">
                           <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
                             <Button
                               variant="outline"
@@ -779,17 +825,17 @@ export function ListedCompaniesTab({
                       selected.has(c.id) && "bg-info/5",
                     )}
                   >
-                    <td className="px-3 py-2.5">
+                    <td className="sticky left-0 z-10 bg-card px-3 py-2.5">
                       <Checkbox
                         checked={selected.has(c.id)}
                         aria-label={`Select ${c.ticker}`}
                         onCheckedChange={() => toggleOne(c.id)}
                       />
                     </td>
-                    <td className="px-3 py-2.5 font-semibold">
+                    <td className="sticky left-10 z-10 bg-card px-3 py-2.5 font-semibold">
                       <Highlight text={c.ticker} term={search} />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="sticky left-[136px] z-10 bg-card px-3 py-2.5 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]">
                       <Highlight text={c.name} term={search} />
                     </td>
                     <td className="px-3 py-2.5 text-center">{c.market}</td>
@@ -809,6 +855,26 @@ export function ListedCompaniesTab({
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pe, "×")}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pbv, "×")}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.grossMarginPct, "%")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.netMarginPct, "%")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.roePct, "%")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.debtEquity, "×")}
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-2.5 text-right tabular-nums",
+                        (c.revenueGrowthPct ?? 0) < 0 && "text-destructive",
+                      )}
+                    >
+                      {fmtMetric(c.revenueGrowthPct, "%")}
+                    </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
                       {c.statementPeriod ?? EMPTY_CELL}
                     </td>

@@ -20,6 +20,14 @@ export interface ListedCompany {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  /** Percent. 99.5 or above means cost of sales was not reported. */
+  grossMarginPct: number | null;
+  netMarginPct: number | null;
+  roePct: number | null;
+  /** Ratio, e.g. 0.59 = 0.59×. Negative means negative equity. */
+  debtEquity: number | null;
+  /** Percent, may be negative. */
+  revenueGrowthPct: number | null;
   /** Fiscal statement end, as entered — "Dec-25" or "Dec-2025". */
   statementPeriod: string | null;
   /** Short business descriptor — "Telecom". */
@@ -44,6 +52,11 @@ export interface ListedCompanyInput {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  grossMarginPct: number | null;
+  netMarginPct: number | null;
+  roePct: number | null;
+  debtEquity: number | null;
+  revenueGrowthPct: number | null;
   statementPeriod: string | null;
   tag: string | null;
   asAt: string | null;
@@ -70,6 +83,11 @@ export function emptyListedCompany(market: PeerMarket): ListedCompanyInput {
     evEbitda: null,
     pe: null,
     pbv: null,
+    grossMarginPct: null,
+    netMarginPct: null,
+    roePct: null,
+    debtEquity: null,
+    revenueGrowthPct: null,
     statementPeriod: null,
     tag: null,
     asAt: null,
@@ -92,7 +110,7 @@ export function csvRow(cells: (string | number | null | undefined)[]): string {
 }
 
 export const LISTED_CSV_HEADER =
-  "company,ticker,market,Exchange_Industry,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at";
+  "company,ticker,market,SET_Group,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,Gross_Margin,Net_Margin,ROE,Debt_Equity,Revenue_growth,statement_period,tag,as_at";
 
 export function listedCompaniesToCsv(rows: ListedCompany[]): string {
   return [
@@ -110,6 +128,11 @@ export function listedCompaniesToCsv(rows: ListedCompany[]): string {
         r.evEbitda,
         r.pe,
         r.pbv,
+        r.grossMarginPct,
+        r.netMarginPct,
+        r.roePct,
+        r.debtEquity,
+        r.revenueGrowthPct,
         r.statementPeriod,
         r.tag,
         r.asAt,
@@ -206,7 +229,13 @@ export function parseListedCsv(text: string): {
   const cName = idx("company", "companyname", "name");
   const cTicker = idx("ticker");
   const cMarket = idx("market");
-  const cGroup = idx("exchangeindustry", "exchangegroup", "setgroup");
+  // The group column arrives as SET_Group now and Exchange_Industry in older
+  // files. SET_Group wins when both are present.
+  const cSetGroup = idx("setgroup");
+  const cLegacyGroup = idx("exchangeindustry", "exchangegroup");
+  const cGroup = cSetGroup >= 0 ? cSetGroup : cLegacyGroup;
+  if (cSetGroup >= 0 && cLegacyGroup >= 0)
+    errors.push("Both SET_Group and Exchange_Industry are present — SET_Group was used.");
   const cSector = idx("sector");
 
   const cRev = idx("revenuethbm", "revenue");
@@ -214,6 +243,11 @@ export function parseListedCsv(text: string): {
   const cEv = idx("evebitda");
   const cPe = idx("pe");
   const cPbv = idx("pbv");
+  const cGross = idx("grossmargin", "grossmarginpct");
+  const cNet = idx("netmargin", "netmarginpct");
+  const cRoe = idx("roe", "roepct");
+  const cDe = idx("debtequity", "de");
+  const cGrowth = idx("revenuegrowth", "revenuegrowthpct");
   const cPeriod = idx("statementperiod", "period");
   const cTag = idx("tag");
   const cAsAt = idx("asat");
@@ -234,9 +268,16 @@ export function parseListedCsv(text: string): {
     cEv,
     cPe,
     cPbv,
+    cGross,
+    cNet,
+    cRoe,
+    cDe,
+    cGrowth,
     cPeriod,
     cTag,
     cAsAt,
+    cSetGroup,
+    cLegacyGroup,
   ]);
   const rawHeader = splitCsvLine(lines[0]);
   const unknown = rawHeader.filter((h, i) => h.trim() !== "" && !known.has(i));
@@ -265,6 +306,11 @@ export function parseListedCsv(text: string): {
       evEbitda: csvNumber(cEv >= 0 ? cells[cEv] : undefined),
       pe: csvNumber(cPe >= 0 ? cells[cPe] : undefined),
       pbv: csvNumber(cPbv >= 0 ? cells[cPbv] : undefined),
+      grossMarginPct: csvNumber(cGross >= 0 ? cells[cGross] : undefined),
+      netMarginPct: csvNumber(cNet >= 0 ? cells[cNet] : undefined),
+      roePct: csvNumber(cRoe >= 0 ? cells[cRoe] : undefined),
+      debtEquity: csvNumber(cDe >= 0 ? cells[cDe] : undefined),
+      revenueGrowthPct: csvNumber(cGrowth >= 0 ? cells[cGrowth] : undefined),
       statementPeriod: (cPeriod >= 0 ? cells[cPeriod]?.trim() : "") || null,
       tag: (cTag >= 0 ? cells[cTag]?.trim() : "") || null,
       asAt: csvDate(cAsAt >= 0 ? cells[cAsAt] : undefined),

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
-import type { Peer } from "@/lib/peer-comparables";
+import { benchmarkMedians, type Peer } from "@/lib/peer-comparables";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 import {
   BAND_PCT,
@@ -140,6 +140,9 @@ export function ValuationSummary({
   const revenueGrowth =
     income.find((i) => i.item_code === "revenue_sales_services" && i.fiscal_year === year)
       ?.percent_change ?? null;
+
+  /** Peer medians for the Benchmark rows, with how many peers each one used. */
+  const bench = benchmarkMedians(peers);
 
   const f = ladderFactors(discounts);
   const m = result.medians;
@@ -338,7 +341,8 @@ export function ValuationSummary({
             <BenchRow
               label="Gross margin"
               own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
-              peer={null}
+              peer={bench.grossMarginPct.value}
+              peerCount={bench.grossMarginPct.count}
             />
             <BenchRow
               label="EBITDA margin"
@@ -358,18 +362,35 @@ export function ValuationSummary({
               blocked={inputs.ebitdaLow === null}
               blockedNote="needs D&A"
               peer={result.medians.ebitdaMarginPct}
+              peerCount={peers.filter((p) => typeof p.ebitdaMarginPct === "number").length}
             />
 
-            <BenchRow label="Net margin" own={ratio("net_profit_margin")} peer={null} />
-            <BenchRow label="Return on equity" own={ratio("return_on_equity")} peer={null} />
+            <BenchRow
+              label="Net margin"
+              own={ratio("net_profit_margin") ?? inputs.netMarginPct}
+              peer={bench.netMarginPct.value}
+              peerCount={bench.netMarginPct.count}
+            />
+            <BenchRow
+              label="Return on equity"
+              own={ratio("return_on_equity")}
+              peer={bench.roePct.value}
+              peerCount={bench.roePct.count}
+            />
             <BenchRow
               label="Debt to equity"
               own={ratio("debt_to_equity_ratio")}
-              peer={null}
+              peer={bench.debtEquity.value}
+              peerCount={bench.debtEquity.count}
               unit="×"
               lowerIsBetter
             />
-            <BenchRow label="Revenue growth" own={revenueGrowth} peer={null} />
+            <BenchRow
+              label="Revenue growth"
+              own={revenueGrowth}
+              peer={bench.revenueGrowthPct.value}
+              peerCount={bench.revenueGrowthPct.count}
+            />
           </tbody>
         </table>
         <p className="mt-2 text-[11px] text-muted-foreground">
@@ -957,6 +978,7 @@ function BenchRow({
   sub,
   tooltip,
   peer,
+  peerCount,
   unit = "%",
   blocked,
   blockedNote,
@@ -970,6 +992,8 @@ function BenchRow({
   sub?: string | null;
   tooltip?: string;
   peer: number | null;
+  /** How many peers carried a usable value for this metric. */
+  peerCount?: number;
   unit?: string;
   blocked?: boolean;
   blockedNote?: string;
@@ -980,6 +1004,8 @@ function BenchRow({
   const gap = own !== null && peer !== null ? own - peer : null;
   const good = gap === null ? null : lowerIsBetter ? gap < 0 : gap > 0;
   const maxV = Math.max(Math.abs(own ?? ownRange?.high ?? 0), Math.abs(peer ?? 0), 1);
+  /** Fewer than three usable values is a median worth doubting. */
+  const thin = peer !== null && peerCount !== undefined && peerCount < 3;
 
   // A range never overstates the difference: the nearest bound is used, so the
   // gap is the smallest one the estimate allows.
@@ -1018,8 +1044,23 @@ function BenchRow({
           fmt(own)
         )}
       </td>
-      <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums text-muted-foreground">
+      <td
+        className={`border-b border-[#F2F4F6] py-[7px] text-right tabular-nums ${
+          thin ? "text-[#B45309]" : "text-muted-foreground"
+        }`}
+      >
         {fmt(peer)}
+        {peer !== null && peerCount !== undefined && (
+          <small
+            className={`block text-[10.5px] font-normal ${
+              thin ? "text-[#B45309]" : "text-muted-foreground"
+            }`}
+          >
+            {thin
+              ? `thin · ${peerCount} value${peerCount === 1 ? "" : "s"}`
+              : `median of ${peerCount}`}
+          </small>
+        )}
       </td>
       <td className="border-b border-[#F2F4F6] py-[7px] text-right">
         {!blocked && own !== null && peer !== null && (

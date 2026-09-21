@@ -29,8 +29,61 @@ export interface Peer {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  grossMarginPct?: number | null;
+  netMarginPct?: number | null;
+  roePct?: number | null;
+  debtEquity?: number | null;
+  revenueGrowthPct?: number | null;
   /** Fiscal statement end of the underlying figures, as entered. */
   statementPeriod?: string | null;
+}
+
+/** A peer median, with how many companies actually carried a value. */
+export interface MedianWithCount {
+  value: number | null;
+  count: number;
+}
+
+export interface BenchmarkMedians {
+  grossMarginPct: MedianWithCount;
+  netMarginPct: MedianWithCount;
+  roePct: MedianWithCount;
+  debtEquity: MedianWithCount;
+  revenueGrowthPct: MedianWithCount;
+}
+
+/** A gross margin at or above this means cost of sales was not reported. */
+export const GROSS_MARGIN_UNREPORTED = 99.5;
+
+function medianWithCount(values: (number | null | undefined)[]): MedianWithCount {
+  const nums = values.filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+  return { value: median(nums), count: nums.length };
+}
+
+/**
+ * Peer medians for the Benchmark rows.
+ *
+ * High values are never trimmed — a holding company's 80% net margin is real.
+ * Only two exclusions apply: a gross margin at 99.5% or above (cost of sales
+ * missing, not a 100% margin), and ROE / D/E for a company with negative
+ * equity, where both ratios are meaningless.
+ */
+export function benchmarkMedians(peers: Peer[]): BenchmarkMedians {
+  const negativeEquity = (p: Peer) =>
+    typeof p.debtEquity === "number" && Number.isFinite(p.debtEquity) && p.debtEquity < 0;
+  return {
+    grossMarginPct: medianWithCount(
+      peers.map((p) =>
+        typeof p.grossMarginPct === "number" && p.grossMarginPct >= GROSS_MARGIN_UNREPORTED
+          ? null
+          : p.grossMarginPct,
+      ),
+    ),
+    netMarginPct: medianWithCount(peers.map((p) => p.netMarginPct)),
+    roePct: medianWithCount(peers.map((p) => (negativeEquity(p) ? null : p.roePct))),
+    debtEquity: medianWithCount(peers.map((p) => (negativeEquity(p) ? null : p.debtEquity))),
+    revenueGrowthPct: medianWithCount(peers.map((p) => p.revenueGrowthPct)),
+  };
 }
 
 

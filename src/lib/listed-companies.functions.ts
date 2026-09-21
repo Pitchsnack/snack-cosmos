@@ -29,6 +29,11 @@ const companyInput = z.object({
   evEbitda: metric,
   pe: metric,
   pbv: metric,
+  grossMarginPct: metric,
+  netMarginPct: metric,
+  roePct: metric,
+  debtEquity: metric,
+  revenueGrowthPct: metric,
   statementPeriod: z.string().max(40).nullable().optional(),
   tag: z.string().max(120).nullable().optional(),
   asAt: z.string().max(20).nullable().optional(),
@@ -47,6 +52,11 @@ function toRow(c: z.infer<typeof companyInput>) {
     ev_ebitda: c.evEbitda ?? null,
     pe: c.pe ?? null,
     pbv: c.pbv ?? null,
+    gross_margin_pct: c.grossMarginPct ?? null,
+    net_margin_pct: c.netMarginPct ?? null,
+    roe_pct: c.roePct ?? null,
+    debt_equity: c.debtEquity ?? null,
+    revenue_growth_pct: c.revenueGrowthPct ?? null,
     statement_period: c.statementPeriod?.trim() || null,
     tag: c.tag?.trim() || null,
     as_at: c.asAt?.trim() || null,
@@ -103,6 +113,11 @@ export const listListedCompanies = createServerFn({ method: "GET" })
       evEbitda: num(r.ev_ebitda),
       pe: num(r.pe),
       pbv: num(r.pbv),
+      grossMarginPct: num(r.gross_margin_pct),
+      netMarginPct: num(r.net_margin_pct),
+      roePct: num(r.roe_pct),
+      debtEquity: num(r.debt_equity),
+      revenueGrowthPct: num(r.revenue_growth_pct),
       statementPeriod: r.statement_period ?? null,
       tag: r.tag ?? null,
       asAt: r.as_at ?? null,
@@ -240,7 +255,30 @@ export const importListedCompanies = createServerFn({ method: "POST" })
     const { generateBaselineSets } = await import("@/lib/baseline-sets.server");
     const baseline = await generateBaselineSets(ctx.supabase, ctx.userId);
 
-    return { created, updated, ids, baseline };
+    // Per-column coverage, plus the values a median will ignore. Nothing is
+    // changed in the data — the exclusions only apply when a median is taken.
+    const has = (v: number | null | undefined) => typeof v === "number" && Number.isFinite(v);
+    const ratioSummary = [
+      { key: "grossMarginPct", label: "Gross margin" },
+      { key: "netMarginPct", label: "Net margin" },
+      { key: "roePct", label: "ROE" },
+      { key: "debtEquity", label: "D/E" },
+      { key: "revenueGrowthPct", label: "Revenue growth" },
+    ].map(({ key, label }) => {
+      const excluded: string[] = [];
+      let withValue = 0;
+      for (const r of data.rows) {
+        const v = (r as Record<string, unknown>)[key] as number | null | undefined;
+        if (!has(v)) continue;
+        withValue += 1;
+        if (key === "grossMarginPct" && (v as number) >= 99.5) excluded.push(r.ticker);
+        else if ((key === "roePct" || key === "debtEquity") && has(r.debtEquity) && (r.debtEquity as number) < 0)
+          excluded.push(r.ticker);
+      }
+      return { key, label, withValue, excluded };
+    });
+
+    return { created, updated, ids, baseline, ratioSummary };
   });
 
 /* ------------------------------------------------------------------ */
