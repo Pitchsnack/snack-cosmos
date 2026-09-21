@@ -144,7 +144,7 @@ export function ListedCompanyDialog({
             />
           </label>
           <label className="col-span-2 space-y-1.5">
-          <label className="col-span-2 space-y-1.5">
+
             <span className="text-xs font-medium text-muted-foreground">SET group</span>
             <Input
               placeholder="e.g. Services"
