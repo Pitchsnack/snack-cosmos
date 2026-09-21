@@ -133,6 +133,63 @@ const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
   asAt: c.asAt,
 });
 
+/** Column definitions shown as header tooltips. */
+const RATIO_HINTS: Record<string, string> = {
+  grossMarginPct: "Gross margin — (sales − cost of goods sold) ÷ sales",
+  netMarginPct: "Net margin — net profit ÷ sales",
+  roePct: "ROE — net profit ÷ equity",
+  debtEquity: "D/E — total liabilities ÷ equity",
+  revenueGrowthPct: "Revenue growth — sales ÷ prior-year sales − 1",
+};
+
+const oneDp = (v: number) =>
+  v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** Percent, one decimal. Negative shows red with a minus sign. */
+function PctCell({ v, signed = false }: { v: number | null; signed?: boolean }) {
+  if (v === null || !Number.isFinite(v)) {
+    return <span className="text-muted-foreground">{EMPTY_CELL}</span>;
+  }
+  const sign = v > 0 && signed ? "+" : "";
+  return (
+    <span className={cn(v < 0 && "text-destructive")}>
+      {sign}
+      {oneDp(v)}%
+    </span>
+  );
+}
+
+/** Gross margin. 100% or more means cost of sales was not reported. */
+function GrossMarginCell({ v }: { v: number | null }) {
+  if (v === null || !Number.isFinite(v)) {
+    return <span className="text-muted-foreground">{EMPTY_CELL}</span>;
+  }
+  if (v >= 100) {
+    return (
+      <span
+        className="text-muted-foreground"
+        title="Cost of sales not reported separately — excluded from medians."
+      >
+        {oneDp(v)}%
+      </span>
+    );
+  }
+  return <span className={cn(v < 0 && "text-destructive")}>{oneDp(v)}%</span>;
+}
+
+/** Ratio, two decimals, with ×. */
+function RatioCell({ v }: { v: number | null }) {
+  if (v === null || !Number.isFinite(v)) {
+    return <span className="text-muted-foreground">{EMPTY_CELL}</span>;
+  }
+  return (
+    <span className={cn(v < 0 && "text-destructive")}>
+      {v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}×
+    </span>
+  );
+}
+
+
 
 export function ListedCompaniesTab({
   tabs,
@@ -155,6 +212,19 @@ export function ListedCompaniesTab({
   const importFn = useServerFn(importListedCompanies);
   const deleteFn = useServerFn(deleteListedCompany);
   const fileRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [atRightEnd, setAtRightEnd] = useState(false);
+  const onTableScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setAtRightEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
+  };
+  useEffect(() => {
+    onTableScroll();
+    const onResize = () => onTableScroll();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [companies]);
 
   const [market, setMarket] = useState<MarketTab>("all");
   const [search, setSearch] = useState("");
@@ -505,11 +575,16 @@ export function ListedCompaniesTab({
 
       {importCsv.isPending && <LoadingOverlay message="Importing CSV…" delay={0} />}
 
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[1980px] border-collapse text-sm">
+      <div className="relative mt-3">
+        <div
+          ref={scrollRef}
+          onScroll={onTableScroll}
+          className="lc-scroll max-h-[70vh] overflow-auto"
+        >
+        <table className="lc-table w-full min-w-[1980px] border-collapse text-sm">
           <thead>
             <tr className="bg-[hsl(222_47%_23%)] text-white">
-              <th className="sticky left-0 z-30 w-10 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
+              <th className="sticky left-0 z-30 w-10 min-w-10 max-w-10 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
                 <Checkbox
                   aria-label="Select all companies"
                   className="border-white/60 data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-[hsl(222_47%_23%)]"
@@ -517,7 +592,7 @@ export function ListedCompaniesTab({
                   onCheckedChange={toggleAll}
                 />
               </th>
-              <th className="sticky left-10 z-30 w-24 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
+              <th className="sticky left-10 z-30 w-24 min-w-24 max-w-24 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
                 <ValueColumnFilter
                   label="Ticker"
                   options={colOptions.ticker}
@@ -525,7 +600,7 @@ export function ListedCompaniesTab({
                   onChange={(v) => setValueFilter("ticker", v)}
                 />
               </th>
-              <th className="sticky left-[136px] z-30 w-56 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)]">
+              <th className="sticky left-[136px] z-30 w-56 min-w-56 max-w-56 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)]">
                 <ValueColumnFilter
                   label="Company"
                   options={colOptions.name}
@@ -553,7 +628,11 @@ export function ListedCompaniesTab({
                 />
               </th>
               {NUMERIC_COLUMNS.map(({ key, label }) => (
-                <th key={key} className="w-28 px-3 py-2.5 text-right">
+                <th
+                  key={key}
+                  title={RATIO_HINTS[key]}
+                  className="w-28 px-3 py-2.5 text-right"
+                >
                   <RangeColumnFilter
                     label={label}
                     value={rangeFilters[key] ?? { min: null, max: null }}
@@ -825,18 +904,23 @@ export function ListedCompaniesTab({
                       selected.has(c.id) && "bg-info/5",
                     )}
                   >
-                    <td className="sticky left-0 z-10 bg-card px-3 py-2.5">
+                    <td className="sticky left-0 z-10 w-10 min-w-10 max-w-10 bg-card px-3 py-2.5">
                       <Checkbox
                         checked={selected.has(c.id)}
                         aria-label={`Select ${c.ticker}`}
                         onCheckedChange={() => toggleOne(c.id)}
                       />
                     </td>
-                    <td className="sticky left-10 z-10 bg-card px-3 py-2.5 font-semibold">
+                    <td className="sticky left-10 z-10 w-24 min-w-24 max-w-24 bg-card px-3 py-2.5 font-semibold">
                       <Highlight text={c.ticker} term={search} />
                     </td>
-                    <td className="sticky left-[136px] z-10 bg-card px-3 py-2.5 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]">
-                      <Highlight text={c.name} term={search} />
+                    <td
+                      className="sticky left-[136px] z-10 w-56 min-w-56 max-w-56 bg-card px-3 py-2.5 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]"
+                      title={c.name}
+                    >
+                      <span className="block max-w-[196px] truncate">
+                        <Highlight text={c.name} term={search} />
+                      </span>
                     </td>
                     <td className="px-3 py-2.5 text-center">{c.market}</td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
@@ -856,24 +940,19 @@ export function ListedCompaniesTab({
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pe, "×")}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pbv, "×")}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
-                      {fmtMetric(c.grossMarginPct, "%")}
+                      <GrossMarginCell v={c.grossMarginPct} />
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
-                      {fmtMetric(c.netMarginPct, "%")}
+                      <PctCell v={c.netMarginPct} />
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
-                      {fmtMetric(c.roePct, "%")}
+                      <PctCell v={c.roePct} />
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
-                      {fmtMetric(c.debtEquity, "×")}
+                      <RatioCell v={c.debtEquity} />
                     </td>
-                    <td
-                      className={cn(
-                        "px-3 py-2.5 text-right tabular-nums",
-                        (c.revenueGrowthPct ?? 0) < 0 && "text-destructive",
-                      )}
-                    >
-                      {fmtMetric(c.revenueGrowthPct, "%")}
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      <PctCell v={c.revenueGrowthPct} signed />
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
                       {c.statementPeriod ?? EMPTY_CELL}
@@ -909,6 +988,13 @@ export function ListedCompaniesTab({
               })}
           </tbody>
         </table>
+        </div>
+        {!atRightEnd && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent"
+          />
+        )}
       </div>
       <p className="border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
         A company used in no peer set is perfectly normal — the table is a reference list, not a

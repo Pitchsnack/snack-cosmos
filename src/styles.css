@@ -217,3 +217,27 @@
 @media (min-width: 1200px) {
   .kpi-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
+
+/* Listed Companies table: the table scrolls, not the page. */
+.lc-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(215 16% 70%) transparent;
+}
+.lc-scroll::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.lc-scroll::-webkit-scrollbar-thumb {
+  background: hsl(215 16% 70%);
+  border-radius: 9999px;
+}
+.lc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lc-table thead th {
+  position: sticky;
+  top: 0;
+}
+.lc-table thead th:not([class*="z-"]) {
+  z-index: 20;
+}
