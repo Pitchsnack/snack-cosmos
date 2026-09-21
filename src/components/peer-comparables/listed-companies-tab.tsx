@@ -37,8 +37,18 @@ import {
   ResultCount,
   TabToolbar,
 } from "@/components/peer-comparables/tab-toolbar";
+import {
+  EMPTY_LABEL,
+  matchesRangeFilter,
+  matchesValueFilter,
+  RangeColumnFilter,
+  ValueColumnFilter,
+  type RangeFilters,
+  type ValueFilters,
+} from "@/components/peer-comparables/column-filter";
 import { cn } from "@/lib/utils";
 import { EMPTY_CELL, fmtMetric } from "@/lib/peer-comparables";
+
 import {
   downloadCsv,
   listedCompaniesToCsv,
@@ -67,6 +77,18 @@ const NO_SECTOR = "__none__";
 /** Metric columns, in table order. Empty input clears to null — never zero. */
 const METRIC_KEYS = ["revenueThbM", "ebitdaMarginPct", "evEbitda", "pe", "pbv"] as const;
 type MetricKey = (typeof METRIC_KEYS)[number];
+
+/** Numeric columns with range filters, in table order. */
+const NUMERIC_COLUMNS: { key: MetricKey; label: string; get: (c: ListedCompany) => number | null }[] =
+  [
+    { key: "revenueThbM", label: "Revenue THB m", get: (c) => c.revenueThbM },
+    { key: "ebitdaMarginPct", label: "EBITDA margin", get: (c) => c.ebitdaMarginPct },
+    { key: "evEbitda", label: "EV/EBITDA", get: (c) => c.evEbitda },
+    { key: "pe", label: "P/E", get: (c) => c.pe },
+    { key: "pbv", label: "P/BV", get: (c) => c.pbv },
+  ];
+
+
 
 const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
   id: c.id,
@@ -110,6 +132,13 @@ export function ListedCompaniesTab({
   const [market, setMarket] = useState<MarketTab>("all");
   const [search, setSearch] = useState("");
   const [sectorFilter, setSectorFilter] = useState<string>(ALL_SECTORS);
+  const [valueFilters, setValueFilters] = useState<ValueFilters>({});
+  const [rangeFilters, setRangeFilters] = useState<RangeFilters>({});
+  const setValueFilter = (key: string, v: string[]) =>
+    setValueFilters((prev) => ({ ...prev, [key]: v }));
+  const setRangeFilter = (key: string, v: { min: number | null; max: number | null }) =>
+    setRangeFilters((prev) => ({ ...prev, [key]: v }));
+
   const [editing, setEditing] = useState<ListedCompanyInput | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<ListedCompany | null>(null);
@@ -186,16 +215,48 @@ export function ListedCompaniesTab({
   );
 
   const inMarket = market === "all" ? companies : companies.filter((c) => c.market === market);
+
+  const colOptions = useMemo(() => {
+    const uniq = (get: (c: ListedCompany) => string | null) =>
+      [...new Set(inMarket.map((c) => (get(c)?.trim() ? (get(c) as string) : EMPTY_LABEL)))].sort(
+        (a, b) => a.localeCompare(b),
+      );
+    return {
+      ticker: uniq((c) => c.ticker),
+      name: uniq((c) => c.name),
+      market: uniq((c) => c.market),
+      sector: uniq((c) => c.sector),
+      statementPeriod: uniq((c) => c.statementPeriod),
+      tag: uniq((c) => c.tag),
+      asAt: uniq((c) => c.asAt),
+    };
+  }, [inMarket]);
+
   const rows = inMarket.filter(
     (c) =>
       matchesTerm(search, c.ticker, c.name, c.tag) &&
-      (sectorFilter === ALL_SECTORS || c.sector === sectorFilter),
+      (sectorFilter === ALL_SECTORS || c.sector === sectorFilter) &&
+      matchesValueFilter(valueFilters.ticker, c.ticker) &&
+      matchesValueFilter(valueFilters.name, c.name) &&
+      matchesValueFilter(valueFilters.market, c.market) &&
+      matchesValueFilter(valueFilters.sector, c.sector) &&
+      matchesValueFilter(valueFilters.statementPeriod, c.statementPeriod) &&
+      matchesValueFilter(valueFilters.tag, c.tag) &&
+      matchesValueFilter(valueFilters.asAt, c.asAt) &&
+      NUMERIC_COLUMNS.every(({ key, get }) => matchesRangeFilter(rangeFilters[key], get(c))),
   );
+
+  const columnFilterCount =
+    Object.values(valueFilters).filter((v) => v.length > 0).length +
+    Object.values(rangeFilters).filter((r) => r.min !== null || r.max !== null).length;
 
   const clearAll = () => {
     setSearch("");
     setSectorFilter(ALL_SECTORS);
+    setValueFilters({});
+    setRangeFilters({});
   };
+
 
   // ---- multi-select -------------------------------------------------------
   const selectedCompanies = companies.filter((c) => selected.has(c.id));
@@ -396,39 +457,77 @@ export function ListedCompaniesTab({
                   onCheckedChange={toggleAll}
                 />
               </th>
-              <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Ticker
+              <th className="w-24 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Ticker"
+                  options={colOptions.ticker}
+                  selected={valueFilters.ticker ?? []}
+                  onChange={(v) => setValueFilter("ticker", v)}
+                />
               </th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Company
+              <th className="px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Company"
+                  options={colOptions.name}
+                  selected={valueFilters.name ?? []}
+                  onChange={(v) => setValueFilter("name", v)}
+                />
               </th>
-              <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
-                Market
+              <th className="w-20 px-3 py-2.5 text-center">
+                <ValueColumnFilter
+                  label="Market"
+                  align="center"
+                  options={colOptions.market}
+                  selected={valueFilters.market ?? []}
+                  onChange={(v) => setValueFilter("market", v)}
+                />
               </th>
-              <th className="w-44 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Sector
+              <th className="w-44 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Sector"
+                  options={colOptions.sector}
+                  selected={valueFilters.sector ?? []}
+                  onChange={(v) => setValueFilter("sector", v)}
+                />
               </th>
-              {["Revenue THB m", "EBITDA margin", "EV/EBITDA", "P/E", "P/BV"].map((h) => (
-                <th
-                  key={h}
-                  className="w-28 px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wide"
-                >
-                  {h}
+              {NUMERIC_COLUMNS.map(({ key, label }) => (
+                <th key={key} className="w-28 px-3 py-2.5 text-right">
+                  <RangeColumnFilter
+                    label={label}
+                    value={rangeFilters[key] ?? { min: null, max: null }}
+                    onChange={(v) => setRangeFilter(key, v)}
+                  />
                 </th>
               ))}
-              <th className="w-20 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Period
+              <th className="w-20 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Period"
+                  options={colOptions.statementPeriod}
+                  selected={valueFilters.statementPeriod ?? []}
+                  onChange={(v) => setValueFilter("statementPeriod", v)}
+                />
               </th>
-              <th className="w-40 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Tag
+              <th className="w-40 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Tag"
+                  options={colOptions.tag}
+                  selected={valueFilters.tag ?? []}
+                  onChange={(v) => setValueFilter("tag", v)}
+                />
               </th>
-              <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                As at
+              <th className="w-24 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="As at"
+                  options={colOptions.asAt}
+                  selected={valueFilters.asAt ?? []}
+                  onChange={(v) => setValueFilter("asAt", v)}
+                />
               </th>
 
               <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                 Used in
               </th>
+
               <th className="sticky right-0 z-20 w-24 bg-[hsl(222_47%_23%)] px-3 py-2.5 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.25)]" />
             </tr>
           </thead>
@@ -443,9 +542,14 @@ export function ListedCompaniesTab({
             {!isLoading && rows.length === 0 && (
               <tr>
                 <td colSpan={15} className="px-4 py-8 text-center text-muted-foreground">
-                  {search.trim() || sectorFilter !== ALL_SECTORS ? (
+                  {search.trim() || sectorFilter !== ALL_SECTORS || columnFilterCount > 0 ? (
                     <>
-                      No companies match “{search.trim() || sectorFilter}”.{" "}
+                      No companies match{" "}
+                      {search.trim() || sectorFilter !== ALL_SECTORS
+                        ? `“${search.trim() || sectorFilter}”`
+                        : "the column filters"}
+                      .{" "}
+
                       <button
                         type="button"
                         onClick={clearAll}
