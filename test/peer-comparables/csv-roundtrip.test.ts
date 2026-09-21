@@ -81,7 +81,7 @@ describe("listed companies CSV", () => {
       },
     ]);
     expect(csv.split("\n")[0]).toBe(
-      "company,ticker,market,Exchange_Industry,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at",
+      "company,ticker,market,SET_Group,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,Gross_Margin,Net_Margin,ROE,Debt_Equity,Revenue_growth,statement_period,tag,as_at",
     );
     const { rows, errors } = parseListedCsv(csv);
     expect(errors).toEqual([]);
