@@ -652,6 +652,16 @@ export function ListedCompaniesTab({
                           </Select>
                         </td>
                         <td className="px-2 py-2">
+                          <Input
+                            className="h-8"
+                            placeholder="e.g. Services"
+                            aria-label="SET group"
+                            value={d.exchangeGroup ?? ""}
+                            onChange={(e) => setField({ exchangeGroup: e.target.value || null })}
+                          />
+                        </td>
+
+                        <td className="px-2 py-2">
                           <Select
                             value={d.sector ?? NO_SECTOR}
                             onValueChange={(v) =>
