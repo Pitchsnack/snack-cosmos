@@ -870,6 +870,7 @@ function MethodRow({
   reference,
   tail,
   showMedianCap,
+  offScale,
 }: {
   row: {
     name: string;
@@ -884,6 +885,8 @@ function MethodRow({
   reference: number | null;
   tail: { ratio: number | null } | null;
   showMedianCap: boolean;
+  /** Book value sits so far above the ranges that drawing it would squash them. */
+  offScale?: boolean;
 }) {
   const clamp = (v: number) => Math.max(0, Math.min(100, scalePos(v, domain.low, domain.high)));
   const left = clamp(row.low!);
