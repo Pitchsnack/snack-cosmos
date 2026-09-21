@@ -92,7 +92,7 @@ export function csvRow(cells: (string | number | null | undefined)[]): string {
 }
 
 export const LISTED_CSV_HEADER =
-  "company,ticker,market,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at";
+  "company,ticker,market,Exchange_Industry,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at";
 
 export function listedCompaniesToCsv(rows: ListedCompany[]): string {
   return [
@@ -102,7 +102,9 @@ export function listedCompaniesToCsv(rows: ListedCompany[]): string {
         r.name,
         r.ticker,
         r.market,
+        r.exchangeGroup,
         r.sector,
+
         r.revenueThbM,
         r.ebitdaMarginPct,
         r.evEbitda,
