@@ -808,17 +808,22 @@ export function ListedCompaniesTab({
                       selected.has(c.id) && "bg-info/5",
                     )}
                   >
-                    <td className="px-3 py-2.5">
+                    <td
+                      className={cn(
+                        "sticky left-0 z-10 bg-card px-3 py-2.5",
+                        selected.has(c.id) && "bg-[hsl(var(--card))]",
+                      )}
+                    >
                       <Checkbox
                         checked={selected.has(c.id)}
                         aria-label={`Select ${c.ticker}`}
                         onCheckedChange={() => toggleOne(c.id)}
                       />
                     </td>
-                    <td className="px-3 py-2.5 font-semibold">
+                    <td className="sticky left-10 z-10 bg-card px-3 py-2.5 font-semibold">
                       <Highlight text={c.ticker} term={search} />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="sticky left-[136px] z-10 bg-card px-3 py-2.5 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]">
                       <Highlight text={c.name} term={search} />
                     </td>
                     <td className="px-3 py-2.5 text-center">{c.market}</td>
