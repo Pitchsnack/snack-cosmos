@@ -66,6 +66,7 @@ describe("listed companies CSV", () => {
         ticker: "TU",
         name: "Thai Union Group",
         market: "SET",
+        exchangeGroup: "Agro & Food",
         sector: "Food & Beverage",
         revenueThbM: 136000,
         ebitdaMarginPct: 8.4,
@@ -80,7 +81,7 @@ describe("listed companies CSV", () => {
       },
     ]);
     expect(csv.split("\n")[0]).toBe(
-      "company,ticker,market,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at",
+      "company,ticker,market,Exchange_Industry,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at",
     );
     const { rows, errors } = parseListedCsv(csv);
     expect(errors).toEqual([]);
@@ -88,6 +89,7 @@ describe("listed companies CSV", () => {
       ticker: "TU",
       name: "Thai Union Group",
       market: "SET",
+      exchangeGroup: "Agro & Food",
       sector: "Food & Beverage",
       evEbitda: null,
       statementPeriod: "Dec-25",
@@ -103,6 +105,7 @@ describe("listed companies CSV", () => {
     expect(errors).toEqual([]);
     expect(rows[0].statementPeriod).toBeNull();
     expect(rows[0].tag).toBeNull();
+    expect(rows[0].exchangeGroup).toBeNull();
     expect(rows[0].ebitdaMarginPct).toBeNull();
   });
 
@@ -112,6 +115,18 @@ describe("listed companies CSV", () => {
     );
     expect(rows[0].statementPeriod).toBe("Dec-2025");
     expect(rows[0].asAt).toBe("2026-09-20");
+  });
+
+  it("reads Exchange_Industry by header, whatever the column order", () => {
+    const { rows, errors } = parseListedCsv(
+      "ticker,Exchange_Industry,company,market,sector\nPTT,Resources,PTT PUBLIC COMPANY LIMITED,SET,Energy & Utilities",
+    );
+    expect(errors).toEqual([]);
+    expect(rows[0]).toMatchObject({
+      ticker: "PTT",
+      exchangeGroup: "Resources",
+      sector: "Energy & Utilities",
+    });
   });
 
   it("warns about an unknown column instead of failing", () => {

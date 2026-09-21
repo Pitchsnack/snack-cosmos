@@ -43,6 +43,13 @@
       "when": 1789926762236,
       "tag": "0005_listed_companies_period_tag",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789968002841,
+      "tag": "0006_listed_companies_exchange_group",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE public.listed_companies ADD COLUMN IF NOT EXISTS exchange_group text;

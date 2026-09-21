@@ -11,7 +11,10 @@ export interface ListedCompany {
   ticker: string;
   name: string;
   market: PeerMarket;
+  /** SET group — the industry group assigned by the exchange. Stored as given. */
+  exchangeGroup: string | null;
   sector: string | null;
+
   revenueThbM: number | null;
   ebitdaMarginPct: number | null;
   evEbitda: number | null;
@@ -33,7 +36,9 @@ export interface ListedCompanyInput {
   ticker: string;
   name: string;
   market: PeerMarket;
+  exchangeGroup: string | null;
   sector: string | null;
+
   revenueThbM: number | null;
   ebitdaMarginPct: number | null;
   evEbitda: number | null;
@@ -57,7 +62,9 @@ export function emptyListedCompany(market: PeerMarket): ListedCompanyInput {
     ticker: "",
     name: "",
     market,
+    exchangeGroup: null,
     sector: null,
+
     revenueThbM: null,
     ebitdaMarginPct: null,
     evEbitda: null,
@@ -85,7 +92,7 @@ export function csvRow(cells: (string | number | null | undefined)[]): string {
 }
 
 export const LISTED_CSV_HEADER =
-  "company,ticker,market,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at";
+  "company,ticker,market,Exchange_Industry,sector,revenue_thb_m,ebitda_margin_pct,ev_ebitda,pe,pbv,statement_period,tag,as_at";
 
 export function listedCompaniesToCsv(rows: ListedCompany[]): string {
   return [
@@ -95,7 +102,9 @@ export function listedCompaniesToCsv(rows: ListedCompany[]): string {
         r.name,
         r.ticker,
         r.market,
+        r.exchangeGroup,
         r.sector,
+
         r.revenueThbM,
         r.ebitdaMarginPct,
         r.evEbitda,
@@ -197,7 +206,9 @@ export function parseListedCsv(text: string): {
   const cName = idx("company", "companyname", "name");
   const cTicker = idx("ticker");
   const cMarket = idx("market");
+  const cGroup = idx("exchangeindustry", "exchangegroup", "setgroup");
   const cSector = idx("sector");
+
   const cRev = idx("revenuethbm", "revenue");
   const cMargin = idx("ebitdamarginpct", "ebitdamargin");
   const cEv = idx("evebitda");
@@ -215,7 +226,9 @@ export function parseListedCsv(text: string): {
     cName,
     cTicker,
     cMarket,
+    cGroup,
     cSector,
+
     cRev,
     cMargin,
     cEv,
@@ -244,7 +257,9 @@ export function parseListedCsv(text: string): {
       ticker: ticker || name,
       name: name || ticker,
       market: rawMarket === "mai" ? "mai" : "SET",
+      exchangeGroup: (cGroup >= 0 ? cells[cGroup]?.trim() : "") || null,
       sector: (cSector >= 0 ? cells[cSector]?.trim() : "") || null,
+
       revenueThbM: csvNumber(cRev >= 0 ? cells[cRev] : undefined),
       ebitdaMarginPct: csvNumber(cMargin >= 0 ? cells[cMargin] : undefined),
       evEbitda: csvNumber(cEv >= 0 ? cells[cEv] : undefined),

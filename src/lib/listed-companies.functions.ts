@@ -21,7 +21,9 @@ const companyInput = z.object({
   ticker: z.string().min(1).max(40),
   name: z.string().min(1).max(200),
   market: z.enum(["SET", "mai"]),
+  exchangeGroup: z.string().max(120).nullable().optional(),
   sector: z.string().max(200).nullable().optional(),
+
   revenueThbM: metric,
   ebitdaMarginPct: metric,
   evEbitda: metric,
@@ -37,7 +39,9 @@ function toRow(c: z.infer<typeof companyInput>) {
     ticker: c.ticker.trim(),
     name: c.name.trim(),
     market: c.market,
+    exchange_group: c.exchangeGroup?.trim() || null,
     sector: c.sector?.trim() || null,
+
     revenue_thb_m: c.revenueThbM ?? null,
     ebitda_margin_pct: c.ebitdaMarginPct ?? null,
     ev_ebitda: c.evEbitda ?? null,
@@ -91,7 +95,9 @@ export const listListedCompanies = createServerFn({ method: "GET" })
       ticker: r.ticker,
       name: r.name,
       market: r.market,
+      exchangeGroup: r.exchange_group ?? null,
       sector: r.sector ?? null,
+
       revenueThbM: num(r.revenue_thb_m),
       ebitdaMarginPct: num(r.ebitda_margin_pct),
       evEbitda: num(r.ev_ebitda),

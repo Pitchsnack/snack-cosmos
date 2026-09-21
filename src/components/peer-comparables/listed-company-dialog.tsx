@@ -78,7 +78,9 @@ export function ListedCompanyDialog({
           ticker: form.ticker.trim(),
           name: form.name.trim(),
           market: form.market,
+          exchangeGroup: form.exchangeGroup,
           sector: form.sector,
+
           revenueThbM: form.revenueThbM,
           ebitdaMarginPct: form.ebitdaMarginPct,
           evEbitda: form.evEbitda,
@@ -142,7 +144,17 @@ export function ListedCompanyDialog({
             />
           </label>
           <label className="col-span-2 space-y-1.5">
+
+            <span className="text-xs font-medium text-muted-foreground">SET group</span>
+            <Input
+              placeholder="e.g. Services"
+              value={form.exchangeGroup ?? ""}
+              onChange={(e) => set({ exchangeGroup: e.target.value || null })}
+            />
+          </label>
+          <label className="col-span-2 space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">
+
               Sector (informational)
             </span>
             <Select
