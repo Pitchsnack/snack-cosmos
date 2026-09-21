@@ -531,7 +531,7 @@ export function ListedCompaniesTab({
                         </td>
                       </tr>
                       <tr className="bg-info/5">
-                        <td colSpan={14} className="px-3 pb-2.5">
+                        <td colSpan={15} className="px-3 pb-2.5">
                           <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
                             <Button
                               variant="outline"
