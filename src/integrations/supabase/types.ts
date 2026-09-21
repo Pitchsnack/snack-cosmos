@@ -1778,6 +1778,7 @@ export type Database = {
           created_at: string
           ebitda_margin_pct: number | null
           ev_ebitda: number | null
+          exchange_group: string | null
           id: string
           market: Database["public"]["Enums"]["peer_market"]
           name: string
@@ -1795,6 +1796,7 @@ export type Database = {
           created_at?: string
           ebitda_margin_pct?: number | null
           ev_ebitda?: number | null
+          exchange_group?: string | null
           id?: string
           market: Database["public"]["Enums"]["peer_market"]
           name: string
@@ -1812,6 +1814,7 @@ export type Database = {
           created_at?: string
           ebitda_margin_pct?: number | null
           ev_ebitda?: number | null
+          exchange_group?: string | null
           id?: string
           market?: Database["public"]["Enums"]["peer_market"]
           name?: string
