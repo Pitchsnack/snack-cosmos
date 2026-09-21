@@ -243,10 +243,6 @@ export function PeerSetsTab({
                 <span className="font-medium text-foreground">Removed:</span>{" "}
                 {summary.removed.length ? summary.removed.join(", ") : "none"}
               </p>
-              <p>
-                <span className="font-medium text-foreground">Skipped (fewer than 3):</span>{" "}
-                {summary.skipped.length ? summary.skipped.join(", ") : "none"}
-              </p>
             </div>
           )}
         </div>
