@@ -630,6 +630,40 @@ export function ListedCompaniesTab({
         onSaved={(id) => onSavedReturn?.(id)}
       />
 
+      <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {selectedCompanies.length} compan
+              {selectedCompanies.length === 1 ? "y" : "ies"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedUsedIn > 0 ? (
+                <>
+                  {selectedUsedIn} of them {selectedUsedIn === 1 ? "is" : "are"} used in peer sets.
+                  Deleting removes them from those sets and changes every valuation that relies on
+                  them.
+                </>
+              ) : (
+                <>None of them are used in a peer set.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkRemove.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={bulkRemove.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                bulkRemove.mutate(selectedCompanies.map((c) => c.id));
+              }}
+            >
+              {bulkRemove.isPending ? "Deleting…" : "Delete selected"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={!!pendingDelete} onOpenChange={(v) => !v && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
