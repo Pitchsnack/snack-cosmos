@@ -300,8 +300,8 @@ export function ValuationSummary({
           )}
         </div>
         <p className="mt-2 text-[11.5px] text-muted-foreground">
-          The axis fits the included methods. A tail is named at the edge rather than stretching the
-          scale.
+          The axis starts at zero, so each range shows at its real size. A tail is named at the edge
+          rather than stretching the scale.
         </p>
       </div>
 
