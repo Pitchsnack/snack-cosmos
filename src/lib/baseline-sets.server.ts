@@ -3,6 +3,8 @@
  *
  * A baseline set is a sector-wide peer set (business_model = null,
  * is_baseline = true) holding EVERY SET-listed company in that sector.
+ * Every sector with at least one SET company gets one — thin sets are
+ * generated too, and flagged as thin in the UI rather than skipped.
  * mai companies never enter a baseline set — they only reach peer sets
  * through hand-built business-model sets.
  *
@@ -10,7 +12,7 @@
  * table, no startup sector picker, no Industry field.
  */
 
-export const BASELINE_MIN_COMPANIES = 3;
+export const BASELINE_MIN_COMPANIES = 1;
 
 export interface BaselineSectorChange {
   sector: string;
