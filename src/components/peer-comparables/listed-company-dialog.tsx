@@ -78,7 +78,9 @@ export function ListedCompanyDialog({
           ticker: form.ticker.trim(),
           name: form.name.trim(),
           market: form.market,
+          exchangeGroup: form.exchangeGroup,
           sector: form.sector,
+
           revenueThbM: form.revenueThbM,
           ebitdaMarginPct: form.ebitdaMarginPct,
           evEbitda: form.evEbitda,
