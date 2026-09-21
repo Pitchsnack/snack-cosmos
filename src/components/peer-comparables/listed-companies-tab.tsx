@@ -486,6 +486,8 @@ export function ListedCompaniesTab({
                   onChange={(v) => setValueFilter("market", v)}
                 />
               </th>
+              <th className="w-32 px-3 py-2.5 text-left font-medium">SET group</th>
+
               <th className="w-44 px-3 py-2.5 text-left">
                 <ValueColumnFilter
                   label="Sector"
