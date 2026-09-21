@@ -558,7 +558,20 @@ export function ListedCompaniesTab({
                 }
 
                 return (
-                  <tr key={c.id} className="border-t border-border/50 hover:bg-muted/40">
+                  <tr
+                    key={c.id}
+                    className={cn(
+                      "border-t border-border/50 hover:bg-muted/40",
+                      selected.has(c.id) && "bg-info/5",
+                    )}
+                  >
+                    <td className="px-3 py-2.5">
+                      <Checkbox
+                        checked={selected.has(c.id)}
+                        aria-label={`Select ${c.ticker}`}
+                        onCheckedChange={() => toggleOne(c.id)}
+                      />
+                    </td>
                     <td className="px-3 py-2.5 font-semibold">
                       <Highlight text={c.ticker} term={search} />
                     </td>
