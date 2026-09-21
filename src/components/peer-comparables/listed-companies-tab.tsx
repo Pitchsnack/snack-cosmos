@@ -208,6 +208,28 @@ export function ListedCompaniesTab({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const bulkRemove = useMutation({
+    mutationFn: async (ids: string[]) => {
+      let done = 0;
+      for (const id of ids) {
+        await deleteFn({ data: { id } });
+        done += 1;
+      }
+      return done;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} compan${n === 1 ? "y" : "ies"} removed.`);
+      setBulkOpen(false);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["listed-companies"] });
+      qc.invalidateQueries({ queryKey: ["peer-sets"] });
+    },
+    onError: (e: Error) => {
+      toast.error(e.message);
+      qc.invalidateQueries({ queryKey: ["listed-companies"] });
+    },
+  });
+
   const remove = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
     onSuccess: () => {
