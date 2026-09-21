@@ -226,7 +226,9 @@ export function parseListedCsv(text: string): {
     cName,
     cTicker,
     cMarket,
+    cGroup,
     cSector,
+
     cRev,
     cMargin,
     cEv,
