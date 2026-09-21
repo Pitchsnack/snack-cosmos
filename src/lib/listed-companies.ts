@@ -11,7 +11,10 @@ export interface ListedCompany {
   ticker: string;
   name: string;
   market: PeerMarket;
+  /** SET group — the industry group assigned by the exchange. Stored as given. */
+  exchangeGroup: string | null;
   sector: string | null;
+
   revenueThbM: number | null;
   ebitdaMarginPct: number | null;
   evEbitda: number | null;
