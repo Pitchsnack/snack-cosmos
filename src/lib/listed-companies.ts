@@ -20,6 +20,14 @@ export interface ListedCompany {
   evEbitda: number | null;
   pe: number | null;
   pbv: number | null;
+  /** Percent. 99.5 or above means cost of sales was not reported. */
+  grossMarginPct: number | null;
+  netMarginPct: number | null;
+  roePct: number | null;
+  /** Ratio, e.g. 0.59 = 0.59×. Negative means negative equity. */
+  debtEquity: number | null;
+  /** Percent, may be negative. */
+  revenueGrowthPct: number | null;
   /** Fiscal statement end, as entered — "Dec-25" or "Dec-2025". */
   statementPeriod: string | null;
   /** Short business descriptor — "Telecom". */
