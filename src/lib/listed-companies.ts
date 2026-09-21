@@ -268,9 +268,16 @@ export function parseListedCsv(text: string): {
     cEv,
     cPe,
     cPbv,
+    cGross,
+    cNet,
+    cRoe,
+    cDe,
+    cGrowth,
     cPeriod,
     cTag,
     cAsAt,
+    cSetGroup,
+    cLegacyGroup,
   ]);
   const rawHeader = splitCsvLine(lines[0]);
   const unknown = rawHeader.filter((h, i) => h.trim() !== "" && !known.has(i));
