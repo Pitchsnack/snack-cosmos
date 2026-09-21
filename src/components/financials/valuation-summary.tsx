@@ -141,6 +141,9 @@ export function ValuationSummary({
     income.find((i) => i.item_code === "revenue_sales_services" && i.fiscal_year === year)
       ?.percent_change ?? null;
 
+  /** Peer medians for the Benchmark rows, with how many peers each one used. */
+  const bench = benchmarkMedians(peers);
+
   const f = ladderFactors(discounts);
   const m = result.medians;
   const step = (cumulative: number, base: number | null) =>
