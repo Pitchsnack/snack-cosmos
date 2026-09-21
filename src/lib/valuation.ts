@@ -331,7 +331,7 @@ export function computeValuation(
           name: "Book value",
           status: "usable",
           reason: "Equity as filed. A floor, not a market price.",
-          input: `equity ${fmtMoney(inputs.equity)}`,
+          input: `equity ${fmtMoney(inputs.equity)} · reference only`,
           low: inputs.equity,
           high: inputs.equity,
           point: true,
