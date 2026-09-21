@@ -396,39 +396,77 @@ export function ListedCompaniesTab({
                   onCheckedChange={toggleAll}
                 />
               </th>
-              <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Ticker
+              <th className="w-24 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Ticker"
+                  options={colOptions.ticker}
+                  selected={valueFilters.ticker ?? []}
+                  onChange={(v) => setValueFilter("ticker", v)}
+                />
               </th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Company
+              <th className="px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Company"
+                  options={colOptions.name}
+                  selected={valueFilters.name ?? []}
+                  onChange={(v) => setValueFilter("name", v)}
+                />
               </th>
-              <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
-                Market
+              <th className="w-20 px-3 py-2.5 text-center">
+                <ValueColumnFilter
+                  label="Market"
+                  align="center"
+                  options={colOptions.market}
+                  selected={valueFilters.market ?? []}
+                  onChange={(v) => setValueFilter("market", v)}
+                />
               </th>
-              <th className="w-44 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Sector
+              <th className="w-44 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Sector"
+                  options={colOptions.sector}
+                  selected={valueFilters.sector ?? []}
+                  onChange={(v) => setValueFilter("sector", v)}
+                />
               </th>
-              {["Revenue THB m", "EBITDA margin", "EV/EBITDA", "P/E", "P/BV"].map((h) => (
-                <th
-                  key={h}
-                  className="w-28 px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wide"
-                >
-                  {h}
+              {NUMERIC_COLUMNS.map(({ key, label }) => (
+                <th key={key} className="w-28 px-3 py-2.5 text-right">
+                  <RangeColumnFilter
+                    label={label}
+                    value={rangeFilters[key] ?? { min: null, max: null }}
+                    onChange={(v) => setRangeFilter(key, v)}
+                  />
                 </th>
               ))}
-              <th className="w-20 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Period
+              <th className="w-20 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Period"
+                  options={colOptions.statementPeriod}
+                  selected={valueFilters.statementPeriod ?? []}
+                  onChange={(v) => setValueFilter("statementPeriod", v)}
+                />
               </th>
-              <th className="w-40 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                Tag
+              <th className="w-40 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="Tag"
+                  options={colOptions.tag}
+                  selected={valueFilters.tag ?? []}
+                  onChange={(v) => setValueFilter("tag", v)}
+                />
               </th>
-              <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
-                As at
+              <th className="w-24 px-3 py-2.5 text-left">
+                <ValueColumnFilter
+                  label="As at"
+                  options={colOptions.asAt}
+                  selected={valueFilters.asAt ?? []}
+                  onChange={(v) => setValueFilter("asAt", v)}
+                />
               </th>
 
               <th className="w-20 px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide">
                 Used in
               </th>
+
               <th className="sticky right-0 z-20 w-24 bg-[hsl(222_47%_23%)] px-3 py-2.5 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.25)]" />
             </tr>
           </thead>
