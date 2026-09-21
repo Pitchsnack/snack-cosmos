@@ -492,7 +492,7 @@ export function ListedCompaniesTab({
         <table className="w-full min-w-[1980px] border-collapse text-sm">
           <thead>
             <tr className="bg-[hsl(222_47%_23%)] text-white">
-              <th className="w-10 px-3 py-2.5 text-left">
+              <th className="sticky left-0 z-30 w-10 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
                 <Checkbox
                   aria-label="Select all companies"
                   className="border-white/60 data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-[hsl(222_47%_23%)]"
@@ -500,7 +500,7 @@ export function ListedCompaniesTab({
                   onCheckedChange={toggleAll}
                 />
               </th>
-              <th className="w-24 px-3 py-2.5 text-left">
+              <th className="sticky left-10 z-30 w-24 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left">
                 <ValueColumnFilter
                   label="Ticker"
                   options={colOptions.ticker}
@@ -508,7 +508,7 @@ export function ListedCompaniesTab({
                   onChange={(v) => setValueFilter("ticker", v)}
                 />
               </th>
-              <th className="px-3 py-2.5 text-left">
+              <th className="sticky left-[136px] z-30 w-56 bg-[hsl(222_47%_23%)] px-3 py-2.5 text-left shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)]">
                 <ValueColumnFilter
                   label="Company"
                   options={colOptions.name}
