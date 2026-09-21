@@ -61,14 +61,35 @@ export function ladderFactors(d: Discounts): {
 export interface FilingInputs {
   year: number | undefined;
   revenue: number | null;
+  /** Sales revenue — the only safe margin denominator. */
+  salesRevenue: number | null;
+  totalRevenue: number | null;
+  grossProfit: number | null;
+  grossMarginPct: number | null;
   netProfit: number | null;
   equity: number | null;
   totalAssets: number | null;
   totalLiabilities: number | null;
+  /** Reported D&A from the cash flow statement; usually absent. */
   da: number | null;
   ebit: number | null;
+  ebitMarginPct: number | null;
+  /** Only set when D&A is reported — an estimate must never feed a valuation. */
   ebitda: number | null;
+  /** Bracketed D&A from the balance sheet, or the reported figure. */
+  daLow: number | null;
+  daHigh: number | null;
+  ebitdaLow: number | null;
+  ebitdaHigh: number | null;
+  ebitdaMarginLowPct: number | null;
+  ebitdaMarginHighPct: number | null;
+  /** True when the bracket comes from the balance sheet rather than the filing. */
+  ebitdaEstimated: boolean;
   netMarginPct: number | null;
+  /** EBIT − (total revenue − total expenses), when it exceeds 0.1% of sales. */
+  reconciliationDiff: number | null;
+  /** Total revenue is below sales revenue in this filing. */
+  revenueOrderNote: boolean;
 }
 
 function pick(items: StatementItem[], code: string, year: number | undefined): number | null {
@@ -78,6 +99,12 @@ function pick(items: StatementItem[], code: string, year: number | undefined): n
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
+/** Average of this year and last, or this year alone when no prior exists. */
+function avg(cur: number | null, prior: number | null): number | null {
+  if (cur === null) return null;
+  return prior === null ? cur : (cur + prior) / 2;
+}
+
 export function readFilingInputs(
   year: number | undefined,
   income: StatementItem[],
@@ -85,31 +112,87 @@ export function readFilingInputs(
   cashFlow: StatementItem[],
   ratios: RatioItem[],
 ): FilingInputs {
-  const revenue =
-    pick(income, "revenue_sales_services", year) ?? pick(income, "total_revenue", year);
+  const prior = year ? year - 1 : undefined;
+  const salesRevenue = pick(income, "revenue_sales_services", year);
+  const totalRevenue = pick(income, "total_revenue", year);
+  const revenue = salesRevenue ?? totalRevenue;
+  const cogs = pick(income, "cost_of_goods_sold", year);
   const netProfit = pick(income, "net_profit_loss", year);
   const pbt = pick(income, "profit_loss_before_income_tax", year);
   const interest = pick(income, "interest_expenses", year);
+  const totalExpenses = pick(income, "total_expenses", year);
   const da = pick(cashFlow, "cf_depreciation_amortization", year);
   const ebit = pbt === null ? null : pbt + (interest ?? 0);
   const ebitda = ebit === null || da === null ? null : ebit + Math.abs(da);
+
+  const grossProfit =
+    salesRevenue !== null && cogs !== null ? salesRevenue - cogs : null;
+  const denom = salesRevenue ?? totalRevenue;
+  const marginOf = (v: number | null) =>
+    v === null || !denom ? null : (v / denom) * 100;
+
+  // D&A is bracketed from the balance sheet when the cash flow statement is empty.
+  const ppe = avg(
+    pick(position, "property_plant_equipment", year),
+    pick(position, "property_plant_equipment", prior),
+  );
+  const nca = (y: number | undefined) => {
+    const total = pick(position, "total_non_current_assets", y);
+    const p = pick(position, "property_plant_equipment", y);
+    return total === null || p === null ? null : total - p;
+  };
+  const other = avg(nca(year), nca(prior));
+
+  const estLow = ppe === null ? null : ppe / 5;
+  const estHigh = ppe === null ? null : ppe / 3 + (other ?? 0) / 5;
+
+  const reported = da !== null;
+  const daLow = reported ? Math.abs(da!) : estLow;
+  const daHigh = reported ? Math.abs(da!) : estHigh;
+  const ebitdaLow = ebit === null || daLow === null ? null : ebit + daLow;
+  const ebitdaHigh = ebit === null || daHigh === null ? null : ebit + daHigh;
+
   const netMarginPct =
     ratios.find((r) => r.ratio_code === "net_profit_margin" && r.fiscal_year === year)?.value ??
     (revenue && netProfit !== null ? (netProfit / revenue) * 100 : null);
 
+  // Data checks — shown, never hidden.
+  let reconciliationDiff: number | null = null;
+  if (ebit !== null && totalRevenue !== null && totalExpenses !== null && salesRevenue) {
+    const diff = ebit - (totalRevenue - totalExpenses);
+    if (Math.abs(diff) > Math.abs(salesRevenue) * 0.001) reconciliationDiff = diff;
+  }
+  const revenueOrderNote =
+    salesRevenue !== null && totalRevenue !== null && totalRevenue < salesRevenue;
+
   return {
     year,
     revenue,
+    salesRevenue,
+    totalRevenue,
+    grossProfit,
+    grossMarginPct: marginOf(grossProfit),
     netProfit,
     equity: pick(position, "equity", year),
     totalAssets: pick(position, "total_assets", year),
     totalLiabilities: pick(position, "total_liabilities", year),
     da,
     ebit,
+    ebitMarginPct: marginOf(ebit),
     ebitda,
+    daLow,
+    daHigh,
+    ebitdaLow,
+    ebitdaHigh,
+    ebitdaMarginLowPct: marginOf(ebitdaLow),
+    ebitdaMarginHighPct: marginOf(ebitdaHigh),
+    ebitdaEstimated: !reported && ebitdaLow !== null,
     netMarginPct,
+    reconciliationDiff,
+    revenueOrderNote,
   };
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Peer medians                                                        */
