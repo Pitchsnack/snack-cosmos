@@ -297,6 +297,33 @@ export function ListedCompaniesTab({
         onClear={clearAll}
       />
 
+      {selectedCompanies.length > 0 && (
+        <div className="mx-4 mt-3 flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted/40 px-3 py-2">
+          <span className="text-sm font-medium">
+            {selectedCompanies.length} selected
+            {selectedUsedIn > 0 && (
+              <span className="ml-2 text-xs font-normal text-warning">
+                {selectedUsedIn} used in peer sets
+              </span>
+            )}
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setSelected(new Set())}>
+              Clear selection
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-8"
+              onClick={() => setBulkOpen(true)}
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              Delete selected
+            </Button>
+          </div>
+        </div>
+      )}
+
       <input
         ref={fileRef}
         type="file"
