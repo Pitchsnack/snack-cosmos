@@ -330,6 +330,23 @@ export function ListedCompaniesTab({
           description: `Created ${b.created} · Updated ${b.updated} · Unchanged ${b.unchanged} · Removed ${b.removed.length} · Skipped ${b.skipped.length} with fewer than 3 SET companies`,
         });
       }
+      /** Per-metric coverage, plus anything the median rules will ignore. */
+      const rs = r.ratioSummary ?? [];
+      if (rs.length) {
+        toast.info("Ratio columns", {
+          duration: 12_000,
+          description: rs
+            .map(
+              (s) =>
+                `${s.label}: ${s.withValue} with a value${
+                  s.excluded.length
+                    ? ` · ${s.excluded.length} excluded from medians (${s.excluded.join(", ")})`
+                    : ""
+                }`,
+            )
+            .join("\n"),
+        });
+      }
       qc.invalidateQueries({ queryKey: ["listed-companies"] });
       qc.invalidateQueries({ queryKey: ["peer-sets"] });
     },
