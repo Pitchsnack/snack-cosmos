@@ -542,9 +542,14 @@ export function ListedCompaniesTab({
             {!isLoading && rows.length === 0 && (
               <tr>
                 <td colSpan={15} className="px-4 py-8 text-center text-muted-foreground">
-                  {search.trim() || sectorFilter !== ALL_SECTORS ? (
+                  {search.trim() || sectorFilter !== ALL_SECTORS || columnFilterCount > 0 ? (
                     <>
-                      No companies match “{search.trim() || sectorFilter}”.{" "}
+                      No companies match{" "}
+                      {search.trim() || sectorFilter !== ALL_SECTORS
+                        ? `“${search.trim() || sectorFilter}”`
+                        : "the column filters"}
+                      .{" "}
+
                       <button
                         type="button"
                         onClick={clearAll}
