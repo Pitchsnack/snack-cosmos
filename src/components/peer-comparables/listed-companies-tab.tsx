@@ -413,7 +413,7 @@ export function ListedCompaniesTab({
                     <Fragment key={c.id}>
                       {c.usedIn > 0 && (
                         <tr className="border-t border-warning/30">
-                          <td colSpan={14} className="bg-warning/10 px-3 py-2">
+                          <td colSpan={15} className="bg-warning/10 px-3 py-2">
                             <span className="flex items-center gap-2 text-xs text-warning-foreground">
                               <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
                               <span>
