@@ -337,6 +337,14 @@ export function PeerSetsTab({
                     >
                       <Highlight text={modelText(r.businessModel)} term={search} />
                     </Badge>
+                    {r.isBaseline && r.exists && r.peerCount < 3 && (
+                      <Badge
+                        variant="outline"
+                        className="ml-1.5 border-warning/30 bg-warning/10 text-warning"
+                      >
+                        thin · {r.peerCount} {r.peerCount === 1 ? "company" : "companies"}
+                      </Badge>
+                    )}
                   </td>
                   <td className="px-4 py-2.5 text-center tabular-nums">
                     {r.exists ? r.peerCount : EMPTY_CELL}
