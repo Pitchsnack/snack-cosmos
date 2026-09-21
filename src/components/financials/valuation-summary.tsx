@@ -804,20 +804,25 @@ function Axis({
           }}
         />
       )}
-      {book !== null && (
-        <>
-          <div
-            className="absolute top-[18px] z-[3] h-[21px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
-            style={{ left: `${pos(book)}%` }}
-          />
-          <div
-            className="absolute top-1 -translate-x-1/2 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground"
-            style={{ left: `${pos(book)}%` }}
-          >
-            book {fmtMoney(book)}
+      {book !== null &&
+        (d.bookOffScale ? (
+          <div className="absolute right-0 top-1 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground">
+            → book {fmtMoney(book)} (off scale)
           </div>
-        </>
-      )}
+        ) : (
+          <>
+            <div
+              className="absolute top-[18px] z-[3] h-[21px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
+              style={{ left: `${pos(book)}%` }}
+            />
+            <div
+              className="absolute top-1 -translate-x-1/2 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground"
+              style={{ left: `${pos(book)}%` }}
+            >
+              book {fmtMoney(book)}
+            </div>
+          </>
+        ))}
       {[spread.low, spread.high].map((v, i) => (
         <div
           key={i}
