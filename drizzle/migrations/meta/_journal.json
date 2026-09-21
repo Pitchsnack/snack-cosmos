@@ -64,6 +64,13 @@
       "when": 1789985235571,
       "tag": "0008_drop_peer_sets_industry_tag_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789993812072,
+      "tag": "0009_listed_companies_ratio_columns",
+      "breakpoints": true
     }
   ]
 }

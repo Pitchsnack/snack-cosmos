@@ -1776,15 +1776,20 @@ export type Database = {
         Row: {
           as_at: string | null
           created_at: string
+          debt_equity: number | null
           ebitda_margin_pct: number | null
           ev_ebitda: number | null
           exchange_group: string | null
+          gross_margin_pct: number | null
           id: string
           market: Database["public"]["Enums"]["peer_market"]
           name: string
+          net_margin_pct: number | null
           pbv: number | null
           pe: number | null
+          revenue_growth_pct: number | null
           revenue_thb_m: number | null
+          roe_pct: number | null
           sector: string | null
           statement_period: string | null
           tag: string | null
@@ -1794,15 +1799,20 @@ export type Database = {
         Insert: {
           as_at?: string | null
           created_at?: string
+          debt_equity?: number | null
           ebitda_margin_pct?: number | null
           ev_ebitda?: number | null
           exchange_group?: string | null
+          gross_margin_pct?: number | null
           id?: string
           market: Database["public"]["Enums"]["peer_market"]
           name: string
+          net_margin_pct?: number | null
           pbv?: number | null
           pe?: number | null
+          revenue_growth_pct?: number | null
           revenue_thb_m?: number | null
+          roe_pct?: number | null
           sector?: string | null
           statement_period?: string | null
           tag?: string | null
@@ -1812,15 +1822,20 @@ export type Database = {
         Update: {
           as_at?: string | null
           created_at?: string
+          debt_equity?: number | null
           ebitda_margin_pct?: number | null
           ev_ebitda?: number | null
           exchange_group?: string | null
+          gross_margin_pct?: number | null
           id?: string
           market?: Database["public"]["Enums"]["peer_market"]
           name?: string
+          net_margin_pct?: number | null
           pbv?: number | null
           pe?: number | null
+          revenue_growth_pct?: number | null
           revenue_thb_m?: number | null
+          roe_pct?: number | null
           sector?: string | null
           statement_period?: string | null
           tag?: string | null
