@@ -338,7 +338,8 @@ export function ValuationSummary({
             <BenchRow
               label="Gross margin"
               own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
-              peer={null}
+              peer={bench.grossMarginPct.value}
+              peerCount={bench.grossMarginPct.count}
             />
             <BenchRow
               label="EBITDA margin"
