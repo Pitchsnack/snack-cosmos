@@ -244,14 +244,43 @@ export interface MethodResult {
   point: boolean;
 }
 
+/** One candidate's place in the tail test. */
+export interface CandidateInfo {
+  key: string;
+  name: string;
+  midpoint: number;
+  /** midpoint ÷ reference, when the rule ran. */
+  ratio: number | null;
+  tail: boolean;
+  lowConfidence: boolean;
+}
+
 export interface ValuationResult {
   methods: MethodResult[];
   /** Methods drawn on the By method chart. */
   drawn: MethodResult[];
-  /** Full spread across every drawn method. */
+  /** Book value — a reference marker, never a candidate. */
+  bookValue: number | null;
+  /** Candidates that took part in the tail test. */
+  candidates: CandidateInfo[];
+  /** Candidates set aside as tails. */
+  tails: CandidateInfo[];
+  /** Candidates kept. */
+  included: MethodResult[];
+  /** True when 3 or more candidates existed, so the tail rule ran. */
+  ruleRan: boolean;
+  /** Median of all candidate midpoints, when the rule ran. */
+  reference: number | null;
+  /** Accepted zone: 0.5× to 2× the reference. */
+  zone: { low: number; high: number } | null;
+  /** Span of the included methods — the axis domain. */
   spread: { low: number; high: number } | null;
-  /** Where the reliable methods agree. */
+  /** Where the included methods agree. */
   indicative: { low: number; high: number } | null;
+  /** Names of the methods behind the agreed range. */
+  agreeNames: string[];
+  /** The agreed range came from a single remaining method. */
+  singleMethod: boolean;
   agreeCount: number;
   totalCount: number;
   /** First blocked method, if any — drives the notice and the tab dot. */
@@ -261,6 +290,7 @@ export interface ValuationResult {
   adjusted: { pbv: number | null; evSales: number | null; evEbitda: number | null };
   medians: PeerMedians;
 }
+
 
 export interface Range {
   low: number;
