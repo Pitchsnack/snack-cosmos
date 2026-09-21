@@ -489,42 +489,131 @@ export function ValuationSummary({
 
       {/* 5 · By method */}
       <Block label="By method" hint="each range, on one scale">
-        {result.drawn.length === 0 ? (
+        {result.drawn.length === 0 || !spread ? (
           <p className="text-[12px] text-muted-foreground">
             No method could be computed from this filing and peer set.
           </p>
         ) : (
           <>
             {result.drawn.map((row) => (
-              <MethodRow key={row.key} row={row} spread={spread!} />
+              <MethodRow
+                key={row.key}
+                row={row}
+                domain={chartDomain(spread, result.bookValue)}
+                zone={result.zone}
+                reference={result.reference}
+                tail={result.tails.find((t) => t.key === row.key) ?? null}
+                showMedianCap={row.key === result.candidates[0]?.key}
+              />
             ))}
             {indicative && (
               <div className="-mx-3 -mb-3 mt-1 grid grid-cols-[132px_1fr_128px] items-center gap-3.5 rounded-b-[7px] border-t border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
                 <div className="text-[12.5px] font-semibold text-[#1E3A8A]">
                   Indicative valuation
+                  <small className="block text-[11px] font-normal text-muted-foreground">
+                    {result.agreeNames.join(" ∩ ")}
+                  </small>
                 </div>
                 <div className="relative h-1.5 rounded-[3px] bg-[#E3E8F4]">
-                  <div
-                    className="absolute top-0 h-1.5 rounded-[3px]"
-                    style={{
-                      left: `${scalePos(indicative.low, spread!.low, spread!.high)}%`,
-                      width: `${Math.max(
-                        2,
-                        scalePos(indicative.high, spread!.low, spread!.high) -
-                          scalePos(indicative.low, spread!.low, spread!.high),
-                      )}%`,
-                      background: "linear-gradient(90deg,#2D4B9E 0%,#1E3A8A 50%,#16296A 100%)",
-                    }}
-                  />
+                  {(() => {
+                    const d = chartDomain(spread, result.bookValue);
+                    const l = scalePos(indicative.low, d.low, d.high);
+                    return (
+                      <div
+                        className="absolute top-0 h-1.5 rounded-[3px]"
+                        style={{
+                          left: `${l}%`,
+                          width: `${Math.max(2, scalePos(indicative.high, d.low, d.high) - l)}%`,
+                          background: "linear-gradient(90deg,#2D4B9E 0%,#1E3A8A 50%,#16296A 100%)",
+                        }}
+                      />
+                    );
+                  })()}
                 </div>
                 <div className="text-right text-[12.5px] font-semibold tabular-nums text-[#1E3A8A]">
                   {fmtMoney(indicative.low)} – {fmtMoney(indicative.high)}
                 </div>
               </div>
             )}
+
+            {/* How the range was chosen */}
+            {result.candidates.length > 0 && (
+              <div className="mt-2.5 border-t border-[#F2F4F6] pt-2.5">
+                <table className="w-full border-collapse text-[12px]">
+                  <thead>
+                    <tr>
+                      {[
+                        "Method",
+                        "Midpoint",
+                        result.reference === null
+                          ? "vs median"
+                          : `vs median ${fmtMoney(result.reference)}`,
+                        "Result",
+                      ].map((h, i) => (
+                        <th
+                          key={h}
+                          className={`border-b border-[#F2F4F6] pb-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground ${
+                            i === 0 ? "text-left" : "text-right"
+                          }`}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.candidates.map((c) => (
+                      <tr key={c.key}>
+                        <td className="border-b border-[#F2F4F6] py-[5px] text-[#0F1B33]">
+                          {c.name}
+                        </td>
+                        <td className="border-b border-[#F2F4F6] py-[5px] text-right tabular-nums text-[#0F1B33]">
+                          {fmtMoney(c.midpoint)}
+                        </td>
+                        <td className="border-b border-[#F2F4F6] py-[5px] text-right tabular-nums text-[#0F1B33]">
+                          {c.ratio === null ? "—" : `${c.ratio.toFixed(1)}×`}
+                        </td>
+                        <td
+                          className={`border-b border-[#F2F4F6] py-[5px] text-right font-semibold ${
+                            c.tail ? "text-[#B45309]" : "text-[#15803D]"
+                          }`}
+                        >
+                          {c.tail
+                            ? "tail — excluded"
+                            : c.lowConfidence
+                              ? "in · low confidence"
+                              : "in"}
+                        </td>
+                      </tr>
+                    ))}
+                    {result.bookValue !== null && (
+                      <tr className="text-muted-foreground">
+                        <td className="py-[5px]">Book value</td>
+                        <td className="py-[5px] text-right tabular-nums">
+                          {fmtMoney(result.bookValue)}
+                        </td>
+                        <td className="py-[5px] text-right">—</td>
+                        <td className="py-[5px] text-right">reference, not a candidate</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <div className="mt-[7px] text-[11.5px] text-muted-foreground">
+                  A method is a <b className="text-[#0F1B33]">tail</b> when its midpoint is below{" "}
+                  <b className="text-[#0F1B33]">0.5×</b> or above{" "}
+                  <b className="text-[#0F1B33]">2×</b> the median of all midpoints
+                  {result.zone
+                    ? ` — here, outside ${fmtMoney(result.zone.low)} – ${fmtMoney(result.zone.high)}, the faint band on the chart`
+                    : ""}
+                  . The rule runs only with 3 or more methods
+                  {result.ruleRan ? "" : ", so it did not run here"}.
+                </div>
+              </div>
+            )}
           </>
         )}
       </Block>
+
 
       {/* 6 · Assumptions */}
       <Block label="Assumptions" hint="every value editable" right="applied to the peer medians">
