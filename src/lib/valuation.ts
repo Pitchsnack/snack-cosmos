@@ -537,6 +537,7 @@ function buildMultipleMethod(a: {
   range: Range | null;
   missingBase: string;
   missingMultiple: string;
+  note?: string;
 }): MethodResult {
   if (a.base === null) return blockedMethod(a.key, a.name, a.missingBase);
   if (!a.range) return blockedMethod(a.key, a.name, a.missingMultiple);
@@ -545,7 +546,9 @@ function buildMultipleMethod(a: {
     name: a.name,
     status: "usable",
     reason: "Peer median with the assumptions applied.",
-    input: `${a.baseLabel} ${fmtMoney(a.base)} × ${fmtMult(a.range.low)}–${fmtMult(a.range.high)}`,
+    input: `${a.baseLabel} ${fmtMoney(a.base)} × ${fmtMult(a.range.low)}–${fmtMult(a.range.high)}${
+      a.note ? ` · ${a.note}` : ""
+    }`,
     low: a.base * a.range.low,
     high: a.base * a.range.high,
     point: false,
