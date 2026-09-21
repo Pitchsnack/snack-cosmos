@@ -62,7 +62,9 @@ export function emptyListedCompany(market: PeerMarket): ListedCompanyInput {
     ticker: "",
     name: "",
     market,
+    exchangeGroup: null,
     sector: null,
+
     revenueThbM: null,
     ebitdaMarginPct: null,
     evEbitda: null,
