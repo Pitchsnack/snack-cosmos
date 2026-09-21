@@ -449,7 +449,10 @@ export function computeValuation(
   // With fewer than 3 candidates the "median" is just an average, and the rule
   // would throw out the credible method. It only runs at 3 or more.
   const ruleRan = candidateRows.length >= 3;
-  const reference = ruleRan ? median(mids) : null;
+  // Rounded once, to the nearest million, so the reference reads the same in
+  // the chart label, the reasoning table and the tail note.
+  const rawReference = ruleRan ? median(mids) : null;
+  const reference = rawReference === null ? null : Math.round(rawReference / 1e6) * 1e6;
   const zone = reference === null ? null : { low: reference * 0.5, high: reference * 2 };
 
   const candidates: CandidateInfo[] = candidateRows.map((m, i) => {

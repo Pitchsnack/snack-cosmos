@@ -300,8 +300,8 @@ export function ValuationSummary({
           )}
         </div>
         <p className="mt-2 text-[11.5px] text-muted-foreground">
-          The axis fits the included methods. A tail is named at the edge rather than stretching the
-          scale.
+          The axis starts at zero, so each range shows at its real size. A tail is named at the edge
+          rather than stretching the scale.
         </p>
       </div>
 
@@ -516,7 +516,7 @@ export function ValuationSummary({
           </p>
         ) : (
           <>
-            {result.drawn.map((row) => (
+            {orderedRows(result).map((row, i) => (
               <MethodRow
                 key={row.key}
                 row={row}
@@ -524,7 +524,8 @@ export function ValuationSummary({
                 zone={result.zone}
                 reference={result.reference}
                 tail={result.tails.find((t) => t.key === row.key) ?? null}
-                showMedianCap={row.key === result.candidates[0]?.key}
+                showMedianCap={i === 0}
+                offScale={row.point && chartDomain(spread, result.bookValue).bookOffScale}
               />
             ))}
             {indicative && (
@@ -741,14 +742,40 @@ function listNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
-/** The drawn scale: the included methods, widened to hold the book marker. */
+/** Book value, then the included methods, then the tails. */
+function orderedRows(result: ValuationResult) {
+  const tailKeys = new Set(result.tails.map((t) => t.key));
+  const book = result.drawn.filter((r) => r.point);
+  const included = result.drawn.filter((r) => !r.point && !tailKeys.has(r.key));
+  const tails = result.drawn.filter((r) => !r.point && tailKeys.has(r.key));
+  return [...book, ...included, ...tails];
+}
+
+/** Next round number at or above a value — 887M → 1.0B, 670M → 800M. */
+function niceCeil(v: number): number {
+  if (!Number.isFinite(v) || v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const s of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) {
+    if (v <= s * mag) return s * mag;
+  }
+  return 10 * mag;
+}
+
+/**
+ * The drawn scale. It always starts at zero so a range shows at its real size,
+ * and reaches the next round number above the included methods and book value.
+ * Book value only leaves the scale when it would squash the ranges (> 2× the
+ * highest included value); tails are always off scale.
+ */
 function chartDomain(
   spread: { low: number; high: number },
   book: number | null,
-): { low: number; high: number } {
-  const low = book === null ? spread.low : Math.min(spread.low, book);
-  const high = book === null ? spread.high : Math.max(spread.high, book);
-  return high > low ? { low, high } : { low, high: low + 1 };
+): { low: number; high: number; bookOffScale: boolean } {
+  const bookOffScale = book !== null && book > spread.high * 2;
+  const top = niceCeil(
+    book === null || bookOffScale ? spread.high : Math.max(spread.high, book),
+  );
+  return { low: 0, high: top > 0 ? top : 1, bookOffScale };
 }
 
 function Axis({
@@ -787,20 +814,25 @@ function Axis({
           }}
         />
       )}
-      {book !== null && (
-        <>
-          <div
-            className="absolute top-[18px] z-[3] h-[21px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
-            style={{ left: `${pos(book)}%` }}
-          />
-          <div
-            className="absolute top-1 -translate-x-1/2 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground"
-            style={{ left: `${pos(book)}%` }}
-          >
-            book {fmtMoney(book)}
+      {book !== null &&
+        (d.bookOffScale ? (
+          <div className="absolute right-0 top-1 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground">
+            → book {fmtMoney(book)} (off scale)
           </div>
-        </>
-      )}
+        ) : (
+          <>
+            <div
+              className="absolute top-[18px] z-[3] h-[21px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
+              style={{ left: `${pos(book)}%` }}
+            />
+            <div
+              className="absolute top-1 -translate-x-1/2 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground"
+              style={{ left: `${pos(book)}%` }}
+            >
+              book {fmtMoney(book)}
+            </div>
+          </>
+        ))}
       {[spread.low, spread.high].map((v, i) => (
         <div
           key={i}
@@ -838,6 +870,7 @@ function MethodRow({
   reference,
   tail,
   showMedianCap,
+  offScale,
 }: {
   row: {
     name: string;
@@ -852,6 +885,8 @@ function MethodRow({
   reference: number | null;
   tail: { ratio: number | null } | null;
   showMedianCap: boolean;
+  /** Book value sits so far above the ranges that drawing it would squash them. */
+  offScale?: boolean;
 }) {
   const clamp = (v: number) => Math.max(0, Math.min(100, scalePos(v, domain.low, domain.high)));
   const left = clamp(row.low!);
@@ -901,10 +936,17 @@ function MethodRow({
         )}
 
         {row.point ? (
-          <div
-            className="absolute -top-1 bottom-[-4px] z-[2] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
-            style={{ left: `${clamp(row.low!)}%` }}
-          />
+          offScale ? (
+            <div className="absolute right-0 top-0 z-[2] flex h-4 items-center gap-[5px] text-[10.5px] text-muted-foreground">
+              <i className="h-[11px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]" />
+              off scale
+            </div>
+          ) : (
+            <div
+              className="absolute -top-1 bottom-[-4px] z-[2] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
+              style={{ left: `${clamp(row.low!)}%` }}
+            />
+          )
         ) : isTail ? (
           <div className="absolute right-0 top-0 z-[2] flex h-4 items-center gap-[5px] text-[10.5px] font-semibold text-[#B45309]">
             <i
