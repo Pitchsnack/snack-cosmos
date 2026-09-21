@@ -362,6 +362,8 @@ export function computeValuation(
       range: effective.evSales,
       missingBase: "revenue not captured in the import",
       missingMultiple: "peers carry no EV/EBITDA and EBITDA margin, so EV/Sales cannot be derived",
+      // It prices the whole enterprise, not the equity — worth saying on the row.
+      note: "EV basis",
     }),
   );
 
