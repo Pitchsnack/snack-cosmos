@@ -68,6 +68,20 @@ export function ValuationMethods({
         <h3 className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[#1E3A8A] opacity-75">
           Methods
         </h3>
+        {inputs.ebitdaEstimated && (
+          <div className="flex items-start gap-3 border-b border-[#F2F4F6] py-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] font-medium text-[#0F1B33]">EBITDA</div>
+              <div className="text-[11px] text-muted-foreground">
+                D&amp;A not in the filing; bracketed from the balance sheet. Used for benchmarking
+                only, never in a valuation.
+              </div>
+            </div>
+            <span className="shrink-0 text-[11.5px] font-semibold text-[#B45309]">
+              estimated range
+            </span>
+          </div>
+        )}
         {result.methods.map((m) => (
           <div
             key={m.key}
@@ -75,12 +89,21 @@ export function ValuationMethods({
           >
             <div className="min-w-0 flex-1">
               <div className="text-[12.5px] font-medium text-[#0F1B33]">{m.name}</div>
-              <div className="text-[11px] text-muted-foreground">{m.reason}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {m.key === "evebitda" && m.status === "blocked" && inputs.ebitdaEstimated
+                  ? "EBITDA is only an estimated range — too wide to value on."
+                  : m.reason}
+              </div>
             </div>
             <span className={`shrink-0 text-[11.5px] font-semibold ${STATUS_TONE[m.status]}`}>
               {m.status}
             </span>
           </div>
+        ))}
+        {notes.map((n) => (
+          <p key={n} className="mt-2.5 text-[11px] leading-[1.45] text-muted-foreground">
+            {n}
+          </p>
         ))}
       </section>
 
@@ -88,22 +111,29 @@ export function ValuationMethods({
         <h3 className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[#1E3A8A] opacity-75">
           Inputs from the filing
         </h3>
-        {rows.map(([label, value]) => (
+        {rows.map(([label, value, est]) => (
           <div
             key={label}
             className="flex items-baseline gap-3 border-b border-[#F2F4F6] py-2.5 last:border-b-0"
           >
             <span className="flex-1 text-[12.5px] font-medium text-[#0F1B33]">{label}</span>
-            <span className="text-[12.5px] tabular-nums text-[#0F1B33]">{value ?? ""}</span>
             <span
-              className={`w-[92px] shrink-0 text-right text-[11.5px] ${
-                value ? "text-[#15803D]" : "text-[#B45309]"
+              className={`text-[12.5px] tabular-nums ${
+                value && est ? "text-[#B45309]" : "text-[#0F1B33]"
               }`}
             >
-              {value ? "present" : "not captured"}
+              {value ?? ""}
+            </span>
+            <span
+              className={`w-[92px] shrink-0 text-right text-[11.5px] ${
+                value ? (est ? "text-[#B45309]" : "text-[#15803D]") : "text-[#B45309]"
+              }`}
+            >
+              {value ? (est ? "estimated" : "present") : "not captured"}
             </span>
           </div>
         ))}
+
       </section>
     </div>
   );
