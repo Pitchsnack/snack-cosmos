@@ -308,6 +308,7 @@ export function ValuationTab({
                 refreshText={age?.text ?? null}
                 ratios={ratios}
                 income={income}
+                inputs={inputs}
                 onMethods={() => setSubTab("methods")}
                 renderMatching={matching}
               />
