@@ -194,6 +194,29 @@ export function ListedCompaniesTab({
     setSectorFilter(ALL_SECTORS);
   };
 
+  // ---- multi-select -------------------------------------------------------
+  const selectedCompanies = companies.filter((c) => selected.has(c.id));
+  const selectedUsedIn = selectedCompanies.filter((c) => c.usedIn > 0).length;
+  const allSelected = rows.length > 0 && rows.every((c) => selected.has(c.id));
+  const someSelected = !allSelected && rows.some((c) => selected.has(c.id));
+
+  const toggleOne = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  /** Select-all acts on the rows currently visible. */
+  const toggleAll = () =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) rows.forEach((c) => next.delete(c.id));
+      else rows.forEach((c) => next.add(c.id));
+      return next;
+    });
+
   const importCsv = useMutation({
     mutationFn: async (file: File) => {
       const { rows: parsed, errors } = parseListedCsv(await file.text());
