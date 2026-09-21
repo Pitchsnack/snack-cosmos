@@ -112,6 +112,8 @@ export function ListedCompaniesTab({
   const [editing, setEditing] = useState<ListedCompanyInput | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<ListedCompany | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   // ---- inline row editing -------------------------------------------------
   const saveRowFn = useServerFn(saveListedCompany);
