@@ -783,6 +783,10 @@ export function ListedCompaniesTab({
                       <Highlight text={c.name} term={search} />
                     </td>
                     <td className="px-3 py-2.5 text-center">{c.market}</td>
+                    <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
+                      {c.exchangeGroup ?? EMPTY_CELL}
+                    </td>
+
                     <td className="px-3 py-2.5 text-muted-foreground">{c.sector ?? EMPTY_CELL}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
                       {fmtMetric(c.revenueThbM)}
