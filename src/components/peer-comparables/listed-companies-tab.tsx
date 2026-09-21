@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { LoadingOverlay } from "@/components/ui/PitchSnackLoader";
 import {
   Select,
   SelectContent,
@@ -448,6 +449,8 @@ export function ListedCompaniesTab({
           e.target.value = "";
         }}
       />
+
+      {importCsv.isPending && <LoadingOverlay message="Importing CSV…" delay={0} />}
 
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[1420px] border-collapse text-sm">
