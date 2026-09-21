@@ -465,6 +465,11 @@ function PeerSetEditor({
           <div className="border-b border-border/60 bg-info/5 px-4 py-3 text-xs text-foreground">
             <strong>Baseline set</strong> — generated automatically from SET listings in this
             sector. To customise the comparables, create a business-model set.
+            {peers.length > 0 && peers.length < 3 && (
+              <span className="ml-1.5 rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning">
+                thin · {peers.length} {peers.length === 1 ? "company" : "companies"}
+              </span>
+            )}
           </div>
         )}
 
