@@ -58,6 +58,11 @@ function companyToPeer(r: any): Peer {
     evEbitda: n(r.ev_ebitda),
     pe: n(r.pe),
     pbv: n(r.pbv),
+    grossMarginPct: n(r.gross_margin_pct),
+    netMarginPct: n(r.net_margin_pct),
+    roePct: n(r.roe_pct),
+    debtEquity: n(r.debt_equity),
+    revenueGrowthPct: n(r.revenue_growth_pct),
     statementPeriod: r.statement_period ?? null,
   };
 }
