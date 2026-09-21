@@ -943,7 +943,7 @@ function MethodRow({
 function Cap({ left }: { left: number }) {
   return (
     <div
-      className="absolute -top-[3px] h-[11px] w-[1.5px] rounded-[1px] opacity-65"
+      className="absolute top-[2.5px] z-[3] h-[11px] w-[1.5px] rounded-[1px] opacity-65"
       style={{ left: `${left}%`, background: ACC }}
     />
   );
