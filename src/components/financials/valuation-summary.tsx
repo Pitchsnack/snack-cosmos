@@ -359,18 +359,35 @@ export function ValuationSummary({
               blocked={inputs.ebitdaLow === null}
               blockedNote="needs D&A"
               peer={result.medians.ebitdaMarginPct}
+              peerCount={peers.filter((p) => typeof p.ebitdaMarginPct === "number").length}
             />
 
-            <BenchRow label="Net margin" own={ratio("net_profit_margin")} peer={null} />
-            <BenchRow label="Return on equity" own={ratio("return_on_equity")} peer={null} />
+            <BenchRow
+              label="Net margin"
+              own={ratio("net_profit_margin") ?? inputs.netMarginPct}
+              peer={bench.netMarginPct.value}
+              peerCount={bench.netMarginPct.count}
+            />
+            <BenchRow
+              label="Return on equity"
+              own={ratio("return_on_equity")}
+              peer={bench.roePct.value}
+              peerCount={bench.roePct.count}
+            />
             <BenchRow
               label="Debt to equity"
               own={ratio("debt_to_equity_ratio")}
-              peer={null}
+              peer={bench.debtEquity.value}
+              peerCount={bench.debtEquity.count}
               unit="×"
               lowerIsBetter
             />
-            <BenchRow label="Revenue growth" own={revenueGrowth} peer={null} />
+            <BenchRow
+              label="Revenue growth"
+              own={revenueGrowth}
+              peer={bench.revenueGrowthPct.value}
+              peerCount={bench.revenueGrowthPct.count}
+            />
           </tbody>
         </table>
         <p className="mt-2 text-[11px] text-muted-foreground">
