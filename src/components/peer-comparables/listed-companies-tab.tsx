@@ -838,6 +838,26 @@ export function ListedCompaniesTab({
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pe, "×")}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{fmtMetric(c.pbv, "×")}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.grossMarginPct, "%")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.netMarginPct, "%")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.roePct, "%")}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {fmtMetric(c.debtEquity, "×")}
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-2.5 text-right tabular-nums",
+                        (c.revenueGrowthPct ?? 0) < 0 && "text-destructive",
+                      )}
+                    >
+                      {fmtMetric(c.revenueGrowthPct, "%")}
+                    </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
                       {c.statementPeriod ?? EMPTY_CELL}
                     </td>
