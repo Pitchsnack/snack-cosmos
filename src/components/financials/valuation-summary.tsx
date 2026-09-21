@@ -936,10 +936,17 @@ function MethodRow({
         )}
 
         {row.point ? (
-          <div
-            className="absolute -top-1 bottom-[-4px] z-[2] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
-            style={{ left: `${clamp(row.low!)}%` }}
-          />
+          offScale ? (
+            <div className="absolute right-0 top-0 z-[2] flex h-4 items-center gap-[5px] text-[10.5px] text-muted-foreground">
+              <i className="h-[11px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]" />
+              off scale
+            </div>
+          ) : (
+            <div
+              className="absolute -top-1 bottom-[-4px] z-[2] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
+              style={{ left: `${clamp(row.low!)}%` }}
+            />
+          )
         ) : isTail ? (
           <div className="absolute right-0 top-0 z-[2] flex h-4 items-center gap-[5px] text-[10.5px] font-semibold text-[#B45309]">
             <i
