@@ -255,7 +255,30 @@ export const importListedCompanies = createServerFn({ method: "POST" })
     const { generateBaselineSets } = await import("@/lib/baseline-sets.server");
     const baseline = await generateBaselineSets(ctx.supabase, ctx.userId);
 
-    return { created, updated, ids, baseline };
+    // Per-column coverage, plus the values a median will ignore. Nothing is
+    // changed in the data — the exclusions only apply when a median is taken.
+    const has = (v: number | null | undefined) => typeof v === "number" && Number.isFinite(v);
+    const ratioSummary = [
+      { key: "grossMarginPct", label: "Gross margin" },
+      { key: "netMarginPct", label: "Net margin" },
+      { key: "roePct", label: "ROE" },
+      { key: "debtEquity", label: "D/E" },
+      { key: "revenueGrowthPct", label: "Revenue growth" },
+    ].map(({ key, label }) => {
+      const excluded: string[] = [];
+      let withValue = 0;
+      for (const r of data.rows) {
+        const v = (r as Record<string, unknown>)[key] as number | null | undefined;
+        if (!has(v)) continue;
+        withValue += 1;
+        if (key === "grossMarginPct" && (v as number) >= 99.5) excluded.push(r.ticker);
+        else if ((key === "roePct" || key === "debtEquity") && has(r.debtEquity) && (r.debtEquity as number) < 0)
+          excluded.push(r.ticker);
+      }
+      return { key, label, withValue, excluded };
+    });
+
+    return { created, updated, ids, baseline, ratioSummary };
   });
 
 /* ------------------------------------------------------------------ */
