@@ -714,108 +714,231 @@ function Num({
   );
 }
 
+/** Join names as "A and B" / "A, B and C". */
+function listNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+/** The drawn scale: the included methods, widened to hold the book marker. */
+function chartDomain(
+  spread: { low: number; high: number },
+  book: number | null,
+): { low: number; high: number } {
+  const low = book === null ? spread.low : Math.min(spread.low, book);
+  const high = book === null ? spread.high : Math.max(spread.high, book);
+  return high > low ? { low, high } : { low, high: low + 1 };
+}
+
 function Axis({
   spread,
   indicative,
+  book,
+  tails,
 }: {
   spread: { low: number; high: number };
-  indicative: { low: number; high: number };
+  indicative: { low: number; high: number } | null;
+  book: number | null;
+  tails: { name: string; low: number; high: number }[];
 }) {
-  const pos = (v: number) => scalePos(v, spread.low, spread.high) * 0.9 + 4;
-  const coreLeft = pos(indicative.low);
-  const coreWidth = Math.max(2, pos(indicative.high) - coreLeft);
+  const d = chartDomain(spread, book);
+  const pos = (v: number) => scalePos(v, d.low, d.high) * 0.86 + 4;
+  const coreLeft = indicative ? pos(indicative.low) : 0;
+  const coreWidth = indicative ? Math.max(1.5, pos(indicative.high) - coreLeft) : 0;
   return (
     <div className="relative mt-3 h-[62px]">
-      <div className="absolute left-0 right-0 top-10 h-px bg-[#EAECEF]" />
+      <div className="absolute left-0 right-0 top-7 h-px bg-[#EAECEF]" />
       <div
-        className="absolute top-[37px] h-[7px] rounded-[4px]"
+        className="absolute top-[25px] h-[7px] rounded-[4px] opacity-90"
         style={{
           left: `${pos(spread.low)}%`,
-          width: `${pos(spread.high) - pos(spread.low)}%`,
-          background: "linear-gradient(90deg,#D8E6F6 0%,#A8C1E4 50%,#7891C6 100%)",
+          width: `${Math.max(1, pos(spread.high) - pos(spread.low))}%`,
+          background: "linear-gradient(90deg,#D8E6F6,#A8BFE2)",
         }}
       />
-      <div
-        className="absolute top-[37px] h-[7px] rounded-[4px]"
-        style={{
-          left: `${coreLeft}%`,
-          width: `${coreWidth}%`,
-          background: "linear-gradient(90deg,#2D4B9E,#16296A)",
-        }}
-      />
-      <div
-        className="absolute top-1.5 -translate-x-1/2 whitespace-nowrap text-center text-[11.5px] font-medium text-[#1E3A8A]"
-        style={{ left: `${coreLeft + coreWidth / 2}%` }}
-      >
-        indicative valuation
-        <i className="mx-auto mt-[3px] block h-3 w-px bg-[#A8B8DC]" />
-      </div>
-      {[
-        { v: spread.low, on: false },
-        { v: indicative.low, on: true },
-        { v: indicative.high, on: true },
-        { v: spread.high, on: false },
-      ].map((t, i) => (
+      {indicative && (
+        <div
+          className="absolute top-[25px] z-[2] h-[7px] rounded-[4px]"
+          style={{
+            left: `${coreLeft}%`,
+            width: `${coreWidth}%`,
+            background: "linear-gradient(90deg,#2D4B9E,#16296A)",
+          }}
+        />
+      )}
+      {book !== null && (
+        <>
+          <div
+            className="absolute top-[18px] z-[3] h-[21px] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
+            style={{ left: `${pos(book)}%` }}
+          />
+          <div
+            className="absolute top-1 -translate-x-1/2 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground"
+            style={{ left: `${pos(book)}%` }}
+          >
+            book {fmtMoney(book)}
+          </div>
+        </>
+      )}
+      {[spread.low, spread.high].map((v, i) => (
         <div
           key={i}
-          className={`absolute top-12 -translate-x-1/2 whitespace-nowrap text-[11px] ${
-            t.on ? "font-semibold text-[#1E3A8A]" : "text-muted-foreground"
-          }`}
-          style={{ left: `${pos(t.v)}%` }}
+          className="absolute top-1 -translate-x-1/2 whitespace-nowrap text-[11px] tabular-nums text-muted-foreground"
+          style={{ left: `${pos(v)}%` }}
         >
-          {fmtMoney(t.v)}
+          {fmtMoney(v)}
         </div>
       ))}
+      {indicative &&
+        [indicative.low, indicative.high].map((v, i) => (
+          <div
+            key={i}
+            className="absolute top-[38px] -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold tabular-nums text-[#1E3A8A]"
+            style={{ left: `${i === 0 ? coreLeft : coreLeft + coreWidth}%` }}
+          >
+            {fmtMoney(v)}
+          </div>
+        ))}
+      {tails.length > 0 && (
+        <div className="absolute right-0 top-[42px] whitespace-nowrap text-[11px] font-semibold text-[#B45309]">
+          {tails
+            .map((t) => `→ tail ${fmtMoney(t.low)}–${fmtMoney(t.high)}`)
+            .join("  ")}
+        </div>
+      )}
     </div>
   );
 }
 
 function MethodRow({
   row,
-  spread,
+  domain,
+  zone,
+  reference,
+  tail,
+  showMedianCap,
 }: {
-  row: { name: string; input: string | null; low: number | null; high: number | null; status: string; point: boolean };
-  spread: { low: number; high: number };
+  row: {
+    name: string;
+    input: string | null;
+    low: number | null;
+    high: number | null;
+    status: string;
+    point: boolean;
+  };
+  domain: { low: number; high: number };
+  zone: { low: number; high: number } | null;
+  reference: number | null;
+  tail: { ratio: number | null } | null;
+  showMedianCap: boolean;
 }) {
-  const left = scalePos(row.low!, spread.low, spread.high);
-  const width = Math.max(1.5, scalePos(row.high!, spread.low, spread.high) - left);
+  const clamp = (v: number) => Math.max(0, Math.min(100, scalePos(v, domain.low, domain.high)));
+  const left = clamp(row.low!);
+  const width = Math.max(1.5, clamp(row.high!) - left);
   const pale = row.status === "low confidence";
+  const isTail = tail !== null;
+
   return (
     <div className="grid grid-cols-[132px_1fr_128px] items-center gap-3.5 border-b border-[#F2F4F6] py-2.5 last:border-b-0">
-      <div className="text-[12.5px] font-medium leading-[1.3] text-[#0F1B33]">
+      <div
+        className={`text-[12.5px] font-medium leading-[1.3] ${
+          isTail ? "text-[#A5ADB8]" : "text-[#0F1B33]"
+        }`}
+      >
         {row.name}
         {row.input && (
-          <small className="block text-[11px] font-normal leading-[1.35] text-muted-foreground">
+          <small
+            className={`block text-[11px] font-normal leading-[1.35] ${
+              isTail ? "text-[#B7BEC8]" : "text-muted-foreground"
+            }`}
+          >
             {row.input}
           </small>
         )}
       </div>
-      <div className="relative h-[5px] rounded-[3px] bg-[#EFF1F5]">
-        <div
-          className="absolute top-0 h-[5px] rounded-[3px]"
-          style={{
-            left: `${left}%`,
-            width: `${width}%`,
-            background: pale
-              ? "linear-gradient(90deg,#D8E6F6 0%,#9DB8DE 50%,#4A66A8 100%)"
-              : "linear-gradient(90deg,#BBD3F0 0%,#6E93CF 50%,#1E3A8A 100%)",
-            opacity: pale ? 0.72 : 1,
-          }}
-        />
-        {!pale && (
+      <div
+        className={`relative h-4 ${row.point ? "" : "before:absolute before:inset-x-0 before:top-[5.5px] before:h-[5px] before:rounded-[3px] before:bg-[#EFF1F5] before:content-['']"}`}
+      >
+        {/* The accepted zone and the reference, drawn behind the bar. */}
+        {zone && (
+          <div
+            className="absolute inset-y-0 z-0 border-l border-dotted border-[#C9D3E8] bg-[#1E3A8A]/[0.035]"
+            style={{ left: `${clamp(zone.low)}%`, width: `${clamp(zone.high) - clamp(zone.low)}%` }}
+          />
+        )}
+        {reference !== null && (
+          <div
+            className="absolute inset-y-0 z-[1] w-0 border-l border-dotted border-[#7C8FBF]"
+            style={{ left: `${clamp(reference)}%` }}
+          >
+            {showMedianCap && (
+              <span className="absolute -top-3 -translate-x-1/2 whitespace-nowrap text-[9.5px] text-[#7C8FBF]">
+                median of midpoints {fmtMoney(reference)}
+              </span>
+            )}
+          </div>
+        )}
+
+        {row.point ? (
+          <div
+            className="absolute -top-1 bottom-[-4px] z-[2] w-0 border-l-[1.5px] border-dashed border-[#8A93A0]"
+            style={{ left: `${clamp(row.low!)}%` }}
+          />
+        ) : isTail ? (
+          <div className="absolute right-0 top-0 z-[2] flex h-4 items-center gap-[5px] text-[10.5px] font-semibold text-[#B45309]">
+            <i
+              className="h-[5px] w-[22px] rounded-[3px]"
+              style={{
+                background:
+                  "repeating-linear-gradient(90deg,#E9D4B4 0 4px,transparent 4px 7px)",
+              }}
+            />
+            off scale
+          </div>
+        ) : (
           <>
-            <Cap left={left} />
-            <Cap left={left + width} />
+            <div
+              className="absolute top-[5.5px] z-[2] h-[5px] rounded-[3px]"
+              style={{
+                left: `${left}%`,
+                width: `${width}%`,
+                background: pale
+                  ? "linear-gradient(90deg,#D8E6F6 0%,#9DB8DE 50%,#4A66A8 100%)"
+                  : "linear-gradient(90deg,#BBD3F0 0%,#6E93CF 50%,#1E3A8A 100%)",
+                opacity: pale ? 0.72 : 1,
+              }}
+            />
+            {!pale && (
+              <>
+                <Cap left={left} />
+                <Cap left={left + width} />
+              </>
+            )}
           </>
         )}
       </div>
-      <div className="text-right text-[12.5px] leading-[1.3] tabular-nums text-[#0F1B33]">
+      <div
+        className={`text-right text-[12.5px] leading-[1.3] tabular-nums ${
+          isTail ? "text-[#A5ADB8]" : "text-[#0F1B33]"
+        }`}
+      >
         {row.point ? fmtMoney(row.low) : `${fmtMoney(row.low)} – ${fmtMoney(row.high)}`}
-        {pale && <small className="block text-[10.5px] text-[#B45309]">low confidence</small>}
+        {row.point && (
+          <small className="block text-[10.5px] text-muted-foreground">not in the range</small>
+        )}
+        {isTail && (
+          <small className="block text-[10.5px] font-semibold text-[#B45309]">
+            tail · {tail!.ratio === null ? "—" : `${tail!.ratio.toFixed(1)}×`} the median
+          </small>
+        )}
+        {pale && !isTail && (
+          <small className="block text-[10.5px] text-[#B45309]">low confidence · included</small>
+        )}
       </div>
     </div>
   );
 }
+
 
 function Cap({ left }: { left: number }) {
   return (
