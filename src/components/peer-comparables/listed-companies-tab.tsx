@@ -450,7 +450,7 @@ export function ListedCompaniesTab({
       />
 
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[1040px] border-collapse text-sm">
+        <table className="w-full min-w-[1420px] border-collapse text-sm">
           <thead>
             <tr className="bg-[hsl(222_47%_23%)] text-white">
               <th className="w-10 px-3 py-2.5 text-left">
