@@ -257,7 +257,9 @@ export function parseListedCsv(text: string): {
       ticker: ticker || name,
       name: name || ticker,
       market: rawMarket === "mai" ? "mai" : "SET",
+      exchangeGroup: (cGroup >= 0 ? cells[cGroup]?.trim() : "") || null,
       sector: (cSector >= 0 ? cells[cSector]?.trim() : "") || null,
+
       revenueThbM: csvNumber(cRev >= 0 ? cells[cRev] : undefined),
       ebitdaMarginPct: csvNumber(cMargin >= 0 ? cells[cMargin] : undefined),
       evEbitda: csvNumber(cEv >= 0 ? cells[cEv] : undefined),
