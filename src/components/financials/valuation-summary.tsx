@@ -1004,6 +1004,8 @@ function BenchRow({
   const gap = own !== null && peer !== null ? own - peer : null;
   const good = gap === null ? null : lowerIsBetter ? gap < 0 : gap > 0;
   const maxV = Math.max(Math.abs(own ?? ownRange?.high ?? 0), Math.abs(peer ?? 0), 1);
+  /** Fewer than three usable values is a median worth doubting. */
+  const thin = peer !== null && peerCount !== undefined && peerCount < 3;
 
   // A range never overstates the difference: the nearest bound is used, so the
   // gap is the smallest one the estimate allows.
