@@ -76,7 +76,18 @@ const MARKET_PILL: Record<MarketTab, string> = {
 const NO_SECTOR = "__none__";
 
 /** Metric columns, in table order. Empty input clears to null — never zero. */
-const METRIC_KEYS = ["revenueThbM", "ebitdaMarginPct", "evEbitda", "pe", "pbv"] as const;
+const METRIC_KEYS = [
+  "revenueThbM",
+  "ebitdaMarginPct",
+  "evEbitda",
+  "pe",
+  "pbv",
+  "grossMarginPct",
+  "netMarginPct",
+  "roePct",
+  "debtEquity",
+  "revenueGrowthPct",
+] as const;
 type MetricKey = (typeof METRIC_KEYS)[number];
 
 /** Numeric columns with range filters, in table order. */
@@ -87,7 +98,15 @@ const NUMERIC_COLUMNS: { key: MetricKey; label: string; get: (c: ListedCompany) 
     { key: "evEbitda", label: "EV/EBITDA", get: (c) => c.evEbitda },
     { key: "pe", label: "P/E", get: (c) => c.pe },
     { key: "pbv", label: "P/BV", get: (c) => c.pbv },
+    { key: "grossMarginPct", label: "Gross margin", get: (c) => c.grossMarginPct },
+    { key: "netMarginPct", label: "Net margin", get: (c) => c.netMarginPct },
+    { key: "roePct", label: "ROE", get: (c) => c.roePct },
+    { key: "debtEquity", label: "D/E", get: (c) => c.debtEquity },
+    { key: "revenueGrowthPct", label: "Rev. growth", get: (c) => c.revenueGrowthPct },
   ];
+
+/** Total columns in the table — used by the full-width message rows. */
+const COL_COUNT = 21;
 
 
 
