@@ -742,6 +742,15 @@ function listNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
+/** Book value, then the included methods, then the tails. */
+function orderedRows(result: ValuationResult) {
+  const tailKeys = new Set(result.tails.map((t) => t.key));
+  const book = result.drawn.filter((r) => r.point);
+  const included = result.drawn.filter((r) => !r.point && !tailKeys.has(r.key));
+  const tails = result.drawn.filter((r) => !r.point && tailKeys.has(r.key));
+  return [...book, ...included, ...tails];
+}
+
 /** Next round number at or above a value — 887M → 1.0B, 670M → 800M. */
 function niceCeil(v: number): number {
   if (!Number.isFinite(v) || v <= 0) return 1;
