@@ -219,8 +219,7 @@ export function PeerSetsTab({
           <p className="font-semibold text-foreground">Baseline sets generated</p>
           <p className="mt-0.5 text-muted-foreground">
             Created {summary.created} · Updated {summary.updated} · Unchanged {summary.unchanged} ·
-            Removed {summary.removed.length} · Skipped {summary.skipped.length} with fewer than 3
-            SET companies
+            Removed {summary.removed.length}
           </p>
           <div className="mt-1.5 flex items-center gap-3">
             <button
@@ -243,10 +242,6 @@ export function PeerSetsTab({
               <p>
                 <span className="font-medium text-foreground">Removed:</span>{" "}
                 {summary.removed.length ? summary.removed.join(", ") : "none"}
-              </p>
-              <p>
-                <span className="font-medium text-foreground">Skipped (fewer than 3):</span>{" "}
-                {summary.skipped.length ? summary.skipped.join(", ") : "none"}
               </p>
             </div>
           )}
@@ -342,6 +337,14 @@ export function PeerSetsTab({
                     >
                       <Highlight text={modelText(r.businessModel)} term={search} />
                     </Badge>
+                    {r.isBaseline && r.exists && r.peerCount < 3 && (
+                      <Badge
+                        variant="outline"
+                        className="ml-1.5 border-warning/30 bg-warning/10 text-warning"
+                      >
+                        thin · {r.peerCount} {r.peerCount === 1 ? "company" : "companies"}
+                      </Badge>
+                    )}
                   </td>
                   <td className="px-4 py-2.5 text-center tabular-nums">
                     {r.exists ? r.peerCount : EMPTY_CELL}
