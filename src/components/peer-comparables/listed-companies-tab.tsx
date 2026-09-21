@@ -169,7 +169,9 @@ export function ListedCompaniesTab({
           ticker: d.ticker,
           name: d.name.trim(),
           market: d.market,
+          exchangeGroup: d.exchangeGroup,
           sector: d.sector,
+
           revenueThbM: d.revenueThbM,
           ebitdaMarginPct: d.ebitdaMarginPct,
           evEbitda: d.evEbitda,
