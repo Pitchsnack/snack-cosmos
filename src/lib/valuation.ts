@@ -437,34 +437,75 @@ export function computeValuation(
   const drawn = methods.filter(
     (m) => m.low !== null && m.high !== null && m.status !== "out of scope",
   );
-  const reliable = drawn.filter((m) => m.status === "usable" && !m.point);
 
-  const spread = drawn.length
+  // Book value is a single reference point, not a range: it can't agree with
+  // anything, so it never takes part.
+  const bookRow = drawn.find((m) => m.point) ?? null;
+  const candidateRows = drawn.filter((m) => !m.point);
+  const mids = candidateRows.map((m) => (m.low! + m.high!) / 2);
+
+  // With fewer than 3 candidates the "median" is just an average, and the rule
+  // would throw out the credible method. It only runs at 3 or more.
+  const ruleRan = candidateRows.length >= 3;
+  const reference = ruleRan ? median(mids) : null;
+  const zone = reference === null ? null : { low: reference * 0.5, high: reference * 2 };
+
+  const candidates: CandidateInfo[] = candidateRows.map((m, i) => {
+    const midpoint = mids[i]!;
+    const ratio = reference ? midpoint / reference : null;
+    return {
+      key: m.key,
+      name: m.name,
+      midpoint,
+      ratio,
+      tail: zone !== null && (midpoint < zone.low || midpoint > zone.high),
+      lowConfidence: m.status === "low confidence",
+    };
+  });
+
+  const tails = candidates.filter((c) => c.tail);
+  const tailKeys = new Set(tails.map((c) => c.key));
+  const included = candidateRows.filter((m) => !tailKeys.has(m.key));
+
+  const spread = included.length
     ? {
-        low: Math.min(...drawn.map((m) => m.low!)),
-        high: Math.max(...drawn.map((m) => m.high!)),
+        low: Math.min(...included.map((m) => m.low!)),
+        high: Math.max(...included.map((m) => m.high!)),
       }
     : null;
 
   let indicative: Range | null = null;
-  if (reliable.length) {
-    const low = Math.max(...reliable.map((m) => m.low!));
-    const high = Math.min(...reliable.map((m) => m.high!));
+  let agreeNames: string[] = [];
+  const singleMethod = included.length === 1;
+  if (singleMethod) {
+    indicative = { low: included[0]!.low!, high: included[0]!.high! };
+    agreeNames = [included[0]!.name];
+  } else if (included.length > 1) {
+    const low = Math.max(...included.map((m) => m.low!));
+    const high = Math.min(...included.map((m) => m.high!));
     // No overlap means the methods disagree; inventing a range would hide that.
-    if (low <= high) indicative = { low, high };
+    if (low <= high) {
+      indicative = { low, high };
+      agreeNames = included.map((m) => m.name);
+    }
   }
-
-  const agreeCount = indicative
-    ? drawn.filter((m) => m.high! >= indicative!.low && m.low! <= indicative!.high).length
-    : 0;
 
   return {
     methods,
     drawn,
+    bookValue: bookRow?.low ?? null,
+    candidates,
+    tails,
+    included,
+    ruleRan,
+    reference,
+    zone,
     spread,
     indicative,
-    agreeCount,
-    totalCount: methods.filter((m) => m.status !== "out of scope").length,
+    agreeNames,
+    singleMethod,
+    agreeCount: indicative ? included.length : 0,
+    totalCount: candidates.length,
     blocked: methods.find((m) => m.status === "blocked") ?? null,
     lowConfidence: methods.some((m) => m.status === "low confidence"),
     effective,
