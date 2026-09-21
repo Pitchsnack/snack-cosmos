@@ -516,7 +516,7 @@ export function ValuationSummary({
           </p>
         ) : (
           <>
-            {result.drawn.map((row) => (
+            {orderedRows(result).map((row, i) => (
               <MethodRow
                 key={row.key}
                 row={row}
@@ -524,7 +524,8 @@ export function ValuationSummary({
                 zone={result.zone}
                 reference={result.reference}
                 tail={result.tails.find((t) => t.key === row.key) ?? null}
-                showMedianCap={row.key === result.candidates[0]?.key}
+                showMedianCap={i === 0}
+                offScale={row.point && chartDomain(spread, result.bookValue).bookOffScale}
               />
             ))}
             {indicative && (
