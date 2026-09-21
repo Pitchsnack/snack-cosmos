@@ -991,6 +991,8 @@ function BenchRow({
   sub?: string | null;
   tooltip?: string;
   peer: number | null;
+  /** How many peers carried a usable value for this metric. */
+  peerCount?: number;
   unit?: string;
   blocked?: boolean;
   blockedNote?: string;
