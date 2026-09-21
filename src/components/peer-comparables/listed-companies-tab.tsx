@@ -78,6 +78,18 @@ const NO_SECTOR = "__none__";
 const METRIC_KEYS = ["revenueThbM", "ebitdaMarginPct", "evEbitda", "pe", "pbv"] as const;
 type MetricKey = (typeof METRIC_KEYS)[number];
 
+/** Numeric columns with range filters, in table order. */
+const NUMERIC_COLUMNS: { key: MetricKey; label: string; get: (c: ListedCompany) => number | null }[] =
+  [
+    { key: "revenueThbM", label: "Revenue THB m", get: (c) => c.revenueThbM },
+    { key: "ebitdaMarginPct", label: "EBITDA margin", get: (c) => c.ebitdaMarginPct },
+    { key: "evEbitda", label: "EV/EBITDA", get: (c) => c.evEbitda },
+    { key: "pe", label: "P/E", get: (c) => c.pe },
+    { key: "pbv", label: "P/BV", get: (c) => c.pbv },
+  ];
+
+
+
 const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
   id: c.id,
   ticker: c.ticker,
