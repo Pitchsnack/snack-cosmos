@@ -110,6 +110,13 @@ export function ListedCompaniesTab({
   const [market, setMarket] = useState<MarketTab>("all");
   const [search, setSearch] = useState("");
   const [sectorFilter, setSectorFilter] = useState<string>(ALL_SECTORS);
+  const [valueFilters, setValueFilters] = useState<ValueFilters>({});
+  const [rangeFilters, setRangeFilters] = useState<RangeFilters>({});
+  const setValueFilter = (key: string, v: string[]) =>
+    setValueFilters((prev) => ({ ...prev, [key]: v }));
+  const setRangeFilter = (key: string, v: { min: number | null; max: number | null }) =>
+    setRangeFilters((prev) => ({ ...prev, [key]: v }));
+
   const [editing, setEditing] = useState<ListedCompanyInput | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<ListedCompany | null>(null);
