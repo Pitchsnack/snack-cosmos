@@ -313,6 +313,14 @@ export function ListedCompaniesTab({
         <table className="w-full min-w-[1040px] border-collapse text-sm">
           <thead>
             <tr className="bg-[hsl(222_47%_23%)] text-white">
+              <th className="w-10 px-3 py-2.5 text-left">
+                <Checkbox
+                  aria-label="Select all companies"
+                  className="border-white/60 data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-[hsl(222_47%_23%)]"
+                  checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                  onCheckedChange={toggleAll}
+                />
+              </th>
               <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
                 Ticker
               </th>
