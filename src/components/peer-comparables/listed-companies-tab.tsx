@@ -95,7 +95,9 @@ const toDraft = (c: ListedCompany): ListedCompanyInput & { id: string } => ({
   ticker: c.ticker,
   name: c.name,
   market: c.market,
+  exchangeGroup: c.exchangeGroup,
   sector: c.sector,
+
   revenueThbM: c.revenueThbM,
   ebitdaMarginPct: c.ebitdaMarginPct,
   evEbitda: c.evEbitda,
