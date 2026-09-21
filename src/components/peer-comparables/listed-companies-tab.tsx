@@ -5,6 +5,7 @@ import { AlertTriangle, Download, Pencil, Plus, Trash2, Upload } from "lucide-re
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -112,6 +113,8 @@ export function ListedCompaniesTab({
   const [editing, setEditing] = useState<ListedCompanyInput | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<ListedCompany | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   // ---- inline row editing -------------------------------------------------
   const saveRowFn = useServerFn(saveListedCompany);
@@ -194,6 +197,29 @@ export function ListedCompaniesTab({
     setSectorFilter(ALL_SECTORS);
   };
 
+  // ---- multi-select -------------------------------------------------------
+  const selectedCompanies = companies.filter((c) => selected.has(c.id));
+  const selectedUsedIn = selectedCompanies.filter((c) => c.usedIn > 0).length;
+  const allSelected = rows.length > 0 && rows.every((c) => selected.has(c.id));
+  const someSelected = !allSelected && rows.some((c) => selected.has(c.id));
+
+  const toggleOne = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  /** Select-all acts on the rows currently visible. */
+  const toggleAll = () =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) rows.forEach((c) => next.delete(c.id));
+      else rows.forEach((c) => next.add(c.id));
+      return next;
+    });
+
   const importCsv = useMutation({
     mutationFn: async (file: File) => {
       const { rows: parsed, errors } = parseListedCsv(await file.text());
@@ -206,6 +232,28 @@ export function ListedCompaniesTab({
       qc.invalidateQueries({ queryKey: ["listed-companies"] });
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const bulkRemove = useMutation({
+    mutationFn: async (ids: string[]) => {
+      let done = 0;
+      for (const id of ids) {
+        await deleteFn({ data: { id } });
+        done += 1;
+      }
+      return done;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} compan${n === 1 ? "y" : "ies"} removed.`);
+      setBulkOpen(false);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["listed-companies"] });
+      qc.invalidateQueries({ queryKey: ["peer-sets"] });
+    },
+    onError: (e: Error) => {
+      toast.error(e.message);
+      qc.invalidateQueries({ queryKey: ["listed-companies"] });
+    },
   });
 
   const remove = useMutation({
@@ -297,6 +345,33 @@ export function ListedCompaniesTab({
         onClear={clearAll}
       />
 
+      {selectedCompanies.length > 0 && (
+        <div className="mx-4 mt-3 flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted/40 px-3 py-2">
+          <span className="text-sm font-medium">
+            {selectedCompanies.length} selected
+            {selectedUsedIn > 0 && (
+              <span className="ml-2 text-xs font-normal text-warning">
+                {selectedUsedIn} used in peer sets
+              </span>
+            )}
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setSelected(new Set())}>
+              Clear selection
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-8"
+              onClick={() => setBulkOpen(true)}
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              Delete selected
+            </Button>
+          </div>
+        </div>
+      )}
+
       <input
         ref={fileRef}
         type="file"
@@ -313,6 +388,14 @@ export function ListedCompaniesTab({
         <table className="w-full min-w-[1040px] border-collapse text-sm">
           <thead>
             <tr className="bg-[hsl(222_47%_23%)] text-white">
+              <th className="w-10 px-3 py-2.5 text-left">
+                <Checkbox
+                  aria-label="Select all companies"
+                  className="border-white/60 data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-[hsl(222_47%_23%)]"
+                  checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                  onCheckedChange={toggleAll}
+                />
+              </th>
               <th className="w-24 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide">
                 Ticker
               </th>
@@ -352,14 +435,14 @@ export function ListedCompaniesTab({
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={15} className="px-4 py-8 text-center text-muted-foreground">
                   Loading…
                 </td>
               </tr>
             )}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={15} className="px-4 py-8 text-center text-muted-foreground">
                   {search.trim() || sectorFilter !== ALL_SECTORS ? (
                     <>
                       No companies match “{search.trim() || sectorFilter}”.{" "}
@@ -413,7 +496,7 @@ export function ListedCompaniesTab({
                     <Fragment key={c.id}>
                       {c.usedIn > 0 && (
                         <tr className="border-t border-warning/30">
-                          <td colSpan={14} className="bg-warning/10 px-3 py-2">
+                          <td colSpan={15} className="bg-warning/10 px-3 py-2">
                             <span className="flex items-center gap-2 text-xs text-warning-foreground">
                               <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
                               <span>
@@ -427,6 +510,7 @@ export function ListedCompaniesTab({
                         </tr>
                       )}
                       <tr className="border-t border-border/50 bg-info/5" onKeyDown={keys}>
+                        <td className="px-3 py-2" />
                         <td className="px-2 py-2">
                           <Input
                             value={d.ticker}
@@ -531,7 +615,7 @@ export function ListedCompaniesTab({
                         </td>
                       </tr>
                       <tr className="bg-info/5">
-                        <td colSpan={14} className="px-3 pb-2.5">
+                        <td colSpan={15} className="px-3 pb-2.5">
                           <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
                             <Button
                               variant="outline"
@@ -558,7 +642,20 @@ export function ListedCompaniesTab({
                 }
 
                 return (
-                  <tr key={c.id} className="border-t border-border/50 hover:bg-muted/40">
+                  <tr
+                    key={c.id}
+                    className={cn(
+                      "border-t border-border/50 hover:bg-muted/40",
+                      selected.has(c.id) && "bg-info/5",
+                    )}
+                  >
+                    <td className="px-3 py-2.5">
+                      <Checkbox
+                        checked={selected.has(c.id)}
+                        aria-label={`Select ${c.ticker}`}
+                        onCheckedChange={() => toggleOne(c.id)}
+                      />
+                    </td>
                     <td className="px-3 py-2.5 font-semibold">
                       <Highlight text={c.ticker} term={search} />
                     </td>
@@ -629,6 +726,40 @@ export function ListedCompaniesTab({
         prefillName={prefillName}
         onSaved={(id) => onSavedReturn?.(id)}
       />
+
+      <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {selectedCompanies.length} compan
+              {selectedCompanies.length === 1 ? "y" : "ies"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedUsedIn > 0 ? (
+                <>
+                  {selectedUsedIn} of them {selectedUsedIn === 1 ? "is" : "are"} used in peer sets.
+                  Deleting removes them from those sets and changes every valuation that relies on
+                  them.
+                </>
+              ) : (
+                <>None of them are used in a peer set.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkRemove.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={bulkRemove.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                bulkRemove.mutate(selectedCompanies.map((c) => c.id));
+              }}
+            >
+              {bulkRemove.isPending ? "Deleting…" : "Delete selected"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(v) => !v && setPendingDelete(null)}>
         <AlertDialogContent>
