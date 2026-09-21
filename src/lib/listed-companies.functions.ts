@@ -39,7 +39,9 @@ function toRow(c: z.infer<typeof companyInput>) {
     ticker: c.ticker.trim(),
     name: c.name.trim(),
     market: c.market,
+    exchange_group: c.exchangeGroup?.trim() || null,
     sector: c.sector?.trim() || null,
+
     revenue_thb_m: c.revenueThbM ?? null,
     ebitda_margin_pct: c.ebitdaMarginPct ?? null,
     ev_ebitda: c.evEbitda ?? null,
