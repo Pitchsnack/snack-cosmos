@@ -741,14 +741,31 @@ function listNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
-/** The drawn scale: the included methods, widened to hold the book marker. */
+/** Next round number at or above a value — 887M → 1.0B, 670M → 800M. */
+function niceCeil(v: number): number {
+  if (!Number.isFinite(v) || v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const s of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) {
+    if (v <= s * mag) return s * mag;
+  }
+  return 10 * mag;
+}
+
+/**
+ * The drawn scale. It always starts at zero so a range shows at its real size,
+ * and reaches the next round number above the included methods and book value.
+ * Book value only leaves the scale when it would squash the ranges (> 2× the
+ * highest included value); tails are always off scale.
+ */
 function chartDomain(
   spread: { low: number; high: number },
   book: number | null,
-): { low: number; high: number } {
-  const low = book === null ? spread.low : Math.min(spread.low, book);
-  const high = book === null ? spread.high : Math.max(spread.high, book);
-  return high > low ? { low, high } : { low, high: low + 1 };
+): { low: number; high: number; bookOffScale: boolean } {
+  const bookOffScale = book !== null && book > spread.high * 2;
+  const top = niceCeil(
+    book === null || bookOffScale ? spread.high : Math.max(spread.high, book),
+  );
+  return { low: 0, high: top > 0 ? top : 1, bookOffScale };
 }
 
 function Axis({
