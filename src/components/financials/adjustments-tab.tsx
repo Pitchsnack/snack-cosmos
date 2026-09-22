@@ -288,19 +288,21 @@ export function AdjustmentsTab({
     );
   }
 
-  const revenueRows = adjustments.filter((a) => isRevenueType(a.type));
-  const expenseRows = adjustments.filter((a) => !isRevenueType(a.type));
+  const revenueRows = adjustments.filter((a) => isRevenueGroup(a.type));
+  const expenseRows = adjustments.filter((a) => !isRevenueGroup(a.type));
 
   const row = (a: Adjustment) => {
     const d = direction(a.type);
     const none = d === "none";
-    if (draft?.id === a.id) return <Fragment key={a.id}>{DraftRow()}</Fragment>;
+    const stripe = isRevenueGroup(a.type)
+      ? "shadow-[inset_3px_0_0_#15803D]"
+      : "shadow-[inset_3px_0_0_#B91C1C]";
     const e = effects(a);
     const sub = inputSummary(a);
     return (
       <tr key={a.id} className={none ? "text-[#A5ADB8]" : undefined}>
         <td
-          className={`border-b border-[#F2F4F6] py-2 pr-2 ${
+          className={`border-b border-[#F2F4F6] py-2 pl-2.5 pr-2 ${stripe} ${
             none ? "text-[#A5ADB8]" : "text-[#0F1B33]"
           }`}
         >
@@ -316,8 +318,15 @@ export function AdjustmentsTab({
         <td className="border-b border-[#F2F4F6] py-2 pr-2 text-muted-foreground">
           {a.filingLine ? FILING_LINE_LABELS[a.filingLine] : "—"}
         </td>
-        <Effect value={none ? null : e.revenue} />
+        {none ? (
+          <td className="whitespace-nowrap border-b border-[#F2F4F6] py-2 pr-2 text-right tabular-nums text-[#A5ADB8]">
+            {thb(a.amount)}
+          </td>
+        ) : (
+          <Effect value={e.revenue} />
+        )}
         <Effect value={none ? null : e.profit} />
+
         <td className="border-b border-[#F2F4F6] py-2 pr-2">
           <span className="rounded-full border border-[#EAECEF] bg-[#F3F4F6] px-2 py-[1px] text-[10.5px] font-semibold text-[#6B7280]">
             {a.recurs === "yearly" ? "yearly" : "one-off"}
