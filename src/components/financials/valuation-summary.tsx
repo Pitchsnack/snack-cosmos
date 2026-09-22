@@ -417,6 +417,7 @@ export function ValuationSummary({
                 <span className="flex items-center justify-center gap-1.5 border-b border-[#E2D8FB] pb-[5px]">
                   <PeerPicker
                     options={peerOptions}
+                    peerTotal={peers.length}
                     chosen={chosenPeer}
                     canEdit={canChoosePeer}
                     onChoose={(id) => onSelectPeer?.(id)}
@@ -459,6 +460,7 @@ export function ValuationSummary({
               own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
               peer={bench.grossMarginPct.value}
               peerCount={bench.grossMarginPct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.grossMarginPct ?? null}
             />
@@ -481,6 +483,7 @@ export function ValuationSummary({
               blockedNote="needs D&A"
               peer={result.medians.ebitdaMarginPct}
               peerCount={peers.filter((p) => typeof p.ebitdaMarginPct === "number").length}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.ebitdaMarginPct ?? null}
             />
@@ -490,6 +493,7 @@ export function ValuationSummary({
               own={ratio("net_profit_margin") ?? inputs.netMarginPct}
               peer={bench.netMarginPct.value}
               peerCount={bench.netMarginPct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.netMarginPct ?? null}
             />
@@ -498,6 +502,7 @@ export function ValuationSummary({
               own={ratio("return_on_equity")}
               peer={bench.roePct.value}
               peerCount={bench.roePct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.roePct ?? null}
             />
@@ -508,6 +513,7 @@ export function ValuationSummary({
               own={ratio("debt_to_equity_ratio")}
               peer={bench.debtEquity.value}
               peerCount={bench.debtEquity.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.debtEquity ?? null}
               unit="×"
@@ -519,6 +525,7 @@ export function ValuationSummary({
               own={revenueGrowth}
               peer={bench.revenueGrowthPct.value}
               peerCount={bench.revenueGrowthPct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.revenueGrowthPct ?? null}
               last
