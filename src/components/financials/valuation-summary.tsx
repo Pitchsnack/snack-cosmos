@@ -785,6 +785,7 @@ export function ValuationSummary({
                 </div>
               </div>
             )}
+            </div>
           </>
         )}
       </Block>
