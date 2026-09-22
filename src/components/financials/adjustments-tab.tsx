@@ -276,6 +276,15 @@ export function AdjustmentsTab({
   const revAdj = adjustedResult.methods.find((x) => x.key === "evsales");
   const revMoved =
     revBase?.low != null && revBase.high != null && revAdj?.low != null && revAdj.high != null;
+  const pbvBase = baseResult.methods.find((x) => x.key === "pbv");
+
+  /** How much of the normalised profit rests on judgement rather than the filing. */
+  const adjShare =
+    n.applied && n.normalisedNetProfit !== null && n.normalisedNetProfit > 0
+      ? (Math.abs(n.netEffect) / n.normalisedNetProfit) * 100
+      : null;
+
+
 
   if (!year) {
     return (
