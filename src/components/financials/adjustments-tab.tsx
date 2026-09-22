@@ -29,7 +29,7 @@ import {
   type ValuationSettings,
 } from "@/lib/valuation-adjustments";
 import { fmtMoney, type ValuationResult } from "@/lib/valuation";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const LINES: FilingLine[] = ["cost_of_goods_sold", "selling_admin", "other_expenses"];
 
@@ -768,7 +768,8 @@ export function AdjustmentsTab({
 
     // Live checks, in order: blocking first, then the amber notes.
     const notes: { text: string; tone: "red" | "amber" | "ok" }[] = [];
-    if (blocking) notes.push({ text: blocking, tone: "red" });
+    const touched = draft.description.trim() !== "" || draft.amount.trim() !== "";
+    if (blocking && touched) notes.push({ text: blocking, tone: "red" });
     if (
       !blocking &&
       dir === "add_back" &&
@@ -807,13 +808,13 @@ export function AdjustmentsTab({
       >
         <div className="flex items-center gap-2 border-b border-[#EAECEF] px-4 py-3">
           <span className="h-2 w-2 rounded-full" style={{ background: accent }} />
-          <h3 className="m-0 text-[13.5px] font-semibold text-[#0F1B33]">
+          <DialogTitle className="m-0 text-[13.5px] font-semibold text-[#0F1B33]">
             {draft.id
               ? "Edit adjustment"
               : revenue
                 ? "Add revenue adjustment"
                 : "Add expense adjustment"}
-          </h3>
+          </DialogTitle>
         </div>
 
         <div className="grid gap-2.5 px-4 py-3.5">
