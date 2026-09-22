@@ -710,7 +710,7 @@ export function ValuationSummary({
 
             {/* How the range was chosen */}
             {result.candidates.length > 0 && (
-              <div className="mt-2.5 border-t border-[#F2F4F6] pt-2.5">
+              <div className="px-3 py-2.5">
                 <table className="w-full border-collapse text-[12px]">
                   <thead>
                     <tr>
