@@ -180,10 +180,21 @@ export function ValuationTab({
       fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
   });
 
-  const [subTab, setSubTab] = useState<"summary" | "methods">("summary");
+  const [subTab, setSubTab] = useState<"summary" | "methods" | "adjustments">("summary");
   const [discounts, setDiscounts] = useState<Discounts>(DEFAULT_DISCOUNTS);
   const [sector, setSector] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
+
+  // Earnings adjustments live per startup and fiscal year.
+  const fetchAdjustments = useServerFn(getValuationAdjustments);
+  const adjKey = ["valuation-adjustments", startupId, year ?? 0] as const;
+  const { data: adjData } = useQuery({
+    queryKey: adjKey,
+    enabled: !!year,
+    queryFn: () => fetchAdjustments({ data: { startupId, fiscalYear: year! } }),
+  });
+  const adjustments = adjData?.adjustments ?? [];
+  const settings = adjData?.settings ?? DEFAULT_VALUATION_SETTINGS;
 
 
   useEffect(() => {
