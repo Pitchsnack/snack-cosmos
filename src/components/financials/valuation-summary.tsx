@@ -116,6 +116,9 @@ export function ValuationSummary({
   selectedPeerId = null,
   onSelectPeer,
   canChoosePeer = false,
+  basisRow = null,
+  chosenBasis = false,
+  sectorPeers = [],
 }: {
   startupName: string;
   year: number | undefined;
