@@ -143,6 +143,12 @@ export function ValuationSummary({
   selectedPeerId?: string | null;
   onSelectPeer?: (id: string | null) => void;
   canChoosePeer?: boolean;
+  /** The "Peers from" switch, shown at the top of Compared against. */
+  basisRow?: React.ReactNode;
+  /** True when the peers above are this startup's own chosen companies. */
+  chosenBasis?: boolean;
+  /** The sector baseline's peers, for the baseline-vs-chosen comparison. */
+  sectorPeers?: Peer[];
 }) {
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
