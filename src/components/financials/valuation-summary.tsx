@@ -434,6 +434,8 @@ export function ValuationSummary({
               own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
               peer={bench.grossMarginPct.value}
               peerCount={bench.grossMarginPct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.grossMarginPct ?? null}
             />
             <BenchRow
               label="EBITDA margin"
@@ -446,7 +448,7 @@ export function ValuationSummary({
               estimated={inputs.ebitdaEstimated}
               sub={
                 inputs.ebitMarginPct !== null
-                  ? `floor ${fmtPct(inputs.ebitMarginPct, 1)} (EBIT margin)`
+                  ? `floor ${fmtPct(inputs.ebitMarginPct, 1)} · EBIT`
                   : null
               }
               tooltip="Estimated. The cash flow statement is empty, so D&A is bracketed from the balance sheet: equipment depreciated over 3–5 years, with other non-current assets amortised over 5 years at most. EBIT is exact."
@@ -454,6 +456,8 @@ export function ValuationSummary({
               blockedNote="needs D&A"
               peer={result.medians.ebitdaMarginPct}
               peerCount={peers.filter((p) => typeof p.ebitdaMarginPct === "number").length}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.ebitdaMarginPct ?? null}
             />
 
             <BenchRow
@@ -461,33 +465,61 @@ export function ValuationSummary({
               own={ratio("net_profit_margin") ?? inputs.netMarginPct}
               peer={bench.netMarginPct.value}
               peerCount={bench.netMarginPct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.netMarginPct ?? null}
             />
             <BenchRow
               label="Return on equity"
               own={ratio("return_on_equity")}
               peer={bench.roePct.value}
               peerCount={bench.roePct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.roePct ?? null}
             />
+            <BenchSection label="Balance sheet" />
             <BenchRow
               label="Debt to equity"
+              labelSub="lower is better"
               own={ratio("debt_to_equity_ratio")}
               peer={bench.debtEquity.value}
               peerCount={bench.debtEquity.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.debtEquity ?? null}
               unit="×"
               lowerIsBetter
             />
+            <BenchSection label="Growth" />
             <BenchRow
               label="Revenue growth"
               own={revenueGrowth}
               peer={bench.revenueGrowthPct.value}
               peerCount={bench.revenueGrowthPct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.revenueGrowthPct ?? null}
+              last
             />
           </tbody>
         </table>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          A peer median shows only where the peer set carries that metric. Blank means the
-          reference is not held, not that the company was not measured.
-        </p>
+        <div className="-mx-3 -mb-3 mt-3 flex flex-wrap gap-[18px] border-t border-[#EAECEF] px-4 py-2.5 text-[11.5px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <i className="inline-block h-[6px] w-3.5 rounded-[3px] bg-[#E8A8A8]" />
+            <i className="inline-block h-[6px] w-3.5 rounded-[3px] bg-[#9ED3B1]" />
+            {startupName} vs median
+          </span>
+          {chosenPeer && (
+            <span className="inline-flex items-center gap-1.5">
+              <i className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[#6D28D9] bg-white" />
+              <b className="font-semibold text-[#6D28D9]">
+                {chosenPeer.ticker ?? chosenPeer.companyName}
+              </b>{" "}
+              vs median
+            </span>
+          )}
+          <span>
+            Gaps are {startupName} minus the comparison. Green means {startupName} is better — for
+            debt to equity, lower. A peer median shows only where the peer set carries that metric.
+          </span>
+        </div>
       </Block>
 
       {/* 4 · Compared against */}
