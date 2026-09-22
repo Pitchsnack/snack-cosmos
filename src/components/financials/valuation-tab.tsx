@@ -396,6 +396,10 @@ export function ValuationTab({
                 normalisation={norm}
                 stake={settings.stake}
                 adjustments={adjustments}
+                matchLabel={appliedLabel}
+                selectedPeerId={settings.benchmarkPeerId ?? null}
+                canChoosePeer={canEdit && year !== null && year !== undefined}
+                onSelectPeer={(id) => choosePeer.mutate(id)}
               />
             ) : (
               <>
