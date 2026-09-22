@@ -472,7 +472,7 @@ export function ValuationTab({
       }
       right={right}
     />
-  );
+    );
 
   return (
     <div>
