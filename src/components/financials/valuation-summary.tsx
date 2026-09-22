@@ -1400,7 +1400,8 @@ function BenchRow({
       return { text: "overlaps", good: null };
     }
     if (own === null) return null;
-    const gap = own - comparison;
+    const digits = unit === "%" ? 1 : 2;
+    const gap = roundHalf(own - comparison, digits);
     return {
       text:
         unit === "%"
