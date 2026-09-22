@@ -199,6 +199,15 @@ export function ValuationTab({
   const adjustments = adjData?.adjustments ?? [];
   const settings = adjData?.settings ?? DEFAULT_VALUATION_SETTINGS;
 
+  // The one peer chosen for the Benchmark, kept per startup and fiscal year.
+  const persistSettings = useServerFn(saveValuationSettings);
+  const choosePeer = useMutation({
+    mutationFn: (benchmarkPeerId: string | null) =>
+      persistSettings({ data: { startupId, fiscalYear: year!, benchmarkPeerId } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adjKey }),
+    onError: (e: Error) => toast.error(e.message || "Could not save the peer"),
+  });
+
 
   useEffect(() => {
     if (!data) return;
