@@ -85,6 +85,13 @@
       "when": 1790047390242,
       "tag": "0011_valuation_adjustments_revenue",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790072267767,
+      "tag": "0012_valuation_settings_benchmark_peer",
+      "breakpoints": true
     }
   ]
 }

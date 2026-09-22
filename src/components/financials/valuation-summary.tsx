@@ -110,6 +110,10 @@ export function ValuationSummary({
   normalisation,
   stake,
   adjustments = [],
+  matchLabel = null,
+  selectedPeerId = null,
+  onSelectPeer,
+  canChoosePeer = false,
 }: {
   startupName: string;
   year: number | undefined;
@@ -128,6 +132,12 @@ export function ValuationSummary({
   normalisation?: Normalisation;
   stake?: Stake;
   adjustments?: Adjustment[];
+  /** Sector · business model of the matched peer set. */
+  matchLabel?: string | null;
+  /** The one peer chosen for the Benchmark, by listed company id. */
+  selectedPeerId?: string | null;
+  onSelectPeer?: (id: string | null) => void;
+  canChoosePeer?: boolean;
 }) {
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
@@ -159,6 +169,21 @@ export function ValuationSummary({
 
   /** Peer medians for the Benchmark rows, with how many peers each one used. */
   const bench = benchmarkMedians(peers);
+
+  /** The chosen peer, and the set list ordered closest in revenue first. */
+  const peerKey = (p: Peer) => p.listedCompanyId ?? p.id ?? p.companyName;
+  const chosenPeer = peers.find((p) => peerKey(p) === selectedPeerId) ?? null;
+  const ownRevenueThbM = inputs.revenue === null ? null : inputs.revenue / 1_000_000;
+  const peerOptions = [...peers]
+    .map((p) => ({
+      key: peerKey(p),
+      peer: p,
+      distance:
+        ownRevenueThbM === null || typeof p.revenueThbM !== "number"
+          ? Number.POSITIVE_INFINITY
+          : Math.abs(p.revenueThbM - ownRevenueThbM),
+    }))
+    .sort((a, b) => a.distance - b.distance);
 
   const f = ladderFactors(discounts);
   const m = result.medians;
@@ -360,29 +385,82 @@ export function ValuationSummary({
 
       {/* 3 · Benchmark */}
       <Block label="Benchmark" hint="against the peer median" right="no assumptions applied">
-        <table className="w-full border-collapse text-[12.5px]">
+        <div className="-mx-3 -mt-3 mb-0 border-b border-[#EAECEF] px-4 py-2.5 text-[12px] text-muted-foreground">
+          Peer median of <b className="font-semibold text-[#0F1B33]">{peers.length} companies</b>
+          {matchLabel ? ` · ${matchLabel}` : ""} · reported figures
+          {year ? `, FY${year}` : ""}
+        </div>
+        <table className="w-full table-fixed border-collapse text-[13px]">
+          <colgroup>
+            <col />
+            <col className="w-[118px]" />
+            <col className="w-[96px]" />
+            <col className="w-[112px]" />
+            <col className="w-[90px]" />
+            <col className="w-[118px]" />
+            <col className="w-[120px]" />
+          </colgroup>
           <thead>
             <tr>
-              {["Metric", startupName, "Peer median", "", "Gap"].map((h, i) => (
-                <th
-                  key={i}
-                  className={`border-b border-[#F2F4F6] pb-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] ${
-                    i === 0 ? "text-left text-muted-foreground" : "text-right"
-                  } ${i === 1 ? "text-[#0F1B33]" : i === 0 ? "" : "text-muted-foreground"} ${
-                    i === 3 ? "w-[56px]" : i === 4 ? "w-[88px]" : ""
-                  }`}
-                >
-                  {h}
-                </th>
-              ))}
+              <th />
+              <th />
+              <th
+                colSpan={2}
+                className="px-3 pt-2 text-center text-[10px] font-bold uppercase tracking-[0.07em] text-[#1E3A8A]"
+              >
+                <span className="block border-b border-[#DDE3F2] pb-[5px]">Peer median</span>
+              </th>
+              <th
+                colSpan={2}
+                className="border-x border-[#E2D8FB] bg-[#F7F3FE] px-3 pt-2 text-center text-[10px] font-bold uppercase tracking-[0.07em] text-[#6D28D9]"
+              >
+                <span className="flex items-center justify-center gap-1.5 border-b border-[#E2D8FB] pb-[5px]">
+                  <PeerPicker
+                    options={peerOptions}
+                    chosen={chosenPeer}
+                    canEdit={canChoosePeer}
+                    onChoose={(id) => onSelectPeer?.(id)}
+                  />
+                </span>
+              </th>
+              <th />
+            </tr>
+            <tr>
+              <th className="border-b border-[#EAECEF] px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                Metric
+              </th>
+              <th className="border-b border-[#EAECEF] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-[#0F1B33]">
+                {startupName}
+              </th>
+              <th className="border-b border-l border-[#EAECEF] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                Median
+              </th>
+              <th className="border-b border-r border-[#EAECEF] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                Gap
+              </th>
+              <th className="border-x border-b border-[#E2D8FB] bg-[#F7F3FE] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8B6FD6]">
+                {chosenPeer ? (chosenPeer.ticker ?? chosenPeer.companyName) : "Peer"}
+              </th>
+              <th className="border-r border-b border-[#E2D8FB] bg-[#F7F3FE] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8B6FD6]">
+                Gap
+              </th>
+              <th className="border-b border-[#EAECEF] px-3 pb-2 text-[10px] font-medium normal-case tracking-[0.03em] text-muted-foreground">
+                <span className="flex justify-between">
+                  <span>worse</span>
+                  <span>better</span>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
+            <BenchSection label="Profitability" />
             <BenchRow
               label="Gross margin"
               own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
               peer={bench.grossMarginPct.value}
               peerCount={bench.grossMarginPct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.grossMarginPct ?? null}
             />
             <BenchRow
               label="EBITDA margin"
@@ -395,7 +473,7 @@ export function ValuationSummary({
               estimated={inputs.ebitdaEstimated}
               sub={
                 inputs.ebitMarginPct !== null
-                  ? `floor ${fmtPct(inputs.ebitMarginPct, 1)} (EBIT margin)`
+                  ? `floor ${fmtPct(inputs.ebitMarginPct, 1)} · EBIT`
                   : null
               }
               tooltip="Estimated. The cash flow statement is empty, so D&A is bracketed from the balance sheet: equipment depreciated over 3–5 years, with other non-current assets amortised over 5 years at most. EBIT is exact."
@@ -403,6 +481,8 @@ export function ValuationSummary({
               blockedNote="needs D&A"
               peer={result.medians.ebitdaMarginPct}
               peerCount={peers.filter((p) => typeof p.ebitdaMarginPct === "number").length}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.ebitdaMarginPct ?? null}
             />
 
             <BenchRow
@@ -410,33 +490,61 @@ export function ValuationSummary({
               own={ratio("net_profit_margin") ?? inputs.netMarginPct}
               peer={bench.netMarginPct.value}
               peerCount={bench.netMarginPct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.netMarginPct ?? null}
             />
             <BenchRow
               label="Return on equity"
               own={ratio("return_on_equity")}
               peer={bench.roePct.value}
               peerCount={bench.roePct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.roePct ?? null}
             />
+            <BenchSection label="Balance sheet" />
             <BenchRow
               label="Debt to equity"
+              labelSub="lower is better"
               own={ratio("debt_to_equity_ratio")}
               peer={bench.debtEquity.value}
               peerCount={bench.debtEquity.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.debtEquity ?? null}
               unit="×"
               lowerIsBetter
             />
+            <BenchSection label="Growth" />
             <BenchRow
               label="Revenue growth"
               own={revenueGrowth}
               peer={bench.revenueGrowthPct.value}
               peerCount={bench.revenueGrowthPct.count}
+              chosen={chosenPeer}
+              chosenValue={chosenPeer?.revenueGrowthPct ?? null}
+              last
             />
           </tbody>
         </table>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          A peer median shows only where the peer set carries that metric. Blank means the
-          reference is not held, not that the company was not measured.
-        </p>
+        <div className="-mx-3 -mb-3 mt-3 flex flex-wrap gap-[18px] border-t border-[#EAECEF] px-4 py-2.5 text-[11.5px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <i className="inline-block h-[6px] w-3.5 rounded-[3px] bg-[#E8A8A8]" />
+            <i className="inline-block h-[6px] w-3.5 rounded-[3px] bg-[#9ED3B1]" />
+            {startupName} vs median
+          </span>
+          {chosenPeer && (
+            <span className="inline-flex items-center gap-1.5">
+              <i className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[#6D28D9] bg-white" />
+              <b className="font-semibold text-[#6D28D9]">
+                {chosenPeer.ticker ?? chosenPeer.companyName}
+              </b>{" "}
+              vs median
+            </span>
+          )}
+          <span>
+            Gaps are {startupName} minus the comparison. Green means {startupName} is better — for
+            debt to equity, lower. A peer median shows only where the peer set carries that metric.
+          </span>
+        </div>
       </Block>
 
       {/* 4 · Compared against */}
@@ -568,8 +676,10 @@ export function ValuationSummary({
                 offScale={row.point && chartDomain(spread, result.bookValue).bookOffScale}
               />
             ))}
+            {/* The answer and its working share one box. */}
+            <div className="mt-3 overflow-hidden rounded-[8px] border border-[#DDE3F2] bg-white">
             {indicative && (
-              <div className="-mx-3 -mb-3 mt-1 grid grid-cols-[132px_1fr_128px] items-center gap-3.5 rounded-b-[7px] border-t border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
+              <div className="grid grid-cols-[132px_1fr_128px] items-center gap-3.5 border-b border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
                 <div className="text-[12.5px] font-semibold text-[#1E3A8A]">
                   Indicative valuation
                   <small className="block text-[11px] font-normal text-muted-foreground">
@@ -600,7 +710,7 @@ export function ValuationSummary({
 
             {/* How the range was chosen */}
             {result.candidates.length > 0 && (
-              <div className="mt-2.5 border-t border-[#F2F4F6] pt-2.5">
+              <div className="px-3 py-2.5">
                 <table className="w-full border-collapse text-[12px]">
                   <thead>
                     <tr>
@@ -624,7 +734,10 @@ export function ValuationSummary({
                     </tr>
                   </thead>
                   <tbody>
-                    {result.candidates.map((c) => (
+                    {/* Included methods first, then tails; book value last. */}
+                    {[...result.candidates]
+                      .sort((a, b) => Number(Boolean(a.tail)) - Number(Boolean(b.tail)))
+                      .map((c) => (
                       <tr key={c.key}>
                         <td className="border-b border-[#F2F4F6] py-[5px] text-[#0F1B33]">
                           {c.name}
@@ -672,6 +785,7 @@ export function ValuationSummary({
                 </div>
               </div>
             )}
+            </div>
           </>
         )}
       </Block>
@@ -1073,8 +1187,140 @@ function Cap({ left }: { left: number }) {
   );
 }
 
+/** A section heading that keeps both framing pairs unbroken. */
+function BenchSection({ label }: { label: string }) {
+  return (
+    <tr>
+      <td
+        colSpan={2}
+        className="px-3 pb-[5px] pt-[13px] text-[10px] font-bold uppercase tracking-[0.08em] text-[#1E3A8A]"
+      >
+        {label}
+      </td>
+      <td className="border-l border-[#E3E7ED]" />
+      <td className="border-r border-[#E3E7ED]" />
+      <td className="border-l border-[#E2D8FB] bg-[#F7F3FE]" />
+      <td className="border-r border-[#E2D8FB] bg-[#F7F3FE]" />
+      <td />
+    </tr>
+  );
+}
+
+/** Choosing the one peer shown beside the median. */
+function PeerPicker({
+  options,
+  chosen,
+  canEdit,
+  onChoose,
+}: {
+  options: { key: string; peer: Peer; distance: number }[];
+  chosen: Peer | null;
+  canEdit: boolean;
+  onChoose: (id: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const shown = options.filter((o) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (o.peer.ticker ?? "").toLowerCase().includes(q) ||
+      o.peer.companyName.toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <span className="relative inline-flex items-center gap-1.5">
+      {chosen ? (
+        <>
+          <span className="text-[10px] font-bold tracking-[0.07em] text-[#6D28D9]">
+            {chosen.ticker ?? chosen.companyName}
+          </span>
+          <span className="rounded-[3px] border border-[#E2D8FB] bg-white px-[5px] text-[9px] font-bold tracking-normal text-[#6D28D9]">
+            {chosen.market}
+          </span>
+          {canEdit && (
+            <>
+              <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                className="text-[11px] font-normal normal-case tracking-normal text-[#B8A6E8]"
+              >
+                ▾ change
+              </button>
+              <button
+                type="button"
+                onClick={() => onChoose(null)}
+                className="text-[11px] font-normal normal-case tracking-normal text-[#B8A6E8]"
+                aria-label="clear chosen peer"
+              >
+                ✕
+              </button>
+            </>
+          )}
+        </>
+      ) : canEdit ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex h-6 items-center gap-1.5 rounded-[6px] border border-dashed border-[#C9B8F3] bg-white px-2.5 text-[11.5px] font-semibold normal-case tracking-normal text-[#6D28D9]"
+        >
+          ＋ Add a peer
+        </button>
+      ) : (
+        <span className="text-[11.5px] font-normal normal-case tracking-normal text-[#CBBFEF]">
+          no peer chosen
+        </span>
+      )}
+
+      {open && (
+        <div className="absolute left-1/2 top-[calc(100%+10px)] z-20 w-[320px] -translate-x-1/2 overflow-hidden rounded-[9px] border border-[#EAECEF] bg-white text-left font-normal normal-case tracking-normal shadow-[0_14px_32px_rgba(15,23,42,0.16)]">
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search the peer set…"
+            className="m-2 h-[30px] w-[calc(100%-16px)] rounded-[7px] border border-[#CDD5E1] px-2.5 text-[12.5px] outline-none"
+          />
+          <div className="max-h-[260px] overflow-y-auto overscroll-contain pb-1">
+            {shown.length === 0 && (
+              <div className="px-3 py-3 text-[12px] text-muted-foreground">No match.</div>
+            )}
+            {shown.map((o, i) => (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => {
+                  onChoose(o.key);
+                  setOpen(false);
+                  setQuery("");
+                }}
+                className="grid w-full grid-cols-[62px_1fr_auto] items-baseline gap-2 px-3 py-[7px] text-left text-[12.5px] text-[#0F1B33] hover:bg-[#F7F3FE]"
+              >
+                <b className="font-bold">{o.peer.ticker ?? "—"}</b>
+                <span className="truncate text-[11.5px] text-muted-foreground">
+                  {o.peer.companyName}
+                  {i === 0 && query.trim() === "" && (
+                    <span className="ml-1 rounded-[3px] bg-[#F7F3FE] px-[5px] text-[9.5px] font-bold text-[#6D28D9]">
+                      closest
+                    </span>
+                  )}
+                </span>
+                <em className="not-italic text-[11.5px] tabular-nums text-muted-foreground">
+                  {typeof o.peer.revenueThbM === "number" ? `${o.peer.revenueThbM.toFixed(0)}m` : "—"}
+                </em>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </span>
+  );
+}
+
 function BenchRow({
   label,
+  labelSub,
   own,
   ownRange,
   estimated,
@@ -1082,12 +1328,16 @@ function BenchRow({
   tooltip,
   peer,
   peerCount,
+  chosen,
+  chosenValue,
   unit = "%",
   blocked,
   blockedNote,
   lowerIsBetter,
+  last,
 }: {
   label: string;
+  labelSub?: string;
   own: number | null;
   /** An estimated bracket shown in place of a single figure. */
   ownRange?: { low: number; high: number } | null;
@@ -1097,39 +1347,97 @@ function BenchRow({
   peer: number | null;
   /** How many peers carried a usable value for this metric. */
   peerCount?: number;
+  /** The one chosen peer, if any. */
+  chosen?: Peer | null;
+  chosenValue?: number | null;
   unit?: string;
   blocked?: boolean;
   blockedNote?: string;
   lowerIsBetter?: boolean;
+  last?: boolean;
 }) {
-  const fmt = (v: number | null) =>
-    v === null ? "—" : unit === "%" ? fmtPct(v) : `${v.toFixed(2)}${unit}`;
-  const gap = own !== null && peer !== null ? own - peer : null;
-  const good = gap === null ? null : lowerIsBetter ? gap < 0 : gap > 0;
-  const maxV = Math.max(Math.abs(own ?? ownRange?.high ?? 0), Math.abs(peer ?? 0), 1);
+  const fmt = (v: number | null | undefined) =>
+    v === null || v === undefined ? "—" : unit === "%" ? fmtPct(v) : `${v.toFixed(2)}${unit}`;
   /** Fewer than three usable values is a median worth doubting. */
   const thin = peer !== null && peerCount !== undefined && peerCount < 3;
+  const border = last ? "" : "border-b border-[#F2F4F6]";
 
-  // A range never overstates the difference: the nearest bound is used, so the
-  // gap is the smallest one the estimate allows.
-  const rangeGap = (() => {
-    if (!ownRange || peer === null) return null;
-    if (ownRange.high < peer) return `≥ ${(peer - ownRange.high).toFixed(1)} pts below`;
-    if (ownRange.low > peer) return `≥ ${(ownRange.low - peer).toFixed(1)} pts above`;
-    return "overlaps peer median";
-  })();
+  /**
+   * Gap is always this company minus the comparison. Where the company's own
+   * figure is an estimated range, the nearest bound is used, so the gap states
+   * the smallest difference the estimate allows.
+   */
+  const gapTo = (
+    comparison: number | null | undefined,
+  ): { text: string; good: boolean | null } | null => {
+    if (comparison === null || comparison === undefined) return null;
+    if (ownRange) {
+      if (ownRange.high < comparison)
+        return {
+          text: `≥ ${(comparison - ownRange.high).toFixed(1)} below`,
+          good: Boolean(lowerIsBetter),
+        };
+      if (ownRange.low > comparison)
+        return {
+          text: `≥ ${(ownRange.low - comparison).toFixed(1)} above`,
+          good: !lowerIsBetter,
+        };
+      return { text: "overlaps", good: null };
+    }
+    if (own === null) return null;
+    const gap = own - comparison;
+    return {
+      text:
+        unit === "%"
+          ? `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(1)} pts`
+          : `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(2)}×`,
+      good: lowerIsBetter ? gap < 0 : gap > 0,
+    };
+  };
+
+  const gapTone = (g: { good: boolean | null } | null) =>
+    g === null || g.good === null
+      ? "text-muted-foreground"
+      : g.good
+        ? "text-[#15803D]"
+        : "text-[#B91C1C]";
+
+  const medianGap = blocked ? null : gapTo(peer);
+  const peerGap = blocked ? null : gapTo(chosenValue);
+
+  // Bar: centred on the median, ±35 points to the edge (±1.0× for multiples).
+  const scale = unit === "×" ? 1 : 35;
+  const ownFigure = ownRange ? ownRange.high : own;
+  const better =
+    peer === null || ownFigure === null
+      ? null
+      : lowerIsBetter
+        ? peer - ownFigure
+        : ownFigure - peer;
+  const peerBetter =
+    peer === null || chosenValue === null || chosenValue === undefined
+      ? null
+      : lowerIsBetter
+        ? peer - chosenValue
+        : chosenValue - peer;
+  const half = (v: number) => Math.min(50, (Math.abs(v) / scale) * 50);
 
   return (
     <tr>
       <td
-        className={`border-b border-[#F2F4F6] py-[7px] font-medium ${
+        className={`h-[44px] px-3 align-middle font-medium ${border} ${
           blocked ? "text-muted-foreground" : "text-[#0F1B33]"
         }`}
       >
         {label}
+        {labelSub && (
+          <small className="block text-[10.5px] font-normal text-muted-foreground">
+            {labelSub}
+          </small>
+        )}
       </td>
       <td
-        className={`border-b border-[#F2F4F6] py-[7px] text-right font-semibold tabular-nums ${
+        className={`h-[44px] whitespace-nowrap px-3 text-right align-middle font-bold tabular-nums ${border} ${
           blocked || ownRange ? "text-[#B45309]" : "text-[#0F1B33]"
         }`}
       >
@@ -1148,7 +1456,7 @@ function BenchRow({
         )}
       </td>
       <td
-        className={`border-b border-[#F2F4F6] py-[7px] text-right tabular-nums ${
+        className={`h-[44px] whitespace-nowrap border-l border-[#E3E7ED] px-3 text-right align-middle tabular-nums ${border} ${
           thin ? "text-[#B45309]" : "text-muted-foreground"
         }`}
       >
@@ -1165,42 +1473,57 @@ function BenchRow({
           </small>
         )}
       </td>
-      <td className="border-b border-[#F2F4F6] py-[7px] text-right">
-        {!blocked && own !== null && peer !== null && (
-          <span className="relative inline-block h-[3px] w-12 rounded-[2px] bg-[#F2F4F6]">
-            <i
-              className="absolute top-0 h-[3px] rounded-[2px] bg-[#1E3A8A]"
-              style={{ width: `${Math.min(100, (Math.abs(own) / maxV) * 100)}%` }}
-            />
-            <i
-              className="absolute h-[3px] rounded-[2px] bg-[#D5DAE0] opacity-55"
-              style={{ top: "-5px", width: `${Math.min(100, (Math.abs(peer) / maxV) * 100)}%` }}
-            />
-          </span>
-        )}
-      </td>
       <td
-        className={`border-b border-[#F2F4F6] py-[7px] text-right text-[12px] font-semibold ${
-          blocked || rangeGap
-            ? "text-[#B45309]"
-            : good === null
-              ? "text-muted-foreground"
-              : good
-                ? "text-[#15803D]"
-                : "text-[#B91C1C]"
+        className={`h-[44px] whitespace-nowrap border-r border-[#E3E7ED] px-3 text-right align-middle text-[12.5px] font-semibold tabular-nums ${border} ${
+          blocked ? "text-[#B45309]" : gapTone(medianGap)
         }`}
       >
-        {blocked
-          ? blockedNote
-          : rangeGap
-            ? rangeGap
-            : gap === null
-              ? "—"
-              : unit === "%"
-                ? `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(1)} pts`
-                : `${gap > 0 ? "+" : "−"}${Math.abs(gap).toFixed(2)}×`}
+        {blocked ? blockedNote : (medianGap?.text ?? "—")}
+      </td>
+      <td
+        className={`h-[44px] whitespace-nowrap border-l border-[#E2D8FB] bg-[#F7F3FE] px-3 text-right align-middle font-semibold tabular-nums ${border} ${
+          chosen ? "text-[#6D28D9]" : "text-center text-[#CBBFEF]"
+        }`}
+      >
+        {chosen ? fmt(chosenValue) : "—"}
+      </td>
+      <td
+        className={`h-[44px] whitespace-nowrap border-r border-[#E2D8FB] bg-[#F7F3FE] px-3 text-right align-middle text-[12.5px] font-semibold tabular-nums ${border} ${
+          chosen && !blocked ? gapTone(peerGap) : "text-center text-[#CBBFEF]"
+        }`}
+      >
+        {chosen ? (blocked ? blockedNote : (peerGap?.text ?? "—")) : "—"}
+      </td>
+      <td className={`h-[44px] px-3 align-middle ${border}`}>
+        <div className="relative h-2.5">
+          <span className="absolute left-0 right-0 top-[4.5px] h-px bg-[#E6EAF0]" />
+          <span className="absolute left-1/2 top-[-3px] h-4 w-px bg-[#C9D0DA]" />
+          {better !== null && !blocked && (
+            <i
+              className="absolute top-[2px] h-1.5 rounded-[3px]"
+              style={{
+                width: `${half(better)}%`,
+                ...(better >= 0 ? { left: "50%" } : { right: "50%" }),
+                background: estimated
+                  ? "repeating-linear-gradient(90deg,#E8A8A8 0 3px,#F6DADA 3px 6px)"
+                  : better >= 0
+                    ? "#9ED3B1"
+                    : "#E8A8A8",
+              }}
+            />
+          )}
+          {peerBetter !== null && (
+            <span
+              className="absolute top-0 z-[2] -ml-[5px] h-2.5 w-2.5 rounded-full border-2 border-[#6D28D9] bg-white"
+              style={{
+                left: `${Math.max(0, Math.min(100, 50 + (peerBetter >= 0 ? half(peerBetter) : -half(peerBetter))))}%`,
+              }}
+            />
+          )}
+        </div>
       </td>
     </tr>
   );
 }
+
 

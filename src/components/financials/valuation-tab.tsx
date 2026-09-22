@@ -21,7 +21,10 @@ import { MatchingRow } from "@/components/financials/matching-row";
 import { ValuationSummary } from "@/components/financials/valuation-summary";
 import { ValuationMethods } from "@/components/financials/valuation-methods";
 import { AdjustmentsTab } from "@/components/financials/adjustments-tab";
-import { getValuationAdjustments } from "@/lib/valuation-adjustments.functions";
+import {
+  getValuationAdjustments,
+  saveValuationSettings,
+} from "@/lib/valuation-adjustments.functions";
 import {
   DEFAULT_VALUATION_SETTINGS,
   normalise,
@@ -195,6 +198,15 @@ export function ValuationTab({
   });
   const adjustments = adjData?.adjustments ?? [];
   const settings = adjData?.settings ?? DEFAULT_VALUATION_SETTINGS;
+
+  // The one peer chosen for the Benchmark, kept per startup and fiscal year.
+  const persistSettings = useServerFn(saveValuationSettings);
+  const choosePeer = useMutation({
+    mutationFn: (benchmarkPeerId: string | null) =>
+      persistSettings({ data: { startupId, fiscalYear: year!, benchmarkPeerId } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adjKey }),
+    onError: (e: Error) => toast.error(e.message || "Could not save the peer"),
+  });
 
 
   useEffect(() => {
@@ -384,6 +396,10 @@ export function ValuationTab({
                 normalisation={norm}
                 stake={settings.stake}
                 adjustments={adjustments}
+                matchLabel={appliedLabel}
+                selectedPeerId={settings.benchmarkPeerId ?? null}
+                canChoosePeer={canEdit && year !== null && year !== undefined}
+                onSelectPeer={(id) => choosePeer.mutate(id)}
               />
             ) : (
               <>
