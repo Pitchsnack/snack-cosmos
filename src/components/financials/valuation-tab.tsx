@@ -233,9 +233,31 @@ export function ValuationTab({
 
   const peers = peerSet?.peers ?? [];
   const inputs = readFilingInputs(year, income, position, cashFlow, ratios);
-  const result = computeValuation(inputs, peers, discounts);
+  const norm = normalise(adjustments, settings, inputs.netProfit);
+  // Reported figures, then the same maths on normalised profit.
+  const baseResult = computeValuation(inputs, peers, discounts);
+  const result = norm.applied
+    ? computeValuation(inputs, peers, discounts, {
+        netProfit: norm.normalisedNetProfit,
+        applied: true,
+      })
+    : baseResult;
   const hasPeers = !!data.applied && peers.length > 0;
   const flag = result.blocked || result.lowConfidence;
+
+  const lineAmount = (code: string) =>
+    income.find((i) => i.item_code === code && i.fiscal_year === year)?.amount ?? null;
+  const totalExpenses = lineAmount("total_expenses");
+  const cogs = lineAmount("cost_of_goods_sold");
+  const sellingAdmin = lineAmount("selling_admin_expenses");
+  const filingLines: Record<FilingLine, number | null> = {
+    cost_of_goods_sold: cogs,
+    selling_admin: sellingAdmin,
+    other_expenses:
+      totalExpenses === null
+        ? null
+        : Math.max(0, totalExpenses - (cogs ?? 0) - (sellingAdmin ?? 0)),
+  };
 
   const appliedLabel = data.applied
     ? peerSetLabel(data.applied.sector, data.applied.businessModel)
