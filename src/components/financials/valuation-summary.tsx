@@ -574,6 +574,7 @@ export function ValuationSummary({
           </Link>
         }
       >
+        {basisRow}
         {renderMatching(
           <button
             type="button"
@@ -643,7 +644,13 @@ export function ValuationSummary({
                   </tr>
                 )}
                 {peers.length > 0 && (
-                  <tr className="bg-[#F5F7FD] font-semibold text-[#1E3A8A]">
+                  <tr
+                    className={
+                      chosenBasis
+                        ? "bg-[#FFF7ED] font-semibold text-[#9A6B2E]"
+                        : "bg-[#F5F7FD] font-semibold text-[#1E3A8A]"
+                    }
+                  >
                     <td className="border-t border-[#DDE3F2] px-2.5 py-[7px]">
                       Median · {peers.length} peer{peers.length === 1 ? "" : "s"}
                     </td>
