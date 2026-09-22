@@ -18,6 +18,12 @@ import {
   type FilingInputs,
   type ValuationResult,
 } from "@/lib/valuation";
+import {
+  direction,
+  type Adjustment,
+  type Normalisation,
+  type Stake,
+} from "@/lib/valuation-adjustments";
 
 const ACC = "#1E3A8A";
 
