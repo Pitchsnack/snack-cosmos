@@ -1334,6 +1334,7 @@ function BenchRow({
   tooltip,
   peer,
   peerCount,
+  peerTotal,
   chosen,
   chosenValue,
   unit = "%",
@@ -1353,6 +1354,8 @@ function BenchRow({
   peer: number | null;
   /** How many peers carried a usable value for this metric. */
   peerCount?: number;
+  /** How many peers are in the set, so a shortfall can be named. */
+  peerTotal?: number;
   /** The one chosen peer, if any. */
   chosen?: Peer | null;
   chosenValue?: number | null;
@@ -1363,9 +1366,15 @@ function BenchRow({
   last?: boolean;
 }) {
   const fmt = (v: number | null | undefined) =>
-    v === null || v === undefined ? "—" : unit === "%" ? fmtPct(v) : `${v.toFixed(2)}${unit}`;
+    v === null || v === undefined ? "—" : unit === "%" ? fmtPct(v) : fmtSigned(v, 2, unit);
   /** Fewer than three usable values is a median worth doubting. */
   const thin = peer !== null && peerCount !== undefined && peerCount < 3;
+  /** The count is only worth stating when this metric is short of the set. */
+  const short =
+    peer !== null &&
+    peerCount !== undefined &&
+    peerTotal !== undefined &&
+    peerCount < peerTotal;
   const border = last ? "" : "border-b border-[#F2F4F6]";
 
   /**
