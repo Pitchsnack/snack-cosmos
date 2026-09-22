@@ -375,9 +375,9 @@ export function computeValuation(
   );
 
   // P/E — suppression rules
-  if (inputs.netProfit === null) {
+  if (peProfit === null) {
     methods.push(blockedMethod("pe", "P/E", "net profit not captured in the import"));
-  } else if (inputs.netProfit <= 0) {
+  } else if (peProfit <= 0) {
     methods.push({
       key: "pe",
       name: "P/E",
@@ -400,12 +400,15 @@ export function computeValuation(
       reason: thin
         ? `Net margin ${inputs.netMarginPct!.toFixed(2)}% — a small change in profit moves this range a long way.`
         : "Peer P/E median, with the assumptions applied.",
-      input: `net profit ${fmtMoney(inputs.netProfit)} × ${fmtMult(pe.low)}–${fmtMult(pe.high)}`,
-      low: inputs.netProfit * pe.low,
-      high: inputs.netProfit * pe.high,
+      input: `net profit ${fmtMoney(peProfit)}${
+        usesNormalised ? " normalised" : ""
+      } × ${fmtMult(pe.low)}–${fmtMult(pe.high)}`,
+      low: peProfit * pe.low,
+      high: peProfit * pe.high,
       point: false,
     });
   }
+
 
   // EV/EBITDA
   if (inputs.ebitda === null) {
