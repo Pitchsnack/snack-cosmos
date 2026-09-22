@@ -392,13 +392,13 @@ export function ValuationSummary({
         </div>
         <table className="w-full table-fixed border-collapse text-[13px]">
           <colgroup>
-            <col />
+            <col className="w-[200px]" />
             <col className="w-[118px]" />
             <col className="w-[96px]" />
             <col className="w-[112px]" />
             <col className="w-[90px]" />
             <col className="w-[118px]" />
-            <col className="w-[120px]" />
+            <col className="w-[158px]" />
           </colgroup>
           <thead>
             <tr>
