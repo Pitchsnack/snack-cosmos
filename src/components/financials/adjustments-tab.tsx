@@ -3,7 +3,7 @@
  * added back, unpaid roles deducted, unrecorded income recorded but never used.
  * Adjustments apply only when a controlling stake is being valued.
  */
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -276,7 +276,7 @@ export function AdjustmentsTab({
             {adjustments.map((a) => {
               const d = direction(a.type);
               const none = d === "none";
-              if (draft?.id === a.id) return <DraftRow key={a.id} />;
+              if (draft?.id === a.id) return <Fragment key={a.id}>{DraftRow()}</Fragment>;
               return (
                 <tr key={a.id} className={none ? "text-[#A5ADB8]" : undefined}>
                   <td
@@ -349,7 +349,7 @@ export function AdjustmentsTab({
               );
             })}
 
-            {draft && !draft.id && <DraftRow />}
+            {draft && !draft.id && DraftRow()}
 
             <tr className="font-semibold">
               <td className="border-t border-[#EAECEF] py-2 pr-2 text-[#0F1B33]">Applied</td>
