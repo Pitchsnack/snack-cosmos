@@ -37,7 +37,16 @@ export function ValuationMethods({
   const rows: [string, string | null, boolean?][] = [
     ["Revenue", inputs.revenue === null ? null : fmtMoney(inputs.revenue)],
     ["Gross profit", inputs.grossProfit === null ? null : fmtMoney(inputs.grossProfit)],
-    ["Net profit", inputs.netProfit === null ? null : fmtMoney(inputs.netProfit)],
+    [
+      "Net profit",
+      inputs.netProfit === null
+        ? null
+        : normalisation?.applied
+          ? `reported ${fmtMoney(inputs.netProfit)} · normalised ${fmtMoney(
+              normalisation.normalisedNetProfit,
+            )}`
+          : fmtMoney(inputs.netProfit),
+    ],
     ["Equity", inputs.equity === null ? null : fmtMoney(inputs.equity)],
     ["Total assets", inputs.totalAssets === null ? null : fmtMoney(inputs.totalAssets)],
     [
