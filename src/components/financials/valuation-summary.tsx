@@ -101,6 +101,9 @@ export function ValuationSummary({
   inputs,
   onMethods,
   renderMatching,
+  normalisation,
+  stake,
+  adjustments = [],
 }: {
   startupName: string;
   year: number | undefined;
@@ -115,9 +118,16 @@ export function ValuationSummary({
   onMethods: () => void;
   /** The one matching row; receives the peers toggle for its right edge. */
   renderMatching: (toggle: React.ReactNode) => React.ReactNode;
+  /** Earnings normalisation from the Adjustments tab. */
+  normalisation?: Normalisation;
+  stake?: Stake;
+  adjustments?: Adjustment[];
 }) {
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
+  const adjApplied = Boolean(normalisation?.applied);
+  const minorityRecorded = stake === "minority" && adjustments.length > 0;
+  const applicableAdjustments = adjustments.filter((a) => direction(a.type) !== "none");
 
   // Mixed fiscal year-ends are normal in Thailand — worth stating, not warning about.
   const periodNote = (() => {
