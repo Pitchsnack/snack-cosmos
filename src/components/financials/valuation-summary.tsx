@@ -211,7 +211,11 @@ export function ValuationSummary({
     {
       step: "Control premium",
       adj:
-        discounts.control === null ? (
+        stake === "minority" ? (
+          <span className="text-[11.5px] text-muted-foreground">
+            applies to controlling stakes only
+          </span>
+        ) : discounts.control === null ? (
           <button
             type="button"
             onClick={() => setDiscounts({ ...discounts, control: 20 })}
