@@ -307,7 +307,7 @@ export function computeValuation(
   peers: Peer[],
   discounts: Discounts,
   /** Normalised earnings from the Adjustments tab; only P/E uses them. */
-  normalised?: { netProfit: number | null; applied: boolean } | null,
+  normalised?: { netProfit: number | null; revenue?: number | null; applied: boolean } | null,
 ): ValuationResult {
   const medians = peerMedians(peers);
   const f = ladderFactors(discounts).total;
@@ -316,6 +316,12 @@ export function computeValuation(
     normalised?.netProfit !== null &&
     normalised?.netProfit !== undefined;
   const peProfit = usesNormalised ? normalised!.netProfit! : inputs.netProfit;
+  const usesNormalisedRevenue =
+    Boolean(normalised?.applied) &&
+    normalised?.revenue !== null &&
+    normalised?.revenue !== undefined &&
+    normalised.revenue !== inputs.revenue;
+  const saleRevenue = usesNormalisedRevenue ? normalised!.revenue! : inputs.revenue;
 
   const adjusted = {
     pbv: medians.pbv === null ? null : medians.pbv * f,
@@ -364,8 +370,8 @@ export function computeValuation(
     buildMultipleMethod({
       key: "evsales",
       name: "Revenue multiple",
-      base: inputs.revenue,
-      baseLabel: "revenue",
+      base: saleRevenue,
+      baseLabel: usesNormalisedRevenue ? "revenue normalised" : "revenue",
       range: effective.evSales,
       missingBase: "revenue not captured in the import",
       missingMultiple: "peers carry no EV/EBITDA and EBITDA margin, so EV/Sales cannot be derived",
