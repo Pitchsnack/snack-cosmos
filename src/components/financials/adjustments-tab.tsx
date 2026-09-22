@@ -31,8 +31,28 @@ import {
   type ValuationSettings,
 } from "@/lib/valuation-adjustments";
 import { fmtMoney, type ValuationResult } from "@/lib/valuation";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const LINES: FilingLine[] = ["cost_of_goods_sold", "selling_admin", "other_expenses"];
+
+/** Unrecorded income is a revenue item for display and for the add dialog. */
+const isRevenueGroup = (t: AdjustmentType) => isRevenueType(t) || t === "unrecorded_income";
+const DIALOG_REVENUE_TYPES: AdjustmentType[] = [
+  "below_market_related_party",
+  "revenue_elsewhere",
+  "one_off_income",
+  "unrecorded_income",
+];
+const DIALOG_EXPENSE_TYPES: AdjustmentType[] = [
+  "booked_expense",
+  "one_off_expense",
+  "missing_cost",
+];
+const DIR_LABEL: Record<string, string> = {
+  add_back: "add back",
+  deduct: "deduct",
+  none: "record only",
+};
 
 const thb = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 0 });
 const m = (v: number) => `${(v / 1_000_000).toFixed(2)}M`;
