@@ -734,7 +734,10 @@ export function ValuationSummary({
                     </tr>
                   </thead>
                   <tbody>
-                    {result.candidates.map((c) => (
+                    {/* Included methods first, then tails; book value last. */}
+                    {[...result.candidates]
+                      .sort((a, b) => Number(Boolean(a.tail)) - Number(Boolean(b.tail)))
+                      .map((c) => (
                       <tr key={c.key}>
                         <td className="border-b border-[#F2F4F6] py-[5px] text-[#0F1B33]">
                           {c.name}
