@@ -233,12 +233,13 @@ export function ValuationTab({
 
   const peers = peerSet?.peers ?? [];
   const inputs = readFilingInputs(year, income, position, cashFlow, ratios);
-  const norm = normalise(adjustments, settings, inputs.netProfit);
+  const norm = normalise(adjustments, settings, inputs.netProfit, inputs.revenue);
   // Reported figures, then the same maths on normalised profit.
   const baseResult = computeValuation(inputs, peers, discounts);
   const result = norm.applied
     ? computeValuation(inputs, peers, discounts, {
         netProfit: norm.normalisedNetProfit,
+        revenue: norm.normalisedRevenue,
         applied: true,
       })
     : baseResult;
@@ -357,6 +358,7 @@ export function ValuationTab({
                 )?.amount ?? null
               }
               reportedNetProfit={inputs.netProfit}
+              reportedRevenue={inputs.revenue}
               baseResult={baseResult}
               adjustedResult={result}
               queryKey={adjKey}
