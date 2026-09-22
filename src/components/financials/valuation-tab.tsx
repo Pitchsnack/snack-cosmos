@@ -283,6 +283,57 @@ export function ValuationTab({
     ? peerSetLabel(data.applied.sector, data.applied.businessModel)
     : null;
 
+  // Context line on the right of the sub-tab row — it follows the sub-tab.
+  const adjShare =
+    norm.applied && norm.normalisedNetProfit
+      ? Math.abs(norm.netEffect / norm.normalisedNetProfit) * 100
+      : null;
+  const contextLine =
+    subTab === "summary" ? (
+      <>
+        <span>
+          Filing <MetaValue>FY{year ?? "—"}</MetaValue>
+        </span>
+        <span>
+          Peer set <MetaValue>{appliedLabel ?? "none matched"}</MetaValue>
+        </span>
+        {age?.text && <span>{age.text}</span>}
+      </>
+    ) : subTab === "methods" ? (
+      <>
+        <span>
+          Filing <MetaValue>FY{year ?? "—"}</MetaValue>
+        </span>
+        <span className="flex items-center gap-1.5">
+          {result.blocked && <span className="h-[6px] w-[6px] rounded-full bg-[#B45309]" />}
+          <MetaValue>
+            {usableCount} of {result.methods.length}
+          </MetaValue>{" "}
+          methods usable
+        </span>
+      </>
+    ) : norm.savedCount === 0 ? (
+      <span>None — reported figures used as filed</span>
+    ) : (
+      <>
+        <span>
+          <MetaValue>{norm.appliedCount}</MetaValue> applied
+        </span>
+        <span>
+          <MetaValue>{norm.savedCount}</MetaValue> saved
+        </span>
+        <span>
+          Tax rate <MetaValue>{settings.taxRate}%</MetaValue>
+        </span>
+        {adjShare !== null && (
+          <span className="text-[#B45309]">
+            {adjShare.toFixed(0)}% of normalised profit from adjustments
+          </span>
+        )}
+      </>
+    );
+
+
   const matching = (right?: React.ReactNode) => (
     <MatchingRow
       sector={sector}
