@@ -232,8 +232,8 @@ export function ValuationTab({
 
   if (isLoading || !data) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center text-sm text-muted-foreground">
-        Loading valuation…
+      <div className="rounded-xl border border-dashed border-border bg-white p-10">
+        <LoadingOverlay message="Loading valuation…" delay={0} />
       </div>
     );
   }
