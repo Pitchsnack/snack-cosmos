@@ -379,7 +379,70 @@ export function ValuationTab({
     );
 
 
-  const matching = (right?: React.ReactNode) => (
+  const startupRevenueM = inputs.revenue !== null ? inputs.revenue / 1e6 : null;
+  const sectorMedianRevM = peerMedians(sectorPeers).revenueThbM;
+  const sizeNote =
+    basis === "sector" &&
+    startupRevenueM !== null &&
+    startupRevenueM > 0 &&
+    sectorMedianRevM !== null &&
+    (sectorMedianRevM > 2 * startupRevenueM || sectorMedianRevM < 0.5 * startupRevenueM)
+      ? `The set's median revenue is ${Math.round(sectorMedianRevM).toLocaleString("en-US")}m against this company's ${Math.round(startupRevenueM).toLocaleString("en-US")}m — companies of a very different size.`
+      : null;
+
+  const chosenOn = selection?.chosenAt
+    ? new Date(selection.chosenAt).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+  const chosenLabel =
+    basis === "chosen"
+      ? `Chosen companies · ${peers.length} peers${selection?.chosenByName ? ` · chosen by ${selection.chosenByName}` : ""}${chosenOn ? ` on ${chosenOn}` : ""}`
+      : null;
+
+  const basisRow = (
+    <>
+      <PeerBasisRow
+        basis={selection?.basis ?? "sector"}
+        canEdit={canEdit}
+        onBasis={(b) => changeBasis.mutate(b)}
+        onChoose={() => setPickerOpen(true)}
+      />
+      {sizeNote && (
+        <div className="mb-[9px] rounded-[7px] border border-[#F6DFB4] bg-[#FEF3E7] px-3 py-2 text-[11.5px] text-[#7C4A0B]">
+          {sizeNote}
+        </div>
+      )}
+      <PeerPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        candidates={candidates ?? []}
+        initialSelected={chosenPeers.map((p) => p.id!).filter(Boolean)}
+        startupRevenueThbM={startupRevenueM}
+        saving={savePeers.isPending}
+        onSave={(ids) => savePeers.mutate(ids)}
+      />
+    </>
+  );
+
+  const chosenStrip = (right?: React.ReactNode) => (
+    <div className="flex flex-wrap items-center gap-2 rounded-[7px] border border-[#F6DFC4] bg-[#FFF7ED] px-3 py-2 text-[11.5px] text-[#7C4A0B]">
+      <span>
+        <b>{chosenLabel}</b>
+        {sectorMedianRevM !== null && basis === "chosen"
+          ? ` · median revenue ${Math.round(peerMedians(peers).revenueThbM ?? 0).toLocaleString("en-US")}m`
+          : ""}
+      </span>
+      {right && <span className="ml-auto">{right}</span>}
+    </div>
+  );
+
+  const matching = (right?: React.ReactNode) =>
+    basis === "chosen" ? (
+      chosenStrip(right)
+    ) : (
     <MatchingRow
       sector={sector}
       model={model}
