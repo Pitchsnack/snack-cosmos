@@ -349,7 +349,7 @@ export function AdjustmentsTab({
               );
             })}
 
-            {draft && !draft.id && <DraftRow />}
+            {draft && !draft.id && DraftRow()}
 
             <tr className="font-semibold">
               <td className="border-t border-[#EAECEF] py-2 pr-2 text-[#0F1B33]">Applied</td>
