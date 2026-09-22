@@ -280,8 +280,22 @@ export function ValuationSummary({
             .map((m) => (
               <span key={m.key}>{` · ${m.name} is low confidence`}</span>
             ))}
+          {adjApplied && normalisation && (
+            <span className="font-semibold text-[#1E3A8A]">
+              {" · "}
+              {normalisation.netEffect >= 0 ? "+" : "−"}
+              {fmtMoney(Math.abs(normalisation.netEffect))} from {normalisation.appliedCount}{" "}
+              adjustment{normalisation.appliedCount === 1 ? "" : "s"} · controlling stake
+            </span>
+          )}
           {year ? ` · filing FY${year}` : ""}
         </div>
+        {minorityRecorded && (
+          <div className="mt-1 text-[11.5px] text-muted-foreground">
+            {applicableAdjustments.length} adjustment
+            {applicableAdjustments.length === 1 ? "" : "s"} recorded, not applied — minority stake
+          </div>
+        )}
         {spread && (
           <Axis
             spread={spread}
