@@ -51,11 +51,14 @@ export interface ValuationSettings {
   stake: Stake;
   /** Percent. */
   taxRate: number;
+  /** The one listed company chosen for the Benchmark, if any. */
+  benchmarkPeerId?: string | null;
 }
 
 export const DEFAULT_VALUATION_SETTINGS: ValuationSettings = {
   stake: "minority",
   taxRate: 20,
+  benchmarkPeerId: null,
 };
 
 export const REVENUE_TYPES: AdjustmentType[] = [
