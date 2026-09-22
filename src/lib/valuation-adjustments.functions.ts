@@ -182,7 +182,11 @@ export const saveValuationSettings = createServerFn({ method: "POST" })
       { fiscalYear: data.fiscalYear, stake: row.stake, taxRate: Number(row.tax_rate) },
     );
 
-    return { stake: row.stake as Stake, taxRate: Number(row.tax_rate) };
+    return {
+      stake: row.stake as Stake,
+      taxRate: Number(row.tax_rate),
+      benchmarkPeerId: row.benchmark_peer_company_id ?? null,
+    };
   });
 
 export const saveValuationAdjustment = createServerFn({ method: "POST" })
