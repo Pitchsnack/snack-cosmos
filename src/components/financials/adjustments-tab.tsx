@@ -713,27 +713,116 @@ export function AdjustmentsTab({
           </p>
         )}
       </Block>
+
+      <Dialog
+        open={!!draft}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDraft(null);
+            setError(null);
+            openerRef.current?.focus();
+          }
+        }}
+      >
+        <DialogContent className="w-[440px] max-w-[92vw] gap-0 p-0">{dialogBody()}</DialogContent>
+      </Dialog>
     </div>
   );
 
-  function DraftRow() {
+  function dialogBody() {
     if (!draft) return null;
+    const revenue = isRevenueGroup(draft.type);
+    const accent = revenue ? "#15803D" : "#B91C1C";
     const dir = direction(draft.type);
-    const revenue = isRevenueType(draft.type);
     const preview = effects(draftAdjustment(draft));
-    const typeOptions = revenue ? REVENUE_TYPES : EXPENSE_TYPES;
+    const typeOptions = revenue ? DIALOG_REVENUE_TYPES : DIALOG_EXPENSE_TYPES;
+    const taxed = (v: number) => v * (1 - settings.taxRate / 100);
+    const amount = Number(draft.amount) || 0;
+    const revenueAddBack =
+      draft.type === "below_market_related_party" || draft.type === "revenue_elsewhere";
+    const blocking = blockingCheck(draft);
+
+    const money = (v: number, sign = true) =>
+      `${sign ? (v >= 0 ? "+ " : "− ") : ""}${thb(Math.abs(v))}`;
+
+    const boxes: { label: string; value: string; tone?: string }[] =
+      draft.type === "unrecorded_income"
+        ? []
+        : draft.type === "below_market_related_party"
+          ? [
+              {
+                label: "Market value",
+                value: thb(amount + preview.revenue),
+              },
+              { label: "Revenue", value: money(preview.revenue) },
+              { label: "Profit, after tax", value: money(taxed(preview.profit)) },
+            ]
+          : draft.type === "revenue_elsewhere"
+            ? [
+                { label: "Revenue", value: money(preview.revenue) },
+                { label: "Profit, pre-tax", value: money(preview.profit) },
+                { label: "Profit, after tax", value: money(taxed(preview.profit)) },
+              ]
+            : [
+                { label: "Revenue", value: "no change", tone: "muted" },
+                { label: "Profit, pre-tax", value: money(preview.profit) },
+                { label: "Profit, after tax", value: money(taxed(preview.profit)) },
+              ];
+
+    // Live checks, in order: blocking first, then the amber notes.
+    const notes: { text: string; tone: "red" | "amber" | "ok" }[] = [];
+    if (blocking) notes.push({ text: blocking, tone: "red" });
+    if (
+      !blocking &&
+      dir === "add_back" &&
+      !isRevenueType(draft.type) &&
+      draft.filingLine &&
+      filingLines[draft.filingLine] !== null
+    )
+      notes.push({
+        text: `Within its filing line — ${thb(amount)} of ${m(filingLines[draft.filingLine]!)} on ${
+          FILING_LINE_LABELS[draft.filingLine]
+        }`,
+        tone: "ok",
+      });
+    if (draft.type === "revenue_elsewhere" && draft.costsAmount.trim() === "")
+      notes.push({
+        text: "No costs entered — the full amount is treated as profit. Correct only if these sales carry no cost.",
+        tone: "amber",
+      });
+    if (reportedRevenue && Math.abs(preview.revenue) > reportedRevenue * 0.1)
+      notes.push({
+        text: "This is more than 10% of reported revenue — beyond this, the valuation describes a different business from the one that filed the accounts.",
+        tone: "amber",
+      });
+    if (profitBeforeTax && profitBeforeTax > 0 && Math.abs(preview.profit) > profitBeforeTax * 0.5)
+      notes.push({
+        text: "This is more than 50% of reported profit before tax.",
+        tone: "amber",
+      });
+
     return (
-      <tr>
-        <td colSpan={8} className="bg-[#F7FAFF] p-0">
-          <div className="flex flex-wrap items-center gap-2 px-1 py-2.5">
-            <input
-              className={`${inputClass} w-[220px]`}
-              placeholder="What is being adjusted"
-              value={draft.description}
-              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-            />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <div className="flex items-center gap-2 border-b border-[#EAECEF] px-4 py-3">
+          <span className="h-2 w-2 rounded-full" style={{ background: accent }} />
+          <h3 className="m-0 text-[13.5px] font-semibold text-[#0F1B33]">
+            {draft.id
+              ? "Edit adjustment"
+              : revenue
+                ? "Add revenue adjustment"
+                : "Add expense adjustment"}
+          </h3>
+        </div>
+
+        <div className="grid gap-2.5 px-4 py-3.5">
+          <Field label="Type">
             <select
-              className={`${inputClass} w-[210px]`}
+              className={inputClass}
               value={draft.type}
               onChange={(e) => {
                 const type = e.target.value as AdjustmentType;
@@ -750,123 +839,223 @@ export function AdjustmentsTab({
                   recurs:
                     type === "below_market_related_party" || type === "revenue_elsewhere"
                       ? "yearly"
-                      : draft.recurs,
+                      : type === "one_off_income"
+                        ? "one_off"
+                        : draft.recurs,
                 });
+                setError(null);
               }}
             >
               {typeOptions.map((t) => (
                 <option key={t} value={t}>
-                  {ADJUSTMENT_TYPE_LABELS[t]}
+                  {ADJUSTMENT_TYPE_LABELS[t]} — {DIR_LABEL[direction(t)]}
                 </option>
               ))}
             </select>
+          </Field>
 
-            {!revenue && (
-              <select
-                className={`${inputClass} w-[150px]`}
-                disabled={draft.type === "unrecorded_income"}
-                value={draft.filingLine ?? ""}
-                onChange={(e) =>
-                  setDraft({ ...draft, filingLine: (e.target.value || null) as FilingLine | null })
-                }
-              >
-                <option value="">—</option>
-                {LINES.map((l) => (
-                  <option key={l} value={l}>
-                    {FILING_LINE_LABELS[l]}
-                  </option>
-                ))}
-              </select>
-            )}
+          <Field label="Description">
+            <input
+              autoFocus
+              className={inputClass}
+              placeholder="What is being adjusted"
+              value={draft.description}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+            />
+          </Field>
 
+          <div className="grid grid-cols-2 gap-2.5">
             <Field
               label={
                 draft.type === "below_market_related_party"
-                  ? "Sales at the related-party price"
+                  ? "Sales at the related price"
                   : draft.type === "revenue_elsewhere"
                     ? "Sales"
-                    : draft.type === "one_off_income"
+                    : draft.type === "one_off_income" || draft.type === "unrecorded_income"
                       ? "Amount"
-                      : "Amount / yr"
+                      : "Amount per year"
               }
             >
-              <input
-                className={`${inputClass} w-[130px] text-right tabular-nums`}
-                inputMode="numeric"
-                placeholder="0"
-                value={draft.amount}
-                onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
-              />
+              <Unit unit="THB">
+                <input
+                  className={`${inputClass} pr-10 text-right tabular-nums`}
+                  inputMode="numeric"
+                  placeholder="e.g. 5,000,000"
+                  value={draft.amount}
+                  onChange={(e) =>
+                    setDraft({ ...draft, amount: e.target.value.replace(/,/g, "") })
+                  }
+                />
+              </Unit>
             </Field>
 
             {draft.type === "below_market_related_party" && (
-              <Field label="Discount to market %">
-                <input
-                  className={`${inputClass} w-[90px] text-right tabular-nums`}
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={draft.discountPct}
-                  onChange={(e) => setDraft({ ...draft, discountPct: e.target.value })}
-                />
+              <Field label="Discount to market">
+                <Unit unit="%">
+                  <input
+                    className={`${inputClass} pr-8 text-right tabular-nums`}
+                    inputMode="numeric"
+                    placeholder="e.g. 20"
+                    value={draft.discountPct}
+                    onChange={(e) => setDraft({ ...draft, discountPct: e.target.value })}
+                  />
+                </Unit>
               </Field>
             )}
 
             {draft.type === "revenue_elsewhere" && (
-              <Field label="Costs of those sales (required)">
-                <input
-                  className={`${inputClass} w-[130px] text-right tabular-nums`}
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={draft.costsAmount}
-                  onChange={(e) => setDraft({ ...draft, costsAmount: e.target.value })}
-                />
+              <Field label="Costs of those sales">
+                <Unit unit="THB">
+                  <input
+                    className={`${inputClass} pr-10 text-right tabular-nums`}
+                    inputMode="numeric"
+                    placeholder="e.g. 2,400,000"
+                    value={draft.costsAmount}
+                    onChange={(e) =>
+                      setDraft({ ...draft, costsAmount: e.target.value.replace(/,/g, "") })
+                    }
+                  />
+                </Unit>
               </Field>
             )}
 
-            <select
-              className={`${inputClass} w-[110px]`}
-              value={draft.recurs}
-              onChange={(e) => setDraft({ ...draft, recurs: e.target.value as Recurs })}
-            >
-              <option value="yearly">Yearly</option>
-              <option value="one_off">One-off</option>
-            </select>
+            {!revenue && (
+              <Field label="Filing line">
+                <select
+                  className={inputClass}
+                  value={draft.filingLine ?? ""}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      filingLine: (e.target.value || null) as FilingLine | null,
+                    })
+                  }
+                >
+                  <option value="">—</option>
+                  {LINES.map((l) => (
+                    <option key={l} value={l}>
+                      {FILING_LINE_LABELS[l]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+          </div>
 
-            <span className="text-[11.5px] text-muted-foreground">
-              <Pill kind={dir} />{" "}
-              {dir === "none"
-                ? "never applied"
-                : `revenue ${preview.revenue === 0 ? "—" : thb(preview.revenue)} · profit ${
-                    preview.profit >= 0 ? "+" : "−"
-                  }${thb(Math.abs(preview.profit))}`}
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 px-1 pb-2.5">
-            <button
-              type="button"
-              onClick={submit}
-              disabled={saveMut.isPending}
-              className="h-[30px] rounded-[7px] bg-[#1E3A8A] px-[13px] text-[12px] font-semibold text-white"
+          <Field label="Recurs">
+            <div className="inline-flex overflow-hidden rounded-[7px] border border-[#D3D9E2]">
+              {(["yearly", "one_off"] as Recurs[]).map((r, i) => {
+                const disabled =
+                  (revenueAddBack && r === "one_off") ||
+                  (draft.type === "one_off_income" && r === "yearly");
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setDraft({ ...draft, recurs: r })}
+                    className={`px-3 py-[5px] text-[12px] ${i ? "border-l border-[#D3D9E2]" : ""} ${
+                      draft.recurs === r
+                        ? "bg-[#1E3A8A] font-semibold text-white"
+                        : disabled
+                          ? "bg-white text-[#A5ADB8]"
+                          : "bg-white text-[#0F1B33]"
+                    }`}
+                  >
+                    {r === "yearly" ? "Yearly" : "One-off"}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+          {revenueAddBack && (
+            <p className="m-0 text-[11px] text-muted-foreground">
+              Revenue add-backs must recur. A one-off gain is recorded as One-off income, which is
+              deducted.
+            </p>
+          )}
+
+          {draft.type === "unrecorded_income" ? (
+            <div className="rounded-[7px] border border-[#EAECEF] bg-[#FAFBFC] px-3 py-2 text-[12px] text-muted-foreground">
+              Recorded only — never applied
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {boxes.map((b) => (
+                <div
+                  key={b.label}
+                  className="rounded-[7px] border border-[#DDE3F2] bg-[#F5F7FD] px-2.5 py-2"
+                >
+                  <div className="text-[9.5px] uppercase tracking-[0.06em] text-muted-foreground">
+                    {b.label}
+                  </div>
+                  <div
+                    className={`mt-0.5 text-[13px] font-semibold tabular-nums ${
+                      b.tone === "muted" ? "text-muted-foreground" : "text-[#1E3A8A]"
+                    }`}
+                  >
+                    {b.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {notes.map((nt) => (
+            <p
+              key={nt.text}
+              className={`m-0 text-[11.5px] ${
+                nt.tone === "red"
+                  ? "text-[#B91C1C]"
+                  : nt.tone === "amber"
+                    ? "text-[#B45309]"
+                    : "text-[#15803D]"
+              }`}
             >
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setDraft(null);
-                setError(null);
-              }}
-              className="h-[30px] rounded-[7px] border border-[#EAECEF] bg-white px-[13px] text-[12px] font-semibold text-[#0F1B33]"
-            >
-              Cancel
-            </button>
-            {error && <span className="text-[11.5px] text-[#B91C1C]">{error}</span>}
-          </div>
-        </td>
-      </tr>
+              {nt.tone === "ok" ? "✓ " : nt.tone === "amber" ? "⚠ " : ""}
+              {nt.text}
+            </p>
+          ))}
+          {error && <p className="m-0 text-[11.5px] text-[#B91C1C]">{error}</p>}
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-[#EAECEF] px-4 py-3">
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(null);
+              setError(null);
+              openerRef.current?.focus();
+            }}
+            className="h-[30px] rounded-[7px] border border-[#EAECEF] bg-white px-3 text-[12.5px] font-semibold text-[#0F1B33]"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!!blocking || saveMut.isPending}
+            style={{ background: blocking ? "#B8BEC8" : accent }}
+            className="h-[30px] rounded-[7px] px-3 text-[12.5px] font-semibold text-white"
+          >
+            {draft.id ? "Save changes" : "Add adjustment"}
+          </button>
+        </div>
+      </form>
     );
   }
 }
+
+function Unit({ unit, children }: { unit: string; children: React.ReactNode }) {
+  return (
+    <span className="relative block">
+      {children}
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10.5px] text-muted-foreground">
+        {unit}
+      </span>
+    </span>
+  );
+}
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
