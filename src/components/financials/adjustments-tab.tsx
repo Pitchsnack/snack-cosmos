@@ -4,7 +4,7 @@
  * unrecorded income recorded but never used. Adjustments apply only when a
  * controlling stake is being valued.
  */
-import { Fragment, useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -16,9 +16,7 @@ import {
 } from "@/lib/valuation-adjustments.functions";
 import {
   ADJUSTMENT_TYPE_LABELS,
-  EXPENSE_TYPES,
   FILING_LINE_LABELS,
-  REVENUE_TYPES,
   direction,
   effects,
   isRevenueType,
@@ -161,6 +159,7 @@ export function AdjustmentsTab({
   const saveSettings = useServerFn(saveValuationSettings);
 
   const [draft, setDraft] = useState<Draft | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
@@ -226,8 +225,6 @@ export function AdjustmentsTab({
   /** Everything that stops a row being saved. */
   const blockingCheck = (d: Draft): string | null => {
     if (!d.description.trim()) return "A description is required.";
-    if (d.type === "revenue_elsewhere" && d.costsAmount.trim() === "")
-      return "Costs of those sales are required — adding the revenue without them would overstate profit.";
     if (
       (d.type === "below_market_related_party" || d.type === "revenue_elsewhere") &&
       d.recurs === "one_off"

@@ -203,9 +203,6 @@ export const saveValuationAdjustment = createServerFn({ method: "POST" })
         "One-off revenue isn't added back — a valuation reflects yearly earnings. Record it as One-off income to deduct it, or mark it yearly if it recurs.",
       );
     }
-    if (data.type === "revenue_elsewhere" && (data.costsAmount ?? null) === null) {
-      throw new Error("Costs of those sales are required for revenue booked elsewhere.");
-    }
     if (
       data.type === "below_market_related_party" &&
       !(data.discountPct && data.discountPct > 0)
