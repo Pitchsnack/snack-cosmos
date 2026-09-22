@@ -1169,68 +1169,121 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Effect({ value }: { value: number | null }) {
-  const none = value === null || value === 0;
+/** Signed millions, two decimals — the only number format in this tab. */
+const sm = (v: number) => `${v >= 0 ? "+" : "−"}${(Math.abs(v) / 1_000_000).toFixed(2)}M`;
+
+function Sep() {
+  return <span className="mx-[5px] text-[#D0D5DC]">·</span>;
+}
+
+function Num({ value, group, total }: { value: number; group?: boolean; total?: boolean }) {
+  const nil = value === 0;
+  const border = total
+    ? "border-t border-[#0F1B33]"
+    : group
+      ? "border-b border-[#EAECEF]"
+      : "border-b border-[#F2F4F6]";
+  const weight = total ? "font-bold" : group ? "font-semibold" : "";
   return (
     <td
-      className={`border-b border-[#F2F4F6] py-2 pr-2 text-right tabular-nums ${
-        none ? "text-[#A5ADB8]" : value! < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
+      className={`whitespace-nowrap ${border} px-3 py-[9px] text-right align-top tabular-nums ${weight} ${
+        nil ? "text-[#AEB6C2]" : value < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
       }`}
     >
-      {none ? "—" : `${value! > 0 ? "+ " : "− "}${thb(Math.abs(value!))}`}
+      {nil ? "—" : sm(value)}
     </td>
   );
 }
 
-function Card({
-  title,
+function EffectRow({
+  label,
+  sub,
   reported,
+  change,
   normalised,
-  delta,
-  foot,
+  usedBy,
+  last,
 }: {
-  title: string;
+  label: string;
+  sub?: React.ReactNode;
   reported: number | null;
+  change: number;
   normalised: number | null;
-  delta: number;
-  foot: string;
+  usedBy: string;
+  last?: boolean;
 }) {
-  const moved = delta !== 0 && reported !== null && normalised !== null && reported !== normalised;
+  const b = last ? "" : "border-b border-[#F2F4F6]";
   return (
-    <div className="rounded-[7px] border border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
-      <div className="mb-1 text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-        {title}
-      </div>
-      <div className="flex items-baseline gap-2">
-        {moved && (
-          <span className="text-[13px] tabular-nums text-muted-foreground line-through">
-            {fmtMoney(reported)}
-          </span>
-        )}
-        <span className="text-[19px] font-semibold tabular-nums text-[#1E3A8A]">
-          {fmtMoney(normalised)}
-        </span>
-      </div>
-      <div className="mt-0.5 text-[11.5px] text-muted-foreground">{foot}</div>
-    </div>
+    <tr>
+      <td className={`${b} py-2 pr-2.5 align-top font-medium text-[#0F1B33]`}>
+        {label}
+        {sub && <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">{sub}</span>}
+      </td>
+      <td className={`${b} whitespace-nowrap py-2 pl-2.5 text-right align-top tabular-nums text-muted-foreground`}>
+        {reported === null ? "—" : `${(reported / 1_000_000).toFixed(2)}M`}
+      </td>
+      <td
+        className={`${b} whitespace-nowrap py-2 pl-2.5 text-right align-top font-semibold tabular-nums ${
+          change === 0 ? "text-[#AEB6C2]" : change < 0 ? "text-[#B45309]" : "text-[#15803D]"
+        }`}
+      >
+        {change === 0 ? "—" : sm(change)}
+      </td>
+      <td className={`${b} whitespace-nowrap py-2 pl-2.5 text-right align-top font-bold tabular-nums text-[#1E3A8A]`}>
+        {normalised === null ? "—" : `${(normalised / 1_000_000).toFixed(2)}M`}
+      </td>
+      <td className={`${b} py-2 pl-2.5 align-top text-[11.5px] text-muted-foreground`}>{usedBy}</td>
+    </tr>
   );
 }
 
-function Pill({ kind }: { kind: "add_back" | "deduct" | "none" }) {
-  const map = {
-    add_back: ["add back", "border-[#CFE8D8] bg-[#EFF7F2] text-[#15803D]"],
-    deduct: ["deduct", "border-[#F2DFC8] bg-[#FDF3EC] text-[#B45309]"],
-    none: ["—", "border-[#EAECEF] bg-[#F3F4F6] text-[#6B7280]"],
-  } as const;
-  const [label, cls] = map[kind];
+type Range = { low: number | null; high: number | null } | null;
+
+function MethodEffect({
+  label,
+  base,
+  adjusted,
+  last,
+}: {
+  label: string;
+  base: Range;
+  adjusted: Range;
+  last?: boolean;
+}) {
+  const b = last ? "" : "border-b border-[#F2F4F6]";
+  const has = (r: Range) => r?.low != null && r.high != null;
+  const range = (r: Range) =>
+    has(r) ? `${(r!.low! / 1e6).toFixed(2)}M – ${(r!.high! / 1e6).toFixed(2)}M` : "—";
+  const moved =
+    has(base) && has(adjusted) && (base!.low !== adjusted!.low || base!.high !== adjusted!.high);
   return (
-    <span
-      className={`whitespace-nowrap rounded-full border px-2 py-[1px] text-[10.5px] font-semibold ${cls}`}
-    >
-      {label}
-    </span>
+    <tr>
+      <td className={`${b} py-2 pr-2.5 font-medium text-[#0F1B33]`}>{label}</td>
+      <td className={`${b} whitespace-nowrap py-2 pl-2.5 text-right tabular-nums text-muted-foreground`}>
+        {range(base)}
+      </td>
+      <td
+        className={`${b} whitespace-nowrap py-2 pl-2.5 text-right tabular-nums ${
+          moved ? "font-bold text-[#1E3A8A]" : "text-muted-foreground"
+        }`}
+      >
+        {range(adjusted)}
+      </td>
+      <td
+        className={`${b} whitespace-nowrap py-2 pl-2.5 text-right tabular-nums ${
+          moved ? "font-semibold text-[#15803D]" : "text-[#AEB6C2]"
+        }`}
+      >
+        {!has(base) || !has(adjusted)
+          ? "—"
+          : moved
+            ? `${sm(adjusted!.low! - base!.low!)} – ${sm(adjusted!.high! - base!.high!)}`
+            : "no change"}
+      </td>
+    </tr>
   );
 }
+
 
 function Check({ ok, text }: { ok: boolean; text: string }) {
   return (
