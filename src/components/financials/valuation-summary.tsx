@@ -288,8 +288,14 @@ export function ValuationSummary({
             <span className="font-semibold text-[#1E3A8A]">
               {" · "}
               {normalisation.netEffect >= 0 ? "+" : "−"}
-              {fmtMoney(Math.abs(normalisation.netEffect))} from {normalisation.appliedCount}{" "}
-              adjustment{normalisation.appliedCount === 1 ? "" : "s"} · controlling stake
+              {fmtMoney(Math.abs(normalisation.netEffect))} profit
+              {normalisation.revenueAdjustment !== 0
+                ? ` and ${normalisation.revenueAdjustment >= 0 ? "+" : "−"}${fmtMoney(
+                    Math.abs(normalisation.revenueAdjustment),
+                  )} revenue`
+                : ""}{" "}
+              from {normalisation.appliedCount} adjustment
+              {normalisation.appliedCount === 1 ? "" : "s"} · controlling stake
             </span>
           )}
           {year ? ` · filing FY${year}` : ""}

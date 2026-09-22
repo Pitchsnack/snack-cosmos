@@ -6,6 +6,8 @@ import {
   type Adjustment,
   type AdjustmentType,
   type FilingLine,
+  isRevenueType,
+  revenueFilingLine,
   type Recurs,
   type Stake,
   type ValuationSettings,
@@ -18,8 +20,17 @@ const typeEnum = z.enum([
   "one_off_expense",
   "missing_cost",
   "unrecorded_income",
+  "below_market_related_party",
+  "revenue_elsewhere",
+  "one_off_income",
 ]);
-const lineEnum = z.enum(["cost_of_goods_sold", "selling_admin", "other_expenses"]);
+const lineEnum = z.enum([
+  "cost_of_goods_sold",
+  "selling_admin",
+  "other_expenses",
+  "revenue",
+  "other_income",
+]);
 const recursEnum = z.enum(["yearly", "one_off"]);
 
 async function startupScope(ctx: Ctx, startupId: string) {
@@ -59,6 +70,8 @@ function rowToAdjustment(r: any): Adjustment {
     type: r.type as AdjustmentType,
     filingLine: (r.filing_line as FilingLine | null) ?? null,
     amount: Number(r.amount),
+    discountPct: r.discount_pct === null || r.discount_pct === undefined ? null : Number(r.discount_pct),
+    costsAmount: r.costs_amount === null || r.costs_amount === undefined ? null : Number(r.costs_amount),
     recurs: r.recurs as Recurs,
   };
 }
@@ -78,7 +91,9 @@ export const getValuationAdjustments = createServerFn({ method: "GET" })
     const [rows, settings] = await Promise.all([
       ctx.supabase
         .from("valuation_adjustments")
-        .select("id, description, type, filing_line, amount, recurs, created_at")
+        .select(
+          "id, description, type, filing_line, amount, discount_pct, costs_amount, recurs, created_at",
+        )
         .eq("startup_id", data.startupId)
         .eq("fiscal_year", data.fiscalYear)
         .order("created_at"),
@@ -168,6 +183,8 @@ export const saveValuationAdjustment = createServerFn({ method: "POST" })
         type: typeEnum,
         filingLine: lineEnum.nullable().optional(),
         amount: z.number().min(0),
+        discountPct: z.number().min(0).max(99).nullable().optional(),
+        costsAmount: z.number().min(0).nullable().optional(),
         recurs: recursEnum,
       })
       .parse(input),
@@ -176,14 +193,40 @@ export const saveValuationAdjustment = createServerFn({ method: "POST" })
     const ctx = context as unknown as Ctx;
     const { tenantId } = await startupScope(ctx, data.startupId);
 
+    // The two revenue add-backs describe yearly earnings, so a one-off cannot
+    // be added back; and revenue without its costs would overstate profit.
+    if (
+      (data.type === "below_market_related_party" || data.type === "revenue_elsewhere") &&
+      data.recurs === "one_off"
+    ) {
+      throw new Error(
+        "One-off revenue isn't added back — a valuation reflects yearly earnings. Record it as One-off income to deduct it, or mark it yearly if it recurs.",
+      );
+    }
+    if (data.type === "revenue_elsewhere" && (data.costsAmount ?? null) === null) {
+      throw new Error("Costs of those sales are required for revenue booked elsewhere.");
+    }
+    if (
+      data.type === "below_market_related_party" &&
+      !(data.discountPct && data.discountPct > 0)
+    ) {
+      throw new Error("A discount to market price is required.");
+    }
+
     const values = {
       startup_id: data.startupId,
       tenant_id: tenantId,
       fiscal_year: data.fiscalYear,
       description: data.description,
       type: data.type,
-      filing_line: data.type === "unrecorded_income" ? null : (data.filingLine ?? null),
+      filing_line: isRevenueType(data.type)
+        ? revenueFilingLine(data.type)
+        : data.type === "unrecorded_income"
+          ? null
+          : (data.filingLine ?? null),
       amount: data.amount,
+      discount_pct: data.type === "below_market_related_party" ? (data.discountPct ?? null) : null,
+      costs_amount: data.type === "revenue_elsewhere" ? (data.costsAmount ?? null) : null,
       recurs: data.recurs,
       updated_at: new Date().toISOString(),
     };
@@ -191,14 +234,14 @@ export const saveValuationAdjustment = createServerFn({ method: "POST" })
     if (data.id) {
       const { data: before } = await ctx.supabase
         .from("valuation_adjustments")
-        .select("id, description, type, filing_line, amount, recurs")
+        .select("id, description, type, filing_line, amount, discount_pct, costs_amount, recurs")
         .eq("id", data.id)
         .maybeSingle();
       const { data: row, error } = await ctx.supabase
         .from("valuation_adjustments")
         .update(values as never)
         .eq("id", data.id)
-        .select("id, description, type, filing_line, amount, recurs")
+        .select("id, description, type, filing_line, amount, discount_pct, costs_amount, recurs")
         .single();
       if (error) throw new Error(error.message);
       await audit(ctx, tenantId, row.id, "valuation_adjustment", "UPDATE", before, {
@@ -211,7 +254,7 @@ export const saveValuationAdjustment = createServerFn({ method: "POST" })
     const { data: row, error } = await ctx.supabase
       .from("valuation_adjustments")
       .insert({ ...values, created_by: ctx.userId } as never)
-      .select("id, description, type, filing_line, amount, recurs")
+      .select("id, description, type, filing_line, amount, discount_pct, costs_amount, recurs")
       .single();
     if (error) throw new Error(error.message);
     await audit(ctx, tenantId, row.id, "valuation_adjustment", "CREATE", null, {
@@ -228,7 +271,9 @@ export const deleteValuationAdjustment = createServerFn({ method: "POST" })
     const ctx = context as unknown as Ctx;
     const { data: before } = await ctx.supabase
       .from("valuation_adjustments")
-      .select("id, startup_id, tenant_id, fiscal_year, description, type, filing_line, amount, recurs")
+      .select(
+        "id, startup_id, tenant_id, fiscal_year, description, type, filing_line, amount, discount_pct, costs_amount, recurs",
+      )
       .eq("id", data.id)
       .maybeSingle();
     if (!before) return { ok: true };

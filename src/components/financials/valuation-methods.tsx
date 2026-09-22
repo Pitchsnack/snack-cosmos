@@ -35,7 +35,16 @@ export function ValuationMethods({
         : fmtMoney(inputs.ebitdaLow);
 
   const rows: [string, string | null, boolean?][] = [
-    ["Revenue", inputs.revenue === null ? null : fmtMoney(inputs.revenue)],
+    [
+      "Revenue",
+      inputs.revenue === null
+        ? null
+        : normalisation?.applied && normalisation.revenueAdjustment !== 0
+          ? `reported ${fmtMoney(inputs.revenue)} · normalised ${fmtMoney(
+              normalisation.normalisedRevenue,
+            )}`
+          : fmtMoney(inputs.revenue),
+    ],
     ["Gross profit", inputs.grossProfit === null ? null : fmtMoney(inputs.grossProfit)],
     [
       "Net profit",
