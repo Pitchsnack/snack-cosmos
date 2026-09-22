@@ -18,6 +18,7 @@ import { businessModelLabel } from "@/lib/sectors";
 import { updateStartup } from "@/lib/startups.functions";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 import { MatchingRow } from "@/components/financials/matching-row";
+import { MetaValue, PageTitle, SubTabRow } from "@/components/financials/fin-tabs";
 import { Loading } from "@/components/ui/PitchSnackLoader";
 import { ValuationSummary } from "@/components/financials/valuation-summary";
 import { ValuationMethods } from "@/components/financials/valuation-methods";
@@ -257,7 +258,9 @@ export function ValuationTab({
       })
     : baseResult;
   const hasPeers = !!data.applied && peers.length > 0;
-  const flag = result.blocked || result.lowConfidence;
+  const usableCount = result.methods.filter(
+    (m) => m.status === "usable" || m.status === "low confidence",
+  ).length;
 
   const lineAmount = (code: string) =>
     income.find((i) => i.item_code === code && i.fiscal_year === year)?.amount ?? null;
@@ -279,6 +282,57 @@ export function ValuationTab({
   const appliedLabel = data.applied
     ? peerSetLabel(data.applied.sector, data.applied.businessModel)
     : null;
+
+  // Context line on the right of the sub-tab row — it follows the sub-tab.
+  const adjShare =
+    norm.applied && norm.normalisedNetProfit
+      ? Math.abs(norm.netEffect / norm.normalisedNetProfit) * 100
+      : null;
+  const contextLine =
+    subTab === "summary" ? (
+      <>
+        <span>
+          Filing <MetaValue>FY{year ?? "—"}</MetaValue>
+        </span>
+        <span>
+          Peer set <MetaValue>{appliedLabel ?? "none matched"}</MetaValue>
+        </span>
+        {age?.text && <span>{age.text}</span>}
+      </>
+    ) : subTab === "methods" ? (
+      <>
+        <span>
+          Filing <MetaValue>FY{year ?? "—"}</MetaValue>
+        </span>
+        <span className="flex items-center gap-1.5">
+          {result.blocked && <span className="h-[6px] w-[6px] rounded-full bg-[#B45309]" />}
+          <MetaValue>
+            {usableCount} of {result.methods.length}
+          </MetaValue>{" "}
+          methods usable
+        </span>
+      </>
+    ) : norm.savedCount === 0 ? (
+      <span>None — reported figures used as filed</span>
+    ) : (
+      <>
+        <span>
+          <MetaValue>{norm.appliedCount}</MetaValue> applied
+        </span>
+        <span>
+          <MetaValue>{norm.savedCount}</MetaValue> saved
+        </span>
+        <span>
+          Tax rate <MetaValue>{settings.taxRate}%</MetaValue>
+        </span>
+        {adjShare !== null && (
+          <span className="text-[#B45309]">
+            {adjShare.toFixed(0)}% of normalised profit from adjustments
+          </span>
+        )}
+      </>
+    );
+
 
   const matching = (right?: React.ReactNode) => (
     <MatchingRow
@@ -325,40 +379,49 @@ export function ValuationTab({
 
 
       {/* Summary / Methods / Adjustments */}
-      <div className="mt-4 rounded-[9px] border border-[#EAECEF] bg-white">
-        <div className="flex gap-5 border-b border-[#EAECEF] px-[18px]">
-          {([
-            ["summary", "Summary"],
-            ["methods", "Methods"],
-            ["adjustments", "Adjustments"],
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSubTab(value)}
-              className={`flex items-center gap-[7px] border-b-[1.5px] py-2.5 text-[12.5px] ${
-                subTab === value
-                  ? "border-[#1E3A8A] font-semibold text-[#1E3A8A]"
-                  : "border-transparent text-muted-foreground"
-              }`}
-            >
-              {value === "methods" && (
-                <span
-                  className={`h-[5px] w-[5px] rounded-full ${
-                    flag ? "bg-[#B45309]" : "bg-[#C7CDD6]"
-                  }`}
-                />
-              )}
-              {label}
-              {value === "adjustments" && norm.appliedCount > 0 && (
-                <span className="rounded-full bg-[#1E3A8A] px-1.5 text-[10px] font-bold text-white">
-                  {norm.appliedCount}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="px-[18px] pb-[18px] pt-4">
+      <div>
+        <SubTabRow
+          value={subTab}
+          onChange={(v) => setSubTab(v as typeof subTab)}
+          tabs={[
+            { value: "summary", label: "Summary", icon: "target" },
+            {
+              value: "methods",
+              label: "Methods",
+              icon: "lines",
+              ...(result.blocked
+                ? {
+                    dot: "amber" as const,
+                    dotTitle: `${result.blocked.name} is blocked — ${result.blocked.reason}`,
+                  }
+                : {}),
+            },
+            {
+              value: "adjustments",
+              label: "Adjustments",
+              icon: "sliders",
+              count: norm.appliedCount,
+            },
+          ]}
+          meta={contextLine}
+        />
+        <div className="px-[18px] pb-[18px]">
+          <PageTitle
+            title={
+              subTab === "summary"
+                ? "Summary"
+                : subTab === "methods"
+                  ? "Methods"
+                  : "Adjustments"
+            }
+            sub={
+              subTab === "summary"
+                ? "the indicative range, and how it compares"
+                : subTab === "methods"
+                  ? "the working from the filing — inputs, each method, and what's missing"
+                  : "how profit and revenue would differ under a new owner"
+            }
+          />
           {subTab === "adjustments" ? (
             <AdjustmentsTab
               startupId={startupId}
