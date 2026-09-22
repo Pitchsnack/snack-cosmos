@@ -487,19 +487,20 @@ export function StartupFinancialsPage({
               </div>
             )}
 
-            {tab === "valuation" && (
-              <ValuationTab
-                startupId={id}
-                startupName={data.startupName}
-                workspace={workspace}
-                year={activeYear}
-                ratios={data.ratios}
-                income={data.income}
-                position={data.position}
-                cashFlow={data.cashFlow}
-              />
-            )}
           </div>
+
+          {tab === "valuation" && (
+            <ValuationTab
+              startupId={id}
+              startupName={data.startupName}
+              workspace={workspace}
+              year={activeYear}
+              ratios={data.ratios}
+              income={data.income}
+              position={data.position}
+              cashFlow={data.cashFlow}
+            />
+          )}
         </div>
       )}
     </div>
