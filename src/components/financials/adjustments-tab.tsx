@@ -460,12 +460,10 @@ export function AdjustmentsTab({
             </tr>
           </thead>
           <tbody>
-            {revenueRows.length > 0 && groupHead("Revenue")}
+            {revenueRows.length > 0 && groupHead("Revenue", true)}
             {revenueRows.map(row)}
-            {expenseRows.length > 0 && groupHead("Expenses")}
+            {expenseRows.length > 0 && groupHead("Expenses", false)}
             {expenseRows.map(row)}
-
-            {draft && !draft.id && DraftRow()}
 
             <tr className="font-semibold">
               <td className="border-t border-[#EAECEF] py-2 pr-2 text-[#0F1B33]">Applied</td>
@@ -473,7 +471,7 @@ export function AdjustmentsTab({
               <td className="border-t border-[#EAECEF]" />
               <td className="border-t border-[#EAECEF]" />
               <td
-                className={`border-t border-[#EAECEF] py-2 pr-2 text-right tabular-nums ${
+                className={`whitespace-nowrap border-t border-[#EAECEF] py-2 pr-2 text-right tabular-nums ${
                   n.revenueAdjustment < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
                 }`}
               >
@@ -482,7 +480,7 @@ export function AdjustmentsTab({
                   : `${n.revenueAdjustment > 0 ? "+ " : "− "}${thb(Math.abs(n.revenueAdjustment))}`}
               </td>
               <td
-                className={`border-t border-[#EAECEF] py-2 pr-2 text-right tabular-nums ${
+                className={`whitespace-nowrap border-t border-[#EAECEF] py-2 pr-2 text-right tabular-nums ${
                   n.netPreTax < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
                 }`}
               >
@@ -490,37 +488,40 @@ export function AdjustmentsTab({
                 {thb(Math.abs(n.netPreTax))}
               </td>
               <td className="border-t border-[#EAECEF]" />
-              <td className="border-t border-[#EAECEF] py-2 text-right font-normal text-muted-foreground">
+              <td className="whitespace-nowrap border-t border-[#EAECEF] py-2 text-right font-normal text-muted-foreground">
                 {n.appliedCount} applied · {n.savedCount} saved
               </td>
             </tr>
           </tbody>
         </table>
 
-        {canEdit && !draft && (
-          <div className="mt-2 flex gap-4">
+        {canEdit && (
+          <div className="mt-2.5 flex gap-2">
             <button
               type="button"
-              onClick={() => {
+              onClick={(ev) => {
+                openerRef.current = ev.currentTarget;
                 setError(null);
                 setDraft({ ...emptyRevenueDraft });
               }}
-              className="text-[12px] font-semibold text-[#1E3A8A]"
+              className="inline-flex h-[30px] items-center gap-1.5 rounded-[7px] border border-[#CFE8D8] bg-white px-3 text-[12.5px] font-semibold text-[#15803D] hover:bg-[#EFF7F2]"
             >
-              ＋ Add revenue adjustment
+              ＋ Revenue adjustment
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={(ev) => {
+                openerRef.current = ev.currentTarget;
                 setError(null);
                 setDraft({ ...emptyExpenseDraft });
               }}
-              className="text-[12px] font-semibold text-[#1E3A8A]"
+              className="inline-flex h-[30px] items-center gap-1.5 rounded-[7px] border border-[#F5D2D2] bg-white px-3 text-[12.5px] font-semibold text-[#B91C1C] hover:bg-[#FDF1F1]"
             >
-              ＋ Add expense adjustment
+              ＋ Expense adjustment
             </button>
           </div>
         )}
+
 
         {/* Checks */}
         <div className="mt-3 grid gap-1.5 border-t border-[#F2F4F6] pt-2.5 text-[12px]">
