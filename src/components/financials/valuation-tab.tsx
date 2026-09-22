@@ -286,7 +286,11 @@ export function ValuationTab({
     : null;
   const suggestion = data.narrower && data.state !== "exact" ? data.narrower : null;
 
-  const peers = peerSet?.peers ?? [];
+  const sectorPeers = peerSet?.peers ?? [];
+  const chosenPeers = selection?.peers ?? [];
+  const basis: "sector" | "chosen" =
+    selection?.basis === "chosen" && chosenPeers.length > 0 ? "chosen" : "sector";
+  const peers = basis === "chosen" ? chosenPeers : sectorPeers;
   const inputs = readFilingInputs(year, income, position, cashFlow, ratios);
   const norm = normalise(adjustments, settings, inputs.netProfit, inputs.revenue);
   // Reported figures, then the same maths on normalised profit.
