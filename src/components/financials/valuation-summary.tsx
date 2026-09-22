@@ -132,6 +132,12 @@ export function ValuationSummary({
   normalisation?: Normalisation;
   stake?: Stake;
   adjustments?: Adjustment[];
+  /** Sector · business model of the matched peer set. */
+  matchLabel?: string | null;
+  /** The one peer chosen for the Benchmark, by listed company id. */
+  selectedPeerId?: string | null;
+  onSelectPeer?: (id: string | null) => void;
+  canChoosePeer?: boolean;
 }) {
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
