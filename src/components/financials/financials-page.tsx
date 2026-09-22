@@ -165,7 +165,23 @@ export function StartupFinancialsPage({
   const queryClient = useQueryClient();
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
-  const [tab, setTab] = useState(initialTab ?? "overview");
+  // Old links to the three statements still work: they open Financial
+  // Statements with that statement selected.
+  const STATEMENT_TABS = ["income", "position", "cash-flow"] as const;
+  const legacy = STATEMENT_TABS.find((v) => v === initialTab || `${v}-statement` === initialTab);
+  const [tab, setTab] = useState(legacy ? "statements" : (initialTab ?? "overview"));
+  const [statementTab, setStatementTab] = useState<string>(() => {
+    if (legacy) return legacy;
+    if (typeof window !== "undefined") {
+      const last = window.sessionStorage.getItem("financials.statementTab");
+      if (last && (STATEMENT_TABS as readonly string[]).includes(last)) return last;
+    }
+    return "income";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined")
+      window.sessionStorage.setItem("financials.statementTab", statementTab);
+  }, [statementTab]);
   const [editing, setEditing] = useState(false);
   const [year, setYear] = useState<number | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
