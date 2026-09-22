@@ -360,24 +360,75 @@ export function ValuationSummary({
 
       {/* 3 · Benchmark */}
       <Block label="Benchmark" hint="against the peer median" right="no assumptions applied">
-        <table className="w-full border-collapse text-[12.5px]">
+        <div className="-mx-3 -mt-3 mb-0 border-b border-[#EAECEF] px-4 py-2.5 text-[12px] text-muted-foreground">
+          Peer median of <b className="font-semibold text-[#0F1B33]">{peers.length} companies</b>
+          {matchLabel ? ` · ${matchLabel}` : ""} · reported figures
+          {year ? `, FY${year}` : ""}
+        </div>
+        <table className="w-full table-fixed border-collapse text-[13px]">
+          <colgroup>
+            <col />
+            <col className="w-[118px]" />
+            <col className="w-[96px]" />
+            <col className="w-[112px]" />
+            <col className="w-[90px]" />
+            <col className="w-[118px]" />
+            <col className="w-[120px]" />
+          </colgroup>
           <thead>
             <tr>
-              {["Metric", startupName, "Peer median", "", "Gap"].map((h, i) => (
-                <th
-                  key={i}
-                  className={`border-b border-[#F2F4F6] pb-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] ${
-                    i === 0 ? "text-left text-muted-foreground" : "text-right"
-                  } ${i === 1 ? "text-[#0F1B33]" : i === 0 ? "" : "text-muted-foreground"} ${
-                    i === 3 ? "w-[56px]" : i === 4 ? "w-[88px]" : ""
-                  }`}
-                >
-                  {h}
-                </th>
-              ))}
+              <th />
+              <th />
+              <th
+                colSpan={2}
+                className="px-3 pt-2 text-center text-[10px] font-bold uppercase tracking-[0.07em] text-[#1E3A8A]"
+              >
+                <span className="block border-b border-[#DDE3F2] pb-[5px]">Peer median</span>
+              </th>
+              <th
+                colSpan={2}
+                className="border-x border-[#E2D8FB] bg-[#F7F3FE] px-3 pt-2 text-center text-[10px] font-bold uppercase tracking-[0.07em] text-[#6D28D9]"
+              >
+                <span className="flex items-center justify-center gap-1.5 border-b border-[#E2D8FB] pb-[5px]">
+                  <PeerPicker
+                    options={peerOptions}
+                    chosen={chosenPeer}
+                    canEdit={canChoosePeer}
+                    onChoose={(id) => onSelectPeer?.(id)}
+                  />
+                </span>
+              </th>
+              <th />
+            </tr>
+            <tr>
+              <th className="border-b border-[#EAECEF] px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                Metric
+              </th>
+              <th className="border-b border-[#EAECEF] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-[#0F1B33]">
+                {startupName}
+              </th>
+              <th className="border-b border-l border-[#EAECEF] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                Median
+              </th>
+              <th className="border-b border-r border-[#EAECEF] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                Gap
+              </th>
+              <th className="border-x border-b border-[#E2D8FB] bg-[#F7F3FE] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8B6FD6]">
+                {chosenPeer ? (chosenPeer.ticker ?? chosenPeer.companyName) : "Peer"}
+              </th>
+              <th className="border-r border-b border-[#E2D8FB] bg-[#F7F3FE] px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8B6FD6]">
+                Gap
+              </th>
+              <th className="border-b border-[#EAECEF] px-3 pb-2 text-[10px] font-medium normal-case tracking-[0.03em] text-muted-foreground">
+                <span className="flex justify-between">
+                  <span>worse</span>
+                  <span>better</span>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
+            <BenchSection label="Profitability" />
             <BenchRow
               label="Gross margin"
               own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
