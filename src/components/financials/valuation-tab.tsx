@@ -20,6 +20,13 @@ import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 import { MatchingRow } from "@/components/financials/matching-row";
 import { ValuationSummary } from "@/components/financials/valuation-summary";
 import { ValuationMethods } from "@/components/financials/valuation-methods";
+import { AdjustmentsTab } from "@/components/financials/adjustments-tab";
+import { getValuationAdjustments } from "@/lib/valuation-adjustments.functions";
+import {
+  DEFAULT_VALUATION_SETTINGS,
+  normalise,
+  type FilingLine,
+} from "@/lib/valuation-adjustments";
 import {
   DEFAULT_DISCOUNTS,
   computeValuation,
