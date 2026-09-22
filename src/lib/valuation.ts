@@ -371,7 +371,8 @@ export function computeValuation(
       key: "evsales",
       name: "Revenue multiple",
       base: saleRevenue,
-      baseLabel: usesNormalisedRevenue ? "revenue normalised" : "revenue",
+      baseLabel: "revenue",
+      baseSuffix: usesNormalisedRevenue ? " normalised" : "",
       range: effective.evSales,
       missingBase: "revenue not captured in the import",
       missingMultiple: "peers carry no EV/EBITDA and EBITDA margin, so EV/Sales cannot be derived",
@@ -553,6 +554,7 @@ function buildMultipleMethod(a: {
   name: string;
   base: number | null;
   baseLabel: string;
+  baseSuffix?: string;
   range: Range | null;
   missingBase: string;
   missingMultiple: string;
@@ -565,7 +567,7 @@ function buildMultipleMethod(a: {
     name: a.name,
     status: "usable",
     reason: "Peer median with the assumptions applied.",
-    input: `${a.baseLabel} ${fmtMoney(a.base)} × ${fmtMult(a.range.low)}–${fmtMult(a.range.high)}${
+    input: `${a.baseLabel} ${fmtMoney(a.base)}${a.baseSuffix ?? ""} × ${fmtMult(a.range.low)}–${fmtMult(a.range.high)}${
       a.note ? ` · ${a.note}` : ""
     }`,
     low: a.base * a.range.low,
