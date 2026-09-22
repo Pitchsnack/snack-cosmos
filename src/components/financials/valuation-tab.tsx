@@ -302,7 +302,7 @@ export function ValuationTab({
         applied: true,
       })
     : baseResult;
-  const hasPeers = !!data.applied && peers.length > 0;
+  const hasPeers = peers.length > 0 && (basis === "chosen" || !!data.applied);
   const usableCount = result.methods.filter(
     (m) => m.status === "usable" || m.status === "low confidence",
   ).length;
