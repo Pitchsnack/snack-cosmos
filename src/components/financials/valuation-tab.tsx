@@ -407,9 +407,19 @@ export function ValuationTab({
       <PeerBasisRow
         basis={selection?.basis ?? "sector"}
         canEdit={canEdit}
-        onBasis={(b) => changeBasis.mutate(b)}
+        onBasis={(b) => {
+          changeBasis.mutate(b);
+          // Nothing to compare against yet — open the picker straight away.
+          if (b === "chosen" && chosenPeers.length === 0) setPickerOpen(true);
+        }}
         onChoose={() => setPickerOpen(true)}
       />
+      {selection?.basis === "chosen" && chosenPeers.length === 0 && (
+        <div className="mb-[9px] rounded-[7px] border border-[#F6DFC4] bg-[#FFF7ED] px-3 py-2 text-[11.5px] text-[#7C4A0B]">
+          No companies chosen yet — pick at least 3 to compare against. Until then the sector set
+          is used.
+        </div>
+      )}
       {sizeNote && (
         <div className="mb-[9px] rounded-[7px] border border-[#F6DFB4] bg-[#FEF3E7] px-3 py-2 text-[11.5px] text-[#7C4A0B]">
           {sizeNote}
