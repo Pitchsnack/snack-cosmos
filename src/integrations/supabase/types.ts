@@ -3051,9 +3051,11 @@ export type Database = {
       valuation_adjustments: {
         Row: {
           amount: number
+          costs_amount: number | null
           created_at: string
           created_by: string | null
           description: string
+          discount_pct: number | null
           filing_line: string | null
           fiscal_year: number
           id: string
@@ -3065,9 +3067,11 @@ export type Database = {
         }
         Insert: {
           amount: number
+          costs_amount?: number | null
           created_at?: string
           created_by?: string | null
           description: string
+          discount_pct?: number | null
           filing_line?: string | null
           fiscal_year: number
           id?: string
@@ -3079,9 +3083,11 @@ export type Database = {
         }
         Update: {
           amount?: number
+          costs_amount?: number | null
           created_at?: string
           created_by?: string | null
           description?: string
+          discount_pct?: number | null
           filing_line?: string | null
           fiscal_year?: number
           id?: string
