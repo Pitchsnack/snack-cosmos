@@ -568,9 +568,30 @@ export function AdjustmentsTab({
                 value={draft.description}
                 onChange={(e) => setDraft({ ...draft, description: e.target.value })}
               />
-              <div className="flex h-[30px] items-center rounded-[6px] border border-dashed border-[#C7D3E6] bg-white px-2 text-[12px] text-muted-foreground">
-                {dir === "add_back" ? "Add back" : dir === "deduct" ? "Deduct" : "Never applied"}
-              </div>
+              <select
+                className={inputClass}
+                value={dir}
+                onChange={(e) => {
+                  const next = e.target.value as "add_back" | "deduct" | "none";
+                  if (next === dir) return;
+                  const nextType: AdjustmentType =
+                    next === "add_back"
+                      ? "booked_expense"
+                      : next === "deduct"
+                        ? "missing_cost"
+                        : "unrecorded_income";
+                  setDraft({
+                    ...draft,
+                    type: nextType,
+                    filingLine: nextType === "unrecorded_income" ? null : draft.filingLine,
+                  });
+                }}
+              >
+                <option value="add_back">Add back</option>
+                <option value="deduct">Deduct</option>
+                <option value="none">Never applied</option>
+              </select>
+
               <select
                 className={inputClass}
                 value={draft.type}
