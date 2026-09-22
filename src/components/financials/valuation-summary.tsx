@@ -677,6 +677,9 @@ export function ValuationSummary({
             — a median this thin is easily moved by one company.
           </div>
         )}
+        {chosenBasis && sectorPeers.length > 0 && (
+          <BaselineVsChosen sectorPeers={sectorPeers} chosen={result.medians} />
+        )}
 
       </Block>
 
