@@ -3109,6 +3109,7 @@ export type Database = {
       }
       valuation_settings: {
         Row: {
+          benchmark_peer_company_id: string | null
           created_at: string
           fiscal_year: number
           id: string
@@ -3120,6 +3121,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          benchmark_peer_company_id?: string | null
           created_at?: string
           fiscal_year: number
           id?: string
@@ -3131,6 +3133,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          benchmark_peer_company_id?: string | null
           created_at?: string
           fiscal_year?: number
           id?: string
@@ -3142,6 +3145,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "valuation_settings_benchmark_peer_company_id_fkey"
+            columns: ["benchmark_peer_company_id"]
+            isOneToOne: false
+            referencedRelation: "listed_companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "valuation_settings_startup_id_fkey"
             columns: ["startup_id"]
