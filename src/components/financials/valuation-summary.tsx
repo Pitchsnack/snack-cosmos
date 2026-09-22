@@ -676,8 +676,10 @@ export function ValuationSummary({
                 offScale={row.point && chartDomain(spread, result.bookValue).bookOffScale}
               />
             ))}
+            {/* The answer and its working share one box. */}
+            <div className="mt-3 overflow-hidden rounded-[8px] border border-[#DDE3F2] bg-white">
             {indicative && (
-              <div className="-mx-3 -mb-3 mt-1 grid grid-cols-[132px_1fr_128px] items-center gap-3.5 rounded-b-[7px] border-t border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
+              <div className="grid grid-cols-[132px_1fr_128px] items-center gap-3.5 border-b border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
                 <div className="text-[12.5px] font-semibold text-[#1E3A8A]">
                   Indicative valuation
                   <small className="block text-[11px] font-normal text-muted-foreground">
