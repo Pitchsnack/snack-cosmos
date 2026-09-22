@@ -170,6 +170,21 @@ export function ValuationSummary({
   /** Peer medians for the Benchmark rows, with how many peers each one used. */
   const bench = benchmarkMedians(peers);
 
+  /** The chosen peer, and the set list ordered closest in revenue first. */
+  const peerKey = (p: Peer) => p.listedCompanyId ?? p.id ?? p.companyName;
+  const chosenPeer = peers.find((p) => peerKey(p) === selectedPeerId) ?? null;
+  const ownRevenueThbM = inputs.revenue === null ? null : inputs.revenue / 1_000_000;
+  const peerOptions = [...peers]
+    .map((p) => ({
+      key: peerKey(p),
+      peer: p,
+      distance:
+        ownRevenueThbM === null || typeof p.revenueThbM !== "number"
+          ? Number.POSITIVE_INFINITY
+          : Math.abs(p.revenueThbM - ownRevenueThbM),
+    }))
+    .sort((a, b) => a.distance - b.distance);
+
   const f = ladderFactors(discounts);
   const m = result.medians;
   const step = (cumulative: number, base: number | null) =>
