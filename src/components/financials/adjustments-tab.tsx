@@ -28,7 +28,7 @@ import {
   type Stake,
   type ValuationSettings,
 } from "@/lib/valuation-adjustments";
-import { fmtMoney, type ValuationResult } from "@/lib/valuation";
+import { type ValuationResult } from "@/lib/valuation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const LINES: FilingLine[] = ["cost_of_goods_sold", "selling_admin", "other_expenses"];
@@ -276,6 +276,15 @@ export function AdjustmentsTab({
   const revAdj = adjustedResult.methods.find((x) => x.key === "evsales");
   const revMoved =
     revBase?.low != null && revBase.high != null && revAdj?.low != null && revAdj.high != null;
+  const pbvBase = baseResult.methods.find((x) => x.key === "pbv");
+
+  /** How much of the normalised profit rests on judgement rather than the filing. */
+  const adjShare =
+    n.applied && n.normalisedNetProfit !== null && n.normalisedNetProfit > 0
+      ? (Math.abs(n.netEffect) / n.normalisedNetProfit) * 100
+      : null;
+
+
 
   if (!year) {
     return (
@@ -285,76 +294,81 @@ export function AdjustmentsTab({
     );
   }
 
-  const revenueRows = adjustments.filter((a) => isRevenueGroup(a.type));
-  const expenseRows = adjustments.filter((a) => !isRevenueGroup(a.type));
+  const appliedRows = adjustments.filter((a) => direction(a.type) !== "none");
+  const revenueRows = appliedRows.filter((a) => isRevenueType(a.type));
+  const expenseRows = appliedRows.filter((a) => !isRevenueType(a.type));
+  const recordedOnly = adjustments.filter((a) => direction(a.type) === "none");
+  const afterTax = (v: number) => v * (1 - settings.taxRate / 100);
+
+  const groupTotals = (rows: Adjustment[]) =>
+    rows.reduce(
+      (acc, a) => {
+        const e = effects(a);
+        return { revenue: acc.revenue + e.revenue, profit: acc.profit + e.profit };
+      },
+      { revenue: 0, profit: 0 },
+    );
+
+  const metaLine = (a: Adjustment) => {
+    switch (a.type) {
+      case "below_market_related_party":
+        return (
+          <>
+            Related-party sales<Sep />
+            {m(a.amount)} at {a.discountPct ?? 0}% below market
+          </>
+        );
+      case "revenue_elsewhere":
+        return (
+          <>
+            Booked elsewhere<Sep />
+            {m(a.amount)} sales<Sep />
+            {a.costsAmount === null ? (
+              <span className="text-[#B45309]">no costs entered</span>
+            ) : (
+              `${m(a.costsAmount)} costs`
+            )}
+          </>
+        );
+      case "one_off_income":
+        return <>One-off income</>;
+      default:
+        return (
+          <>
+            {ADJUSTMENT_TYPE_LABELS[a.type]}
+            {a.filingLine && (
+              <>
+                <Sep />
+                {FILING_LINE_LABELS[a.filingLine]}
+              </>
+            )}
+          </>
+        );
+    }
+  };
 
   const row = (a: Adjustment) => {
-    const d = direction(a.type);
-    const none = d === "none";
-    const stripe = isRevenueGroup(a.type)
-      ? "shadow-[inset_3px_0_0_#15803D]"
-      : "shadow-[inset_3px_0_0_#B91C1C]";
     const e = effects(a);
-    const sub = inputSummary(a);
     return (
-      <tr key={a.id} className={none ? "text-[#A5ADB8]" : undefined}>
-        <td
-          className={`border-b border-[#F2F4F6] py-2 pl-2.5 pr-2 ${stripe} ${
-            none ? "text-[#A5ADB8]" : "text-[#0F1B33]"
-          }`}
-        >
-          <div className="font-medium">{a.description}</div>
-          {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}
+      <tr key={a.id} className="group">
+        <td className="border-b border-[#F2F4F6] py-[9px] pl-[22px] pr-3 align-top">
+          <div className="font-medium text-[#0F1B33]">{a.description}</div>
+          <div className="mt-px text-[11px] text-muted-foreground">{metaLine(a)}</div>
         </td>
-        <td className="border-b border-[#F2F4F6] py-2 pr-2">
-          <Pill kind={d} />
+        <td className="whitespace-nowrap border-b border-[#F2F4F6] py-[9px] pr-3 align-top text-[11.5px] text-[#4B5563]">
+          {a.recurs === "yearly" ? "Yearly" : "One-off"}
         </td>
-        <td className="border-b border-[#F2F4F6] py-2 pr-2 text-muted-foreground">
-          {ADJUSTMENT_TYPE_LABELS[a.type]}
-        </td>
-        <td className="border-b border-[#F2F4F6] py-2 pr-2 text-muted-foreground">
-          {a.filingLine ? FILING_LINE_LABELS[a.filingLine] : "—"}
-        </td>
-        {none ? (
-          <td className="whitespace-nowrap border-b border-[#F2F4F6] py-2 pr-2 text-right tabular-nums text-[#A5ADB8]">
-            {thb(a.amount)}
-          </td>
-        ) : (
-          <Effect value={e.revenue} />
-        )}
-        <Effect value={none ? null : e.profit} />
-
-        <td className="border-b border-[#F2F4F6] py-2 pr-2">
-          <span className="rounded-full border border-[#EAECEF] bg-[#F3F4F6] px-2 py-[1px] text-[10.5px] font-semibold text-[#6B7280]">
-            {a.recurs === "yearly" ? "yearly" : "one-off"}
-          </span>
-        </td>
-        <td className="whitespace-nowrap border-b border-[#F2F4F6] py-2 text-right">
-          {none && (
-            <span className="mr-2 text-[11px] font-medium text-[#B91C1C]">
-              recorded, never applied — not verifiable from the filing
-            </span>
-          )}
+        <Num value={e.revenue} />
+        <Num value={e.profit} />
+        <Num value={afterTax(e.profit)} />
+        <td className="whitespace-nowrap border-b border-[#F2F4F6] py-[9px] text-right align-top">
           {canEdit && (
-            <>
+            <span className="text-[#C0C6CF] transition-colors group-hover:text-[#8A93A0]">
               <button
                 type="button"
                 aria-label="Edit adjustment"
-                onClick={(ev) => {
-                  openerRef.current = ev.currentTarget;
-                  setError(null);
-                  setDraft({
-                    id: a.id,
-                    description: a.description,
-                    type: a.type,
-                    filingLine: a.filingLine,
-                    amount: String(a.amount),
-                    discountPct: a.discountPct === null ? "" : String(a.discountPct),
-                    costsAmount: a.costsAmount === null ? "" : String(a.costsAmount),
-                    recurs: a.recurs,
-                  });
-                }}
-                className="px-1 text-muted-foreground"
+                onClick={(ev) => openEdit(ev.currentTarget, a)}
+                className="px-1"
               >
                 ✎
               </button>
@@ -362,29 +376,65 @@ export function AdjustmentsTab({
                 type="button"
                 aria-label="Delete adjustment"
                 onClick={() => deleteMut.mutate(a.id)}
-                className="px-1 text-muted-foreground"
+                className="px-1"
               >
                 🗑
               </button>
-            </>
+            </span>
           )}
         </td>
       </tr>
     );
   };
 
-  const groupHead = (label: string, revenue: boolean) => (
-    <tr>
-      <td
-        colSpan={8}
-        className={`border-b border-[#EAECEF] bg-[#FAFBFC] py-1.5 pl-2.5 pr-2 text-[10.5px] font-bold uppercase tracking-[0.07em] ${
-          revenue ? "text-[#15803D]" : "text-[#B91C1C]"
-        }`}
-      >
-        {label}
-      </td>
-    </tr>
-  );
+  const openEdit = (el: HTMLElement, a: Adjustment) => {
+    openerRef.current = el;
+    setError(null);
+    setDraft({
+      id: a.id,
+      description: a.description,
+      type: a.type,
+      filingLine: a.filingLine,
+      amount: String(a.amount),
+      discountPct: a.discountPct === null ? "" : String(a.discountPct),
+      costsAmount: a.costsAmount === null ? "" : String(a.costsAmount),
+      recurs: a.recurs,
+    });
+  };
+
+  const groupRow = (label: string, rows: Adjustment[], revenue: boolean) => {
+    const t = groupTotals(rows);
+    const colour = revenue ? "#15803D" : "#B91C1C";
+    return (
+      <tr className="bg-[#FAFBFC]">
+        <td className="border-b border-[#EAECEF] py-2 pl-3 pr-3 font-semibold">
+          <span
+            className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.07em]"
+            style={{ color: colour }}
+          >
+            <span
+              className="h-2 w-2 rounded-[2px]"
+              style={{ background: colour }}
+              aria-hidden="true"
+            />
+            {label}{" "}
+            <span className="text-[11px] font-normal normal-case tracking-normal text-muted-foreground">
+              {rows.length} item{rows.length === 1 ? "" : "s"}
+            </span>
+          </span>
+        </td>
+        <td className="border-b border-[#EAECEF]" />
+        <Num value={t.revenue} group />
+        <Num value={t.profit} group />
+        <Num value={afterTax(t.profit)} group />
+        <td className="border-b border-[#EAECEF]" />
+      </tr>
+    );
+  };
+
+  const tableTotals = groupTotals(appliedRows);
+
+
 
 
   return (
@@ -433,62 +483,49 @@ export function AdjustmentsTab({
           </span>
         </div>
 
-        <table className="w-full border-collapse text-[12.5px]">
+        <table className="w-full table-fixed border-collapse text-[12.5px]">
+          <colgroup>
+            <col />
+            <col className="w-[78px]" />
+            <col className="w-[118px]" />
+            <col className="w-[118px]" />
+            <col className="w-[118px]" />
+            <col className="w-[52px]" />
+          </colgroup>
           <thead>
             <tr>
-              {[
-                "Adjustment",
-                "Direction",
-                "Type",
-                "Filing line",
-                "Revenue",
-                "Profit, pre-tax",
-                "Recurs",
-                "",
-              ].map((h, i) => (
-                <th
-                  key={h + i}
-                  className={`whitespace-nowrap border-b border-[#EAECEF] pb-1.5 pr-2 text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground ${
-                    i === 4 || i === 5 ? "text-right" : "text-left"
-                  }`}
-                >
-                  {h}
-                </th>
-              ))}
+              {["Adjustment", "Recurs", "Revenue", "Profit, pre-tax", "Profit, after tax", ""].map(
+                (h, i) => (
+                  <th
+                    key={h + i}
+                    className={`whitespace-nowrap border-b border-[#EAECEF] px-3 pb-[7px] pt-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground ${
+                      i >= 2 && i <= 4 ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
-            {revenueRows.length > 0 && groupHead("Revenue", true)}
+            {revenueRows.length > 0 && groupRow("Revenue", revenueRows, true)}
             {revenueRows.map(row)}
-            {expenseRows.length > 0 && groupHead("Expenses", false)}
+            {expenseRows.length > 0 && groupRow("Expenses", expenseRows, false)}
             {expenseRows.map(row)}
 
-            <tr className="font-semibold">
-              <td className="border-t border-[#EAECEF] py-2 pr-2 text-[#0F1B33]">Applied</td>
-              <td className="border-t border-[#EAECEF]" />
-              <td className="border-t border-[#EAECEF]" />
-              <td className="border-t border-[#EAECEF]" />
-              <td
-                className={`whitespace-nowrap border-t border-[#EAECEF] py-2 pr-2 text-right tabular-nums ${
-                  n.revenueAdjustment < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
-                }`}
-              >
-                {n.revenueAdjustment === 0
-                  ? "—"
-                  : `${n.revenueAdjustment > 0 ? "+ " : "− "}${thb(Math.abs(n.revenueAdjustment))}`}
+            <tr>
+              <td className="border-t border-[#0F1B33] px-3 py-2.5 font-bold text-[#0F1B33]">
+                <span className="text-[10.5px] uppercase tracking-[0.07em]">Total applied</span>
+                <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                  {appliedRows.length} adjustment{appliedRows.length === 1 ? "" : "s"}
+                </span>
               </td>
-              <td
-                className={`whitespace-nowrap border-t border-[#EAECEF] py-2 pr-2 text-right tabular-nums ${
-                  n.netPreTax < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
-                }`}
-              >
-                {n.netPreTax >= 0 ? "+ " : "− "}
-                {thb(Math.abs(n.netPreTax))}
-              </td>
-              <td className="border-t border-[#EAECEF]" />
-              <td className="whitespace-nowrap border-t border-[#EAECEF] py-2 text-right font-normal text-muted-foreground">
-                {n.appliedCount} applied · {n.savedCount} saved
-              </td>
+              <td className="border-t border-[#0F1B33]" />
+              <Num value={tableTotals.revenue} total />
+              <Num value={tableTotals.profit} total />
+              <Num value={afterTax(tableTotals.profit)} total />
+              <td className="border-t border-[#0F1B33]" />
             </tr>
           </tbody>
         </table>
@@ -520,14 +557,63 @@ export function AdjustmentsTab({
           </div>
         )}
 
+        {recordedOnly.length > 0 && (
+          <div className="mt-3 overflow-hidden rounded-[7px] border border-[#EAECEF]">
+            <div className="flex items-baseline gap-2 border-b border-[#EAECEF] bg-[#FAFBFC] px-3 py-[7px] text-[10.5px] font-bold uppercase tracking-[0.07em] text-muted-foreground">
+              Recorded, not applied{" "}
+              <span className="font-normal normal-case tracking-normal">
+                · {recordedOnly.length} item{recordedOnly.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            {recordedOnly.map((a) => (
+              <div
+                key={a.id}
+                className="grid grid-cols-[1fr_78px_118px_52px] items-center px-3 py-2 text-[12.5px] text-[#A5ADB8]"
+              >
+                <span className="text-[#8A93A0]">
+                  {a.description}{" "}
+                  <span className="text-[11px]">· {ADJUSTMENT_TYPE_LABELS[a.type]}</span>
+                </span>
+                <span>{a.recurs === "yearly" ? "Yearly" : "One-off"}</span>
+                <span className="text-right tabular-nums">{m(a.amount)}</span>
+                <span className="text-right text-[#C0C6CF]">
+                  {canEdit && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label="Edit adjustment"
+                        onClick={(ev) => openEdit(ev.currentTarget, a)}
+                        className="px-1"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Delete adjustment"
+                        onClick={() => deleteMut.mutate(a.id)}
+                        className="px-1"
+                      >
+                        🗑
+                      </button>
+                    </>
+                  )}
+                </span>
+              </div>
+            ))}
+            <p className="m-0 px-3 pb-2.5 text-[11px] text-muted-foreground">
+              Unrecorded income can&apos;t be verified from the filing, so it&apos;s kept on record
+              but never enters the figures.
+            </p>
+          </div>
+        )}
 
         {/* Checks */}
-        <div className="mt-3 grid gap-1.5 border-t border-[#F2F4F6] pt-2.5 text-[12px]">
+        <div className="mt-3 grid gap-1 border-t border-[#F2F4F6] pt-2.5 text-[12px]">
           <Check
             ok={overLine.length === 0}
             text={
               overLine.length === 0
-                ? "Every applied expense adjustment is within its filing line."
+                ? "Every expense adjustment is within its filing line."
                 : `${overLine.length} adjustment${
                     overLine.length === 1 ? "" : "s"
                   } exceed their filing line.`
@@ -539,8 +625,8 @@ export function AdjustmentsTab({
               revenueShare === null
                 ? "No revenue adjustment applied."
                 : revenueShare <= 10
-                  ? `Revenue adjustments are ${revenueShare.toFixed(0)}% of reported revenue — below the 10% warning level.`
-                  : `Revenue adjustments are ${revenueShare.toFixed(0)}% of reported revenue — beyond this, the valuation describes a different business from the one that filed the accounts.`
+                  ? `Revenue adjustments are ${revenueShare.toFixed(0)}% of reported revenue — below the 10% level.`
+                  : `Revenue adjustments are ${revenueShare.toFixed(0)}% of reported revenue — above the 10% level.`
             }
           />
           <Check
@@ -549,167 +635,186 @@ export function AdjustmentsTab({
               bigShare === null
                 ? "Reported profit before tax is not captured, so the 50% check cannot run."
                 : bigShare <= 50
-                  ? `Applied adjustments are ${bigShare.toFixed(0)}% of reported profit before tax — below the 50% warning level.`
-                  : `Applied adjustments are ${bigShare.toFixed(0)}% of reported profit before tax — the valuation now depends more on adjustments than on the filing.`
+                  ? `Profit adjustments are ${bigShare.toFixed(0)}% of reported profit before tax — below the 50% level.`
+                  : `Profit adjustments are ${bigShare.toFixed(0)}% of reported profit before tax — the valuation now rests more on adjustments than on the filing.`
             }
           />
-          {n.unrecordedCount > 0 && (
-            <Check
-              ok={false}
-              text={`${n.unrecordedCount} unrecorded item${
-                n.unrecordedCount === 1 ? " is" : "s are"
-              } listed and excluded.`}
-            />
+        </div>
+      </Block>
+
+      <Block
+        label="Effect of adjustments"
+        hint="reported → adjusted"
+        right={`THB · FY${year}`}
+      >
+        <div className="pb-1">
+          <div className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.07em] text-[#1E3A8A]">
+            Inputs
+          </div>
+          <table className="w-full table-fixed border-collapse text-[12.5px]">
+            <colgroup>
+              <col />
+              <col className="w-[110px]" />
+              <col className="w-[110px]" />
+              <col className="w-[110px]" />
+              <col className="w-[150px]" />
+            </colgroup>
+            <thead>
+              <tr>
+                {["Figure", "Reported", "Adjustments", "Normalised", "Used by"].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`whitespace-nowrap border-b border-[#EAECEF] pb-1.5 pl-2.5 pt-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground ${
+                      i === 0 || i === 4 ? "pl-0 text-left" : "text-right"
+                    }`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <EffectRow
+                label="Revenue"
+                reported={reportedRevenue}
+                change={n.revenueAdjustment}
+                normalised={n.applied ? n.normalisedRevenue : reportedRevenue}
+                usedBy="Revenue multiple"
+              />
+              <EffectRow
+                label="Net profit"
+                sub={
+                  n.applied ? (
+                    <>
+                      {n.addBacks > 0 ? `+${m(n.addBacks)} pre-tax` : "no add-backs"} ·{" "}
+                      {n.deductions > 0 ? (
+                        <span className="text-[#B45309]">−{m(n.deductions)} deductions</span>
+                      ) : (
+                        <span className="text-[#AEB6C2]">no deductions</span>
+                      )}{" "}
+                      ·{" "}
+                      {n.tax !== 0 ? (
+                        <span className="text-[#B45309]">
+                          {n.tax > 0 ? "−" : "+"}
+                          {m(Math.abs(n.tax))} tax at {settings.taxRate}%
+                        </span>
+                      ) : (
+                        <span className="text-[#AEB6C2]">no tax effect</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-[#AEB6C2]">
+                      not applied — a minority stake is being valued
+                    </span>
+                  )
+                }
+                reported={reportedNetProfit}
+                change={n.netEffect}
+                normalised={n.applied ? n.normalisedNetProfit : reportedNetProfit}
+                usedBy="P/E"
+                last
+              />
+            </tbody>
+          </table>
+
+          <div className="mb-2.5 mt-2 overflow-hidden rounded-[7px] border border-[#DFE4EB] bg-[#FAFBFC]">
+            <table className="w-full table-fixed border-collapse text-[12.5px]">
+              <colgroup>
+                <col />
+                <col className="w-[110px]" />
+                <col className="w-[110px]" />
+                <col className="w-[110px]" />
+                <col className="w-[150px]" />
+              </colgroup>
+              <tbody>
+                <tr>
+                  <td className="py-2 pl-2.5 text-muted-foreground">Equity</td>
+                  <td className="py-2 pl-2.5 text-right tabular-nums text-muted-foreground">
+                    {baseResult.bookValue === null ? "—" : m(baseResult.bookValue)}
+                  </td>
+                  <td colSpan={2} className="py-2 text-center">
+                    <span className="inline-block rounded-full border border-[#E6EAF0] bg-[#F4F6F9] px-2.5 py-px text-[10px] font-semibold uppercase tracking-[0.08em] text-[#9AA3AF]">
+                      not adjusted
+                    </span>
+                  </td>
+                  <td className="py-2 pl-2.5 text-[11.5px] text-muted-foreground">P/BV</td>
+                </tr>
+              </tbody>
+            </table>
+            {adjShare !== null && (
+              <div className="flex items-center justify-center gap-2.5 border-t border-[#E6EAF0] px-2.5 py-2 text-[12px] text-[#7C4A0B]">
+                <span className="relative h-[6px] w-[160px] overflow-hidden rounded-[3px] bg-[#EFF1F5]">
+                  <i
+                    className="absolute inset-y-0 left-0 block"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, adjShare))}%`,
+                      background: "linear-gradient(90deg,#E9C48E,#B45309)",
+                    }}
+                  />
+                </span>
+                <span>
+                  <b>{adjShare.toFixed(0)}%</b> of normalised net profit comes from adjustments.
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-1.5 mt-3 border-t border-[#EAECEF] pt-2.5 text-[10.5px] font-bold uppercase tracking-[0.07em] text-[#1E3A8A]">
+            Methods
+          </div>
+          <table className="w-full table-fixed border-collapse text-[12.5px]">
+            <colgroup>
+              <col />
+              <col className="w-[170px]" />
+              <col className="w-[170px]" />
+              <col className="w-[170px]" />
+            </colgroup>
+            <thead>
+              <tr>
+                {["Method", "Reported basis", "With adjustments", "Change"].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`whitespace-nowrap border-b border-[#EAECEF] pb-1.5 pl-2.5 pt-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground ${
+                      i === 0 ? "pl-0 text-left" : "text-right"
+                    }`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <MethodEffect
+                label="P/E"
+                base={peBase ?? null}
+                adjusted={peMoved && n.applied ? (peAdj ?? null) : (peBase ?? null)}
+              />
+              <MethodEffect
+                label="Revenue multiple"
+                base={revBase ?? null}
+                adjusted={
+                  revMoved && n.applied && n.revenueAdjustment !== 0
+                    ? (revAdj ?? null)
+                    : (revBase ?? null)
+                }
+              />
+              <MethodEffect
+                label="P/BV"
+                base={pbvBase ?? null}
+                adjusted={pbvBase ?? null}
+                last
+              />
+            </tbody>
+          </table>
+          {n.normalisedNetProfit !== null && n.applied && n.normalisedNetProfit <= 0 && (
+            <p className="mt-2 text-[11.5px] text-[#B45309]">
+              Normalised profit is not positive, so P/E is suppressed as for any loss-making
+              company.
+            </p>
           )}
         </div>
       </Block>
 
-      <Block label="Normalised figures" hint="reported, then adjusted">
-        <div className="grid gap-2.5 md:grid-cols-2">
-          <Card
-            title="Revenue"
-            reported={reportedRevenue}
-            normalised={n.applied ? n.normalisedRevenue : reportedRevenue}
-            delta={n.revenueAdjustment}
-            foot={
-              n.applied && n.revenueAdjustment !== 0
-                ? "used by the revenue multiple"
-                : "not adjusted"
-            }
-          />
-          <Card
-            title="Net profit"
-            reported={reportedNetProfit}
-            normalised={n.applied ? n.normalisedNetProfit : reportedNetProfit}
-            delta={n.netEffect}
-            foot={n.applied ? "used by the P/E method" : "not applied — minority stake"}
-          />
-        </div>
-        <table className="mt-2.5 w-full border-collapse text-[12.5px]">
-          <tbody>
-            {[
-              ["Revenue adjustment", n.revenueAdjustment, n.revenueAdjustment < 0],
-              ["Add-backs to profit", n.addBacks, false],
-              ["Deductions from profit", -n.deductions, true],
-              ["Net adjustment, pre-tax", n.netPreTax, n.netPreTax < 0],
-              [`Tax at ${settings.taxRate}%`, -n.tax, n.tax > 0],
-              ["Net profit effect", n.netEffect, n.netEffect < 0],
-            ].map(([label, value, neg], i, arr) => (
-              <tr key={label as string}>
-                <td
-                  className={`py-[5px] ${
-                    i === arr.length - 1
-                      ? "font-semibold text-[#1E3A8A]"
-                      : "border-b border-[#F2F4F6] text-[#0F1B33]"
-                  }`}
-                >
-                  {label as string}
-                </td>
-                <td
-                  className={`py-[5px] text-right tabular-nums ${
-                    i === arr.length - 1
-                      ? "font-semibold text-[#1E3A8A]"
-                      : `border-b border-[#F2F4F6] ${neg ? "text-[#B45309]" : "text-[#0F1B33]"}`
-                  }`}
-                >
-                  {(value as number) < 0 ? "− " : "+ "}
-                  {fmtMoney(Math.abs(value as number))}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Block>
-
-      <Block label="Effect on methods" hint="which ranges moved">
-        <table className="w-full border-collapse text-[12.5px]">
-          <tbody>
-            <tr>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-[#0F1B33]">P/E</td>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-muted-foreground">
-                {n.applied
-                  ? `${fmtMoney(reportedNetProfit)} → ${fmtMoney(n.normalisedNetProfit)} net profit`
-                  : "reported net profit"}
-              </td>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums">
-                {peMoved ? (
-                  n.applied ? (
-                    <>
-                      <span className="text-muted-foreground">
-                        {fmtMoney(peBase!.low)} – {fmtMoney(peBase!.high)}
-                      </span>{" "}
-                      →{" "}
-                      <b className="font-semibold text-[#0F1B33]">
-                        {fmtMoney(peAdj!.low)} – {fmtMoney(peAdj!.high)}
-                      </b>
-                    </>
-                  ) : (
-                    <span className="text-[#0F1B33]">
-                      {fmtMoney(peBase!.low)} – {fmtMoney(peBase!.high)}
-                    </span>
-                  )
-                ) : (
-                  <span className="text-muted-foreground">not available</span>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-[#0F1B33]">
-                Revenue multiple
-              </td>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-muted-foreground">
-                {n.applied && n.revenueAdjustment !== 0
-                  ? `${fmtMoney(reportedRevenue)} → ${fmtMoney(n.normalisedRevenue)} revenue`
-                  : "revenue unchanged"}
-              </td>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-right tabular-nums">
-                {revMoved ? (
-                  n.applied && n.revenueAdjustment !== 0 ? (
-                    <>
-                      <span className="text-muted-foreground">
-                        {fmtMoney(revBase!.low)} – {fmtMoney(revBase!.high)}
-                      </span>{" "}
-                      →{" "}
-                      <b className="font-semibold text-[#0F1B33]">
-                        {fmtMoney(revAdj!.low)} – {fmtMoney(revAdj!.high)}
-                      </b>
-                    </>
-                  ) : (
-                    <span className="text-muted-foreground">no change</span>
-                  )
-                ) : (
-                  <span className="text-muted-foreground">not available</span>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-[#0F1B33]">P/BV</td>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-muted-foreground">
-                equity unchanged
-              </td>
-              <td className="border-b border-[#F2F4F6] py-[7px] text-right text-muted-foreground">
-                no change
-              </td>
-            </tr>
-            {n.applied && peMoved && (
-              <tr>
-                <td className="py-[7px] font-semibold text-[#15803D]">P/E difference</td>
-                <td />
-                <td className="py-[7px] text-right font-semibold tabular-nums text-[#15803D]">
-                  {peAdj!.low! - peBase!.low! >= 0 ? "+ " : "− "}
-                  {fmtMoney(Math.abs(peAdj!.low! - peBase!.low!))} –{" "}
-                  {fmtMoney(Math.abs(peAdj!.high! - peBase!.high!))}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {n.normalisedNetProfit !== null && n.applied && n.normalisedNetProfit <= 0 && (
-          <p className="mt-2 text-[11.5px] text-[#B45309]">
-            Normalised profit is not positive, so P/E is suppressed as for any loss-making company.
-          </p>
-        )}
-      </Block>
 
       <Dialog
         open={!!draft}
@@ -1064,68 +1169,121 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Effect({ value }: { value: number | null }) {
-  const none = value === null || value === 0;
+/** Signed millions, two decimals — the only number format in this tab. */
+const sm = (v: number) => `${v >= 0 ? "+" : "−"}${(Math.abs(v) / 1_000_000).toFixed(2)}M`;
+
+function Sep() {
+  return <span className="mx-[5px] text-[#D0D5DC]">·</span>;
+}
+
+function Num({ value, group, total }: { value: number; group?: boolean; total?: boolean }) {
+  const nil = value === 0;
+  const border = total
+    ? "border-t border-[#0F1B33]"
+    : group
+      ? "border-b border-[#EAECEF]"
+      : "border-b border-[#F2F4F6]";
+  const weight = total ? "font-bold" : group ? "font-semibold" : "";
   return (
     <td
-      className={`border-b border-[#F2F4F6] py-2 pr-2 text-right tabular-nums ${
-        none ? "text-[#A5ADB8]" : value! < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
+      className={`whitespace-nowrap ${border} px-3 py-[9px] text-right align-top tabular-nums ${weight} ${
+        nil ? "text-[#AEB6C2]" : value < 0 ? "text-[#B45309]" : "text-[#0F1B33]"
       }`}
     >
-      {none ? "—" : `${value! > 0 ? "+ " : "− "}${thb(Math.abs(value!))}`}
+      {nil ? "—" : sm(value)}
     </td>
   );
 }
 
-function Card({
-  title,
+function EffectRow({
+  label,
+  sub,
   reported,
+  change,
   normalised,
-  delta,
-  foot,
+  usedBy,
+  last,
 }: {
-  title: string;
+  label: string;
+  sub?: React.ReactNode;
   reported: number | null;
+  change: number;
   normalised: number | null;
-  delta: number;
-  foot: string;
+  usedBy: string;
+  last?: boolean;
 }) {
-  const moved = delta !== 0 && reported !== null && normalised !== null && reported !== normalised;
+  const b = last ? "" : "border-b border-[#F2F4F6]";
   return (
-    <div className="rounded-[7px] border border-[#DDE3F2] bg-[#F5F7FD] px-3 py-2.5">
-      <div className="mb-1 text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-        {title}
-      </div>
-      <div className="flex items-baseline gap-2">
-        {moved && (
-          <span className="text-[13px] tabular-nums text-muted-foreground line-through">
-            {fmtMoney(reported)}
-          </span>
-        )}
-        <span className="text-[19px] font-semibold tabular-nums text-[#1E3A8A]">
-          {fmtMoney(normalised)}
-        </span>
-      </div>
-      <div className="mt-0.5 text-[11.5px] text-muted-foreground">{foot}</div>
-    </div>
+    <tr>
+      <td className={`${b} py-2 pr-2.5 align-top font-medium text-[#0F1B33]`}>
+        {label}
+        {sub && <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">{sub}</span>}
+      </td>
+      <td className={`${b} whitespace-nowrap py-2 pl-2.5 text-right align-top tabular-nums text-muted-foreground`}>
+        {reported === null ? "—" : `${(reported / 1_000_000).toFixed(2)}M`}
+      </td>
+      <td
+        className={`${b} whitespace-nowrap py-2 pl-2.5 text-right align-top font-semibold tabular-nums ${
+          change === 0 ? "text-[#AEB6C2]" : change < 0 ? "text-[#B45309]" : "text-[#15803D]"
+        }`}
+      >
+        {change === 0 ? "—" : sm(change)}
+      </td>
+      <td className={`${b} whitespace-nowrap py-2 pl-2.5 text-right align-top font-bold tabular-nums text-[#1E3A8A]`}>
+        {normalised === null ? "—" : `${(normalised / 1_000_000).toFixed(2)}M`}
+      </td>
+      <td className={`${b} py-2 pl-2.5 align-top text-[11.5px] text-muted-foreground`}>{usedBy}</td>
+    </tr>
   );
 }
 
-function Pill({ kind }: { kind: "add_back" | "deduct" | "none" }) {
-  const map = {
-    add_back: ["add back", "border-[#CFE8D8] bg-[#EFF7F2] text-[#15803D]"],
-    deduct: ["deduct", "border-[#F2DFC8] bg-[#FDF3EC] text-[#B45309]"],
-    none: ["—", "border-[#EAECEF] bg-[#F3F4F6] text-[#6B7280]"],
-  } as const;
-  const [label, cls] = map[kind];
+type Range = { low: number | null; high: number | null } | null;
+
+function MethodEffect({
+  label,
+  base,
+  adjusted,
+  last,
+}: {
+  label: string;
+  base: Range;
+  adjusted: Range;
+  last?: boolean;
+}) {
+  const b = last ? "" : "border-b border-[#F2F4F6]";
+  const has = (r: Range) => r?.low != null && r.high != null;
+  const range = (r: Range) =>
+    has(r) ? `${(r!.low! / 1e6).toFixed(2)}M – ${(r!.high! / 1e6).toFixed(2)}M` : "—";
+  const moved =
+    has(base) && has(adjusted) && (base!.low !== adjusted!.low || base!.high !== adjusted!.high);
   return (
-    <span
-      className={`whitespace-nowrap rounded-full border px-2 py-[1px] text-[10.5px] font-semibold ${cls}`}
-    >
-      {label}
-    </span>
+    <tr>
+      <td className={`${b} py-2 pr-2.5 font-medium text-[#0F1B33]`}>{label}</td>
+      <td className={`${b} whitespace-nowrap py-2 pl-2.5 text-right tabular-nums text-muted-foreground`}>
+        {range(base)}
+      </td>
+      <td
+        className={`${b} whitespace-nowrap py-2 pl-2.5 text-right tabular-nums ${
+          moved ? "font-bold text-[#1E3A8A]" : "text-muted-foreground"
+        }`}
+      >
+        {range(adjusted)}
+      </td>
+      <td
+        className={`${b} whitespace-nowrap py-2 pl-2.5 text-right tabular-nums ${
+          moved ? "font-semibold text-[#15803D]" : "text-[#AEB6C2]"
+        }`}
+      >
+        {!has(base) || !has(adjusted)
+          ? "—"
+          : moved
+            ? `${sm(adjusted!.low! - base!.low!)} – ${sm(adjusted!.high! - base!.high!)}`
+            : "no change"}
+      </td>
+    </tr>
   );
 }
+
 
 function Check({ ok, text }: { ok: boolean; text: string }) {
   return (
