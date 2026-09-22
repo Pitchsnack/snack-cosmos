@@ -20,6 +20,13 @@ import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 import { MatchingRow } from "@/components/financials/matching-row";
 import { ValuationSummary } from "@/components/financials/valuation-summary";
 import { ValuationMethods } from "@/components/financials/valuation-methods";
+import { AdjustmentsTab } from "@/components/financials/adjustments-tab";
+import { getValuationAdjustments } from "@/lib/valuation-adjustments.functions";
+import {
+  DEFAULT_VALUATION_SETTINGS,
+  normalise,
+  type FilingLine,
+} from "@/lib/valuation-adjustments";
 import {
   DEFAULT_DISCOUNTS,
   computeValuation,
@@ -173,10 +180,21 @@ export function ValuationTab({
       fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
   });
 
-  const [subTab, setSubTab] = useState<"summary" | "methods">("summary");
+  const [subTab, setSubTab] = useState<"summary" | "methods" | "adjustments">("summary");
   const [discounts, setDiscounts] = useState<Discounts>(DEFAULT_DISCOUNTS);
   const [sector, setSector] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
+
+  // Earnings adjustments live per startup and fiscal year.
+  const fetchAdjustments = useServerFn(getValuationAdjustments);
+  const adjKey = ["valuation-adjustments", startupId, year ?? 0] as const;
+  const { data: adjData } = useQuery({
+    queryKey: adjKey,
+    enabled: !!year,
+    queryFn: () => fetchAdjustments({ data: { startupId, fiscalYear: year! } }),
+  });
+  const adjustments = adjData?.adjustments ?? [];
+  const settings = adjData?.settings ?? DEFAULT_VALUATION_SETTINGS;
 
 
   useEffect(() => {
@@ -215,9 +233,31 @@ export function ValuationTab({
 
   const peers = peerSet?.peers ?? [];
   const inputs = readFilingInputs(year, income, position, cashFlow, ratios);
-  const result = computeValuation(inputs, peers, discounts);
+  const norm = normalise(adjustments, settings, inputs.netProfit);
+  // Reported figures, then the same maths on normalised profit.
+  const baseResult = computeValuation(inputs, peers, discounts);
+  const result = norm.applied
+    ? computeValuation(inputs, peers, discounts, {
+        netProfit: norm.normalisedNetProfit,
+        applied: true,
+      })
+    : baseResult;
   const hasPeers = !!data.applied && peers.length > 0;
   const flag = result.blocked || result.lowConfidence;
+
+  const lineAmount = (code: string) =>
+    income.find((i) => i.item_code === code && i.fiscal_year === year)?.amount ?? null;
+  const totalExpenses = lineAmount("total_expenses");
+  const cogs = lineAmount("cost_of_goods_sold");
+  const sellingAdmin = lineAmount("selling_admin_expenses");
+  const filingLines: Record<FilingLine, number | null> = {
+    cost_of_goods_sold: cogs,
+    selling_admin: sellingAdmin,
+    other_expenses:
+      totalExpenses === null
+        ? null
+        : Math.max(0, totalExpenses - (cogs ?? 0) - (sellingAdmin ?? 0)),
+  };
 
   const appliedLabel = data.applied
     ? peerSetLabel(data.applied.sector, data.applied.businessModel)
@@ -267,12 +307,13 @@ export function ValuationTab({
       )}
 
 
-      {/* Summary / Methods */}
+      {/* Summary / Methods / Adjustments */}
       <div className="mt-4 rounded-[9px] border border-[#EAECEF] bg-white">
         <div className="flex gap-5 border-b border-[#EAECEF] px-[18px]">
           {([
             ["summary", "Summary"],
             ["methods", "Methods"],
+            ["adjustments", "Adjustments"],
           ] as const).map(([value, label]) => (
             <button
               key={value}
@@ -292,11 +333,35 @@ export function ValuationTab({
                 />
               )}
               {label}
+              {value === "adjustments" && norm.appliedCount > 0 && (
+                <span className="rounded-full bg-[#1E3A8A] px-1.5 text-[10px] font-bold text-white">
+                  {norm.appliedCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
         <div className="px-[18px] pb-[18px] pt-4">
-          {subTab === "summary" ? (
+          {subTab === "adjustments" ? (
+            <AdjustmentsTab
+              startupId={startupId}
+              year={year}
+              canEdit={canEdit}
+              adjustments={adjustments}
+              settings={settings}
+              filingLines={filingLines}
+              profitBeforeTax={
+                income.find(
+                  (i) =>
+                    i.item_code === "profit_loss_before_income_tax" && i.fiscal_year === year,
+                )?.amount ?? null
+              }
+              reportedNetProfit={inputs.netProfit}
+              baseResult={baseResult}
+              adjustedResult={result}
+              queryKey={adjKey}
+            />
+          ) : subTab === "summary" ? (
             hasPeers ? (
               <ValuationSummary
                 startupName={startupName}
@@ -311,6 +376,9 @@ export function ValuationTab({
                 inputs={inputs}
                 onMethods={() => setSubTab("methods")}
                 renderMatching={matching}
+                normalisation={norm}
+                stake={settings.stake}
+                adjustments={adjustments}
               />
             ) : (
               <>
@@ -341,11 +409,11 @@ export function ValuationTab({
               </>
             )
           ) : (
-
-            <ValuationMethods result={result} inputs={inputs} />
+            <ValuationMethods result={result} inputs={inputs} normalisation={norm} />
           )}
         </div>
       </div>
+
     </div>
   );
 }

@@ -3,6 +3,7 @@
  * filing actually carries. No cards.
  */
 import { fmtMoney, fmtPct, type FilingInputs, type ValuationResult } from "@/lib/valuation";
+import type { Normalisation } from "@/lib/valuation-adjustments";
 
 const STATUS_TONE: Record<string, string> = {
   usable: "text-[#15803D]",
@@ -14,9 +15,11 @@ const STATUS_TONE: Record<string, string> = {
 export function ValuationMethods({
   result,
   inputs,
+  normalisation,
 }: {
   result: ValuationResult;
   inputs: FilingInputs;
+  normalisation?: Normalisation;
 }) {
   const daText =
     inputs.daLow === null || inputs.daHigh === null
@@ -34,7 +37,16 @@ export function ValuationMethods({
   const rows: [string, string | null, boolean?][] = [
     ["Revenue", inputs.revenue === null ? null : fmtMoney(inputs.revenue)],
     ["Gross profit", inputs.grossProfit === null ? null : fmtMoney(inputs.grossProfit)],
-    ["Net profit", inputs.netProfit === null ? null : fmtMoney(inputs.netProfit)],
+    [
+      "Net profit",
+      inputs.netProfit === null
+        ? null
+        : normalisation?.applied
+          ? `reported ${fmtMoney(inputs.netProfit)} · normalised ${fmtMoney(
+              normalisation.normalisedNetProfit,
+            )}`
+          : fmtMoney(inputs.netProfit),
+    ],
     ["Equity", inputs.equity === null ? null : fmtMoney(inputs.equity)],
     ["Total assets", inputs.totalAssets === null ? null : fmtMoney(inputs.totalAssets)],
     [

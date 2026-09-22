@@ -18,6 +18,12 @@ import {
   type FilingInputs,
   type ValuationResult,
 } from "@/lib/valuation";
+import {
+  direction,
+  type Adjustment,
+  type Normalisation,
+  type Stake,
+} from "@/lib/valuation-adjustments";
 
 const ACC = "#1E3A8A";
 
@@ -101,6 +107,9 @@ export function ValuationSummary({
   inputs,
   onMethods,
   renderMatching,
+  normalisation,
+  stake,
+  adjustments = [],
 }: {
   startupName: string;
   year: number | undefined;
@@ -115,9 +124,16 @@ export function ValuationSummary({
   onMethods: () => void;
   /** The one matching row; receives the peers toggle for its right edge. */
   renderMatching: (toggle: React.ReactNode) => React.ReactNode;
+  /** Earnings normalisation from the Adjustments tab. */
+  normalisation?: Normalisation;
+  stake?: Stake;
+  adjustments?: Adjustment[];
 }) {
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
+  const adjApplied = Boolean(normalisation?.applied);
+  const minorityRecorded = stake === "minority" && adjustments.length > 0;
+  const applicableAdjustments = adjustments.filter((a) => direction(a.type) !== "none");
 
   // Mixed fiscal year-ends are normal in Thailand — worth stating, not warning about.
   const periodNote = (() => {
@@ -195,7 +211,11 @@ export function ValuationSummary({
     {
       step: "Control premium",
       adj:
-        discounts.control === null ? (
+        stake === "minority" ? (
+          <span className="text-[11.5px] text-muted-foreground">
+            applies to controlling stakes only
+          </span>
+        ) : discounts.control === null ? (
           <button
             type="button"
             onClick={() => setDiscounts({ ...discounts, control: 20 })}
@@ -264,8 +284,22 @@ export function ValuationSummary({
             .map((m) => (
               <span key={m.key}>{` · ${m.name} is low confidence`}</span>
             ))}
+          {adjApplied && normalisation && (
+            <span className="font-semibold text-[#1E3A8A]">
+              {" · "}
+              {normalisation.netEffect >= 0 ? "+" : "−"}
+              {fmtMoney(Math.abs(normalisation.netEffect))} from {normalisation.appliedCount}{" "}
+              adjustment{normalisation.appliedCount === 1 ? "" : "s"} · controlling stake
+            </span>
+          )}
           {year ? ` · filing FY${year}` : ""}
         </div>
+        {minorityRecorded && (
+          <div className="mt-1 text-[11.5px] text-muted-foreground">
+            {applicableAdjustments.length} adjustment
+            {applicableAdjustments.length === 1 ? "" : "s"} recorded, not applied — minority stake
+          </div>
+        )}
         {spread && (
           <Axis
             spread={spread}
@@ -689,6 +723,12 @@ export function ValuationSummary({
             </tr>
           </tbody>
         </table>
+        {adjApplied && (discounts.control ?? 0) > 0 && (
+          <p className="mt-2 text-[11.5px] text-[#B45309]">
+            Adjustments and a control premium can count the same gain twice — both reflect what a
+            controlling owner can change.
+          </p>
+        )}
         <p className="mt-2 text-[11px] text-muted-foreground">
           Every adjustment is editable. Control premium is off by default — apply it only when
           valuing a controlling stake.
@@ -707,6 +747,21 @@ export function ValuationSummary({
           ? "no control premium"
           : `${discounts.control}% control premium`}
         .
+        {adjApplied && applicableAdjustments.length > 0 && (
+          <>
+            <br />
+            Applied adjustments:{" "}
+            {applicableAdjustments
+              .map(
+                (a) =>
+                  `${a.description} ${direction(a.type) === "add_back" ? "+" : "−"}${fmtMoney(
+                    a.amount,
+                  )}`,
+              )
+              .join(" · ")}
+            .
+          </>
+        )}
       </div>
     </div>
   );

@@ -3048,6 +3048,103 @@ export type Database = {
           },
         ]
       }
+      valuation_adjustments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string
+          filing_line: string | null
+          fiscal_year: number
+          id: string
+          recurs: string
+          startup_id: string
+          tenant_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description: string
+          filing_line?: string | null
+          fiscal_year: number
+          id?: string
+          recurs?: string
+          startup_id: string
+          tenant_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          filing_line?: string | null
+          fiscal_year?: number
+          id?: string
+          recurs?: string
+          startup_id?: string
+          tenant_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_adjustments_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_settings: {
+        Row: {
+          created_at: string
+          fiscal_year: number
+          id: string
+          stake: string
+          startup_id: string
+          tax_rate: number
+          tenant_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          fiscal_year: number
+          id?: string
+          stake?: string
+          startup_id: string
+          tax_rate?: number
+          tenant_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          fiscal_year?: number
+          id?: string
+          stake?: string
+          startup_id?: string
+          tax_rate?: number
+          tenant_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_settings_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_context: {
         Row: {
           active_role_id: string | null
