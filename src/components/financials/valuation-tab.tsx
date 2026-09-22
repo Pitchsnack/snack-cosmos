@@ -258,6 +258,9 @@ export function ValuationTab({
       totalExpenses === null
         ? null
         : Math.max(0, totalExpenses - (cogs ?? 0) - (sellingAdmin ?? 0)),
+    // Revenue lines have no cap — the 10% revenue check takes that place.
+    revenue: inputs.revenue,
+    other_income: null,
   };
 
   const appliedLabel = data.applied
