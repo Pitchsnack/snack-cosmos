@@ -375,16 +375,19 @@ export function AdjustmentsTab({
     );
   };
 
-  const groupHead = (label: string) => (
+  const groupHead = (label: string, revenue: boolean) => (
     <tr>
       <td
         colSpan={8}
-        className="border-b border-[#EAECEF] bg-[#F7F8FA] py-1.5 pr-2 text-[10px] font-bold uppercase tracking-[0.07em] text-muted-foreground"
+        className={`border-b border-[#EAECEF] bg-[#FAFBFC] py-1.5 pl-2.5 pr-2 text-[10.5px] font-bold uppercase tracking-[0.07em] ${
+          revenue ? "text-[#15803D]" : "text-[#B91C1C]"
+        }`}
       >
         {label}
       </td>
     </tr>
   );
+
 
   return (
     <div>
