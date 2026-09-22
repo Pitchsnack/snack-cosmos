@@ -568,7 +568,10 @@ export function ValuationTab({
                 normalisation={norm}
                 stake={settings.stake}
                 adjustments={adjustments}
-                matchLabel={appliedLabel}
+                matchLabel={basis === "chosen" ? chosenLabel : appliedLabel}
+                basisRow={basisRow}
+                chosenBasis={basis === "chosen"}
+                sectorPeers={sectorPeers}
                 selectedPeerId={settings.benchmarkPeerId ?? null}
                 canChoosePeer={canEdit && year !== null && year !== undefined}
                 onSelectPeer={(id) => choosePeer.mutate(id)}
@@ -597,7 +600,10 @@ export function ValuationTab({
                       {appliedLabel ? "the peer set behind every figure" : "no peer set matched"}
                     </span>
                   </div>
-                  <div className="p-3">{matching()}</div>
+                  <div className="p-3">
+                    {basisRow}
+                    {matching()}
+                  </div>
                 </div>
               </>
             )
