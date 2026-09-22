@@ -132,6 +132,8 @@ export const saveValuationSettings = createServerFn({ method: "POST" })
         fiscalYear: z.number().int(),
         stake: z.enum(["minority", "controlling"]).optional(),
         taxRate: z.number().min(0).max(100).optional(),
+        /** The one peer chosen for the Benchmark; null clears it. */
+        benchmarkPeerId: z.string().uuid().nullable().optional(),
       })
       .parse(input),
   )
@@ -141,7 +143,7 @@ export const saveValuationSettings = createServerFn({ method: "POST" })
 
     const { data: before } = await ctx.supabase
       .from("valuation_settings")
-      .select("id, stake, tax_rate")
+      .select("id, stake, tax_rate, benchmark_peer_company_id")
       .eq("startup_id", data.startupId)
       .eq("fiscal_year", data.fiscalYear)
       .maybeSingle();
@@ -153,6 +155,10 @@ export const saveValuationSettings = createServerFn({ method: "POST" })
       stake: data.stake ?? before?.stake ?? DEFAULT_VALUATION_SETTINGS.stake,
       tax_rate:
         data.taxRate ?? (before ? Number(before.tax_rate) : DEFAULT_VALUATION_SETTINGS.taxRate),
+      benchmark_peer_company_id:
+        data.benchmarkPeerId !== undefined
+          ? data.benchmarkPeerId
+          : (before?.benchmark_peer_company_id ?? null),
       updated_by: ctx.userId,
       updated_at: new Date().toISOString(),
     };
@@ -160,7 +166,7 @@ export const saveValuationSettings = createServerFn({ method: "POST" })
     const { data: row, error } = await ctx.supabase
       .from("valuation_settings")
       .upsert(next as never, { onConflict: "startup_id,fiscal_year" })
-      .select("id, stake, tax_rate")
+      .select("id, stake, tax_rate, benchmark_peer_company_id")
       .single();
     if (error) throw new Error(error.message);
 
