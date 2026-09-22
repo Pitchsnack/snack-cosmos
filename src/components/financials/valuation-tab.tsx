@@ -307,12 +307,13 @@ export function ValuationTab({
       )}
 
 
-      {/* Summary / Methods */}
+      {/* Summary / Methods / Adjustments */}
       <div className="mt-4 rounded-[9px] border border-[#EAECEF] bg-white">
         <div className="flex gap-5 border-b border-[#EAECEF] px-[18px]">
           {([
             ["summary", "Summary"],
             ["methods", "Methods"],
+            ["adjustments", "Adjustments"],
           ] as const).map(([value, label]) => (
             <button
               key={value}
@@ -332,11 +333,35 @@ export function ValuationTab({
                 />
               )}
               {label}
+              {value === "adjustments" && norm.appliedCount > 0 && (
+                <span className="rounded-full bg-[#1E3A8A] px-1.5 text-[10px] font-bold text-white">
+                  {norm.appliedCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
         <div className="px-[18px] pb-[18px] pt-4">
-          {subTab === "summary" ? (
+          {subTab === "adjustments" ? (
+            <AdjustmentsTab
+              startupId={startupId}
+              year={year}
+              canEdit={canEdit}
+              adjustments={adjustments}
+              settings={settings}
+              filingLines={filingLines}
+              profitBeforeTax={
+                income.find(
+                  (i) =>
+                    i.item_code === "profit_loss_before_income_tax" && i.fiscal_year === year,
+                )?.amount ?? null
+              }
+              reportedNetProfit={inputs.netProfit}
+              baseResult={baseResult}
+              adjustedResult={result}
+              queryKey={adjKey}
+            />
+          ) : subTab === "summary" ? (
             hasPeers ? (
               <ValuationSummary
                 startupName={startupName}
@@ -351,6 +376,9 @@ export function ValuationTab({
                 inputs={inputs}
                 onMethods={() => setSubTab("methods")}
                 renderMatching={matching}
+                normalisation={norm}
+                stake={settings.stake}
+                adjustments={adjustments}
               />
             ) : (
               <>
@@ -381,11 +409,11 @@ export function ValuationTab({
               </>
             )
           ) : (
-
-            <ValuationMethods result={result} inputs={inputs} />
+            <ValuationMethods result={result} inputs={inputs} normalisation={norm} />
           )}
         </div>
       </div>
+
     </div>
   );
 }
