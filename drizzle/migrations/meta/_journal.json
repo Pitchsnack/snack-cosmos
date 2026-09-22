@@ -71,6 +71,13 @@
       "when": 1789993812072,
       "tag": "0009_listed_companies_ratio_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790044887047,
+      "tag": "0010_valuation_adjustments",
+      "breakpoints": true
     }
   ]
 }
