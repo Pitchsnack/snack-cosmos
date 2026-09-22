@@ -18,6 +18,7 @@ import { businessModelLabel } from "@/lib/sectors";
 import { updateStartup } from "@/lib/startups.functions";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 import { MatchingRow } from "@/components/financials/matching-row";
+import { MetaValue, PageTitle, SubTabRow } from "@/components/financials/fin-tabs";
 import { Loading } from "@/components/ui/PitchSnackLoader";
 import { ValuationSummary } from "@/components/financials/valuation-summary";
 import { ValuationMethods } from "@/components/financials/valuation-methods";
@@ -257,7 +258,9 @@ export function ValuationTab({
       })
     : baseResult;
   const hasPeers = !!data.applied && peers.length > 0;
-  const flag = result.blocked || result.lowConfidence;
+  const usableCount = result.methods.filter(
+    (m) => m.status === "usable" || m.status === "low confidence",
+  ).length;
 
   const lineAmount = (code: string) =>
     income.find((i) => i.item_code === code && i.fiscal_year === year)?.amount ?? null;
