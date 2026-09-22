@@ -343,7 +343,8 @@ export function AdjustmentsTab({
               <button
                 type="button"
                 aria-label="Edit adjustment"
-                onClick={() => {
+                onClick={(ev) => {
+                  openerRef.current = ev.currentTarget;
                   setError(null);
                   setDraft({
                     id: a.id,
