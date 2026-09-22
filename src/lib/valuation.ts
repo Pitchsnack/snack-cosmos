@@ -595,9 +595,22 @@ export function fmtMult(v: number | null | undefined): string {
   return `${v.toFixed(2)}×`;
 }
 
+/** Round half away from zero, on the decimal value rather than the raw float. */
+export function roundHalf(v: number, digits = 2): number {
+  const f = 10 ** digits;
+  const sign = v < 0 ? -1 : 1;
+  return (sign * Math.round(Math.abs(v) * f + Number.EPSILON)) / f;
+}
+
+/** Formats a decimal with a true minus sign, never a hyphen. */
+export function fmtSigned(v: number, digits = 2, suffix = ""): string {
+  const r = roundHalf(v, digits);
+  return `${r < 0 ? "−" : ""}${Math.abs(r).toFixed(digits)}${suffix}`;
+}
+
 export function fmtPct(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return "—";
-  return `${v.toFixed(digits)}%`;
+  return fmtSigned(v, digits, "%");
 }
 
 /** Position of a value on a 0–100 scale between two bounds. */

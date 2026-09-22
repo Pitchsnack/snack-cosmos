@@ -12,6 +12,8 @@ import {
   fmtMoney,
   fmtMult,
   fmtPct,
+  fmtSigned,
+  roundHalf,
   ladderFactors,
   scalePos,
   type Discounts,
@@ -392,13 +394,13 @@ export function ValuationSummary({
         </div>
         <table className="w-full table-fixed border-collapse text-[13px]">
           <colgroup>
-            <col />
+            <col className="w-[200px]" />
             <col className="w-[118px]" />
             <col className="w-[96px]" />
             <col className="w-[112px]" />
             <col className="w-[90px]" />
             <col className="w-[118px]" />
-            <col className="w-[120px]" />
+            <col className="w-[158px]" />
           </colgroup>
           <thead>
             <tr>
@@ -459,6 +461,7 @@ export function ValuationSummary({
               own={ratio("gross_profit_margin") ?? inputs.grossMarginPct}
               peer={bench.grossMarginPct.value}
               peerCount={bench.grossMarginPct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.grossMarginPct ?? null}
             />
@@ -481,6 +484,7 @@ export function ValuationSummary({
               blockedNote="needs D&A"
               peer={result.medians.ebitdaMarginPct}
               peerCount={peers.filter((p) => typeof p.ebitdaMarginPct === "number").length}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.ebitdaMarginPct ?? null}
             />
@@ -490,6 +494,7 @@ export function ValuationSummary({
               own={ratio("net_profit_margin") ?? inputs.netMarginPct}
               peer={bench.netMarginPct.value}
               peerCount={bench.netMarginPct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.netMarginPct ?? null}
             />
@@ -498,6 +503,7 @@ export function ValuationSummary({
               own={ratio("return_on_equity")}
               peer={bench.roePct.value}
               peerCount={bench.roePct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.roePct ?? null}
             />
@@ -508,6 +514,7 @@ export function ValuationSummary({
               own={ratio("debt_to_equity_ratio")}
               peer={bench.debtEquity.value}
               peerCount={bench.debtEquity.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.debtEquity ?? null}
               unit="×"
@@ -519,6 +526,7 @@ export function ValuationSummary({
               own={revenueGrowth}
               peer={bench.revenueGrowthPct.value}
               peerCount={bench.revenueGrowthPct.count}
+              peerTotal={peers.length}
               chosen={chosenPeer}
               chosenValue={chosenPeer?.revenueGrowthPct ?? null}
               last
@@ -1328,6 +1336,7 @@ function BenchRow({
   tooltip,
   peer,
   peerCount,
+  peerTotal,
   chosen,
   chosenValue,
   unit = "%",
@@ -1347,6 +1356,8 @@ function BenchRow({
   peer: number | null;
   /** How many peers carried a usable value for this metric. */
   peerCount?: number;
+  /** How many peers are in the set, so a shortfall can be named. */
+  peerTotal?: number;
   /** The one chosen peer, if any. */
   chosen?: Peer | null;
   chosenValue?: number | null;
@@ -1357,9 +1368,15 @@ function BenchRow({
   last?: boolean;
 }) {
   const fmt = (v: number | null | undefined) =>
-    v === null || v === undefined ? "—" : unit === "%" ? fmtPct(v) : `${v.toFixed(2)}${unit}`;
+    v === null || v === undefined ? "—" : unit === "%" ? fmtPct(v) : fmtSigned(v, 2, unit);
   /** Fewer than three usable values is a median worth doubting. */
   const thin = peer !== null && peerCount !== undefined && peerCount < 3;
+  /** The count is only worth stating when this metric is short of the set. */
+  const short =
+    peer !== null &&
+    peerCount !== undefined &&
+    peerTotal !== undefined &&
+    peerCount < peerTotal;
   const border = last ? "" : "border-b border-[#F2F4F6]";
 
   /**
@@ -1385,7 +1402,8 @@ function BenchRow({
       return { text: "overlaps", good: null };
     }
     if (own === null) return null;
-    const gap = own - comparison;
+    const digits = unit === "%" ? 1 : 2;
+    const gap = roundHalf(own - comparison, digits);
     return {
       text:
         unit === "%"
@@ -1461,12 +1479,8 @@ function BenchRow({
         }`}
       >
         {fmt(peer)}
-        {peer !== null && peerCount !== undefined && (
-          <small
-            className={`block text-[10.5px] font-normal ${
-              thin ? "text-[#B45309]" : "text-muted-foreground"
-            }`}
-          >
+        {peer !== null && peerCount !== undefined && (thin || short) && (
+          <small className="block text-[10.5px] font-normal text-[#B45309]">
             {thin
               ? `thin · ${peerCount} value${peerCount === 1 ? "" : "s"}`
               : `median of ${peerCount}`}
