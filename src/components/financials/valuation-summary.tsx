@@ -1477,12 +1477,8 @@ function BenchRow({
         }`}
       >
         {fmt(peer)}
-        {peer !== null && peerCount !== undefined && (
-          <small
-            className={`block text-[10.5px] font-normal ${
-              thin ? "text-[#B45309]" : "text-muted-foreground"
-            }`}
-          >
+        {peer !== null && peerCount !== undefined && (thin || short) && (
+          <small className="block text-[10.5px] font-normal text-[#B45309]">
             {thin
               ? `thin · ${peerCount} value${peerCount === 1 ? "" : "s"}`
               : `median of ${peerCount}`}
