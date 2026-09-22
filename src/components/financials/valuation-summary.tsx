@@ -110,6 +110,10 @@ export function ValuationSummary({
   normalisation,
   stake,
   adjustments = [],
+  matchLabel = null,
+  selectedPeerId = null,
+  onSelectPeer,
+  canChoosePeer = false,
 }: {
   startupName: string;
   year: number | undefined;
