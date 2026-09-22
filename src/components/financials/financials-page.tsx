@@ -355,100 +355,152 @@ export function StartupFinancialsPage({
           </p>
         </div>
       ) : (
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="h-auto w-full flex-wrap justify-start gap-6 rounded-none border-b border-[#E5E7EB] bg-transparent p-0">
-            {[
-              ["overview", "Overview"],
-              ["company-info", "Company Info"],
-              ["income", "Income Statement"],
-              ["position", "Financial Position"],
-              ["cash-flow", "Cash Flow Statement"],
-              ["ratios", "Financial Ratios"],
-              ["valuation", "Valuation"],
-            ].map(([value, label]) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="rounded-none border-b-2 border-transparent bg-transparent px-0 py-2.5 text-[13.5px] text-muted-foreground shadow-none data-[state=active]:border-[#2563EB] data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-[#2563EB] data-[state=active]:shadow-none"
-              >
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="rounded-[10px] border border-[#EAECEF] bg-white pt-3">
+          <MainTabBar
+            value={tab}
+            onChange={setTab}
+            tabs={[
+              { value: "overview", label: "Overview", icon: "grid" },
+              { value: "company-info", label: "Company Info", icon: "building" },
+              {
+                value: "statements",
+                label: "Financial Statements",
+                icon: "document",
+                count: 3,
+                dividerBefore: true,
+              },
+              { value: "ratios", label: "Financial Ratios", icon: "percent" },
+              { value: "valuation", label: "Valuation", icon: "tag", dividerBefore: true },
+            ]}
+          />
 
-          <TabsContent value="overview" className="mt-4">
-            <FinancialsOverview
-              year={activeYear}
-              years={years}
-
-              currency={data.currency}
-              income={data.income}
-              position={data.position}
-              ratios={data.ratios}
+          {tab === "statements" && (
+            <SubTabRow
+              value={statementTab}
+              onChange={setStatementTab}
+              tabs={[
+                { value: "income", label: "Income Statement", icon: "trend" },
+                { value: "position", label: "Financial Position", icon: "scales" },
+                {
+                  value: "cash-flow",
+                  label: "Cash Flow",
+                  icon: "flow",
+                  ...(hasCashFlow
+                    ? {}
+                    : { dot: "grey" as const, dotTitle: "No data in the filing" }),
+                },
+              ]}
+              meta={
+                <>
+                  <span>
+                    Source <MetaValue>DBD filings</MetaValue>
+                  </span>
+                  <span>
+                    Amounts in <MetaValue>{data.currency}</MetaValue>
+                  </span>
+                  <span>
+                    Latest <MetaValue>FY{activeYear ?? "—"}</MetaValue>
+                  </span>
+                </>
+              }
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="company-info" className="mt-4">
-            {companyInfo ? (
-              <CompanyInfoTab
-                startupId={id}
-                info={companyInfo}
-                financials={data}
-                workspace={workspace}
-                canManage={canManage}
-                onSaved={() =>
-                  queryClient.invalidateQueries({ queryKey: ["company-info-th", id] })
-                }
-              />
-            ) : (
-              <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center text-sm text-muted-foreground">
-                Loading company information…
+          <div className="px-[18px] pb-[18px]">
+            {tab === "overview" && (
+              <div className="pt-4">
+                <FinancialsOverview
+                  year={activeYear}
+                  years={years}
+                  currency={data.currency}
+                  income={data.income}
+                  position={data.position}
+                  ratios={data.ratios}
+                />
               </div>
             )}
-          </TabsContent>
 
-          <TabsContent value="income" className="mt-4 space-y-3">
-            <h2 className="text-lg font-semibold">Income Statement for the year {range}</h2>
-            <StatementTable years={years} rows={INCOME_ROWS} items={data.income} />
-            <Remarks />
-          </TabsContent>
+            {tab === "company-info" && (
+              <div className="pt-4">
+                {companyInfo ? (
+                  <CompanyInfoTab
+                    startupId={id}
+                    info={companyInfo}
+                    financials={data}
+                    workspace={workspace}
+                    canManage={canManage}
+                    onSaved={() =>
+                      queryClient.invalidateQueries({ queryKey: ["company-info-th", id] })
+                    }
+                  />
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center text-sm text-muted-foreground">
+                    Loading company information…
+                  </div>
+                )}
+              </div>
+            )}
 
-          <TabsContent value="position" className="mt-4 space-y-3">
-            <h2 className="text-lg font-semibold">
-              Statement of Financial Position for the year {range}
-            </h2>
-            <StatementTable years={years} rows={POSITION_ROWS} items={data.position} />
-            <Remarks />
-          </TabsContent>
+            {tab === "statements" && statementTab === "income" && (
+              <div className="space-y-3">
+                <PageTitle
+                  title="Income Statement"
+                  sub="revenue, costs and profit, year by year"
+                />
+                <StatementTable years={years} rows={INCOME_ROWS} items={data.income} />
+                <Remarks />
+              </div>
+            )}
 
-          <TabsContent value="cash-flow" className="mt-4 space-y-3">
-            <h2 className="text-lg font-semibold">Cash Flow Statement for the year {range}</h2>
-            <StatementTable
-              years={years}
-              items={data.cashFlow}
-              sections={CASH_FLOW_SECTIONS.map((s) => ({ title: s.title, rows: s.rows }))}
-            />
-            <Remarks />
-          </TabsContent>
+            {tab === "statements" && statementTab === "position" && (
+              <div className="space-y-3">
+                <PageTitle
+                  title="Financial Position"
+                  sub="assets, liabilities and equity at each year end"
+                />
+                <StatementTable years={years} rows={POSITION_ROWS} items={data.position} />
+                <Remarks />
+              </div>
+            )}
 
-          <TabsContent value="ratios" className="mt-4 space-y-3">
-            <h2 className="text-lg font-semibold">Major Financial Ratios for the year {range}</h2>
-            <RatiosTable years={years} ratios={data.ratios} />
-          </TabsContent>
+            {tab === "statements" && statementTab === "cash-flow" && (
+              <div className="space-y-3">
+                <PageTitle
+                  title="Cash Flow"
+                  sub="cash in and out of operations, investment and financing"
+                />
+                <StatementTable
+                  years={years}
+                  items={data.cashFlow}
+                  sections={CASH_FLOW_SECTIONS.map((s) => ({ title: s.title, rows: s.rows }))}
+                />
+                <Remarks />
+              </div>
+            )}
 
-          <TabsContent value="valuation" className="mt-4">
-            <ValuationTab
-              startupId={id}
-              startupName={data.startupName}
-              workspace={workspace}
-              year={activeYear}
-              ratios={data.ratios}
-              income={data.income}
-              position={data.position}
-              cashFlow={data.cashFlow}
-            />
-          </TabsContent>
-        </Tabs>
+            {tab === "ratios" && (
+              <div className="space-y-3 pt-4">
+                <h2 className="text-lg font-semibold">
+                  Major Financial Ratios for the year {range}
+                </h2>
+                <RatiosTable years={years} ratios={data.ratios} />
+              </div>
+            )}
+
+            {tab === "valuation" && (
+              <ValuationTab
+                startupId={id}
+                startupName={data.startupName}
+                workspace={workspace}
+                year={activeYear}
+                ratios={data.ratios}
+                income={data.income}
+                position={data.position}
+                cashFlow={data.cashFlow}
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
