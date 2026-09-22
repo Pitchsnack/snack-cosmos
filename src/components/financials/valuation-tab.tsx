@@ -193,6 +193,39 @@ export function ValuationTab({
       fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
   });
 
+  // Peers from — the sector set, or companies chosen for this startup alone.
+  const fetchSelection = useServerFn(getStartupPeers);
+  const fetchCandidates = useServerFn(listPeerCandidates);
+  const persistSelection = useServerFn(saveStartupPeers);
+  const persistBasis = useServerFn(setStartupPeerBasis);
+  const selectionKey = ["startup-peers", startupId] as const;
+  const { data: selection } = useQuery({
+    queryKey: selectionKey,
+    queryFn: () => fetchSelection({ data: { startupId } }),
+  });
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const { data: candidates } = useQuery({
+    queryKey: ["peer-candidates"],
+    enabled: pickerOpen,
+    staleTime: 300_000,
+    queryFn: () => fetchCandidates(),
+  });
+  const savePeers = useMutation({
+    mutationFn: (ids: string[]) =>
+      persistSelection({ data: { startupId, listedCompanyIds: ids } }),
+    onSuccess: async () => {
+      setPickerOpen(false);
+      await queryClient.invalidateQueries({ queryKey: selectionKey });
+      toast.success("Peer companies saved");
+    },
+    onError: (e: Error) => toast.error(e.message || "Could not save the companies"),
+  });
+  const changeBasis = useMutation({
+    mutationFn: (basis: "sector" | "chosen") => persistBasis({ data: { startupId, basis } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: selectionKey }),
+    onError: (e: Error) => toast.error(e.message || "Could not switch the peer basis"),
+  });
+
   const [subTab, setSubTab] = useState<"summary" | "methods" | "adjustments">("summary");
   const [discounts, setDiscounts] = useState<Discounts>(DEFAULT_DISCOUNTS);
   const [sector, setSector] = useState<string | null>(null);
