@@ -417,7 +417,6 @@ export function ValuationSummary({
                 <span className="flex items-center justify-center gap-1.5 border-b border-[#E2D8FB] pb-[5px]">
                   <PeerPicker
                     options={peerOptions}
-                    peerTotal={peers.length}
                     chosen={chosenPeer}
                     canEdit={canChoosePeer}
                     onChoose={(id) => onSelectPeer?.(id)}
