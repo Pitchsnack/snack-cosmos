@@ -99,17 +99,25 @@ export const getValuationAdjustments = createServerFn({ method: "GET" })
         .order("created_at"),
       ctx.supabase
         .from("valuation_settings")
-        .select("stake, tax_rate")
+        .select("stake, tax_rate, benchmark_peer_company_id")
         .eq("startup_id", data.startupId)
         .eq("fiscal_year", data.fiscalYear)
         .maybeSingle(),
     ]);
     if (rows.error) throw new Error(rows.error.message);
 
-    const s = settings.data as { stake: string; tax_rate: number } | null;
+    const s = settings.data as {
+      stake: string;
+      tax_rate: number;
+      benchmark_peer_company_id: string | null;
+    } | null;
     return {
       settings: s
-        ? { stake: s.stake as Stake, taxRate: Number(s.tax_rate) }
+        ? {
+            stake: s.stake as Stake,
+            taxRate: Number(s.tax_rate),
+            benchmarkPeerId: s.benchmark_peer_company_id ?? null,
+          }
         : DEFAULT_VALUATION_SETTINGS,
       adjustments: (rows.data ?? []).map(rowToAdjustment),
     };
