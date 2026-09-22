@@ -18,7 +18,7 @@ import { businessModelLabel } from "@/lib/sectors";
 import { updateStartup } from "@/lib/startups.functions";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
 import { MatchingRow } from "@/components/financials/matching-row";
-import { LoadingOverlay } from "@/components/ui/PitchSnackLoader";
+import { Loading } from "@/components/ui/PitchSnackLoader";
 import { ValuationSummary } from "@/components/financials/valuation-summary";
 import { ValuationMethods } from "@/components/financials/valuation-methods";
 import { AdjustmentsTab } from "@/components/financials/adjustments-tab";
@@ -234,7 +234,7 @@ export function ValuationTab({
   if (isLoading || !data) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-white p-10">
-        <LoadingOverlay message="Loading valuation…" delay={0} />
+        <Loading message="Loading valuation…" delay={0} />
       </div>
     );
   }
