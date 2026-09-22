@@ -28,7 +28,7 @@ import {
   type Stake,
   type ValuationSettings,
 } from "@/lib/valuation-adjustments";
-import { fmtMoney, type ValuationResult } from "@/lib/valuation";
+import { type ValuationResult } from "@/lib/valuation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const LINES: FilingLine[] = ["cost_of_goods_sold", "selling_admin", "other_expenses"];
