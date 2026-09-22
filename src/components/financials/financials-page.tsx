@@ -269,6 +269,10 @@ export function StartupFinancialsPage({
     : "—";
   const backTo = workspace === "my-startups" ? "/my-startups" : "/startups";
   const isSample = data.statements.some((s) => s.source_name === "Sample dataset");
+  // The Cash Flow dot follows the data, not the tab name.
+  const hasCashFlow = data.cashFlow.some(
+    (i) => typeof i.amount === "number" && Number.isFinite(i.amount),
+  );
 
   return (
     <div className="space-y-4 bg-[#F4F6FA] p-6">
