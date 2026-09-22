@@ -52,7 +52,7 @@ function toPeer(r: any): PeerCandidate {
 async function userName(ctx: Ctx, id: string | null): Promise<string | null> {
   if (!id) return null;
   const { data } = await ctx.supabase
-    .from("profiles")
+    .from("users")
     .select("first_name, last_name, email")
     .eq("id", id)
     .maybeSingle();
