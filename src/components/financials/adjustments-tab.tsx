@@ -285,76 +285,81 @@ export function AdjustmentsTab({
     );
   }
 
-  const revenueRows = adjustments.filter((a) => isRevenueGroup(a.type));
-  const expenseRows = adjustments.filter((a) => !isRevenueGroup(a.type));
+  const appliedRows = adjustments.filter((a) => direction(a.type) !== "none");
+  const revenueRows = appliedRows.filter((a) => isRevenueType(a.type));
+  const expenseRows = appliedRows.filter((a) => !isRevenueType(a.type));
+  const recordedOnly = adjustments.filter((a) => direction(a.type) === "none");
+  const afterTax = (v: number) => v * (1 - settings.taxRate / 100);
+
+  const groupTotals = (rows: Adjustment[]) =>
+    rows.reduce(
+      (acc, a) => {
+        const e = effects(a);
+        return { revenue: acc.revenue + e.revenue, profit: acc.profit + e.profit };
+      },
+      { revenue: 0, profit: 0 },
+    );
+
+  const metaLine = (a: Adjustment) => {
+    switch (a.type) {
+      case "below_market_related_party":
+        return (
+          <>
+            Related-party sales<Sep />
+            {m(a.amount)} at {a.discountPct ?? 0}% below market
+          </>
+        );
+      case "revenue_elsewhere":
+        return (
+          <>
+            Booked elsewhere<Sep />
+            {m(a.amount)} sales<Sep />
+            {a.costsAmount === null ? (
+              <span className="text-[#B45309]">no costs entered</span>
+            ) : (
+              `${m(a.costsAmount)} costs`
+            )}
+          </>
+        );
+      case "one_off_income":
+        return <>One-off income</>;
+      default:
+        return (
+          <>
+            {ADJUSTMENT_TYPE_LABELS[a.type]}
+            {a.filingLine && (
+              <>
+                <Sep />
+                {FILING_LINE_LABELS[a.filingLine]}
+              </>
+            )}
+          </>
+        );
+    }
+  };
 
   const row = (a: Adjustment) => {
-    const d = direction(a.type);
-    const none = d === "none";
-    const stripe = isRevenueGroup(a.type)
-      ? "shadow-[inset_3px_0_0_#15803D]"
-      : "shadow-[inset_3px_0_0_#B91C1C]";
     const e = effects(a);
-    const sub = inputSummary(a);
     return (
-      <tr key={a.id} className={none ? "text-[#A5ADB8]" : undefined}>
-        <td
-          className={`border-b border-[#F2F4F6] py-2 pl-2.5 pr-2 ${stripe} ${
-            none ? "text-[#A5ADB8]" : "text-[#0F1B33]"
-          }`}
-        >
-          <div className="font-medium">{a.description}</div>
-          {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}
+      <tr key={a.id} className="group">
+        <td className="border-b border-[#F2F4F6] py-[9px] pl-[22px] pr-3 align-top">
+          <div className="font-medium text-[#0F1B33]">{a.description}</div>
+          <div className="mt-px text-[11px] text-muted-foreground">{metaLine(a)}</div>
         </td>
-        <td className="border-b border-[#F2F4F6] py-2 pr-2">
-          <Pill kind={d} />
+        <td className="whitespace-nowrap border-b border-[#F2F4F6] py-[9px] pr-3 align-top text-[11.5px] text-[#4B5563]">
+          {a.recurs === "yearly" ? "Yearly" : "One-off"}
         </td>
-        <td className="border-b border-[#F2F4F6] py-2 pr-2 text-muted-foreground">
-          {ADJUSTMENT_TYPE_LABELS[a.type]}
-        </td>
-        <td className="border-b border-[#F2F4F6] py-2 pr-2 text-muted-foreground">
-          {a.filingLine ? FILING_LINE_LABELS[a.filingLine] : "—"}
-        </td>
-        {none ? (
-          <td className="whitespace-nowrap border-b border-[#F2F4F6] py-2 pr-2 text-right tabular-nums text-[#A5ADB8]">
-            {thb(a.amount)}
-          </td>
-        ) : (
-          <Effect value={e.revenue} />
-        )}
-        <Effect value={none ? null : e.profit} />
-
-        <td className="border-b border-[#F2F4F6] py-2 pr-2">
-          <span className="rounded-full border border-[#EAECEF] bg-[#F3F4F6] px-2 py-[1px] text-[10.5px] font-semibold text-[#6B7280]">
-            {a.recurs === "yearly" ? "yearly" : "one-off"}
-          </span>
-        </td>
-        <td className="whitespace-nowrap border-b border-[#F2F4F6] py-2 text-right">
-          {none && (
-            <span className="mr-2 text-[11px] font-medium text-[#B91C1C]">
-              recorded, never applied — not verifiable from the filing
-            </span>
-          )}
+        <Num value={e.revenue} />
+        <Num value={e.profit} />
+        <Num value={afterTax(e.profit)} />
+        <td className="whitespace-nowrap border-b border-[#F2F4F6] py-[9px] text-right align-top">
           {canEdit && (
-            <>
+            <span className="text-[#C0C6CF] transition-colors group-hover:text-[#8A93A0]">
               <button
                 type="button"
                 aria-label="Edit adjustment"
-                onClick={(ev) => {
-                  openerRef.current = ev.currentTarget;
-                  setError(null);
-                  setDraft({
-                    id: a.id,
-                    description: a.description,
-                    type: a.type,
-                    filingLine: a.filingLine,
-                    amount: String(a.amount),
-                    discountPct: a.discountPct === null ? "" : String(a.discountPct),
-                    costsAmount: a.costsAmount === null ? "" : String(a.costsAmount),
-                    recurs: a.recurs,
-                  });
-                }}
-                className="px-1 text-muted-foreground"
+                onClick={(ev) => openEdit(ev.currentTarget, a)}
+                className="px-1"
               >
                 ✎
               </button>
@@ -362,29 +367,65 @@ export function AdjustmentsTab({
                 type="button"
                 aria-label="Delete adjustment"
                 onClick={() => deleteMut.mutate(a.id)}
-                className="px-1 text-muted-foreground"
+                className="px-1"
               >
                 🗑
               </button>
-            </>
+            </span>
           )}
         </td>
       </tr>
     );
   };
 
-  const groupHead = (label: string, revenue: boolean) => (
-    <tr>
-      <td
-        colSpan={8}
-        className={`border-b border-[#EAECEF] bg-[#FAFBFC] py-1.5 pl-2.5 pr-2 text-[10.5px] font-bold uppercase tracking-[0.07em] ${
-          revenue ? "text-[#15803D]" : "text-[#B91C1C]"
-        }`}
-      >
-        {label}
-      </td>
-    </tr>
-  );
+  const openEdit = (el: HTMLElement, a: Adjustment) => {
+    openerRef.current = el;
+    setError(null);
+    setDraft({
+      id: a.id,
+      description: a.description,
+      type: a.type,
+      filingLine: a.filingLine,
+      amount: String(a.amount),
+      discountPct: a.discountPct === null ? "" : String(a.discountPct),
+      costsAmount: a.costsAmount === null ? "" : String(a.costsAmount),
+      recurs: a.recurs,
+    });
+  };
+
+  const groupRow = (label: string, rows: Adjustment[], revenue: boolean) => {
+    const t = groupTotals(rows);
+    const colour = revenue ? "#15803D" : "#B91C1C";
+    return (
+      <tr className="bg-[#FAFBFC]">
+        <td className="border-b border-[#EAECEF] py-2 pl-3 pr-3 font-semibold">
+          <span
+            className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.07em]"
+            style={{ color: colour }}
+          >
+            <span
+              className="h-2 w-2 rounded-[2px]"
+              style={{ background: colour }}
+              aria-hidden="true"
+            />
+            {label}{" "}
+            <span className="text-[11px] font-normal normal-case tracking-normal text-muted-foreground">
+              {rows.length} item{rows.length === 1 ? "" : "s"}
+            </span>
+          </span>
+        </td>
+        <td className="border-b border-[#EAECEF]" />
+        <Num value={t.revenue} group />
+        <Num value={t.profit} group />
+        <Num value={afterTax(t.profit)} group />
+        <td className="border-b border-[#EAECEF]" />
+      </tr>
+    );
+  };
+
+  const tableTotals = groupTotals(appliedRows);
+
+
 
 
   return (
