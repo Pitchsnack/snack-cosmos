@@ -35,9 +35,17 @@ import {
 import {
   DEFAULT_DISCOUNTS,
   computeValuation,
+  peerMedians,
   readFilingInputs,
   type Discounts,
 } from "@/lib/valuation";
+import {
+  getStartupPeers,
+  listPeerCandidates,
+  saveStartupPeers,
+  setStartupPeerBasis,
+} from "@/lib/startup-peers.functions";
+import { PeerBasisRow, PeerPickerDialog } from "@/components/financials/peer-basis";
 
 
 const DASH = "—";
