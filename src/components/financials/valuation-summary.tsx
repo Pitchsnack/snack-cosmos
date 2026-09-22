@@ -18,6 +18,8 @@ import {
   scalePos,
   type Discounts,
   type FilingInputs,
+  peerMedians,
+  type PeerMedians,
   type ValuationResult,
 } from "@/lib/valuation";
 import {
@@ -116,6 +118,9 @@ export function ValuationSummary({
   selectedPeerId = null,
   onSelectPeer,
   canChoosePeer = false,
+  basisRow = null,
+  chosenBasis = false,
+  sectorPeers = [],
 }: {
   startupName: string;
   year: number | undefined;
@@ -140,6 +145,12 @@ export function ValuationSummary({
   selectedPeerId?: string | null;
   onSelectPeer?: (id: string | null) => void;
   canChoosePeer?: boolean;
+  /** The "Peers from" switch, shown at the top of Compared against. */
+  basisRow?: React.ReactNode;
+  /** True when the peers above are this startup's own chosen companies. */
+  chosenBasis?: boolean;
+  /** The sector baseline's peers, for the baseline-vs-chosen comparison. */
+  sectorPeers?: Peer[];
 }) {
   const [showPeers, setShowPeers] = useState(true);
   const { indicative, spread } = result;
@@ -565,6 +576,7 @@ export function ValuationSummary({
           </Link>
         }
       >
+        {basisRow}
         {renderMatching(
           <button
             type="button"
@@ -634,7 +646,13 @@ export function ValuationSummary({
                   </tr>
                 )}
                 {peers.length > 0 && (
-                  <tr className="bg-[#F5F7FD] font-semibold text-[#1E3A8A]">
+                  <tr
+                    className={
+                      chosenBasis
+                        ? "bg-[#FFF7ED] font-semibold text-[#9A6B2E]"
+                        : "bg-[#F5F7FD] font-semibold text-[#1E3A8A]"
+                    }
+                  >
                     <td className="border-t border-[#DDE3F2] px-2.5 py-[7px]">
                       Median · {peers.length} peer{peers.length === 1 ? "" : "s"}
                     </td>
@@ -660,6 +678,9 @@ export function ValuationSummary({
             </b>{" "}
             — a median this thin is easily moved by one company.
           </div>
+        )}
+        {chosenBasis && sectorPeers.length > 0 && (
+          <BaselineVsChosen sectorPeers={sectorPeers} chosen={result.medians} />
         )}
 
       </Block>
@@ -1541,3 +1562,43 @@ function BenchRow({
 }
 
 
+
+/** The sector baseline's medians, struck through, beside the chosen set's. */
+function BaselineVsChosen({
+  sectorPeers,
+  chosen,
+}: {
+  sectorPeers: Peer[];
+  chosen: PeerMedians;
+}) {
+  const base = peerMedians(sectorPeers);
+  const boxes: [string, number | null, number | null, string][] = [
+    ["Median revenue", base.revenueThbM, chosen.revenueThbM, "m"],
+    ["EV/EBITDA", base.evEbitda, chosen.evEbitda, "x"],
+    ["P/E", base.pe, chosen.pe, "x"],
+    ["P/BV", base.pbv, chosen.pbv, "x"],
+  ];
+  const show = (v: number | null, unit: string) =>
+    v === null || !Number.isFinite(v)
+      ? "—"
+      : unit === "m"
+        ? fmtSigned(v, 0, "").replace("+", "")
+        : `${v.toFixed(2)}×`;
+
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {boxes.map(([label, b, c, unit]) => (
+        <div key={label} className="rounded-[7px] border border-[#EAECEF] bg-[#FBFCFE] px-2.5 py-2">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
+            {label}
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-[11.5px] text-[#9AA3AF] line-through">{show(b, unit)}</span>
+            <span className="text-[13px] font-bold text-[#9A6B2E]">{show(c, unit)}</span>
+          </div>
+          <div className="text-[10.5px] text-muted-foreground">sector baseline → chosen</div>
+        </div>
+      ))}
+    </div>
+  );
+}

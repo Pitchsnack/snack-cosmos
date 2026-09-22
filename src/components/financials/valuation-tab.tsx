@@ -35,9 +35,17 @@ import {
 import {
   DEFAULT_DISCOUNTS,
   computeValuation,
+  peerMedians,
   readFilingInputs,
   type Discounts,
 } from "@/lib/valuation";
+import {
+  getStartupPeers,
+  listPeerCandidates,
+  saveStartupPeers,
+  setStartupPeerBasis,
+} from "@/lib/startup-peers.functions";
+import { PeerBasisRow, PeerPickerDialog } from "@/components/financials/peer-basis";
 
 
 const DASH = "—";
@@ -185,6 +193,39 @@ export function ValuationTab({
       fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
   });
 
+  // Peers from — the sector set, or companies chosen for this startup alone.
+  const fetchSelection = useServerFn(getStartupPeers);
+  const fetchCandidates = useServerFn(listPeerCandidates);
+  const persistSelection = useServerFn(saveStartupPeers);
+  const persistBasis = useServerFn(setStartupPeerBasis);
+  const selectionKey = ["startup-peers", startupId] as const;
+  const { data: selection } = useQuery({
+    queryKey: selectionKey,
+    queryFn: () => fetchSelection({ data: { startupId } }),
+  });
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const { data: candidates } = useQuery({
+    queryKey: ["peer-candidates"],
+    enabled: pickerOpen,
+    staleTime: 300_000,
+    queryFn: () => fetchCandidates(),
+  });
+  const savePeers = useMutation({
+    mutationFn: (ids: string[]) =>
+      persistSelection({ data: { startupId, listedCompanyIds: ids } }),
+    onSuccess: async () => {
+      setPickerOpen(false);
+      await queryClient.invalidateQueries({ queryKey: selectionKey });
+      toast.success("Peer companies saved");
+    },
+    onError: (e: Error) => toast.error(e.message || "Could not save the companies"),
+  });
+  const changeBasis = useMutation({
+    mutationFn: (basis: "sector" | "chosen") => persistBasis({ data: { startupId, basis } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: selectionKey }),
+    onError: (e: Error) => toast.error(e.message || "Could not switch the peer basis"),
+  });
+
   const [subTab, setSubTab] = useState<"summary" | "methods" | "adjustments">("summary");
   const [discounts, setDiscounts] = useState<Discounts>(DEFAULT_DISCOUNTS);
   const [sector, setSector] = useState<string | null>(null);
@@ -245,7 +286,11 @@ export function ValuationTab({
     : null;
   const suggestion = data.narrower && data.state !== "exact" ? data.narrower : null;
 
-  const peers = peerSet?.peers ?? [];
+  const sectorPeers = peerSet?.peers ?? [];
+  const chosenPeers = selection?.peers ?? [];
+  const basis: "sector" | "chosen" =
+    selection?.basis === "chosen" && chosenPeers.length > 0 ? "chosen" : "sector";
+  const peers = basis === "chosen" ? chosenPeers : sectorPeers;
   const inputs = readFilingInputs(year, income, position, cashFlow, ratios);
   const norm = normalise(adjustments, settings, inputs.netProfit, inputs.revenue);
   // Reported figures, then the same maths on normalised profit.
@@ -257,7 +302,7 @@ export function ValuationTab({
         applied: true,
       })
     : baseResult;
-  const hasPeers = !!data.applied && peers.length > 0;
+  const hasPeers = peers.length > 0 && (basis === "chosen" || !!data.applied);
   const usableCount = result.methods.filter(
     (m) => m.status === "usable" || m.status === "low confidence",
   ).length;
@@ -334,7 +379,70 @@ export function ValuationTab({
     );
 
 
-  const matching = (right?: React.ReactNode) => (
+  const startupRevenueM = inputs.revenue !== null ? inputs.revenue / 1e6 : null;
+  const sectorMedianRevM = peerMedians(sectorPeers).revenueThbM;
+  const sizeNote =
+    basis === "sector" &&
+    startupRevenueM !== null &&
+    startupRevenueM > 0 &&
+    sectorMedianRevM !== null &&
+    (sectorMedianRevM > 2 * startupRevenueM || sectorMedianRevM < 0.5 * startupRevenueM)
+      ? `The set's median revenue is ${Math.round(sectorMedianRevM).toLocaleString("en-US")}m against this company's ${Math.round(startupRevenueM).toLocaleString("en-US")}m — companies of a very different size.`
+      : null;
+
+  const chosenOn = selection?.chosenAt
+    ? new Date(selection.chosenAt).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+  const chosenLabel =
+    basis === "chosen"
+      ? `Chosen companies · ${peers.length} peers${selection?.chosenByName ? ` · chosen by ${selection.chosenByName}` : ""}${chosenOn ? ` on ${chosenOn}` : ""}`
+      : null;
+
+  const basisRow = (
+    <>
+      <PeerBasisRow
+        basis={selection?.basis ?? "sector"}
+        canEdit={canEdit}
+        onBasis={(b) => changeBasis.mutate(b)}
+        onChoose={() => setPickerOpen(true)}
+      />
+      {sizeNote && (
+        <div className="mb-[9px] rounded-[7px] border border-[#F6DFB4] bg-[#FEF3E7] px-3 py-2 text-[11.5px] text-[#7C4A0B]">
+          {sizeNote}
+        </div>
+      )}
+      <PeerPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        candidates={candidates ?? []}
+        initialSelected={chosenPeers.map((p) => p.id!).filter(Boolean)}
+        startupRevenueThbM={startupRevenueM}
+        saving={savePeers.isPending}
+        onSave={(ids) => savePeers.mutate(ids)}
+      />
+    </>
+  );
+
+  const chosenStrip = (right?: React.ReactNode) => (
+    <div className="flex flex-wrap items-center gap-2 rounded-[7px] border border-[#F6DFC4] bg-[#FFF7ED] px-3 py-2 text-[11.5px] text-[#7C4A0B]">
+      <span>
+        <b>{chosenLabel}</b>
+        {sectorMedianRevM !== null && basis === "chosen"
+          ? ` · median revenue ${Math.round(peerMedians(peers).revenueThbM ?? 0).toLocaleString("en-US")}m`
+          : ""}
+      </span>
+      {right && <span className="ml-auto">{right}</span>}
+    </div>
+  );
+
+  const matching = (right?: React.ReactNode) =>
+    basis === "chosen" ? (
+      chosenStrip(right)
+    ) : (
     <MatchingRow
       sector={sector}
       model={model}
@@ -364,7 +472,7 @@ export function ValuationTab({
       }
       right={right}
     />
-  );
+    );
 
   return (
     <div>
@@ -460,7 +568,10 @@ export function ValuationTab({
                 normalisation={norm}
                 stake={settings.stake}
                 adjustments={adjustments}
-                matchLabel={appliedLabel}
+                matchLabel={basis === "chosen" ? chosenLabel : appliedLabel}
+                basisRow={basisRow}
+                chosenBasis={basis === "chosen"}
+                sectorPeers={sectorPeers}
                 selectedPeerId={settings.benchmarkPeerId ?? null}
                 canChoosePeer={canEdit && year !== null && year !== undefined}
                 onSelectPeer={(id) => choosePeer.mutate(id)}
@@ -489,7 +600,10 @@ export function ValuationTab({
                       {appliedLabel ? "the peer set behind every figure" : "no peer set matched"}
                     </span>
                   </div>
-                  <div className="p-3">{matching()}</div>
+                  <div className="p-3">
+                    {basisRow}
+                    {matching()}
+                  </div>
                 </div>
               </>
             )

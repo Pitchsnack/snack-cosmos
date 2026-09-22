@@ -2449,6 +2449,45 @@ export type Database = {
           },
         ]
       }
+      startup_peer_selections: {
+        Row: {
+          chosen_at: string
+          chosen_by: string | null
+          id: string
+          listed_company_id: string
+          startup_id: string
+        }
+        Insert: {
+          chosen_at?: string
+          chosen_by?: string | null
+          id?: string
+          listed_company_id: string
+          startup_id: string
+        }
+        Update: {
+          chosen_at?: string
+          chosen_by?: string | null
+          id?: string
+          listed_company_id?: string
+          startup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_peer_selections_listed_company_id_fkey"
+            columns: ["listed_company_id"]
+            isOneToOne: false
+            referencedRelation: "listed_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_peer_selections_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startup_tags: {
         Row: {
           id: string
@@ -2587,6 +2626,7 @@ export type Database = {
           logo_url: string | null
           long_description: string | null
           market_tags: string[]
+          peer_basis: string
           product_tags: string[]
           region: string | null
           registered_capital: string | null
@@ -2629,6 +2669,7 @@ export type Database = {
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
+          peer_basis?: string
           product_tags?: string[]
           region?: string | null
           registered_capital?: string | null
@@ -2671,6 +2712,7 @@ export type Database = {
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
+          peer_basis?: string
           product_tags?: string[]
           region?: string | null
           registered_capital?: string | null
