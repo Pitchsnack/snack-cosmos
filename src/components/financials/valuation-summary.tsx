@@ -723,6 +723,12 @@ export function ValuationSummary({
             </tr>
           </tbody>
         </table>
+        {adjApplied && (discounts.control ?? 0) > 0 && (
+          <p className="mt-2 text-[11.5px] text-[#B45309]">
+            Adjustments and a control premium can count the same gain twice — both reflect what a
+            controlling owner can change.
+          </p>
+        )}
         <p className="mt-2 text-[11px] text-muted-foreground">
           Every adjustment is editable. Control premium is off by default — apply it only when
           valuing a controlling stake.
@@ -741,6 +747,21 @@ export function ValuationSummary({
           ? "no control premium"
           : `${discounts.control}% control premium`}
         .
+        {adjApplied && applicableAdjustments.length > 0 && (
+          <>
+            <br />
+            Applied adjustments:{" "}
+            {applicableAdjustments
+              .map(
+                (a) =>
+                  `${a.description} ${direction(a.type) === "add_back" ? "+" : "−"}${fmtMoney(
+                    a.amount,
+                  )}`,
+              )
+              .join(" · ")}
+            .
+          </>
+        )}
       </div>
     </div>
   );
