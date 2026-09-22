@@ -325,40 +325,49 @@ export function ValuationTab({
 
 
       {/* Summary / Methods / Adjustments */}
-      <div className="mt-4 rounded-[9px] border border-[#EAECEF] bg-white">
-        <div className="flex gap-5 border-b border-[#EAECEF] px-[18px]">
-          {([
-            ["summary", "Summary"],
-            ["methods", "Methods"],
-            ["adjustments", "Adjustments"],
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSubTab(value)}
-              className={`flex items-center gap-[7px] border-b-[1.5px] py-2.5 text-[12.5px] ${
-                subTab === value
-                  ? "border-[#1E3A8A] font-semibold text-[#1E3A8A]"
-                  : "border-transparent text-muted-foreground"
-              }`}
-            >
-              {value === "methods" && (
-                <span
-                  className={`h-[5px] w-[5px] rounded-full ${
-                    flag ? "bg-[#B45309]" : "bg-[#C7CDD6]"
-                  }`}
-                />
-              )}
-              {label}
-              {value === "adjustments" && norm.appliedCount > 0 && (
-                <span className="rounded-full bg-[#1E3A8A] px-1.5 text-[10px] font-bold text-white">
-                  {norm.appliedCount}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="px-[18px] pb-[18px] pt-4">
+      <div>
+        <SubTabRow
+          value={subTab}
+          onChange={(v) => setSubTab(v as typeof subTab)}
+          tabs={[
+            { value: "summary", label: "Summary", icon: "target" },
+            {
+              value: "methods",
+              label: "Methods",
+              icon: "lines",
+              ...(result.blocked
+                ? {
+                    dot: "amber" as const,
+                    dotTitle: `${result.blocked.name} is blocked — ${result.blocked.reason}`,
+                  }
+                : {}),
+            },
+            {
+              value: "adjustments",
+              label: "Adjustments",
+              icon: "sliders",
+              count: norm.appliedCount,
+            },
+          ]}
+          meta={contextLine}
+        />
+        <div className="px-[18px] pb-[18px]">
+          <PageTitle
+            title={
+              subTab === "summary"
+                ? "Summary"
+                : subTab === "methods"
+                  ? "Methods"
+                  : "Adjustments"
+            }
+            sub={
+              subTab === "summary"
+                ? "the indicative range, and how it compares"
+                : subTab === "methods"
+                  ? "the working from the filing — inputs, each method, and what's missing"
+                  : "how profit and revenue would differ under a new owner"
+            }
+          />
           {subTab === "adjustments" ? (
             <AdjustmentsTab
               startupId={startupId}
