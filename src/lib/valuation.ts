@@ -306,9 +306,16 @@ export function computeValuation(
   inputs: FilingInputs,
   peers: Peer[],
   discounts: Discounts,
+  /** Normalised earnings from the Adjustments tab; only P/E uses them. */
+  normalised?: { netProfit: number | null; applied: boolean } | null,
 ): ValuationResult {
   const medians = peerMedians(peers);
   const f = ladderFactors(discounts).total;
+  const usesNormalised =
+    Boolean(normalised?.applied) &&
+    normalised?.netProfit !== null &&
+    normalised?.netProfit !== undefined;
+  const peProfit = usesNormalised ? normalised!.netProfit! : inputs.netProfit;
 
   const adjusted = {
     pbv: medians.pbv === null ? null : medians.pbv * f,
