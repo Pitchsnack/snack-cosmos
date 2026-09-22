@@ -276,7 +276,7 @@ export function AdjustmentsTab({
             {adjustments.map((a) => {
               const d = direction(a.type);
               const none = d === "none";
-              if (draft?.id === a.id) return <DraftRow key={a.id} />;
+              if (draft?.id === a.id) return <Fragment key={a.id}>{DraftRow()}</Fragment>;
               return (
                 <tr key={a.id} className={none ? "text-[#A5ADB8]" : undefined}>
                   <td
