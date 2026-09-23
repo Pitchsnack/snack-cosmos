@@ -80,7 +80,8 @@ function UsersPage() {
 }
 
 function UsersPageInner() {
-  const { has } = usePermissions();
+  const { has, isControl } = usePermissions();
+  const canEditStatus = isControl || has("users.suspend");
   const { data: session } = useSessionContext();
   const fetchUsers = useServerFn(listUsers);
   const tenantId = session?.activeWorkspace.tenantId ?? null;
