@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listUsers, inviteUser } from "@/lib/users.functions";
+import { listUsers, inviteUser, updateUserStatus } from "@/lib/users.functions";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { ROLE_LABELS, type AppRole } from "@/lib/permissions";
@@ -71,6 +71,59 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const USER_STATUSES = [
+  "Pending",
+  "Active",
+  "Suspended",
+  "Locked",
+  "Archived",
+  "Deleted",
+] as const;
+
+function StatusSelect({
+  userId,
+  status,
+  onChanged,
+}: {
+  userId: string;
+  status: string;
+  onChanged: () => void;
+}) {
+  const update = useServerFn(updateUserStatus);
+  const [busy, setBusy] = useState(false);
+
+  async function change(next: string) {
+    if (next === status) return;
+    setBusy(true);
+    try {
+      await update({
+        data: { targetUserId: userId, status: next as (typeof USER_STATUSES)[number] },
+      });
+      toast.success(`Status set to ${next}`);
+      onChanged();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not update status");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Select value={status} onValueChange={change} disabled={busy}>
+      <SelectTrigger className="h-8 w-[140px] text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {USER_STATUSES.map((s) => (
+          <SelectItem key={s} value={s} className="text-xs">
+            {s}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function UsersPage() {
   return (
     <PermissionGuard permission="users.read" message="You don't have permission to view users.">
@@ -80,7 +133,8 @@ function UsersPage() {
 }
 
 function UsersPageInner() {
-  const { has } = usePermissions();
+  const { has, isControl } = usePermissions();
+  const canEditStatus = isControl || has("users.suspend");
   const { data: session } = useSessionContext();
   const fetchUsers = useServerFn(listUsers);
   const tenantId = session?.activeWorkspace.tenantId ?? null;
@@ -153,7 +207,15 @@ function UsersPageInner() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={u.status} />
+                        {canEditStatus ? (
+                          <StatusSelect
+                            userId={u.id}
+                            status={u.status}
+                            onChanged={() => refetch()}
+                          />
+                        ) : (
+                          <StatusBadge status={u.status} />
+                        )}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "Never"}
