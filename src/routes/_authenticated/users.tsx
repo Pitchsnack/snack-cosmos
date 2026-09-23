@@ -71,6 +71,59 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const USER_STATUSES = [
+  "Pending",
+  "Active",
+  "Suspended",
+  "Locked",
+  "Archived",
+  "Deleted",
+] as const;
+
+function StatusSelect({
+  userId,
+  status,
+  onChanged,
+}: {
+  userId: string;
+  status: string;
+  onChanged: () => void;
+}) {
+  const update = useServerFn(updateUserStatus);
+  const [busy, setBusy] = useState(false);
+
+  async function change(next: string) {
+    if (next === status) return;
+    setBusy(true);
+    try {
+      await update({
+        data: { targetUserId: userId, status: next as (typeof USER_STATUSES)[number] },
+      });
+      toast.success(`Status set to ${next}`);
+      onChanged();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not update status");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Select value={status} onValueChange={change} disabled={busy}>
+      <SelectTrigger className="h-8 w-[140px] text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {USER_STATUSES.map((s) => (
+          <SelectItem key={s} value={s} className="text-xs">
+            {s}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function UsersPage() {
   return (
     <PermissionGuard permission="users.read" message="You don't have permission to view users.">
