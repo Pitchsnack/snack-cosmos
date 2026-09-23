@@ -153,7 +153,15 @@ function UsersPageInner() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={u.status} />
+                        {canEditStatus ? (
+                          <StatusSelect
+                            userId={u.id}
+                            status={u.status}
+                            onChanged={() => refetch()}
+                          />
+                        ) : (
+                          <StatusBadge status={u.status} />
+                        )}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "Never"}
