@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -344,11 +344,11 @@ export function StartupDetailPanel({
 }: {
   id: string;
   /** Rendered right under the header (profile tabs). */
-  belowHeader?: React.ReactNode;
+  belowHeader?: ReactNode;
   /** When set, replaces the live panel body (Hidden profile / Compare / editor). */
-  replaceBody?: React.ReactNode;
+  replaceBody?: ReactNode;
   /** Extra ⋮ menu items, shown after Edit. */
-  extraMenuItems?: React.ReactNode;
+  extraMenuItems?: ReactNode;
   showEdit?: boolean;
   compact?: boolean;
   /** My Startups surfaces only: shows Publish / Unpublish to Startup Directory. */
