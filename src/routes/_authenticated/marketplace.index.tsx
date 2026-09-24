@@ -16,7 +16,7 @@ import {
 } from "@/components/marketplace/marketplace-cards";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/marketplace")({
+export const Route = createFileRoute("/_authenticated/marketplace/")({
   head: () => ({
     meta: [
       { title: "Marketplace — PitchSnack" },
