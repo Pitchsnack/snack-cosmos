@@ -93,6 +93,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
         type="button"
         onClick={onLogo ?? onMenu}
         aria-label="Expand or collapse the menu"
+        data-keep-sidebar
         title="Click the logo to expand or collapse the menu"
         className="hidden shrink-0 bg-transparent p-0 sm:block"
       >
