@@ -25,6 +25,7 @@ import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPeerComparablesRouteImport } from './routes/_authenticated/peer-comparables'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
+import { Route as AuthenticatedMarketplaceRouteImport } from './routes/_authenticated/marketplace'
 import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
 import { Route as AuthenticatedIndustryMapRouteImport } from './routes/_authenticated/industry-map'
@@ -155,6 +156,12 @@ const AuthenticatedMyPageRoute = AuthenticatedMyPageRouteImport.update({
   path: '/my-page',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMarketplaceRoute =
+  AuthenticatedMarketplaceRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedInvestorsRoute = AuthenticatedInvestorsRouteImport.update({
   id: '/investors',
   path: '/investors',
@@ -433,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
+  '/marketplace': typeof AuthenticatedMarketplaceRoute
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -491,6 +499,7 @@ export interface FileRoutesByTo {
   '/entity-control': typeof AuthenticatedEntityControlRoute
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
+  '/marketplace': typeof AuthenticatedMarketplaceRoute
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -549,6 +558,7 @@ export interface FileRoutesById {
   '/_authenticated/industry-map': typeof AuthenticatedIndustryMapRoute
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
+  '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRoute
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -614,6 +624,7 @@ export interface FileRouteTypes {
     | '/industry-map'
     | '/intake-queue'
     | '/investors'
+    | '/marketplace'
     | '/my-page'
     | '/notifications'
     | '/peer-comparables'
@@ -672,6 +683,7 @@ export interface FileRouteTypes {
     | '/entity-control'
     | '/industry-map'
     | '/intake-queue'
+    | '/marketplace'
     | '/my-page'
     | '/notifications'
     | '/peer-comparables'
@@ -729,6 +741,7 @@ export interface FileRouteTypes {
     | '/_authenticated/industry-map'
     | '/_authenticated/intake-queue'
     | '/_authenticated/investors'
+    | '/_authenticated/marketplace'
     | '/_authenticated/my-page'
     | '/_authenticated/notifications'
     | '/_authenticated/peer-comparables'
@@ -897,6 +910,13 @@ declare module '@tanstack/react-router' {
       path: '/my-page'
       fullPath: '/my-page'
       preLoaderRoute: typeof AuthenticatedMyPageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/marketplace': {
+      id: '/_authenticated/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof AuthenticatedMarketplaceRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/investors': {
@@ -1388,6 +1408,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndustryMapRoute: typeof AuthenticatedIndustryMapRoute
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
+  AuthenticatedMarketplaceRoute: typeof AuthenticatedMarketplaceRoute
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPeerComparablesRoute: typeof AuthenticatedPeerComparablesRoute
@@ -1419,6 +1440,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndustryMapRoute: AuthenticatedIndustryMapRoute,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
+  AuthenticatedMarketplaceRoute: AuthenticatedMarketplaceRoute,
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPeerComparablesRoute: AuthenticatedPeerComparablesRoute,

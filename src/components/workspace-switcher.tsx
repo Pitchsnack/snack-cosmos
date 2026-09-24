@@ -1,3 +1,4 @@
+import { useIsMarketplace, usePersona } from "@/hooks/use-marketplace";
 import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown, Building2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -128,7 +129,11 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
       ? CONTROL_LABEL
       : tenants[0]?.tenantName ?? "—";
   const roleCode = session?.activeWorkspace.roleCode ?? session?.roles?.[0] ?? null;
-  const roleLabel = roleCode ? ROLE_LABELS[roleCode] ?? roleCode : "No role";
+  const isMarket = useIsMarketplace();
+  const { persona } = usePersona();
+  const roleLabel = isMarket
+    ? persona === "buyer" ? "Buyer" : "Seller"
+    : roleCode ? ROLE_LABELS[roleCode] ?? roleCode : "No role";
 
 
   async function pick(tenantId: string | null, workspaceType: string | null) {
