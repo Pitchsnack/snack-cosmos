@@ -40,6 +40,7 @@ import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_aut
 import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authenticated/startups.index'
 import { Route as AuthenticatedSharedDealsIndexRouteImport } from './routes/_authenticated/shared-deals.index'
 import { Route as AuthenticatedMyStartupsIndexRouteImport } from './routes/_authenticated/my-startups.index'
+import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace.index'
 import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authenticated/investors.index'
 import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
 import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
@@ -50,6 +51,7 @@ import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsDefaultIntakeRouteImport } from './routes/_authenticated/settings.default-intake'
 import { Route as AuthenticatedMyStartupsNewRouteImport } from './routes/_authenticated/my-startups.new'
 import { Route as AuthenticatedMyStartupsIdRouteImport } from './routes/_authenticated/my-startups.$id'
+import { Route as AuthenticatedMarketplaceMyBusinessRouteImport } from './routes/_authenticated/marketplace.my-business'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
 import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
 import { Route as AuthenticatedGlobalStartupsBrowseRouteImport } from './routes/_authenticated/global-startups.browse'
@@ -240,6 +242,12 @@ const AuthenticatedMyStartupsIndexRoute =
     path: '/my-startups/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMarketplaceIndexRoute =
+  AuthenticatedMarketplaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
 const AuthenticatedInvestorsIndexRoute =
   AuthenticatedInvestorsIndexRouteImport.update({
     id: '/',
@@ -297,6 +305,12 @@ const AuthenticatedMyStartupsIdRoute =
     id: '/my-startups/$id',
     path: '/my-startups/$id',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMarketplaceMyBusinessRoute =
+  AuthenticatedMarketplaceMyBusinessRouteImport.update({
+    id: '/my-business',
+    path: '/my-business',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
 const AuthenticatedInvestorsNewRoute =
   AuthenticatedInvestorsNewRouteImport.update({
@@ -440,7 +454,7 @@ export interface FileRoutesByFullPath {
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/investors': typeof AuthenticatedInvestorsRouteWithChildren
-  '/marketplace': typeof AuthenticatedMarketplaceRoute
+  '/marketplace': typeof AuthenticatedMarketplaceRouteWithChildren
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -458,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/marketplace/my-business': typeof AuthenticatedMarketplaceMyBusinessRoute
   '/my-startups/$id': typeof AuthenticatedMyStartupsIdRouteWithChildren
   '/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
@@ -468,6 +483,7 @@ export interface FileRoutesByFullPath {
   '/deals/': typeof AuthenticatedDealsIndexRoute
   '/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
   '/investors/': typeof AuthenticatedInvestorsIndexRoute
+  '/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
   '/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/startups/': typeof AuthenticatedStartupsIndexRoute
@@ -499,7 +515,6 @@ export interface FileRoutesByTo {
   '/entity-control': typeof AuthenticatedEntityControlRoute
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
-  '/marketplace': typeof AuthenticatedMarketplaceRoute
   '/my-page': typeof AuthenticatedMyPageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -514,6 +529,7 @@ export interface FileRoutesByTo {
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/marketplace/my-business': typeof AuthenticatedMarketplaceMyBusinessRoute
   '/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
@@ -522,6 +538,7 @@ export interface FileRoutesByTo {
   '/deals': typeof AuthenticatedDealsIndexRoute
   '/global-startups': typeof AuthenticatedGlobalStartupsIndexRoute
   '/investors': typeof AuthenticatedInvestorsIndexRoute
+  '/marketplace': typeof AuthenticatedMarketplaceIndexRoute
   '/my-startups': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals': typeof AuthenticatedSharedDealsIndexRoute
   '/startups': typeof AuthenticatedStartupsIndexRoute
@@ -558,7 +575,7 @@ export interface FileRoutesById {
   '/_authenticated/industry-map': typeof AuthenticatedIndustryMapRoute
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/_authenticated/investors': typeof AuthenticatedInvestorsRouteWithChildren
-  '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRoute
+  '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteWithChildren
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -577,6 +594,7 @@ export interface FileRoutesById {
   '/_authenticated/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/_authenticated/marketplace/my-business': typeof AuthenticatedMarketplaceMyBusinessRoute
   '/_authenticated/my-startups/$id': typeof AuthenticatedMyStartupsIdRouteWithChildren
   '/_authenticated/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
   '/_authenticated/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
@@ -587,6 +605,7 @@ export interface FileRoutesById {
   '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
   '/_authenticated/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
   '/_authenticated/investors/': typeof AuthenticatedInvestorsIndexRoute
+  '/_authenticated/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
   '/_authenticated/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/_authenticated/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/_authenticated/startups/': typeof AuthenticatedStartupsIndexRoute
@@ -642,6 +661,7 @@ export interface FileRouteTypes {
     | '/global-startups/browse'
     | '/investors/$id'
     | '/investors/new'
+    | '/marketplace/my-business'
     | '/my-startups/$id'
     | '/my-startups/new'
     | '/settings/default-intake'
@@ -652,6 +672,7 @@ export interface FileRouteTypes {
     | '/deals/'
     | '/global-startups/'
     | '/investors/'
+    | '/marketplace/'
     | '/my-startups/'
     | '/shared-deals/'
     | '/startups/'
@@ -683,7 +704,6 @@ export interface FileRouteTypes {
     | '/entity-control'
     | '/industry-map'
     | '/intake-queue'
-    | '/marketplace'
     | '/my-page'
     | '/notifications'
     | '/peer-comparables'
@@ -698,6 +718,7 @@ export interface FileRouteTypes {
     | '/global-startups/$id'
     | '/global-startups/browse'
     | '/investors/new'
+    | '/marketplace/my-business'
     | '/my-startups/new'
     | '/settings/default-intake'
     | '/shared-deals/$id'
@@ -706,6 +727,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/global-startups'
     | '/investors'
+    | '/marketplace'
     | '/my-startups'
     | '/shared-deals'
     | '/startups'
@@ -760,6 +782,7 @@ export interface FileRouteTypes {
     | '/_authenticated/global-startups/browse'
     | '/_authenticated/investors/$id'
     | '/_authenticated/investors/new'
+    | '/_authenticated/marketplace/my-business'
     | '/_authenticated/my-startups/$id'
     | '/_authenticated/my-startups/new'
     | '/_authenticated/settings/default-intake'
@@ -770,6 +793,7 @@ export interface FileRouteTypes {
     | '/_authenticated/deals/'
     | '/_authenticated/global-startups/'
     | '/_authenticated/investors/'
+    | '/_authenticated/marketplace/'
     | '/_authenticated/my-startups/'
     | '/_authenticated/shared-deals/'
     | '/_authenticated/startups/'
@@ -1017,6 +1041,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyStartupsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/marketplace/': {
+      id: '/_authenticated/marketplace/'
+      path: '/'
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof AuthenticatedMarketplaceIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
     '/_authenticated/investors/': {
       id: '/_authenticated/investors/'
       path: '/'
@@ -1086,6 +1117,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/my-startups/$id'
       preLoaderRoute: typeof AuthenticatedMyStartupsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/marketplace/my-business': {
+      id: '/_authenticated/marketplace/my-business'
+      path: '/my-business'
+      fullPath: '/marketplace/my-business'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMyBusinessRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
     }
     '/_authenticated/investors/new': {
       id: '/_authenticated/investors/new'
@@ -1315,6 +1353,23 @@ const AuthenticatedInvestorsRouteWithChildren =
     AuthenticatedInvestorsRouteChildren,
   )
 
+interface AuthenticatedMarketplaceRouteChildren {
+  AuthenticatedMarketplaceMyBusinessRoute: typeof AuthenticatedMarketplaceMyBusinessRoute
+  AuthenticatedMarketplaceIndexRoute: typeof AuthenticatedMarketplaceIndexRoute
+}
+
+const AuthenticatedMarketplaceRouteChildren: AuthenticatedMarketplaceRouteChildren =
+  {
+    AuthenticatedMarketplaceMyBusinessRoute:
+      AuthenticatedMarketplaceMyBusinessRoute,
+    AuthenticatedMarketplaceIndexRoute: AuthenticatedMarketplaceIndexRoute,
+  }
+
+const AuthenticatedMarketplaceRouteWithChildren =
+  AuthenticatedMarketplaceRoute._addFileChildren(
+    AuthenticatedMarketplaceRouteChildren,
+  )
+
 interface AuthenticatedSharedDealsRouteChildren {
   AuthenticatedSharedDealsIdRoute: typeof AuthenticatedSharedDealsIdRoute
   AuthenticatedSharedDealsIndexRoute: typeof AuthenticatedSharedDealsIndexRoute
@@ -1408,7 +1463,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndustryMapRoute: typeof AuthenticatedIndustryMapRoute
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
   AuthenticatedInvestorsRoute: typeof AuthenticatedInvestorsRouteWithChildren
-  AuthenticatedMarketplaceRoute: typeof AuthenticatedMarketplaceRoute
+  AuthenticatedMarketplaceRoute: typeof AuthenticatedMarketplaceRouteWithChildren
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPeerComparablesRoute: typeof AuthenticatedPeerComparablesRoute
@@ -1440,7 +1495,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndustryMapRoute: AuthenticatedIndustryMapRoute,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
   AuthenticatedInvestorsRoute: AuthenticatedInvestorsRouteWithChildren,
-  AuthenticatedMarketplaceRoute: AuthenticatedMarketplaceRoute,
+  AuthenticatedMarketplaceRoute: AuthenticatedMarketplaceRouteWithChildren,
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPeerComparablesRoute: AuthenticatedPeerComparablesRoute,
