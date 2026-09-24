@@ -1274,6 +1274,119 @@ export type Database = {
         }
         Relationships: []
       }
+      hidden_profiles: {
+        Row: {
+          asking_price: number | null
+          code_name: string
+          cover_art: string | null
+          created_at: string
+          created_by: string | null
+          customers_summary: string
+          deal_type: string | null
+          description: string
+          handover: string | null
+          has_unpublished_changes: boolean
+          headline: string
+          highlights: string[]
+          id: string
+          live: Json | null
+          nda_approver: string
+          ndas_approved: number
+          open_to: string[]
+          process: string | null
+          published_at: string | null
+          published_by: string | null
+          reason: string | null
+          ref_no: string
+          region: string | null
+          stake_pct: number | null
+          startup_id: string
+          status: string
+          structure: string | null
+          tenant_id: string
+          unpublished_at: string | null
+          updated_at: string
+          updated_by: string | null
+          views: number
+        }
+        Insert: {
+          asking_price?: number | null
+          code_name: string
+          cover_art?: string | null
+          created_at?: string
+          created_by?: string | null
+          customers_summary?: string
+          deal_type?: string | null
+          description?: string
+          handover?: string | null
+          has_unpublished_changes?: boolean
+          headline?: string
+          highlights?: string[]
+          id?: string
+          live?: Json | null
+          nda_approver?: string
+          ndas_approved?: number
+          open_to?: string[]
+          process?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          reason?: string | null
+          ref_no?: string
+          region?: string | null
+          stake_pct?: number | null
+          startup_id: string
+          status?: string
+          structure?: string | null
+          tenant_id: string
+          unpublished_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          views?: number
+        }
+        Update: {
+          asking_price?: number | null
+          code_name?: string
+          cover_art?: string | null
+          created_at?: string
+          created_by?: string | null
+          customers_summary?: string
+          deal_type?: string | null
+          description?: string
+          handover?: string | null
+          has_unpublished_changes?: boolean
+          headline?: string
+          highlights?: string[]
+          id?: string
+          live?: Json | null
+          nda_approver?: string
+          ndas_approved?: number
+          open_to?: string[]
+          process?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          reason?: string | null
+          ref_no?: string
+          region?: string | null
+          stake_pct?: number | null
+          startup_id?: string
+          status?: string
+          structure?: string | null
+          tenant_id?: string
+          unpublished_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hidden_profiles_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: true
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       income_statement_items: {
         Row: {
           amount: number | null
