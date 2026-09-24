@@ -72,7 +72,7 @@ export function MarketplaceAdminSwitch() {
   );
 }
 
-export function GlobalBar({ onMenu, showMenu }: { onMenu?: () => void; showMenu: boolean }) {
+export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; showMenu: boolean; onLogo?: () => void }) {
   const isMarket = useIsMarketplace();
   const { persona } = usePersona();
   const { roleLabel } = useUserIdentity();
@@ -89,7 +89,16 @@ export function GlobalBar({ onMenu, showMenu }: { onMenu?: () => void; showMenu:
           <Menu className="h-5 w-5" />
         </button>
       )}
-      <img src={logoWhite} alt="PitchSnack" className="hidden h-8 w-auto sm:block" />
+      <button
+        type="button"
+        onClick={onLogo ?? onMenu}
+        aria-label="Expand or collapse the menu"
+        data-keep-sidebar
+        title="Click the logo to expand or collapse the menu"
+        className="hidden shrink-0 bg-transparent p-0 sm:block"
+      >
+        <img src={logoWhite} alt="PitchSnack" className="h-8 w-auto" />
+      </button>
       <MarketplaceAdminSwitch />
       <div className="ml-auto flex items-center gap-2">
         <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>

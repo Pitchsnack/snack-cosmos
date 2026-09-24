@@ -541,7 +541,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
-    <GlobalBar showMenu={false} />
+    <GlobalBar showMenu={false} onLogo={toggle} />
     <div
       className="grid min-h-0 w-full flex-1 overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
       style={
