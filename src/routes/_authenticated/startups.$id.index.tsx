@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink, Mail, MapPin, Calendar, Pencil, Linkedin, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,6 +22,10 @@ import { StartupNotFound } from "@/components/startups/startup-not-found";
 
 export const Route = createFileRoute("/_authenticated/startups/$id/")({
   head: () => ({ meta: [{ title: "Startup — SnackPortal2" }] }),
+  // No separate entry page: a link to an entry opens its information box over the directory.
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/startups", search: { panel: params.id, tab: "full" } });
+  },
   component: StartupDetailPage,
 });
 
