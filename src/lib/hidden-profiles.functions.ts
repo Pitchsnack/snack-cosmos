@@ -58,6 +58,8 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ startupId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
+    const { data: existing } = await sb.from("hidden_profiles").select(COLS).eq("startup_id", data.startupId).maybeSingle();
+    if (existing) return existing as unknown as HiddenProfileRow;
     const facts = await loadFacts(sb, data.startupId);
     if (isStartupEntry(facts.company_type)) throw new Error("Startups can't be listed in the Marketplace yet");
     for (let i = 0; i < 6; i++) {
@@ -78,6 +80,10 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
         .select(COLS)
         .single();
       if (!error) return row as unknown as HiddenProfileRow;
+      if (/startup_id/.test(error.message)) {
+        const { data: again } = await sb.from("hidden_profiles").select(COLS).eq("startup_id", data.startupId).maybeSingle();
+        if (again) return again as unknown as HiddenProfileRow;
+      }
       if (!/code_name/.test(error.message)) throw new Error(error.message);
     }
     throw new Error("Couldn't find a free code name — try again");
