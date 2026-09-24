@@ -148,7 +148,7 @@ export function PersonaCard() {
               persona === p ? "bg-white text-[#141a2b]" : "text-[#a9b0c3] hover:text-white",
             )}
           >
-            {p === "buyer" ? "I'm Buyer" : p}
+            {p === "seller" ? "I'm Seller" : "I'm Buyer"}
           </button>
         ))}
       </div>
