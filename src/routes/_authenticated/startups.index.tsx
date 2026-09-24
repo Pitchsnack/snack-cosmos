@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Search, Rocket, RefreshCw, X, Star, ArrowLeft } from "lucide-react";
+import { Plus, Search, Rocket, RefreshCw, X, Star, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,12 @@ import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
 import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favorite-list-row";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
+import { EntryProfileTabs, type EntryTab } from "@/components/hidden-profile/entry-tabs";
+import { HiddenCard } from "@/components/hidden-profile/hidden-card";
+import { HiddenStatusChip } from "@/components/hidden-profile/bits";
+import { useHiddenProfiles, useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
+import { hiddenStatusOf, type HiddenStatus } from "@/lib/hidden-profile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { InvestorDetailPanel } from "@/components/investors/investor-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { usePersistentView } from "@/hooks/use-persistent-view";
@@ -24,12 +30,7 @@ import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
-import {
-  isPublicationPreview,
-  readPreviewPublication,
-  listPreviewPublishedRefs,
-  PREVIEW_DISCLAIMER,
-} from "@/lib/publication";
+import { isPublicationPreview, listPreviewPublishedRefs } from "@/lib/publication";
 import { usePreviewPublicationVersion } from "@/hooks/use-publication";
 import { cn } from "@/lib/utils";
 import { SECTORS, BUSINESS_MODELS, businessModelLabel } from "@/lib/sectors";
@@ -58,6 +59,10 @@ const searchSchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
 
   fav: z.coerce.boolean().optional(),
+  cards: z.enum(["full", "hidden"]).optional(),
+  hp: z.enum(["all", "live", "draft", "none"]).optional(),
+  tab: z.enum(["full", "hidden", "compare"]).optional(),
+  edit: z.coerce.boolean().optional(),
 });
 
 
@@ -92,13 +97,39 @@ function StartupsPageInner() {
   useEffect(() => {
     if (s.panel) setModalId(s.panel);
   }, [s.panel]);
+  const cardsMode = s.cards ?? "full";
+  const hpFilter = s.hp ?? "all";
+  const tab: EntryTab = s.tab ?? (cardsMode === "hidden" ? "hidden" : "full");
+  const editing = !!s.edit;
+  const isMobile = useIsMobile();
+  const openerRef = useRef<HTMLElement | null>(null);
+  const setTab = (t: EntryTab) => navigate({ search: (p: typeof s) => ({ ...p, tab: t }), replace: true });
+  const setEditing = (v: boolean) => navigate({ search: (p: typeof s) => ({ ...p, edit: v || undefined }), replace: true });
   const closeStartup = () => {
     setModalId(null);
-    if (s.panel) navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }), replace: true });
+    navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined, edit: undefined }), replace: true });
   };
-  const openStartup = (id: string) => {
+  const openStartup = (id: string, opts?: { tab?: EntryTab; edit?: boolean }) => {
+    openerRef.current = (typeof document !== "undefined" ? document.activeElement : null) as HTMLElement | null;
     setModalId(id);
-    navigate({ search: (prev: typeof s) => ({ ...prev, panel: id }), replace: true });
+    navigate({
+      search: (prev: typeof s) => ({
+        ...prev,
+        panel: id,
+        tab: opts?.tab ?? (cardsMode === "hidden" ? "hidden" : "full"),
+        edit: opts?.edit || undefined,
+      }),
+      replace: true,
+    });
+  };
+  const { byStartup } = useHiddenProfiles();
+  const hpActions = useHiddenProfileActions();
+  const createHidden = async (id: string, inSplit: boolean) => {
+    if (!byStartup.get(id)) {
+      try { await hpActions.create.mutateAsync({ startupId: id }); } catch { return; }
+    }
+    if (inSplit && !isMobile) navigate({ search: (p: typeof s) => ({ ...p, selected: id, tab: "hidden", edit: true }) });
+    else openStartup(id, { tab: "hidden", edit: true });
   };
 
   const { ids: favIds } = useFavoriteStartups();
@@ -108,7 +139,6 @@ function StartupsPageInner() {
 
   // Preview-only, opt-in simulation. Never authoritative for the real directory:
   // it is off by default, available only in preview mode, and never persists.
-  const [previewDirectoryFilter, setPreviewDirectoryFilter] = useState(false);
   const previewVersion = usePreviewPublicationVersion();
   // Session-scoped preview publications are the ONLY way a Private founder-owned
   // startup may enter this list, and only in explicitly labelled preview mode.
@@ -129,13 +159,26 @@ function StartupsPageInner() {
   });
 
   const rawItems = data && "items" in data ? data.items : [];
+  const statusOf = (it: (typeof rawItems)[number]): HiddenStatus => hiddenStatusOf(byStartup.get(it.id), it.company_type);
+  const hpCounts = useMemo(() => {
+    const c = { all: rawItems.length, live: 0, draft: 0, none: 0 };
+    for (const it of rawItems) {
+      const st = hiddenStatusOf(byStartup.get(it.id), it.company_type);
+      if (st === "live" || st === "live_edited") c.live++;
+      else if (st === "draft") c.draft++;
+      else c.none++;
+    }
+    return c;
+  }, [rawItems, byStartup]);
   const baseItems = useMemo(() => {
-    if (!isPublicationPreview || !previewDirectoryFilter) return rawItems;
-    void previewVersion; // re-evaluate when session preview state changes
-    return rawItems.filter(
-      (it) => readPreviewPublication(it.id).status === "published",
-    );
-  }, [rawItems, previewDirectoryFilter, previewVersion]);
+    if (hpFilter === "all") return rawItems;
+    return rawItems.filter((it) => {
+      const st = hiddenStatusOf(byStartup.get(it.id), it.company_type);
+      if (hpFilter === "live") return st === "live" || st === "live_edited";
+      if (hpFilter === "draft") return st === "draft";
+      return st === "none" || st === "na";
+    });
+  }, [rawItems, hpFilter, byStartup]);
   const { mask } = useRestrictionMask("startups");
   const items = useMemo(
     () =>
@@ -255,27 +298,44 @@ function StartupsPageInner() {
         </Button>
       </div>
 
-      {isPublicationPreview && (
-        <div
-          role="status"
-          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground"
-        >
-          <span>
-            <strong className="text-amber-700 dark:text-amber-400">Preview mode</strong> —{" "}
-            {PREVIEW_DISCLAIMER} It does not change what the real Startup Directory shows for
-            anyone.
-          </span>
-          <label className="inline-flex cursor-pointer items-center gap-2">
-            <input
-              type="checkbox"
-              checked={previewDirectoryFilter}
-              onChange={(e) => setPreviewDirectoryFilter(e.target.checked)}
-              className="h-3.5 w-3.5 cursor-pointer accent-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            Show only preview-published startups
-          </label>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-1 rounded-md bg-muted/60 p-1 text-xs">
+          <span className="px-2 text-muted-foreground">Hidden profile:</span>
+          {(["all", "live", "draft", "none"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              aria-pressed={hpFilter === k}
+              onClick={() => navigate({ search: (p: typeof s) => ({ ...p, hp: k === "all" ? undefined : k, page: 1 }) })}
+              className={cn("rounded px-2 py-1 font-medium", hpFilter === k ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+            >
+              {k === "all" ? "All" : k === "live" ? "Live" : k === "draft" ? "Drafts" : "None"} <span className="opacity-60">{hpCounts[k]}</span>
+            </button>
+          ))}
         </div>
-      )}
+        <span className="text-xs text-muted-foreground">
+          {cardsMode === "hidden" && view !== "list"
+            ? "What buyers see in SME Takeover. Only Admin sees the Full profile row."
+            : "Live hidden profiles are what buyers see in SME Takeover before the NDA."}
+        </span>
+        {view !== "list" && (
+          <div className="ml-auto inline-flex items-center gap-1 rounded-md bg-muted/60 p-1 text-xs">
+            <span className="px-2 text-muted-foreground">Cards:</span>
+            {(["full", "hidden"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={cardsMode === k}
+                onClick={() => navigate({ search: (p: typeof s) => ({ ...p, cards: k === "full" ? undefined : k, tab: k === "hidden" ? "hidden" : "full", edit: undefined }) })}
+                className={cn("inline-flex items-center gap-1 rounded px-2 py-1 font-medium", cardsMode === k ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+              >
+                {k === "full" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                {k === "full" ? "Full" : "Hidden"}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
 
 
@@ -308,22 +368,47 @@ function StartupsPageInner() {
               : "sm:grid-cols-2 lg:grid-cols-3",
           )}
         >
-          {items.map((it) => (
-            <StartupCard key={it.id} s={it} onClick={() => openStartup(it.id)} compact={favOnly} />
-          ))}
+          {items.map((it) =>
+            cardsMode === "hidden" ? (
+              <HiddenCard
+                key={it.id}
+                s={it}
+                row={byStartup.get(it.id)}
+                variant="grid"
+                onOpen={() => openStartup(it.id, { tab: "hidden" })}
+                onProfiles={() => openStartup(it.id, { tab: "hidden" })}
+                onCreate={() => void createHidden(it.id, false)}
+              />
+            ) : (
+              <div key={it.id} className="space-y-1.5">
+                <StartupCard s={it} onClick={() => openStartup(it.id, { tab: "full" })} compact={favOnly} />
+                <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+                  <span className="shrink-0">Hidden profile:</span>
+                  <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
+                  <button type="button" onClick={() => openStartup(it.id, { tab: "full" })} className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 font-medium text-foreground hover:bg-muted">Profiles</button>
+                </div>
+              </div>
+            ),
+          )}
         </div>
       ) : view === "list" ? (
         favOnly ? (
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
             <FavoriteListHeader />
             {items.map((it) => (
-              <FavoriteListRow key={it.id} s={it} onSelect={() => openStartup(it.id)} />
+              <FavoriteListRow key={it.id} s={it} onSelect={() => openStartup(it.id, { tab: "full" })} />
             ))}
           </div>
         ) : (
           <div className="space-y-2">
             {items.map((it) => (
-              <StartupRow key={it.id} s={it} onSelect={() => openStartup(it.id)} />
+              <div key={it.id} className="flex items-center gap-3">
+                <div className="min-w-0 flex-1"><StartupRow s={it} onSelect={() => openStartup(it.id, { tab: "full" })} /></div>
+                <div className="w-44 shrink-0">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Hidden profile</div>
+                  <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
+                </div>
+              </div>
             ))}
           </div>
         )
@@ -348,19 +433,37 @@ function StartupsPageInner() {
                     }
                   />
                 ))
-              : items.map((it) => (
-                  <StartupListItem
-                    key={it.id}
-                    s={it}
-                    selected={selected === it.id}
-                    onSelect={() =>
-                      navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })
-                    }
-                  />
-                ))}
+              : items.map((it) => {
+                  const pick = () =>
+                    isMobile
+                      ? openStartup(it.id)
+                      : navigate({ search: (p: typeof s) => ({ ...p, selected: it.id, edit: undefined }) });
+                  return cardsMode === "hidden" ? (
+                    <HiddenCard
+                      key={it.id}
+                      s={it}
+                      row={byStartup.get(it.id)}
+                      variant="split"
+                      selected={selected === it.id}
+                      onOpen={pick}
+                      onCreate={() => void createHidden(it.id, true)}
+                    />
+                  ) : (
+                    <div key={it.id}>
+                      <StartupListItem s={it} selected={selected === it.id} onSelect={pick} />
+                      <div className="flex items-center gap-2 px-2 pt-1 text-[11px] text-muted-foreground">
+                        Hidden profile: <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
+                      </div>
+                    </div>
+                  );
+                })}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
-            {selected ? <StartupDetailPanel id={selected} /> : <StartupDetailEmpty />}
+            {selected ? (
+              <EntryProfileTabs id={selected} tab={tab} onTabChange={setTab} editing={editing} onEditingChange={setEditing} />
+            ) : (
+              <StartupDetailEmpty />
+            )}
           </div>
         </div>
       )}
@@ -375,17 +478,27 @@ function StartupsPageInner() {
 
       <Dialog open={!!modalId} onOpenChange={(o) => !o && closeStartup()}>
         <DialogContent
+          onCloseAutoFocus={(e) => {
+            if (openerRef.current) {
+              e.preventDefault();
+              openerRef.current.focus();
+            }
+          }}
           className={cn(
             "[&>button]:hidden",
             "p-0 gap-0 flex flex-col overflow-hidden",
-            "sm:max-w-2xl sm:max-h-[85vh] sm:rounded-2xl",
-            "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
+            "sm:max-w-[820px] sm:max-h-[88vh] sm:rounded-2xl",
+            "max-sm:inset-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none",
           )}
         >
           <StartupPanelModalBody
             modalId={modalId}
             onClose={closeStartup}
             returnSearch={{ ...s, panel: undefined }}
+            tab={tab}
+            onTabChange={setTab}
+            editing={editing}
+            onEditingChange={setEditing}
           />
         </DialogContent>
       </Dialog>
@@ -398,10 +511,18 @@ function StartupPanelModalBody({
   modalId,
   onClose,
   returnSearch,
+  tab,
+  onTabChange,
+  editing,
+  onEditingChange,
 }: {
   modalId: string | null;
   onClose: () => void;
   returnSearch: Omit<z.infer<typeof searchSchema>, "panel"> & { panel?: undefined };
+  tab: EntryTab;
+  onTabChange: (t: EntryTab) => void;
+  editing: boolean;
+  onEditingChange: (v: boolean) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -475,7 +596,11 @@ function StartupPanelModalBody({
           )
         ) : (
           modalId && (
-            <StartupDetailPanel
+            <EntryProfileTabs
+              tab={tab}
+              onTabChange={onTabChange}
+              editing={editing}
+              onEditingChange={onEditingChange}
               id={modalId}
               showEdit={false}
               compact

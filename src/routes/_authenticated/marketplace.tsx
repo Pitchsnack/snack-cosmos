@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listMarketplaceTeasers } from "@/lib/hidden-profiles.functions";
+import { useHasSession } from "@/hooks/use-has-session";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Store } from "lucide-react";
 import { usePersona, lastAdminPath } from "@/hooks/use-marketplace";
@@ -31,8 +35,31 @@ const COPY = {
   seller: "Sell your business to verified buyers — list it, share it under NDA, and follow every offer.",
 };
 
-// Real listings only — none exist yet, so the directory starts empty.
-const LISTINGS: Record<"sme" | "funds", MarketplaceListing[]> = { sme: [], funds: [] };
+// Buyers read ONLY live hidden profiles (the published copy + computed ranges).
+function useTeasers(): Record<"sme" | "funds", MarketplaceListing[]> {
+  const fn = useServerFn(listMarketplaceTeasers);
+  const enabled = useHasSession();
+  const { data } = useQuery({ queryKey: ["marketplace-teasers"], queryFn: () => fn(), enabled });
+  const sme = (data ?? []).map((t): MarketplaceListing => ({
+    id: t.id,
+    kind: "sme",
+    ref: t.ref,
+    codeName: t.codeName,
+    region: t.region,
+    headline: t.headline,
+    tags: [t.industry, t.dealType].filter(Boolean) as string[],
+    rows: [
+      { label: "Revenue", value: t.revenueRange ?? "—" },
+      { label: "Asking", value: t.askingPrice == null ? "On request" : `฿${t.askingPrice}M` },
+      { label: "Stake", value: t.stakePct != null ? `${t.stakePct}%` : "—" },
+    ],
+    mandateFit: 0,
+    listedAt: t.publishedAt ? new Date(t.publishedAt).toLocaleDateString() : "",
+    nda: "locked",
+    isNew: !!t.publishedAt && Date.now() - new Date(t.publishedAt).getTime() < 3 * 86400_000,
+  }));
+  return { sme, funds: [] };
+}
 
 function MarketplacePage() {
   const { persona, setPersona } = usePersona();
@@ -42,6 +69,7 @@ function MarketplacePage() {
   const [tab, setTab] = useState<"sme" | "funds">("sme");
   const { view, persist } = usePersistentView("ps-marketplace-view", undefined);
   const [selected, setSelected] = useState<string | null>(null);
+  const LISTINGS = useTeasers();
   const items = LISTINGS[tab];
 
   return (

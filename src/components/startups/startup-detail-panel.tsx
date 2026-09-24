@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -338,8 +338,17 @@ export function StartupDetailPanel({
   myStartupsReturnSearch,
   returnSearch,
   onSelectInvestor,
+  belowHeader,
+  replaceBody,
+  extraMenuItems,
 }: {
   id: string;
+  /** Rendered right under the header (profile tabs). */
+  belowHeader?: ReactNode;
+  /** When set, replaces the live panel body (Hidden profile / Compare / editor). */
+  replaceBody?: ReactNode;
+  /** Extra ⋮ menu items, shown after Edit. */
+  extraMenuItems?: ReactNode;
   showEdit?: boolean;
   compact?: boolean;
   /** My Startups surfaces only: shows Publish / Unpublish to Startup Directory. */
@@ -565,6 +574,7 @@ export function StartupDetailPanel({
                       <Pencil className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
                   )}
+                  {extraMenuItems}
                   {isMyWorkspace && (
                     <DropdownMenuItem asChild>
                       <Link to="/my-startups/$id/acquisition" params={{ id }} onClick={() => onClose?.()}>
@@ -602,7 +612,9 @@ export function StartupDetailPanel({
         </div>
       </header>
 
-      {showPublication && (
+      {belowHeader}
+
+      {showPublication && !replaceBody && (
         <PublicationActions
           startup={s as unknown as Parameters<typeof PublicationActions>[0]["startup"]}
           canPublish={canManage}
@@ -610,7 +622,7 @@ export function StartupDetailPanel({
       )}
 
       {/* Steps 2 & 4 — relationship state (Connect → Requested → Share) */}
-      {!isMyWorkspace && (
+      {!isMyWorkspace && !replaceBody && (
         <ConnectionStateCard
           startupRef={id}
           counterpartName={counterpartName}
@@ -679,7 +691,7 @@ export function StartupDetailPanel({
         </AlertDialogContent>
       </AlertDialog>
 
-      {!isMyWorkspace && connectionState === "requested" ? null : (
+      {replaceBody ? replaceBody : !isMyWorkspace && connectionState === "requested" ? null : (
         <>
       {/* Media */}
       {mediaSlots.length > 0 && (
