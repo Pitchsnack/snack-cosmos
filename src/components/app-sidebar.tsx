@@ -40,7 +40,8 @@ import { useEffectivePermissions } from "@/hooks/use-effective-permissions";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import logoWhite from "@/assets/pitchsnack-white.png";
-import hatWhiteIcon from "@/assets/pitchsnack-hat-white-icon.png";
+import { useIsMarketplace, rememberAdminPath } from "@/hooks/use-marketplace";
+import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marketplace/marketplace-frame";
 
 type NavPath =
   | "/"
@@ -261,6 +262,7 @@ function SidebarBody({
   onNavigate?: () => void;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMarket = useIsMarketplace();
   const showLabels = !collapsed || isMobile;
   const { has, isControl, isResolved, roles } = useEffectivePermissions();
   const { data: sessionData } = useSessionContext();
@@ -298,48 +300,7 @@ function SidebarBody({
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="relative flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-        {showLabels ? (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label="Toggle sidebar"
-            title="Click the logo to expand or collapse the sidebar"
-            className="flex items-center bg-transparent p-0"
-          >
-            <img src={logoWhite} alt="PitchSnack" className="h-9 w-auto" />
-          </button>
-        ) : null}
-        {!isMobile && (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-expanded={!collapsed}
-            aria-controls="app-sidebar-nav"
-            className={cn(
-              "relative flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
-              collapsed && "mx-auto",
-            )}
-          >
-            <img
-              src={hatWhiteIcon}
-              alt=""
-              aria-hidden="true"
-              className={cn(
-                "absolute h-5 w-5 select-none transition-opacity duration-100",
-                collapsed ? "opacity-80" : "opacity-0",
-              )}
-            />
-            <ChevronLeft
-              className={cn(
-                "absolute h-4 w-4 transition-opacity duration-100",
-                collapsed ? "opacity-0" : "opacity-100",
-              )}
-            />
-          </button>
-        )}
-      </div>
+      {isMarket && <PersonaCard />}
 
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {(() => {
@@ -406,6 +367,10 @@ function SidebarBody({
             );
           };
 
+          if (isMarket) {
+            return showLabels ? <MarketplaceEmptyMenu /> : null;
+          }
+
           if (!useControlGroups) {
             return <div className="space-y-1">{visibleItems.map((it, i) => renderItem(it, i))}</div>;
           }
@@ -451,7 +416,7 @@ type SidebarIntent = "auto" | "open" | "closed";
 const INTENT_KEY = "sp2.sidebarIntent";
 
 export function AppSidebar({ children }: { children: React.ReactNode }) {
-  const isMobile = useMediaQuery("(max-width: 767px)");
+  const isMobile = useMediaQuery("(max-width: 960px)");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdminRoute =
     pathname.startsWith("/access-management") ||
@@ -507,6 +472,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setAutoCollapsed(false);
     setMobileOpen(false);
+    if (!pathname.startsWith("/marketplace")) rememberAdminPath(pathname);
   }, [pathname]);
 
   // Single capture-phase click listener for auto-collapse.
@@ -535,28 +501,26 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   if (isMobile) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
-        <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 text-sidebar-foreground">
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger
-              className="rounded-md p-1.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5" />
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="w-64 border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-            >
-              <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <div className="relative h-full">
+        <GlobalBar showMenu onMenu={() => setMobileOpen(true)} />
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent
+            side="left"
+            className="w-72 border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          >
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <div className="flex h-full flex-col">
+              <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
+                <img src={logoWhite} alt="PitchSnack" className="h-8 w-auto" />
                 <button
                   type="button"
                   aria-label="Close menu"
                   onClick={() => setMobileOpen(false)}
-                  className="absolute right-3 top-4 z-10 rounded-md p-1.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+                  className="rounded-md p-1.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
                 >
                   <X className="h-4 w-4" />
                 </button>
+              </div>
+              <div className="min-h-0 flex-1">
                 <SidebarBody
                   collapsed={false}
                   onToggle={() => setMobileOpen(false)}
@@ -564,10 +528,9 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
                   onNavigate={() => setMobileOpen(false)}
                 />
               </div>
-            </SheetContent>
-          </Sheet>
-          <img src={logoWhite} alt="PitchSnack" className="h-7 w-auto" />
-        </header>
+            </div>
+          </SheetContent>
+        </Sheet>
         <main className="flex-1 overflow-y-auto p-4">
           <RouteBreadcrumbs className="mb-3" />
           {children}
@@ -577,8 +540,10 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <div className="flex h-screen w-full flex-col overflow-hidden">
+    <GlobalBar showMenu={false} />
     <div
-      className="grid h-screen w-full overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
+      className="grid min-h-0 w-full flex-1 overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
       style={
         {
           gridTemplateColumns: "var(--sidebar-width) 1fr",
@@ -592,7 +557,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         data-app-sidebar
         aria-label="Primary"
         className={cn(
-          "h-screen overflow-hidden border-r border-sidebar-border bg-sidebar shadow-lg",
+          "h-full overflow-hidden border-r border-sidebar-border bg-sidebar shadow-lg",
           "transition-[width] duration-300 motion-reduce:transition-none",
           effectiveCollapsed ? "w-16" : "w-64",
         )}
@@ -600,13 +565,14 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         <SidebarBody collapsed={effectiveCollapsed} onToggle={toggle} />
       </aside>
 
-      <main className="h-screen min-w-0 overflow-y-auto overflow-x-hidden">
+      <main className="h-full min-w-0 overflow-y-auto overflow-x-hidden">
         <div className="mx-auto max-w-7xl px-8 py-10">
           <WorkspaceHeader />
           <RouteBreadcrumbs className="sticky top-14 z-10 -mx-8 mb-4 border-b border-border/60 bg-background/95 px-8 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70" />
           {children}
         </div>
       </main>
+    </div>
     </div>
   );
 }

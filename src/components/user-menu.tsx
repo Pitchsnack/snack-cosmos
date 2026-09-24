@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ROLE_LABELS } from "@/lib/permissions";
+import { useIsMarketplace, usePersona } from "@/hooks/use-marketplace";
 
 export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const navigate = useNavigate();
@@ -28,7 +29,10 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
     (u?.firstName?.[0] ?? "") + (u?.lastName?.[0] ?? "") ||
     (u?.email?.[0]?.toUpperCase() ?? "?");
   const name = [u?.firstName, u?.lastName].filter(Boolean).join(" ") || u?.email || "Signed in";
-  const roleLabel = data?.roles[0] ? ROLE_LABELS[data.roles[0]] : "—";
+  const isMarket = useIsMarketplace();
+  const { persona } = usePersona();
+  const baseRole = data?.roles[0] ? ROLE_LABELS[data.roles[0]] : "—";
+  const roleLabel = isMarket ? (persona === "buyer" ? "Buyer" : "Seller") : baseRole;
 
   async function signOut() {
     try { await onLogout(); } catch { /* best effort */ }
