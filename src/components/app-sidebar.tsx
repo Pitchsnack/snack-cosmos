@@ -22,7 +22,6 @@ import {
   Globe,
   Inbox,
   Network,
-  UserCircle,
   Contact as ContactIcon,
   Database,
   Layers,
@@ -85,7 +84,6 @@ type NavItem = {
 // whose effective role set includes STARTUP_USER.
 const STARTUP_MENU_ORDER = [
   "Dashboard",
-  "My Profile",
   "Startup Activity",
   "Startups Directory",
   "Industry Map",
@@ -104,7 +102,6 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
     title: "User Workflow",
     labels: [
       "Dashboard",
-      "My Profile",
       "My Connections",
       "Contacts",
       "Deals",
@@ -230,7 +227,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
   { label: "Startup Activity", icon: BarChart3, path: "/startup-activity", exact: false },
-  { label: "My Profile", icon: UserCircle, path: "/my-page", exact: false },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
@@ -415,6 +411,7 @@ const INTENT_KEY = "sp2.sidebarIntent";
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const isMobile = useMediaQuery("(max-width: 960px)");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMarket = useIsMarketplace();
   const isAdminRoute =
     pathname.startsWith("/access-management") ||
     pathname.startsWith("/audit") ||
@@ -469,10 +466,10 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setAutoCollapsed(false);
     setMobileOpen(false);
-    if (!pathname.startsWith("/marketplace") && !pathname.startsWith("/my-startups")) {
+    if (!isMarket) {
       rememberAdminPath(pathname);
     }
-  }, [pathname]);
+  }, [isMarket, pathname]);
 
   // Single capture-phase click listener for auto-collapse.
   useEffect(() => {
