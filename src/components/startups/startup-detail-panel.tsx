@@ -693,8 +693,11 @@ export function StartupDetailPanel({
                   if (!n) throw new Error("You don't have permission to delete this startup.");
                   toast.success("Startup deleted.");
                   setConfirm(null);
-                  qc.invalidateQueries();
                   onClose?.();
+                  // Drop cached data for the deleted startup so nothing refetches it.
+                  const hasId = (k: readonly unknown[]) => JSON.stringify(k).includes(id);
+                  qc.removeQueries({ predicate: (q) => hasId(q.queryKey) });
+                  qc.invalidateQueries({ predicate: (q) => !hasId(q.queryKey) });
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Delete failed.");
                 }
