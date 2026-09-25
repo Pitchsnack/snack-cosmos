@@ -281,26 +281,29 @@ function HiddenPanel({ s, editing, setEditing }: { s: StartupListItem; editing: 
 
 /* --------------------------------- Layout --------------------------------- */
 
-export function MyBusinessProfiles({ items }: { items: StartupListItem[] }) {
+export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem[] }) {
   const isMobile = useIsMobile();
+  const [gone, setGone] = useState<string[]>([]);
+  const items = allItems.filter((i) => !gone.includes(i.id));
   const [sel, setSel] = useState<Sel | null>(null);
   const [editing, setEditing] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!items.length) return;
+    if (!items.length) { if (sel) setSel(null); return; }
     if (!sel || !items.some((i) => i.id === sel.id)) setSel({ id: items[0].id, kind: "hidden" });
   }, [items, sel]);
 
   const current = items.find((i) => i.id === sel?.id) ?? null;
   const select = (k: Sel) => { setSel(k); setEditing(false); setMobileOpen(true); };
+  const closeDeleted = (id: string) => { setGone((g) => [...g, id]); setSel(null); setEditing(false); setMobileOpen(false); };
 
   const right = current && sel ? (
     <div className="min-w-0 space-y-4">
       <CompletenessStrip s={current} onHidden={() => { setSel({ id: current.id, kind: "hidden" }); setEditing(true); }} />
       <div className="rounded-[14px] border border-border bg-card p-6 shadow-sm">
         {sel.kind === "full" ? (
-          <StartupDetailPanel key={current.id} id={current.id} showPublication workspace="my-startups" />
+          <StartupDetailPanel key={current.id} id={current.id} showPublication workspace="my-startups" onClose={() => closeDeleted(current.id)} />
         ) : (
           <HiddenPanel key={current.id} s={current} editing={editing} setEditing={setEditing} />
         )}
