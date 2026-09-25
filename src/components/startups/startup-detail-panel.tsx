@@ -79,6 +79,7 @@ import { CompanyEntityPill } from "@/components/relationships/company-entity-pil
 import { StartupInfoBody } from "@/components/startups/startup-info-body";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
+import { useDeleteControlRecords } from "@/hooks/use-entity-control";
 
 
 
@@ -399,6 +400,8 @@ export function StartupDetailPanel({
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
+  const deleteStartup = useDeleteControlRecords();
+  const qc = useQueryClient();
   const [shareOpen, setShareOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
 
@@ -679,13 +682,25 @@ export function StartupDetailPanel({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteStartup.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              disabled
+              disabled={deleteStartup.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              title="Backend integration pending"
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  const n = await deleteStartup.mutateAsync({ entity: "startup", ids: [id] });
+                  if (!n) throw new Error("You don't have permission to delete this startup.");
+                  toast.success("Startup deleted.");
+                  setConfirm(null);
+                  qc.invalidateQueries();
+                  onClose?.();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Delete failed.");
+                }
+              }}
             >
-              Delete
+              {deleteStartup.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
