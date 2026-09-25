@@ -15,6 +15,20 @@ export interface SessionContextDTO {
     lastName: string | null;
     status: string;
     userType: string;
+    title: string | null;
+    organisation: string | null;
+    bio: string | null;
+    city: string | null;
+    country: string | null;
+    website: string | null;
+    linkedin: string | null;
+    phone: string | null;
+    industryFocus: string | null;
+    functionalExpertise: string | null;
+    buyerType: string | null;
+    experience: string | null;
+    verified: boolean;
+    plan: string | null;
   } | null;
   roles: AppRole[];
   tenants: Array<{
