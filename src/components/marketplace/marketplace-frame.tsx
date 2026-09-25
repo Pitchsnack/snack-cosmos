@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -125,10 +125,7 @@ export function PersonaCard() {
   const { persona, setPersona } = usePersona();
   const { data } = useSessionContext();
   const { name, initials } = useUserIdentity();
-  const u = data?.user as (NonNullable<typeof data>["user"] & {
-    title?: string | null; organisation?: string | null; city?: string | null;
-    country?: string | null; verified?: boolean; buyerType?: string | null;
-  }) | null | undefined;
+  const u = data?.user;
   const workspace = data?.activeWorkspace?.tenantName ?? data?.tenants?.[0]?.tenantName ?? null;
   const org = u?.organisation ?? workspace;
   const subtitle = [u?.title, org].filter(Boolean).join(" · ");
@@ -165,9 +162,16 @@ export function PersonaCard() {
             )}
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[17px] font-bold leading-tight tracking-[-0.01em]">{name}</div>
+            <div className="flex min-w-0 items-center gap-1 text-[17px] font-bold leading-tight tracking-[-0.01em]">
+              <span className="truncate">{name}</span>
+              {u?.plan && (
+                <span title={`${u.plan} plan`} className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-[#EDE4FF] text-[#6D28D9]">
+                  <Crown className="h-[9px] w-[9px]" />
+                </span>
+              )}
+            </div>
             {subtitle && (
-              <div className={cn("mt-0.5 text-[13px] leading-snug", dark ? "text-[#a1a6b3]" : "text-[#6b7280]")}>{subtitle}</div>
+              <div className={cn("mt-0.5 truncate text-[13px] leading-snug", dark ? "text-[#a1a6b3]" : "text-[#6b7280]")}>{subtitle}</div>
             )}
           </div>
         </div>
