@@ -4,6 +4,7 @@ import { ChevronRight, Home } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
+import { useIsMarketplace, usePersona } from "@/hooks/use-marketplace";
 
 /**
  * Maps route path templates to human-readable breadcrumb labels.
@@ -73,6 +74,8 @@ function resolveLabel(pathTemplate: string) {
 
 export function RouteBreadcrumbs({ className }: { className?: string }) {
   const matches = useRouterState({ select: (s) => s.matches as AnyRouteMatch[] });
+  const isMarketplace = useIsMarketplace();
+  const { persona } = usePersona();
   // Active workspace comes from the approved session/workspace context only —
   // never inferred from the current route or page content.
   const { data: session } = useSessionContext();
@@ -81,6 +84,14 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
     session?.activeWorkspace.tenantName ?? (isControl ? "Control" : null);
 
   const items = useMemo(() => {
+    if (isMarketplace) {
+      return [{
+        label: persona === "seller" ? "Seller" : "Buyer",
+        to: "/marketplace",
+        params: {} as Record<string, string>,
+      }];
+    }
+
     // Deduplicate by path template, keeping the deepest (leaf) match for each
     // template so layout routes and their index leaves do not produce
     // duplicate crumbs. The leaf is always the last match in the array.
@@ -101,14 +112,14 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
           params: (m.params ?? {}) as Record<string, string>,
         };
       });
-  }, [matches]);
+  }, [isMarketplace, matches, persona]);
 
   if (items.length === 0) return null;
 
   const firstPathTemplate = items[0]?.to;
   const isHomeRoute =
     firstPathTemplate === HOME_ROUTE || firstPathTemplate === "/";
-  const showHome = !isHomeRoute;
+  const showHome = !isMarketplace && !isHomeRoute;
 
   return (
     <nav aria-label="Breadcrumb" className={cn("text-sm", className)}>
