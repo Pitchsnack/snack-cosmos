@@ -3026,6 +3026,68 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          bio: string | null
+          buyer_type: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          experience: string | null
+          functional_expertise: string | null
+          industry_focus: string | null
+          linkedin: string | null
+          organisation: string | null
+          phone: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          bio?: string | null
+          buyer_type?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          experience?: string | null
+          functional_expertise?: string | null
+          industry_focus?: string | null
+          linkedin?: string | null
+          organisation?: string | null
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          bio?: string | null
+          buyer_type?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          experience?: string | null
+          functional_expertise?: string | null
+          industry_focus?: string | null
+          linkedin?: string | null
+          organisation?: string | null
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -3139,6 +3201,32 @@ export type Database = {
             foreignKeyName: "user_tenants_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_verifications: {
+        Row: {
+          user_id: string
+          verified_at: string
+          verified_by: string | null
+        }
+        Insert: {
+          user_id: string
+          verified_at?: string
+          verified_by?: string | null
+        }
+        Update: {
+          user_id?: string
+          verified_at?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
