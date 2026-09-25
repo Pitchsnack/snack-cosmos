@@ -1,0 +1,1 @@
+ALTER TABLE public.startup_ownership ADD COLUMN IF NOT EXISTS seller_relation text CHECK (seller_relation IN ('owner','family_owner','agent'));
