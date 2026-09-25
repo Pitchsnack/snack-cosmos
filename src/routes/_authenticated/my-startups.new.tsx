@@ -1,33 +1,58 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { StartupForm } from "@/components/startups/startup-form";
+import { SellerWizard } from "@/components/startups/seller-wizard";
 import { PermissionGuard } from "@/components/permission-guard";
+import { useSessionContext } from "@/hooks/use-session-context";
+import {
+  clearDraft, draftToPrefill, emptyDraft, loadDraft, type SellerDraft, type SellerPrefill,
+} from "@/lib/seller-wizard";
 
 export const Route = createFileRoute("/_authenticated/my-startups/new")({
   head: () => ({
     meta: [
-      { title: "Add My Startup — SnackPortal2" },
-      { name: "description", content: "Create a new startup profile in My Startups." },
+      { title: "Add My Business — PitchSnack" },
+      { name: "description", content: "Answer a few questions to create your business profile." },
     ],
   }),
   component: NewMyStartupPage,
 });
 
 function NewMyStartupPage() {
+  const navigate = useNavigate();
+  const { data } = useSessionContext();
+  const userId = data?.user?.id as string | undefined;
+  const [initial, setInitial] = useState<SellerDraft | null>(null);
+  const [prefill, setPrefill] = useState<SellerPrefill | null>(null);
+
+  useEffect(() => {
+    if (userId && !initial) setInitial(loadDraft(userId) ?? emptyDraft());
+  }, [userId, initial]);
+
   return (
     <PermissionGuard permission="startups.write" message="You don't have permission to create startups.">
-      <div className="mx-auto max-w-4xl space-y-6">
-        <Link to="/my-startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to My Startups
-        </Link>
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Add my business</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create your startup profile. Complete company details, media, founders, and investors.
-          </p>
+      {prefill ? (
+        <div className="mx-auto max-w-4xl space-y-6">
+          <Link to="/my-startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back to My Business
+          </Link>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Add my business</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              We've filled in your answers. Review, complete and save your business profile.
+            </p>
+          </div>
+          <StartupForm redirectAfterCreate="my-startups" prefill={prefill} onCreated={() => userId && clearDraft(userId)} />
         </div>
-        <StartupForm redirectAfterCreate="my-startups" />
-      </div>
+      ) : userId && initial ? (
+        <SellerWizard
+          userId={userId}
+          initial={initial}
+          onExit={() => navigate({ to: "/my-startups" })}
+          onFinish={(d) => setPrefill(draftToPrefill(d))}
+        />
+      ) : null}
     </PermissionGuard>
   );
 }

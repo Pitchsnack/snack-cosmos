@@ -143,6 +143,8 @@ function Pill({
 interface Props {
   /** Answers from the seller onboarding wizard — pre-fill the create form and start at Auto Enrich. */
   prefill?: SellerPrefill;
+  /** Called after a successful create. */
+  onCreated?: (id: string) => void;
   /** When provided, the form is in edit mode. */
   startup?: StartupDetail;
   /** Where to navigate after a successful create. Defaults to the new startup's detail page. */
@@ -214,6 +216,7 @@ function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
 export function StartupForm({
   startup,
   prefill,
+  onCreated,
   redirectAfterCreate = "detail",
   workspace = "startups",
   myStartupsReturnSearch,
@@ -576,6 +579,7 @@ export function StartupForm({
       // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
       void investorStartupLinksAdapter.saveStartupInvestorRelationships(res.id, investorLinks);
       toast.success("Startup created");
+      onCreated?.(res.id);
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
       if (redirectAfterCreate === "my-startups") {
