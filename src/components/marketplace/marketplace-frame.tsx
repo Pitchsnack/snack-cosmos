@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -123,34 +123,107 @@ export function PersonaBadge({ persona }: { persona: Persona }) {
 
 export function PersonaCard() {
   const { persona, setPersona } = usePersona();
-  const { name, initials, org } = useUserIdentity();
+  const { data } = useSessionContext();
+  const { name, initials } = useUserIdentity();
+  const u = data?.user as (NonNullable<typeof data>["user"] & {
+    title?: string | null; organisation?: string | null; city?: string | null;
+    country?: string | null; verified?: boolean; buyerType?: string | null;
+  }) | null | undefined;
+  const workspace = data?.activeWorkspace?.tenantName ?? data?.tenants?.[0]?.tenantName ?? null;
+  const org = u?.organisation ?? workspace;
+  const subtitle = [u?.title, org].filter(Boolean).join(" · ");
+  const neutral = persona === "seller" ? workspace : u?.buyerType ?? null;
+  const location = [u?.city, u?.country].filter(Boolean).join(", ");
+  const dark = persona === "seller";
   return (
-    <div className="space-y-2 border-b border-sidebar-border p-3">
-      <div className="flex items-center gap-2.5 rounded-lg bg-sidebar-accent p-2.5">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sidebar-primary/20 text-xs font-semibold text-sidebar-primary">
-          {initials}
-        </div>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-sm font-medium">{name}</div>
-          <div className="truncate text-[11px] text-sidebar-foreground/60">{org}</div>
-        </div>
-        <PersonaBadge persona={persona} />
-      </div>
-      <div role="tablist" aria-label="Persona" className="grid grid-cols-2 gap-1 rounded-lg bg-white/[0.07] p-1">
-        {(["seller", "buyer"] as const).map((p) => (
-          <button
-            key={p}
-            role="tab"
-            aria-selected={persona === p}
-            onClick={() => setPersona(p)}
+    <div className="space-y-3 border-b border-sidebar-border p-3" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div
+        className={cn(
+          "rounded-[14px] border p-4",
+          dark
+            ? "border-[#343846] bg-[#262933] text-[#e5e7eb]"
+            : "border-[#E6E8EC] bg-white text-[#0f1115] shadow-[0_1px_2px_rgba(16,24,40,.04),0_6px_16px_rgba(16,24,40,.06)]",
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div
             className={cn(
-              "h-7 rounded-md text-xs font-semibold capitalize transition-colors",
-              persona === p ? "bg-white text-[#141a2b]" : "text-[#a9b0c3] hover:text-white",
+              "relative grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[14px] text-[18px] font-bold text-white",
+              dark ? "bg-gradient-to-br from-[#f59e0b] to-[#b45309]" : "bg-gradient-to-br from-[#fb923c] to-[#ea580c]",
             )}
           >
-            {p === "seller" ? "I'm Seller" : "I'm Buyer"}
-          </button>
-        ))}
+            {initials}
+            {u?.verified && (
+              <span
+                className={cn(
+                  "absolute -bottom-1 -right-1 grid h-[18px] w-[18px] place-items-center rounded-full border-2 bg-[#16A34A] text-white",
+                  dark ? "border-[#262933]" : "border-white",
+                )}
+              >
+                <Check className="h-[9px] w-[9px]" strokeWidth={4} />
+              </span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-[17px] font-bold leading-tight tracking-[-0.01em]">{name}</div>
+            {subtitle && (
+              <div className={cn("mt-0.5 text-[13px] leading-snug", dark ? "text-[#a1a6b3]" : "text-[#6b7280]")}>{subtitle}</div>
+            )}
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-[9px] py-1 text-[11px] font-bold uppercase tracking-[0.06em]",
+              dark ? "bg-[rgba(22,163,74,.16)] text-[#4ADE80]" : "bg-[#EEF0FF] text-[#4338CA]",
+            )}
+          >
+            {persona}
+          </span>
+          {neutral && (
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-[9px] py-1 text-[11px] font-semibold",
+                dark ? "bg-[#30343f] text-[#cbd0da]" : "bg-[#f3f4f6] text-[#374151]",
+              )}
+            >
+              {neutral}
+            </span>
+          )}
+        </div>
+        {location && (
+          <div className={cn("mt-2.5 flex items-center gap-1.5 truncate text-[12px]", dark ? "text-[#8b90a0]" : "text-[#6b7280]")}>
+            <MapPin className="h-[13px] w-[13px] shrink-0" />
+            {location}
+          </div>
+        )}
+      </div>
+      <div
+        role="tablist"
+        aria-label="Persona"
+        className={cn("grid grid-cols-2 gap-1 rounded-[12px] p-1", dark ? "border border-[#343846] bg-[#262933]" : "bg-[#f3f4f6]")}
+      >
+        {(["seller", "buyer"] as const).map((p) => {
+          const Icon = p === "seller" ? Building2 : Briefcase;
+          const on = persona === p;
+          return (
+            <button
+              key={p}
+              role="tab"
+              aria-selected={on}
+              onClick={() => setPersona(p)}
+              className={cn(
+                "flex h-10 items-center justify-center gap-[7px] rounded-[9px] text-[14px] font-semibold transition-colors",
+                on
+                  ? cn("bg-white text-[#0f1115]", !dark && "shadow-[0_1px_3px_rgba(16,24,40,.12)]")
+                  : dark ? "text-[#9ca3af] hover:text-white" : "text-[#6b7280] hover:text-[#0f1115]",
+              )}
+            >
+              <Icon className="h-[15px] w-[15px]" />
+              {p === "seller" ? "I'm Seller" : "I'm Buyer"}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
