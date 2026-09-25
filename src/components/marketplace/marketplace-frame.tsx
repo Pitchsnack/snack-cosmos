@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -158,7 +158,6 @@ export function PersonaCard() {
 
 export function MarketplaceEmptyMenu() {
   const { persona } = usePersona();
-  const navigate = useNavigate();
 
   if (persona === "seller") {
     return (
@@ -166,6 +165,13 @@ export function MarketplaceEmptyMenu() {
         <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
           My Workspace
         </div>
+        <Link
+          to="/my-page"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        >
+          <UserCircle className="h-4 w-4 shrink-0" />
+          <span>My Profile</span>
+        </Link>
         <Link
           to="/my-startups"
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
@@ -185,16 +191,17 @@ export function MarketplaceEmptyMenu() {
   }
 
   return (
-    <div className="rounded-lg border border-dashed border-sidebar-border p-3 text-xs leading-relaxed text-sidebar-foreground/60">
-      <div className="mb-1 font-semibold text-sidebar-foreground/80">No menu items yet.</div>
-      The Marketplace menu is empty for now. Every menu item is in Admin.
-      <button
-        type="button"
-        onClick={() => navigate({ to: lastAdminPath() as "/dashboard" })}
-        className="mt-2 block font-semibold text-sidebar-primary hover:underline"
+    <div className="space-y-1">
+      <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+        My Workspace
+      </div>
+      <Link
+        to="/my-page"
+        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
       >
-        See the Admin menu →
-      </button>
+        <UserCircle className="h-4 w-4 shrink-0" />
+        <span>My Profile</span>
+      </Link>
     </div>
   );
 }

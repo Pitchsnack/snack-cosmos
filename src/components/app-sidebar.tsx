@@ -22,7 +22,6 @@ import {
   Globe,
   Inbox,
   Network,
-  UserCircle,
   Contact as ContactIcon,
   Database,
   Layers,
@@ -85,7 +84,6 @@ type NavItem = {
 // whose effective role set includes STARTUP_USER.
 const STARTUP_MENU_ORDER = [
   "Dashboard",
-  "My Profile",
   "Startup Activity",
   "Startups Directory",
   "Industry Map",
@@ -104,7 +102,6 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
     title: "User Workflow",
     labels: [
       "Dashboard",
-      "My Profile",
       "My Connections",
       "Contacts",
       "Deals",
@@ -230,7 +227,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Audit Logs", icon: ScrollText, path: "/audit", exact: false, perm: "audit.read" },
   { label: "Security", icon: Shield, path: "/security", exact: false, perm: "security.read" },
   { label: "Startup Activity", icon: BarChart3, path: "/startup-activity", exact: false },
-  { label: "My Profile", icon: UserCircle, path: "/my-page", exact: false },
   { label: "Preferences", icon: Settings, path: "/preferences", exact: false },
 ];
 
