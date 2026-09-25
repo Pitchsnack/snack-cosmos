@@ -12,7 +12,12 @@ function key(userId: string | undefined) {
 
 export function useIsMarketplace() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  return pathname === "/marketplace" || pathname.startsWith("/marketplace/");
+  return (
+    pathname === "/marketplace" ||
+    pathname.startsWith("/marketplace/") ||
+    pathname === "/my-startups" ||
+    pathname.startsWith("/my-startups/")
+  );
 }
 
 /** View-only Seller | Buyer switch, remembered per signed-in user. */

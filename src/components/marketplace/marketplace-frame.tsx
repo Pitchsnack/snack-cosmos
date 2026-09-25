@@ -174,7 +174,7 @@ export function MarketplaceEmptyMenu() {
           <span>My Business</span>
         </Link>
         <Link
-          to="/marketplace/my-business"
+          to="/marketplace/my-contact"
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
         >
           <Building2 className="h-4 w-4 shrink-0" />
