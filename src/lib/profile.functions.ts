@@ -31,7 +31,7 @@ export const saveMyProfile = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     if ("firstName" in data || "lastName" in data) {
-      const patch: Record<string, string | null> = {};
+      const patch: { first_name?: string | null; last_name?: string | null } = {};
       if ("firstName" in data) patch.first_name = data.firstName ?? null;
       if ("lastName" in data) patch.last_name = data.lastName ?? null;
       const { error } = await supabase.from("users").update(patch).eq("id", userId);
@@ -50,7 +50,7 @@ export const saveMyProfile = createServerFn({ method: "POST" })
     if (Object.keys(row).length) {
       const { error } = await supabase
         .from("user_profiles")
-        .upsert({ user_id: userId, ...row, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+        .upsert({ user_id: userId, ...(row as Record<string, never>), updated_at: new Date().toISOString() }, { onConflict: "user_id" });
       if (error) throw new Error(error.message);
     }
     return { ok: true };
