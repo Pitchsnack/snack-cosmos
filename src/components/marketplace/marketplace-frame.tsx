@@ -171,7 +171,7 @@ export function MarketplaceEmptyMenu() {
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
         >
           <Building2 className="h-4 w-4 shrink-0" />
-          <span>My business</span>
+          <span>My contact</span>
         </Link>
       </div>
     );
