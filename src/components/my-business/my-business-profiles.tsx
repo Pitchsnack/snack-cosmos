@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Bookmark, Check, EyeOff, MoreVertical, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Bookmark, Check, EyeOff, MoreVertical, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -328,4 +328,3 @@ export function MyBusinessProfiles({ items }: { items: StartupListItem[] }) {
   );
 }
 
-export { Plus };

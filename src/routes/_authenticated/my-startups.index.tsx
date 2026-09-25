@@ -33,9 +33,10 @@ import { AcquisitionRequirementsPanel } from "@/components/acquisition/acquisiti
 import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
 import { useAcquisitionStrategy } from "@/lib/acquisition/strategy-store";
 import { cn } from "@/lib/utils";
+import { MyBusinessProfiles } from "@/components/my-business/my-business-profiles";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
-const VIEW = ["grid","split","list"] as const;
+const VIEW = ["profiles","grid","split","list"] as const;
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C","Growth","Other"];
 const COMPANY_TYPES = ["SaaS","FinTech","Marketplace","AI","Hardware","Consumer","Other"];
 
@@ -87,7 +88,7 @@ function MyStartupsPageInner() {
   const s = Route.useSearch();
   const page = s.page ?? 1;
   const sort = s.sort ?? "updated_desc";
-  const view = s.view ?? "grid";
+  const view = s.view ?? "profiles";
   const selected = s.selected;
   const favOnly = !!s.fav;
   const { ids: favIds } = useFavoriteStartups();
@@ -190,7 +191,7 @@ function MyStartupsPageInner() {
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">My Business</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {total > 0
-              ? `${total} startup${total === 1 ? "" : "s"} you own or manage`
+              ? `${total} business${total === 1 ? "" : "es"} you own or manage`
               : "Add and manage the startup profiles you own. Keep company details, media, founders and investors up to date."}
           </p>
         </div>
@@ -222,8 +223,16 @@ function MyStartupsPageInner() {
               {mineItems.filter((it) => favIds.has(it.id)).length}
             </span>
           </button>
+          <Button
+            variant={view === "profiles" ? "default" : "outline"}
+            size="sm"
+            className="h-9"
+            onClick={() => navigate({ search: (p: typeof s) => ({ ...p, view: undefined }) })}
+          >
+            Profiles
+          </Button>
           <ViewToggle
-            value={view}
+            value={view === "profiles" ? ("" as never) : view}
             onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
           />
           {has("startups.write") && (
@@ -300,6 +309,8 @@ function MyStartupsPageInner() {
             </Button>
           )}
         </div>
+      ) : view === "profiles" ? (
+        <MyBusinessProfiles items={items} />
       ) : view === "grid" ? (
         <div
           className={cn(
