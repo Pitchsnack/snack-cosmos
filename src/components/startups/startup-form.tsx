@@ -635,7 +635,6 @@ export function StartupForm({
   const canSubmit = useMemo(() => {
     if (!startupName) return false;
     if (isEdit) return true;
-    if (!websiteUrl.trim()) return false;
     const matchOk = !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive;
     return !!(tenantId && owningAgentUserId && owningAiAgentId && matchOk);
   }, [isEdit, startupName, websiteUrl, tenantId, owningAgentUserId, owningAiAgentId, tenantMatchesActive]);
@@ -791,7 +790,7 @@ export function StartupForm({
       return;
     }
     if (!raw) {
-      toast.error("Website is required.");
+      setPhase("full");
       return;
     }
     const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
@@ -843,7 +842,7 @@ export function StartupForm({
               onChange={setWebsiteUrl}
               onCommit={(url) => void websiteDup.check(url)}
               placeholder="https://acme.com"
-              required={!isEdit}
+              required={false}
             />
             <div className="space-y-1.5">
               <Label>Startup Type</Label>
