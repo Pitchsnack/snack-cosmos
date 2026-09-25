@@ -15,6 +15,20 @@ export interface SessionContextDTO {
     lastName: string | null;
     status: string;
     userType: string;
+    title: string | null;
+    organisation: string | null;
+    bio: string | null;
+    city: string | null;
+    country: string | null;
+    website: string | null;
+    linkedin: string | null;
+    phone: string | null;
+    industryFocus: string | null;
+    functionalExpertise: string | null;
+    buyerType: string | null;
+    experience: string | null;
+    verified: boolean;
+    plan: string | null;
   } | null;
   roles: AppRole[];
   tenants: Array<{
@@ -42,7 +56,7 @@ export const getSessionContext = createServerFn({ method: "GET" })
       await Promise.all([
         supabase
           .from("users")
-          .select("id,email,first_name,last_name,status,user_type")
+          .select("id,email,first_name,last_name,status,user_type,primary_tenant_id")
           .eq("id", userId)
           .maybeSingle(),
         supabase
@@ -81,6 +95,16 @@ export const getSessionContext = createServerFn({ method: "GET" })
     const activeRoleCode =
       (ctxRow?.roles as unknown as { role_code: AppRole } | null)?.role_code ?? null;
 
+    const planTenant = activeTenantId ?? (userRow?.primary_tenant_id as string | null) ?? tenants[0]?.tenantId ?? null;
+    const [{ data: prof }, { data: ver }, { data: sub }] = await Promise.all([
+      supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("user_verifications").select("user_id").eq("user_id", userId).maybeSingle(),
+      planTenant
+        ? supabase.from("tenant_subscription").select("subscription_plan").eq("tenant_id", planTenant).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    const plan = (sub as { subscription_plan?: string } | null)?.subscription_plan ?? null;
+
     const permissionSet = new Set<Permission>();
     for (const r of roles) {
       for (const p of ROLE_PERMISSIONS[r] ?? []) permissionSet.add(p);
@@ -95,6 +119,20 @@ export const getSessionContext = createServerFn({ method: "GET" })
             lastName: (userRow.last_name as string | null) ?? null,
             status: userRow.status as string,
             userType: userRow.user_type as string,
+            title: prof?.title ?? null,
+            organisation: prof?.organisation ?? null,
+            bio: prof?.bio ?? null,
+            city: prof?.city ?? null,
+            country: prof?.country ?? null,
+            website: prof?.website ?? null,
+            linkedin: prof?.linkedin ?? null,
+            phone: prof?.phone ?? null,
+            industryFocus: prof?.industry_focus ?? null,
+            functionalExpertise: prof?.functional_expertise ?? null,
+            buyerType: prof?.buyer_type ?? null,
+            experience: prof?.experience ?? null,
+            verified: Boolean(ver),
+            plan: plan && !/^free$/i.test(plan) ? plan : null,
           }
         : null,
       roles,
