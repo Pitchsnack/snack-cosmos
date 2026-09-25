@@ -232,7 +232,7 @@ function MyStartupsPageInner() {
 
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
-              <Plus className="mr-2 h-4 w-4" /> Add my startup
+              <Plus className="mr-2 h-4 w-4" /> Add My Business
             </Button>
           )}
         </div>
