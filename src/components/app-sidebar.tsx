@@ -469,7 +469,9 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setAutoCollapsed(false);
     setMobileOpen(false);
-    if (!pathname.startsWith("/marketplace")) rememberAdminPath(pathname);
+    if (!pathname.startsWith("/marketplace") && !pathname.startsWith("/my-startups")) {
+      rememberAdminPath(pathname);
+    }
   }, [pathname]);
 
   // Single capture-phase click listener for auto-collapse.
