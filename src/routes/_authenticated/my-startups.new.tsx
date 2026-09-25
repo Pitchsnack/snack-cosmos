@@ -21,7 +21,7 @@ function NewMyStartupPage() {
           <ArrowLeft className="h-4 w-4" /> Back to My Startups
         </Link>
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Add my startup</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Add my business</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Create your startup profile. Complete company details, media, founders, and investors.
           </p>
