@@ -2519,6 +2519,7 @@ export type Database = {
           created_at: string
           id: string
           owning_agent_user_id: string
+          seller_relation: string | null
           startup_id: string
           tenant_id: string
         }
@@ -2527,6 +2528,7 @@ export type Database = {
           created_at?: string
           id?: string
           owning_agent_user_id: string
+          seller_relation?: string | null
           startup_id: string
           tenant_id: string
         }
@@ -2535,6 +2537,7 @@ export type Database = {
           created_at?: string
           id?: string
           owning_agent_user_id?: string
+          seller_relation?: string | null
           startup_id?: string
           tenant_id?: string
         }

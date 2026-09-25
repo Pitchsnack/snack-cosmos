@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { SellerDraftCard } from "@/components/my-business/seller-draft-card";
 import { Plus, Search, Rocket, RefreshCw, X, Star, Building2 } from "lucide-react";
 import { z } from "zod";
 
@@ -280,6 +281,7 @@ function MyStartupsPageInner() {
         </Button>
       </div>
 
+      <SellerDraftCard />
       {isLoading && items.length === 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -305,7 +307,7 @@ function MyStartupsPageInner() {
               onClick={() => navigate({ to: "/my-startups/new" })}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
-              <Plus className="mr-2 h-4 w-4" /> Add my startup
+              <Plus className="mr-2 h-4 w-4" /> Add my business
             </Button>
           )}
         </div>

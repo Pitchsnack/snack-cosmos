@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw, Sparkles, Upload, Scissors } from "lucide-react";
+import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2 } from "lucide-react";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import { StartupStepper } from "./startup-stepper";
+import { THB_REVENUE_BANDS, type SellerPrefill } from "@/lib/seller-wizard";
 import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
@@ -140,6 +141,10 @@ function Pill({
 }
 
 interface Props {
+  /** Answers from the seller onboarding wizard — pre-fill the create form and start at Auto Enrich. */
+  prefill?: SellerPrefill;
+  /** Called after a successful create. */
+  onCreated?: (id: string) => void;
   /** When provided, the form is in edit mode. */
   startup?: StartupDetail;
   /** Where to navigate after a successful create. Defaults to the new startup's detail page. */
@@ -210,6 +215,8 @@ function hydrateMediaState(startup?: StartupDetail): EntityMediaState {
 
 export function StartupForm({
   startup,
+  prefill,
+  onCreated,
   redirectAfterCreate = "detail",
   workspace = "startups",
   myStartupsReturnSearch,
@@ -314,20 +321,20 @@ export function StartupForm({
     typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
 
   // Company profile
-  const [startupName, setStartupName] = useState(startup?.startup_name ?? "");
+  const [startupName, setStartupName] = useState(startup?.startup_name ?? prefill?.startupName ?? "");
   const [companyType, setCompanyType] = useState<string>(startup?.company_type ?? "");
   const [registeredName, setRegisteredName] = useState(startup?.registered_name ?? "");
-  const [registeredNumber, setRegisteredNumber] = useState(startup?.registered_number ?? "");
-  const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? "");
+  const [registeredNumber, setRegisteredNumber] = useState(startup?.registered_number ?? prefill?.registeredNumber ?? "");
+  const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? prefill?.yearFounded ?? "");
   const [email, setEmail] = useState(startup?.email ?? "");
-  const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? "");
+  const [headquarters, setHeadquarters] = useState(startup?.headquarters ?? prefill?.country ?? "");
   const [region, setRegion] = useState<string>(startup?.region ?? "");
-  const [websiteUrl, setWebsiteUrl] = useState(startup?.website_url ?? "");
+  const [websiteUrl, setWebsiteUrl] = useState(startup?.website_url ?? prefill?.websiteUrl ?? "");
   const [linkedinUrl, setLinkedinUrl] = useState(startup?.linkedin_url ?? "");
   // P-18 Company URL duplicate check — identical in Add and Edit.
   const websiteDup = useWebsiteDuplicateCheck(startup?.id);
   
-  const [city, setCity] = useState(startup?.city ?? "");
+  const [city, setCity] = useState(startup?.city ?? prefill?.city ?? "");
 
   // Company information
   const [shortDescription, setShortDescription] = useState(startup?.short_description ?? "");
@@ -339,14 +346,14 @@ export function StartupForm({
   const [marketTags, setMarketTags] = useState<string[]>(startup?.market_tags ?? []);
   const [marketTagDraft, setMarketTagDraft] = useState("");
   const [regulatoryLicenses, setRegulatoryLicenses] = useState<RegulatoryLicence[]>(
-    startup?.regulatory_licenses ?? [],
+    startup?.regulatory_licenses ?? prefill?.licences ?? [],
   );
-  const [isoStandards, setIsoStandards] = useState<string[]>(startup?.iso_standards ?? []);
+  const [isoStandards, setIsoStandards] = useState<string[]>(startup?.iso_standards ?? prefill?.isoStandards ?? []);
   const initialIndustries = startup?.industry ?? [];
   const [industries, setIndustries] = useState<string[]>(initialIndustries);
   const [customIndustry, setCustomIndustry] = useState("");
   // Sector + business model — optional, used only for financial benchmarking.
-  const [sector, setSector] = useState<string | null>(startup?.sector ?? null);
+  const [sector, setSector] = useState<string | null>(startup?.sector ?? prefill?.sector ?? null);
   const [businessModel, setBusinessModel] = useState<string | null>(
     startup?.business_model ?? null,
   );
@@ -415,8 +422,8 @@ export function StartupForm({
   const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
   const [enriching, setEnriching] = useState(false);
   // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
-  const [lastYearRevenue, setLastYearRevenue] = useState(startup?.last_year_revenue ?? "");
-  const [companySize, setCompanySize] = useState(startup?.company_size ?? "");
+  const [lastYearRevenue, setLastYearRevenue] = useState(startup?.last_year_revenue ?? prefill?.lastYearRevenue ?? "");
+  const [companySize, setCompanySize] = useState(startup?.company_size ?? prefill?.companySize ?? "");
 
   const [owningAgentUserId, setOwningAgent] = useState("");
   const [owningAiAgentId, setOwningAi] = useState("");
@@ -546,6 +553,7 @@ export function StartupForm({
         data: {
           tenantId: vars.selectedTenantId,
           startupName,
+          sellerRelation: prefill?.sellerRelation ?? null,
           websiteUrl: websiteUrl || null,
           city: city || null,
           industry: industryArray,
@@ -571,6 +579,7 @@ export function StartupForm({
       // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
       void investorStartupLinksAdapter.saveStartupInvestorRelationships(res.id, investorLinks);
       toast.success("Startup created");
+      onCreated?.(res.id);
       qc.invalidateQueries({ queryKey: ["startups"] });
       guard.markSaved();
       if (redirectAfterCreate === "my-startups") {
@@ -635,7 +644,6 @@ export function StartupForm({
   const canSubmit = useMemo(() => {
     if (!startupName) return false;
     if (isEdit) return true;
-    if (!websiteUrl.trim()) return false;
     const matchOk = !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive;
     return !!(tenantId && owningAgentUserId && owningAiAgentId && matchOk);
   }, [isEdit, startupName, websiteUrl, tenantId, owningAgentUserId, owningAiAgentId, tenantMatchesActive]);
@@ -791,7 +799,7 @@ export function StartupForm({
       return;
     }
     if (!raw) {
-      toast.error("Website is required.");
+      setPhase("full");
       return;
     }
     const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
@@ -814,6 +822,38 @@ export function StartupForm({
       setPhase("full");
     }
   };
+
+  const revenueOptions = (() => {
+    const base = /thailand/i.test(headquarters) ? THB_REVENUE_BANDS : REVENUE_RANGES;
+    return lastYearRevenue && !base.includes(lastYearRevenue) ? [lastYearRevenue, ...base] : base;
+  })();
+  const revenueCurrency = /thailand/i.test(headquarters) ? "THB" : "USD";
+  const sizeOptions =
+    companySize && !COMPANY_SIZES.includes(companySize) ? [companySize, ...COMPANY_SIZES] : COMPANY_SIZES;
+
+  // Wizard hand-off: run Auto Enrich (step 2) straight away with the pre-filled answers.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!prefill || isEdit || autoStarted.current) return;
+    autoStarted.current = true;
+    void runQuickEnrich();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (phase === "quick" && prefill) {
+    return (
+      <div className="space-y-4 text-sm">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-card">
+          <StartupStepper current={2} />
+        </div>
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-10 text-center shadow-card">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <p className="font-medium">Auto-filling {startupName || "your business"}…</p>
+          <p className="text-xs text-muted-foreground">Looking up public details. You can review and edit everything next.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (phase === "quick") {
     return (
@@ -843,7 +883,7 @@ export function StartupForm({
               onChange={setWebsiteUrl}
               onCommit={(url) => void websiteDup.check(url)}
               placeholder="https://acme.com"
-              required={!isEdit}
+              required={false}
             />
             <div className="space-y-1.5">
               <Label>Startup Type</Label>
@@ -894,7 +934,7 @@ export function StartupForm({
                 <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Select —</SelectItem>
-                  {COMPANY_SIZES.map((s) => (
+                  {sizeOptions.map((s) => (
                     <SelectItem key={s} value={s}>{s} employees</SelectItem>
                   ))}
                 </SelectContent>
@@ -911,12 +951,12 @@ export function StartupForm({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Last Year&apos;s Revenue (USD)</Label>
+              <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
               <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Select —</SelectItem>
-                  {REVENUE_RANGES.map((s) => (
+                  {revenueOptions.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
@@ -1241,7 +1281,7 @@ export function StartupForm({
             <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
-              {COMPANY_SIZES.map((s) => (
+              {sizeOptions.map((s) => (
                 <SelectItem key={s} value={s}>{s} employees</SelectItem>
               ))}
             </SelectContent>
@@ -1249,12 +1289,12 @@ export function StartupForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label>Last Year&apos;s Revenue (USD)</Label>
+          <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
           <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
-              {REVENUE_RANGES.map((s) => (
+              {revenueOptions.map((s) => (
                 <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
             </SelectContent>

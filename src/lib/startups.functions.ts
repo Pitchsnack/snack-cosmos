@@ -517,7 +517,7 @@ const ProfileFields = {
 const CreateInput = z.object({
   tenantId: z.string().uuid(),
   startupName: z.string().min(1).max(255),
-  
+  sellerRelation: z.enum(["owner", "family_owner", "agent"]).nullable().optional(),
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
   city: z.string().max(100).optional().nullable(),
   industry: z.array(z.string().min(1).max(100)).max(20).optional(),
@@ -680,6 +680,7 @@ export const createStartup = createServerFn({ method: "POST" })
 
     const { error: oErr } = await supabase.from("startup_ownership").insert({
       startup_id: ins.id, tenant_id: ins.tenant_id, owning_agent_user_id: data.owningAgentUserId,
+      seller_relation: data.sellerRelation ?? null,
     });
     if (oErr) { await supabase.from("startups").delete().eq("id", ins.id); throw new Error("Owner assignment failed: " + oErr.message); }
 
