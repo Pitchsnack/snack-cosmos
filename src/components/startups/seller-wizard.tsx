@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Lock } from "lucide-react";
 import { SectorPicker } from "@/components/startups/sector-fields";
-import { businessModelLabel } from "@/lib/sectors";
 import {
   SELLER_RELATIONS, THAI_PROVINCES, THB_REVENUE_BANDS, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
   isValidUrl, saveDraft, type SellerDraft,
 } from "@/lib/seller-wizard";
-
-void businessModelLabel;
 
 const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review"];
 const STEPS = [
@@ -27,6 +24,42 @@ const THIS_YEAR = new Date().getFullYear();
 const inp =
   "w-full rounded-[10px] border border-[#d1d5db] bg-white px-3.5 py-3 text-[15.5px] text-[#111827] outline-none focus:border-[#1e2a4a] focus:shadow-[0_0_0_3px_#e3e8f2]";
 const fieldLbl = "mb-[7px] block text-[13px] font-semibold text-[#374151]";
+
+function Radio({ list, value, onPick, grid }: {
+    list: { value: string; label: string; hint?: string }[]; value: string | null; onPick: (v: string) => void; grid?: boolean;
+  }): React.ReactElement {
+  return (
+    <div className={grid ? "grid grid-cols-2 gap-2.5 sm:grid-cols-3" : "grid gap-2"}>
+      {list.map((o) => {
+        const sel = value === o.value;
+        return (
+          <button key={o.value} type="button" onClick={() => onPick(o.value)}
+            className={`flex items-center gap-3.5 rounded-[10px] border px-4 py-[13px] text-left transition-colors ${grid ? "justify-center" : ""} ${sel ? "border-[#1e2a4a] bg-[#eef1f7]" : "border-[#e5e7eb] bg-white hover:border-[#c5cbd8]"}`}>
+            {!grid && (
+              <span className={`grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px] ${sel ? "border-[#1e2a4a]" : "border-[#c5cbd8]"}`}>
+                {sel && <span className="h-2 w-2 rounded-full bg-[#1e2a4a]" />}
+              </span>
+            )}
+            <span>
+              <b className="block text-[15px] font-semibold">{o.label}</b>
+              {o.hint && <small className="mt-0.5 block text-[13.5px] text-[#6b7280]">{o.hint}</small>}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Check({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }): React.ReactElement {
+  return (
+    <button type="button" onClick={onClick}
+      className={`flex items-center gap-2.5 rounded-[9px] border px-3 py-2.5 text-left text-[13.5px] ${on ? "border-[#1e2a4a] bg-[#eef1f7] text-[#111827]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#c5cbd8]"}`}>
+      <span className={`grid h-4 w-4 flex-none place-items-center rounded border-[1.5px] text-[10px] text-white ${on ? "border-[#1e2a4a] bg-[#1e2a4a]" : "border-[#c5cbd8]"}`}>{on ? "✓" : ""}</span>
+      {label}
+    </button>
+  );
+}
 
 export function SellerWizard({
   userId, initial, onExit, onFinish,
@@ -73,38 +106,6 @@ export function SellerWizard({
     review: true,
   };
   const canSkip = cur.id === "web" || cur.id === "lic";
-
-  const Radio = ({ list, value, onPick, grid }: {
-    list: { value: string; label: string; hint?: string }[]; value: string | null; onPick: (v: string) => void; grid?: boolean;
-  }) => (
-    <div className={grid ? "grid grid-cols-2 gap-2.5 sm:grid-cols-3" : "grid gap-2"}>
-      {list.map((o) => {
-        const sel = value === o.value;
-        return (
-          <button key={o.value} type="button" onClick={() => onPick(o.value)}
-            className={`flex items-center gap-3.5 rounded-[10px] border px-4 py-[13px] text-left transition-colors ${grid ? "justify-center" : ""} ${sel ? "border-[#1e2a4a] bg-[#eef1f7]" : "border-[#e5e7eb] bg-white hover:border-[#c5cbd8]"}`}>
-            {!grid && (
-              <span className={`grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px] ${sel ? "border-[#1e2a4a]" : "border-[#c5cbd8]"}`}>
-                {sel && <span className="h-2 w-2 rounded-full bg-[#1e2a4a]" />}
-              </span>
-            )}
-            <span>
-              <b className="block text-[15px] font-semibold">{o.label}</b>
-              {o.hint && <small className="mt-0.5 block text-[13.5px] text-[#6b7280]">{o.hint}</small>}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  const Check = ({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }) => (
-    <button type="button" onClick={onClick}
-      className={`flex items-center gap-2.5 rounded-[9px] border px-3 py-2.5 text-left text-[13.5px] ${on ? "border-[#1e2a4a] bg-[#eef1f7] text-[#111827]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#c5cbd8]"}`}>
-      <span className={`grid h-4 w-4 flex-none place-items-center rounded border-[1.5px] text-[10px] text-white ${on ? "border-[#1e2a4a] bg-[#1e2a4a]" : "border-[#c5cbd8]"}`}>{on ? "✓" : ""}</span>
-      {label}
-    </button>
-  );
 
   const allLic = [...WIZARD_LICENCES, ...d.licences.filter((l) => !WIZARD_LICENCES.some((w) => w.name === l.name))];
   const allIso = [...WIZARD_ISO, ...d.iso.filter((s) => !WIZARD_ISO.includes(s))];
