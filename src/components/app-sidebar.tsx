@@ -411,6 +411,7 @@ const INTENT_KEY = "sp2.sidebarIntent";
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const isMobile = useMediaQuery("(max-width: 960px)");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMarket = useIsMarketplace();
   const isAdminRoute =
     pathname.startsWith("/access-management") ||
     pathname.startsWith("/audit") ||
