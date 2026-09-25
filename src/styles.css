@@ -26,6 +26,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-dark: var(--accent-dark);
+  --color-profile: var(--profile);
+  --color-profile-soft: var(--profile-soft);
+  --color-profile-line: var(--profile-line);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -76,6 +79,9 @@
   --muted-foreground: hsl(220 10% 46%);
 
   --accent: hsl(38 92% 55%);
+  --profile: hsl(263 70% 50%);
+  --profile-soft: hsl(262 100% 97%);
+  --profile-line: hsl(266 100% 93%);
   --accent-foreground: hsl(225 55% 12%);
   --accent-dark: hsl(38 92% 44%);
 
@@ -154,6 +160,9 @@
   --secondary-foreground: hsl(220 20% 90%);
   --muted: hsl(225 20% 16%);
   --muted-foreground: hsl(220 10% 55%);
+  --profile: hsl(263 80% 72%);
+  --profile-soft: hsl(263 40% 18%);
+  --profile-line: hsl(263 30% 30%);
   --accent: hsl(38 92% 55%);
   --accent-foreground: hsl(225 55% 12%);
   --accent-dark: hsl(38 92% 44%);
