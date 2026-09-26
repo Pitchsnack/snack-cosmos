@@ -254,9 +254,8 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
 
 function PrivateCardBody({ s }: { s: StartupListItem }) {
   const { pct } = useCompleteness(s);
-  const { data: pub } = usePublication(s.id);
-  const published = (pub as { published?: boolean; status?: string } | undefined)?.published ?? (pub as { status?: string } | undefined)?.status === "published";
-  const website = s.website ? (s.website.startsWith("http") ? s.website : `https://${s.website}`) : null;
+  const published = usePublication(s.id).status === "published";
+  const website = s.website_url ? (s.website_url.startsWith("http") ? s.website_url : `https://${s.website_url}`) : null;
   return (
     <div className="p-3.5">
       <div className="flex items-center gap-3">
@@ -273,7 +272,7 @@ function PrivateCardBody({ s }: { s: StartupListItem }) {
       <div className="mt-2">
         <RowLine label="Directory">{published ? "Published" : "Not published"}</RowLine>
         <RowLine label="Website">
-          {website ? <a href={website} target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-2 hover:underline">{s.website}</a> : <span className="font-normal text-muted-foreground">—</span>}
+          {website ? <a href={website} target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-2 hover:underline">{s.website_url.replace(/^https?:\/\//, "")}</a> : <span className="font-normal text-muted-foreground">—</span>}
         </RowLine>
       </div>
     </div>
