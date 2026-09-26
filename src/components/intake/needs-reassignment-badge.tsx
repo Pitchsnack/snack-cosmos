@@ -11,6 +11,7 @@ import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { DefaultIntakeDomain } from "@/lib/default-intake";
+import { useIsMarketplace } from "@/hooks/use-marketplace";
 
 export function NeedsReassignmentBadge({
   className,
@@ -52,6 +53,8 @@ export function PreviewNeedsReassignmentBadge({
   className?: string;
   size?: "xs" | "sm";
 }) {
-  if (!needsReassignment) return null;
+  // Seller / Buyer surfaces never show Default Intake internals.
+  const isSellerOrBuyer = useIsMarketplace();
+  if (isSellerOrBuyer || !needsReassignment) return null;
   return <NeedsReassignmentBadge className={className} size={size} />;
 }

@@ -477,6 +477,14 @@ export function StartupForm({
     if (owningAgentUserId !== principalRef) setOwningAgent(principalRef);
   }, [isMyStartupsCreate, principalRef, owningAgentUserId]);
 
+  // My Startups flow: pick the tenant's AI agent automatically. Sellers never
+  // see or choose ownership, but the backend contract still requires one.
+  useEffect(() => {
+    if (!isMyStartupsCreate || owningAiAgentId) return;
+    const first = aiOptions[0]?.id;
+    if (first) setOwningAi(first);
+  }, [isMyStartupsCreate, owningAiAgentId, aiOptions]);
+
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -1645,8 +1653,8 @@ export function StartupForm({
         </div>
       )}
 
-      {/* Ownership (create only) */}
-      {!isEdit && (
+      {/* Ownership (create only, admin surfaces only — hidden in My Business) */}
+      {!isEdit && !isMyStartupsCreate && (
         <div className="border-t border-border pt-4">
           <DefaultIntakeOwnershipModeSection
             domain="startup"
