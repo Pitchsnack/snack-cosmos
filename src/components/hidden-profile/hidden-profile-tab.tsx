@@ -1,19 +1,26 @@
-import { EyeOff, Lock, Pencil, Plus, Store, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Check, EyeOff, Lock, Pencil, Plus, Store } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
-  decadeOf,
   hiddenStatusOf,
-  identityTerms,
   isStartupEntry,
-  moneyRange,
   runIdentityCheck,
-  staffRange,
   type EntryFacts,
   type HiddenDraft,
   type HiddenProfileRow,
 } from "@/lib/hidden-profile";
-import { Flagged, Marker, SectorArt } from "./bits";
+import {
+  buildPublicListing,
+  checkListing,
+  decadeLabel,
+  listingTerms,
+  suggestDescription,
+  type ListingSource,
+} from "@/lib/public-listing";
+import { Flagged } from "./bits";
+import { PublicListingCard } from "./public-listing-card";
+import { PublicListingEditor } from "./public-listing-editor";
 
 function fmtDate(s?: string | null) {
   return s ? new Date(s).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—";
@@ -24,27 +31,30 @@ export function HiddenProfileTab({
   companyType,
   row,
   facts,
-  showMarkers,
   onEdit,
   onCreate,
   onPublish,
   creating,
-  industry,
   publishBlocked,
+  source,
+  hasFinancials,
 }: {
   name: string;
   companyType?: string | null;
   row: HiddenProfileRow | null;
   facts: EntryFacts | undefined;
-  showMarkers: boolean;
+  showMarkers?: boolean;
   onEdit: () => void;
   onCreate: () => void;
   onPublish: () => void;
   creating?: boolean;
-  industry: string;
+  industry?: string;
   /** When set, Publish stays disabled and this text explains why. */
   publishBlocked?: string | null;
+  source: ListingSource;
+  hasFinancials: boolean;
 }) {
+  const [editorOpen, setEditorOpen] = useState(false);
   if (isStartupEntry(companyType)) {
     return (
       <div className="flex items-start gap-2.5 rounded-[10px] border border-amber-300 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
@@ -63,10 +73,15 @@ export function HiddenProfileTab({
     );
   }
   const status = hiddenStatusOf(row, companyType);
-  const d = row as HiddenDraft;
-  const terms = facts ? identityTerms(facts) : [];
-  const findings = facts ? runIdentityCheck(d, facts) : [];
-  const f = facts ?? ({} as EntryFacts);
+  const live = status === "live" || status === "live_edited";
+  const src: ListingSource = { ...source, people: facts?.people ?? source.people };
+  const terms = listingTerms(src);
+  const listing = buildPublicListing(src, { ...row, live }, hasFinancials);
+  const flagged = [
+    ...checkListing(listing, terms),
+    ...(facts ? runIdentityCheck(row as HiddenDraft, facts).map((f) => f.term) : []),
+  ].filter((v, i, a) => a.indexOf(v) === i);
+  const overview = (source.long_description || source.short_description || "").trim().split(/(?<=[.!?])\s/)[0] ?? "";
 
   return (
     <div className="space-y-3">
@@ -79,103 +94,93 @@ export function HiddenProfileTab({
           <span className="text-muted-foreground"><strong className="text-emerald-700 dark:text-emerald-400">Live in SME Takeover</strong> · Since {fmtDate(row.published_at)} as {row.live?.code_name ?? row.code_name} · {row.views} views · {row.ndas_approved} NDAs approved</span>
         )}
         <div className="ml-auto flex gap-2">
-          <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit public view</Button>
+          <Button size="sm" variant="outline" onClick={() => setEditorOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit public view</Button>
           {status === "draft" ? (
-            <Button size="sm" onClick={onPublish} disabled={!!publishBlocked || findings.length > 0} title={publishBlocked ?? (findings.length ? "Fix the identity check first" : undefined)} className="bg-accent text-accent-foreground hover:bg-accent/90">Publish</Button>
+            <Button size="sm" onClick={onPublish} disabled={!!publishBlocked || flagged.length > 0} title={publishBlocked ?? (flagged.length ? "Fix the identity check first" : undefined)} className="bg-accent text-accent-foreground hover:bg-accent/90">Publish to Marketplace</Button>
           ) : (
             <Button size="sm" variant="outline" asChild><Link to="/marketplace"><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>
           )}
         </div>
       </div>
 
-      {findings.length > 0 && (
-        <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          {findings.length} detail{findings.length === 1 ? "" : "s"} could name the company. They are marked below. Edit the public view to fix them before you publish.
+      <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How buyers see it on the Marketplace</span>
+          <span className={live ? "rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[11px] font-bold text-[#166534]" : "rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[11px] font-bold text-[#92400E]"}>
+            {live ? "Live · published" : "Draft · not published"}
+          </span>
         </div>
+        <PublicListingCard l={listing} seller />
+      </div>
+      {flagged.length === 0 ? (
+        <p className="flex items-center gap-1.5 text-[12.5px] text-emerald-700 dark:text-emerald-400"><Check className="h-4 w-4" />Identity check passed · no company, product or people names in the public text.</p>
+      ) : (
+        <p className="flex items-start gap-1.5 text-[12.5px] text-destructive"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Identity check found: {flagged.join(", ")}. Edit the public view to remove them before you publish.</p>
       )}
 
-      <div className="rounded-[14px] border-[1.5px] border-dashed border-border p-4">
-        <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Buyer preview</div>
-        <div className="flex gap-4">
-          <SectorArt art={d.cover_art} className="h-24 w-40 shrink-0 rounded-lg">
-            <span className="absolute bottom-1 left-2 text-[10px]">Identity after NDA</span>
-          </SectorArt>
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="grid h-8 w-8 place-items-center rounded border border-dashed border-border text-muted-foreground"><EyeOff className="h-3.5 w-3.5" /></div>
-              <h3 className="text-lg font-semibold"><Flagged text={d.code_name} terms={terms} /></h3>
-              <Marker kind="own" show={showMarkers} />
-            </div>
-            <div className="text-xs text-muted-foreground">{row.ref_no} · {d.region || "—"}</div>
-            <p className="text-sm font-medium"><Flagged text={d.headline} terms={terms} /> <Marker kind="shared" show={showMarkers} /></p>
-            <p className="text-sm text-muted-foreground"><Flagged text={d.description} terms={terms} /> <Marker kind="own" show={showMarkers} /></p>
-          </div>
+      <div>
+        <div className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Filled from your wizard answers <span className="font-normal normal-case tracking-normal">· only the headline is new</span></div>
+        <div className="overflow-hidden rounded-[12px] border border-border bg-card text-[12.5px]">
+          <SrcRow tag="YOU" field="Headline" hl>
+            The one thing to write: one line, no company or product name. We suggest one from your sector and product overview.{" "}
+            <button type="button" onClick={() => setEditorOpen(true)} className="font-semibold text-profile">Edit</button>
+          </SrcRow>
+          <SrcRow tag="WEBSITE" field="Description">
+            {overview ? (
+              <>
+                <span className="text-muted-foreground"><Struck text={overview} terms={terms} /></span>
+                {" → "}{listing.description || suggestDescription(overview, terms)}
+              </>
+            ) : "Product overview from Auto Enrich, with company and product names removed"}
+          </SrcRow>
+          <SrcRow tag="WEBSITE" field="Products & services">Tags generated by Auto Enrich from your website; product names removed</SrcRow>
+          <SrcRow tag="WEBSITE" field="Markets">Customer segments and regions generated by Auto Enrich</SrcRow>
+          <SrcRow tag="WIZARD" field="Revenue">'Revenue last year' band, shown as you chose it: {listing.revenueBand ?? "not answered"}</SrcRow>
+          <SrcRow tag="WIZARD" field="Location">City / province → province only, no address</SrcRow>
+          <SrcRow tag="WIZARD" field="Employees">'Size of your company' band: {listing.employees ?? "not answered"}</SrcRow>
+          <SrcRow tag="WIZARD" field="Founded">{source.year_founded ? `Year founded ${source.year_founded} → shown as ${decadeLabel(source.year_founded)}` : "Year founded → shown as a decade"}</SrcRow>
+          <SrcRow tag="WIZARD" field="Sector">SET sector and sub-sector, as selected</SrcRow>
+          <SrcRow tag="WIZARD" field="Certifications">Licences and ISO standards, as ticked</SrcRow>
+          <SrcRow tag="WIZARD" field="Verified">Badge shown once the registration number is verified</SrcRow>
         </div>
-
-        <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
-          <Fact label="Founded" value={decadeOf(f.year_founded) ?? "—"} m="range" show={showMarkers} />
-          <Fact label="Type" value={companyType ?? "—"} m="shared" show={showMarkers} />
-          <Fact label="Industry" value={industry} m="shared" show={showMarkers} />
-          <Fact label="Region" value={d.region ?? "—"} m="range" show={showMarkers} />
-          <Fact label="Employees" value={staffRange(f.company_size) ?? "—"} m="range" show={showMarkers} />
-          <Fact label="Revenue" value={moneyRange(f.last_year_revenue) ?? "—"} m="range" show={showMarkers} />
-          <Fact label="Website" value="Hidden until NDA" m="nda" show={showMarkers} />
-          <Fact label="Email" value="Hidden until NDA" m="nda" show={showMarkers} />
-          <Fact label="LinkedIn" value="Hidden until NDA" m="nda" show={showMarkers} />
-        </dl>
-
-        <Block title="Highlights" m="shared" show={showMarkers}>
-          <ul className="list-disc space-y-1 pl-5 text-sm">
-            {d.highlights.filter((h) => h.trim()).map((h, i) => <li key={i}><Flagged text={h} terms={terms} /></li>)}
-          </ul>
-        </Block>
-        <Block title="Product overview" m="nda" show={showMarkers}>
-          <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><Lock className="h-3.5 w-3.5" />Shown after the NDA</p>
-        </Block>
-        <Block title="People" m="own" show={showMarkers}>
-          <p className="text-sm text-muted-foreground">{(f.people ?? []).length ? `${f.people!.length} people · names after the NDA` : "Roles only · names after the NDA"}</p>
-        </Block>
-        <Block title="Customers" m="own" show={showMarkers}>
-          <p className="text-sm"><Flagged text={d.customers_summary} terms={terms} /></p>
-        </Block>
-        <Block title="Deal terms" m="shared" show={showMarkers}>
-          <p className="text-sm">
-            {d.asking_price == null ? "Price on request" : `฿${d.asking_price}M`} · {d.stake_pct ?? "—"}% · {d.deal_type ?? "—"}
-            {d.reason ? <> · <Flagged text={d.reason} terms={terms} /></> : null}
-          </p>
-        </Block>
-        <section className="mt-4 border-t border-border pt-3">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">In private view · shown after you approve an NDA</div>
-          <div className="flex flex-wrap gap-1.5">
-            {["Company name & logo", "Website & email", "Photos", "Founder name", "Product overview", "Data room"].map((t) => (
-              <span key={t} className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11.5px] font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"><Lock className="h-3 w-3" />{t}</span>
-            ))}
-          </div>
-        </section>
+        <div className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">In private view <span className="font-normal normal-case tracking-normal">· shown after you approve an NDA</span></div>
+        <div className="flex flex-wrap gap-1.5">
+          {["Company name & logo", "Product name", "Website & email", "Photos", "Founder name", "Exact figures", "Data room"].map((t) => (
+            <span key={t} className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11.5px] font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"><Lock className="h-3 w-3" />{t}</span>
+          ))}
+        </div>
       </div>
+
+      {editorOpen && (
+        <PublicListingEditor row={row} source={src} listing={listing} onClose={() => setEditorOpen(false)} onFullEdit={() => { setEditorOpen(false); onEdit(); }} />
+      )}
     </div>
   );
 }
 
-function Fact({ label, value, m, show }: { label: string; value: string; m: Parameters<typeof Marker>[0]["kind"]; show: boolean }) {
+function Struck({ text, terms }: { text: string; terms: { term: string; reason: string }[] }) {
   return (
-    <div>
-      <dt className="text-[11px] text-muted-foreground">{label}</dt>
-      <dd className="font-medium"><span>{value}</span>{"\u00a0"}<Marker kind={m} show={show} /></dd>
-    </div>
+    <span className="[&_mark]:bg-transparent [&_mark]:px-0 [&_mark]:text-destructive [&_mark]:line-through">
+      <Flagged text={text} terms={terms} />
+    </span>
   );
 }
 
-function Block({ title, m, show, children }: { title: string; m: Parameters<typeof Marker>[0]["kind"]; show: boolean; children: React.ReactNode }) {
+const TAG = {
+  YOU: "bg-[#FEF3C7] text-[#92400E]",
+  WEBSITE: "bg-[#E8F6EE] text-[#166534]",
+  WIZARD: "bg-[#EEF0FF] text-[#4338CA]",
+} as const;
+
+function SrcRow({ tag, field, hl, children }: { tag: keyof typeof TAG; field: string; hl?: boolean; children: React.ReactNode }) {
   return (
-    <section className="mt-4 border-t border-border pt-3">
-      <div className="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {title}
-        <Marker kind={m} labelled show={show} />
+    <div className={`grid grid-cols-[170px_minmax(0,1fr)] gap-3 border-t border-border px-3 py-2 first:border-t-0 ${hl ? "bg-[#FFFDF5] dark:bg-amber-950/20" : ""}`}>
+      <div className="flex items-center gap-1.5">
+        <span className={`rounded px-1.5 py-0.5 text-[9.5px] font-bold ${TAG[tag]}`}>{tag}</span>
+        <span className="font-semibold">{field}</span>
       </div>
-      {children}
-    </section>
+      <div className="text-foreground/80">{children}</div>
+    </div>
   );
 }
 
