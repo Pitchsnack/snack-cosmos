@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { StartupListItem } from "@/lib/startups.functions";
 import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
-import { usePublication } from "@/hooks/use-publication";
+import { StartupCard } from "@/components/startups/startup-card";
 import { HiddenProfileTab } from "@/components/hidden-profile/hidden-profile-tab";
 import { HiddenProfileEditor } from "@/components/hidden-profile/hidden-profile-editor";
 import { SectorArt } from "@/components/hidden-profile/bits";
@@ -252,33 +252,6 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   );
 }
 
-function PrivateCardBody({ s }: { s: StartupListItem }) {
-  const { pct } = useCompleteness(s);
-  const published = usePublication(s.id).status === "published";
-  const website = s.website_url ? (s.website_url.startsWith("http") ? s.website_url : `https://${s.website_url}`) : null;
-  return (
-    <div className="p-3.5">
-      <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-[10px] border border-border bg-muted text-sm font-bold">
-          {s.logo_signed_url ? <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" /> : s.startup_name.slice(0, 1)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[14.5px] font-bold">{s.startup_name}</div>
-          <div className="truncate text-[12px] text-muted-foreground">{[s.company_type, s.headquarters].filter(Boolean).join(" · ") || "—"}</div>
-        </div>
-        <Ring pct={pct} size={40} stroke={4} done={pct >= 100} />
-      </div>
-      {s.short_description && <p className="mb-2 mt-2.5 line-clamp-2 text-[12.5px] text-muted-foreground">{s.short_description}</p>}
-      <div className="mt-2">
-        <RowLine label="Directory">{published ? "Published" : "Not published"}</RowLine>
-        <RowLine label="Website">
-          {website ? <a href={website} target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-2 hover:underline">{website.replace(/^https?:\/\//, "")}</a> : <span className="font-normal text-muted-foreground">—</span>}
-        </RowLine>
-      </div>
-    </div>
-  );
-}
-
 function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | null; onView: (v: View) => void }) {
   const { row } = useHiddenProfile(s.id);
   const [local, setLocal] = useState<View>("public");
@@ -291,10 +264,14 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
         <FolderTab active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Buyer preview" tone="indigo" onClick={() => pick("public")} />
         <FolderTab active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" tone="green" onClick={() => pick("private")} />
       </div>
-      <div className={cn("overflow-hidden rounded-[14px] border-2 bg-card",
-        selected ? "border-amber-500 shadow-[0_0_0_3px_color-mix(in_oklab,#f59e0b_18%,transparent)]" : "border-amber-500/50")}>
-        {v === "public" ? <PublicCardBody s={s} row={row} /> : <PrivateCardBody s={s} />}
-      </div>
+      {v === "public" ? (
+        <div className={cn("overflow-hidden rounded-[14px] border-2 bg-card",
+          selected ? "border-amber-500 shadow-[0_0_0_3px_color-mix(in_oklab,#f59e0b_18%,transparent)]" : "border-amber-500/50")}>
+          <PublicCardBody s={s} row={row} />
+        </div>
+      ) : (
+        <StartupCard s={s} onClick={() => pick("private")} />
+      )}
     </div>
   );
 }
