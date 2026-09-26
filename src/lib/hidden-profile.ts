@@ -62,6 +62,9 @@ export interface HiddenDraft {
   process: string | null;
   open_to: string[];
   nda_approver: "seller" | "admin";
+  /** Public tags; null = derived from the private view (Auto Enrich). */
+  product_tags?: string[] | null;
+  market_tags?: string[] | null;
 }
 
 export interface HiddenProfileRow extends HiddenDraft {
@@ -304,14 +307,9 @@ export function missingForPublish(d: Partial<HiddenDraft>): string[] {
   const m: string[] = [];
   if (!d.code_name?.trim()) m.push("Code name");
   if (!d.headline?.trim()) m.push("Headline");
-  if (!d.description?.trim()) m.push("Description");
-  if ((d.highlights ?? []).filter((h) => h.trim()).length < 3) m.push("3 highlights");
-  if (!d.customers_summary?.trim()) m.push("Customers described");
-  if (d.asking_price !== null && d.asking_price !== undefined && !(d.asking_price > 0)) m.push("Asking price or on request");
   if (!(d.stake_pct != null && d.stake_pct >= 1 && d.stake_pct <= 100)) m.push("Stake 1–100%");
-  if (!d.reason?.trim()) m.push("Reason for sale");
-  if (!(d.open_to ?? []).length) m.push("At least one \u201copen to\u201d");
-  if ((d.headline ?? "").length > 120) m.push("Headline up to 120 characters");
+  if (!d.deal_type) m.push("Deal type");
+  if ((d.headline ?? "").length > 90) m.push("Headline up to 90 characters");
   if ((d.description ?? "").length > 420) m.push("Description up to 420 characters");
   return m;
 }
@@ -334,5 +332,7 @@ export function pickDraft(r: Partial<HiddenDraft>): HiddenDraft {
     process: r.process ?? null,
     open_to: r.open_to ?? [],
     nda_approver: r.nda_approver ?? "admin",
+    product_tags: r.product_tags ?? null,
+    market_tags: r.market_tags ?? null,
   };
 }

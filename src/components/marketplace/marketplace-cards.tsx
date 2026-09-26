@@ -1,5 +1,6 @@
 import { Bookmark, EyeOff, TrendingUp, Wallet, Tag, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { PublicListing } from "@/lib/public-listing";
 
 /** Teaser-only listing shape. Hidden fields (name, logo, exact figures) are
  *  only present once the NDA is approved — the server must not send them before. */
@@ -19,6 +20,8 @@ export type MarketplaceListing = {
   isNew?: boolean;
   name?: string; // after NDA only
   logoUrl?: string; // after NDA only
+  /** Public listing (same card as the seller's Public view). */
+  listing?: PublicListing;
 };
 
 const TYPE_LABEL = { sme: "SME", pe: "PE fund", vc: "VC fund" } as const;

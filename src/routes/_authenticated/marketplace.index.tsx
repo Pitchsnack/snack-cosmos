@@ -15,6 +15,7 @@ import {
   type MarketplaceListing,
 } from "@/components/marketplace/marketplace-cards";
 import { cn } from "@/lib/utils";
+import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 
 export const Route = createFileRoute("/_authenticated/marketplace/")({
   head: () => ({
@@ -40,24 +41,28 @@ function useTeasers(): Record<"sme" | "funds", MarketplaceListing[]> {
   const fn = useServerFn(listMarketplaceTeasers);
   const enabled = useHasSession();
   const { data } = useQuery({ queryKey: ["marketplace-teasers"], queryFn: () => fn(), enabled });
-  const sme = (data ?? []).map((t): MarketplaceListing => ({
-    id: t.id,
-    kind: "sme",
-    ref: t.ref,
-    codeName: t.codeName,
-    region: t.region,
-    headline: t.headline,
-    tags: [t.industry, t.dealType].filter(Boolean) as string[],
-    rows: [
-      { label: "Revenue", value: t.revenueRange ?? "—" },
-      { label: "Asking", value: t.askingPrice == null ? "On request" : `฿${t.askingPrice}M` },
-      { label: "Stake", value: t.stakePct != null ? `${t.stakePct}%` : "—" },
-    ],
-    mandateFit: 0,
-    listedAt: t.publishedAt ? new Date(t.publishedAt).toLocaleDateString() : "",
-    nda: "locked",
-    isNew: !!t.publishedAt && Date.now() - new Date(t.publishedAt).getTime() < 3 * 86400_000,
-  }));
+  const sme = (data ?? []).map((t): MarketplaceListing => {
+    const l = t.listing;
+    return {
+      id: t.id,
+      kind: "sme",
+      ref: l.refNo,
+      codeName: l.codeName,
+      region: l.location ?? "",
+      headline: l.headline,
+      tags: [l.sector, t.dealType].filter(Boolean) as string[],
+      rows: [
+        { label: "Revenue", value: l.revenueBand ?? "—" },
+        { label: "Asking", value: t.askingPrice == null ? "On request" : `฿${t.askingPrice}M` },
+        { label: "Stake", value: t.stakePct != null ? `${t.stakePct}%` : "—" },
+      ],
+      mandateFit: 0,
+      listedAt: l.publishedAt ? new Date(l.publishedAt).toLocaleDateString() : "",
+      nda: "locked",
+      isNew: !!l.publishedAt && Date.now() - new Date(l.publishedAt).getTime() < 3 * 86400_000,
+      listing: l,
+    };
+  });
   return { sme, funds: [] };
 }
 
@@ -129,8 +134,8 @@ function MarketplacePage() {
           <p>No {tab === "sme" ? "businesses" : "funds"} listed yet.</p>
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((l) => <MarketplaceGridCard key={l.id} l={l} />)}
+        <div className={cn("grid gap-4", items[0]?.listing ? "2xl:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3")}>
+          {items.map((l) => (l.listing ? <PublicListingCard key={l.id} l={l.listing} className="border border-border" /> : <MarketplaceGridCard key={l.id} l={l} />))}
         </div>
       ) : view === "split" ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
@@ -141,7 +146,7 @@ function MarketplacePage() {
           </div>
           <div className="hidden min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4 lg:block">
             {selected ? (
-              <MarketplaceGridCard l={items.find((i) => i.id === selected)!} />
+              (() => { const it = items.find((i) => i.id === selected)!; return it.listing ? <PublicListingCard l={it.listing} /> : <MarketplaceGridCard l={it} />; })()
             ) : (
               <p className="text-sm text-muted-foreground">Select a listing to preview it.</p>
             )}

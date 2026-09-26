@@ -10,6 +10,8 @@ import { CompareTab } from "./compare-tab";
 import { HiddenProfileEditor } from "./hidden-profile-editor";
 import { MarkerLegend } from "./bits";
 import { cn } from "@/lib/utils";
+import { useHasFinancials } from "@/hooks/use-has-financials";
+import type { ListingSource } from "@/lib/public-listing";
 
 export type EntryTab = "full" | "hidden" | "compare";
 
@@ -43,6 +45,7 @@ export function EntryProfileTabs({
   const { row } = useHiddenProfile(id);
   const { data: facts } = useEntryFacts(id);
   const actions = useHiddenProfileActions();
+  const { hasData: hasFinancials } = useHasFinancials(id);
   const [showMarkers, setShowMarkers] = useShowMarkers();
   const [publishOnOpen, setPublishOnOpen] = useState(false);
   const companyType = s?.company_type ?? null;
@@ -110,6 +113,8 @@ export function EntryProfileTabs({
         facts={facts}
         industry={industry}
         showMarkers={showMarkers}
+        source={(s ?? { startup_name: "" }) as ListingSource}
+        hasFinancials={hasFinancials}
         creating={actions.create.isPending}
         onCreate={openEditor}
         onEdit={() => onEditingChange(true)}
