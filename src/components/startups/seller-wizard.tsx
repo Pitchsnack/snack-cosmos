@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Lock } from "lucide-react";
+import { ExternalLink, Lock, AlertTriangle } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { SectorPicker } from "@/components/startups/sector-fields";
 import {
   SELLER_RELATIONS, THAI_PROVINCES, THB_REVENUE_BANDS, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
-  isValidUrl, saveDraft, type SellerDraft,
+  isValidUrl, saveDraft, answeredCount, normalizeUrl, type SellerDraft,
 } from "@/lib/seller-wizard";
 
 const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review"];
@@ -62,27 +64,41 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onFinish,
+  userId, initial, onExit, onCancel, onFinish,
 }: {
   userId: string;
   initial: SellerDraft;
   onExit: () => void;
+  onCancel: () => void;
   onFinish: (d: SellerDraft) => void;
 }) {
   const [d, setD] = useState<SellerDraft>(initial);
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
+  const [webState, setWebState] = useState<"idle" | "checking" | "unreachable">("idle");
+  const checkWeb = useServerFn(checkWebsiteReachable);
   const timer = useRef<number | null>(null);
+  const savedTimer = useRef<number | null>(null);
+  const firstRun = useRef(true);
   const step = Math.min(d.step, STEPS.length - 1);
   const cur = STEPS[step]!;
 
   // Autosave on every answer.
   useEffect(() => {
+    if (firstRun.current) { firstRun.current = false; return; }
+    // Nothing is stored until the user answers something (Cancel on step 1 leaves no draft).
     saveDraft(userId, d);
-    setSaved(true);
+    setJustSaved(true);
+    if (savedTimer.current) window.clearTimeout(savedTimer.current);
+    savedTimer.current = window.setTimeout(() => setJustSaved(false), 1500);
   }, [d, userId]);
-  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
+  useEffect(() => () => {
+    if (timer.current) window.clearTimeout(timer.current);
+    if (savedTimer.current) window.clearTimeout(savedTimer.current);
+  }, []);
+  useEffect(() => setWebState("idle"), [d.web]);
 
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
   const go = (n: number) => set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
@@ -126,8 +142,43 @@ export function SellerWizard({
         </div>
       ) },
     web: { t: "What is your company website?", h: "We use it to auto-fill your profile. You can skip this.",
-      body: <div><input className={inp} value={d.web} autoFocus onChange={(e) => set({ web: e.target.value })} placeholder="https://yourcompany.co.th" />
-        {d.web.trim() && !valid.web && <p className="mt-1.5 text-[13px] text-destructive">Enter a valid web address, or click Skip.</p>}</div> },
+      body: (
+        <div>
+          <label className={fieldLbl}>Website URL</label>
+          <div className="flex gap-2">
+            <input className={inp} value={d.web} autoFocus maxLength={2048} onChange={(e) => set({ web: e.target.value })}
+              onBlur={() => set({ web: d.web.trim() })} placeholder="https://www.yourcompany.com" />
+            {valid.web ? (
+              <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer"
+                className="inline-flex flex-none items-center gap-1.5 rounded-[10px] border border-[#d1d5db] bg-white px-3.5 text-[13.5px] font-semibold text-[#1e2a4a] hover:border-[#1e2a4a]">
+                <ExternalLink className="h-4 w-4" />Check website
+              </a>
+            ) : (
+              <span aria-disabled="true" className="inline-flex flex-none cursor-not-allowed items-center gap-1.5 rounded-[10px] border border-[#eef0f3] bg-white px-3.5 text-[13.5px] font-semibold text-[#c0c4cc]">
+                <ExternalLink className="h-4 w-4" />Check website
+              </span>
+            )}
+          </div>
+          {d.web.trim() && !valid.web ? (
+            <p className="mt-1.5 text-[13px] text-destructive">Enter a valid website address, e.g. www.yourcompany.com</p>
+          ) : (
+            <p className="mt-1.5 text-[13px] text-[#6b7280]">Click Check website to open it in a new tab and make sure it is your company.</p>
+          )}
+          {webState === "unreachable" && (
+            <div className="mt-4 rounded-[10px] border border-[#fcd34d] bg-[#fffbeb] p-3.5">
+              <p className="flex items-start gap-2 text-[13.5px] font-medium text-[#92400e]">
+                <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />We couldn't reach this website. Please check the address.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#374151]"
+                  onClick={() => { setWebState("idle"); (document.querySelector("input[placeholder='https://www.yourcompany.com']") as HTMLInputElement | null)?.focus(); }}>Edit address</button>
+                <button type="button" className="rounded-[9px] bg-[#1e2a4a] px-3.5 py-2 text-[13px] font-semibold text-white"
+                  onClick={() => set({ web: normalizeUrl(d.web), step: step + 1 })}>Continue anyway</button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) },
     year: { t: "What year was the company founded?",
       body: <div><input className={`${inp} max-w-[200px]`} inputMode="numeric" value={d.year} maxLength={4} autoFocus
         onChange={(e) => set({ year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={`e.g. ${THIS_YEAR - 10}`} />
@@ -187,14 +238,14 @@ export function SellerWizard({
             ["You are", SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
             ["Company name", d.name, 1],
             ["Registration no.", d.reg, 1],
-            ["Website", d.web && valid.web ? d.web : "", 2],
+            ["Website", d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
             ["Year founded", d.year, 3],
             ["Location", d.city ? `${d.city}, Thailand` : "", 4],
             ["Revenue last year", d.rev, 5],
             ["Company size", WIZARD_SIZES.find((s) => s.value === d.size)?.label, 6],
             ["Sector", d.sector, 7],
             ["Licences & standards", [...d.licences.map((l) => l.name), ...d.iso].join(", "), 8],
-          ] as [string, string | null | undefined, number][]).map(([k, v, n]) => (
+          ] as [string, React.ReactNode, number][]).map(([k, v, n]) => (
             <div key={k} className="flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0">
               <span className="w-[170px] flex-none text-[#6b7280]">{k}</span>
               <b className={`flex-1 font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || "Not provided"}</b>
@@ -210,8 +261,7 @@ export function SellerWizard({
     <div className="-m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
         <span className="text-[14px] font-semibold">Add my business</span>
-        <span className="ml-auto text-[13px] text-[#9ca3af]">{saved ? "Draft saved" : ""}</span>
-        <button type="button" onClick={onExit} className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-[7px] text-[13px] font-semibold text-[#374151]">Save &amp; exit</button>
+        <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : "All changes saved"}</span>
       </div>
       <div className="mx-auto max-w-[680px] px-5 pb-16 pt-10">
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
@@ -229,19 +279,53 @@ export function SellerWizard({
             {q.body}
           </div>
           <div className="mt-8 flex items-center gap-2.5">
-            <button type="button" disabled={step === 0} onClick={() => go(step - 1)}
-              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151] disabled:cursor-not-allowed disabled:border-[#eef0f3] disabled:text-[#c0c4cc]">Back</button>
+            <button type="button" onClick={() => (step === 0 ? onCancel() : go(step - 1))}
+              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{step === 0 ? "Cancel" : "Back"}</button>
             {canSkip && (
               <button type="button" className="text-sm font-semibold text-[#6b7280]"
                 onClick={() => { if (cur.id === "web") set({ web: "", step: step + 1 }); else go(step + 1); }}>Skip</button>
             )}
-            <button type="button" disabled={!valid[cur.id]}
-              onClick={() => (cur.id === "review" ? onFinish(d) : go(step + 1))}
-              className="ml-auto rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
-              {cur.id === "review" ? "Continue to auto-fill" : "Continue"}
-            </button>
+            <div className="ml-auto flex items-center gap-2.5">
+              {step > 0 && (
+                <button type="button" onClick={() => setConfirmExit(true)}
+                  className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">Save &amp; exit</button>
+              )}
+              <button type="button" disabled={!valid[cur.id] || webState === "checking"}
+                onClick={async () => {
+                  if (cur.id === "review") return onFinish(d);
+                  if (cur.id === "web") {
+                    const url = normalizeUrl(d.web);
+                    setWebState("checking");
+                    let ok = false;
+                    try { ok = (await checkWeb({ data: { url } })).ok; } catch { ok = false; }
+                    if (!ok) { setWebState("unreachable"); return; }
+                    set({ web: url, step: step + 1 });
+                    return;
+                  }
+                  go(step + 1);
+                }}
+                className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
+                {cur.id === "review" ? "Continue to auto-fill" : webState === "checking" ? "Checking…" : "Continue"}
+              </button>
+            </div>
           </div>
         </div>
+        {confirmExit && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => setConfirmExit(false)}>
+            <div role="dialog" aria-modal="true" className="w-full max-w-[400px] rounded-[14px] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-bold">Save and finish later?</h3>
+              <p className="mt-1 text-[14px] text-[#6b7280]">Your answers are saved. You can continue setup from My Business.</p>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
+                <i className="block h-full bg-[#1e2a4a]" style={{ width: `${Math.round((answeredCount(d) / 9) * 100)}%` }} />
+              </div>
+              <p className="mt-2 text-[13px] text-[#6b7280]">{answeredCount(d)} of 9 questions answered</p>
+              <div className="mt-5 flex justify-end gap-2">
+                <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151]">Keep going</button>
+                <button type="button" onClick={() => { saveDraft(userId, d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">Save &amp; exit</button>
+              </div>
+            </div>
+          </div>
+        )}
         <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">Your company name, website and exact figures stay private until you approve a buyer's NDA.</p>
       </div>
     </div>

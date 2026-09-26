@@ -51,8 +51,43 @@ export const WIZARD_LICENCES: RegulatoryLicence[] = [
 ];
 
 export const WIZARD_ISO = [
-  "ISO 9001", "ISO 14001", "ISO 22000", "ISO 27001", "ISO 45001", "ISO 13485", "HACCP", "GMP",
+  "ISO 9001 – Quality", "ISO 14001 – Environment", "ISO 22000 – Food safety",
+  "ISO 27001 – Information security", "ISO 45001 – Health & safety", "ISO 13485 – Medical devices",
+  "HACCP", "GMP",
 ];
+
+export const WIZARD_QUESTION_TITLES = [
+  "Your role", "Company name", "Website", "Year founded", "Location",
+  "Revenue", "Company size", "Sector", "Licences & certifications",
+];
+
+/** Answered flags for the 9 questions (review excluded). */
+export function answeredFlags(d: SellerDraft): boolean[] {
+  return [
+    !!d.role,
+    !!d.name.trim() && /^\d{13}$/.test(d.reg),
+    !!d.web.trim(),
+    /^\d{4}$/.test(d.year),
+    !!d.city,
+    !!d.rev,
+    !!d.size,
+    !!d.sector,
+    d.licences.length + d.iso.length > 0,
+  ];
+}
+export const answeredCount = (d: SellerDraft) => answeredFlags(d).filter(Boolean).length;
+/** First unanswered required question (website + licences are optional); 9 = review. */
+export function firstOpenStep(d: SellerDraft): number {
+  const f = answeredFlags(d);
+  const required = [0, 1, 3, 4, 5, 6, 7];
+  const i = required.find((n) => !f[n]);
+  return i ?? 9;
+}
+
+export const normalizeUrl = (raw: string) => {
+  const v = raw.trim();
+  return v && !/^https?:\/\//i.test(v) ? `https://${v}` : v;
+};
 
 export interface SellerDraft {
   step: number;

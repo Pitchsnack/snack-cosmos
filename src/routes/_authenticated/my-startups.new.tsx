@@ -6,7 +6,7 @@ import { SellerWizard } from "@/components/startups/seller-wizard";
 import { PermissionGuard } from "@/components/permission-guard";
 import { useSessionContext } from "@/hooks/use-session-context";
 import {
-  clearDraft, draftToPrefill, emptyDraft, loadDraft, type SellerDraft, type SellerPrefill,
+  clearDraft, draftToPrefill, emptyDraft, loadDraft, firstOpenStep, type SellerDraft, type SellerPrefill,
 } from "@/lib/seller-wizard";
 
 export const Route = createFileRoute("/_authenticated/my-startups/new")({
@@ -27,7 +27,7 @@ function NewMyStartupPage() {
   const [prefill, setPrefill] = useState<SellerPrefill | null>(null);
 
   useEffect(() => {
-    if (userId && !initial) setInitial(loadDraft(userId) ?? emptyDraft());
+    if (userId && !initial) { const saved = loadDraft(userId); setInitial(saved ? { ...saved, step: firstOpenStep(saved) } : emptyDraft()); }
   }, [userId, initial]);
 
   return (
@@ -50,6 +50,7 @@ function NewMyStartupPage() {
           userId={userId}
           initial={initial}
           onExit={() => navigate({ to: "/my-startups" })}
+          onCancel={() => { if (window.history.length > 1) window.history.back(); else navigate({ to: "/my-startups" }); }}
           onFinish={(d) => setPrefill(draftToPrefill(d))}
         />
       ) : null}
