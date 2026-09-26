@@ -1653,8 +1653,8 @@ export function StartupForm({
         </div>
       )}
 
-      {/* Ownership (create only) */}
-      {!isEdit && (
+      {/* Ownership (create only, admin surfaces only — hidden in My Business) */}
+      {!isEdit && !isMyStartupsCreate && (
         <div className="border-t border-border pt-4">
           <DefaultIntakeOwnershipModeSection
             domain="startup"
