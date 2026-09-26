@@ -1,0 +1,1 @@
+ALTER TABLE public.hidden_profiles ADD COLUMN IF NOT EXISTS product_tags text[], ADD COLUMN IF NOT EXISTS market_tags text[];

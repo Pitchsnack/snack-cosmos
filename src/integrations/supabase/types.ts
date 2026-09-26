@@ -1290,10 +1290,12 @@ export type Database = {
           highlights: string[]
           id: string
           live: Json | null
+          market_tags: string[] | null
           nda_approver: string
           ndas_approved: number
           open_to: string[]
           process: string | null
+          product_tags: string[] | null
           published_at: string | null
           published_by: string | null
           reason: string | null
@@ -1324,10 +1326,12 @@ export type Database = {
           highlights?: string[]
           id?: string
           live?: Json | null
+          market_tags?: string[] | null
           nda_approver?: string
           ndas_approved?: number
           open_to?: string[]
           process?: string | null
+          product_tags?: string[] | null
           published_at?: string | null
           published_by?: string | null
           reason?: string | null
@@ -1358,10 +1362,12 @@ export type Database = {
           highlights?: string[]
           id?: string
           live?: Json | null
+          market_tags?: string[] | null
           nda_approver?: string
           ndas_approved?: number
           open_to?: string[]
           process?: string | null
+          product_tags?: string[] | null
           published_at?: string | null
           published_by?: string | null
           reason?: string | null
