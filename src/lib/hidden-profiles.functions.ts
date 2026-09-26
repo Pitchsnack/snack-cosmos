@@ -211,32 +211,22 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { buildPublicListing } = await import("@/lib/public-listing");
     const { data, error } = await supabaseAdmin
       .from("hidden_profiles")
-      .select("id, ref_no, published_at, live, startups!inner(industry, sector, company_size, last_year_revenue, year_founded)")
+      .select("id, startup_id, ref_no, published_at, live, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards)")
       .eq("status", "live");
     if (error) throw new Error(error.message);
+    const ids = (data ?? []).map((r) => r.startup_id);
+    const { data: fin } = ids.length
+      ? await supabaseAdmin.from("financial_statements").select("startup_id").in("startup_id", ids)
+      : { data: [] as { startup_id: string }[] };
+    const withFin = new Set((fin ?? []).map((f) => f.startup_id));
+    // Private fields are used here only to strip names; only the public listing leaves the server.
     return (data ?? []).map((r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
-      const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as {
-        industry: string[] | null; sector: string | null; company_size: string | null; last_year_revenue: string | null; year_founded: number | null;
-      };
-      const industry = st?.sector || st?.industry?.[0] || "SME";
-      return {
-        id: r.id,
-        ref: r.ref_no,
-        codeName: live.code_name,
-        region: live.region ?? "",
-        headline: live.headline,
-        coverArt: live.cover_art,
-        industry,
-        dealType: live.deal_type,
-        revenueRange: moneyRange(st?.last_year_revenue),
-        staffRange: staffRange(st?.company_size),
-        founded: decadeOf(st?.year_founded),
-        askingPrice: live.asking_price,
-        stakePct: live.stake_pct,
-        publishedAt: r.published_at,
-      };
+      const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
+      const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
+      return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, stakePct: live.stake_pct };
     });
   });
