@@ -52,6 +52,8 @@ export function PreviewNeedsReassignmentBadge({
   className?: string;
   size?: "xs" | "sm";
 }) {
-  if (!needsReassignment) return null;
+  // Seller / Buyer surfaces never show Default Intake internals.
+  const isSellerOrBuyer = useIsMarketplace();
+  if (isSellerOrBuyer || !needsReassignment) return null;
   return <NeedsReassignmentBadge className={className} size={size} />;
 }
