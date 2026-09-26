@@ -30,6 +30,7 @@ export function HiddenProfileTab({
   onPublish,
   creating,
   industry,
+  publishBlocked,
 }: {
   name: string;
   companyType?: string | null;
@@ -41,15 +42,22 @@ export function HiddenProfileTab({
   onPublish: () => void;
   creating?: boolean;
   industry: string;
+  /** When set, Publish stays disabled and this text explains why. */
+  publishBlocked?: string | null;
 }) {
   if (isStartupEntry(companyType)) {
-    return <Empty text="Startups can't be listed in the Marketplace yet" />;
+    return (
+      <div className="flex items-start gap-2.5 rounded-[10px] border border-amber-300 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        Startups can't be listed on the Marketplace yet. You can prepare your public view now. It goes live as soon as startup listings open.
+      </div>
+    );
   }
   if (!row) {
     return (
-      <Empty text={`${name} has no hidden profile yet`}>
+      <Empty text={`${name} has no public view yet`}>
         <Button onClick={onCreate} disabled={creating} className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Plus className="mr-1.5 h-4 w-4" /> Create hidden profile
+          <Plus className="mr-1.5 h-4 w-4" /> Create public view
         </Button>
       </Empty>
     );
@@ -71,9 +79,9 @@ export function HiddenProfileTab({
           <span className="text-muted-foreground"><strong className="text-emerald-700 dark:text-emerald-400">Live in SME Takeover</strong> · Since {fmtDate(row.published_at)} as {row.live?.code_name ?? row.code_name} · {row.views} views · {row.ndas_approved} NDAs approved</span>
         )}
         <div className="ml-auto flex gap-2">
-          <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit hidden profile</Button>
+          <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit public view</Button>
           {status === "draft" ? (
-            <Button size="sm" onClick={onPublish} className="bg-accent text-accent-foreground hover:bg-accent/90">Publish</Button>
+            <Button size="sm" onClick={onPublish} disabled={!!publishBlocked || findings.length > 0} title={publishBlocked ?? (findings.length ? "Fix the identity check first" : undefined)} className="bg-accent text-accent-foreground hover:bg-accent/90">Publish</Button>
           ) : (
             <Button size="sm" variant="outline" asChild><Link to="/marketplace"><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>
           )}
@@ -83,12 +91,12 @@ export function HiddenProfileTab({
       {findings.length > 0 && (
         <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          {findings.length} detail{findings.length === 1 ? "" : "s"} could name the company. They are marked below. Edit the hidden profile to fix them before you publish.
+          {findings.length} detail{findings.length === 1 ? "" : "s"} could name the company. They are marked below. Edit the public view to fix them before you publish.
         </div>
       )}
 
-      <div className="rounded-xl border border-border p-4">
-        <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">What buyers see before the NDA</div>
+      <div className="rounded-[14px] border-[1.5px] border-dashed border-border p-4">
+        <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Buyer preview</div>
         <div className="flex gap-4">
           <SectorArt art={d.cover_art} className="h-24 w-40 shrink-0 rounded-lg">
             <span className="absolute bottom-1 left-2 text-[10px]">Identity after NDA</span>
@@ -137,6 +145,14 @@ export function HiddenProfileTab({
             {d.reason ? <> · <Flagged text={d.reason} terms={terms} /></> : null}
           </p>
         </Block>
+        <section className="mt-4 border-t border-border pt-3">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">In private view · shown after you approve an NDA</div>
+          <div className="flex flex-wrap gap-1.5">
+            {["Company name & logo", "Website & email", "Photos", "Founder name", "Product overview", "Data room"].map((t) => (
+              <span key={t} className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11.5px] font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"><Lock className="h-3 w-3" />{t}</span>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
