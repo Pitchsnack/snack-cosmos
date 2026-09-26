@@ -272,7 +272,7 @@ function PrivateCardBody({ s }: { s: StartupListItem }) {
       <div className="mt-2">
         <RowLine label="Directory">{published ? "Published" : "Not published"}</RowLine>
         <RowLine label="Website">
-          {website ? <a href={website} target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-2 hover:underline">{s.website_url.replace(/^https?:\/\//, "")}</a> : <span className="font-normal text-muted-foreground">—</span>}
+          {website ? <a href={website} target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-2 hover:underline">{website.replace(/^https?:\/\//, "")}</a> : <span className="font-normal text-muted-foreground">—</span>}
         </RowLine>
       </div>
     </div>
