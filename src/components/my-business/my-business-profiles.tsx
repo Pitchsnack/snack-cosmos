@@ -14,8 +14,10 @@ import { SectorArt } from "@/components/hidden-profile/bits";
 import { useEntryFacts, useHiddenProfile, useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import {
-  hiddenStatusOf, isStartupEntry, moneyRange, type HiddenDraft, type HiddenProfileRow,
+  hiddenStatusOf, isStartupEntry, type HiddenDraft, type HiddenProfileRow,
 } from "@/lib/hidden-profile";
+import { buildPublicListing, type ListingSource } from "@/lib/public-listing";
+import { TagChips } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +38,7 @@ function useCompleteness(s: StartupListItem) {
     { key: "logo", label: "Logo & photos", weight: 15, required: false, done: !!s.logo_signed_url && !!s.tile_image_signed_url },
     { key: "fin", label: "Financials FY23–25", weight: 20, required: true, done: hasData },
     { key: "terms", label: "Deal terms", weight: 15, required: true, done: !!row && row.stake_pct != null && !!row.deal_type },
-    { key: "hidden", label: "Public description", weight: 20, required: true, done: !!row && !!row.code_name?.trim() && !!row.description?.trim() && !!row.customers_summary?.trim() },
+    { key: "hidden", label: "Public headline", weight: 20, required: true, done: !!row && !!row.headline?.trim() },
     { key: "people", label: "Key people & customers", weight: 15, required: false, done: (facts?.people?.length ?? 0) > 0 && (facts?.customers?.length ?? 0) > 0 },
   ];
   const pct = items.reduce((a, i) => a + (i.done ? i.weight : 0), 0);
@@ -59,9 +61,9 @@ function Ring({ pct, size, stroke = 5, done }: { pct: number; size: number; stro
 }
 
 const HELP: Record<ItemKey, { cta: string; link: string; help: string }> = {
-  fin: { cta: "Add financials", link: "Add →", help: "Buyers see revenue as a range before the NDA, exact figures after." },
+  fin: { cta: "Add financials", link: "Add →", help: "Your wizard revenue band is already public. Detailed FY23–25 figures are shown only after the NDA." },
   terms: { cta: "Set deal terms", link: "Set →", help: "Stake, deal type and asking price shown in your public view." },
-  hidden: { cta: "Write public description", link: "Write →", help: "An anonymous description buyers read before the NDA." },
+  hidden: { cta: "Write public headline", link: "Write →", help: "One line buyers read first. No company or product names." },
   desc: { cta: "Add description", link: "Add →", help: "A short description and tags for your company." },
   logo: { cta: "Add logo & photos", link: "Add →", help: "Shown only after you approve an NDA." },
   people: { cta: "Add people & customers", link: "Add →", help: "Key people and customers, names after the NDA." },
@@ -223,7 +225,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   const status = hiddenStatusOf(row, s.company_type);
   const d = row as HiddenDraft;
   const industry = s.sector || s.industry?.[0] || "SME";
-  const rev = moneyRange(s.last_year_revenue);
+  const listing = buildPublicListing(s as ListingSource, { ...row, live: status === "live" || status === "live_edited" }, false);
   const live = status === "live" || status === "live_edited";
   return (
     <>
@@ -241,12 +243,14 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
           <div className="min-w-0 flex-1 truncate pb-0.5 text-[14px] font-bold">{d.code_name || "Untitled"}</div>
         </div>
         <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{row.ref_no} · {industry} · {d.region || "Region not set"}</div>
-        <p className="mb-2 mt-1.5 truncate text-[12.5px] text-muted-foreground">{d.description || d.headline || <em>No description yet</em>}</p>
-        <RowLine label="Revenue">{rev ?? <span className="font-normal text-muted-foreground">Add financials</span>}</RowLine>
-        <RowLine label="Marketplace">{live ? "Live" : status === "draft" ? "Draft" : "Not listed"}</RowLine>
-        <RowLine label="Identity">
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11.5px] font-normal text-muted-foreground"><EyeOff className="h-3 w-3" />Name hidden</span>
+        <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>No description yet</em>}</p>
+        <RowLine label="Revenue">
+          {listing.revenueBand ? <>{listing.revenueBand} <span className="ml-1 rounded bg-[#EEF0FF] px-1 py-0.5 text-[9.5px] font-semibold text-[#4338CA]">Range</span></> : "—"}
         </RowLine>
+        <div className="space-y-1.5 border-t border-border pt-2">
+          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Products & services</div><TagChips tags={listing.productTags.slice(0, 4)} /></div>
+          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Markets</div><TagChips tags={listing.marketTags.slice(0, 4)} green /></div>
+        </div>
       </div>
     </>
   );
@@ -299,6 +303,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
   const { row } = useHiddenProfile(s.id);
   const { data: facts } = useEntryFacts(s.id);
   const { missingRequired } = useCompleteness(s);
+  const { hasData: hasFinancials } = useHasFinancials(s.id);
   const actions = useHiddenProfileActions();
   const [publishOnOpen, setPublishOnOpen] = useState(false);
   const industry = s.sector || s.industry?.[0] || "—";
@@ -357,6 +362,8 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
         facts={facts}
         industry={industry}
         showMarkers
+        source={s as ListingSource}
+        hasFinancials={hasFinancials}
         creating={actions.create.isPending}
         onCreate={create}
         onEdit={() => setEditing(true)}
