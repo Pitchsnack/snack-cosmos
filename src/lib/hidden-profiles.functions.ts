@@ -19,7 +19,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, live, has_unpublished_changes, views, ndas_approved, updated_at";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags";
 
 type Sb = SupabaseClient<Database>;
 
@@ -106,6 +106,8 @@ const DraftSchema = z.object({
   process: z.string().max(400).nullable(),
   open_to: z.array(z.string()).max(5),
   nda_approver: z.enum(["seller", "admin"]),
+  product_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
+  market_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
 });
 
 function draftError(msg: string) {
