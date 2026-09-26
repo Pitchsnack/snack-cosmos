@@ -11,6 +11,7 @@ import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { DefaultIntakeDomain } from "@/lib/default-intake";
+import { useIsMarketplace } from "@/hooks/use-marketplace";
 
 export function NeedsReassignmentBadge({
   className,
