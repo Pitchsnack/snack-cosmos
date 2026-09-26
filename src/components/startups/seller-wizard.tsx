@@ -5,7 +5,7 @@ import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { SectorPicker } from "@/components/startups/sector-fields";
 import {
   SELLER_RELATIONS, THAI_PROVINCES, THB_REVENUE_BANDS, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
-  isValidUrl, saveDraft, answeredCount, normalizeUrl, WIZARD_QUESTION_TITLES, type SellerDraft,
+  isValidUrl, saveDraft, answeredCount, normalizeUrl, type SellerDraft,
 } from "@/lib/seller-wizard";
 
 const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review"];

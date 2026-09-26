@@ -50,7 +50,7 @@ function NewMyStartupPage() {
           userId={userId}
           initial={initial}
           onExit={() => navigate({ to: "/my-startups" })}
-          onCancel={() => { if (!loadDraft(userId)) clearDraft(userId); if (window.history.length > 1) window.history.back(); else navigate({ to: "/my-startups" }); }}
+          onCancel={() => { if (window.history.length > 1) window.history.back(); else navigate({ to: "/my-startups" }); }}
           onFinish={(d) => setPrefill(draftToPrefill(d))}
         />
       ) : null}
