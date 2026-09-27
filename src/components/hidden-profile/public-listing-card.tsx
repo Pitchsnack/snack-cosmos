@@ -86,11 +86,7 @@ export function PublicListingCard({ l, seller = false, className }: { l: PublicL
         <h3 className="text-[18px] font-bold leading-[1.3]">{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3.5 w-3.5" />}>Verified company</Badge>}
-          {l.hasFinancials ? (
-            <Badge tone="green" icon={<FileText className="h-3.5 w-3.5" />}>Financial reports available</Badge>
-          ) : seller ? (
-            <Badge tone="dashed" icon={<FileText className="h-3.5 w-3.5" />}>Financial reports · add FY23–25</Badge>
-          ) : null}
+          {seller && <Badge tone="dashed" icon={<FileText className="h-3.5 w-3.5" />}>Verified financials · optional</Badge>}
           <Badge tone="violet" icon={<Lock className="h-3.5 w-3.5" />}>Identity after NDA</Badge>
         </div>
         {l.revenueBand && (
