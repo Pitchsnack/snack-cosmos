@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          fields: string[]
+          id: string
+          item_id: string
+          item_type: string
+          note: string | null
+          reasons: string[]
+          startup_id: string | null
+          subject_user_id: string | null
+          version: number | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          fields?: string[]
+          id?: string
+          item_id: string
+          item_type: string
+          note?: string | null
+          reasons?: string[]
+          startup_id?: string | null
+          subject_user_id?: string | null
+          version?: number | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          fields?: string[]
+          id?: string
+          item_id?: string
+          item_type?: string
+          note?: string | null
+          reasons?: string[]
+          startup_id?: string | null
+          subject_user_id?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -57,6 +102,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      buyer_verifications: {
+        Row: {
+          assignee_id: string | null
+          buyer_type: string | null
+          company_name: string
+          decided_at: string | null
+          decision_note: string | null
+          documents: string[]
+          email_domain_match: boolean | null
+          id: string
+          linkedin: string | null
+          registration_no: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          website: string | null
+          work_email: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          buyer_type?: string | null
+          company_name: string
+          decided_at?: string | null
+          decision_note?: string | null
+          documents?: string[]
+          email_domain_match?: boolean | null
+          id?: string
+          linkedin?: string | null
+          registration_no?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+          work_email: string
+        }
+        Update: {
+          assignee_id?: string | null
+          buyer_type?: string | null
+          company_name?: string
+          decided_at?: string | null
+          decision_note?: string | null
+          documents?: string[]
+          email_domain_match?: boolean | null
+          id?: string
+          linkedin?: string | null
+          registration_no?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          work_email?: string
+        }
+        Relationships: []
       }
       cash_flow_items: {
         Row: {
@@ -1276,7 +1378,9 @@ export type Database = {
       }
       hidden_profiles: {
         Row: {
+          approval_status: string
           asking_price: number | null
+          assignee_id: string | null
           code_name: string
           cover_art: string | null
           cover_image_url: string | null
@@ -1284,6 +1388,10 @@ export type Database = {
           created_by: string | null
           customers_summary: string
           deal_type: string | null
+          decided_at: string | null
+          decision_fields: string[]
+          decision_note: string | null
+          decision_reasons: string[]
           description: string
           handover: string | null
           has_unpublished_changes: boolean
@@ -1291,6 +1399,7 @@ export type Database = {
           highlights: string[]
           id: string
           live: Json | null
+          live_snapshot: Json | null
           market_tags: string[] | null
           nda_approver: string
           ndas_approved: number
@@ -1306,14 +1415,19 @@ export type Database = {
           startup_id: string
           status: string
           structure: string | null
+          submitted_at: string | null
+          submitted_by: string | null
           tenant_id: string
           unpublished_at: string | null
           updated_at: string
           updated_by: string | null
+          version: number
           views: number
         }
         Insert: {
+          approval_status?: string
           asking_price?: number | null
+          assignee_id?: string | null
           code_name: string
           cover_art?: string | null
           cover_image_url?: string | null
@@ -1321,6 +1435,10 @@ export type Database = {
           created_by?: string | null
           customers_summary?: string
           deal_type?: string | null
+          decided_at?: string | null
+          decision_fields?: string[]
+          decision_note?: string | null
+          decision_reasons?: string[]
           description?: string
           handover?: string | null
           has_unpublished_changes?: boolean
@@ -1328,6 +1446,7 @@ export type Database = {
           highlights?: string[]
           id?: string
           live?: Json | null
+          live_snapshot?: Json | null
           market_tags?: string[] | null
           nda_approver?: string
           ndas_approved?: number
@@ -1343,14 +1462,19 @@ export type Database = {
           startup_id: string
           status?: string
           structure?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           tenant_id: string
           unpublished_at?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
           views?: number
         }
         Update: {
+          approval_status?: string
           asking_price?: number | null
+          assignee_id?: string | null
           code_name?: string
           cover_art?: string | null
           cover_image_url?: string | null
@@ -1358,6 +1482,10 @@ export type Database = {
           created_by?: string | null
           customers_summary?: string
           deal_type?: string | null
+          decided_at?: string | null
+          decision_fields?: string[]
+          decision_note?: string | null
+          decision_reasons?: string[]
           description?: string
           handover?: string | null
           has_unpublished_changes?: boolean
@@ -1365,6 +1493,7 @@ export type Database = {
           highlights?: string[]
           id?: string
           live?: Json | null
+          live_snapshot?: Json | null
           market_tags?: string[] | null
           nda_approver?: string
           ndas_approved?: number
@@ -1380,10 +1509,13 @@ export type Database = {
           startup_id?: string
           status?: string
           structure?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           tenant_id?: string
           unpublished_at?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
           views?: number
         }
         Relationships: [
@@ -1965,6 +2097,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      listing_submissions: {
+        Row: {
+          hidden_profile_id: string
+          id: string
+          snapshot: Json
+          startup_id: string
+          submitted_at: string
+          submitted_by: string
+          tenant_id: string
+          version: number
+        }
+        Insert: {
+          hidden_profile_id: string
+          id?: string
+          snapshot: Json
+          startup_id: string
+          submitted_at?: string
+          submitted_by: string
+          tenant_id: string
+          version: number
+        }
+        Update: {
+          hidden_profile_id?: string
+          id?: string
+          snapshot?: Json
+          startup_id?: string
+          submitted_at?: string
+          submitted_by?: string
+          tenant_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_submissions_hidden_profile_id_fkey"
+            columns: ["hidden_profile_id"]
+            isOneToOne: false
+            referencedRelation: "hidden_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       master_agent_tenants: {
         Row: {
