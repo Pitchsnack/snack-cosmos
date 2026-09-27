@@ -283,7 +283,15 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
   );
 }
 
-/* ------------------------------ Right panel ------------------------------- */
+function Intro({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="mb-4 flex items-start gap-2.5 rounded-[10px] bg-muted px-3 py-2.5 text-[13px] leading-relaxed text-foreground/80">
+      <span className="mt-0.5 shrink-0">{icon}</span>
+      <span>{children}</span>
+    </div>
+  );
+}
+
 
 
 function KindPill({ kind }: { kind: View }) {
