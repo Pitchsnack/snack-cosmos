@@ -93,7 +93,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
       const pages = new Map<string, AnyRouteMatch>();
       for (const match of matches) {
         const path = getPathTemplate(match.routeId);
-        if (path !== "/" && path !== "/marketplace" && path !== "/_authenticated") {
+        if (!HIDDEN_ROUTE_IDS.has(match.routeId) && path !== "/marketplace") {
           pages.set(path, match);
         }
       }
