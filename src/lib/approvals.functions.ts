@@ -44,7 +44,7 @@ async function buildSnapshot(sb: any, startupId: string, hp: any) {
   return {
     public: draft,
     private: { ...st, people, financial_years: ((fin ?? []) as any[]).map((f) => f.fiscal_year), photos: photos ?? 0 },
-    identity_flags: findings.map((f: any) => f.word ?? f.term ?? String(f)),
+    identity_flags: findings.map((f) => f.term),
   };
 }
 
@@ -148,9 +148,9 @@ export const listApprovals = createServerFn({ method: "GET" })
 
 async function userNames(sb: any, ids: string[]) {
   if (!ids.length) return {} as Record<string, string>;
-  const { data } = await sb.from("users").select("id, full_name, email").in("id", ids);
+  const { data } = await sb.from("users").select("id, first_name, last_name, email").in("id", ids);
   const out: Record<string, string> = {};
-  for (const u of data ?? []) out[u.id] = u.full_name || u.email || "User";
+  for (const u of data ?? []) out[u.id] = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email || "User";
   return out;
 }
 
@@ -301,7 +301,7 @@ export const getBuyerReview = createServerFn({ method: "GET" })
     const { data: bv } = await sb.from("buyer_verifications").select("*").eq("id", data.id).maybeSingle();
     if (!bv) throw new Error("Buyer not found");
     const { data: profile } = await sb.from("user_profiles").select("*").eq("user_id", bv.user_id).maybeSingle();
-    const { data: user } = await sb.from("users").select("full_name, email").eq("id", bv.user_id).maybeSingle();
+    const { data: user } = await sb.from("users").select("first_name, last_name, email").eq("id", bv.user_id).maybeSingle();
     const { data: events } = await sb.from("approval_events").select("*").eq("item_id", bv.id).order("created_at", { ascending: false });
     const ids = [bv.assignee_id, ...(events ?? []).map((e: any) => e.actor_id)].filter(Boolean);
     return { bv, profile, user, events: events ?? [], names: await userNames(sb, ids) };
