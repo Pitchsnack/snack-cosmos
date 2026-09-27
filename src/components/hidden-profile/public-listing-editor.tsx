@@ -24,7 +24,7 @@ export function PublicListingEditor({ row, source, listing, onClose, onFullEdit 
   row: HiddenProfileRow; source: ListingSource; listing: PublicListing; onClose: () => void; onFullEdit: () => void;
 }) {
   const suggestion = useMemo(() => suggestHeadline(source), [source]);
-  const [headline, setHeadline] = useState(row.headline || "");
+  const [headline, setHeadline] = useState(row.headline.trim() || suggestion);
   const [description, setDescription] = useState(listing.description);
   const [products, setProducts] = useState(listing.productTags.join(", "));
   const [markets, setMarkets] = useState(listing.marketTags.join(", "));
