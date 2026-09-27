@@ -256,8 +256,10 @@ export const decideListing = createServerFn({ method: "POST" })
 export const getMyVerification = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await (context.supabase as any).from("buyer_verifications").select("*").eq("user_id", context.userId).maybeSingle();
-    return data ?? null;
+    const sb = context.supabase as any;
+    const { data } = await sb.from("buyer_verifications").select("*").eq("user_id", context.userId).maybeSingle();
+    const { data: uv } = await sb.from("user_verifications").select("user_id").eq("user_id", context.userId).maybeSingle();
+    return { request: data ?? null, verified: !!uv || data?.status === "verified" };
   });
 
 const domainOf = (v?: string | null) => {
@@ -319,6 +321,9 @@ export const decideBuyer = createServerFn({ method: "POST" })
       .update({ status, decision_note: data.note ?? null, decided_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq("id", data.id).select("*").single();
     if (error) throw new Error(error.message);
+    if (data.action === "verify") {
+      await sb.from("user_verifications").upsert({ user_id: bv.user_id, verified_at: new Date().toISOString(), verified_by: context.userId });
+    }
     await logEvent({ item_type: "buyer", item_id: bv.id, subject_user_id: bv.user_id, action: data.action, actor_id: context.userId, note: data.note ?? null });
     const msg = {
       verify: ["You're a verified buyer", "You can now request NDAs."],

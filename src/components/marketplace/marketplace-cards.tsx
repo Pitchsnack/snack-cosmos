@@ -1,3 +1,4 @@
+import { useMyVerification } from "@/components/marketplace/buyer-verification";
 import { Bookmark, EyeOff, TrendingUp, Wallet, Tag, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PublicListing } from "@/lib/public-listing";
@@ -86,9 +87,7 @@ export function MarketplaceGridCard({ l, onOpen }: { l: MarketplaceListing; onOp
           <button type="button" onClick={onOpen} className="h-[34px] rounded-md border border-border bg-background text-sm font-medium text-foreground hover:bg-muted">
             {l.nda === "approved" ? "Data room" : "View teaser"}
           </button>
-          <button type="button" disabled={l.nda === "requested"} className="h-[34px] rounded-md bg-accent text-sm font-medium text-accent-foreground hover:bg-accent/90 disabled:opacity-60">
-            {l.nda === "approved" ? "Full profile" : l.nda === "requested" ? "Requested" : "Request NDA"}
-          </button>
+          <NdaButton nda={l.nda} />
         </div>
       </div>
     </div>
@@ -128,5 +127,15 @@ export function MarketplaceSplitCard({ l, selected, onSelect, onOpen }: { l: Mar
         </button>
       </div>
     </div>
+  );
+}
+
+function NdaButton({ nda }: { nda: MarketplaceListing["nda"] }) {
+  const { data } = useMyVerification();
+  const locked = nda !== "approved" && !data?.verified;
+  return (
+    <button type="button" disabled={nda === "requested" || locked} title={locked ? "Submit for verification on My Profile first" : undefined} className="h-[34px] rounded-md bg-accent text-sm font-medium text-accent-foreground hover:bg-accent/90 disabled:opacity-60">
+      {nda === "approved" ? "Full profile" : nda === "requested" ? "Requested" : locked ? "Available after verification" : "Request NDA"}
+    </button>
   );
 }
