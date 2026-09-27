@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, Lock, Pencil, Plus, Store } from "lucide-react";
+import { AlertTriangle, Check, Lock, Pencil, Store } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
