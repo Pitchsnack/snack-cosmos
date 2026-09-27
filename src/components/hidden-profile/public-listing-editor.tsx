@@ -15,7 +15,6 @@ import {
   type PublicListing,
 } from "@/lib/public-listing";
 import { useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
-import { MediaUploader } from "@/components/startups/media-uploader";
 
 const split = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
@@ -28,7 +27,6 @@ export function PublicListingEditor({ row, source, listing, onClose, onFullEdit 
   const [description, setDescription] = useState(listing.description);
   const [products, setProducts] = useState(listing.productTags.join(", "));
   const [markets, setMarkets] = useState(listing.marketTags.join(", "));
-  const [coverImage, setCoverImage] = useState<string | null>(row.cover_image_url ?? null);
   const { save } = useHiddenProfileActions();
   const terms = useMemo(() => listingTerms(source), [source]);
   const flagged = checkListing({ headline, description, productTags: split(products), marketTags: split(markets) }, terms);
@@ -37,7 +35,7 @@ export function PublicListingEditor({ row, source, listing, onClose, onFullEdit 
   const submit = async () => {
     await save.mutateAsync({
       startupId: row.startup_id,
-      draft: { ...pickDraft(row), headline: headline.trim(), description: description.trim(), product_tags: split(products), market_tags: split(markets), cover_image_url: coverImage },
+      draft: { ...pickDraft(row), headline: headline.trim(), description: description.trim(), product_tags: split(products), market_tags: split(markets) },
     });
     onClose();
   };
@@ -71,8 +69,8 @@ export function PublicListingEditor({ row, source, listing, onClose, onFullEdit 
             <Input value={markets} onChange={(e) => setMarkets(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block font-semibold">Cover picture <span className="font-normal text-muted-foreground">(optional — no logos, people or identifying details; the sector artwork is used otherwise)</span></label>
-            <MediaUploader tenantId={row.tenant_id} startupId={row.startup_id} kind="slot-1" path={coverImage} onChange={setCoverImage} aspect="video" />
+            <label className="mb-1 block font-semibold">Public picture</label>
+            <p className="text-[12px] text-muted-foreground">Image locked · set by Admin. Admin picks it from the image library so every Marketplace card looks consistent; it goes live when your listing is approved.</p>
           </div>
           {flagged.length === 0 ? (
             <p className="flex items-center gap-1.5 text-[12.5px] text-emerald-700 dark:text-emerald-400"><Check className="h-4 w-4" />Identity check passed</p>

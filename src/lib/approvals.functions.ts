@@ -133,7 +133,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: listings } = await sb
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, cover_art, approval_status, version, submitted_at, submitted_by, assignee_id, decided_at, startups!inner(startup_name, sector, last_year_revenue)")
+      .select("id, startup_id, ref_no, code_name, cover_art, status, approval_status, version, submitted_at, submitted_by, assignee_id, decided_at, startups!inner(startup_name, sector, last_year_revenue, company_type)")
       .in("approval_status", ["in_review", "changes_requested"])
       .order("submitted_at", { ascending: true });
     const { data: buyers } = await sb.from("buyer_verifications").select("*").in("status", ["pending", "more_info"]).order("submitted_at", { ascending: true });
@@ -143,7 +143,8 @@ export const listApprovals = createServerFn({ method: "GET" })
     for (const b of buyers ?? []) { userIds.add(b.user_id); if (b.assignee_id) userIds.add(b.assignee_id); }
     for (const h of history ?? []) userIds.add(h.actor_id);
     const names = await userNames(sb, [...userIds]);
-    return { listings: listings ?? [], buyers: buyers ?? [], history: history ?? [], names, me: context.userId };
+    const emails = await userEmails(sb, [...userIds]);
+    return { listings: listings ?? [], buyers: buyers ?? [], history: history ?? [], names, emails, me: context.userId };
   });
 
 async function userNames(sb: any, ids: string[]) {
@@ -151,6 +152,14 @@ async function userNames(sb: any, ids: string[]) {
   const { data } = await sb.from("users").select("id, first_name, last_name, email").in("id", ids);
   const out: Record<string, string> = {};
   for (const u of data ?? []) out[u.id] = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email || "User";
+  return out;
+}
+
+async function userEmails(sb: any, ids: string[]) {
+  if (!ids.length) return {} as Record<string, string>;
+  const { data } = await sb.from("users").select("id, email").in("id", ids);
+  const out: Record<string, string> = {};
+  for (const u of data ?? []) out[u.id] = u.email ?? "";
   return out;
 }
 
@@ -183,7 +192,9 @@ export const getListingReview = createServerFn({ method: "GET" })
     const listing = buildPublicListing(snap.private, { ...snap.public, ref_no: hp.ref_no, live: false, published_at: hp.published_at }, (fin ?? []).length > 0);
     const changed = previous ? diffKeys(previous.snapshot.public, snap.public) : [];
     const ids = [hp.submitted_by, hp.assignee_id, ...(events ?? []).map((e: any) => e.actor_id)].filter(Boolean);
-    return { hp, snapshot: snap, listing, changed, events: events ?? [], names: await userNames(sb, ids) };
+    const { data: edits } = await sb.from("listing_admin_edits").select("*").eq("hidden_profile_id", hp.id).eq("version", hp.version ?? 0).is("undone_at", null).order("created_at", { ascending: false });
+    for (const e of edits ?? []) ids.push(e.admin_id);
+    return { hp, snapshot: snap, listing, changed, events: events ?? [], edits: edits ?? [], names: await userNames(sb, ids) };
   });
 
 function diffKeys(a: Record<string, unknown> = {}, b: Record<string, unknown> = {}) {
@@ -213,11 +224,14 @@ export const decideListing = createServerFn({ method: "POST" })
       note: z.string().max(2000).optional(),
       reasons: z.array(z.string().max(80)).max(10).optional(),
       fields: z.array(z.string().max(60)).max(10).optional(),
+      category: z.string().max(80).optional(),
+      isNew: z.boolean().optional(),
+      featured: z.boolean().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
-    if (data.action === "reject" && !data.note?.trim()) throw new Error("Give a reason");
+    if (data.action !== "approve" && !data.note?.trim()) throw new Error("Add a note for the seller");
     const sb = await admin();
     const { data: hp } = await sb.from("hidden_profiles").select("*").eq("id", data.id).maybeSingle();
     if (!hp) throw new Error("Listing not found");
@@ -226,9 +240,13 @@ export const decideListing = createServerFn({ method: "POST" })
     let patch: Record<string, unknown>;
     if (data.action === "approve") {
       const { data: sub } = await sb.from("listing_submissions").select("snapshot").eq("hidden_profile_id", hp.id).eq("version", hp.version).maybeSingle();
-      const pub = sub?.snapshot?.public ?? pickDraft(hp);
+      // Admin-chosen public image goes live now, replacing the locked placeholder.
+      const cover = hp.pending_cover ?? hp.cover_image_url ?? null;
+      const pub = { ...pickDraft(hp), cover_image_url: cover };
       patch = {
-        ...base, approval_status: "live", status: "live", live: pub, live_snapshot: sub?.snapshot ?? null,
+        ...base, approval_status: "live", status: "live", live: pub, live_snapshot: sub?.snapshot ? { ...sub.snapshot, public: pub } : null,
+        cover_image_url: cover, directory_category: data.category ?? hp.directory_category ?? null, featured: !!data.featured,
+        new_until: data.isNew === false ? null : new Date(Date.now() + 14 * 86_400_000).toISOString(),
         has_unpublished_changes: false, published_at: hp.status === "live" && hp.published_at ? hp.published_at : now, published_by: context.userId,
       };
     } else if (data.action === "request_changes") {
@@ -247,7 +265,13 @@ export const decideListing = createServerFn({ method: "POST" })
       request_changes: ["Changes requested", `Admin asked for changes to ${hp.code_name}: ${data.note ?? ""}`],
       reject: ["Listing rejected", `${hp.code_name} was rejected: ${data.note ?? ""}`],
     }[data.action];
-    await notify(hp.submitted_by, hp.tenant_id, msg[0], msg[1]);
+    let extra = "";
+    if (data.action === "approve" && hp.notify_admin_edits) {
+      const { data: edits } = await sb.from("listing_admin_edits").select("field").eq("hidden_profile_id", hp.id).eq("version", hp.version ?? 0).is("undone_at", null);
+      const f = [...new Set(((edits ?? []) as any[]).map((e) => FIELD_LABEL[e.field] ?? e.field))];
+      if (f.length) extra = ` Admin edited: ${f.join(", ")}.`;
+    }
+    await notify(hp.submitted_by, hp.tenant_id, msg[0], msg[1] + extra);
     return { ok: true };
   });
 
@@ -332,4 +356,102 @@ export const decideBuyer = createServerFn({ method: "POST" })
     }[data.action];
     await notify(bv.user_id, null, msg[0], msg[1]);
     return bv;
+  });
+
+
+// ---------------------------------------------------------------- admin edits & image library
+
+export const FIELD_LABEL: Record<string, string> = {
+  headline: "Headline", description: "Description", product_tags: "Products & services", market_tags: "Markets", code_name: "Code name",
+  region: "Region", deal_type: "Deal type", stake_pct: "Stake", asking_price: "Asking price", structure: "Structure", reason: "Reason for sale",
+  handover: "Handover", process: "Process", open_to: "Open to", highlights: "Highlights", customers_summary: "Customers", cover_art: "Sector artwork",
+  pending_cover: "Public image", nda_approver: "NDA approver",
+};
+const UNDOABLE = new Set(Object.keys(FIELD_LABEL));
+
+/** Records each changed field as an admin edit against the current version. Called from saveHiddenProfile. */
+export async function recordAdminEdits(hp: any, next: Record<string, unknown>, adminId: string) {
+  const rows = Object.keys(next).filter((k) => UNDOABLE.has(k) && JSON.stringify(hp[k] ?? null) !== JSON.stringify(next[k] ?? null))
+    .map((k) => ({ hidden_profile_id: hp.id, version: hp.version ?? 0, field: k, old_value: hp[k] ?? null, new_value: next[k] ?? null, admin_id: adminId }));
+  if (!rows.length) return;
+  const sb = await admin();
+  await sb.from("listing_admin_edits").insert(rows);
+}
+
+export const undoAdminEdit = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ editId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const sb = await admin();
+    const { data: e } = await sb.from("listing_admin_edits").select("*").eq("id", data.editId).maybeSingle();
+    if (!e || e.undone_at) throw new Error("Edit not found");
+    if (!UNDOABLE.has(e.field)) throw new Error("Can't undo this field");
+    const { error } = await sb.from("hidden_profiles").update({ [e.field]: e.old_value }).eq("id", e.hidden_profile_id);
+    if (error) throw new Error(error.message);
+    await sb.from("listing_admin_edits").update({ undone_at: new Date().toISOString() }).eq("id", e.id);
+    return { ok: true };
+  });
+
+export const setNotifyAdminEdits = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), value: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const sb = await admin();
+    await sb.from("hidden_profiles").update({ notify_admin_edits: data.value }).eq("id", data.id);
+    return { ok: true };
+  });
+
+/** Admin picks the public image (library upload path or "art:<sector>"); it goes live on approval. */
+export const setPublicImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), cover: z.string().max(300).regex(/^(art:.+|library\/[0-9a-f-]{36}\.(jpg|jpeg|png|webp))$/i).nullable() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const sb = await admin();
+    const { data: hp } = await sb.from("hidden_profiles").select("id, version, pending_cover").eq("id", data.id).maybeSingle();
+    if (!hp) throw new Error("Listing not found");
+    const { error } = await sb.from("hidden_profiles").update({ pending_cover: data.cover }).eq("id", hp.id);
+    if (error) throw new Error(error.message);
+    await recordAdminEdits(hp, { pending_cover: data.cover }, context.userId);
+    return { ok: true };
+  });
+
+export const listImageLibrary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as Ctx);
+    const sb = await admin();
+    const { data } = await sb.from("listing_image_library").select("*").order("created_at", { ascending: false });
+    const rows = (data ?? []) as { id: string; path: string; label: string }[];
+    const out = [];
+    for (const r of rows) {
+      const { data: s } = await sb.storage.from("startup-media").createSignedUrl(r.path, 3600);
+      out.push({ ...r, url: s?.signedUrl ?? null });
+    }
+    return out;
+  });
+
+export const createLibraryUpload = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ ext: z.enum(["jpg", "jpeg", "png", "webp"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const sb = await admin();
+    const path = `library/${crypto.randomUUID()}.${data.ext}`;
+    const { data: u, error } = await sb.storage.from("startup-media").createSignedUploadUrl(path);
+    if (error) throw new Error(error.message);
+    return { path, uploadUrl: u.signedUrl as string };
+  });
+
+export const addLibraryImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ path: z.string().regex(/^library\/[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$/i), label: z.string().max(80) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const sb = await admin();
+    const { error } = await sb.from("listing_image_library").insert({ path: data.path, label: data.label, created_by: context.userId });
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

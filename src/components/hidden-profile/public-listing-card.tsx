@@ -12,11 +12,30 @@ export function useMediaUrl(path: string | null) {
   const getUrl = useServerFn(getStartupSignedUrl);
   useEffect(() => {
     let cancel = false;
-    if (!path) { setUrl(null); return; }
+    if (!path || path.startsWith("art:")) { setUrl(null); return; }
     getUrl({ data: { path } }).then((r) => { if (!cancel) setUrl(r.url); }).catch(() => {});
     return () => { cancel = true; };
   }, [path, getUrl]);
   return url;
+}
+
+/** Locked placeholder shown until Admin sets the public image and approves. */
+export function LockedCover({ className, children }: { className?: string; children?: React.ReactNode }) {
+  return (
+    <div className={cn("relative grid place-items-center overflow-hidden bg-muted text-muted-foreground", className)}>
+      <div className="flex flex-col items-center gap-1.5 text-center text-[11.5px] font-semibold"><Lock className="h-5 w-5" />Image locked · set by Admin</div>
+      {children}
+    </div>
+  );
+}
+
+/** Renders a public cover value: storage path, "art:<sector>", or the locked placeholder. */
+export function CoverView({ cover, fallbackArt, locked, className, children }: { cover: string | null; fallbackArt?: string | null; locked?: boolean; className?: string; children?: React.ReactNode }) {
+  const url = useMediaUrl(cover);
+  if (cover?.startsWith("art:")) return <SectorArt art={cover.slice(4)} className={className}>{children}</SectorArt>;
+  if (url) return <div className={cn("relative overflow-hidden", className)}><img src={url} alt="" className="absolute inset-0 h-full w-full object-cover" />{children}</div>;
+  if (locked) return <LockedCover className={className}>{children}</LockedCover>;
+  return <SectorArt art={fallbackArt} className={className}>{children}</SectorArt>;
 }
 
 function fmt(d?: string | null) {
@@ -56,21 +75,13 @@ function Fact({ icon, children, full }: { icon: React.ReactNode; children: React
 /** One listing card used by the seller's Public view AND the buyer Marketplace. */
 export function PublicListingCard({ l, seller = false, className }: { l: PublicListing; seller?: boolean; className?: string }) {
   const ic = "h-4 w-4";
-  const coverUrl = useMediaUrl(l.coverImage);
   const badge = seller && (
     <span className={cn("absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
       l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : l.refNo ? "Draft" : "Preview"}</span>
   );
   return (
     <div className={cn("grid gap-[18px] rounded-[14px] bg-card p-3.5 shadow-[0_1px_3px_rgba(16,24,40,.08),0_4px_12px_rgba(16,24,40,.05)] sm:grid-cols-[190px_minmax(0,1fr)]", className)} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-      {coverUrl ? (
-        <div className="relative min-h-[160px] overflow-hidden rounded-[10px]">
-          <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          {badge}
-        </div>
-      ) : (
-        <SectorArt art={l.coverArt ?? l.sector} className="min-h-[160px] rounded-[10px]">{badge}</SectorArt>
-      )}
+      <CoverView cover={l.coverImage} fallbackArt={l.coverArt ?? l.sector} locked={seller && !l.coverImage} className="min-h-[160px] rounded-[10px]">{badge}</CoverView>
       <div className="min-w-0">
         <h3 className="text-[18px] font-bold leading-[1.3]">{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1.5">

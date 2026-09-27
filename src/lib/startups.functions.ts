@@ -226,6 +226,8 @@ const ListInput = z.object({
    * modes; never treated as persistent publication.
    */
   allowPrivateRefs: z.array(z.string().uuid()).max(200).default([]),
+  /** Restrict to specific startup ids (Admin listing review). */
+  ids: z.array(z.string().uuid()).max(50).optional(),
 });
 
 export const listStartups = createServerFn({ method: "GET" })
@@ -259,6 +261,7 @@ export const listStartups = createServerFn({ method: "GET" })
     if (data.companyType) q = q.eq("company_type", data.companyType);
     if (data.productTag) q = q.contains("product_tags", [data.productTag]);
     if (data.marketTag) q = q.contains("market_tags", [data.marketTag]);
+    if (data.ids?.length) q = q.in("id", data.ids);
 
     switch (data.sort) {
       case "created_desc": q = q.order("created_at", { ascending: false }); break;
@@ -878,6 +881,12 @@ export const getStartupSignedUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ path: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }) => {
+    // Admin image-library pictures are anonymous marketplace art: any signed-in user may view them.
+    if (/^library\/[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$/i.test(data.path)) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: s } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(data.path, SIGN_TTL);
+      return { url: s?.signedUrl ?? null };
+    }
     const url = await signPath(context.supabase, data.path);
     return { url };
   });

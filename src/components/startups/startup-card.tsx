@@ -9,6 +9,7 @@ import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
+import { useHiddenProfile } from "@/hooks/use-hidden-profiles";
 import { cn } from "@/lib/utils";
 import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 
@@ -78,6 +79,9 @@ export function StartupCard({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const { isFavorite } = useFavoriteStartups();
+  const { row: listingRow } = useHiddenProfile(s.id);
+  const isNew = !!listingRow?.new_until && new Date(listingRow.new_until).getTime() > Date.now();
+  const newBadge = isNew ? <span className="absolute right-2 top-2 z-20 rounded-full bg-emerald-600 px-2 py-0.5 text-[10.5px] font-bold text-primary-foreground">NEW</span> : null;
   const bookmarked = isFavorite(s.id);
 
   const [isPressed, setIsPressed] = useState(false);
@@ -327,6 +331,7 @@ export function StartupCard({
           style={cardStyle}
           {...interactionHandlers}
         >
+          {newBadge}
           {inner}
         </button>
       ) : (
@@ -337,6 +342,7 @@ export function StartupCard({
           style={cardStyle}
           {...interactionHandlers}
         >
+          {newBadge}
           {inner}
         </Link>
       )}

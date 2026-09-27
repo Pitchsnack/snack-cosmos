@@ -18,6 +18,7 @@ import {
 } from "@/lib/public-listing";
 import { PublicListingCard } from "./public-listing-card";
 import { PublicListingEditor } from "./public-listing-editor";
+import { useAdminReview } from "@/components/my-business/admin-review-context";
 
 
 export function HiddenProfileTab({
@@ -49,6 +50,7 @@ export function HiddenProfileTab({
   hasFinancials: boolean;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
+  const adminReview = useAdminReview();
   const [editAfterCreate, setEditAfterCreate] = useState(false);
   const startup = isStartupEntry(companyType);
   // After "Edit public view" creates the draft, open the editor as soon as the row arrives.
@@ -77,7 +79,8 @@ export function HiddenProfileTab({
   void status; void onPublish; void publishBlocked; void startup;
   const src: ListingSource = { ...source, people: facts?.people ?? source.people };
   const terms = listingTerms(src);
-  const listing = buildPublicListing(src, { ...row, live }, hasFinancials);
+  const built = buildPublicListing(src, { ...row, live }, hasFinancials);
+  const listing = adminReview ? { ...built, coverImage: adminReview.pendingCover ?? built.coverImage } : built;
   const flagged = [
     ...checkListing(listing, terms),
     ...(facts ? runIdentityCheck(row as HiddenDraft, facts).map((f) => f.term) : []),

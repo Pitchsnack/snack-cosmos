@@ -10,18 +10,20 @@ import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 import { StartupCard } from "@/components/startups/startup-card";
 import { HiddenProfileTab } from "@/components/hidden-profile/hidden-profile-tab";
 import { HiddenProfileEditor } from "@/components/hidden-profile/hidden-profile-editor";
-import { SectorArt } from "@/components/hidden-profile/bits";
 import { useEntryFacts, useHiddenProfile, useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import {
   hiddenStatusOf, isStartupEntry, type HiddenDraft, type HiddenProfileRow,
 } from "@/lib/hidden-profile";
 import { buildPublicListing, type ListingSource } from "@/lib/public-listing";
-import { TagChips, useMediaUrl } from "@/components/hidden-profile/public-listing-card";
+import { TagChips } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { runIdentityCheck } from "@/lib/hidden-profile";
 import { ApprovalFooter, ApprovalNotice, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
+import { useAdminReview } from "@/components/my-business/admin-review-context";
+import { CoverView } from "@/components/hidden-profile/public-listing-card";
+import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 type View = "public" | "private";
 
@@ -221,7 +223,8 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   const industry = s.sector || s.industry?.[0] || "SME";
   const listing = buildPublicListing(s as ListingSource, row ? { ...row, live: status === "live" || status === "live_edited" } : null, false);
   const live = status === "live" || status === "live_edited";
-  const coverUrl = useMediaUrl(d?.cover_image_url ?? null);
+  const adminReview = useAdminReview();
+  const cover = adminReview ? adminReview.pendingCover : row?.live ? row?.cover_image_url ?? null : null;
   const ap = approvalOf(row);
   const badge = (
     <span className={cn("absolute left-2.5 top-2.5 z-10 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-bold", row ? APPROVAL_TONE[ap] : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
@@ -230,16 +233,9 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   );
   return (
     <>
-      {coverUrl ? (
-        <div className="relative h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
-          <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          {badge}
-        </div>
-      ) : (
-        <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} className="h-[120px] w-full">
-          {badge}
-        </SectorArt>
-      )}
+      <CoverView cover={cover} fallbackArt={d?.cover_art ?? s.sector ?? s.industry?.[0]} locked={!cover && !live} className="h-[120px] w-full">
+        {badge}
+      </CoverView>
       <div className="px-3 pb-3">
         <div className="pt-2.5">
           <div className="truncate text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>
@@ -310,6 +306,8 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
   const [publishOnOpen, setPublishOnOpen] = useState(false);
   const industry = s.sector || s.industry?.[0] || "—";
   const startup = isStartupEntry(s.company_type);
+  const adminReview = useAdminReview();
+  void startup;
 
   const create = async () => {
     if (!row) {
@@ -340,9 +338,28 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
           <div className="truncate text-[13px] text-muted-foreground">{row ? `${row.ref_no} · ${industry} · ${row.region || "Region not set"}` : industry}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <Button size="sm" variant="outline" onClick={() => void create()} disabled={actions.create.isPending}>
-            <Pencil className="mr-1.5 h-3.5 w-3.5" />{row ? "Edit public view" : "Create public view"}
-          </Button>
+          {adminReview ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit as Admin<ChevronDown className="ml-1 h-3.5 w-3.5" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuItem onClick={() => void create()}>Edit public view <span className="ml-auto text-[11px] text-muted-foreground">headline, description, chips</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={adminReview.onEditPrivate}>Edit private view <span className="ml-auto text-[11px] text-muted-foreground">NDA details</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={adminReview.onSetImage}>Set public image <span className="ml-auto text-[11px] text-muted-foreground">admin only</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={adminReview.onEditMedia}>Change logo & private photos</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem checked={adminReview.notify} onCheckedChange={(v) => adminReview.onToggleNotify(!!v)} onSelect={(e) => e.preventDefault()}>Notify seller of admin changes</DropdownMenuCheckboxItem>
+                <DropdownMenuLabel className="cursor-pointer text-[12px] font-medium text-muted-foreground" onClick={adminReview.onShowEdits}>
+                  {adminReview.editsCount} admin edit{adminReview.editsCount === 1 ? "" : "s"} on this version · view / undo
+                </DropdownMenuLabel>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => void create()} disabled={actions.create.isPending}>
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />{row ? "Edit public view" : "Create public view"}
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -398,11 +415,12 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
     else void navigate({ to: "/my-startups/$id/edit", params: { id: current.id } });
   };
 
+  const adminReview = useAdminReview();
   const pill = current ? <ProgressPill s={current} onItem={onItem} /> : null;
 
   const right = current && sel ? (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm" style={{ overflow: "visible" }}>
-      {!(editing && sel.view === "public") && (
+      {!adminReview && !(editing && sel.view === "public") && (
         <PanelNotice s={current} onEditPublic={() => { setSel({ id: current.id, view: "public" }); setEditing(true); }} />
       )}
       {sel.view === "public" ? (
@@ -427,7 +445,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
           />
         </>
       )}
-      {!(editing && sel.view === "public") && (
+      {!adminReview && !(editing && sel.view === "public") && (
         <PanelFooter s={current} onItem={(k) => (k === "private" ? navigate({ to: "/my-startups/$id/edit", params: { id: current.id } }) : onItem(k as ItemKey))} />
       )}
     </div>

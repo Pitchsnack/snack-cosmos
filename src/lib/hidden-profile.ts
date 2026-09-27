@@ -89,6 +89,10 @@ export interface HiddenProfileRow extends HiddenDraft {
   decision_note?: string | null;
   decision_reasons?: string[];
   decision_fields?: string[];
+  pending_cover?: string | null;
+  new_until?: string | null;
+  featured?: boolean;
+  directory_category?: string | null;
 }
 
 export type ApprovalStatus = "draft" | "in_review" | "changes_requested" | "live" | "live_edits_pending" | "rejected" | "unpublished";
