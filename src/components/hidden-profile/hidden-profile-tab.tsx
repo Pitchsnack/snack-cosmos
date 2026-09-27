@@ -72,7 +72,9 @@ export function HiddenProfileTab({
     );
   }
   const status = hiddenStatusOf(row, companyType);
-  const live = status === "live" || status === "live_edited";
+  const live = row.status === "live";
+  const ap = (row.approval_status ?? (live ? "live" : "draft")) as string;
+  void status; void onPublish; void publishBlocked; void startup;
   const src: ListingSource = { ...source, people: facts?.people ?? source.people };
   const terms = listingTerms(src);
   const listing = buildPublicListing(src, { ...row, live }, hasFinancials);
@@ -83,22 +85,17 @@ export function HiddenProfileTab({
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
-        <div className="ml-auto flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => setEditorOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit public view</Button>
-          {startup ? null : status === "draft" ? (
-            <Button size="sm" onClick={onPublish} disabled={!!publishBlocked || flagged.length > 0} title={publishBlocked ?? (flagged.length ? "Fix the identity check first" : undefined)} className="bg-accent text-accent-foreground hover:bg-accent/90">Publish to Marketplace</Button>
-          ) : (
-            <Button size="sm" variant="outline" asChild><Link to="/marketplace"><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>
-          )}
+      {live && (
+        <div className="flex justify-end">
+          <Button size="sm" variant="outline" asChild><Link to="/marketplace"><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>
         </div>
-      </div>
+      )}
 
       <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How buyers see it on the Marketplace</span>
           <span className={live ? "rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[11px] font-bold text-[#166534]" : "rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[11px] font-bold text-[#92400E]"}>
-            {live ? "Live · published" : "Draft · not published"}
+            {ap === "live" ? "Live · published" : ap === "live_edits_pending" ? "Live · edits pending" : ap === "in_review" ? "In review" : ap === "changes_requested" ? "Changes requested" : ap === "rejected" ? "Rejected · draft" : "Draft · not published"}
           </span>
         </div>
         <PublicListingCard l={listing} seller />
