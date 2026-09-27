@@ -85,11 +85,26 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
 
   const items = useMemo(() => {
     if (isMarketplace) {
-      return [{
+      const area = {
         label: persona === "seller" ? "Seller" : "Buyer",
         to: "/marketplace",
         params: {} as Record<string, string>,
-      }];
+      };
+      const pages = new Map<string, AnyRouteMatch>();
+      for (const match of matches) {
+        const path = getPathTemplate(match.routeId);
+        if (path !== "/" && path !== "/marketplace" && path !== "/_authenticated") {
+          pages.set(path, match);
+        }
+      }
+      return [area, ...Array.from(pages, ([path, match]) => ({
+        label: path === "/my-startups" ? "My Business"
+          : path === "/my-startups/new" ? "Add My Business"
+          : path === "/marketplace/my-contact" ? "My contact"
+          : resolveLabel(path),
+        to: path,
+        params: (match.params ?? {}) as Record<string, string>,
+      }))];
     }
 
     // Deduplicate by path template, keeping the deepest (leaf) match for each
@@ -124,7 +139,14 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
   return (
     <nav aria-label="Breadcrumb" className={cn("text-sm", className)}>
       <ol className="flex flex-wrap items-center gap-1.5 text-muted-foreground">
-        {workspaceLabel && (
+        {isMarketplace ? (
+          <li className="inline-flex items-center gap-1.5">
+            <Link to={HOME_ROUTE} className="font-medium text-foreground transition-colors hover:text-foreground/70">
+              Control
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
+          </li>
+        ) : workspaceLabel && (
           <li className="inline-flex items-center gap-1.5">
             <span
               className="max-w-[180px] truncate font-medium text-foreground"
