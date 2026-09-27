@@ -1,3 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { pendingApprovalsCount } from "@/lib/approvals.functions";
 import { useState, useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
@@ -66,7 +69,8 @@ type NavPath =
   | "/contacts"
   | "/entity-control"
   | "/industry-map"
-  | "/ai-agents";
+  | "/ai-agents"
+  | "/approvals";
 
 
 type NavItem = {
@@ -116,6 +120,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Global Startups",
       "Browse Global Catalogue",
       "Startups Directory",
+      "Approvals",
       "Investors Directory",
       "Industry Map",
     ],
@@ -142,6 +147,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
+  { label: "Approvals", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
   { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
 
 
@@ -356,6 +362,7 @@ function SidebarBody({
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 {showLabels && <span className="whitespace-pre">{item.label}{item.label === "Investors Directory" ? "\n" : ""}</span>}
+                {showLabels && item.label === "Approvals" && <ApprovalsBadge />}
               </Link>
             );
           };
@@ -571,4 +578,11 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     </div>
     </div>
   );
+}
+
+function ApprovalsBadge() {
+  const fn = useServerFn(pendingApprovalsCount);
+  const { data } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => fn(), staleTime: 60_000 });
+  if (!data) return null;
+  return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data}</span>;
 }
