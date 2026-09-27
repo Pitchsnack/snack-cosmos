@@ -302,7 +302,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
   const startup = isStartupEntry(s.company_type);
 
   const create = async () => {
-    if (!row && !startup) {
+    if (!row) {
       try { await actions.create.mutateAsync({ startupId: s.id }); } catch { return; }
     }
     setEditing(true);
