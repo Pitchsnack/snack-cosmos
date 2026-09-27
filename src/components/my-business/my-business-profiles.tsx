@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, ChevronDown, Eye, EyeOff, Info, Lock, MoreVertical, Pencil } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Eye, EyeOff, Lock, MoreVertical, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -285,14 +285,6 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
 
 /* ------------------------------ Right panel ------------------------------- */
 
-function Intro({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="mb-4 flex items-start gap-2.5 rounded-[10px] bg-muted px-3 py-2.5 text-[13px] leading-relaxed text-foreground/80">
-      <span className="mt-0.5 shrink-0">{icon}</span>
-      <span>{children}</span>
-    </div>
-  );
-}
 
 function KindPill({ kind }: { kind: View }) {
   return kind === "public" ? (
@@ -355,9 +347,6 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
           {pill}
         </div>
       </div>
-      <Intro icon={<Info className="h-4 w-4" />}>
-        This is your buyer preview: how your business is advertised on the Marketplace. Your name, logo, website and photos stay hidden until you approve an NDA.
-      </Intro>
       <HiddenProfileTab
         name={s.startup_name}
         companyType={s.company_type}
