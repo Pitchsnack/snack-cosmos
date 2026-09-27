@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Check, EyeOff, Lock, Pencil, Plus, Store } from "lucide-react";
+import { AlertTriangle, Check, Lock, Pencil, Plus, Store } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -182,12 +182,3 @@ function SrcRow({ tag, field, hl, children }: { tag: keyof typeof TAG; field: st
   );
 }
 
-function Empty({ text, children }: { text: string; children?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-      <EyeOff className="h-6 w-6" />
-      {text}
-      {children}
-    </div>
-  );
-}
