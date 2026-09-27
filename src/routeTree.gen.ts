@@ -45,6 +45,7 @@ import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
 import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
 import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts.index'
+import { Route as AuthenticatedApprovalsIndexRouteImport } from './routes/_authenticated/approvals.index'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
@@ -73,6 +74,8 @@ import { Route as AuthenticatedMyStartupsIdCoverRouteImport } from './routes/_au
 import { Route as AuthenticatedMyStartupsIdAcquisitionRouteImport } from './routes/_authenticated/my-startups.$id.acquisition'
 import { Route as AuthenticatedInvestorsIdPortfolioRouteImport } from './routes/_authenticated/investors.$id.portfolio'
 import { Route as AuthenticatedInvestorsIdEditRouteImport } from './routes/_authenticated/investors.$id.edit'
+import { Route as AuthenticatedApprovalsListingsIdRouteImport } from './routes/_authenticated/approvals.listings.$id'
+import { Route as AuthenticatedApprovalsBuyersIdRouteImport } from './routes/_authenticated/approvals.buyers.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -271,6 +274,12 @@ const AuthenticatedContactsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedContactsRoute,
   } as any)
+const AuthenticatedApprovalsIndexRoute =
+  AuthenticatedApprovalsIndexRouteImport.update({
+    id: '/approvals/',
+    path: '/approvals/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedStartupsNewRoute =
   AuthenticatedStartupsNewRouteImport.update({
     id: '/new',
@@ -436,6 +445,18 @@ const AuthenticatedInvestorsIdEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedInvestorsIdRoute,
   } as any)
+const AuthenticatedApprovalsListingsIdRoute =
+  AuthenticatedApprovalsListingsIdRouteImport.update({
+    id: '/approvals/listings/$id',
+    path: '/approvals/listings/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedApprovalsBuyersIdRoute =
+  AuthenticatedApprovalsBuyersIdRouteImport.update({
+    id: '/approvals/buyers/$id',
+    path: '/approvals/buyers/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -479,6 +500,7 @@ export interface FileRoutesByFullPath {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/approvals/': typeof AuthenticatedApprovalsIndexRoute
   '/contacts/': typeof AuthenticatedContactsIndexRoute
   '/deals/': typeof AuthenticatedDealsIndexRoute
   '/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -487,6 +509,8 @@ export interface FileRoutesByFullPath {
   '/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/startups/': typeof AuthenticatedStartupsIndexRoute
+  '/approvals/buyers/$id': typeof AuthenticatedApprovalsBuyersIdRoute
+  '/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/investors/$id/portfolio': typeof AuthenticatedInvestorsIdPortfolioRoute
   '/my-startups/$id/acquisition': typeof AuthenticatedMyStartupsIdAcquisitionRoute
@@ -534,6 +558,7 @@ export interface FileRoutesByTo {
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/approvals': typeof AuthenticatedApprovalsIndexRoute
   '/contacts': typeof AuthenticatedContactsIndexRoute
   '/deals': typeof AuthenticatedDealsIndexRoute
   '/global-startups': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -542,6 +567,8 @@ export interface FileRoutesByTo {
   '/my-startups': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals': typeof AuthenticatedSharedDealsIndexRoute
   '/startups': typeof AuthenticatedStartupsIndexRoute
+  '/approvals/buyers/$id': typeof AuthenticatedApprovalsBuyersIdRoute
+  '/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/investors/$id/portfolio': typeof AuthenticatedInvestorsIdPortfolioRoute
   '/my-startups/$id/acquisition': typeof AuthenticatedMyStartupsIdAcquisitionRoute
@@ -601,6 +628,7 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
+  '/_authenticated/approvals/': typeof AuthenticatedApprovalsIndexRoute
   '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
   '/_authenticated/deals/': typeof AuthenticatedDealsIndexRoute
   '/_authenticated/global-startups/': typeof AuthenticatedGlobalStartupsIndexRoute
@@ -609,6 +637,8 @@ export interface FileRoutesById {
   '/_authenticated/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/_authenticated/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/_authenticated/startups/': typeof AuthenticatedStartupsIndexRoute
+  '/_authenticated/approvals/buyers/$id': typeof AuthenticatedApprovalsBuyersIdRoute
+  '/_authenticated/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/_authenticated/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/_authenticated/investors/$id/portfolio': typeof AuthenticatedInvestorsIdPortfolioRoute
   '/_authenticated/my-startups/$id/acquisition': typeof AuthenticatedMyStartupsIdAcquisitionRoute
@@ -668,6 +698,7 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/$id'
     | '/startups/new'
+    | '/approvals/'
     | '/contacts/'
     | '/deals/'
     | '/global-startups/'
@@ -676,6 +707,8 @@ export interface FileRouteTypes {
     | '/my-startups/'
     | '/shared-deals/'
     | '/startups/'
+    | '/approvals/buyers/$id'
+    | '/approvals/listings/$id'
     | '/investors/$id/edit'
     | '/investors/$id/portfolio'
     | '/my-startups/$id/acquisition'
@@ -723,6 +756,7 @@ export interface FileRouteTypes {
     | '/settings/default-intake'
     | '/shared-deals/$id'
     | '/startups/new'
+    | '/approvals'
     | '/contacts'
     | '/deals'
     | '/global-startups'
@@ -731,6 +765,8 @@ export interface FileRouteTypes {
     | '/my-startups'
     | '/shared-deals'
     | '/startups'
+    | '/approvals/buyers/$id'
+    | '/approvals/listings/$id'
     | '/investors/$id/edit'
     | '/investors/$id/portfolio'
     | '/my-startups/$id/acquisition'
@@ -789,6 +825,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals/$id'
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
+    | '/_authenticated/approvals/'
     | '/_authenticated/contacts/'
     | '/_authenticated/deals/'
     | '/_authenticated/global-startups/'
@@ -797,6 +834,8 @@ export interface FileRouteTypes {
     | '/_authenticated/my-startups/'
     | '/_authenticated/shared-deals/'
     | '/_authenticated/startups/'
+    | '/_authenticated/approvals/buyers/$id'
+    | '/_authenticated/approvals/listings/$id'
     | '/_authenticated/investors/$id/edit'
     | '/_authenticated/investors/$id/portfolio'
     | '/_authenticated/my-startups/$id/acquisition'
@@ -1076,6 +1115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
       parentRoute: typeof AuthenticatedContactsRoute
     }
+    '/_authenticated/approvals/': {
+      id: '/_authenticated/approvals/'
+      path: '/approvals'
+      fullPath: '/approvals/'
+      preLoaderRoute: typeof AuthenticatedApprovalsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/startups/new': {
       id: '/_authenticated/startups/new'
       path: '/new'
@@ -1271,6 +1317,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/investors/$id/edit'
       preLoaderRoute: typeof AuthenticatedInvestorsIdEditRouteImport
       parentRoute: typeof AuthenticatedInvestorsIdRoute
+    }
+    '/_authenticated/approvals/listings/$id': {
+      id: '/_authenticated/approvals/listings/$id'
+      path: '/approvals/listings/$id'
+      fullPath: '/approvals/listings/$id'
+      preLoaderRoute: typeof AuthenticatedApprovalsListingsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/approvals/buyers/$id': {
+      id: '/_authenticated/approvals/buyers/$id'
+      path: '/approvals/buyers/$id'
+      fullPath: '/approvals/buyers/$id'
+      preLoaderRoute: typeof AuthenticatedApprovalsBuyersIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
@@ -1479,8 +1539,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMyStartupsIdRoute: typeof AuthenticatedMyStartupsIdRouteWithChildren
   AuthenticatedMyStartupsNewRoute: typeof AuthenticatedMyStartupsNewRoute
   AuthenticatedSettingsDefaultIntakeRoute: typeof AuthenticatedSettingsDefaultIntakeRoute
+  AuthenticatedApprovalsIndexRoute: typeof AuthenticatedApprovalsIndexRoute
   AuthenticatedGlobalStartupsIndexRoute: typeof AuthenticatedGlobalStartupsIndexRoute
   AuthenticatedMyStartupsIndexRoute: typeof AuthenticatedMyStartupsIndexRoute
+  AuthenticatedApprovalsBuyersIdRoute: typeof AuthenticatedApprovalsBuyersIdRoute
+  AuthenticatedApprovalsListingsIdRoute: typeof AuthenticatedApprovalsListingsIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1513,8 +1576,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMyStartupsNewRoute: AuthenticatedMyStartupsNewRoute,
   AuthenticatedSettingsDefaultIntakeRoute:
     AuthenticatedSettingsDefaultIntakeRoute,
+  AuthenticatedApprovalsIndexRoute: AuthenticatedApprovalsIndexRoute,
   AuthenticatedGlobalStartupsIndexRoute: AuthenticatedGlobalStartupsIndexRoute,
   AuthenticatedMyStartupsIndexRoute: AuthenticatedMyStartupsIndexRoute,
+  AuthenticatedApprovalsBuyersIdRoute: AuthenticatedApprovalsBuyersIdRoute,
+  AuthenticatedApprovalsListingsIdRoute: AuthenticatedApprovalsListingsIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
