@@ -214,25 +214,17 @@ function RowLine({ label, children }: { label: string; children: React.ReactNode
 }
 
 function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow | null }) {
-  if (isStartupEntry(s.company_type) || !row) {
-    return (
-      <div className="flex flex-col items-center gap-2 p-6 text-center text-[12.5px] text-muted-foreground">
-        <EyeOff className="h-5 w-5" />
-        {isStartupEntry(s.company_type) ? "Startups can't be listed on the Marketplace yet" : "No public view yet"}
-      </div>
-    );
-  }
   const status = hiddenStatusOf(row, s.company_type);
-  const d = row as HiddenDraft;
+  const d = row as HiddenDraft | null;
   const industry = s.sector || s.industry?.[0] || "SME";
-  const listing = buildPublicListing(s as ListingSource, { ...row, live: status === "live" || status === "live_edited" }, false);
+  const listing = buildPublicListing(s as ListingSource, row ? { ...row, live: status === "live" || status === "live_edited" } : null, false);
   const live = status === "live" || status === "live_edited";
   return (
     <>
-      <SectorArt art={d.cover_art} className="h-[84px] w-full">
+      <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} className="h-[84px] w-full">
         <span className={cn("absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
           live ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-          {live ? "Live" : "Draft"}
+          {live ? "Live" : "Preview"}
         </span>
       </SectorArt>
       <div className="px-3 pb-3">
@@ -240,9 +232,9 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border-2 border-card bg-gradient-to-br from-accent to-accent-dark text-accent-foreground">
             <EyeOff className="h-4 w-4" />
           </div>
-          <div className="min-w-0 flex-1 truncate pb-0.5 text-[14px] font-bold">{d.code_name || "Untitled"}</div>
+          <div className="min-w-0 flex-1 truncate pb-0.5 text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>
         </div>
-        <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{row.ref_no} · {industry} · {d.region || "Region not set"}</div>
+        <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, d?.region].filter(Boolean).join(" · ")}</div>
         <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>No description yet</em>}</p>
         <RowLine label="Revenue">
           {listing.revenueBand ? <>{listing.revenueBand} <span className="ml-1 rounded bg-[#EEF0FF] px-1 py-0.5 text-[9.5px] font-semibold text-[#4338CA]">Range</span></> : "—"}
@@ -334,7 +326,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
         <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-accent to-accent-dark text-accent-foreground"><EyeOff className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
           <KindPill kind="public" />
-          <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || "Untitled"}</h2>
+          <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || "Public view"}</h2>
           <div className="truncate text-[13px] text-muted-foreground">{row ? `${row.ref_no} · ${industry} · ${row.region || "Region not set"}` : industry}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
