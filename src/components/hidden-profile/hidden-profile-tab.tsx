@@ -19,9 +19,6 @@ import {
 import { PublicListingCard } from "./public-listing-card";
 import { PublicListingEditor } from "./public-listing-editor";
 
-function fmtDate(s?: string | null) {
-  return s ? new Date(s).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—";
-}
 
 export function HiddenProfileTab({
   name,
