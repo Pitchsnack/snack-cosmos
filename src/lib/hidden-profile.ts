@@ -65,6 +65,8 @@ export interface HiddenDraft {
   /** Public tags; null = derived from the private view (Auto Enrich). */
   product_tags?: string[] | null;
   market_tags?: string[] | null;
+  /** Optional uploaded cover picture (startup-media storage path); null = sector vector art. */
+  cover_image_url?: string | null;
 }
 
 export interface HiddenProfileRow extends HiddenDraft {
@@ -334,5 +336,6 @@ export function pickDraft(r: Partial<HiddenDraft>): HiddenDraft {
     nda_approver: r.nda_approver ?? "admin",
     product_tags: r.product_tags ?? null,
     market_tags: r.market_tags ?? null,
+    cover_image_url: r.cover_image_url ?? null,
   };
 }

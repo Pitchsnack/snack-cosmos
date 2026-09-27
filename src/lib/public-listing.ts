@@ -46,6 +46,8 @@ export interface PublicListing {
   codeName: string;
   refNo: string;
   coverArt: string | null;
+  /** Uploaded cover picture (startup-media storage path); null = sector vector art. */
+  coverImage: string | null;
   live: boolean;
   publishedAt: string | null;
 }
@@ -146,6 +148,7 @@ export function buildPublicListing(
     code_name?: string | null;
     ref_no?: string | null;
     cover_art?: string | null;
+    cover_image_url?: string | null;
     live?: boolean;
     published_at?: string | null;
   } | null,
@@ -171,6 +174,7 @@ export function buildPublicListing(
     codeName: p?.code_name ?? "",
     refNo: p?.ref_no ?? "",
     coverArt: p?.cover_art ?? null,
+    coverImage: p?.cover_image_url ?? null,
     live: !!p?.live,
     publishedAt: p?.published_at ?? null,
   };
