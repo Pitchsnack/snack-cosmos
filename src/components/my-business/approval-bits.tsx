@@ -11,6 +11,7 @@ import {
 } from "@/lib/approvals.functions";
 import type { ApprovalStatus, HiddenProfileRow } from "@/lib/hidden-profile";
 import { cn } from "@/lib/utils";
+import { reportPrice } from "@/components/my-business/report-offers";
 
 export const approvalOf = (row: HiddenProfileRow | null | undefined): ApprovalStatus =>
   (row?.approval_status as ApprovalStatus) ?? (row?.status === "live" ? "live" : "draft");
@@ -149,7 +150,7 @@ export function ApprovalFooter({
     ));
     if (flagged) parts.push(<span key="id" className="font-semibold text-destructive">Identity check</span>);
     text = blockedReason && !parts.length ? blockedReason : (
-      <>{parts.length} required item{parts.length === 1 ? "" : "s"} before you can submit for approval: {parts.map((p, i) => <span key={i}>{i > 0 && " · "}{p}</span>)}</>
+      <>{parts.length} required item{parts.length === 1 ? "" : "s"} before you can submit for approval: {parts.map((p, i) => <span key={i}>{i > 0 && " · "}{p}</span>)}. Recommended: verified financial report ({reportPrice("financials")}).</>
     );
     action = submitBtn();
   } else {

@@ -340,12 +340,18 @@ export function StartupDetailPanel({
   returnSearch,
   onSelectInvestor,
   belowHeader,
+  afterFounders,
+  financialsHeaderAction,
   replaceBody,
   extraMenuItems,
 }: {
   id: string;
   /** Rendered right under the header (profile tabs). */
   belowHeader?: ReactNode;
+  /** Seller-only reports, placed after the canonical founder section. */
+  afterFounders?: ReactNode;
+  /** Seller-only replacement for the financials shortcut. */
+  financialsHeaderAction?: ReactNode;
   /** When set, replaces the live panel body (Hidden profile / Compare / editor). */
   replaceBody?: ReactNode;
   /** Extra ⋮ menu items, shown after Edit. */
@@ -516,7 +522,7 @@ export function StartupDetailPanel({
               ) : (
                 <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
-              <FinancialsAction
+               {financialsHeaderAction ?? <FinancialsAction
                 id={id}
                 isMyWorkspace={isMyWorkspace}
                 onClose={onClose}
@@ -525,7 +531,7 @@ export function StartupDetailPanel({
                 registeredNumber={
                   (s as unknown as { registered_number?: string | null }).registered_number
                 }
-              />
+               />}
               <FavoriteToggle id={id} size="md" className="ml-2 h-8 w-8" />
 
 
@@ -809,6 +815,7 @@ export function StartupDetailPanel({
             (f.fullName ?? "").charAt(0).toUpperCase()
           )
         }
+        afterFounders={afterFounders}
       />
 
 
