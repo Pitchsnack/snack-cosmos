@@ -39,7 +39,7 @@ function ListingReview() {
   const { data, isLoading, error } = useQuery({ queryKey: ["approvals", "listing", id], queryFn: () => fn({ data: { id } }) });
   const done = () => { qc.invalidateQueries({ queryKey: ["approvals"] }); };
   const decide = useMutation({
-    mutationFn: (v: Parameters<typeof decideFn>[0]["data"]) => decideFn({ data: v }),
+    mutationFn: (v: { id: string; action: "approve" | "request_changes" | "reject"; note?: string; reasons?: string[]; fields?: string[] }) => decideFn({ data: v }),
     onSuccess: (_r, v) => { done(); toast.success(v.action === "approve" ? "Approved and live" : v.action === "reject" ? "Rejected" : "Sent to seller"); navigate({ to: "/approvals" }); },
     onError: (e) => toast.error((e as Error).message),
   });
