@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { AlertTriangle, Check, Lock, Pencil, Plus, Store } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, Check, Lock, Pencil, Store } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,13 +55,21 @@ export function HiddenProfileTab({
   hasFinancials: boolean;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editAfterCreate, setEditAfterCreate] = useState(false);
   const startup = isStartupEntry(companyType);
+  // After "Edit public view" creates the draft, open the editor as soon as the row arrives.
+  useEffect(() => {
+    if (row && editAfterCreate) { setEditorOpen(true); setEditAfterCreate(false); }
+  }, [row, editAfterCreate]);
   if (!row) {
     const preview = buildPublicListing(source, null, hasFinancials);
     return (
       <div className="space-y-3">
         {startup && <p className="flex items-start gap-2 text-sm text-muted-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Startup listings aren't available on the Marketplace yet. This preview is private.</p>}
-        {!startup && <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"><span>{name} has no public listing yet. This preview is private.</span><Button onClick={onCreate} disabled={creating} variant="outline"><Plus className="mr-1.5 h-4 w-4" />Create public view</Button></div>}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+          <span>{name} has no public listing yet. This preview is private.</span>
+          <Button onClick={() => { setEditAfterCreate(true); onCreate(); }} disabled={creating} variant="outline"><Pencil className="mr-1.5 h-4 w-4" />{creating ? "Creating…" : "Edit public view"}</Button>
+        </div>
         <div className="rounded-[14px] bg-muted p-3.5">
           <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How buyers would see it</div>
           <PublicListingCard l={preview} seller />

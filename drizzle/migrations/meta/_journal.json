@@ -127,6 +127,13 @@
       "when": 1790457123852,
       "tag": "0017_public_listing_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790487585532,
+      "tag": "0018_hidden_profile_cover_image",
+      "breakpoints": true
     }
   ]
 }

@@ -1279,6 +1279,7 @@ export type Database = {
           asking_price: number | null
           code_name: string
           cover_art: string | null
+          cover_image_url: string | null
           created_at: string
           created_by: string | null
           customers_summary: string
@@ -1315,6 +1316,7 @@ export type Database = {
           asking_price?: number | null
           code_name: string
           cover_art?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
           customers_summary?: string
@@ -1351,6 +1353,7 @@ export type Database = {
           asking_price?: number | null
           code_name?: string
           cover_art?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
           customers_summary?: string
