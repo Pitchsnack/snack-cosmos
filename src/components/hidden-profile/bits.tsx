@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link2, Lock, ArrowLeftRight, Waves, ImageIcon } from "lucide-react";
+import { Link2, Lock, ArrowLeftRight, Waves, Building2, Factory, ShoppingBag, Truck, HeartPulse, Utensils, Monitor, Clapperboard, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { findTermsIn, STATUS_LABEL, type HiddenStatus } from "@/lib/hidden-profile";
 
@@ -77,11 +77,22 @@ export function Flagged({ text, terms }: { text: string; terms: { term: string; 
 }
 
 export function SectorArt({ art, className, children }: { art?: string | null; className?: string; children?: ReactNode }) {
+  const name = art || "Business";
+  const lower = name.toLowerCase();
+  const Icon = /food|beverage|restaurant|agri/.test(lower) ? Utensils
+    : /manufactur|industrial|material|energy/.test(lower) ? Factory
+    : /tech|digital|telecom/.test(lower) ? Monitor
+    : /retail|consumer|commerce/.test(lower) ? ShoppingBag
+    : /logistic|transport/.test(lower) ? Truck
+    : /health|medical|hospital/.test(lower) ? HeartPulse
+    : /media|entertainment/.test(lower) ? Clapperboard
+    : /service|finance|property/.test(lower) ? BriefcaseBusiness : Building2;
   return (
-    <div className={cn("relative grid place-items-center overflow-hidden bg-gradient-to-br from-muted to-secondary text-muted-foreground", className)}>
-      <div className="flex flex-col items-center gap-1 text-[11px]">
-        <ImageIcon className="h-5 w-5 opacity-60" />
-        {art ?? "Sector image"}
+    <div className={cn("relative grid place-items-center overflow-hidden bg-secondary text-secondary-foreground", className)}>
+      <div aria-hidden="true" className="absolute inset-0 opacity-40" style={{ backgroundImage: "repeating-linear-gradient(135deg,transparent 0px,transparent 24px,var(--border) 25px,transparent 26px)" }} />
+      <div className="relative flex flex-col items-center gap-1.5 text-center">
+        <div className="grid h-12 w-12 place-items-center rounded-lg border border-border bg-card shadow-sm"><Icon className="h-6 w-6 text-profile" strokeWidth={1.5} /></div>
+        <span className="max-w-[160px] truncate text-[11px] font-semibold">{name}</span>
       </div>
       {children}
     </div>

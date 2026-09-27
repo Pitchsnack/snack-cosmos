@@ -42,10 +42,10 @@ export function PublicListingCard({ l, seller = false, className }: { l: PublicL
   const ic = "h-4 w-4";
   return (
     <div className={cn("grid gap-[18px] rounded-[14px] bg-card p-3.5 shadow-[0_1px_3px_rgba(16,24,40,.08),0_4px_12px_rgba(16,24,40,.05)] sm:grid-cols-[190px_minmax(0,1fr)]", className)} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-      <SectorArt art={l.coverArt ?? l.sector} className="min-h-[160px] rounded-[10px] bg-none !bg-[#E0E7FF]">
+      <SectorArt art={l.coverArt ?? l.sector} className="min-h-[160px] rounded-[10px]">
         {seller && (
           <span className={cn("absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
-            l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : "Draft"}</span>
+            l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : l.refNo ? "Draft" : "Preview"}</span>
         )}
       </SectorArt>
       <div className="min-w-0">

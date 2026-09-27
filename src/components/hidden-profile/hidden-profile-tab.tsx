@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Check, EyeOff, Lock, Pencil, Plus, Store } from "lucide-react";
+import { AlertTriangle, Check, Lock, Pencil, Plus, Store } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,21 +55,18 @@ export function HiddenProfileTab({
   hasFinancials: boolean;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
-  if (isStartupEntry(companyType)) {
-    return (
-      <div className="flex items-start gap-2.5 rounded-[10px] border border-amber-300 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-        Startups can't be listed on the Marketplace yet. You can prepare your public view now. It goes live as soon as startup listings open.
-      </div>
-    );
-  }
+  const startup = isStartupEntry(companyType);
   if (!row) {
+    const preview = buildPublicListing(source, null, hasFinancials);
     return (
-      <Empty text={`${name} has no public view yet`}>
-        <Button onClick={onCreate} disabled={creating} className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Plus className="mr-1.5 h-4 w-4" /> Create public view
-        </Button>
-      </Empty>
+      <div className="space-y-3">
+        {startup && <p className="flex items-start gap-2 text-sm text-muted-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Startup listings aren't available on the Marketplace yet. This preview is private.</p>}
+        {!startup && <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"><span>{name} has no public listing yet. This preview is private.</span><Button onClick={onCreate} disabled={creating} variant="outline"><Plus className="mr-1.5 h-4 w-4" />Create public view</Button></div>}
+        <div className="rounded-[14px] bg-muted p-3.5">
+          <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How buyers would see it</div>
+          <PublicListingCard l={preview} seller />
+        </div>
+      </div>
     );
   }
   const status = hiddenStatusOf(row, companyType);
@@ -86,6 +83,7 @@ export function HiddenProfileTab({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs">
+        {startup && <span className="text-muted-foreground">Startup listings aren't available on the Marketplace yet. This preview is private.</span>}
         {status === "draft" ? (
           <span className="text-muted-foreground"><strong className="text-amber-700 dark:text-amber-400">Draft</strong> · buyers can't see it · SME Takeover · {row.ref_no} · saved {fmtDate(row.updated_at)}</span>
         ) : status === "live_edited" ? (
@@ -95,7 +93,7 @@ export function HiddenProfileTab({
         )}
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="outline" onClick={() => setEditorOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit public view</Button>
-          {status === "draft" ? (
+          {startup ? null : status === "draft" ? (
             <Button size="sm" onClick={onPublish} disabled={!!publishBlocked || flagged.length > 0} title={publishBlocked ?? (flagged.length ? "Fix the identity check first" : undefined)} className="bg-accent text-accent-foreground hover:bg-accent/90">Publish to Marketplace</Button>
           ) : (
             <Button size="sm" variant="outline" asChild><Link to="/marketplace"><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>
@@ -184,12 +182,3 @@ function SrcRow({ tag, field, hl, children }: { tag: keyof typeof TAG; field: st
   );
 }
 
-function Empty({ text, children }: { text: string; children?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-      <EyeOff className="h-6 w-6" />
-      {text}
-      {children}
-    </div>
-  );
-}
