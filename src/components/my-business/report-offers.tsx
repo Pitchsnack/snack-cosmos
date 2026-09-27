@@ -48,7 +48,7 @@ export function ReportOffers({ id }: { id: string }) {
             <p className="mt-1 text-[13px] leading-relaxed text-foreground/80">{offers[kind].description}</p>
             <ul className="mt-2 space-y-1 text-[12.5px] text-foreground/80">{offers[kind].benefits.map((text) => <li key={text} className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />{text}</li>)}</ul>
             <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
-              <Button size="sm" disabled title={kind === "valuation" ? "Order the verified financial report first. Payments are not enabled yet." : "Payments are not enabled yet"} className="bg-profile text-primary-foreground">Order · {reportPrice(kind)}</Button>
+              <span title={kind === "valuation" ? "Order the verified financial report first. Payments are not enabled yet." : "Payments are not enabled yet"}><Button size="sm" disabled className="bg-profile text-primary-foreground">Order · {reportPrice(kind)}</Button></span>
               <Button size="sm" variant="outline" onClick={() => setSample(kind)}>View sample</Button>
               {kind === "financials" ? <Button size="sm" variant="link" className="ml-auto px-0 text-muted-foreground" onClick={() => void enterFigures()}>Enter figures myself</Button> : <span className="ml-auto text-xs text-muted-foreground" title="Payments are not enabled yet">Bundle both · {reportPrice("bundle")}</span>}
             </div>

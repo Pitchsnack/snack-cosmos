@@ -124,7 +124,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
           {!full && next && (
             <div className="mt-3 rounded-[10px] border border-profile-line bg-profile-soft p-3">
               <div className="text-[10.5px] font-bold uppercase tracking-wider text-profile">Next step</div>
-              <div className="mt-1 text-[13.5px] font-bold">{HELP[next.key].cta === "Add financials" ? "Add financials FY23–25" : HELP[next.key].cta}</div>
+              <div className="mt-1 text-[13.5px] font-bold">{HELP[next.key].cta}</div>
               <p className="mt-0.5 text-[12px] text-muted-foreground">{HELP[next.key].help}</p>
               <button type="button" onClick={() => go(next.key)} className="mt-2 inline-flex h-8 items-center rounded-lg bg-profile px-3 text-[12.5px] font-semibold text-primary-foreground hover:opacity-90">{HELP[next.key].cta}</button>
             </div>
