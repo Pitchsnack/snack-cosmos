@@ -7,7 +7,7 @@ import { getStartupSignedUrl } from "@/lib/startups.functions";
 import { SectorArt } from "./bits";
 
 /** Resolves a startup-media storage path to a signed URL. */
-function useMediaUrl(path: string | null) {
+export function useMediaUrl(path: string | null) {
   const [url, setUrl] = useState<string | null>(null);
   const getUrl = useServerFn(getStartupSignedUrl);
   useEffect(() => {

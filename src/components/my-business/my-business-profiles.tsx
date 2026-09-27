@@ -17,7 +17,7 @@ import {
   hiddenStatusOf, isStartupEntry, type HiddenDraft, type HiddenProfileRow,
 } from "@/lib/hidden-profile";
 import { buildPublicListing, type ListingSource } from "@/lib/public-listing";
-import { TagChips } from "@/components/hidden-profile/public-listing-card";
+import { TagChips, useMediaUrl } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -219,14 +219,25 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   const industry = s.sector || s.industry?.[0] || "SME";
   const listing = buildPublicListing(s as ListingSource, row ? { ...row, live: status === "live" || status === "live_edited" } : null, false);
   const live = status === "live" || status === "live_edited";
+  const coverUrl = useMediaUrl(d?.cover_image_url ?? null);
+  const badge = (
+    <span className={cn("absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+      live ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
+      {live ? "Live" : "Preview"}
+    </span>
+  );
   return (
     <>
-      <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} className="h-[84px] w-full">
-        <span className={cn("absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
-          live ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-          {live ? "Live" : "Preview"}
-        </span>
-      </SectorArt>
+      {coverUrl ? (
+        <div className="relative h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
+          <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          {badge}
+        </div>
+      ) : (
+        <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} className="h-[120px] w-full">
+          {badge}
+        </SectorArt>
+      )}
       <div className="px-3 pb-3">
         <div className="-mt-5 flex items-end gap-2.5">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border-2 border-card bg-gradient-to-br from-accent to-accent-dark text-accent-foreground">
