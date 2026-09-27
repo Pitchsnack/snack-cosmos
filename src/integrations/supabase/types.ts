@@ -1393,6 +1393,8 @@ export type Database = {
           decision_note: string | null
           decision_reasons: string[]
           description: string
+          directory_category: string | null
+          featured: boolean
           handover: string | null
           has_unpublished_changes: boolean
           headline: string
@@ -1403,7 +1405,10 @@ export type Database = {
           market_tags: string[] | null
           nda_approver: string
           ndas_approved: number
+          new_until: string | null
+          notify_admin_edits: boolean
           open_to: string[]
+          pending_cover: string | null
           process: string | null
           product_tags: string[] | null
           published_at: string | null
@@ -1440,6 +1445,8 @@ export type Database = {
           decision_note?: string | null
           decision_reasons?: string[]
           description?: string
+          directory_category?: string | null
+          featured?: boolean
           handover?: string | null
           has_unpublished_changes?: boolean
           headline?: string
@@ -1450,7 +1457,10 @@ export type Database = {
           market_tags?: string[] | null
           nda_approver?: string
           ndas_approved?: number
+          new_until?: string | null
+          notify_admin_edits?: boolean
           open_to?: string[]
+          pending_cover?: string | null
           process?: string | null
           product_tags?: string[] | null
           published_at?: string | null
@@ -1487,6 +1497,8 @@ export type Database = {
           decision_note?: string | null
           decision_reasons?: string[]
           description?: string
+          directory_category?: string | null
+          featured?: boolean
           handover?: string | null
           has_unpublished_changes?: boolean
           headline?: string
@@ -1497,7 +1509,10 @@ export type Database = {
           market_tags?: string[] | null
           nda_approver?: string
           ndas_approved?: number
+          new_until?: string | null
+          notify_admin_edits?: boolean
           open_to?: string[]
+          pending_cover?: string | null
           process?: string | null
           product_tags?: string[] | null
           published_at?: string | null
@@ -2095,6 +2110,74 @@ export type Database = {
           tag?: string | null
           ticker?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      listing_admin_edits: {
+        Row: {
+          admin_id: string
+          created_at: string
+          field: string
+          hidden_profile_id: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          undone_at: string | null
+          version: number
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          field: string
+          hidden_profile_id: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          undone_at?: string | null
+          version?: number
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          field?: string
+          hidden_profile_id?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          undone_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_admin_edits_hidden_profile_id_fkey"
+            columns: ["hidden_profile_id"]
+            isOneToOne: false
+            referencedRelation: "hidden_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_image_library: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          path: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          path: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          path?: string
         }
         Relationships: []
       }

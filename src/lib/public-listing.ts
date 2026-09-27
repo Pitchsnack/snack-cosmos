@@ -174,7 +174,8 @@ export function buildPublicListing(
     codeName: p?.code_name ?? "",
     refNo: p?.ref_no ?? "",
     coverArt: p?.cover_art ?? null,
-    coverImage: p?.cover_image_url ?? null,
+    // Public image is set by Admin and only shows once a version has been approved.
+    coverImage: p?.live ? p?.cover_image_url ?? null : null,
     live: !!p?.live,
     publishedAt: p?.published_at ?? null,
   };

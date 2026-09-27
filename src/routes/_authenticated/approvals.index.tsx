@@ -50,17 +50,21 @@ function ApprovalsPage() {
     onError: (e) => toast.error((e as Error).message),
   });
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("waiting");
+  const [status, setStatus] = useState("all");
+  const [type, setType] = useState("all");
   const [sort, setSort] = useState("oldest");
 
   const listings = useMemo(() => {
     let l = (data?.listings ?? []) as any[];
-    if (status === "waiting") l = l.filter((x) => x.approval_status === "in_review");
+    if (status === "waiting") l = l.filter((x) => x.approval_status === "in_review" && x.status !== "live");
+    if (status === "edits") l = l.filter((x) => x.approval_status === "in_review" && x.status === "live");
     if (status === "changes") l = l.filter((x) => x.approval_status === "changes_requested");
-    if (q) l = l.filter((x) => `${x.code_name} ${x.ref_no} ${x.startups?.startup_name} ${x.startups?.sector}`.toLowerCase().includes(q.toLowerCase()));
+    if (type !== "all") l = l.filter((x) => typeOf(x) === type);
+    if (q) l = l.filter((x) => `${x.code_name} ${x.ref_no} ${x.startups?.startup_name} ${data?.emails?.[x.submitted_by] ?? ""}`.toLowerCase().includes(q.toLowerCase()));
     if (sort === "newest") l = [...l].reverse();
+    if (sort === "mine") l = l.filter((x) => x.assignee_id === data?.me);
     return l;
-  }, [data, status, q, sort]);
+  }, [data, status, type, q, sort]);
   const waitingOnSellers = (data?.listings ?? []).filter((x: any) => x.approval_status === "changes_requested").length;
   const buyers = ((data?.buyers ?? []) as any[]).filter((b) => (status === "waiting" ? b.status === "pending" : true))
     .filter((b) => !q || `${b.company_name} ${b.work_email}`.toLowerCase().includes(q.toLowerCase()));
@@ -93,37 +97,43 @@ function ApprovalsPage() {
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="waiting">Waiting</SelectItem>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="waiting">In review</SelectItem>
+              {tab === "listings" && <SelectItem value="edits">Live · edits pending</SelectItem>}
               {tab === "listings" && <SelectItem value="changes">Changes requested</SelectItem>}
-              <SelectItem value="all">All open</SelectItem>
             </SelectContent>
           </Select>
+          {tab === "listings" && (
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All types</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="Startup">Startup</SelectItem></SelectContent>
+            </Select>
+          )}
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="oldest">Oldest first</SelectItem><SelectItem value="newest">Newest first</SelectItem></SelectContent>
+            <SelectContent><SelectItem value="oldest">Oldest first</SelectItem><SelectItem value="newest">Newest first</SelectItem><SelectItem value="mine">Assigned to me</SelectItem></SelectContent>
           </Select>
         </div>
       )}
 
       {error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : tab === "listings" ? (
         <>
-          <Table head={["Listing", "Seller", "Sector", "Revenue band", "Submitted", "Assignee", "Status", ""]}>
-            {listings.length === 0 && <EmptyRow cols={8} text="Nothing waiting." />}
+          <Table head={["Listing", "Type", "Submitted", "Status", "Version", "Assigned", ""]}>
+            {listings.length === 0 && <EmptyRow cols={7} text="Nothing waiting." />}
             {listings.map((l) => (
               <tr key={l.id} className="border-t border-border">
                 <td className="p-3">
                   <div className="flex items-center gap-2.5">
                     <SectorArt art={l.cover_art ?? l.startups?.sector} className="h-9 w-12 shrink-0 rounded-md" />
-                    <div className="min-w-0"><div className="font-semibold">{l.code_name}</div><div className="truncate text-xs text-muted-foreground">{l.startups?.startup_name} · {l.ref_no}</div></div>
+                    <div className="min-w-0"><div className="font-semibold">{l.startups?.startup_name ?? l.code_name}</div><div className="truncate text-xs text-muted-foreground">{l.ref_no} · {data?.emails?.[l.submitted_by] || names[l.submitted_by] || "—"}</div></div>
                   </div>
                 </td>
-                <td className="p-3">{names[l.submitted_by] ?? "—"}</td>
-                <td className="p-3">{l.startups?.sector ?? "—"}</td>
-                <td className="p-3">{l.startups?.last_year_revenue ?? "—"}</td>
+                <td className="p-3">{typeOf(l)}</td>
                 <td className="p-3"><div>{fmt(l.submitted_at)}</div><div className={cn("text-xs", days(l.submitted_at) >= 1 ? "text-amber-700" : "text-muted-foreground")}>{ago(l.submitted_at)}</div></td>
+                <td className="p-3"><QueueChip l={l} /></td>
+                <td className="p-3">v{l.version}</td>
                 <td className="p-3">{l.assignee_id ? names[l.assignee_id] ?? "—" : <Button size="sm" variant="ghost" onClick={() => assign.mutate({ kind: "listing", id: l.id })}>Assign to me</Button>}</td>
-                <td className="p-3"><StatusPill s={l.approval_status === "changes_requested" ? "Changes requested" : l.version > 1 ? `Resubmitted · v${l.version}` : "Waiting"} /></td>
-                <td className="p-3 text-right"><Link to="/approvals/listings/$id" params={{ id: l.id }} className="font-semibold text-primary hover:underline">Review →</Link></td>
+                <td className="p-3 text-right"><Button size="sm" asChild><Link to="/approvals/listings/$id" params={{ id: l.id }}>Review</Link></Button></td>
               </tr>
             ))}
           </Table>
@@ -162,6 +172,12 @@ function ApprovalsPage() {
   );
 }
 
+function typeOf(l: any) { return /startup/i.test(l.startups?.company_type ?? "") ? "Startup" : "Business"; }
+function QueueChip({ l }: { l: any }) {
+  const [label, tone] = l.approval_status === "changes_requested" ? ["Changes requested", "bg-purple-500/15 text-purple-700"]
+    : l.status === "live" ? ["Live · edits pending", "bg-blue-500/15 text-blue-700"] : ["In review", "bg-amber-500/15 text-amber-800"];
+  return <span className={cn("inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold", tone)}>{label}</span>;
+}
 export function StatusPill({ s }: { s: string }) {
   const tone = /Changes|More info|Resubmitted/.test(s) ? "bg-amber-500/15 text-amber-800" : /Live|Verified|Approved/.test(s) ? "bg-emerald-500/15 text-emerald-700" : /Reject|Declin/.test(s) ? "bg-red-500/15 text-red-700" : "bg-blue-500/15 text-blue-700";
   return <span className={cn("inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold", tone)}>{s}</span>;
