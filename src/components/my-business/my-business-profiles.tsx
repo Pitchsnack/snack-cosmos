@@ -239,11 +239,8 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
         </SectorArt>
       )}
       <div className="px-3 pb-3">
-        <div className="-mt-5 flex items-end gap-2.5">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border-2 border-card bg-gradient-to-br from-accent to-accent-dark text-accent-foreground">
-            <EyeOff className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1 truncate pb-0.5 text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>
+        <div className="pt-2.5">
+          <div className="truncate text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>
         </div>
         <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, d?.region].filter(Boolean).join(" · ")}</div>
         <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>No description yet</em>}</p>
