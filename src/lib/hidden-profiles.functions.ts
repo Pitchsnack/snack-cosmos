@@ -58,7 +58,6 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
     const { data: existing } = await sb.from("hidden_profiles").select(COLS).eq("startup_id", data.startupId).maybeSingle();
     if (existing) return existing as unknown as HiddenProfileRow;
     const facts = await loadFacts(sb, data.startupId);
-    if (isStartupEntry(facts.company_type)) throw new Error("Startups can't be listed in the Marketplace yet");
     for (let i = 0; i < 6; i++) {
       const { data: row, error } = await sb
         .from("hidden_profiles")
@@ -142,6 +141,7 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const facts = await loadFacts(sb, data.startupId);
+    if (isStartupEntry(facts.company_type)) throw new Error("Startups can't be listed in the Marketplace yet");
     const draft = pickDraft(data.draft as HiddenDraft);
     const findings = runIdentityCheck(draft, facts);
     if (findings.length) throw new Error(`Identity check failed: ${findings.length} detail(s) could name the company`);
