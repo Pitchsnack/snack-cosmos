@@ -16,7 +16,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, submitted_at, decided_at, decision_note, decision_reasons, decision_fields";
 
 type Sb = SupabaseClient<Database>;
 
@@ -117,15 +117,17 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ startupId: z.string().uuid(), draft: DraftSchema }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
-    const { data: cur, error: e1 } = await sb.from("hidden_profiles").select("status").eq("startup_id", data.startupId).maybeSingle();
+    const { data: cur, error: e1 } = await sb.from("hidden_profiles").select("status, approval_status").eq("startup_id", data.startupId).maybeSingle();
     if (e1) throw new Error(e1.message);
     if (!cur) throw new Error("No hidden profile");
+    const approvalPatch = (cur as { approval_status?: string }).approval_status === "live" ? { approval_status: "live_edits_pending" } : {};
     const { data: row, error } = await sb
       .from("hidden_profiles")
       .update({
         ...data.draft,
         highlights: data.draft.highlights,
         has_unpublished_changes: cur.status === "live",
+        ...approvalPatch,
         updated_by: context.userId,
       })
       .eq("startup_id", data.startupId)
