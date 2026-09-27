@@ -45,7 +45,7 @@ export function PublicListingCard({ l, seller = false, className }: { l: PublicL
       <SectorArt art={l.coverArt ?? l.sector} className="min-h-[160px] rounded-[10px]">
         {seller && (
           <span className={cn("absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
-            l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : "Draft"}</span>
+            l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : l.refNo ? "Draft" : "Preview"}</span>
         )}
       </SectorArt>
       <div className="min-w-0">
