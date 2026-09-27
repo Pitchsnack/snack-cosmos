@@ -19,6 +19,8 @@ import {
 import { buildPublicListing, type ListingSource } from "@/lib/public-listing";
 import { TagChips, useMediaUrl } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { runIdentityCheck } from "@/lib/hidden-profile";
+import { ApprovalFooter, ApprovalNotice, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
 
 type View = "public" | "private";
@@ -220,10 +222,10 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   const listing = buildPublicListing(s as ListingSource, row ? { ...row, live: status === "live" || status === "live_edited" } : null, false);
   const live = status === "live" || status === "live_edited";
   const coverUrl = useMediaUrl(d?.cover_image_url ?? null);
+  const ap = approvalOf(row);
   const badge = (
-    <span className={cn("absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
-      live ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-      {live ? "Live" : "Preview"}
+    <span className={cn("absolute left-2.5 top-2.5 z-10 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-bold", row ? APPROVAL_TONE[ap] : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
+      {row ? (ap === "live_edits_pending" ? "Live · edits pending" : APPROVAL_LABEL[ap]) : "Preview"}
     </span>
   );
   return (
@@ -338,11 +340,9 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
           <div className="truncate text-[13px] text-muted-foreground">{row ? `${row.ref_no} · ${industry} · ${row.region || "Region not set"}` : industry}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          {!startup && (
-            <Button size="sm" variant="outline" onClick={() => void create()} disabled={actions.create.isPending}>
-              <Pencil className="mr-1.5 h-3.5 w-3.5" />{row ? "Edit public view" : "Create public view"}
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={() => void create()} disabled={actions.create.isPending}>
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />{row ? "Edit public view" : "Create public view"}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -402,6 +402,9 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
 
   const right = current && sel ? (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm" style={{ overflow: "visible" }}>
+      {!(editing && sel.view === "public") && (
+        <PanelNotice s={current} onEditPublic={() => { setSel({ id: current.id, view: "public" }); setEditing(true); }} />
+      )}
       {sel.view === "public" ? (
         <PublicPanel key={current.id} s={current} editing={editing} setEditing={setEditing} pill={pill} />
       ) : (
@@ -424,6 +427,9 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
           />
         </>
       )}
+      {!(editing && sel.view === "public") && (
+        <PanelFooter s={current} onItem={(k) => (k === "private" ? navigate({ to: "/my-startups/$id/edit", params: { id: current.id } }) : onItem(k as ItemKey))} />
+      )}
     </div>
   ) : null;
 
@@ -445,5 +451,29 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
       </div>
       {!isMobile && <div className="min-w-0 lg:self-start">{right}</div>}
     </div>
+  );
+}
+
+function PanelNotice({ s, onEditPublic }: { s: StartupListItem; onEditPublic: () => void }) {
+  const { row } = useHiddenProfile(s.id);
+  return <ApprovalNotice row={row} onEditPublic={onEditPublic} />;
+}
+
+function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) => void }) {
+  const { row } = useHiddenProfile(s.id);
+  const { data: facts } = useEntryFacts(s.id);
+  const { items } = useCompleteness(s);
+  const actions = useHiddenProfileActions();
+  const missing = items.filter((i) => i.required && !i.done).map((i) => ({ key: i.key, label: i.label }));
+  const flagged = row && facts ? runIdentityCheck(row as HiddenDraft, facts).length : 0;
+  return (
+    <ApprovalFooter
+      startupId={s.id}
+      row={row}
+      missing={missing}
+      flagged={flagged}
+      onItem={onItem}
+      onCreate={() => actions.create.mutate({ startupId: s.id })}
+    />
   );
 }

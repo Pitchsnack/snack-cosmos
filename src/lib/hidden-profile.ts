@@ -82,7 +82,16 @@ export interface HiddenProfileRow extends HiddenDraft {
   views: number;
   ndas_approved: number;
   updated_at: string;
+  approval_status?: ApprovalStatus;
+  version?: number;
+  submitted_at?: string | null;
+  decided_at?: string | null;
+  decision_note?: string | null;
+  decision_reasons?: string[];
+  decision_fields?: string[];
 }
+
+export type ApprovalStatus = "draft" | "in_review" | "changes_requested" | "live" | "live_edits_pending" | "rejected" | "unpublished";
 
 /** Facts from the full profile the identity check and ranges work from. */
 export interface EntryFacts {

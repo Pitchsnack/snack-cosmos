@@ -1,3 +1,4 @@
+import { BuyerVerificationCard } from "@/components/marketplace/buyer-verification";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -169,6 +170,7 @@ function MyPage() {
         <Tile icon={Calendar} tint="bg-[#f3f4f6] text-[#4b5563]" value={memberSince} label="Member since" date />
       </div>
 
+      {buyer && <BuyerVerificationCard />}
       {buyer && (
         <div className="mt-4 rounded-[14px] border border-[#E6E8EC] bg-white shadow-[0_1px_2px_rgba(16,24,40,.04)]">
           <div className="flex items-center justify-between border-b border-[#E6E8EC] px-5 py-4">
