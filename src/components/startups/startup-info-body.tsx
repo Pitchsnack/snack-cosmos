@@ -180,10 +180,12 @@ function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) 
 export function StartupInfoBody({
   data,
   renderFounderAvatar,
+  afterFounders,
 }: {
   data: StartupInfoData;
   /** Lets a surface mask founder pictures (Basic Information Restrictions). */
   renderFounderAvatar?: (founder: StartupInfoFounder) => React.ReactNode;
+  afterFounders?: React.ReactNode;
 }) {
   const [descExpanded, setDescExpanded] = useState(false);
   const [descClamped, setDescClamped] = useState(false);
@@ -408,6 +410,7 @@ export function StartupInfoBody({
           </div>
         )}
       </StartupInfoSection>
+      {afterFounders}
     </>
   );
 }

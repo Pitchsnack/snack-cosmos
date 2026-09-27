@@ -24,12 +24,13 @@ import { cn } from "@/lib/utils";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
 import { CoverView } from "@/components/hidden-profile/public-listing-card";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { ReportOffers, ReportHeaderAction, reportPrice } from "@/components/my-business/report-offers";
 
 type View = "public" | "private";
 
 /* ------------------------------ Completeness ------------------------------ */
 
-type ItemKey = "desc" | "logo" | "fin" | "terms" | "hidden" | "people";
+type ItemKey = "desc" | "logo" | "fin" | "valuation" | "terms" | "hidden" | "people";
 type Item = { key: ItemKey; label: string; weight: number; required: boolean; done: boolean };
 
 function useCompleteness(s: StartupListItem) {
@@ -40,13 +41,14 @@ function useCompleteness(s: StartupListItem) {
   const items: Item[] = [
     { key: "desc", label: "Description & tags", weight: 15, required: false, done: !!s.short_description?.trim() && tags > 0 },
     { key: "logo", label: "Logo & photos", weight: 15, required: false, done: !!s.logo_signed_url && !!s.tile_image_signed_url },
-    { key: "fin", label: "Financials FY23–25", weight: 20, required: true, done: hasData },
+    { key: "fin", label: `Verified financial report ${reportPrice("financials")}`, weight: 10, required: false, done: false },
+    { key: "valuation", label: `Estimated valuation ${reportPrice("valuation")}`, weight: 10, required: false, done: false },
     { key: "terms", label: "Deal terms", weight: 15, required: true, done: !!row && row.stake_pct != null && !!row.deal_type },
     { key: "hidden", label: "Public headline", weight: 20, required: true, done: !!row && !!row.headline?.trim() },
     { key: "people", label: "Key people & customers", weight: 15, required: false, done: (facts?.people?.length ?? 0) > 0 && (facts?.customers?.length ?? 0) > 0 },
   ];
   const pct = items.reduce((a, i) => a + (i.done ? i.weight : 0), 0);
-  return { items, pct, missingRequired: items.filter((i) => i.required && !i.done).length };
+  return { items, pct, missingRequired: items.filter((i) => i.required && !i.done).length, hasData };
 }
 
 function Ring({ pct, size, stroke = 5, done }: { pct: number; size: number; stroke?: number; done?: boolean }) {
@@ -65,7 +67,8 @@ function Ring({ pct, size, stroke = 5, done }: { pct: number; size: number; stro
 }
 
 const HELP: Record<ItemKey, { cta: string; link: string; help: string }> = {
-  fin: { cta: "Add financials", link: "Add →", help: "Your wizard revenue band is already public. Detailed FY23–25 figures are shown only after the NDA." },
+  fin: { cta: "Verified financial report", link: "View →", help: "Optional analyst-verified FY23–25 report, available to buyers after the NDA." },
+  valuation: { cta: "Estimated valuation", link: "View →", help: "Optional independent valuation, after the verified financial report." },
   terms: { cta: "Set deal terms", link: "Set →", help: "Stake, deal type and asking price shown in your public view." },
   hidden: { cta: "Write public headline", link: "Write →", help: "One line buyers read first. No company or product names." },
   desc: { cta: "Add description", link: "Add →", help: "A short description and tags for your company." },
@@ -74,7 +77,7 @@ const HELP: Record<ItemKey, { cta: string; link: string; help: string }> = {
 };
 
 function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) => void }) {
-  const { items, pct, missingRequired } = useCompleteness(s);
+  const { items, pct, missingRequired, hasData } = useCompleteness(s);
   const [open, setOpen] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -88,10 +91,11 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
     return () => { document.removeEventListener("mousedown", click); document.removeEventListener("keydown", key); };
   }, [open]);
   const req = items.filter((i) => i.required && !i.done);
-  const next = req[0] ?? items.find((i) => !i.done);
+  const next = req[0] ?? items.find((i) => !i.done && i.key !== "fin" && i.key !== "valuation");
   const restReq = req.filter((i) => i !== next);
-  const opt = items.filter((i) => !i.required && !i.done && i !== next);
-  const done = items.filter((i) => i.done);
+  const recommended = items.filter((i) => i.key === "fin" || i.key === "valuation");
+  const opt = items.filter((i) => !i.required && !i.done && i !== next && !recommended.includes(i));
+  const done = items.filter((i) => i.done && !recommended.includes(i));
   const go = (k: ItemKey) => { setOpen(false); onItem(k); };
 
   return (
@@ -115,7 +119,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
         <div className="absolute right-0 top-full z-50 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
           <div className="flex items-center justify-between text-[14px] font-bold"><span>Profile setup</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{missingRequired} required item{missingRequired === 1 ? "" : "s"} before you can publish</p>}
+          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{missingRequired} required item{missingRequired === 1 ? "" : "s"} before you can submit</p>}
 
           {!full && next && (
             <div className="mt-3 rounded-[10px] border border-profile-line bg-profile-soft p-3">
@@ -131,6 +135,10 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
               {restReq.map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="solid" />)}
             </Group>
           )}
+          <Group title="Recommended">
+            {recommended.map((i) => <Row key={i.key} label={i.label} link="View →" onClick={() => go(i.key)} circle="dashed" />)}
+          </Group>
+          {hasData && <p className="mt-1 text-[11px] text-muted-foreground">Your own figures: Provided by seller, not verified.</p>}
           {!full && opt.length > 0 && (
             <Group title="Optional">
               {opt.map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="dashed" />)}
@@ -410,7 +418,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
 
   const onItem = (k: ItemKey) => {
     if (!current) return;
-    if (k === "fin") void navigate({ to: "/my-startups/$id/financials", params: { id: current.id } });
+    if (k === "fin" || k === "valuation") { setSel({ id: current.id, view: "private" }); setEditing(false); requestAnimationFrame(() => document.getElementById(`reports-${current.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })); }
     else if (k === "terms" || k === "hidden") { setSel({ id: current.id, view: "public" }); setEditing(true); }
     else void navigate({ to: "/my-startups/$id/edit", params: { id: current.id } });
   };
@@ -436,6 +444,8 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
             id={current.id}
             showPublication
             workspace="my-startups"
+             afterFounders={!adminReview && <ReportOffers id={current.id} />}
+             financialsHeaderAction={!adminReview ? <ReportHeaderAction id={current.id} /> : undefined}
             onClose={() => closeDeleted(current.id)}
             belowHeader={
               <div className="mt-3">

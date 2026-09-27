@@ -5,3 +5,4 @@
 
 - Public listing image is Admin-only (hidden_profiles.pending_cover, promoted to cover_image_url on approval); sellers never write it — keeps Marketplace cards consistent.
 - Admin listing review renders MyBusinessProfiles inside AdminReviewCtx instead of separate admin tables, so Admin sees exactly the seller screen.
+- Seller report offers live after the shared founder section via an optional slot; keep samples and prices in report-catalog.json so Directory cards remain unchanged and preview-only offers cannot be mistaken for paid orders.
