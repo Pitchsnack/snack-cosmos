@@ -1,7 +1,23 @@
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PublicListing } from "@/lib/public-listing";
+import { getStartupSignedUrl } from "@/lib/startups.functions";
 import { SectorArt } from "./bits";
+
+/** Resolves a startup-media storage path to a signed URL. */
+function useMediaUrl(path: string | null) {
+  const [url, setUrl] = useState<string | null>(null);
+  const getUrl = useServerFn(getStartupSignedUrl);
+  useEffect(() => {
+    let cancel = false;
+    if (!path) { setUrl(null); return; }
+    getUrl({ data: { path } }).then((r) => { if (!cancel) setUrl(r.url); }).catch(() => {});
+    return () => { cancel = true; };
+  }, [path, getUrl]);
+  return url;
+}
 
 function fmt(d?: string | null) {
   return d ? new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
@@ -40,14 +56,21 @@ function Fact({ icon, children, full }: { icon: React.ReactNode; children: React
 /** One listing card used by the seller's Public view AND the buyer Marketplace. */
 export function PublicListingCard({ l, seller = false, className }: { l: PublicListing; seller?: boolean; className?: string }) {
   const ic = "h-4 w-4";
+  const coverUrl = useMediaUrl(l.coverImage);
+  const badge = seller && (
+    <span className={cn("absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+      l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : l.refNo ? "Draft" : "Preview"}</span>
+  );
   return (
     <div className={cn("grid gap-[18px] rounded-[14px] bg-card p-3.5 shadow-[0_1px_3px_rgba(16,24,40,.08),0_4px_12px_rgba(16,24,40,.05)] sm:grid-cols-[190px_minmax(0,1fr)]", className)} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-      <SectorArt art={l.coverArt ?? l.sector} className="min-h-[160px] rounded-[10px]">
-        {seller && (
-          <span className={cn("absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
-            l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : l.refNo ? "Draft" : "Preview"}</span>
-        )}
-      </SectorArt>
+      {coverUrl ? (
+        <div className="relative min-h-[160px] overflow-hidden rounded-[10px]">
+          <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          {badge}
+        </div>
+      ) : (
+        <SectorArt art={l.coverArt ?? l.sector} className="min-h-[160px] rounded-[10px]">{badge}</SectorArt>
+      )}
       <div className="min-w-0">
         <h3 className="text-[18px] font-bold leading-[1.3]">{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1.5">
