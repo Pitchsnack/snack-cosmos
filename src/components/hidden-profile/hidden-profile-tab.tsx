@@ -83,7 +83,7 @@ export function HiddenProfileTab({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs">
+      <div className="flex justify-end">
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="outline" onClick={() => setEditorOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit public view</Button>
           {startup ? null : status === "draft" ? (
