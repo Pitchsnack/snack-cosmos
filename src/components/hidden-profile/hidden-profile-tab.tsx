@@ -88,18 +88,12 @@ export function HiddenProfileTab({
 
   return (
     <div className="space-y-3">
-      {live && (
-        <div className="flex justify-end">
-          <Button size="sm" variant="outline" asChild><Link to="/marketplace"><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>
-        </div>
-      )}
-
       <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
         <div className="mb-3 flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How buyers see it on the Marketplace</span>
           <span className={live ? "rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[11px] font-bold text-[#166534]" : "rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[11px] font-bold text-[#92400E]"}>
             {ap === "live" ? "Live · published" : ap === "live_edits_pending" ? "Live · edits pending" : ap === "in_review" ? "In review" : ap === "changes_requested" ? "Changes requested" : ap === "rejected" ? "Rejected · draft" : "Draft · not published"}
           </span>
+          {live && <Button size="sm" variant="outline" asChild><Link to="/marketplace"><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>}
         </div>
         <PublicListingCard l={listing} seller />
       </div>
