@@ -1,6 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { pendingApprovalsCount } from "@/lib/approvals.functions";
 import { useState, useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
@@ -41,6 +38,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useEffectivePermissions } from "@/hooks/use-effective-permissions";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
+import { ApprovalsBadge } from "@/components/menu-count-badge";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import { useIsMarketplace, rememberAdminPath } from "@/hooks/use-marketplace";
 import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marketplace/marketplace-frame";
@@ -580,9 +578,3 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ApprovalsBadge() {
-  const fn = useServerFn(pendingApprovalsCount);
-  const { data } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => fn(), staleTime: 60_000 });
-  if (!data) return null;
-  return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data}</span>;
-}
