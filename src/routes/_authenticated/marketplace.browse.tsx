@@ -23,9 +23,8 @@ import type { PublicListing } from "@/lib/public-listing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/browse")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    company: typeof search.company === "string" ? search.company : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { company?: string } =>
+    typeof search.company === "string" ? { company: search.company } : {},
   head: () => ({
     meta: [
       { title: "Browse listings — PitchSnack" },
