@@ -89,12 +89,9 @@ function PipelinePage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-link">My workspace</div>
-          <h1 className="mt-2 text-[30px] font-bold leading-tight">Pipeline</h1>
+          <h1 className="mt-2 text-[30px] font-bold leading-tight">My Pipeline</h1>
           <p className="mt-2 max-w-[560px] text-muted-foreground">
-            {seller
-              ? <>Every buyer working on your sale, from NDA request to offer. Names and offers are visible to you only.{" "}
-                  {pending.length > 0 && <b className="text-foreground">{pending.length} decision{pending.length > 1 ? "s are" : " is"} waiting for you.</b>}</>
-              : "Businesses you are pursuing. Each step is a document shared, so you and the seller see the same record."}
+            Find the right compay; 1 decision is waiting for you.
           </p>
         </div>
         {seller && data[0] && (
