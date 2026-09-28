@@ -15,6 +15,8 @@ import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useHasSession } from "@/hooks/use-has-session";
 import { listMarketplaceTeasers } from "@/lib/hidden-profiles.functions";
 import { useMyVerification } from "@/components/marketplace/buyer-verification";
+import { InvestorBrowse } from "@/components/marketplace/investor-browse";
+import { usePersona } from "@/hooks/use-marketplace";
 import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import type { PublicListing } from "@/lib/public-listing";
