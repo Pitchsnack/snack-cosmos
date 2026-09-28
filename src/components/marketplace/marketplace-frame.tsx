@@ -295,7 +295,7 @@ export function MarketplaceEmptyMenu() {
           inactiveProps={MENU_LINK_INACTIVE}
         >
           <Building2 className="h-4 w-4 shrink-0" />
-          <span>My contact</span>
+          <span>Contacts</span>
         </Link>
         </div>
       </div>
