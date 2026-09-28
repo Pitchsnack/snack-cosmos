@@ -162,6 +162,7 @@ export function ValuationTab({
   income,
   position = [],
   cashFlow = [],
+  readOnly = false,
 }: {
   startupId: string;
   startupName: string;
@@ -171,9 +172,13 @@ export function ValuationTab({
   income: StatementItem[];
   position?: StatementItem[];
   cashFlow?: StatementItem[];
+  /** Seller view: show the numbers, hide every editing control. */
+  readOnly?: boolean;
 }) {
-  const { has, isControl } = usePermissions();
-  const canEdit = isControl || has("startups.write");
+  const { has, isControl: isControlRaw } = usePermissions();
+  const isControl = readOnly ? false : isControlRaw;
+  const canEdit = !readOnly && (isControlRaw || has("startups.write"));
+
   const fetchMatch = useServerFn(getPeerMatch);
   const fetchPeerSet = useServerFn(getPeerSet);
   const saveStartup = useServerFn(updateStartup);
