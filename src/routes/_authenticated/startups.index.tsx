@@ -33,6 +33,8 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { isPublicationPreview, listPreviewPublishedRefs } from "@/lib/publication";
 import { usePreviewPublicationVersion } from "@/hooks/use-publication";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
+import { ReportChip, Pill, orderState, dayMonth, useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
 import { SECTORS, BUSINESS_MODELS, businessModelLabel } from "@/lib/sectors";
 
 
@@ -123,6 +125,15 @@ function StartupsPageInner() {
     });
   };
   const { byStartup } = useHiddenProfiles();
+  const { data: ordersData } = useAllReportOrders();
+  const orderByStartup = useMemo(() => {
+    const m = new Map<string, ReportOrder>();
+    for (const o of (ordersData?.orders ?? []) as ReportOrder[]) {
+      const cur = m.get(o.startup_id);
+      if (!cur || (cur.kind !== "financials" && o.kind === "financials")) m.set(o.startup_id, o);
+    }
+    return m;
+  }, [ordersData]);
   const hpActions = useHiddenProfileActions();
   const createHidden = async (id: string, inSplit: boolean) => {
     if (!byStartup.get(id)) {
@@ -633,5 +644,25 @@ function FilterSelect({ label, value, options, onChange, optionLabel }: { label:
         {options.map((o) => <SelectItem key={o} value={o}>{optionLabel ? optionLabel(o) : o}</SelectItem>)}
       </SelectContent>
     </Select>
+  );
+}
+
+function DirectoryReportStrip({ o }: { o: ReportOrder }) {
+  const st = orderState(o);
+  const done = st === "delivered";
+  return (
+    <div className={cn("mb-4 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3", done ? "border-[#A7F3D0] bg-[#ECFDF5]" : "border-[#FCD34D] bg-[#FFFBEB]")}>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 text-[13.5px] font-bold">
+          {o.kind === "valuation" ? "Estimated valuation" : "Verified financial report"}
+          {done ? <Pill tone="green">Delivered {dayMonth(o.delivered_at)}</Pill> : st === "overdue" ? <Pill tone="red">Overdue</Pill> : <Pill tone="amber">Paid</Pill>}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          Order {o.ref} · paid {dayMonth(o.paid_at)} · due {dayMonth(o.due_at)} · {st === "generated" ? "generated · review" : done ? "published" : "not generated yet"}
+        </div>
+      </div>
+      <Link to="/startups/$id/financials" params={{ id: o.startup_id }} search={{ tab: o.kind === "valuation" ? "valuation" : undefined }}
+        className="rounded-lg bg-sidebar px-3.5 py-2 text-[13px] font-semibold text-sidebar-foreground">Open Financials →</Link>
+    </div>
   );
 }
