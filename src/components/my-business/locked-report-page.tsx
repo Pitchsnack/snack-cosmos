@@ -1,16 +1,21 @@
 import { useMemo, useState } from "react";
 import { Check, Eye, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useStartups } from "@/hooks/use-startups";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { SampleReport, reportPrice } from "@/components/my-business/report-offers";
+import { StartupFinancialsPage } from "@/components/financials/financials-page";
+import { useHasFinancials } from "@/hooks/use-has-financials";
+import { useReportUnlock } from "@/lib/report-unlock";
 import catalog from "@/config/report-catalog.json";
 
 type Kind = "financials" | "valuation";
 
-/** Report orders are not tracked yet, so every report is currently locked. */
+/** Report orders are not tracked server-side yet. */
 export const isReportOrdered = (_kind: Kind) => false;
+
 
 export function PadlockTile() {
   return (
