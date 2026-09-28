@@ -277,7 +277,7 @@ export function MarketplaceEmptyMenu() {
           inactiveProps={MENU_LINK_INACTIVE}
         >
           <Building2 className="h-4 w-4 shrink-0" />
-          <span>My Business</span>
+          <span>My Company</span>
         </Link>
         <Link to="/my-financials" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
           <FileBarChart className="h-4 w-4 shrink-0" />
