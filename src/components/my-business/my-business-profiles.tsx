@@ -440,7 +440,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
       ) : (
         <>
           <div className="mb-2 flex items-center justify-between gap-3">
-            <KindPill kind="private" row={privRow} />
+            <PrivateKindPill id={current.id} />
             {pill}
           </div>
           <StartupDetailPanel
@@ -508,4 +508,9 @@ function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) =>
       onCreate={() => actions.create.mutate({ startupId: s.id })}
     />
   );
+}
+
+function PrivateKindPill({ id }: { id: string }) {
+  const { row } = useHiddenProfile(id);
+  return <KindPill kind="private" row={row} />;
 }
