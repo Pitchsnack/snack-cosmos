@@ -175,7 +175,8 @@ export const pendingApprovalsCount = createServerFn({ method: "GET" })
     const sb = await admin();
     const { count: a } = await sb.from("hidden_profiles").select("id", { count: "exact", head: true }).eq("approval_status", "in_review");
     const { count: b } = await sb.from("buyer_verifications").select("id", { count: "exact", head: true }).eq("status", "pending");
-    return (a ?? 0) + (b ?? 0);
+    const { count: c } = await sb.from("report_orders").select("id", { count: "exact", head: true }).in("status", ["paid", "generated"]);
+    return (a ?? 0) + (b ?? 0) + (c ?? 0);
   });
 
 export const getListingReview = createServerFn({ method: "GET" })
