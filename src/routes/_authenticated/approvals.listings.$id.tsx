@@ -50,7 +50,7 @@ function ListingReview() {
     enabled: !!startupId,
     queryFn: () => listFn({ data: { ids: [startupId!], pageSize: 1 } as never }),
   });
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["approvals"] }); qc.invalidateQueries({ queryKey: ["hidden-profiles"] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["approvals"] }); qc.invalidateQueries({ queryKey: ["hidden-profiles"] }); qc.invalidateQueries({ queryKey: ["startups"] }); };
   const decide = useMutation({
     mutationFn: (v: { id: string; action: "approve" | "request_changes" | "reject"; note?: string; reasons?: string[]; fields?: string[]; category?: string; isNew?: boolean; featured?: boolean }) => decideFn({ data: v }),
     onSuccess: (_r, v) => {
