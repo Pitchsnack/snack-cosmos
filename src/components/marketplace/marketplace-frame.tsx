@@ -248,14 +248,28 @@ export function MarketplaceEmptyMenu() {
 
   if (persona === "seller") {
     return (
-      <div className="space-y-1">
-        <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-          My Workspace
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+            Discover
+          </div>
+          <Link
+            to="/marketplace/browse"
+            activeProps={MENU_LINK_ACTIVE}
+            inactiveProps={MENU_LINK_INACTIVE}
+          >
+            <LayoutGrid className="h-4 w-4 shrink-0" />
+            <span>Browse listings</span>
+          </Link>
         </div>
-        <Link to="/my-page" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
-          <UserCircle className="h-4 w-4 shrink-0" />
-          <span>My Profile</span>
-        </Link>
+        <div className="space-y-1">
+          <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+            My Workspace
+          </div>
+          <Link to="/my-page" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
+            <UserCircle className="h-4 w-4 shrink-0" />
+            <span>My Profile</span>
+          </Link>
         <Link
           to="/my-startups"
           activeOptions={{ exact: false }}
