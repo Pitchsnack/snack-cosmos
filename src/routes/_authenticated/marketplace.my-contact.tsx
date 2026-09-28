@@ -124,7 +124,6 @@ function ContactsPage() {
 
 function Row({ c, active, onOpen }: { c: ContactPerson; active: boolean; onOpen: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (!active && document.activeElement === document.body) ref.current?.focus(); }, [active]);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const h = handle(c.linkedin);
   return (
