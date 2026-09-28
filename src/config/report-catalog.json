@@ -1,5 +1,9 @@
 {
-  "prices": { "financials": 10000, "valuation": 15000, "bundle": 22000 },
+  "prices": {
+    "financials": 10000,
+    "valuation": 15000,
+    "bundle": 22000
+  },
   "currency": "THB",
   "sample": {
     "company": "Project Lotus · F&B chain",
@@ -7,35 +11,189 @@
       "prepared": "12 Aug 2026",
       "period": "FY2023–2025",
       "rows": [
-        { "label": "Revenue", "values": ["184.2", "221.6", "268.9", "+20.8%"] },
-        { "label": "Gross profit · margin", "values": ["98.1 · 53%", "121.9 · 55%", "150.6 · 56%", ""] },
-        { "label": "EBITDA · margin", "values": ["24.0 · 13%", "31.0 · 14%", "40.3 · 15%", "+29.6%"] },
-        { "label": "Net profit", "values": ["14.9", "19.2", "25.0", ""] },
-        { "label": "Net debt / (cash)", "values": ["12.4", "6.1", "(3.8)", ""] }
+        {
+          "label": "Revenue",
+          "values": [
+            "184.2",
+            "221.6",
+            "268.9",
+            "+20.8%"
+          ]
+        },
+        {
+          "label": "Gross profit · margin",
+          "values": [
+            "98.1 · 53%",
+            "121.9 · 55%",
+            "150.6 · 56%",
+            ""
+          ]
+        },
+        {
+          "label": "EBITDA · margin",
+          "values": [
+            "24.0 · 13%",
+            "31.0 · 14%",
+            "40.3 · 15%",
+            "+29.6%"
+          ]
+        },
+        {
+          "label": "Net profit",
+          "values": [
+            "14.9",
+            "19.2",
+            "25.0",
+            ""
+          ]
+        },
+        {
+          "label": "Net debt / (cash)",
+          "values": [
+            "12.4",
+            "6.1",
+            "(3.8)",
+            ""
+          ]
+        }
       ],
       "chart": [
-        { "year": "FY23", "value": 184.2 },
-        { "year": "FY24", "value": 221.6 },
-        { "year": "FY25", "value": 268.9 }
+        {
+          "year": "FY23",
+          "value": 184.2
+        },
+        {
+          "year": "FY24",
+          "value": 221.6
+        },
+        {
+          "year": "FY25",
+          "value": 268.9
+        }
       ],
       "notes": [
-        { "label": "Sources", "text": "Audited statements FY23–25 · DBD filings · management accounts to Jun 2026" },
-        { "label": "Analyst notes", "text": "One-off ฿4.1M outlet closure cost in FY24 shown below EBITDA · Related-party rent restated at market rate" },
-        { "label": "What buyers see", "text": "Before the NDA: Revenue ฿250M – 500M, EBITDA margin about 15% · After the NDA: this report" }
+        {
+          "label": "Sources",
+          "text": "Audited statements FY23–25 · DBD filings · management accounts to Jun 2026"
+        },
+        {
+          "label": "Analyst notes",
+          "text": "One-off ฿4.1M outlet closure cost in FY24 shown below EBITDA · Related-party rent restated at market rate"
+        },
+        {
+          "label": "What buyers see",
+          "text": "Before the NDA: Revenue ฿250M – 500M, EBITDA margin about 15% · After the NDA: this report"
+        }
       ]
     },
     "valuation": {
       "prepared": "19 Aug 2026",
-      "range": { "low": "฿280M", "mid": "฿340M", "high": "฿400M" },
+      "range": {
+        "low": "฿280M",
+        "mid": "฿340M",
+        "high": "฿400M"
+      },
       "rows": [
-        { "method": "Comparable transactions", "basis": "6 Thai F&B deals 2024–26", "rate": "7.5× – 9.5× EBITDA", "value": "฿302M – 383M" },
-        { "method": "EV / Revenue", "basis": "FY25 revenue ฿268.9M", "rate": "1.1× – 1.5×", "value": "฿296M – 403M" },
-        { "method": "Discounted cash flow", "basis": "5-year plan, 14% WACC", "rate": "Terminal growth 3%", "value": "฿318M – 356M" }
+        {
+          "method": "Comparable transactions",
+          "basis": "6 Thai F&B deals 2024–26",
+          "rate": "7.5× – 9.5× EBITDA",
+          "value": "฿302M – 383M"
+        },
+        {
+          "method": "EV / Revenue",
+          "basis": "FY25 revenue ฿268.9M",
+          "rate": "1.1× – 1.5×",
+          "value": "฿296M – 403M"
+        },
+        {
+          "method": "Discounted cash flow",
+          "basis": "5-year plan, 14% WACC",
+          "rate": "Terminal growth 3%",
+          "value": "฿318M – 356M"
+        }
       ],
       "notes": [
-        { "label": "Key drivers", "text": "20% revenue growth · 15% EBITDA margin · 16 outlets, 40 planned · net cash position" },
-        { "label": "Adjustments", "text": "Key-person dependency (−5%) · lease renewals due 2027 (−3%) · brand and 4.6★ ratings (+4%)" },
-        { "label": "What buyers see", "text": "Before the NDA: Independent valuation available · After the NDA: this report. The asking price stays yours to set." }
+        {
+          "label": "Key drivers",
+          "text": "20% revenue growth · 15% EBITDA margin · 16 outlets, 40 planned · net cash position"
+        },
+        {
+          "label": "Adjustments",
+          "text": "Key-person dependency (−5%) · lease renewals due 2027 (−3%) · brand and 4.6★ ratings (+4%)"
+        },
+        {
+          "label": "What buyers see",
+          "text": "Before the NDA: Independent valuation available · After the NDA: this report. The asking price stays yours to set."
+        }
+      ]
+    }
+  },
+  "locked": {
+    "financials": {
+      "deliveryDays": 2,
+      "items": [
+        [
+          "Key finance summary",
+          "headline figures, trends and peer comparison"
+        ],
+        [
+          "Company info",
+          "registration, registered capital, directors and shareholders"
+        ],
+        [
+          "Income statement",
+          "FY2021–2025, year by year"
+        ],
+        [
+          "Balance sheet",
+          "assets, liabilities and equity"
+        ],
+        [
+          "Financial ratios",
+          "15 ratios: profitability, liquidity, efficiency, leverage"
+        ],
+        [
+          "Financial analysis of the income",
+          "analyst notes on margins, growth and one-offs"
+        ],
+        [
+          "\"Verified financials\" badge on your listing",
+          ""
+        ],
+        [
+          "Delivered within {days} business days from your DBD filings",
+          "nothing to upload"
+        ],
+        [
+          "Required before ordering the Estimated valuation ({valuationPrice})",
+          ""
+        ]
+      ]
+    },
+    "valuation": {
+      "deliveryDays": 7,
+      "items": [
+        [
+          "Valuation range",
+          "low, midpoint and high"
+        ],
+        [
+          "Comparable transactions",
+          "EV/EBITDA multiples from matched peers"
+        ],
+        [
+          "Cash-flow check",
+          "discounted cash-flow cross-check"
+        ],
+        [
+          "\"Independent valuation\" badge on your listing",
+          ""
+        ],
+        [
+          "Delivered within {days} business days",
+          "after your verified financials"
+        ]
       ]
     }
   }

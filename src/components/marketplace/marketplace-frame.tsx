@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator } from "lucide-react";
+import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -263,6 +264,16 @@ export function MarketplaceEmptyMenu() {
         >
           <Building2 className="h-4 w-4 shrink-0" />
           <span>My Business</span>
+        </Link>
+        <Link to="/my-financials" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
+          <FileBarChart className="h-4 w-4 shrink-0" />
+          <span>My Financials</span>
+          {isReportOrdered("financials") ? <PitchsnackTag /> : <PadlockTile />}
+        </Link>
+        <Link to="/my-valuation" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
+          <Calculator className="h-4 w-4 shrink-0" />
+          <span>Company Valuation</span>
+          {isReportOrdered("valuation") ? <PitchsnackTag /> : <PadlockTile />}
         </Link>
         <Link
           to="/marketplace/my-contact"

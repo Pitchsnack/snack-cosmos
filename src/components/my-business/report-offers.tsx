@@ -61,7 +61,7 @@ export function ReportOffers({ id }: { id: string }) {
   );
 }
 
-function SampleReport({ kind, onClose }: { kind: Kind | null; onClose: () => void }) {
+export function SampleReport({ kind, onClose }: { kind: Kind | null; onClose: () => void }) {
   if (!kind) return null;
   const fin = catalog.sample.financials;
   const val = catalog.sample.valuation;
