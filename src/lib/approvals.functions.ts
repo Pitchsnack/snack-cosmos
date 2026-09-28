@@ -108,6 +108,10 @@ export const unpublishListing = createServerFn({ method: "POST" })
       status: "draft", live: null, approval_status: "unpublished", has_unpublished_changes: false, unpublished_at: new Date().toISOString(), updated_by: context.userId,
     }).eq("id", hp.id);
     if (error) throw new Error(error.message);
+    // Approval controls directory visibility; unpublishing takes it back out.
+    const sbAdmin = await admin();
+    await sbAdmin.from("startups").update({ visibility: "Private" }).eq("id", hp.startup_id).neq("visibility", "Private");
+
     await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: context.userId, version: hp.version, action: "unpublish", actor_id: context.userId });
     await notify(context.userId, hp.tenant_id, "Listing unpublished", `${hp.code_name} is no longer visible to buyers.`);
     return { ok: true };
@@ -256,6 +260,11 @@ export const decideListing = createServerFn({ method: "POST" })
     }
     const { error } = await sb.from("hidden_profiles").update(patch).eq("id", hp.id);
     if (error) throw new Error(error.message);
+    if (data.action === "approve" && hp.startup_id) {
+      // Approved businesses must leave Private so the Startup Directory lists them.
+      await sb.from("startups").update({ visibility: "Tenant" }).eq("id", hp.startup_id).eq("visibility", "Private");
+    }
+
     await logEvent({
       item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: hp.submitted_by, version: hp.version,
       action: data.action, actor_id: context.userId, note: data.note ?? null, reasons: data.reasons ?? [], fields: data.fields ?? [],
