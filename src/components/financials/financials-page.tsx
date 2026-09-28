@@ -177,7 +177,8 @@ export function StartupFinancialsPage({
   // Statements with that statement selected.
   const STATEMENT_TABS = ["income", "position", "cash-flow"] as const;
   const legacy = STATEMENT_TABS.find((v) => v === initialTab || `${v}-statement` === initialTab);
-  const [tab, setTab] = useState(legacy ? "statements" : (initialTab ?? "overview"));
+  const [tabState, setTab] = useState(legacy ? "statements" : (initialTab ?? "overview"));
+  const tab = section === "valuation" ? "valuation" : section === "financials" && tabState === "valuation" ? "overview" : tabState;
   const [statementTab, setStatementTab] = useState<string>(() => {
     if (legacy) return legacy;
     if (typeof window !== "undefined") {
@@ -294,7 +295,7 @@ export function StartupFinancialsPage({
             </Link>
           </Button>
           <h1 className="text-[25px] font-bold tracking-[-0.015em]" style={{ color: NAVY }}>
-            Financial Overview
+            {section === "valuation" ? "Company Valuation" : "Financial Overview"}
           </h1>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
             Juristic Name : {data.registeredName || data.startupName}
@@ -401,7 +402,7 @@ export function StartupFinancialsPage({
         </div>
       ) : (
         <div className="rounded-[10px] border border-[#EAECEF] bg-white pt-3">
-          <MainTabBar
+          {section !== "valuation" && <MainTabBar
             value={tab}
             onChange={setTab}
             tabs={[
@@ -415,9 +416,11 @@ export function StartupFinancialsPage({
                 dividerBefore: true,
               },
               { value: "ratios", label: "Financial Ratios", icon: "percent" },
-              { value: "valuation", label: "Valuation", icon: "tag", dividerBefore: true },
+              ...(section === "financials"
+                ? []
+                : [{ value: "valuation", label: "Valuation", icon: "tag" as const, dividerBefore: true }]),
             ]}
-          />
+          />}
 
           {tab === "statements" && (
             <SubTabRow
