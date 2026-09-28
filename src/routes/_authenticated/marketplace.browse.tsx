@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { myNdaStatuses, requestNda } from "@/lib/pipeline.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Bookmark, Search, Store, X } from "lucide-react";
 import { toast } from "sonner";
@@ -203,7 +204,8 @@ function LowerPanel({ t }: { t: Teaser }) {
     reason?: string | null; ndaCount?: number | null; loiCount?: number | null;
     growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus;
   };
-  const status: NdaStatus = x.ndaStatus ?? "none";
+  const { data: ndaMap } = useNdaStatuses();
+  const status: NdaStatus = (ndaMap?.[t.id] as NdaStatus | undefined) ?? x.ndaStatus ?? "none";
   const interest = x.ndaCount != null || x.loiCount != null
     ? [x.ndaCount != null && `${x.ndaCount} NDAs`, x.loiCount != null && `${x.loiCount} LOIs`].filter(Boolean).join(" · ")
     : null;
@@ -415,7 +417,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
                     ) : (
                       <div className="flex shrink-0 gap-2">
                         <SaveButton saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} />
-                        <NdaButton />
+                        <NdaButton listingId={current.id} />
                       </div>
                     )}
                   </div>
@@ -442,7 +444,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
                   </div>
                 </div>
                 <SaveButton saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />
-                <NdaButton />
+                <NdaButton listingId={t.id} />
               </div>
             );
           })}
@@ -455,7 +457,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
             <div className="space-y-4">
               <div className="flex justify-end gap-2 pr-6">
                 <SaveButton saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} />
-                <NdaButton />
+                <NdaButton listingId={modal.id} />
               </div>
               <ListingDetail t={modal} />
             </div>
