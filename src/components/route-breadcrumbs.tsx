@@ -103,7 +103,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
       return [area, ...Array.from(pages, ([path, match]) => ({
         label: path === "/my-startups" ? "My Company"
           : path === "/my-startups/new" ? "Add My Business"
-          : path === "/marketplace/my-contact" ? "My contact"
+          : path === "/marketplace/my-contact" ? "Contacts\n"
           : path === "/my-financials" ? "My Financials"
           : path === "/my-valuation" ? "Company Valuation"
           : resolveLabel(path),
