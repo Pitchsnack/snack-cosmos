@@ -91,7 +91,7 @@ function PipelinePage() {
           <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-link">My workspace</div>
           <h1 className="mt-2 text-[30px] font-bold leading-tight">My Pipeline</h1>
           <p className="mt-2 max-w-[560px] text-muted-foreground">
-            Find the right compay; 1 decision is waiting for you.
+            Find Investors Aligned With Your Business: 1 decision is waiting for you.
           </p>
         </div>
         {seller && data[0] && (
