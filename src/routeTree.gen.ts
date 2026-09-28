@@ -54,6 +54,7 @@ import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsDefaultIntakeRouteImport } from './routes/_authenticated/settings.default-intake'
 import { Route as AuthenticatedMyStartupsNewRouteImport } from './routes/_authenticated/my-startups.new'
 import { Route as AuthenticatedMyStartupsIdRouteImport } from './routes/_authenticated/my-startups.$id'
+import { Route as AuthenticatedMarketplacePipelineRouteImport } from './routes/_authenticated/marketplace.pipeline'
 import { Route as AuthenticatedMarketplaceMyContactRouteImport } from './routes/_authenticated/marketplace.my-contact'
 import { Route as AuthenticatedMarketplaceBrowseRouteImport } from './routes/_authenticated/marketplace.browse'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
@@ -330,6 +331,12 @@ const AuthenticatedMyStartupsIdRoute =
     path: '/my-startups/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMarketplacePipelineRoute =
+  AuthenticatedMarketplacePipelineRouteImport.update({
+    id: '/pipeline',
+    path: '/pipeline',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
 const AuthenticatedMarketplaceMyContactRoute =
   AuthenticatedMarketplaceMyContactRouteImport.update({
     id: '/my-contact',
@@ -518,6 +525,7 @@ export interface FileRoutesByFullPath {
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/my-contact': typeof AuthenticatedMarketplaceMyContactRoute
+  '/marketplace/pipeline': typeof AuthenticatedMarketplacePipelineRoute
   '/my-startups/$id': typeof AuthenticatedMyStartupsIdRouteWithChildren
   '/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
@@ -581,6 +589,7 @@ export interface FileRoutesByTo {
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/my-contact': typeof AuthenticatedMarketplaceMyContactRoute
+  '/marketplace/pipeline': typeof AuthenticatedMarketplacePipelineRoute
   '/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
@@ -652,6 +661,7 @@ export interface FileRoutesById {
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/_authenticated/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/_authenticated/marketplace/my-contact': typeof AuthenticatedMarketplaceMyContactRoute
+  '/_authenticated/marketplace/pipeline': typeof AuthenticatedMarketplacePipelineRoute
   '/_authenticated/my-startups/$id': typeof AuthenticatedMyStartupsIdRouteWithChildren
   '/_authenticated/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
   '/_authenticated/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
@@ -725,6 +735,7 @@ export interface FileRouteTypes {
     | '/investors/new'
     | '/marketplace/browse'
     | '/marketplace/my-contact'
+    | '/marketplace/pipeline'
     | '/my-startups/$id'
     | '/my-startups/new'
     | '/settings/default-intake'
@@ -788,6 +799,7 @@ export interface FileRouteTypes {
     | '/investors/new'
     | '/marketplace/browse'
     | '/marketplace/my-contact'
+    | '/marketplace/pipeline'
     | '/my-startups/new'
     | '/settings/default-intake'
     | '/shared-deals/$id'
@@ -858,6 +870,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investors/new'
     | '/_authenticated/marketplace/browse'
     | '/_authenticated/marketplace/my-contact'
+    | '/_authenticated/marketplace/pipeline'
     | '/_authenticated/my-startups/$id'
     | '/_authenticated/my-startups/new'
     | '/_authenticated/settings/default-intake'
@@ -1217,6 +1230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyStartupsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/marketplace/pipeline': {
+      id: '/_authenticated/marketplace/pipeline'
+      path: '/pipeline'
+      fullPath: '/marketplace/pipeline'
+      preLoaderRoute: typeof AuthenticatedMarketplacePipelineRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
     '/_authenticated/marketplace/my-contact': {
       id: '/_authenticated/marketplace/my-contact'
       path: '/my-contact'
@@ -1476,6 +1496,7 @@ const AuthenticatedInvestorsRouteWithChildren =
 interface AuthenticatedMarketplaceRouteChildren {
   AuthenticatedMarketplaceBrowseRoute: typeof AuthenticatedMarketplaceBrowseRoute
   AuthenticatedMarketplaceMyContactRoute: typeof AuthenticatedMarketplaceMyContactRoute
+  AuthenticatedMarketplacePipelineRoute: typeof AuthenticatedMarketplacePipelineRoute
   AuthenticatedMarketplaceIndexRoute: typeof AuthenticatedMarketplaceIndexRoute
 }
 
@@ -1484,6 +1505,8 @@ const AuthenticatedMarketplaceRouteChildren: AuthenticatedMarketplaceRouteChildr
     AuthenticatedMarketplaceBrowseRoute: AuthenticatedMarketplaceBrowseRoute,
     AuthenticatedMarketplaceMyContactRoute:
       AuthenticatedMarketplaceMyContactRoute,
+    AuthenticatedMarketplacePipelineRoute:
+      AuthenticatedMarketplacePipelineRoute,
     AuthenticatedMarketplaceIndexRoute: AuthenticatedMarketplaceIndexRoute,
   }
 

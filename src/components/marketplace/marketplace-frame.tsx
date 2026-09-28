@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
@@ -301,11 +301,15 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       ? [
           { to: "/my-page", label: "My Profile", icon: UserCircle },
           { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
+          { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
           { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
           { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
           { to: "/marketplace/my-contact", label: "Contacts", icon: Building2 },
         ]
-      : [{ to: "/my-page", label: "My Profile", icon: UserCircle }];
+      : [
+          { to: "/my-page", label: "My Profile", icon: UserCircle },
+          { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
+        ];
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
