@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bookmark, Lock, Search, Store, X } from "lucide-react";
+import { Bookmark, Search, Store, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -131,7 +131,6 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
   );
 }
 
-const AFTER_NDA = ["Company name & logo", "Website & contacts", "Founder names", "Exact financials FY23–25", "Valuation report", "Data room"];
 const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contact"];
 
 /** Right panel body — everything comes from the public read model only. */
