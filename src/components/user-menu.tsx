@@ -47,7 +47,9 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+          title={collapsed ? `${name} · ${roleLabel}` : undefined}
+          aria-label={collapsed ? `${name} · ${roleLabel}` : undefined}
+          className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent ${collapsed ? "justify-center" : ""}`}
         >
           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sidebar-primary/20 text-xs font-semibold text-sidebar-primary">
             {initials.slice(0, 2).toUpperCase()}

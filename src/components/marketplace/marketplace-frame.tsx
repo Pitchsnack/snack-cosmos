@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
@@ -122,7 +122,7 @@ export function PersonaBadge({ persona }: { persona: Persona }) {
   );
 }
 
-export function PersonaCard() {
+export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
   const { persona, setPersona } = usePersona();
   const { data } = useSessionContext();
   const { name, initials } = useUserIdentity();
@@ -133,6 +133,50 @@ export function PersonaCard() {
   const neutral = persona === "seller" ? workspace : u?.buyerType ?? null;
   const location = [u?.city, u?.country].filter(Boolean).join(", ");
   const dark = persona === "seller";
+  if (collapsed) {
+    const tip = `${name} · ${persona === "seller" ? "Seller" : "Buyer"}`;
+    return (
+      <div className="flex flex-col items-center px-2 pt-3">
+        <div
+          tabIndex={0}
+          title={tip}
+          aria-label={tip}
+          className="relative grid h-9 w-9 place-items-center rounded-[10px] bg-gradient-to-br from-[#fb923c] to-[#ea580c] text-[13px] font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        >
+          {initials}
+          {u?.verified && (
+            <span className="absolute -bottom-1 -right-1 grid h-3.5 w-3.5 place-items-center rounded-full border-2 border-sidebar bg-[#16A34A] text-white">
+              <Check className="h-[7px] w-[7px]" strokeWidth={4} />
+            </span>
+          )}
+        </div>
+        <div role="tablist" aria-label="Persona" className="mt-3 flex flex-col gap-1 rounded-[10px] border border-sidebar-border bg-sidebar-accent p-1">
+          {(["seller", "buyer"] as const).map((p) => {
+            const Icon = p === "seller" ? Building2 : Briefcase;
+            const on = persona === p;
+            const label = p === "seller" ? "I'm Seller" : "I'm Buyer";
+            return (
+              <button
+                key={p}
+                role="tab"
+                aria-selected={on}
+                aria-label={label}
+                title={label}
+                onClick={() => setPersona(p)}
+                className={cn(
+                  "grid h-[30px] w-[34px] place-items-center rounded-[7px] transition-colors",
+                  on ? "bg-white text-[#0f1115]" : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+                )}
+              >
+                <Icon className="h-[15px] w-[15px]" />
+              </button>
+            );
+          })}
+        </div>
+        <RailDivider />
+      </div>
+    );
+  }
   return (
     <div className="space-y-3 border-b border-sidebar-border p-3" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div
@@ -243,90 +287,79 @@ const MENU_LINK_INACTIVE = {
   className: `${MENU_LINK_BASE} text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground`,
 };
 
-export function MarketplaceEmptyMenu() {
-  const { persona } = usePersona();
+type MenuItem = { to: string; label: string; icon: typeof LayoutGrid; exact?: boolean; lock?: "financials" | "valuation" };
 
-  if (persona === "seller") {
+function RailDivider() {
+  return <div aria-hidden className="mx-auto my-3 h-px w-7 bg-sidebar-border" />;
+}
+
+export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolean }) {
+  const { persona } = usePersona();
+  const discover: MenuItem[] = [{ to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid }];
+  const workspace: MenuItem[] =
+    persona === "seller"
+      ? [
+          { to: "/my-page", label: "My Profile", icon: UserCircle },
+          { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
+          { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
+          { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
+          { to: "/marketplace/my-contact", label: "Contacts", icon: Building2 },
+        ]
+      : [{ to: "/my-page", label: "My Profile", icon: UserCircle }];
+
+  if (collapsed) {
+    const railItem = (it: MenuItem) => {
+      const locked = it.lock ? !isReportOrdered(it.lock) : false;
+      const tip = locked ? `${it.label} · locked` : it.label;
+      return (
+        <Link
+          key={it.to}
+          to={it.to}
+          activeOptions={it.exact === false ? { exact: false } : undefined}
+          title={tip}
+          aria-label={tip}
+          activeProps={{ className: "bg-sidebar-accent text-sidebar-primary font-medium" }}
+          inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" }}
+          className="relative flex items-center justify-center rounded-lg px-2 py-2.5 transition-colors"
+        >
+          <it.icon className="h-4 w-4 shrink-0" />
+          {locked && (
+            <span className="absolute right-1 top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-accent text-accent-foreground">
+              <Lock className="h-2 w-2" strokeWidth={3} />
+            </span>
+          )}
+        </Link>
+      );
+    };
     return (
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-            Discover
-          </div>
-          <Link
-            to="/marketplace/browse"
-            activeProps={MENU_LINK_ACTIVE}
-            inactiveProps={MENU_LINK_INACTIVE}
-          >
-            <LayoutGrid className="h-4 w-4 shrink-0" />
-            <span>Browse listings</span>
-          </Link>
-        </div>
-        <div className="space-y-1">
-          <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-            My Workspace
-          </div>
-          <Link to="/my-page" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
-            <UserCircle className="h-4 w-4 shrink-0" />
-            <span>My Profile</span>
-          </Link>
-        <Link
-          to="/my-startups"
-          activeOptions={{ exact: false }}
-          activeProps={MENU_LINK_ACTIVE}
-          inactiveProps={MENU_LINK_INACTIVE}
-        >
-          <Building2 className="h-4 w-4 shrink-0" />
-          <span>My Company</span>
-        </Link>
-        <Link to="/my-financials" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
-          <FileBarChart className="h-4 w-4 shrink-0" />
-          <span>My Financials</span>
-          {isReportOrdered("financials") ? <PitchsnackTag /> : <PadlockTile />}
-        </Link>
-        <Link to="/my-valuation" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
-          <Calculator className="h-4 w-4 shrink-0" />
-          <span>Company Valuation</span>
-          {isReportOrdered("valuation") ? <PitchsnackTag /> : <PadlockTile />}
-        </Link>
-        <Link
-          to="/marketplace/my-contact"
-          activeProps={MENU_LINK_ACTIVE}
-          inactiveProps={MENU_LINK_INACTIVE}
-        >
-          <Building2 className="h-4 w-4 shrink-0" />
-          <span>Contacts</span>
-        </Link>
-        </div>
+      <div>
+        <div className="space-y-1">{discover.map(railItem)}</div>
+        <RailDivider />
+        <div className="space-y-1">{workspace.map(railItem)}</div>
       </div>
     );
   }
 
+  const fullItem = (it: MenuItem) => (
+    <Link
+      key={it.to}
+      to={it.to}
+      activeOptions={it.exact === false ? { exact: false } : undefined}
+      activeProps={MENU_LINK_ACTIVE}
+      inactiveProps={MENU_LINK_INACTIVE}
+    >
+      <it.icon className="h-4 w-4 shrink-0" />
+      <span>{it.label}</span>
+      {it.lock && (isReportOrdered(it.lock) ? <PitchsnackTag /> : <PadlockTile />)}
+    </Link>
+  );
+  const title = (t: string) => (
+    <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">{t}</div>
+  );
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-          Discover
-        </div>
-        <Link
-          to="/marketplace/browse"
-          activeProps={MENU_LINK_ACTIVE}
-          inactiveProps={MENU_LINK_INACTIVE}
-        >
-          <LayoutGrid className="h-4 w-4 shrink-0" />
-          <span>Browse listings</span>
-        </Link>
-      </div>
-      <div className="space-y-1">
-        <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-          My Workspace
-        </div>
-        <Link to="/my-page" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
-          <UserCircle className="h-4 w-4 shrink-0" />
-          <span>My Profile</span>
-        </Link>
-      </div>
+      <div className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
+      <div className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>
     </div>
   );
 }
-
