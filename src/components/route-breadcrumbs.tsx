@@ -48,6 +48,7 @@ const PATH_LABELS: Record<string, string> = {
   "/preferences": "Preferences",
   "/my-page": "My Profile",
   "/marketplace/browse": "Browse listings",
+  "/marketplace/pipeline": "Pipeline",
 
   "/startup-activity": "Startup Activity",
   "/ai-agents": "AI Agents",

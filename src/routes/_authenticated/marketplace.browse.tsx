@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { myNdaStatuses, requestNda } from "@/lib/pipeline.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Bookmark, Search, Store, X } from "lucide-react";
 import { toast } from "sonner";
@@ -100,15 +101,40 @@ function SaveButton({ saved, onClick, square }: { saved: boolean; onClick: () =>
   );
 }
 
-function NdaButton({ className }: { className?: string }) {
+function useNdaStatuses() {
+  const fn = useServerFn(myNdaStatuses);
+  return useQuery({ queryKey: ["pipeline", "nda-statuses"], queryFn: () => fn() });
+}
+
+function NdaButton({ className, listingId }: { className?: string; listingId: string }) {
   const { data } = useMyVerification();
+  const { data: statuses } = useNdaStatuses();
+  const req = useServerFn(requestNda);
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const st = statuses?.[listingId];
   const locked = !data?.verified;
+  if (st) {
+    return (
+      <span className={cn("inline-flex h-[34px] items-center rounded-md border px-3 text-sm font-medium text-muted-foreground", className)}>
+        {st === "requested" ? "NDA requested" : st === "declined" ? "Request declined" : "NDA approved"}
+      </span>
+    );
+  }
   return (
     <button
       type="button"
-      disabled={locked}
       title={locked ? "Submit for verification on My Profile first" : undefined}
-      onClick={(e) => { e.stopPropagation(); toast.success("NDA request sent for review."); }}
+      disabled={locked || busy}
+      onClick={async (e) => {
+        e.stopPropagation();
+        setBusy(true);
+        try {
+          await req({ data: { listingId } });
+          toast.success("NDA request sent to the seller.");
+          qc.invalidateQueries({ queryKey: ["pipeline"] });
+        } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
+      }}
       className={cn("h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
     >
       {locked ? "Available after verification" : "Request NDA"}
@@ -178,7 +204,8 @@ function LowerPanel({ t }: { t: Teaser }) {
     reason?: string | null; ndaCount?: number | null; loiCount?: number | null;
     growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus;
   };
-  const status: NdaStatus = x.ndaStatus ?? "none";
+  const { data: ndaMap } = useNdaStatuses();
+  const status: NdaStatus = (ndaMap?.[t.id] as NdaStatus | undefined) ?? x.ndaStatus ?? "none";
   const interest = x.ndaCount != null || x.loiCount != null
     ? [x.ndaCount != null && `${x.ndaCount} NDAs`, x.loiCount != null && `${x.loiCount} LOIs`].filter(Boolean).join(" · ")
     : null;
@@ -231,7 +258,7 @@ function LowerPanel({ t }: { t: Teaser }) {
             <div className="text-sm font-bold text-[#78350F]">Request the NDA to unlock</div>
             <p className="mt-0.5 text-[12.5px] text-[#92400E]">{unlock}</p>
           </div>
-          <NdaButton />
+          <NdaButton listingId={t.id} />
         </div>
       )}
 
@@ -390,7 +417,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
                     ) : (
                       <div className="flex shrink-0 gap-2">
                         <SaveButton saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} />
-                        <NdaButton />
+                        <NdaButton listingId={current.id} />
                       </div>
                     )}
                   </div>
@@ -417,7 +444,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
                   </div>
                 </div>
                 <SaveButton saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />
-                <NdaButton />
+                <NdaButton listingId={t.id} />
               </div>
             );
           })}
@@ -430,7 +457,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
             <div className="space-y-4">
               <div className="flex justify-end gap-2 pr-6">
                 <SaveButton saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} />
-                <NdaButton />
+                <NdaButton listingId={modal.id} />
               </div>
               <ListingDetail t={modal} />
             </div>
