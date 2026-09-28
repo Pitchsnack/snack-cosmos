@@ -4,7 +4,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  isStartupEntry,
   missingForPublish,
   pickDraft,
   runIdentityCheck,
@@ -152,7 +151,7 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const facts = await loadFacts(sb, data.startupId);
-    if (isStartupEntry(facts.company_type)) throw new Error("Startups can't be listed in the Marketplace yet");
+
     const draft = pickDraft(data.draft as HiddenDraft);
     const findings = runIdentityCheck(draft, facts);
     if (findings.length) throw new Error(`Identity check failed: ${findings.length} detail(s) could name the company`);
