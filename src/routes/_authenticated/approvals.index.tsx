@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
+import { useAllReportOrders, orderState, type ReportOrder } from "@/components/reports/report-order-bits";
+import { PaidReports, HistoryTab, Tile } from "@/components/reports/approvals-report-tabs";
 
 export const Route = createFileRoute("/_authenticated/approvals/")({
   head: () => ({
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/approvals/")({
       { name: "description", content: "Review seller listings and buyer verifications waiting for Admin approval." },
     ],
   }),
-  validateSearch: z.object({ tab: z.enum(["listings", "buyers", "history"]).optional() }),
+  validateSearch: z.object({ tab: z.enum(["listings", "buyers", "reports", "history"]).optional() }),
   component: ApprovalsPage,
 });
 
@@ -68,27 +70,44 @@ function ApprovalsPage() {
   const waitingOnSellers = (data?.listings ?? []).filter((x: any) => x.approval_status === "changes_requested").length;
   const buyers = ((data?.buyers ?? []) as any[]).filter((b) => (status === "waiting" ? b.status === "pending" : true))
     .filter((b) => !q || `${b.company_name} ${b.work_email}`.toLowerCase().includes(q.toLowerCase()));
-  const waiting = (data?.listings ?? []).filter((x: any) => x.approval_status === "in_review").length + (data?.buyers ?? []).filter((b: any) => b.status === "pending").length;
   const oldest = Math.max(0, ...[...(data?.listings ?? []), ...(data?.buyers ?? [])].map((x: any) => days(x.submitted_at)));
-  const mine = [...(data?.listings ?? []), ...(data?.buyers ?? [])].filter((x: any) => x.assignee_id === data?.me).length;
   const names = (data?.names ?? {}) as Record<string, string>;
+  const { data: od } = useAllReportOrders();
+  const orders = (od?.orders ?? []) as ReportOrder[];
+  const overdueOrders = orders.filter((o) => orderState(o) === "overdue").sort((a, b) => +new Date(a.due_at!) - +new Date(b.due_at!));
+  const reportsWaiting = orders.filter((o) => o.status === "paid" || o.status === "generated").length;
+  const deliveredWeek = orders.filter((o) => o.delivered_at && Date.now() - +new Date(o.delivered_at) < 7 * 86_400_000).length;
+  const listingsWaiting = (data?.listings ?? []).filter((x: any) => x.approval_status === "in_review").length;
+  const buyersWaiting = (data?.buyers ?? []).filter((b: any) => b.status === "pending").length;
 
   return (
     <div className="space-y-5" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-      <div>
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Control</div>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Approvals</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{waiting} waiting · oldest {oldest} day{oldest === 1 ? "" : "s"} · you are assigned {mine}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Approvals &amp; alerts</div>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Approvals</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} listings · {buyersWaiting} buyers · <b className="text-foreground">{reportsWaiting} paid reports</b> · {overdueOrders.length} overdue</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => toast.info("Alert settings are coming soon.")}>Alert settings</Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Tile label="Listings to review" value={listingsWaiting} sub={`oldest ${oldest} day${oldest === 1 ? "" : "s"}`} />
+        <Tile label="Buyer verifications" value={buyersWaiting} sub="pending" />
+        <Tile label="Paid reports waiting" value={reportsWaiting} sub={`${overdueOrders.length} overdue`} amber />
+        <Tile label="Delivered this week" value={deliveredWeek} sub="reports" />
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {([["listings", `Listings (${data?.listings.length ?? 0})`], ["buyers", `Buyers (${data?.buyers.length ?? 0})`], ["history", "History"]] as const).map(([k, label]) => (
+        {([["listings", "Listings", data?.listings.length ?? 0, false], ["buyers", "Buyers", data?.buyers.length ?? 0, false], ["reports", "Paid reports", reportsWaiting, overdueOrders.length > 0], ["history", "History", null, false]] as const).map(([k, label, n, red]) => (
           <button key={k} type="button" onClick={() => navigate({ search: { tab: k } })}
-            className={cn("-mb-px border-b-2 px-3 py-2 text-sm font-semibold", tab === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>{label}</button>
+            className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold", tab === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+            {label}{n !== null && <span className={cn("rounded-full px-1.5 text-[11px]", red ? "bg-red-600 text-primary-foreground" : "bg-muted text-foreground")}>{n}</span>}
+          </button>
         ))}
       </div>
 
-      {tab !== "history" && (
+      {(tab === "listings" || tab === "buyers") && (
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-md bg-muted/60 px-3">
             <Search className="h-4 w-4 text-muted-foreground" />
@@ -155,18 +174,10 @@ function ApprovalsPage() {
             </tr>
           ))}
         </Table>
+      ) : tab === "reports" ? (
+        <PaidReports orders={orders} overdue={overdueOrders} />
       ) : (
-        <Table head={["When", "Decision", "Item", "By"]}>
-          {(data?.history ?? []).length === 0 && <EmptyRow cols={4} text="No activity yet." />}
-          {(data?.history ?? []).map((h: any) => (
-            <tr key={h.id} className="border-t border-border">
-              <td className="p-3">{fmt(h.created_at)}</td>
-              <td className="p-3 font-medium">{ACTION[h.action] ?? h.action}</td>
-              <td className="p-3">{h.item_type === "listing" ? "Listing" : "Buyer"}{h.version ? ` · v${h.version}` : ""}{h.note ? <div className="text-xs text-muted-foreground">{h.note}</div> : null}</td>
-              <td className="p-3">{names[h.actor_id] ?? "—"}</td>
-            </tr>
-          ))}
-        </Table>
+        <HistoryTab approvalEvents={(data?.history ?? []) as any[]} startupInfo={(data as any)?.startupInfo ?? {}} buyerInfo={(data as any)?.buyerInfo ?? {}} names={names} />
       )}
     </div>
   );

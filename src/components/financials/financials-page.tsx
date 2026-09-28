@@ -28,6 +28,7 @@ import { FinIcon } from "@/components/financials/fin-icon";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS, fmtCapital } from "@/lib/financials";
 import { getStartupFinancials } from "@/lib/financials.functions";
 import { getCompanyInfoTh } from "@/lib/company-info.functions";
+import { ReportOrderStrip } from "@/components/reports/report-order-strip";
 import { CompanyInfoTab } from "@/components/financials/company-info-tab";
 import type { StartupFinancials } from "@/lib/financials.functions";
 import {
@@ -190,12 +191,12 @@ export function StartupFinancialsPage({
   const [year, setYear] = useState<number | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
 
-  const handleRefresh = async () => {
-    if (refreshing) return;
-    const ok = window.confirm(
+  const handleRefresh = async (skipConfirm = false): Promise<number[] | null> => {
+    if (refreshing) return null;
+    const ok = skipConfirm || window.confirm(
       "Clear all stored financial data for this startup and re-extract it from the DBD Data Warehouse?",
     );
-    if (!ok) return;
+    if (!ok) return null;
     setRefreshing(true);
     const toastId = toast.loading("Clearing data and re-extracting…");
     try {
@@ -204,7 +205,7 @@ export function StartupFinancialsPage({
         toast.error(result.message ?? "Auto extraction returned no data. Existing data kept.", {
           id: toastId,
         });
-        return;
+        return null;
       }
       await clearFinancials({ data: { startupId: id } });
       await saveFinancials({
@@ -225,8 +226,10 @@ export function StartupFinancialsPage({
       await queryClient.invalidateQueries({ queryKey: ["company-info-th", id] });
       setYear(undefined);
       toast.success(`Refreshed ${result.years.length} fiscal year(s) from DBD.`, { id: toastId });
+      return (result.years as any[]).map((y) => Number(y?.fiscalYear ?? y?.fiscal_year ?? y?.year)).filter(Boolean);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Refresh failed.", { id: toastId });
+      return null;
     } finally {
       setRefreshing(false);
     }
@@ -330,7 +333,7 @@ export function StartupFinancialsPage({
             <Button
               size="sm"
               variant="outline"
-              onClick={handleRefresh}
+              onClick={() => void handleRefresh()}
               disabled={refreshing}
               title="Clear stored data and re-run Auto extraction from DBD"
             >
@@ -362,6 +365,16 @@ export function StartupFinancialsPage({
           years={sortedYears}
           activeYear={activeYear}
           onSelectYear={setYear}
+        />
+      )}
+
+      {canManage && !editing && (
+        <ReportOrderStrip
+          startupId={id}
+          kind={tab === "valuation" ? "valuation" : "financials"}
+          regNo={(data as any)?.registeredNumber ?? (companyInfo as any)?.registration_number ?? null}
+          onGenerate={tab === "valuation" ? undefined : () => handleRefresh(true)}
+          onEdit={() => setEditing(true)}
         />
       )}
 

@@ -2439,6 +2439,112 @@ export type Database = {
           },
         ]
       }
+      report_order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          id: string
+          note: string | null
+          order_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          note?: string | null
+          order_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "report_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_orders: {
+        Row: {
+          amount: number
+          analyst_id: string | null
+          created_at: string
+          currency: string
+          delivered_at: string | null
+          delivered_by: string | null
+          due_at: string | null
+          generated_at: string | null
+          id: string
+          invoice_no: string | null
+          kind: string
+          method: string | null
+          ordered_by: string | null
+          paid_at: string
+          payment_ref: string | null
+          ref: string
+          startup_id: string
+          status: string
+        }
+        Insert: {
+          amount?: number
+          analyst_id?: string | null
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          delivered_by?: string | null
+          due_at?: string | null
+          generated_at?: string | null
+          id?: string
+          invoice_no?: string | null
+          kind: string
+          method?: string | null
+          ordered_by?: string | null
+          paid_at?: string
+          payment_ref?: string | null
+          ref?: string
+          startup_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          analyst_id?: string | null
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          delivered_by?: string | null
+          due_at?: string | null
+          generated_at?: string | null
+          id?: string
+          invoice_no?: string | null
+          kind?: string
+          method?: string | null
+          ordered_by?: string | null
+          paid_at?: string
+          payment_ref?: string | null
+          ref?: string
+          startup_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_orders_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string
