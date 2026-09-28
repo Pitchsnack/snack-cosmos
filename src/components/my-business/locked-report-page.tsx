@@ -99,6 +99,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
           id={company.id}
           workspace="my-startups"
           readOnly
+          section={kind}
           {...(kind === "valuation" ? { initialTab: "valuation" } : {})}
         />
       </div>

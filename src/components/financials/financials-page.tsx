@@ -155,12 +155,15 @@ export function StartupFinancialsPage({
   workspace = "startups",
   initialTab,
   readOnly = false,
+  section,
 }: {
   id: string;
   workspace?: "startups" | "my-startups";
   initialTab?: string;
   /** Seller view: live figures, no Edit / Refresh controls. */
   readOnly?: boolean;
+  /** Seller pages: "financials" hides Valuation; "valuation" shows only Valuation. */
+  section?: "financials" | "valuation";
 }) {
   const fetchFinancials = useServerFn(getStartupFinancials);
   const clearFinancials = useServerFn(clearStartupFinancials);
