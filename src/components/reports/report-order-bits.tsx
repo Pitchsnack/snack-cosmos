@@ -19,7 +19,7 @@ export function orderState(o: ReportOrder): OrderState {
   return "paid";
 }
 export const overdueDays = (o: ReportOrder) => (o.due_at ? Math.max(1, Math.ceil((Date.now() - new Date(o.due_at).getTime()) / 86_400_000)) : 0);
-export const dayMonth = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "—");
+export const dayMonth = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" }).replace("Sept", "Sep") : "—");
 export const dayMonthTime = (d?: string | null) =>
   d ? `${dayMonth(d)}, ${new Date(d).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : "—";
 export const kindLabel = (k: string) => (k === "valuation" ? "Estimated valuation" : k === "bundle" ? "Financials + valuation" : "Financial report");
