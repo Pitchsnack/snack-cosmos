@@ -12,7 +12,6 @@ import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { SampleReport, reportPrice } from "@/components/my-business/report-offers";
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
 import { useHasFinancials } from "@/hooks/use-has-financials";
-import { useReportUnlock } from "@/lib/report-unlock";
 import catalog from "@/config/report-catalog.json";
 
 type Kind = "financials" | "valuation";
