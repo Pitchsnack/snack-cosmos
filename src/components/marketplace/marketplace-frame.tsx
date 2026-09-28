@@ -301,11 +301,16 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       ? [
           { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
-          { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
-          { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
           { to: "/marketplace/my-contact", label: "Contacts", icon: Building2 },
         ]
       : [{ to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch }];
+  const tools: MenuItem[] =
+    persona === "seller"
+      ? [
+          { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
+          { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
+        ]
+      : [];
   const account: MenuItem[] = [{ to: "/my-page", label: "My Profile", icon: UserCircle }];
 
   if (collapsed) {
@@ -337,6 +342,12 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
         <div className="space-y-1">{discover.map(railItem)}</div>
         <RailDivider />
         <div className="space-y-1">{workspace.map(railItem)}</div>
+        {tools.length > 0 && (
+          <>
+            <RailDivider />
+            <div className="space-y-1">{tools.map(railItem)}</div>
+          </>
+        )}
         <RailDivider />
         <div className="space-y-1">{account.map(railItem)}</div>
       </div>
@@ -363,6 +374,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
     <div className="space-y-4">
       <div className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
       <div className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>
+      {tools.length > 0 && <div className="space-y-1">{title("Tools")}{tools.map(fullItem)}</div>}
       <div className="space-y-1">{title("Account")}{account.map(fullItem)}</div>
     </div>
   );
