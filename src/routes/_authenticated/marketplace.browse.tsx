@@ -357,6 +357,13 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
           <Store className="mx-auto mb-2 h-8 w-8 opacity-50" />
           <p>{ownOnly ? "Your company is not live on the Marketplace yet." : "No listings match your filters yet."}</p>
         </div>
+      ) : !ownOnly && view === "grid" ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((t) => (
+            <PublicListingCard key={t.id} l={t.listing} deal={t} onSelect={() => setModalId(t.id)}
+              topRight={<SaveButton square saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />} />
+          ))}
+        </div>
       ) : ownOnly || view === "split" ? (
         <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
           <div className="space-y-3">
