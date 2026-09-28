@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { Check, Eye, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { createMyReportOrder } from "@/lib/report-orders.functions";
+import { dayMonth, useStartupReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
 import { Button } from "@/components/ui/button";
 import { useStartups } from "@/hooks/use-startups";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
@@ -54,20 +58,23 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
   const t = TITLES[kind];
 
   const { hasData } = useHasFinancials(company?.id ?? "");
-  const financialsUnlock = useReportUnlock("financials", company?.id);
-  const valuationUnlock = useReportUnlock("valuation", company?.id);
-  const unlock = kind === "financials" ? financialsUnlock : valuationUnlock;
-  const needsFinancials = kind === "valuation" && !financialsUnlock.unlocked;
-
-  const handlePay = () => {
-    if (!company) return;
-    if (!hasData) {
-      toast.error("We have no filed statements for this company yet. Import them first, then unlock the report.");
-      return;
-    }
-    unlock.unlock();
-    toast.success(kind === "financials" ? "Your verified financials are unlocked." : "Your valuation is unlocked.");
-  };
+  const { data: ordersData } = useStartupReportOrders(company?.id);
+  const orders = (ordersData?.orders ?? []) as ReportOrder[];
+  const orderFor = (k: Kind) => orders.find((o) => o.kind === k || o.kind === "bundle");
+  const order = orderFor(kind);
+  const delivered = order?.status === "delivered";
+  const needsFinancials = kind === "valuation" && orderFor("financials")?.status !== "delivered";
+  const qc = useQueryClient();
+  const payFn = useServerFn(createMyReportOrder);
+  const pay = useMutation({
+    mutationFn: () => payFn({ data: { startupId: company!.id, kind } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["report-orders"] });
+      toast.success("Order received — PitchSnack analysts will prepare your report.");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  const handlePay = () => { if (company) pay.mutate(); };
 
   const picker = mine.length > 1 && (
     <select value={company?.id} onChange={(e) => setPicked(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm">
@@ -75,7 +82,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
     </select>
   );
 
-  if (company && unlock.unlocked && hasData) {
+  if (company && delivered && hasData) {
     return (
       <div className="font-sans" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4 md:px-7 md:pt-7">
@@ -105,11 +112,11 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">My Workspace</div>
           <h1 className="text-[26px] font-bold tracking-tight">{t.page}</h1>
-          <p className="text-[13.5px] text-muted-foreground">{name} · {kind === "financials" ? "verified report" : "valuation"} not ordered yet</p>
+          <p className="text-[13.5px] text-muted-foreground">{name} · {kind === "financials" ? "verified report" : "valuation"} {order ? "in preparation" : "not ordered yet"}</p>
         </div>
         <div className="flex items-center gap-2">
           {picker}
-          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11.5px] font-bold text-amber-800">Not ordered</span>
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11.5px] font-bold text-amber-800">{order ? `Ordered · due ${dayMonth(order.due_at)}` : "Not ordered"}</span>
         </div>
       </div>
 
@@ -143,9 +150,9 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
               <Why icon={<Lock className="h-4 w-4" />}><b>You decide who sees it, every time.</b> The full report is never sent automatically. When a buyer signs the NDA, you choose whether to share it with that buyer. Buyers see only the ranges until you do. <span className="ml-1 inline-flex rounded-full border border-profile-line bg-card px-2 py-0.5 text-[11.5px] font-bold text-profile">Shared case by case</span></Why>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span title={needsFinancials ? "Unlock the verified financial report first" : !hasData ? "No filed statements recorded for this company yet" : "Pay and open your report"}>
-                <Button disabled={!company || needsFinancials || !hasData} onClick={handlePay} className="bg-sidebar text-sidebar-foreground">
-                  Pay · {reportPrice(kind)}
+              <span title={needsFinancials ? "Your verified financial report must be delivered first" : order ? `Order ${order.ref} is being prepared` : "Pay for your report"}>
+                <Button disabled={!company || needsFinancials || !!order || pay.isPending} onClick={handlePay} className="bg-sidebar text-sidebar-foreground">
+                  {order ? `Ordered · ${order.ref}` : `Pay · ${reportPrice(kind)}`}
                 </Button>
               </span>
               <Button variant="outline" onClick={() => setSample(kind)}>View sample</Button>

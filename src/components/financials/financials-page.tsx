@@ -373,7 +373,7 @@ export function StartupFinancialsPage({
           startupId={id}
           kind={tab === "valuation" ? "valuation" : "financials"}
           regNo={(data as any)?.registeredNumber ?? (companyInfo as any)?.registration_number ?? null}
-          onGenerate={() => handleRefresh(true)}
+          onGenerate={tab === "valuation" ? undefined : () => handleRefresh(true)}
           onEdit={() => setEditing(true)}
         />
       )}
