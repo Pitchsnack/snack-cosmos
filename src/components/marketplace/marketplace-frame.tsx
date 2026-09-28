@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { PipelineCountBadge } from "@/components/menu-count-badge";
 import { cn } from "@/lib/utils";
@@ -302,9 +302,14 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       ? [
           { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
-          { to: "/marketplace/my-contact", label: "Contacts", icon: Building2 },
+          { to: "/marketplace/my-contact", label: "Contacts", icon: Contact },
+          { to: "/marketplace/messages", label: "Messages", icon: MessageSquare },
         ]
-      : [{ to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch }];
+      : [
+          { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
+          { to: "/marketplace/my-contact", label: "Contacts", icon: Contact },
+          { to: "/marketplace/messages", label: "Messages", icon: MessageSquare },
+        ];
   const tools: MenuItem[] =
     persona === "seller"
       ? [
