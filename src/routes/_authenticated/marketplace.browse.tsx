@@ -355,16 +355,9 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Store className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p>No listings match your filters yet.</p>
+          <p>{ownOnly ? "Your company is not live on the Marketplace yet." : "No listings match your filters yet."}</p>
         </div>
-      ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((t) => (
-            <PublicListingCard key={t.id} l={t.listing} deal={t} onSelect={() => setModalId(t.id)}
-              topRight={<SaveButton square saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />} />
-          ))}
-        </div>
-      ) : view === "split" ? (
+      ) : ownOnly || view === "split" ? (
         <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
           <div className="space-y-3">
             {items.map((t) => (
@@ -376,7 +369,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
                 onToggleExpand={() => setExpandedId((e) => (e === t.id ? null : t.id))}
                 selected={wide && current?.id === t.id}
                 onSelect={() => (wide ? setSelected(t.id) : setModalId(t.id))}
-                topRight={<SaveButton square saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />}
+                topRight={ownOnly ? undefined : <SaveButton square saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />}
               />
             ))}
           </div>
@@ -386,11 +379,23 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
                 <>
                   <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
                     <span className="min-w-0 truncate text-sm font-semibold">{[current.listing.codeName, current.listing.refNo].filter(Boolean).join(" · ")}</span>
-                    <div className="flex shrink-0 gap-2">
-                      <SaveButton saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} />
-                      <NdaButton />
-                    </div>
+                    {ownOnly ? (
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">Buyer preview</span>
+                    ) : (
+                      <div className="flex shrink-0 gap-2">
+                        <SaveButton saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} />
+                        <NdaButton />
+                      </div>
+                    )}
                   </div>
+                  <div className="overflow-y-auto p-5"><ListingDetail t={current} /></div>
+                </>
+              ) : (
+                <p className="py-16 text-center text-sm text-muted-foreground">Select a listing to see the details.</p>
+              )}
+            </div>
+          )}
+
                   <div className="overflow-y-auto p-5"><ListingDetail t={current} /></div>
                 </>
               ) : (
