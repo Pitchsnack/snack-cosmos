@@ -402,14 +402,6 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
               )}
             </div>
           )}
-
-                  <div className="overflow-y-auto p-5"><ListingDetail t={current} /></div>
-                </>
-              ) : (
-                <p className="py-16 text-center text-sm text-muted-foreground">Select a listing to see the details.</p>
-              )}
-            </div>
-          )}
         </div>
       ) : (
         <div className="space-y-2">
