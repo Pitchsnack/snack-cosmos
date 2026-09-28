@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bookmark, Lock, Search, Store, X } from "lucide-react";
+import { Bookmark, Search, Store, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -131,7 +131,6 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
   );
 }
 
-const AFTER_NDA = ["Company name & logo", "Website & contacts", "Founder names", "Exact financials FY23–25", "Valuation report", "Data room"];
 const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contact"];
 
 /** Right panel body — everything comes from the public read model only. */
@@ -148,37 +147,100 @@ function ListingDetail({ t }: { t: Teaser }) {
           <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? "Show less ▴" : "Show more ▾"}</button>
         </Section>
       )}
-      <Section title="Deal terms">
-        <div className="rounded-lg border border-border px-3">
-          <Row k="Stake offered" v={t.stakePct != null ? `${t.stakePct}%` : "—"} />
-          <Row k="Asking price" v={t.askingPrice == null ? "On request" : `฿${t.askingPrice}M`} />
-          <Row k="Deal type" v={t.dealType ?? "—"} />
+      <LowerPanel t={t} />
+    </div>
+  );
+}
+
+type NdaStatus = "none" | "requested" | "approved" | "exchanged";
+
+function KV({ rows }: { rows: [string, React.ReactNode][] }) {
+  const shown = rows.filter(([, v]) => v != null && v !== "");
+  return <>{shown.map(([k, v]) => <Row key={k} k={k} v={v} />)}</>;
+}
+
+function LowerPanel({ t }: { t: Teaser }) {
+  const l = t.listing;
+  const x = t as Teaser & {
+    reason?: string | null; ndaCount?: number | null; loiCount?: number | null;
+    growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus;
+  };
+  const status: NdaStatus = x.ndaStatus ?? "none";
+  const interest = x.ndaCount != null || x.loiCount != null
+    ? [x.ndaCount != null && `${x.ndaCount} NDAs`, x.loiCount != null && `${x.loiCount} LOIs`].filter(Boolean).join(" · ")
+    : null;
+  const unlock = [
+    "Company name & logo",
+    "website & contacts",
+    (l as { people?: string[] }).people?.length !== 0 && "founder names",
+    l.hasFinancials && "exact financials FY23–25",
+    "valuation report",
+    "data room",
+  ].filter(Boolean).join(" · ");
+  const step = { none: 0, requested: 1, approved: 2, exchanged: 3 }[status];
+  const subs = [status === "none" ? "You are here" : "", status === "requested" ? "waiting for the seller" : "usually 2 days", "identity, financials, data room", "talk directly"];
+  const card = "rounded-[12px] border border-border px-[14px] py-3";
+  return (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className={card}>
+          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Deal terms</h4>
+          <KV rows={[
+            ["Stake offered", t.stakePct != null ? `${t.stakePct}%` : null],
+            ["Asking price", t.askingPrice == null ? "On request" : `฿${t.askingPrice}M`],
+            ["Deal type", t.dealType ?? null],
+            ["Reason", x.reason ?? null],
+            ["Buyer interest", interest],
+          ]} />
         </div>
-      </Section>
-      <Section title="Financial snapshot · ranges before NDA">
-        <div className="rounded-lg border border-border px-3">
-          <Row k="Revenue FY25" v={l.revenueBand ?? "—"} />
-          <Row k="Verified financials" v={l.hasFinancials ? "Yes" : "Not yet"} />
-          <Row k="Full report" v="After NDA" />
+        <div className={card}>
+          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Financials · ranges before NDA</h4>
+          <KV rows={[
+            ["Revenue FY25", l.revenueBand],
+            ["Growth", x.growthBand ?? null],
+            ["EBITDA margin", x.ebitdaMargin ?? null],
+            ["Net cash", x.netCash ?? null],
+            ["Verified by", l.hasFinancials
+              ? <span className="text-[#16A34A]">✓ PitchSnack analysts</span>
+              : <span className="font-normal text-muted-foreground">Seller-provided, not verified</span>],
+          ]} />
         </div>
-      </Section>
-      <Section title="Shown after you sign the NDA">
-        <div className="flex flex-wrap gap-1.5">
-          {AFTER_NDA.map((x) => (
-            <span key={x} className="inline-flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFFBEB] px-2 py-0.5 text-[11.5px] font-semibold text-[#92400E]"><Lock className="h-3 w-3" />{x}</span>
-          ))}
+      </div>
+
+      {status === "approved" || status === "exchanged" ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#86EFAC] bg-[#F0FDF4] px-[14px] py-3">
+          <div className="text-sm font-bold text-[#166534]">NDA approved · full profile unlocked</div>
+          <Button size="sm">Open full profile</Button>
         </div>
-      </Section>
-      <Section title="How it works">
-        <ol className="grid gap-2 sm:grid-cols-4">
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#FCD34D] bg-[#FFFBEB] px-[14px] py-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-bold text-[#78350F]">Request the NDA to unlock</div>
+            <p className="mt-0.5 text-[12.5px] text-[#92400E]">{unlock}</p>
+          </div>
+          <NdaButton />
+        </div>
+      )}
+
+      <section>
+        <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How it works</h4>
+        <ol className="relative grid grid-cols-4">
+          <span className="absolute left-[12.5%] right-[12.5%] top-[7px] h-[2px] bg-[#E5E7EB]" />
           {STEPS.map((s, i) => (
-            <li key={s} className="rounded-lg border border-border p-2.5 text-[12.5px]">
-              <span className="mb-1 grid h-5 w-5 place-items-center rounded-full bg-muted text-[11px] font-bold">{i + 1}</span>{s}
+            <li key={s} className="relative flex flex-col items-center text-center">
+              <span className={cn(
+                "h-4 w-4 rounded-full",
+                i < step && "bg-[#9CA3AF]",
+                i === step && "bg-[#6D28D9] ring-4 ring-[#6D28D9]/20",
+                i > step && "border-2 border-[#D1D5DB] bg-card",
+              )} />
+              <span className={cn("mt-2 text-[12.5px]", i === step ? "font-bold" : "text-foreground/80")}>{s}</span>
+              {subs[i] && <span className="text-[11px] text-muted-foreground">{subs[i]}</span>}
             </li>
           ))}
         </ol>
-      </Section>
-    </div>
+      </section>
+    </>
   );
 }
 
