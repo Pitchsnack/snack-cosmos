@@ -233,6 +233,15 @@ export function PersonaCard() {
   );
 }
 
+const MENU_LINK_BASE =
+  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors";
+const MENU_LINK_ACTIVE = {
+  className: `${MENU_LINK_BASE} bg-sidebar-accent text-sidebar-primary font-medium`,
+};
+const MENU_LINK_INACTIVE = {
+  className: `${MENU_LINK_BASE} text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground`,
+};
+
 export function MarketplaceEmptyMenu() {
   const { persona } = usePersona();
 
@@ -242,23 +251,23 @@ export function MarketplaceEmptyMenu() {
         <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
           My Workspace
         </div>
-        <Link
-          to="/my-page"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-        >
+        <Link to="/my-page" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
           <UserCircle className="h-4 w-4 shrink-0" />
           <span>My Profile</span>
         </Link>
         <Link
           to="/my-startups"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          activeOptions={{ exact: false }}
+          activeProps={MENU_LINK_ACTIVE}
+          inactiveProps={MENU_LINK_INACTIVE}
         >
           <Building2 className="h-4 w-4 shrink-0" />
           <span>My Business</span>
         </Link>
         <Link
           to="/marketplace/my-contact"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          activeProps={MENU_LINK_ACTIVE}
+          inactiveProps={MENU_LINK_INACTIVE}
         >
           <Building2 className="h-4 w-4 shrink-0" />
           <span>My contact</span>
@@ -275,7 +284,8 @@ export function MarketplaceEmptyMenu() {
         </div>
         <Link
           to="/marketplace/browse"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          activeProps={MENU_LINK_ACTIVE}
+          inactiveProps={MENU_LINK_INACTIVE}
         >
           <LayoutGrid className="h-4 w-4 shrink-0" />
           <span>Browse listings</span>
@@ -285,10 +295,7 @@ export function MarketplaceEmptyMenu() {
         <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
           My Workspace
         </div>
-        <Link
-          to="/my-page"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-        >
+        <Link to="/my-page" activeProps={MENU_LINK_ACTIVE} inactiveProps={MENU_LINK_INACTIVE}>
           <UserCircle className="h-4 w-4 shrink-0" />
           <span>My Profile</span>
         </Link>
