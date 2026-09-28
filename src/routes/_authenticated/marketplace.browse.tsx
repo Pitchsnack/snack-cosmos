@@ -21,6 +21,9 @@ import type { PublicListing } from "@/lib/public-listing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/browse")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    company: typeof search.company === "string" ? search.company : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Browse listings — PitchSnack" },
@@ -31,8 +34,17 @@ export const Route = createFileRoute("/_authenticated/marketplace/browse")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: BrowseListingsPage,
+  component: BrowseRoute,
 });
+
+/** Buyers browse every live listing; sellers browse investors, and only ever see their own listing. */
+function BrowseRoute() {
+  const { persona } = usePersona();
+  const { company } = Route.useSearch();
+  if (persona === "seller" && !company) return <InvestorBrowse />;
+  return <BrowseListingsPage ownOnly={persona === "seller" ? (company ?? null) : null} />;
+}
+
 
 type Teaser = {
   id: string;
