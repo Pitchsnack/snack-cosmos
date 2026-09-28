@@ -363,6 +363,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
     <div className="space-y-4">
       <div className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
       <div className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>
+      <div className="space-y-1">{title("Account")}{account.map(fullItem)}</div>
     </div>
   );
 }
