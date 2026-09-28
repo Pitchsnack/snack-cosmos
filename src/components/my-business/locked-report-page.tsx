@@ -51,8 +51,53 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
   const name = company?.startup_name ?? "Your company";
   const cfg = catalog.locked[kind];
   const fill = (t: string) => t.replace("{days}", String(cfg.deliveryDays)).replace("{valuationPrice}", reportPrice("valuation"));
-  const needsFinancials = kind === "valuation" && !isReportOrdered("financials");
   const t = TITLES[kind];
+
+  const { hasData } = useHasFinancials(company?.id ?? "");
+  const financialsUnlock = useReportUnlock("financials", company?.id);
+  const valuationUnlock = useReportUnlock("valuation", company?.id);
+  const unlock = kind === "financials" ? financialsUnlock : valuationUnlock;
+  const needsFinancials = kind === "valuation" && !financialsUnlock.unlocked;
+
+  const handlePay = () => {
+    if (!company) return;
+    if (!hasData) {
+      toast.error("We have no filed statements for this company yet. Import them first, then unlock the report.");
+      return;
+    }
+    unlock.unlock();
+    toast.success(kind === "financials" ? "Your verified financials are unlocked." : "Your valuation is unlocked.");
+  };
+
+  const picker = mine.length > 1 && (
+    <select value={company?.id} onChange={(e) => setPicked(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm">
+      {mine.map((m) => <option key={m.id} value={m.id}>{m.startup_name}</option>)}
+    </select>
+  );
+
+  if (company && unlock.unlocked && hasData) {
+    return (
+      <div className="font-sans" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+        <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4 md:px-7 md:pt-7">
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">My Workspace</div>
+            <h1 className="text-[26px] font-bold tracking-tight">{t.page}</h1>
+            <p className="text-[13.5px] text-muted-foreground">{name} · read-only</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {picker}
+            <PitchsnackTag />
+          </div>
+        </div>
+        <StartupFinancialsPage
+          id={company.id}
+          workspace="my-startups"
+          readOnly
+          {...(kind === "valuation" ? { initialTab: "valuation" } : {})}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 font-sans md:p-7" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -63,14 +108,11 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
           <p className="text-[13.5px] text-muted-foreground">{name} · {kind === "financials" ? "verified report" : "valuation"} not ordered yet</p>
         </div>
         <div className="flex items-center gap-2">
-          {mine.length > 1 && (
-            <select value={company?.id} onChange={(e) => setPicked(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm">
-              {mine.map((m) => <option key={m.id} value={m.id}>{m.startup_name}</option>)}
-            </select>
-          )}
+          {picker}
           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11.5px] font-bold text-amber-800">Not ordered</span>
         </div>
       </div>
+
 
       <div className="relative mt-4 min-h-[640px]">
         <SampleBehind />
