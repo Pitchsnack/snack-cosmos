@@ -337,6 +337,8 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
         <div className="space-y-1">{discover.map(railItem)}</div>
         <RailDivider />
         <div className="space-y-1">{workspace.map(railItem)}</div>
+        <RailDivider />
+        <div className="space-y-1">{account.map(railItem)}</div>
       </div>
     );
   }
