@@ -43,7 +43,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
   const [picked, setPicked] = useState<string | null>(null);
   const [sample, setSample] = useState<Kind | null>(null);
   const company = mine.find((m) => m.id === picked) ?? mine[0];
-  const name = company?.name ?? "Your company";
+  const name = company?.startupName ?? "Your company";
   const cfg = catalog.locked[kind];
   const fill = (t: string) => t.replace("{days}", String(cfg.deliveryDays)).replace("{valuationPrice}", reportPrice("valuation"));
   const needsFinancials = kind === "valuation" && !isReportOrdered("financials");
@@ -60,7 +60,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
         <div className="flex items-center gap-2">
           {mine.length > 1 && (
             <select value={company?.id} onChange={(e) => setPicked(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm">
-              {mine.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              {mine.map((m) => <option key={m.id} value={m.id}>{m.startupName}</option>)}
             </select>
           )}
           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11.5px] font-bold text-amber-800">Not ordered</span>
