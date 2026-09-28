@@ -100,7 +100,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
         }
       }
       return [area, ...Array.from(pages, ([path, match]) => ({
-        label: path === "/my-startups" ? "My Business"
+        label: path === "/my-startups" ? "My Company"
           : path === "/my-startups/new" ? "Add My Business"
           : path === "/marketplace/my-contact" ? "My contact"
           : path === "/my-financials" ? "My Financials"
