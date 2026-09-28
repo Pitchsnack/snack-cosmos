@@ -72,57 +72,104 @@ function Fact({ icon, children, full }: { icon: React.ReactNode; children: React
   );
 }
 
-/** One listing card used by the seller's Public view AND the buyer Marketplace. */
-export function PublicListingCard({ l, seller = false, className }: { l: PublicListing; seller?: boolean; className?: string }) {
-  const ic = "h-4 w-4";
-  const badge = seller && (
-    <span className={cn("absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
-      l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]")}>{l.live ? "Live" : l.refNo ? "Draft" : "Preview"}</span>
-  );
+export type ListingDeal = { dealType?: string | null; askingPrice?: number | null; stakePct?: number | null };
+
+export function dealLine(d?: ListingDeal) {
+  if (!d) return "";
+  return [
+    d.dealType,
+    d.stakePct != null ? `${d.stakePct}% stake` : null,
+    d.askingPrice == null ? "price on request" : `฿${d.askingPrice}M asking`,
+  ].filter(Boolean).join(" · ");
+}
+
+/**
+ * One listing card used by the seller's "How buyers see it", the buyer Grid,
+ * the Split list and the Split detail panel. The cover is ALWAYS sector vector
+ * art — photos and logos only appear in the Private view after NDA.
+ */
+export function PublicListingCard({
+  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight,
+}: {
+  l: PublicListing;
+  seller?: boolean;
+  className?: string;
+  deal?: ListingDeal;
+  /** When false, shows the compact version with a "Show more" link. */
+  expanded?: boolean;
+  onToggleExpand?: () => void;
+  selected?: boolean;
+  onSelect?: () => void;
+  topRight?: React.ReactNode;
+}) {
+  const badgeLabel = seller ? (l.live ? "Live" : l.refNo ? "Draft" : "Preview") : "Identity hidden";
+  const meta = [l.sector, l.subSector, l.location?.replace(/, Thailand$/, ""), l.employees].filter(Boolean).join(" · ");
+  const dl = dealLine(deal);
+  const interactive = !!onSelect;
   return (
-    <div className={cn("grid gap-[18px] rounded-[14px] bg-card p-3.5 shadow-[0_1px_3px_rgba(16,24,40,.08),0_4px_12px_rgba(16,24,40,.05)] sm:grid-cols-[190px_minmax(0,1fr)]", className)} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-      <CoverView cover={l.coverImage} fallbackArt={l.coverArt ?? l.sector} locked={seller && !l.coverImage} className="min-h-[160px] rounded-[10px]">{badge}</CoverView>
-      <div className="min-w-0">
-        <h3 className="text-[18px] font-bold leading-[1.3]">{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3.5 w-3.5" />}>Verified company</Badge>}
-          {seller && <Badge tone="dashed" icon={<FileText className="h-3.5 w-3.5" />}>Verified financials · optional</Badge>}
-          <Badge tone="violet" icon={<Lock className="h-3.5 w-3.5" />}>Identity after NDA</Badge>
+    <div
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-pressed={interactive ? !!selected : undefined}
+      onClick={onSelect}
+      onKeyDown={interactive ? (e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onSelect?.(); } } : undefined}
+      className={cn(
+        "flex flex-col overflow-hidden rounded-[14px] border-[1.5px] bg-card text-left transition-shadow",
+        selected ? "border-[#F59E0B] shadow-[0_0_0_4px_rgba(245,158,11,.15)]" : "border-border",
+        interactive && "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        className,
+      )}
+      style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+    >
+      <SectorArt art={l.coverArt ?? l.sector} className="h-[112px] w-full shrink-0">
+        <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+          seller ? (l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]") : "bg-background/95 text-foreground")}>
+          {!seller && <Lock className="h-3 w-3" />}{badgeLabel}
+        </span>
+        {topRight && <div className="absolute right-2.5 top-2.5">{topRight}</div>}
+      </SectorArt>
+      <div className="flex flex-1 flex-col p-3.5">
+        <h3 className="line-clamp-2 text-[15px] font-bold leading-[1.3]">{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
+        <div className="mt-2 flex flex-wrap gap-1">
+          {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>Verified company</Badge>}
+          {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>Verified financials</Badge>
+            : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>Verified financials · optional</Badge>}
+          <Badge tone="violet" icon={<Lock className="h-3 w-3" />}>Identity after NDA</Badge>
         </div>
         {l.revenueBand && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-[14px] text-muted-foreground">Revenue FY25</span>
-            <span className="text-[15px] font-bold">{l.revenueBand}</span>
+          <div className="mt-2.5 flex items-center gap-2">
+            <span className="text-[13px] text-muted-foreground">Revenue FY25</span>
+            <span className="text-[14px] font-bold">{l.revenueBand}</span>
             <span className="rounded bg-[#EEF0FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#4338CA]">Range</span>
           </div>
         )}
-        {l.description && <p className="mt-2 text-[13.5px] text-[#374151] dark:text-foreground/80">{l.description}</p>}
-        <div className="mt-3 space-y-2 border-t border-[#F0F1F3] pt-3 dark:border-border">
-          <div className="grid grid-cols-[126px_minmax(0,1fr)] items-start gap-2">
-            <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Products & services</span>
-            <TagChips tags={l.productTags} />
+        {meta && <div className="mt-1.5 truncate text-[12.5px] text-muted-foreground">{meta}</div>}
+        {expanded && (
+          <div className="mt-3 space-y-2.5 border-t border-border pt-3">
+            {l.description && <p className="text-[13px] text-foreground/80">{l.description}</p>}
+            <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
+              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Products & services</span>
+              <TagChips tags={l.productTags} />
+            </div>
+            <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
+              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Markets</span>
+              <TagChips tags={l.marketTags} green />
+            </div>
+            {l.certifications.length > 0 && (
+              <div className="flex items-center gap-2 text-[12.5px]"><ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />{l.certifications.join(" · ")}</div>
+            )}
+            {dl && <div className="flex items-center gap-2 text-[12.5px] font-medium"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />{dl}</div>}
           </div>
-          <div className="grid grid-cols-[126px_minmax(0,1fr)] items-start gap-2">
-            <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Markets</span>
-            <TagChips tags={l.marketTags} green />
-          </div>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
-          {l.sector && (
-            <Fact full icon={<Building2 className={ic} />}>
-              {l.sector}{l.subSector && <span className="ml-1.5 rounded-full bg-muted px-2 py-0.5 text-[11.5px] font-semibold">{l.subSector}</span>}
-            </Fact>
+        )}
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-2 text-[12px] text-muted-foreground" style={{ marginTop: 12 }}>
+          <span className="min-w-0 truncate">{[l.codeName, l.refNo].filter(Boolean).join(" · ")}</span>
+          {onToggleExpand ? (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} className="shrink-0 font-semibold text-foreground hover:underline">
+              {expanded ? "Show less ▴" : "Show more ▾"}
+            </button>
+          ) : (
+            <span className="shrink-0">{l.live && l.publishedAt ? `Posted ${fmt(l.publishedAt)}` : "Not published yet"}</span>
           )}
-          <Fact icon={<MapPin className={ic} />}>{l.location ?? "—"}</Fact>
-          <Fact icon={<Calendar className={ic} />}>{l.typeFounded ?? "—"}</Fact>
-          <Fact icon={<Users className={ic} />}>{l.employees ?? "—"}</Fact>
-          {l.certifications.length > 0 ? (
-            <Fact icon={<ShieldCheck className={ic} />}>{l.certifications.join(" · ")}</Fact>
-          ) : <span />}
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2 text-[12px] text-muted-foreground">
-          <span className="inline-flex min-w-0 items-center gap-1 truncate"><Briefcase className="h-3.5 w-3.5 shrink-0" />{[l.codeName, l.refNo].filter(Boolean).join(" · ")}</span>
-          <span className="shrink-0">{l.live && l.publishedAt ? `Posted on ${fmt(l.publishedAt)}` : "Not published yet"}</span>
         </div>
       </div>
     </div>

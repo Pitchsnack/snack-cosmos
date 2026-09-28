@@ -241,7 +241,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   );
   return (
     <>
-      <CoverView cover={cover} fallbackArt={d?.cover_art ?? s.sector ?? s.industry?.[0]} locked={!cover && !live} className="h-[120px] w-full">
+      <CoverView cover={null} fallbackArt={d?.cover_art ?? s.sector ?? s.industry?.[0]} className="h-[120px] w-full">
         {badge}
       </CoverView>
       <div className="px-3 pb-3">
