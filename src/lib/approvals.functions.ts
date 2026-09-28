@@ -141,14 +141,27 @@ export const listApprovals = createServerFn({ method: "GET" })
       .in("approval_status", ["in_review", "changes_requested"])
       .order("submitted_at", { ascending: true });
     const { data: buyers } = await sb.from("buyer_verifications").select("*").in("status", ["pending", "more_info"]).order("submitted_at", { ascending: true });
-    const { data: history } = await sb.from("approval_events").select("*").order("created_at", { ascending: false }).limit(100);
+    const { data: history } = await sb.from("approval_events").select("*").order("created_at", { ascending: false }).limit(500);
     const userIds = new Set<string>();
     for (const l of listings ?? []) { if (l.submitted_by) userIds.add(l.submitted_by); if (l.assignee_id) userIds.add(l.assignee_id); }
     for (const b of buyers ?? []) { userIds.add(b.user_id); if (b.assignee_id) userIds.add(b.assignee_id); }
     for (const h of history ?? []) userIds.add(h.actor_id);
     const names = await userNames(sb, [...userIds]);
     const emails = await userEmails(sb, [...userIds]);
-    return { listings: listings ?? [], buyers: buyers ?? [], history: history ?? [], names, emails, me: context.userId };
+    const sids = [...new Set((history ?? []).map((h: any) => h.startup_id).filter(Boolean))];
+    const startupInfo: Record<string, { name: string; code: string | null; ref: string | null }> = {};
+    if (sids.length) {
+      const { data: st } = await sb.from("startups").select("id, startup_name, hidden_profiles(code_name, ref_no)").in("id", sids);
+      for (const x of st ?? []) { const h = Array.isArray(x.hidden_profiles) ? x.hidden_profiles[0] : x.hidden_profiles; startupInfo[x.id] = { name: x.startup_name, code: h?.code_name ?? null, ref: h?.ref_no ?? null }; }
+    }
+    const bids = (history ?? []).filter((h: any) => h.item_type !== "listing").map((h: any) => h.item_id);
+    const buyerInfo: Record<string, any> = {};
+    if (bids.length) {
+      const { data: bv } = await sb.from("buyer_verifications").select("id, user_id, company_name, buyer_type").in("id", bids);
+      for (const b of bv ?? []) buyerInfo[b.id] = b;
+      Object.assign(names, await userNames(sb, (bv ?? []).map((b: any) => b.user_id)));
+    }
+    return { listings: listings ?? [], buyers: buyers ?? [], history: history ?? [], names, emails, me: context.userId, startupInfo, buyerInfo };
   });
 
 async function userNames(sb: any, ids: string[]) {

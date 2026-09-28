@@ -177,7 +177,7 @@ function ApprovalsPage() {
       ) : tab === "reports" ? (
         <PaidReports orders={orders} overdue={overdueOrders} />
       ) : (
-        <HistoryTab approvalEvents={(data?.history ?? []) as any[]} listings={(data?.listings ?? []) as any[]} buyers={(data?.buyers ?? []) as any[]} names={names} />
+        <HistoryTab approvalEvents={(data?.history ?? []) as any[]} startupInfo={(data as any)?.startupInfo ?? {}} buyerInfo={(data as any)?.buyerInfo ?? {}} names={names} />
       )}
     </div>
   );
