@@ -528,8 +528,10 @@ export function StartupFinancialsPage({
               income={data.income}
               position={data.position}
               cashFlow={data.cashFlow}
+              readOnly={readOnly}
             />
           )}
+
         </div>
       )}
     </div>
