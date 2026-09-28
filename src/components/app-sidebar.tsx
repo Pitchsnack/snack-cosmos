@@ -299,9 +299,9 @@ function SidebarBody({
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      {isMarket && <PersonaCard />}
+      {isMarket && <PersonaCard collapsed={!showLabels} />}
 
-      <nav className="flex-1 overflow-y-auto px-2 py-4">
+      <nav className={cn("flex-1 overflow-y-auto px-2", isMarket && !showLabels ? "pb-4" : "py-4")}>
         {(() => {
           const renderItem = (item: NavItem, idx: number, hideSoonBadge = false) => {
             const isActive =
@@ -368,7 +368,7 @@ function SidebarBody({
           };
 
           if (isMarket) {
-            return showLabels ? <MarketplaceEmptyMenu /> : null;
+            return <MarketplaceEmptyMenu collapsed={!showLabels} />;
           }
 
           if (!useControlGroups) {
