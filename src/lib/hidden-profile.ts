@@ -113,14 +113,14 @@ export interface EntryFacts {
   customers?: string[];
 }
 
-export const isStartupEntry = (companyType?: string | null) =>
-  (companyType ?? "").trim().toLowerCase() === "startup";
+// Any business type can have a hidden/buyer card; the old startup restriction is retired.
+export const isStartupEntry = (_companyType?: string | null) => false;
 
 export function hiddenStatusOf(
   row: Pick<HiddenProfileRow, "status" | "has_unpublished_changes"> | null | undefined,
-  companyType?: string | null,
+  _companyType?: string | null,
 ): HiddenStatus {
-  if (isStartupEntry(companyType)) return "na";
+
   if (!row) return "none";
   if (row.status === "live") return row.has_unpublished_changes ? "live_edited" : "live";
   return "draft";
