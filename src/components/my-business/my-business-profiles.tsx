@@ -19,7 +19,7 @@ import { buildPublicListing, type ListingSource } from "@/lib/public-listing";
 import { TagChips } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { runIdentityCheck } from "@/lib/hidden-profile";
-import { ApprovalFooter, ApprovalNotice, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
+import { ApprovalFooter, ApprovalNotice, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
 import { CoverView } from "@/components/hidden-profile/public-listing-card";
@@ -297,7 +297,11 @@ function Intro({ icon, children }: { icon: React.ReactNode; children: React.Reac
 
 
 
-function KindPill({ kind }: { kind: View }) {
+function KindPill({ kind, row }: { kind: View; row?: HiddenProfileRow | null }) {
+  return <span className="inline-flex flex-wrap items-center gap-2"><KindLabel kind={kind} /><ApprovedChip row={row} /></span>;
+}
+
+function KindLabel({ kind }: { kind: View }) {
   return kind === "public" ? (
     <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">Public view · Buyer preview</span>
   ) : (
@@ -341,7 +345,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
       <div className="mb-4 flex items-center gap-3.5 border-b border-border pb-4">
         <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-accent to-accent-dark text-accent-foreground"><EyeOff className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
-          <KindPill kind="public" />
+          <KindPill kind="public" row={row} />
           <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || "Public view"}</h2>
           <div className="truncate text-[13px] text-muted-foreground">{row ? `${row.ref_no} · ${industry} · ${row.region || "Region not set"}` : industry}</div>
         </div>
@@ -436,7 +440,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
       ) : (
         <>
           <div className="mb-2 flex items-center justify-between gap-3">
-            <KindPill kind="private" />
+            <PrivateKindPill id={current.id} />
             {pill}
           </div>
           <StartupDetailPanel
@@ -504,4 +508,9 @@ function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) =>
       onCreate={() => actions.create.mutate({ startupId: s.id })}
     />
   );
+}
+
+function PrivateKindPill({ id }: { id: string }) {
+  const { row } = useHiddenProfile(id);
+  return <KindPill kind="private" row={row} />;
 }

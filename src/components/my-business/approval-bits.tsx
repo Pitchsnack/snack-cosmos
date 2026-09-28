@@ -1,8 +1,9 @@
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react";
+import { Check, ChevronDown, CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -80,7 +81,7 @@ export function ApprovalNotice({ row, onEditPublic }: { row: HiddenProfileRow | 
       </div>
     );
   if (st === "live")
-    return <div className={cn(box, "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200")}><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /><span>Approved and live since {fmt(row.published_at)}. Any change to the Public or Private view must be resubmitted before buyers see it; the approved version stays live in the meantime.</span></div>;
+    return null;
   if (st === "live_edits_pending") {
     const changed = changedFields(row);
     return (
@@ -257,5 +258,25 @@ function ConfirmSubmitDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** "✓ Approved {date}" chip with the resubmit note in a popover. Shown while an approved version is live. */
+export function ApprovedChip({ row }: { row: HiddenProfileRow | null | undefined }) {
+  const [open, setOpen] = useState(false);
+  const st = approvalOf(row);
+  if (!row || (st !== "live" && st !== "live_edits_pending")) return null;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" aria-expanded={open} className="inline-flex h-[22px] items-center gap-1 rounded-full border border-border bg-background px-2 text-xs font-medium text-muted-foreground">
+          <Check className="h-3 w-3 text-emerald-600" />Approved {fmt(row.published_at)}
+          <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto max-w-[300px] rounded-[10px] px-3 py-2.5 text-[13px] leading-snug">
+        Any change to the Public or Private view must be resubmitted before buyers see it; the approved version stays live in the meantime.
+      </PopoverContent>
+    </Popover>
   );
 }
