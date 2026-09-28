@@ -153,10 +153,13 @@ export function StartupFinancialsPage({
   id,
   workspace = "startups",
   initialTab,
+  readOnly = false,
 }: {
   id: string;
   workspace?: "startups" | "my-startups";
   initialTab?: string;
+  /** Seller view: live figures, no Edit / Refresh controls. */
+  readOnly?: boolean;
 }) {
   const fetchFinancials = useServerFn(getStartupFinancials);
   const clearFinancials = useServerFn(clearStartupFinancials);
@@ -164,7 +167,8 @@ export function StartupFinancialsPage({
   const saveFinancials = useServerFn(saveStartupFinancials);
   const queryClient = useQueryClient();
   const { has, isControl } = usePermissions();
-  const canManage = isControl || has("startups.write");
+  const canManage = !readOnly && (isControl || has("startups.write"));
+
   // Old links to the three statements still work: they open Financial
   // Statements with that statement selected.
   const STATEMENT_TABS = ["income", "position", "cash-flow"] as const;
@@ -524,8 +528,10 @@ export function StartupFinancialsPage({
               income={data.income}
               position={data.position}
               cashFlow={data.cashFlow}
+              readOnly={readOnly}
             />
           )}
+
         </div>
       )}
     </div>
