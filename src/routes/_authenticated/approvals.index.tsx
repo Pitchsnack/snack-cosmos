@@ -70,9 +70,7 @@ function ApprovalsPage() {
   const waitingOnSellers = (data?.listings ?? []).filter((x: any) => x.approval_status === "changes_requested").length;
   const buyers = ((data?.buyers ?? []) as any[]).filter((b) => (status === "waiting" ? b.status === "pending" : true))
     .filter((b) => !q || `${b.company_name} ${b.work_email}`.toLowerCase().includes(q.toLowerCase()));
-  const waiting = (data?.listings ?? []).filter((x: any) => x.approval_status === "in_review").length + (data?.buyers ?? []).filter((b: any) => b.status === "pending").length;
   const oldest = Math.max(0, ...[...(data?.listings ?? []), ...(data?.buyers ?? [])].map((x: any) => days(x.submitted_at)));
-  const mine = [...(data?.listings ?? []), ...(data?.buyers ?? [])].filter((x: any) => x.assignee_id === data?.me).length;
   const names = (data?.names ?? {}) as Record<string, string>;
   const { data: od } = useAllReportOrders();
   const orders = (od?.orders ?? []) as ReportOrder[];
