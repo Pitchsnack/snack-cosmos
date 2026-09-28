@@ -299,17 +299,14 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   const workspace: MenuItem[] =
     persona === "seller"
       ? [
-          { to: "/my-page", label: "My Profile", icon: UserCircle },
           { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
           { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
           { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
           { to: "/marketplace/my-contact", label: "Contacts", icon: Building2 },
         ]
-      : [
-          { to: "/my-page", label: "My Profile", icon: UserCircle },
-          { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
-        ];
+      : [{ to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch }];
+  const account: MenuItem[] = [{ to: "/my-page", label: "My Profile", icon: UserCircle }];
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
@@ -340,6 +337,8 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
         <div className="space-y-1">{discover.map(railItem)}</div>
         <RailDivider />
         <div className="space-y-1">{workspace.map(railItem)}</div>
+        <RailDivider />
+        <div className="space-y-1">{account.map(railItem)}</div>
       </div>
     );
   }
@@ -364,6 +363,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
     <div className="space-y-4">
       <div className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
       <div className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>
+      <div className="space-y-1">{title("Account")}{account.map(fullItem)}</div>
     </div>
   );
 }
