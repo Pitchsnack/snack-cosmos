@@ -103,6 +103,8 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
         label: path === "/my-startups" ? "My Business"
           : path === "/my-startups/new" ? "Add My Business"
           : path === "/marketplace/my-contact" ? "My contact"
+          : path === "/my-financials" ? "My Financials"
+          : path === "/my-valuation" ? "Company Valuation"
           : resolveLabel(path),
         to: path,
         params: (match.params ?? {}) as Record<string, string>,
