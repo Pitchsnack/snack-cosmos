@@ -260,6 +260,11 @@ export const decideListing = createServerFn({ method: "POST" })
     }
     const { error } = await sb.from("hidden_profiles").update(patch).eq("id", hp.id);
     if (error) throw new Error(error.message);
+    if (data.action === "approve" && hp.startup_id) {
+      // Approved businesses must leave Private so the Startup Directory lists them.
+      await sb.from("startups").update({ visibility: "Tenant" }).eq("id", hp.startup_id).eq("visibility", "Private");
+    }
+
     await logEvent({
       item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: hp.submitted_by, version: hp.version,
       action: data.action, actor_id: context.userId, note: data.note ?? null, reasons: data.reasons ?? [], fields: data.fields ?? [],
