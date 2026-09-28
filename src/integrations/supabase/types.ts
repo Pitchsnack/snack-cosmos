@@ -769,6 +769,121 @@ export type Database = {
           },
         ]
       }
+      deal_pipeline_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          id: string
+          note: string | null
+          pipeline_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          note?: string | null
+          pipeline_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          note?: string | null
+          pipeline_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_pipeline_events_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_pipelines: {
+        Row: {
+          buyer_message: string | null
+          buyer_user_id: string
+          contact_at: string | null
+          created_at: string
+          hidden_profile_id: string
+          id: string
+          legal_at: string | null
+          loi_accepted_at: string | null
+          loi_amount: number | null
+          loi_conditions: string | null
+          loi_exclusivity_days: number | null
+          loi_sent_at: string | null
+          nda_approved_at: string | null
+          nda_requested_at: string
+          payment_at: string | null
+          report_requested_at: string | null
+          report_shared_at: string | null
+          spa_at: string | null
+          startup_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_message?: string | null
+          buyer_user_id: string
+          contact_at?: string | null
+          created_at?: string
+          hidden_profile_id: string
+          id?: string
+          legal_at?: string | null
+          loi_accepted_at?: string | null
+          loi_amount?: number | null
+          loi_conditions?: string | null
+          loi_exclusivity_days?: number | null
+          loi_sent_at?: string | null
+          nda_approved_at?: string | null
+          nda_requested_at?: string
+          payment_at?: string | null
+          report_requested_at?: string | null
+          report_shared_at?: string | null
+          spa_at?: string | null
+          startup_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_message?: string | null
+          buyer_user_id?: string
+          contact_at?: string | null
+          created_at?: string
+          hidden_profile_id?: string
+          id?: string
+          legal_at?: string | null
+          loi_accepted_at?: string | null
+          loi_amount?: number | null
+          loi_conditions?: string | null
+          loi_exclusivity_days?: number | null
+          loi_sent_at?: string | null
+          nda_approved_at?: string | null
+          nda_requested_at?: string
+          payment_at?: string | null
+          report_requested_at?: string | null
+          report_shared_at?: string | null
+          spa_at?: string | null
+          startup_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_pipelines_hidden_profile_id_fkey"
+            columns: ["hidden_profile_id"]
+            isOneToOne: false
+            referencedRelation: "hidden_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_share_activity: {
         Row: {
           activity_details: Json
