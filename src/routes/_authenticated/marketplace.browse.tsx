@@ -307,16 +307,19 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Store className="h-3.5 w-3.5" /> Discover
+            <Store className="h-3.5 w-3.5" /> {ownOnly ? "My listing" : "Discover"}
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Browse listings</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{ownOnly ? "My company on the Marketplace" : "Browse listings"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {items.length > 0 ? `${items.length} live listing${items.length === 1 ? "" : "s"}` : "Approved businesses appear here."}
+            {ownOnly
+              ? "This is exactly how buyers see your company. Other companies are not shown here."
+              : items.length > 0 ? `${items.length} live listing${items.length === 1 ? "" : "s"}` : "Approved businesses appear here."}
           </p>
         </div>
-        <ViewToggle value={view} onChange={persist} />
+        {!ownOnly && <ViewToggle value={view} onChange={persist} />}
       </div>
 
+      {!ownOnly && (
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -342,6 +345,8 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
           </Button>
         )}
       </div>
+      )}
+
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
