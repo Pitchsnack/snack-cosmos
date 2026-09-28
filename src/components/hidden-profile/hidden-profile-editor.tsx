@@ -233,7 +233,7 @@ export function HiddenProfileEditor({
         ) : (
           <>
             <Button variant="outline" disabled={busy} onClick={() => setConfirm("unpublish")}>Unpublish</Button>
-            <Button variant="outline" asChild className="ml-auto"><Link to="/marketplace">View in Marketplace</Link></Button>
+            <Button variant="outline" asChild className="ml-auto"><Link to="/marketplace/browse" search={{ company: row.id }}>View in Marketplace</Link></Button>
           </>
         )}
       </div>

@@ -15,12 +15,16 @@ import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useHasSession } from "@/hooks/use-has-session";
 import { listMarketplaceTeasers } from "@/lib/hidden-profiles.functions";
 import { useMyVerification } from "@/components/marketplace/buyer-verification";
+import { InvestorBrowse } from "@/components/marketplace/investor-browse";
+import { usePersona } from "@/hooks/use-marketplace";
 import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import type { PublicListing } from "@/lib/public-listing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/browse")({
+  validateSearch: (search: Record<string, unknown>): { company?: string } =>
+    typeof search.company === "string" ? { company: search.company } : {},
   head: () => ({
     meta: [
       { title: "Browse listings — PitchSnack" },
@@ -31,8 +35,17 @@ export const Route = createFileRoute("/_authenticated/marketplace/browse")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: BrowseListingsPage,
+  component: BrowseRoute,
 });
+
+/** Buyers browse every live listing; sellers browse investors, and only ever see their own listing. */
+function BrowseRoute() {
+  const { persona } = usePersona();
+  const { company } = Route.useSearch();
+  if (persona === "seller" && !company) return <InvestorBrowse />;
+  return <BrowseListingsPage ownOnly={persona === "seller" ? (company ?? null) : null} />;
+}
+
 
 type Teaser = {
   id: string;
@@ -244,11 +257,12 @@ function LowerPanel({ t }: { t: Teaser }) {
   );
 }
 
-function BrowseListingsPage() {
+function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
   const fn = useServerFn(listMarketplaceTeasers);
   const enabled = useHasSession();
   const { data, isLoading } = useQuery({ queryKey: ["marketplace-teasers"], queryFn: () => fn(), enabled });
-  const teasers = (data ?? []) as Teaser[];
+  const all = (data ?? []) as Teaser[];
+  const teasers = ownOnly ? all.filter((t) => t.id === ownOnly) : all;
 
   const { view, persist } = usePersistentView("ps-browse-view", undefined);
   const { ids: savedIds, toggle: toggleSave } = useSavedListings();
@@ -292,16 +306,19 @@ function BrowseListingsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Store className="h-3.5 w-3.5" /> Discover
+            <Store className="h-3.5 w-3.5" /> {ownOnly ? "My listing" : "Discover"}
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Browse listings</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{ownOnly ? "My company on the Marketplace" : "Browse listings"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {items.length > 0 ? `${items.length} live listing${items.length === 1 ? "" : "s"}` : "Approved businesses appear here."}
+            {ownOnly
+              ? "This is exactly how buyers see your company. Other companies are not shown here."
+              : items.length > 0 ? `${items.length} live listing${items.length === 1 ? "" : "s"}` : "Approved businesses appear here."}
           </p>
         </div>
-        <ViewToggle value={view} onChange={persist} />
+        {!ownOnly && <ViewToggle value={view} onChange={persist} />}
       </div>
 
+      {!ownOnly && (
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -327,6 +344,8 @@ function BrowseListingsPage() {
           </Button>
         )}
       </div>
+      )}
+
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -335,16 +354,16 @@ function BrowseListingsPage() {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Store className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p>No listings match your filters yet.</p>
+          <p>{ownOnly ? "Your company is not live on the Marketplace yet." : "No listings match your filters yet."}</p>
         </div>
-      ) : view === "grid" ? (
+      ) : !ownOnly && view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((t) => (
             <PublicListingCard key={t.id} l={t.listing} deal={t} onSelect={() => setModalId(t.id)}
               topRight={<SaveButton square saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />} />
           ))}
         </div>
-      ) : view === "split" ? (
+      ) : ownOnly || view === "split" ? (
         <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
           <div className="space-y-3">
             {items.map((t) => (
@@ -356,7 +375,7 @@ function BrowseListingsPage() {
                 onToggleExpand={() => setExpandedId((e) => (e === t.id ? null : t.id))}
                 selected={wide && current?.id === t.id}
                 onSelect={() => (wide ? setSelected(t.id) : setModalId(t.id))}
-                topRight={<SaveButton square saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />}
+                topRight={ownOnly ? undefined : <SaveButton square saved={savedIds.has(t.id)} onClick={() => toggleSave(t.id)} />}
               />
             ))}
           </div>
@@ -366,10 +385,14 @@ function BrowseListingsPage() {
                 <>
                   <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
                     <span className="min-w-0 truncate text-sm font-semibold">{[current.listing.codeName, current.listing.refNo].filter(Boolean).join(" · ")}</span>
-                    <div className="flex shrink-0 gap-2">
-                      <SaveButton saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} />
-                      <NdaButton />
-                    </div>
+                    {ownOnly ? (
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">Buyer preview</span>
+                    ) : (
+                      <div className="flex shrink-0 gap-2">
+                        <SaveButton saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} />
+                        <NdaButton />
+                      </div>
+                    )}
                   </div>
                   <div className="overflow-y-auto p-5"><ListingDetail t={current} /></div>
                 </>
