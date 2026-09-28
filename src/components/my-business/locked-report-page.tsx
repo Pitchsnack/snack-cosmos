@@ -143,11 +143,14 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
               <Why icon={<Lock className="h-4 w-4" />}><b>You decide who sees it, every time.</b> The full report is never sent automatically. When a buyer signs the NDA, you choose whether to share it with that buyer. Buyers see only the ranges until you do. <span className="ml-1 inline-flex rounded-full border border-profile-line bg-card px-2 py-0.5 text-[11.5px] font-bold text-profile">Shared case by case</span></Why>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span title={needsFinancials ? "Order the verified financial report first" : "Checkout opens once payments are enabled"}>
-                <Button disabled className="bg-sidebar text-sidebar-foreground">Order · {reportPrice(kind)}</Button>
+              <span title={needsFinancials ? "Unlock the verified financial report first" : !hasData ? "No filed statements recorded for this company yet" : "Pay and open your report"}>
+                <Button disabled={!company || needsFinancials || !hasData} onClick={handlePay} className="bg-sidebar text-sidebar-foreground">
+                  Pay · {reportPrice(kind)}
+                </Button>
               </span>
               <Button variant="outline" onClick={() => setSample(kind)}>View sample</Button>
             </div>
+
             <p className="mt-3 text-[11.5px] text-muted-foreground">Includes VAT · invoice issued to {name} · refundable if your DBD filings cannot be read</p>
           </div>
         </div>
