@@ -99,10 +99,10 @@ function ApprovalsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {([["listings", "Listings", data?.listings.length ?? 0, false], ["buyers", "Buyers", data?.buyers.length ?? 0, false], ["reports", "Paid reports", reportsWaiting, overdueOrders.length > 0], ["history", "History", null, false]] as const).map(([k, label, n, red]) => (
+        {([["listings", "Listings", data?.listings.length ?? 0], ["buyers", "Buyers", data?.buyers.length ?? 0], ["reports", "Paid reports", reportsWaiting], ["history", "History", null]] as const).map(([k, label, n]) => (
           <button key={k} type="button" onClick={() => navigate({ search: { tab: k } })}
             className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold", tab === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
-            {label}{n !== null && <span className={cn("rounded-full px-1.5 text-[11px]", red ? "bg-red-600 text-primary-foreground" : "bg-muted text-foreground")}>{n}</span>}
+            {label}{n !== null && <span className={cn("rounded-full px-1.5 text-[11px]", n > 0 ? "bg-[#FEE2E2] text-[#B91C1C]" : "bg-muted text-foreground")}>{n}</span>}
           </button>
         ))}
       </div>
