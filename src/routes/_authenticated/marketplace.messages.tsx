@@ -179,11 +179,10 @@ function Chat({ c, seller, panel, setPanel, onBack, hiddenMobile }: { c: Conv; s
   // Opening (and new incoming messages while open) marks the thread read.
   useEffect(() => {
     if (!data) return;
-    if (!c.unread) return;
     const key = ["messages", "threads"];
     qc.setQueriesData({ queryKey: key }, (old: any) => Array.isArray(old) ? old.map((t: any) => (t.key === c.key ? { ...t, unread: 0 } : t)) : old);
     readFn({ data: { key: c.key } }).then(() => qc.invalidateQueries({ queryKey: key }));
-  }, [c.key, c.unread, lastIn, !!data]);
+  }, [c.key, lastIn, !!data]);
 
   const items = useMemo(() => {
     const ev: { at: string; text: string; link: string; open: Dialog }[] = [];
