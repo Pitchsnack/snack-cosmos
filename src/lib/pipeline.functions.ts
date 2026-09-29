@@ -195,7 +195,7 @@ export const listPipeline = createServerFn({ method: "GET" })
         person: null,
         verified: true,
         // Identity stays hidden until the seller approves the NDA.
-        logoUrl: revealed ? st.logo_url ?? null : null,
+        logoUrl: revealed && st.logo_url ? (signedLogos[st.logo_url] ?? (/^https?:\/\//.test(st.logo_url) ? st.logo_url : null)) : null,
       }, asking);
     });
     return items;
