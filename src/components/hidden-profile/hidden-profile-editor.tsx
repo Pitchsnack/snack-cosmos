@@ -294,7 +294,7 @@ export function HiddenProfileEditor({
         {isLive && liveChanged && <span className="w-full text-xs text-muted-foreground">Your changes aren't published yet. Buyers still see the published version.</span>}
         {!isLive ? (
           <>
-            <Button variant="outline" disabled={busy || !dirty} onClick={() => a.save.mutate(payload)}>Save draft</Button>
+            <Button variant="outline" disabled={busy || !dirty} onClick={() => a.save.mutate(payload)}>Save </Button>
             <Button disabled={busy || !canPublish} onClick={() => setConfirm("publish")} className="ml-auto bg-accent text-accent-foreground hover:bg-accent/90">Publish to Marketplace</Button>
           </>
         ) : liveChanged ? (
