@@ -256,6 +256,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 <li>Cash and interest-bearing debt are not reported separately in the DBD filing.</li>
               </ul>}
               <p className="mt-2 text-[12px] text-[#6B7280]">Sources: DBD filings FY{years[0]}–{last} · audited statements · checked by PitchSnack analysts.</p>
+              </>)}
             </>
           )}
           {sample && tab === "val" && (() => {
