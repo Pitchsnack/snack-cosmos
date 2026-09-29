@@ -55,11 +55,20 @@ export type PipelineRow = {
   legalAt: string | null;
   spaAt: string | null;
   paymentAt: string | null;
+  reportViewedAt: string | null;
+  reportAllowDownload: boolean;
+  ndaExpiresAt: string | null;
+  loiStakePct: number | null;
+  loiAcceptedByName: string | null;
+  loiChangesRequestedAt: string | null;
+  exclusivityUntil: string | null;
+  updatedAt: string;
+  parties: { sellerCompany: string; codeName: string | null; buyerOrg: string; buyerName: string | null; sellerName: string | null };
   counterparty: { name: string; sub: string; person: string | null; verified: boolean; logoUrl: string | null };
   askingPrice: number | null;
 };
 
-function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: number | null): PipelineRow {
+function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: number | null, parties: PipelineRow["parties"], names: Record<string, string> = {}): PipelineRow {
   return {
     id: r.id,
     status: r.status,
@@ -79,6 +88,15 @@ function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: numbe
     legalAt: r.legal_at,
     spaAt: r.spa_at,
     paymentAt: r.payment_at,
+    reportViewedAt: r.report_viewed_at ?? null,
+    reportAllowDownload: !!r.report_allow_download,
+    ndaExpiresAt: r.nda_expires_at ?? (r.nda_approved_at ? new Date(new Date(r.nda_approved_at).getTime() + 730 * 86_400_000).toISOString() : null),
+    loiStakePct: r.loi_stake_pct != null ? Number(r.loi_stake_pct) : null,
+    loiAcceptedByName: r.loi_accepted_by ? names[r.loi_accepted_by] ?? null : null,
+    loiChangesRequestedAt: r.loi_changes_requested_at ?? null,
+    exclusivityUntil: r.exclusivity_until ?? null,
+    updatedAt: r.updated_at,
+    parties,
     counterparty,
     askingPrice: asking,
   };
@@ -168,7 +186,9 @@ export const listPipeline = createServerFn({ method: "GET" })
       for (const d of signed ?? []) if (d.path && d.signedUrl) signedLogos[d.path] = d.signedUrl;
     }
     const buyerIds = [...new Set(rows.map((r) => r.buyer_user_id))];
-    const names = await userNames(buyerIds);
+    const { data: owners } = stIds.length ? await sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds) : { data: [] };
+    const ownerMap = Object.fromEntries((owners ?? []).map((o: any) => [o.startup_id, o.owning_agent_user_id]));
+    const names = await userNames([...new Set([...buyerIds, ...Object.values(ownerMap), ...rows.map((r) => r.loi_accepted_by).filter(Boolean)])] as string[]);
     const { data: bvs } = buyerIds.length
       ? await sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", buyerIds)
       : { data: [] };
@@ -176,6 +196,16 @@ export const listPipeline = createServerFn({ method: "GET" })
 
     const items = rows.map((r) => {
       const hp = hpMap[r.hidden_profile_id] ?? {};
+      const st0 = stMap[r.startup_id] ?? {};
+      const bv0 = bvMap[r.buyer_user_id] ?? {};
+      const revealed0 = data.as === "seller" || !!r.nda_approved_at;
+      const parties = {
+        sellerCompany: revealed0 ? st0.startup_name || hp.code_name || "Business" : hp.code_name || "Business",
+        codeName: hp.code_name ?? null,
+        buyerOrg: bv0.company_name || names[r.buyer_user_id] || "Buyer",
+        buyerName: names[r.buyer_user_id] ?? null,
+        sellerName: revealed0 ? names[ownerMap[r.startup_id]] ?? null : null,
+      };
       const asking = hp.asking_price != null ? Number(hp.asking_price) : null;
       if (data.as === "seller") {
         const bv = bvMap[r.buyer_user_id] ?? {};
@@ -185,7 +215,7 @@ export const listPipeline = createServerFn({ method: "GET" })
           person: names[r.buyer_user_id] ?? null,
           verified: bv.status === "verified",
           logoUrl: null,
-        }, asking);
+        }, asking, parties, names);
       }
       const st = stMap[r.startup_id] ?? {};
       const revealed = !!r.nda_approved_at;
@@ -196,7 +226,7 @@ export const listPipeline = createServerFn({ method: "GET" })
         verified: true,
         // Identity stays hidden until the seller approves the NDA.
         logoUrl: revealed && st.logo_url ? (signedLogos[st.logo_url] ?? (/^https?:\/\//.test(st.logo_url) ? st.logo_url : null)) : null,
-      }, asking);
+      }, asking, parties, names);
     });
     return items;
   });
@@ -215,7 +245,7 @@ export const decideNda = createServerFn({ method: "POST" })
       await log(p.id, "nda_declined", context.userId);
       return { ok: true };
     }
-    await update(p.id, { nda_approved_at: now, ...(data.shareReport ? { report_shared_at: now } : {}) });
+    await update(p.id, { nda_approved_at: now, nda_expires_at: new Date(Date.now() + 730 * 86_400_000).toISOString(), ...(data.shareReport ? { report_shared_at: now } : {}) });
     await log(p.id, "nda_approved", context.userId);
     if (data.shareReport) await log(p.id, "report_shared", context.userId);
     return { ok: true };
@@ -266,15 +296,20 @@ export const sendLoi = createServerFn({ method: "POST" })
 
 export const decideLoi = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => Id.extend({ accept: z.boolean() }).parse(d))
+  .inputValidator((d) => Id.extend({ decision: z.enum(["accept", "decline", "changes"]), consent: z.string().max(2000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const p = await load(data.id);
     await assertSeller(context, p.startup_id);
-    if (!p.loi_sent_at) throw new Error("No letter of intent to decide");
-    if (data.accept) {
-      const now = new Date().toISOString();
-      await update(p.id, { loi_accepted_at: now, contact_at: now });
-      await log(p.id, "loi_accepted", context.userId);
+    if (!p.loi_sent_at || p.loi_accepted_at) throw new Error("No letter of intent to decide");
+    const now = new Date();
+    if (data.decision === "accept") {
+      if (!data.consent) throw new Error("Tick the box to accept");
+      const until = new Date(now.getTime() + (p.loi_exclusivity_days ?? 0) * 86_400_000).toISOString();
+      await update(p.id, { loi_accepted_at: now.toISOString(), contact_at: now.toISOString(), loi_accepted_by: context.userId, loi_consent_text: data.consent, exclusivity_until: until });
+      await log(p.id, "loi_accepted", context.userId, data.consent);
+    } else if (data.decision === "changes") {
+      await update(p.id, { loi_changes_requested_at: now.toISOString() });
+      await log(p.id, "loi_changes_requested", context.userId);
     } else {
       await update(p.id, { loi_sent_at: null, loi_amount: null });
       await log(p.id, "loi_declined", context.userId);
@@ -306,4 +341,105 @@ export const pipelineEvents = createServerFn({ method: "GET" })
       .eq("pipeline_id", data.id)
       .order("created_at", { ascending: false });
     return ev ?? [];
+  });
+
+async function assertParty(ctx: Ctx, p: any) {
+  if (p.buyer_user_id === ctx.userId) return "buyer" as const;
+  await assertSeller(ctx, p.startup_id);
+  return "seller" as const;
+}
+
+export type ReportData = {
+  years: number[];
+  income: Record<string, Record<number, number | null>>;
+  position: Record<string, Record<number, number | null>>;
+  ratios: { code: string; label: string; value: number | null; unit: string | null }[];
+  info: { registration: string | null; capital: number | null; founded: string | null; employees: string | null; directors: string | null; shareholders: string | null };
+  valuationShared: boolean;
+};
+
+async function buildReport(startupId: string): Promise<ReportData> {
+  const sb = await admin();
+  const [inc, pos, rat, ci, st, vo] = await Promise.all([
+    sb.from("income_statement_items").select("fiscal_year, item_code, amount").eq("startup_id", startupId),
+    sb.from("financial_position_items").select("fiscal_year, item_code, amount").eq("startup_id", startupId),
+    sb.from("financial_ratios").select("fiscal_year, ratio_code, ratio_label, value, unit, display_order").eq("startup_id", startupId).order("display_order"),
+    sb.from("company_info_th").select("registration_number, registered_capital_thb, registration_date, authorized_signatory_th").eq("startup_id", startupId).maybeSingle(),
+    sb.from("startups").select("registered_number, registered_capital, year_founded, company_size").eq("id", startupId).maybeSingle(),
+    sb.from("report_orders").select("kind, status").eq("startup_id", startupId).eq("status", "delivered"),
+  ]);
+  const income: ReportData["income"] = {}; const position: ReportData["position"] = {};
+  const ys = new Set<number>();
+  for (const r of inc.data ?? []) { ys.add(r.fiscal_year); (income[r.item_code] ??= {})[r.fiscal_year] = r.amount != null ? Number(r.amount) : null; }
+  for (const r of pos.data ?? []) { ys.add(r.fiscal_year); (position[r.item_code] ??= {})[r.fiscal_year] = r.amount != null ? Number(r.amount) : null; }
+  const years = [...ys].sort((a, b) => a - b).slice(-5);
+  const last = years[years.length - 1];
+  const ratios = (rat.data ?? []).filter((r: any) => r.fiscal_year === last).map((r: any) => ({ code: r.ratio_code, label: r.ratio_label, value: r.value != null ? Number(r.value) : null, unit: r.unit }));
+  return {
+    years, income, position, ratios,
+    info: {
+      registration: ci.data?.registration_number ?? st.data?.registered_number ?? null,
+      capital: ci.data?.registered_capital_thb != null ? Number(ci.data.registered_capital_thb) : st.data?.registered_capital != null ? Number(st.data.registered_capital) : null,
+      founded: st.data?.year_founded ? String(st.data.year_founded) : ci.data?.registration_date ? String(ci.data.registration_date).slice(0, 4) : null,
+      employees: st.data?.company_size ?? null,
+      directors: ci.data?.authorized_signatory_th ?? null,
+      shareholders: null,
+    },
+    valuationShared: (vo.data ?? []).some((o: any) => o.kind === "valuation" || o.kind === "bundle"),
+  };
+}
+
+/** Report viewer data. Buyer opens are logged so the seller sees "Report viewed". */
+export const getPipelineReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.parse(d))
+  .handler(async ({ data, context }) => {
+    const p = await load(data.id);
+    const role = await assertParty(context, p);
+    if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
+    if (!p.report_shared_at) throw new Error("The report has not been shared");
+    if (role === "buyer") {
+      await update(p.id, { report_viewed_at: new Date().toISOString() });
+      await log(p.id, "report_viewed", context.userId);
+    }
+    return buildReport(p.startup_id);
+  });
+
+/** Buyer: every received report side by side. */
+export const compareReports = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await admin();
+    const { data: rows } = await sb.from("deal_pipelines").select("id, startup_id").eq("buyer_user_id", context.userId)
+      .not("nda_approved_at", "is", null).not("report_shared_at", "is", null).neq("status", "declined");
+    const out: Record<string, ReportData> = {};
+    for (const r of rows ?? []) out[r.id] = await buildReport(r.startup_id);
+    return out;
+  });
+
+/** Seller: the buyer's profile, only for pairs with an approved NDA. */
+export const investorProfile = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.parse(d))
+  .handler(async ({ data, context }) => {
+    const p = await load(data.id);
+    await assertSeller(context, p.startup_id);
+    const sb = await admin();
+    const [{ data: bv }, { data: up }, { data: u }] = await Promise.all([
+      sb.from("buyer_verifications").select("company_name, buyer_type, status").eq("user_id", p.buyer_user_id).maybeSingle(),
+      sb.from("user_profiles").select("title, organisation, bio, city, country, industry_focus, buyer_type, experience").eq("user_id", p.buyer_user_id).maybeSingle(),
+      sb.from("users").select("first_name, last_name, email").eq("id", p.buyer_user_id).maybeSingle(),
+    ]);
+    const approved = !!p.nda_approved_at;
+    const sectors = Array.isArray(up?.industry_focus) ? up.industry_focus.join(", ") : up?.industry_focus ?? null;
+    return {
+      org: bv?.company_name || up?.organisation || [u?.first_name, u?.last_name].filter(Boolean).join(" ") || "Buyer",
+      type: bv?.buyer_type || up?.buyer_type || null,
+      city: [up?.city, up?.country].filter(Boolean).join(", ") || null,
+      verified: bv?.status === "verified",
+      about: up?.bio ?? null,
+      sectors: sectors || null,
+      trackRecord: up?.experience ?? null,
+      person: approved ? { name: [u?.first_name, u?.last_name].filter(Boolean).join(" ") || u?.email || null, role: up?.title ?? null } : null,
+    };
   });
