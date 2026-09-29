@@ -106,6 +106,11 @@ export function HiddenProfileEditor({
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-semibold">Edit public view</h2>
           <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">{isLive ? (liveChanged ? "Live · edited" : "Live") : "Draft"}</span>
+          {source && (
+            <Button type="button" variant="outline" size="sm" className="ml-auto" onClick={fillAll}>
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />Auto-fill all
+            </Button>
+          )}
         </div>
 
         <div className={cn("rounded-md border px-3 py-2 text-xs", findings.length ? "border-destructive/40 bg-destructive/5 text-destructive" : "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400")}>
@@ -175,9 +180,12 @@ export function HiddenProfileEditor({
           <Field label="Highlights (3 required)">
             <div id="hp-highlights" className="space-y-1.5">
               {d.highlights.map((h, i) => (
-                <Input key={i} value={h} placeholder={`Highlight ${i + 1}${i < 3 ? "" : " (optional)"}`} onChange={(e) => set("highlights", d.highlights.map((x, j) => (j === i ? e.target.value : x)))} className={flagCls("highlights")} />
+                <Input key={i} value={h} placeholder={highlightIdeas[i] || `Highlight ${i + 1}${i < 3 ? "" : " (optional)"}`} onChange={(e) => set("highlights", d.highlights.map((x, j) => (j === i ? e.target.value : x)))} className={flagCls("highlights")} />
               ))}
             </div>
+            {highlightIdeas.length > 0 && (
+              <button type="button" onClick={fillHighlights} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Suggest highlights (no names)</button>
+            )}
             <Msg k="highlights" />
           </Field>
           <Field label="Customers, described without names">
