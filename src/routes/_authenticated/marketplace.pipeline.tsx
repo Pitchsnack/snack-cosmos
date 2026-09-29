@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePersona } from "@/hooks/use-marketplace";
 import {
-  listPipeline, decideNda, shareReport, askForReport, sendLoi, shareStep, pipelineEvents,
+  listPipeline, decideNda, shareReport, revokeReportShare, askForReport, sendLoi, shareStep, pipelineEvents,
   type PipelineRow,
 } from "@/lib/pipeline.functions";
 import { STEPS, currentStep, isPending, waitState } from "@/lib/pipeline-state";
@@ -397,7 +397,7 @@ function Stepper({ cur }: { cur: number }) {
 function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void }) {
   const [loiOpen, setLoiOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
-  const [dlg, setDlg] = useState<null | "report" | "investor" | "seller" | "nda" | "loi">(null);
+  const [dlg, setDlg] = useState<null | "report" | "investor" | "seller" | "nda" | "loi" | "share">(null);
   const cur = currentStep(p);
   const refresh = useRefresh();
   const fShare = useServerFn(shareReport);
@@ -418,12 +418,14 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
         <Button size="sm" variant="outline" onClick={() => setDlg("nda")}>View NDA</Button>
         <Button size="sm" variant="outline" onClick={() => setDlg(seller ? "investor" : "seller")}>{seller ? "Investor profile" : "Seller profile"}</Button>
       </>],
-    ["Financial & Valuation", p.reportSharedAt,
-      p.reportSharedAt ? `Verified financial report ${seller ? "shared" : "received"}`
-        : p.reportRequestedAt ? (seller ? `Requested by the buyer ${day(p.reportRequestedAt)}` : <><b>You asked for the report on {day(p.reportRequestedAt)}</b> · waiting for the seller</>)
+    ["Financial & Valuation", p.share ? p.share.sharedAt : null,
+      seller ? sellerReportLine(p) : p.share ? `${sharedWhat(p.share)} received${p.share.allowDownload ? " · download allowed" : " · view only"}`
+        : p.revokedAt ? `The seller stopped sharing the report on ${day(p.revokedAt)}`
+        : p.reportRequestedAt ? <><b>You asked for the report on {day(p.reportRequestedAt)}</b> · waiting for the seller</>
         : "Not shared yet",
-      p.reportSharedAt ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>View report</Button>
-        : seller ? (p.reportRequestedAt ? <Button size="sm" onClick={() => act(() => fShare({ data: { id: p.id } }), "Report shared")}>Share report</Button> : undefined)
+      seller ? (p.share ? <><Button size="sm" variant="outline" onClick={() => setDlg("share")}>Change</Button><Button size="sm" variant="outline" onClick={() => setDlg("report")}>View report</Button></>
+          : p.reports.financials || p.reports.valuation ? <Button size="sm" onClick={() => setDlg("share")}>Share report</Button> : undefined)
+        : p.share ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>View report</Button>
         : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>Ask for the report</Button> : undefined],
     ["Letter of intent", p.loiAcceptedAt,
       p.loiAcceptedAt ? `${money(p.loiAmount)} · accepted by ${seller ? "you" : "the seller"} · exclusivity ${p.loiExclusivityDays ?? 0} days`
@@ -496,6 +498,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
       {loiOpen && <LoiDialog id={p.id} onClose={() => setLoiOpen(false)} />}
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
+      {dlg === "share" && <ShareReportDialog p={p} onClose={() => setDlg(null)} onDone={refresh} />}
       {dlg === "investor" && <InvestorProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
       {dlg === "seller" && <SellerProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} onReport={() => setDlg("report")} onAsk={() => { setDlg(null); ask(); }} />}
       {dlg === "nda" && <NdaDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
@@ -541,7 +544,7 @@ function LoiDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
 const EVENT_LABEL: Record<string, string> = {
   nda_requested: "NDA requested", nda_approved: "NDA approved", nda_declined: "NDA declined",
-  report_requested: "Financial report requested", report_shared: "Financial report shared",
+  report_requested: "Financial report requested", report_shared: "Report shared", report_share_changed: "Report sharing changed", report_revoked: "Seller stopped sharing the report",
   loi_sent: "Letter of intent sent", loi_accepted: "Letter of intent accepted", loi_declined: "Letter of intent declined", loi_changes_requested: "Changes to the letter of intent requested", report_viewed: "Financial report opened",
   legal_shared: "Legal folder shared", spa_shared: "SPA draft shared", payment_shared: "Payment completed",
 };
@@ -563,6 +566,63 @@ function HistoryDialog({ id, onClose }: { id: string; other: string; onClose: ()
           ))}
           {list.length === 0 && <li className="py-4 text-center text-muted-foreground">No events yet.</li>}
         </ul>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const sharedWhat = (s: { financials: boolean; valuation: boolean }) =>
+  s.financials && s.valuation ? "Financial report + valuation" : s.financials ? "Verified financial report" : "Estimated valuation";
+
+function sellerReportLine(p: PipelineRow) {
+  if (p.share) return `${sharedWhat(p.share)} shared ${day(p.share.sharedAt)} · ${p.share.allowDownload ? "download allowed" : "view only"}${p.reportViewedAt ? ` · opened ${day(p.reportViewedAt)}` : " · not opened yet"}`;
+  if (!p.reports.financials && !p.reports.valuation) return <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Lock className="h-3.5 w-3.5" />Your report isn't ready yet — PitchSnack will let you know</span>;
+  if (p.revokedAt) return `You stopped sharing on ${day(p.revokedAt)}`;
+  return p.reportRequestedAt ? `Requested by the buyer ${day(p.reportRequestedAt)} · not shared` : "Not shared yet";
+}
+
+function ShareReportDialog({ p, onClose, onDone }: { p: PipelineRow; onClose: () => void; onDone: () => void }) {
+  const fShare = useServerFn(shareReport);
+  const fRevoke = useServerFn(revokeReportShare);
+  const [fin, setFin] = useState(p.share ? p.share.financials : p.reports.financials);
+  const [val, setVal] = useState(p.share ? p.share.valuation : false);
+  const [dl, setDl] = useState(p.share?.allowDownload ?? false);
+  const [busy, setBusy] = useState(false);
+  const run = async (f: () => Promise<unknown>, msg: string) => {
+    setBusy(true);
+    try { await f(); toast.success(msg); onDone(); onClose(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  const opt = (on: boolean, set: (v: boolean) => void, ready: boolean, label: string, sub: string) => (
+    <label className={cn("flex items-start gap-3 rounded-lg border p-3", !ready && "opacity-50")}>
+      <Checkbox checked={on && ready} disabled={!ready} onCheckedChange={(v) => set(!!v)} className="mt-0.5" />
+      <span><span className="block text-sm font-semibold">{label}</span><span className="text-xs text-muted-foreground">{ready ? sub : "Not authorised by PitchSnack yet"}</span></span>
+    </label>
+  );
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{p.share ? "Change what you share" : "Share your report"} with {p.counterparty.name}</DialogTitle>
+          <DialogDescription>Only this buyer sees it, and only while your NDA with them is active. You can stop sharing any time.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          {opt(fin, setFin, p.reports.financials, "Verified financial report", "statements, ratios and analyst notes")}
+          {opt(val, setVal, p.reports.valuation, "Estimated valuation", "range, methods and adjustments")}
+          <label className="flex items-start gap-3 p-1">
+            <Checkbox checked={dl} onCheckedChange={(v) => setDl(!!v)} className="mt-0.5" />
+            <span className="text-sm">Let them download a PDF <span className="block text-xs text-muted-foreground">Otherwise they can only view it, watermarked with their name.</span></span>
+          </label>
+        </div>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {p.share ? <Button variant="ghost" className="text-destructive" disabled={busy} onClick={() => run(() => fRevoke({ data: { id: p.id } }), `${p.counterparty.name} can no longer open your report`)}>Stop sharing</Button> : <span />}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button disabled={busy || (!(fin && p.reports.financials) && !(val && p.reports.valuation))}
+              onClick={() => run(() => fShare({ data: { id: p.id, financials: fin, valuation: val, allowDownload: dl } }), p.share ? "Sharing updated" : `Report shared with ${p.counterparty.name}`)}>
+              {p.share ? "Save" : "Share"}
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
