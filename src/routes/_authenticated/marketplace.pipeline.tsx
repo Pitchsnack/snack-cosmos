@@ -184,7 +184,7 @@ function SellerPending({ rows }: { rows: PipelineRow[] }) {
               <button key={p.id} onClick={() => setSelId(p.id)}
                 className={cn("flex w-full items-center gap-3 rounded-[12px] border bg-card p-3 text-left",
                   sel?.id === p.id && "border-accent bg-accent/5")}>
-                <Avatar name={p.counterparty.name} tone={loi ? "orange" : "violet"} />
+                <Avatar name={p.counterparty.name} tone={loi ? "orange" : "violet"} logoUrl={p.counterparty.logoUrl} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-bold">{p.counterparty.name}</div>
                   <div className="text-[12.5px] font-semibold text-accent-dark">{loi ? "Letter of intent" : "NDA request"}</div>
@@ -204,7 +204,7 @@ function SellerPending({ rows }: { rows: PipelineRow[] }) {
 function PanelHead({ p, children }: { p: PipelineRow; children: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-start gap-3 border-b pb-4">
-      <Avatar name={p.counterparty.name} />
+      <Avatar name={p.counterparty.name} logoUrl={p.counterparty.logoUrl} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[18px] font-bold">{p.counterparty.name}</span>
@@ -391,7 +391,7 @@ function TrackingCard({ p, seller, defaultOpen }: { p: PipelineRow; seller: bool
   return (
     <div className="rounded-[14px] border bg-card p-5">
       <div className="flex flex-wrap items-start gap-3">
-        <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} />
+        <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} />
         <button className="min-w-0 flex-1 text-left" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[16px] font-bold">{p.counterparty.name}</span>
