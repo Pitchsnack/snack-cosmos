@@ -190,8 +190,8 @@ function Row({ label, link, onClick, circle }: { label: string; link: string; on
 
 /* --------------------------- Left: tabbed card ---------------------------- */
 
-function FolderTab({ active, open, icon, title, sub, tone, onClick }: {
-  active: boolean; open?: boolean; icon: React.ReactNode; title: string; sub: string; tone: "indigo" | "green"; onClick: () => void;
+function FolderTab({ active, open, side, icon, title, sub, tone, onClick }: {
+  active: boolean; open?: boolean; side: "left" | "right"; icon: React.ReactNode; title: string; sub: string; tone: "indigo" | "green"; onClick: () => void;
 }) {
   return (
     <button
@@ -200,17 +200,21 @@ function FolderTab({ active, open, icon, title, sub, tone, onClick }: {
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "relative flex flex-1 items-center gap-2 rounded-t-[12px] first:rounded-tl-none last:rounded-tr-none px-3 py-2 text-left",
+        "absolute flex items-center gap-2.5 overflow-hidden rounded-t-[12px] border border-b-0 px-4 text-left transition-[width,height,background-color] duration-200 ease-in-out",
+        side === "left" ? "left-0" : "right-0",
         active
-          ? cn("z-10 -mb-px border border-b-0 bg-card pb-[9px] text-foreground", open ? "border-accent" : "border-border")
-          : "mb-0 border border-b-0 border-border bg-muted text-muted-foreground hover:text-foreground",
+          ? cn("bottom-[-1px] z-[2] h-[59px] w-[58%] bg-card text-foreground",
+              open ? "border-accent" : "border-border",
+              side === "left" ? "shadow-[7px_0_8px_-7px_rgba(16,24,40,.16)]" : "shadow-[-7px_0_8px_-7px_rgba(16,24,40,.16)]")
+          : cn("bottom-0 z-[1] h-[52px] w-[48%] border-[#E1E4EA] bg-[#ECEEF2] text-[#6B7385] hover:bg-[#E4E7EC] dark:border-border dark:bg-muted dark:text-muted-foreground",
+              side === "right" ? "pl-[calc(6%+16px)]" : "pr-[calc(6%+16px)]"),
       )}
     >
       {icon}
       <span className="min-w-0">
-        <span className="block text-[13px] font-bold leading-tight">{title}</span>
-        <span className={cn("block text-[10.5px] leading-tight",
-          active ? (tone === "indigo" ? "text-indigo-700 dark:text-indigo-300" : "text-green-800 dark:text-green-400") : "")}>{sub}</span>
+        <span className="block text-[14px] font-bold leading-tight">{title}</span>
+        <span className={cn("block truncate text-[11.5px] leading-snug",
+          active ? (tone === "indigo" ? "text-indigo-700 dark:text-indigo-300" : "text-green-800 dark:text-green-400") : "text-[#8A93A0]")}>{sub}</span>
       </span>
     </button>
   );
@@ -270,9 +274,9 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
   const selected = view != null;
   return (
     <div>
-      <div role="tablist" className="relative z-10 flex gap-1">
-        <FolderTab active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Buyer preview" open={selected} tone="indigo" onClick={() => pick("public")} />
-        <FolderTab active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open={selected} tone="green" onClick={() => pick("private")} />
+      <div role="tablist" className="relative z-10 h-[58px]">
+        <FolderTab side="left" active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Buyer preview" open={selected} tone="indigo" onClick={() => pick("public")} />
+        <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open={selected} tone="green" onClick={() => pick("private")} />
       </div>
       {v === "public" ? (
         <div className={cn("overflow-hidden rounded-b-[14px] rounded-t-none border bg-card [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
