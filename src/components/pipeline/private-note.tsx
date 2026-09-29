@@ -20,6 +20,15 @@ const Cap = ({ children }: { children: React.ReactNode }) => <div className="mb-
 const Empty = () => <span className="text-[#9CA3AF]">Not disclosed</span>;
 const Edited = () => <span className="ml-1.5 text-[11.5px] font-normal lowercase text-[#7C3AED]">edited</span>;
 
+function Row({ label, children, edit }: { label: string; children: React.ReactNode; edit?: boolean }) {
+  return (
+    <div className={`grid grid-cols-[130px_1fr] gap-3 py-[7px] text-[13px] ${edit ? "" : "border-b border-[#F0F1F4]"}`}>
+      <div className="text-[#6B7280]">{label}</div>
+      <div className="min-w-0 break-words font-normal text-[#374151]">{children}</div>
+    </div>
+  )  );
+}
+
 export function PrivateNote({ pipelineId, onClose }: { pipelineId: string; onClose: () => void }) {
   const get = useServerFn(getPrivateNote);
   const save = useServerFn(savePrivateNote);
@@ -71,12 +80,6 @@ export function PrivateNote({ pipelineId, onClose }: { pipelineId: string; onClo
     const v = shown[k];
     return <>{v ? v : <Empty />}{isEdited(k) && <Edited />}</>;
   };
-  const Row = ({ label, children, edit }: { label: string; children: React.ReactNode; edit?: boolean }) => (
-    <div className={`grid grid-cols-[130px_1fr] gap-3 py-[7px] text-[13px] ${edit ? "" : "border-b border-[#F0F1F4]"}`}>
-      <div className="text-[#6B7280]">{label}</div>
-      <div className="min-w-0 break-words font-normal text-[#374151]">{children}</div>
-    </div>
-  );
   const line = (k: string) => (
     <input value={draft[k] ?? ""} placeholder="Not disclosed" onChange={(e) => setDraft({ ...draft, [k]: e.target.value })}
       className="w-full border-0 border-b border-dashed border-[#CBD5E1] bg-transparent py-0.5 text-[13px] font-normal text-[#374151] outline-none placeholder:text-[#9CA3AF] focus:border-solid focus:border-[#2563EB]" />
