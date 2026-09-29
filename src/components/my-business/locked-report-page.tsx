@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { useStartups } from "@/hooks/use-startups";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
-import { SampleReport, reportPrice } from "@/components/my-business/report-offers";
+import { reportPrice } from "@/components/my-business/report-offers";
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import catalog from "@/config/report-catalog.json";
+import { ReportViewer } from "@/components/pipeline/pipeline-dialogs";
+import { makeSampleReport } from "@/lib/sample-report";
 
 type Kind = "financials" | "valuation";
 
@@ -162,7 +164,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
           </div>
         </div>
       </div>
-      <SampleReport kind={sample} onClose={() => setSample(null)} />
+      {sample && <ReportViewer seller sample={makeSampleReport()} initialTab={sample === "valuation" ? "val" : "fin"} onClose={() => setSample(null)} />}
     </div>
   );
 }
