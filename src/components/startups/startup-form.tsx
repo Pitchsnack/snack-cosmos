@@ -1228,6 +1228,7 @@ export function StartupForm({
       </div>
 
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
+      <div className="@container">
       <div className="grid grid-cols-[100px_1fr_2fr_140px] gap-4">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
@@ -1273,20 +1274,21 @@ export function StartupForm({
             </SelectContent>
           </Select>
         </div>
+        <div className="col-span-4 space-y-1.5 @[760px]:col-span-3">
+          <Label htmlFor="business-address">Business Address</Label>
+          <Textarea
+            id="business-address"
+            value={businessAddress}
+            onChange={(e) => setBusinessAddress(e.target.value)}
+            placeholder="Street address, building, district and postal code"
+            maxLength={1000}
+            rows={1}
+            className="field-sizing-content min-h-9 max-h-[4.75rem] resize-none overflow-y-auto px-3 py-2 text-sm shadow-sm"
+          />
+        </div>
+      </div>
       </div>
 
-
-      <div className="space-y-1.5">
-        <Label htmlFor="business-address">Business Address</Label>
-        <Textarea
-          id="business-address"
-          value={businessAddress}
-          onChange={(e) => setBusinessAddress(e.target.value)}
-          placeholder="Street address, building, district and postal code"
-          maxLength={1000}
-          rows={3}
-        />
-      </div>
 
       {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
       <div className="grid grid-cols-3 gap-4">
