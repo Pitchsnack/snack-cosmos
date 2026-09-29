@@ -176,6 +176,15 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
           {data && !years.length && <div className="py-16 text-center text-[#6B7280]">The verified figures have not been published for this business yet.</div>}
           {data && years.length > 0 && tab === "fin" && m && (
             <>
+              <div className="sticky top-0 z-10 -mx-6 mb-1 border-b border-[#EAECEF] bg-white px-6 pb-[14px] pt-[10px]">
+                <div role="tablist" onKeyDown={tabArrowNav} className="inline-flex gap-0.5 rounded-[9px] border border-[#DCE3EF] bg-white p-[3px]">
+                  {([["overview", "Overview"], ["info", "Company Info"], ["statements", "Financial Statements"], ["ratios", "Financial Ratios"]] as const).map(([k, l]) => (
+                    <button key={k} type="button" role="tab" aria-selected={finTab === k} tabIndex={finTab === k ? 0 : -1} onClick={() => setFinTab(k)}
+                      className={cn("h-[30px] whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-medium", finTab === k ? "bg-[#F6A823] text-[#0E162F] shadow-[inset_0_0_0_1px_#DD971F]" : "text-[#5B6576] hover:bg-[#F1F4F9]")}>{l}</button>
+                  ))}
+                </div>
+              </div>
+              {finTab === "overview" && (<>
               <Caption>Key finance summary · FY{last}</Caption>
               <div className="grid grid-cols-4 gap-3">
                 {([
