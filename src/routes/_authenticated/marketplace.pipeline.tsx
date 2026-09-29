@@ -19,7 +19,7 @@ import {
   type PipelineRow,
 } from "@/lib/pipeline.functions";
 import { STEPS, currentStep, isPending, waitState } from "@/lib/pipeline-state";
-import { ReportViewer, CompareReports, InvestorProfile, NdaDialog, LoiDialog as LoiDocDialog } from "@/components/pipeline/pipeline-dialogs";
+import { ReportViewer, CompareReports, InvestorProfile, SellerProfile, NdaDialog, LoiDialog as LoiDocDialog } from "@/components/pipeline/pipeline-dialogs";
 import { Tooltip as TT, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvider delayDuration={200}><TT>{children}</TT></TooltipProvider>;
 
@@ -397,7 +397,7 @@ function Stepper({ cur }: { cur: number }) {
 function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void }) {
   const [loiOpen, setLoiOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
-  const [dlg, setDlg] = useState<null | "report" | "investor" | "nda" | "loi">(null);
+  const [dlg, setDlg] = useState<null | "report" | "investor" | "seller" | "nda" | "loi">(null);
   const cur = currentStep(p);
   const refresh = useRefresh();
   const fShare = useServerFn(shareReport);
@@ -416,7 +416,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
     ["NDA", p.ndaApprovedAt, `Approved by ${seller ? "you" : "the seller"} · requested ${day(p.ndaRequestedAt)}`,
       <>
         <Button size="sm" variant="outline" onClick={() => setDlg("nda")}>View NDA</Button>
-        {seller && <Button size="sm" variant="outline" onClick={() => setDlg("investor")}>Investor profile</Button>}
+        <Button size="sm" variant="outline" onClick={() => setDlg(seller ? "investor" : "seller")}>{seller ? "Investor profile" : "Seller profile"}</Button>
       </>],
     ["Financial & Valuation", p.reportSharedAt,
       p.reportSharedAt ? `Verified financial report ${seller ? "shared" : "received"}`
@@ -466,7 +466,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
         <div className="flex items-center gap-[14px] text-[12.5px] font-semibold text-[#6B7280]">
           {seller
             ? <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("investor"); }}>Investor profile</button>
-            : <Link to="/marketplace/browse" search={{ company: p.hiddenProfileId }} onClick={stop} className="text-[12.5px] font-semibold text-[#2563EB] hover:underline">View listing</Link>}
+            : <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("seller"); }}>Seller profile</button>}
           <span className="flex items-center gap-2">
             {open ? "Hide details" : "Details"}
             <span className="grid h-[30px] w-[30px] place-items-center rounded-[8px] border border-[#E5E7EB]">
@@ -497,6 +497,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "investor" && <InvestorProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
+      {dlg === "seller" && <SellerProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} onReport={() => setDlg("report")} onAsk={() => { setDlg(null); ask(); }} />}
       {dlg === "nda" && <NdaDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "loi" && <LoiDocDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
     </div>

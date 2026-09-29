@@ -11,7 +11,7 @@ const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvide
 import { cn } from "@/lib/utils";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
 import {
-  getPipelineReport, compareReports, investorProfile, decideLoi,
+  getPipelineReport, compareReports, investorProfile, sellerProfile, decideLoi,
   type PipelineRow, type ReportData,
 } from "@/lib/pipeline.functions";
 
@@ -535,6 +535,55 @@ export function LoiDialog({ p, seller, onClose }: { p: PipelineRow; seller: bool
       ) : (
         <Foot><Lock className="h-3.5 w-3.5" />Confidential under the NDA. Both parties see the same letter.</Foot>
       )}
+    </Shell>
+  );
+}
+
+/* ---------------- Seller profile (buyer) ---------------- */
+export function SellerProfile({ p, onClose, onNda, onLoi, onReport, onAsk }: { p: PipelineRow; onClose: () => void; onNda: () => void; onLoi: () => void; onReport: () => void; onAsk: () => void }) {
+  const f = useServerFn(sellerProfile);
+  const { data } = useQuery({ queryKey: ["pipeline", "seller", p.id], queryFn: () => f({ data: { id: p.id } }) });
+  const link = "font-semibold text-[#2563EB] hover:underline";
+  const name = data?.name ?? p.counterparty.name;
+  const logo = p.counterparty.logoUrl;
+  return (
+    <Shell width={520} onClose={onClose} label="Seller profile">
+      <div className="flex items-start gap-3 border-b border-[#F0F1F4] px-6 pb-4 pt-5">
+        {logo ? <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-[11px] border border-[#E5E7EB] object-contain" /> : <div className="[&>div]:!h-11 [&>div]:!w-11 [&>div]:!rounded-[11px]"><Tile30 name={name} /></div>}
+        <div className="min-w-0 flex-1">
+          <DialogTitle className="text-[18px] font-bold">{name}</DialogTitle>
+          <DialogDescription className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-[#6B7280]">
+            {[data?.industry, data?.city].filter(Boolean).join(" · ") || "Seller"}
+            <span className="inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Verified seller</span>
+          </DialogDescription>
+        </div>
+        <CloseX onClose={onClose} />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
+        {data?.about && <p className="text-[13.5px] text-[#374151]">{data.about}</p>}
+        <Caption>The deal</Caption>
+        <Rows rows={[["Asking price", data?.askingPrice != null ? money(data.askingPrice) : null], ["Stake for sale", data?.stakePct != null ? `${data.stakePct}%` : null], ["Deal type", data?.dealType], ["Reason for sale", data?.reason]]} />
+        <Caption>Company</Caption>
+        <Rows rows={[["Code name", data?.codeName], ["Founded", data?.founded], ["Employees", data?.employees],
+          ["Website", data?.website ? <a href={/^https?:/.test(data.website) ? data.website : `https://${data.website}`} target="_blank" rel="noreferrer" className={link}>{data.website.replace(/^https?:\/\//, "")}</a> : null]]} />
+        <Caption>Contact</Caption>
+        <Rows rows={[
+          ["Person", data?.person ? [data.person.name, data.person.role].filter(Boolean).join(" · ") : null],
+          ["Details", <Link to="/marketplace/my-contact" className={link}>Open in Contacts</Link>],
+        ]} />
+        <Caption>This deal</Caption>
+        <Rows rows={[
+          ["NDA", <>{fmtDate(p.ndaApprovedAt)} · approved by the seller · <button className={link} onClick={onNda}>View NDA</button></>],
+          ["Financial report", p.reportSharedAt ? <>received {fmtDate(p.reportSharedAt)} · <button className={link} onClick={onReport}>View report</button></>
+            : p.reportRequestedAt ? `requested ${fmtDate(p.reportRequestedAt)} · waiting for the seller`
+            : <>not received · <button className={link} onClick={onAsk}>Ask for it</button></>],
+          ...(p.loiSentAt ? [["Letter of intent", <>{p.loiAcceptedAt ? `accepted ${fmtDate(p.loiAcceptedAt)}` : `sent ${fmtDate(p.loiSentAt)} · waiting for the seller`} · <button className={link} onClick={onLoi}>View LOI</button></>] as [string, React.ReactNode]] : []),
+          ["Current step", STEPS[Math.min(currentStep(p), 6)]],
+        ]} />
+        <Button asChild variant="outline" size="sm" className="mt-5 h-8">
+          <Link to="/marketplace/browse" search={{ company: p.hiddenProfileId }}>Open full listing ›</Link>
+        </Button>
+      </div>
     </Shell>
   );
 }
