@@ -21,7 +21,7 @@ import {
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { ComplianceFields } from "@/components/startups/compliance-fields";
 import { SectorBusinessModelFields } from "@/components/startups/sector-fields";
-import { ISO_STANDARDS, LICENCE_CATEGORIES, normaliseLicenceName, sortLicences, type LicenceCategory, type RegulatoryLicence } from "@/lib/compliance";
+import { ISO_STANDARDS, LICENCE_CATEGORIES, isRegulatorOnly, normaliseLicenceName, sortLicences, type LicenceCategory, type RegulatoryLicence } from "@/lib/compliance";
 
 type ISOStandard = string;
 import {
