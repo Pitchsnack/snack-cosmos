@@ -31,7 +31,7 @@ import {
   type HiddenProfileRow,
   type HiddenTextField,
 } from "@/lib/hidden-profile";
-import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, suggestHighlights, type ListingSource } from "@/lib/public-listing";
+import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, suggestHighlights, suggestCustomersSummary, type ListingSource } from "@/lib/public-listing";
 import { useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +71,7 @@ export function HiddenProfileEditor({
   const headlineIdea = useMemo(() => (source ? suggestHeadline(source, opts) : ""), [source, opts]);
   const descIdea = useMemo(() => (source ? suggestBusinessDescription(source, opts) : ""), [source, opts]);
   const highlightIdeas = useMemo(() => (source ? suggestHighlights(source, opts).filter(Boolean) : []), [source, opts]);
+  const customersIdea = useMemo(() => (source ? suggestCustomersSummary(source, opts) : ""), [source, opts]);
   const fillHighlights = () =>
     set("highlights", d.highlights.map((h, i) => highlightIdeas[i] ?? h));
   const fillAll = () =>
@@ -80,6 +81,7 @@ export function HiddenProfileEditor({
       headline: headlineIdea || p.headline,
       description: descIdea || p.description,
       highlights: p.highlights.map((h, i) => highlightIdeas[i] ?? h),
+      customers_summary: customersIdea || p.customers_summary,
     }));
 
   // On first load of a listing, empty public fields are pre-filled with the
@@ -96,8 +98,17 @@ export function HiddenProfileEditor({
       headline: p.headline.trim() ? p.headline : headlineIdea,
       description: p.description.trim() ? p.description : descIdea,
       highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
+      customers_summary: p.customers_summary.trim() ? p.customers_summary : customersIdea,
     }));
-  }, [row.id, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, prefilled]);
+  }, [row.id, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, customersIdea, prefilled]);
+
+  /** Small "Suggest" button shown beside a field label. */
+  const SuggestBtn = ({ onClick, label = "Suggest" }: { onClick: () => void; label?: string }) => (
+    <button type="button" onClick={onClick} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11.5px] font-semibold text-profile hover:bg-muted">
+      <Sparkles className="h-3.5 w-3.5 shrink-0" />{label}
+    </button>
+  );
+
 
 
 
@@ -190,34 +201,41 @@ export function HiddenProfileEditor({
             </div>
           )}
           <Field label={`Headline (${d.headline.length}/120)`}>
-            <Input id="hp-headline" maxLength={120} value={d.headline} onChange={(e) => set("headline", e.target.value)} className={flagCls("headline")} />
+            <div className="flex gap-2">
+              <Input id="hp-headline" maxLength={120} value={d.headline} placeholder={headlineIdea} onChange={(e) => set("headline", e.target.value)} className={flagCls("headline")} />
+              {headlineIdea && <SuggestBtn onClick={() => set("headline", headlineIdea)} />}
+            </div>
             {headlineIdea && d.headline.trim() !== headlineIdea && (
               <button type="button" onClick={() => set("headline", headlineIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Use: {headlineIdea}</button>
             )}
             <Msg k="headline" />
           </Field>
           <Field label={`Description (${d.description.length}/420)`}>
-            <Textarea id="hp-description" maxLength={420} rows={4} value={d.description} onChange={(e) => set("description", e.target.value)} className={flagCls("description")} />
+            {descIdea && <div className="mb-1"><SuggestBtn onClick={() => set("description", descIdea)} /></div>}
+            <Textarea id="hp-description" maxLength={420} rows={4} value={d.description} placeholder={descIdea} onChange={(e) => set("description", e.target.value)} className={flagCls("description")} />
             {descIdea && d.description.trim() !== descIdea && (
               <button type="button" onClick={() => set("description", descIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Write it for me (no names)</button>
             )}
             <Msg k="description" />
           </Field>
           <Field label="Highlights (3 required)">
+            {highlightIdeas.length > 0 && <div className="mb-1"><SuggestBtn onClick={fillHighlights} /></div>}
             <div id="hp-highlights" className="space-y-1.5">
               {d.highlights.map((h, i) => (
                 <Input key={i} value={h} placeholder={highlightIdeas[i] || `Highlight ${i + 1}${i < 3 ? "" : " (optional)"}`} onChange={(e) => set("highlights", d.highlights.map((x, j) => (j === i ? e.target.value : x)))} className={flagCls("highlights")} />
               ))}
             </div>
-            {highlightIdeas.length > 0 && (
-              <button type="button" onClick={fillHighlights} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Suggest highlights (no names)</button>
-            )}
             <Msg k="highlights" />
           </Field>
           <Field label="Customers, described without names">
-            <Textarea id="hp-customers_summary" rows={2} value={d.customers_summary} onChange={(e) => set("customers_summary", e.target.value)} className={flagCls("customers_summary")} />
+            {customersIdea && <div className="mb-1"><SuggestBtn onClick={() => set("customers_summary", customersIdea)} /></div>}
+            <Textarea id="hp-customers_summary" rows={3} value={d.customers_summary} placeholder={customersIdea} onChange={(e) => set("customers_summary", e.target.value)} className={flagCls("customers_summary")} />
+            {customersIdea && d.customers_summary.trim() !== customersIdea && (
+              <button type="button" onClick={() => set("customers_summary", customersIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Write it for me (no names)</button>
+            )}
             <Msg k="customers_summary" />
           </Field>
+
         </Section>
 
         <Section n={3} title="Deal terms">
