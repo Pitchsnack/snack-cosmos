@@ -13,6 +13,7 @@ import {
 import { STEPS, currentStep, stepDates, waitState } from "@/lib/pipeline-state";
 import { NdaDialog, LoiDialog, ReportViewer, InvestorProfile, SellerProfile } from "@/components/pipeline/pipeline-dialogs";
 import { cn } from "@/lib/utils";
+import { useBump } from "@/hooks/use-bump";
 
 export const Route = createFileRoute("/_authenticated/marketplace/messages")({
   head: () => ({
@@ -63,8 +64,10 @@ function MessagesPage() {
   const pFn = useServerFn(listPipeline);
   const tFn = useServerFn(threadSummaries);
   const { data: rows = [] } = useQuery({ queryKey: ["pipeline", persona], queryFn: () => pFn({ data: { as: persona } }) });
-  const { data: sums = [] } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => tFn({ data: { as: persona } }), refetchInterval: 5000 });
+  const { data: sums = [] } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => tFn({ data: { as: persona } }), refetchInterval: 2500, refetchIntervalInBackground: true });
 
+  const [sel, setSel] = useState<string | null>(null);
+  const selKey = sel;
   const convs: Conv[] = useMemo(() => {
     const sm = Object.fromEntries(sums.map((s) => [s.key, s]));
     const deals = rows.filter((p) => p.ndaApprovedAt).map((p): Conv => {
@@ -75,18 +78,17 @@ function MessagesPage() {
         person: seller ? p.parties.buyerName : p.parties.sellerName,
         sub: p.counterparty.sub,
         codeName: p.parties.codeName,
-        unread: sm[key]?.unread ?? 0,
+        unread: key === selKey ? 0 : sm[key]?.unread ?? 0,
         last: sm[key]?.last ?? null,
       };
     });
     const adv = sums.find((s) => s.key.startsWith("a:"));
-    const all = adv ? [...deals, { key: adv.key, p: null, name: ADVISOR, person: null, sub: "PitchSnack M&A advisor", codeName: null, unread: adv.unread, last: adv.last }] : deals;
+    const all = adv ? [...deals, { key: adv.key, p: null, name: ADVISOR, person: null, sub: "PitchSnack M&A advisor", codeName: null, unread: adv.key === selKey ? 0 : adv.unread, last: adv.last }] : deals;
     const t = (c: Conv) => c.last?.at ?? c.p?.ndaApprovedAt ?? "0";
     return all.sort((a, b) => t(b).localeCompare(t(a)));
-  }, [rows, sums, seller]);
+  }, [rows, sums, seller, selKey]);
 
   const [q, setQ] = useState("");
-  const [sel, setSel] = useState<string | null>(null);
   const [mobileChat, setMobileChat] = useState(false);
   const [panel, setPanel] = useState(false);
   useEffect(() => setPanel(false), [persona]);
@@ -167,7 +169,7 @@ function Chat({ c, seller, panel, setPanel, onBack, hiddenMobile }: { c: Conv; s
   const sendFn = useServerFn(sendMessage);
   const upFn = useServerFn(messageUploadUrl);
   const urlFn = useServerFn(messageFileUrl);
-  const { data } = useQuery({ queryKey: ["messages", "thread", c.key], queryFn: () => mFn({ data: { key: c.key } }), refetchInterval: 5000 });
+  const { data } = useQuery({ queryKey: ["messages", "thread", c.key], queryFn: () => mFn({ data: { key: c.key } }), refetchInterval: 2500 });
   const [dialog, setDialog] = useState<Dialog>(null);
   const pipeBtn = useRef<HTMLButtonElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -499,4 +501,10 @@ function Composer({ person, seller, onSend }: { person: string; seller: boolean;
       </div>
     </div>
   );
+}
+
+function RowCount({ n }: { n: number }) {
+  const bump = useBump(n);
+  if (!n) return null;
+  return <span key={bump} className={cn("ml-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-[#F6A823] px-1.5 text-[10.5px] font-bold text-[#0E162F]", bump && "mkt-bump")}>{n > 9 ? "9+" : n}</span>;
 }
