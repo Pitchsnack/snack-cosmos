@@ -104,6 +104,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
         label: path === "/my-startups" ? "My Company"
           : path === "/my-startups/new" ? "Add My Business"
           : path === "/marketplace/my-contact" ? "Contacts"
+          : path === "/marketplace/my-company" ? "My Company"
           : path === "/marketplace/messages" ? "Messages"
           : path === "/my-financials" ? "My Financials"
           : path === "/my-valuation" ? "Company Valuation"
