@@ -810,19 +810,27 @@ export type Database = {
           buyer_user_id: string
           contact_at: string | null
           created_at: string
+          exclusivity_until: string | null
           hidden_profile_id: string
           id: string
           legal_at: string | null
           loi_accepted_at: string | null
+          loi_accepted_by: string | null
           loi_amount: number | null
+          loi_changes_requested_at: string | null
           loi_conditions: string | null
+          loi_consent_text: string | null
           loi_exclusivity_days: number | null
           loi_sent_at: string | null
+          loi_stake_pct: number | null
           nda_approved_at: string | null
+          nda_expires_at: string | null
           nda_requested_at: string
           payment_at: string | null
+          report_allow_download: boolean
           report_requested_at: string | null
           report_shared_at: string | null
+          report_viewed_at: string | null
           spa_at: string | null
           startup_id: string
           status: string
@@ -833,19 +841,27 @@ export type Database = {
           buyer_user_id: string
           contact_at?: string | null
           created_at?: string
+          exclusivity_until?: string | null
           hidden_profile_id: string
           id?: string
           legal_at?: string | null
           loi_accepted_at?: string | null
+          loi_accepted_by?: string | null
           loi_amount?: number | null
+          loi_changes_requested_at?: string | null
           loi_conditions?: string | null
+          loi_consent_text?: string | null
           loi_exclusivity_days?: number | null
           loi_sent_at?: string | null
+          loi_stake_pct?: number | null
           nda_approved_at?: string | null
+          nda_expires_at?: string | null
           nda_requested_at?: string
           payment_at?: string | null
+          report_allow_download?: boolean
           report_requested_at?: string | null
           report_shared_at?: string | null
+          report_viewed_at?: string | null
           spa_at?: string | null
           startup_id: string
           status?: string
@@ -856,19 +872,27 @@ export type Database = {
           buyer_user_id?: string
           contact_at?: string | null
           created_at?: string
+          exclusivity_until?: string | null
           hidden_profile_id?: string
           id?: string
           legal_at?: string | null
           loi_accepted_at?: string | null
+          loi_accepted_by?: string | null
           loi_amount?: number | null
+          loi_changes_requested_at?: string | null
           loi_conditions?: string | null
+          loi_consent_text?: string | null
           loi_exclusivity_days?: number | null
           loi_sent_at?: string | null
+          loi_stake_pct?: number | null
           nda_approved_at?: string | null
+          nda_expires_at?: string | null
           nda_requested_at?: string
           payment_at?: string | null
+          report_allow_download?: boolean
           report_requested_at?: string | null
           report_shared_at?: string | null
+          report_viewed_at?: string | null
           spa_at?: string | null
           startup_id?: string
           status?: string
