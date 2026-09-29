@@ -56,7 +56,18 @@ function isPending(p: PipelineRow) {
   return !p.ndaApprovedAt || (!!p.loiSentAt && !p.loiAcceptedAt);
 }
 
-function Avatar({ name, tone = "violet" }: { name: string; tone?: "violet" | "orange" }) {
+function Avatar({ name, tone = "violet", logoUrl }: { name: string; tone?: "violet" | "orange"; logoUrl?: string | null }) {
+  const [broken, setBroken] = React.useState(false);
+  if (logoUrl && !broken) {
+    return (
+      <img
+        src={logoUrl}
+        alt={name}
+        onError={() => setBroken(true)}
+        className="h-11 w-11 shrink-0 rounded-[10px] border border-border bg-white object-contain"
+      />
+    );
+  }
   return (
     <div className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-[10px] text-[15px] font-bold text-white",
       tone === "violet" ? "bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9]" : "bg-gradient-to-br from-[#fb923c] to-[#ea580c]")}>
