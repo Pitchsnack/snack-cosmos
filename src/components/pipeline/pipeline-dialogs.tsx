@@ -118,6 +118,8 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
   const error = sample ? null : q.error;
   const [tab, setTab] = useState<"fin" | "val">(initialTab);
   const [allRatios, setAllRatios] = useState(false);
+  const [valTab, setValTab] = useState<"summary" | "methods" | "adjustments" | "peers">("summary");
+
   const company = sample ? sample.company : p.parties.sellerCompany;
   const cashOf = (y: number) => sample?.cash[y] ?? null;
   const debtOf = (y: number) => sample?.debt[y] ?? null;
