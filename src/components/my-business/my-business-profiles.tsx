@@ -190,8 +190,8 @@ function Row({ label, link, onClick, circle }: { label: string; link: string; on
 
 /* --------------------------- Left: tabbed card ---------------------------- */
 
-function FolderTab({ active, icon, title, sub, tone, onClick }: {
-  active: boolean; icon: React.ReactNode; title: string; sub: string; tone: "indigo" | "green"; onClick: () => void;
+function FolderTab({ active, open, icon, title, sub, tone, onClick }: {
+  active: boolean; open?: boolean; icon: React.ReactNode; title: string; sub: string; tone: "indigo" | "green"; onClick: () => void;
 }) {
   return (
     <button
@@ -200,9 +200,9 @@ function FolderTab({ active, icon, title, sub, tone, onClick }: {
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "relative flex flex-1 items-center gap-2 rounded-t-[12px] px-3 py-2 text-left",
+        "relative flex flex-1 items-center gap-2 rounded-t-[12px] first:rounded-tl-none px-3 py-2 text-left",
         active
-          ? "z-10 -mb-[2px] border-2 border-b-0 border-amber-500 bg-card pb-[10px] text-foreground"
+          ? cn("z-10 -mb-px border border-b-0 bg-card pb-[9px] text-foreground", open ? "border-accent" : "border-border")
           : "mb-0 border border-b-0 border-border bg-muted text-muted-foreground hover:text-foreground",
       )}
     >
@@ -270,17 +270,18 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
   const selected = view != null;
   return (
     <div>
-      <div role="tablist" className="flex gap-1 px-1">
-        <FolderTab active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Buyer preview" tone="indigo" onClick={() => pick("public")} />
-        <FolderTab active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" tone="green" onClick={() => pick("private")} />
+      <div role="tablist" className="relative z-10 flex gap-1 pr-1">
+        <FolderTab active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Buyer preview" open={selected} tone="indigo" onClick={() => pick("public")} />
+        <FolderTab active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open={selected} tone="green" onClick={() => pick("private")} />
       </div>
       {v === "public" ? (
-        <div className={cn("overflow-hidden rounded-[14px] border-2 bg-card",
-          selected ? "border-amber-500 shadow-[0_0_0_3px_color-mix(in_oklab,#f59e0b_18%,transparent)]" : "border-amber-500/50")}>
+        <div className={cn("overflow-hidden rounded-[14px] rounded-tl-none border bg-card", selected ? "border-accent" : "border-border")}>
           <PublicCardBody s={s} row={row} />
         </div>
       ) : (
-        <StartupCard s={s} onClick={() => pick("private")} />
+        <div className={cn("overflow-hidden rounded-[14px] rounded-tl-none border bg-card [&>button]:rounded-none [&>button]:border-0 [&>button]:shadow-none", selected ? "border-accent" : "border-border")}>
+          <StartupCard s={s} onClick={() => pick("private")} />
+        </div>
       )}
     </div>
   );
