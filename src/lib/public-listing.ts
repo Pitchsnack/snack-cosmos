@@ -204,12 +204,12 @@ export function suggestCodeNames(s: ListingSource): string[] {
   const terms = listingTerms(s);
   const geo = GEO_ADJ(a.geo);
   const qualifier = a.certs.length ? "Certified" : a.customerTypes[0] ? titleCase(a.customerTypes[0]) : "Industrial";
-  const second = a.products[1] ? titleCase(a.products[1].split(/\s+/)[0]) : (s.sector ?? "");
+  const family = a.role === "Manufacturer" ? "Industries" : a.role === "Distributor" ? "Trading" : a.role === "Provider" ? "Services" : "Group";
   const out = [
     geo && `${geo} ${a.core}`,
     `${a.core} ${a.role}`,
     `${qualifier} ${a.core}`,
-    second && second.toLowerCase() !== a.core.toLowerCase() ? `${a.core} ${titleCase(second)}` : `${a.core} Group`,
+    `${a.core} ${family}`,
   ]
     .filter(Boolean)
     .map((x) => `Project ${titleCase(String(x)).replace(/\s{2,}/g, " ").trim()}`)
