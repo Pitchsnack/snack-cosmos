@@ -443,3 +443,42 @@ export const investorProfile = createServerFn({ method: "GET" })
       person: approved ? { name: [u?.first_name, u?.last_name].filter(Boolean).join(" ") || u?.email || null, role: up?.title ?? null } : null,
     };
   });
+
+/** Buyer: the seller's profile, contact only once the NDA is approved. */
+export const sellerProfile = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.parse(d))
+  .handler(async ({ data, context }) => {
+    const p = await load(data.id);
+    if (p.buyer_user_id !== context.userId) throw new Error("Not your pipeline");
+    const sb = await admin();
+    const approved = !!p.nda_approved_at;
+    const [{ data: hp }, { data: st }, { data: own }] = await Promise.all([
+      sb.from("hidden_profiles").select("code_name, asking_price, stake_pct, deal_type, reason, headline, region").eq("id", p.hidden_profile_id).maybeSingle(),
+      sb.from("startups").select("startup_name, industry, city, year_founded, company_size, website_url, short_description").eq("id", p.startup_id).maybeSingle(),
+      sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id).maybeSingle(),
+    ]);
+    let person: { name: string | null; role: string | null } | null = null;
+    if (approved && own?.owning_agent_user_id) {
+      const [{ data: u }, { data: up }] = await Promise.all([
+        sb.from("users").select("first_name, last_name, email").eq("id", own.owning_agent_user_id).maybeSingle(),
+        sb.from("user_profiles").select("title").eq("user_id", own.owning_agent_user_id).maybeSingle(),
+      ]);
+      person = { name: [u?.first_name, u?.last_name].filter(Boolean).join(" ") || u?.email || null, role: up?.title ?? "Owner" };
+    }
+    return {
+      name: approved ? st?.startup_name || hp?.code_name || "Business" : hp?.code_name || "Business",
+      industry: st?.industry ?? null,
+      city: approved ? st?.city ?? hp?.region ?? null : hp?.region ?? null,
+      about: (approved ? st?.short_description : null) || hp?.headline || null,
+      askingPrice: hp?.asking_price != null ? Number(hp.asking_price) : null,
+      stakePct: hp?.stake_pct != null ? Number(hp.stake_pct) : null,
+      dealType: hp?.deal_type ?? null,
+      reason: hp?.reason ?? null,
+      codeName: hp?.code_name ?? null,
+      founded: st?.year_founded ? String(st.year_founded) : null,
+      employees: st?.company_size ?? null,
+      website: approved ? st?.website_url ?? null : null,
+      person,
+    };
+  });
