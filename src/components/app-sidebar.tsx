@@ -40,7 +40,8 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import { ApprovalsBadge } from "@/components/menu-count-badge";
 import logoWhite from "@/assets/pitchsnack-white.png";
-import { useIsMarketplace, rememberAdminPath } from "@/hooks/use-marketplace";
+import logoBlack from "@/assets/pitchsnack-black.png";
+import { useIsMarketplace, usePersona, rememberAdminPath } from "@/hooks/use-marketplace";
 import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marketplace/marketplace-frame";
 
 type NavPath =
@@ -260,6 +261,7 @@ function SidebarBody({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMarket = useIsMarketplace();
+  const { persona } = usePersona();
   const showLabels = !collapsed || isMobile;
   const { has, isControl, isResolved, roles } = useEffectivePermissions();
   const { data: sessionData } = useSessionContext();
@@ -296,7 +298,7 @@ function SidebarBody({
   })();
 
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+    <div data-mkt-view={isMarket ? persona : undefined} className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       {isMarket && <PersonaCard collapsed={!showLabels} />}
 
       <nav className={cn("flex-1 overflow-y-auto px-2", isMarket && !showLabels ? "pb-4" : "py-4")}>
@@ -417,6 +419,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   const isMobile = useMediaQuery("(max-width: 960px)");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMarket = useIsMarketplace();
+  const { persona } = usePersona();
   const isAdminRoute =
     pathname.startsWith("/access-management") ||
     pathname.startsWith("/audit") ||
@@ -506,12 +509,14 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent
             side="left"
+            data-mkt-view={isMarket ? persona : undefined}
             className="w-72 border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           >
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <div className="flex h-full flex-col">
               <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
-                <img src={logoWhite} alt="PitchSnack" className="h-8 w-auto" />
+                <img src={logoWhite} alt="PitchSnack" className={cn("h-8 w-auto", isMarket && "hidden dark:block")} />
+                {isMarket && <img src={logoBlack} alt="PitchSnack" className="h-8 w-auto dark:hidden" />}
                 <button
                   type="button"
                   aria-label="Close menu"
@@ -556,6 +561,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         ref={sidebarRef}
         id="app-sidebar-nav"
         data-app-sidebar
+        data-mkt-view={isMarket ? persona : undefined}
         aria-label="Primary"
         className={cn(
           "h-full overflow-hidden border-r border-sidebar-border bg-sidebar shadow-lg",

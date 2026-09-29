@@ -22,14 +22,14 @@ export const isReportOrdered = (_kind: Kind) => false;
 
 export function PadlockTile() {
   return (
-    <span title="Locked until you order the report" className="ml-auto grid h-5 w-5 place-items-center rounded-md bg-amber-500/20 text-amber-400">
+    <span title="Locked until you order the report" className="ml-auto grid h-5 w-5 place-items-center rounded-md bg-amber-500/20 text-amber-400" data-mkt-lock data-mkt-badge>
       <Lock className="h-3 w-3" />
     </span>
   );
 }
 
 export function PitchsnackTag() {
-  return <span className="ml-auto rounded-[5px] bg-profile/25 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-profile">PitchSnack</span>;
+  return <span data-mkt-badge className="ml-auto rounded-[5px] bg-profile/25 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-profile">PitchSnack</span>;
 }
 
 const TITLES: Record<Kind, { page: string; card: string; tag: string }> = {

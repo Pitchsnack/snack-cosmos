@@ -15,6 +15,8 @@ function CountPill({ count, collapsed }: { count: number; collapsed?: boolean })
   if (collapsed) {
     return (
       <span
+        data-mkt-badge
+        data-rail
         title={`${count}`}
         className={cn(
           "absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-accent px-1",
@@ -26,7 +28,7 @@ function CountPill({ count, collapsed }: { count: number; collapsed?: boolean })
     );
   }
   return (
-    <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+    <span data-mkt-badge className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
       {label}
     </span>
   );
