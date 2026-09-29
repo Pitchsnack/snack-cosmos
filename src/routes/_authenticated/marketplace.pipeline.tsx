@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronRight, Lock } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Lock } from "lucide-react";
+
+// Open/closed Tracking cards persist across tab/role switches; reset on reload.
+let sessionOpen = new Set<string>();
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -92,6 +95,18 @@ function PipelinePage() {
   const pending = data.filter(isPending);
   const tracking = data.filter((p) => !!p.ndaApprovedAt);
   const [tab, setTab] = useState<"pending" | "tracking">("pending");
+  const [openIds, setOpenIdsState] = useState<string[]>(() => [...sessionOpen]);
+  const setOpenIds = (ids: string[]) => { sessionOpen = new Set(ids); setOpenIdsState(ids); };
+  const toggle = (id: string) => setOpenIds(openIds.includes(id) ? openIds.filter((x) => x !== id) : [...openIds, id]);
+  const allOpen = tracking.length > 0 && tracking.every((p) => openIds.includes(p.id));
+  useEffect(() => {
+    const deal = new URLSearchParams(window.location.search).get("deal");
+    if (!deal || !tracking.some((p) => p.id === deal)) return;
+    setTab("tracking");
+    if (!sessionOpen.has(deal)) setOpenIds([...sessionOpen, deal]);
+    setTimeout(() => document.getElementById(`deal-${deal}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracking.length]);
   const seller = persona === "seller";
   const waiting = seller ? pending.length : data.filter((p) => p.ndaApprovedAt && !p.reportSharedAt && !p.reportRequestedAt).length;
 
@@ -129,10 +144,17 @@ function PipelinePage() {
       ) : tab === "pending" ? (
         seller ? <SellerPending rows={pending} /> : <BuyerPending rows={pending} />
       ) : (
-        <div className="space-y-4">
-          <p className="text-[13px] text-muted-foreground">One card per {seller ? "buyer" : "business"}. Each step is a document shared, so both sides see the same record.</p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[13px] text-muted-foreground">One card per {seller ? "buyer" : "business"}. Click a card to see each step; click again to fold it back to the timeline.</p>
+            {tracking.length > 0 && (
+              <button className="shrink-0 text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setOpenIds(allOpen ? [] : tracking.map((p) => p.id))}>
+                {allOpen ? "Collapse all" : "Expand all"}
+              </button>
+            )}
+          </div>
           {tracking.length === 0 && <Empty text={seller ? "No buyers past the NDA yet." : "No seller has approved your NDA yet."} />}
-          {tracking.map((p, i) => <TrackingCard key={p.id} p={p} seller={seller} defaultOpen={i === 0} />)}
+          {tracking.map((p) => <TrackingCard key={p.id} p={p} seller={seller} open={openIds.includes(p.id)} onToggle={() => toggle(p.id)} />)}
         </div>
       )}
     </div>
@@ -349,8 +371,7 @@ function Stepper({ cur }: { cur: number }) {
   );
 }
 
-function TrackingCard({ p, seller, defaultOpen }: { p: PipelineRow; seller: boolean; defaultOpen: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
+function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void }) {
   const [loiOpen, setLoiOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
   const cur = currentStep(p);
@@ -389,36 +410,49 @@ function TrackingCard({ p, seller, defaultOpen }: { p: PipelineRow; seller: bool
   ];
 
   return (
-    <div className="rounded-[14px] border bg-card p-5">
-      <div className="flex flex-wrap items-start gap-3">
-        <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} />
-        <button className="min-w-0 flex-1 text-left" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[16px] font-bold">{p.counterparty.name}</span>
-            <Pill tone="blue">{STEPS[Math.min(cur, 6)]}</Pill>
-            <span className="text-[13px] text-muted-foreground">Financial report</span>{reportPill}
+    <div id={`deal-${p.id}`} className={cn("overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-card transition-shadow hover:border-[#D9DCE2]", open && "shadow-[0_6px_20px_rgba(16,24,40,.06)]")}>
+      <button type="button" onClick={onToggle} aria-expanded={open}
+        className="grid w-full grid-cols-[40px_1fr_auto] items-center gap-[14px] px-5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2563EB]">
+        <div className="[&>*]:!h-10 [&>*]:!w-10 [&>*]:!text-[14px]">
+          <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} />
+        </div>
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
+            <span className="truncate text-[16px] font-bold">{p.counterparty.name}</span>
+            <span className="shrink-0 rounded-[6px] border border-[#DBEAFE] bg-[#EFF6FF] px-1.5 py-0.5 text-[11.5px] font-semibold text-[#1D4ED8]">{STEPS[Math.min(cur, 6)]}</span>
+            <span className="shrink-0 text-[12px] text-[#6B7280]">Financial report</span>
+            <span className="shrink-0">{reportPill}</span>
           </div>
-          <div className="text-[13px] text-muted-foreground">
-            {[p.counterparty.sub, p.loiAmount ? `${seller ? "offer" : "your offer"} ${money(p.loiAmount)}` : null, waitingOn].filter(Boolean).join(" · ")}
-          </div>
-        </button>
-      </div>
-      <Stepper cur={cur} />
-      {open && (
-        <div className="mt-4 divide-y border-t">
-          {rows.map(([label, date, text, action]) => (
-            <div key={label} className="grid grid-cols-[170px_80px_1fr_auto] items-center gap-3 py-3 text-[13.5px]">
-              <div className={cn("font-bold", !date && "text-muted-foreground")}>{label}</div>
-              <div className="text-muted-foreground">{day(date)}</div>
-              <div>{text}</div>
-              <div>{action}</div>
-            </div>
-          ))}
-          <div className="flex justify-end pt-3">
-            <button className="text-[13px] font-semibold text-link" onClick={() => setHistOpen(true)}>History</button>
+          <div className="truncate text-[12.5px] text-[#6B7280]">
+            {[p.counterparty.sub, p.loiAmount ? `${seller ? "offer" : "your offer"} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
+            {waitingOn && <>{" · "}<span className="font-semibold text-[#B45309]">{waitingOn}</span></>}
           </div>
         </div>
-      )}
+        <div className="flex items-center gap-2 text-[12.5px] font-semibold text-[#6B7280]">
+          {open ? "Hide details" : "Details"}
+          <span className="grid h-[30px] w-[30px] place-items-center rounded-[8px] border border-[#E5E7EB]">
+            <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 motion-reduce:transition-none", open && "rotate-180")} />
+          </span>
+        </div>
+      </button>
+      <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} /></div>
+      <div className={cn("grid transition-[grid-template-rows] duration-[250ms] ease-in-out motion-reduce:transition-none", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+        <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
+          <div className="mx-5 border-t border-[#F0F1F4]">
+            {rows.map(([label, date, text, action]) => (
+              <div key={label} className="grid min-h-[50px] grid-cols-[168px_72px_1fr_auto] items-center gap-4 border-b border-[#F0F1F4] py-2 text-[13.5px]">
+                <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-[#111827]" : "text-[#9CA3AF]")}>{label}</div>
+                <div className="text-muted-foreground">{day(date)}</div>
+                <div className="text-[#374151]">{text}</div>
+                <div>{action}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end px-5 pb-4 pt-2.5">
+            <button className="text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setHistOpen(true)}>History</button>
+          </div>
+        </div>
+      </div>
       {loiOpen && <LoiDialog id={p.id} onClose={() => setLoiOpen(false)} />}
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
     </div>
