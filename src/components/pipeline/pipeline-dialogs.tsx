@@ -10,6 +10,7 @@ import { Tooltip as TT, TooltipContent, TooltipProvider, TooltipTrigger } from "
 const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvider delayDuration={200}><TT>{children}</TT></TooltipProvider>;
 import { cn } from "@/lib/utils";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
+import type { SampleReportData } from "@/lib/sample-report";
 import {
   getPipelineReport, compareReports, investorProfile, sellerProfile, decideLoi,
   type PipelineRow, type ReportData,
@@ -102,17 +103,24 @@ function DownloadBtn({ allowed, reason }: { allowed: boolean; reason?: string })
 }
 
 /* ---------------- report viewer ---------------- */
-export function ReportViewer({ p, seller, viewerName, onClose }: { p: PipelineRow; seller: boolean; viewerName?: string | null; onClose: () => void }) {
+export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, initialTab = "fin" }: { p?: PipelineRow; seller: boolean; viewerName?: string | null; onClose: () => void; sample?: SampleReportData; initialTab?: "fin" | "val" }) {
   const f = useServerFn(getPipelineReport);
   const qc = useQueryClient();
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["pipeline", "report", p.id],
+  const p = pRow as PipelineRow;
+  const q = useQuery({
+    queryKey: ["pipeline", "report", pRow?.id ?? "sample"],
+    enabled: !sample && !!pRow,
     queryFn: async () => { const r = await f({ data: { id: p.id } }); if (!seller) qc.invalidateQueries({ queryKey: ["pipeline"], exact: false, predicate: (q) => q.queryKey[1] !== "report" }); return r; },
     staleTime: 0,
   });
-  const [tab, setTab] = useState<"fin" | "val">("fin");
+  const data = sample?.data ?? q.data;
+  const isLoading = !sample && q.isLoading;
+  const error = sample ? null : q.error;
+  const [tab, setTab] = useState<"fin" | "val">(initialTab);
   const [allRatios, setAllRatios] = useState(false);
-  const company = p.parties.sellerCompany;
+  const company = sample ? sample.company : p.parties.sellerCompany;
+  const cashOf = (y: number) => sample?.cash[y] ?? null;
+  const debtOf = (y: number) => sample?.debt[y] ?? null;
   const years = data?.years ?? [];
   const last = years[years.length - 1];
   const prev = years[years.length - 2];
@@ -120,7 +128,7 @@ export function ReportViewer({ p, seller, viewerName, onClose }: { p: PipelineRo
   const mp = data && prev ? metrics(data, prev) : null;
   const growth = m?.revenue != null && mp?.revenue ? ((m.revenue - mp.revenue) / Math.abs(mp.revenue)) * 100 : null;
   const today = shortDate(new Date().toISOString());
-  const mark = seller ? `Shared with ${p.parties.buyerOrg} · confidential` : `${p.parties.buyerOrg} · ${viewerName ?? p.parties.buyerName ?? "Viewer"} · ${today} · confidential`;
+  const mark = sample ? "Sample · made-up figures · not a real company" : seller ? `Shared with ${p.parties.buyerOrg} · confidential` : `${p.parties.buyerOrg} · ${viewerName ?? p.parties.buyerName ?? "Viewer"} · ${today} · confidential`;
   const yl = (y: number) => `FY${String(y).slice(-2)}`;
 
   return (
@@ -128,13 +136,13 @@ export function ReportViewer({ p, seller, viewerName, onClose }: { p: PipelineRo
       <div className="flex items-start gap-3 border-b border-[#F0F1F4] px-6 pb-3 pt-5">
         <Tile30 name={company} />
         <div className="min-w-0 flex-1">
-          <DialogTitle className="truncate text-[17px] font-bold">{seller ? `Your report · ${company}` : company}</DialogTitle>
+          <DialogTitle className="truncate text-[17px] font-bold">{sample ? `Sample report · ${company}` : seller ? `Your report · ${company}` : company}</DialogTitle>
           <DialogDescription className="text-[12.5px] text-[#6B7280]">
-            Verified financial report{years.length ? ` · FY${years[0]}–${last}` : ""} · ฿ million
+            {sample ? `${sample.sector} · anonymised preview · ` : ""}Verified financial report{years.length ? ` · FY${years[0]}–${last}` : ""} · ฿ million
           </DialogDescription>
         </div>
         <span className="inline-flex h-7 items-center gap-1 rounded-full bg-[#ECFDF3] px-2.5 text-[12px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />Verified by PitchSnack</span>
-        <DownloadBtn allowed={seller || p.reportAllowDownload} reason="The seller has not allowed downloads for this report" />
+        <DownloadBtn allowed={!sample && (seller || p.reportAllowDownload)} reason={sample ? "Download is available once your own report is delivered" : "The seller has not allowed downloads for this report"} />
         <CloseX onClose={onClose} />
       </div>
       <div className="flex gap-5 border-b border-[#F0F1F4] px-6">
@@ -162,7 +170,7 @@ export function ReportViewer({ p, seller, viewerName, onClose }: { p: PipelineRo
                   ["Revenue", mn(m.revenue), growth != null ? `${growth >= 0 ? "+" : ""}${growth.toFixed(1)}% vs FY${String(prev).slice(-2)}` : "—"],
                   ["EBITDA", mn(m.ebitda), `${pct(margin(m.ebitda, m.revenue))} margin`],
                   ["Net profit", mn(m.net), `${pct(margin(m.net, m.revenue))} margin`],
-                  ["Net debt/(cash)", "—", "Not in the filed statements"],
+                  sample ? ["Net debt/(cash)", mn((debtOf(last) ?? 0) - (cashOf(last) ?? 0)), "Interest-bearing debt less cash"] : ["Net debt/(cash)", "—", "Not in the filed statements"],
                 ] as const).map(([k, v, s]) => (
                   <div key={k} className="rounded-[12px] border border-[#E5E7EB] bg-white/80 p-3">
                     <div className="text-[12px] text-[#6B7280]">{k}</div>
@@ -186,8 +194,8 @@ export function ReportViewer({ p, seller, viewerName, onClose }: { p: PipelineRo
               <Caption>Balance sheet · ฿ million</Caption>
               <FigTable years={years} yl={yl} rows={[
                 ["Total assets", (y) => metrics(data, y).assets, null],
-                ["Cash", () => null, null],
-                ["Interest-bearing debt", () => null, null],
+                ["Cash", cashOf, null],
+                ["Interest-bearing debt", debtOf, null],
                 ["Total liabilities", (y) => metrics(data, y).liabilities, null],
                 ["Equity", (y) => metrics(data, y).equity, null],
               ]} />
@@ -207,14 +215,50 @@ export function ReportViewer({ p, seller, viewerName, onClose }: { p: PipelineRo
                 </div>
               )}
               <Caption>Analyst notes</Caption>
-              <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
+              {sample ? (
+                <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
+                  <li>Revenue grew every year with steady gross margins; growth driven by new customers and higher order values.</li>
+                  <li>One-off costs shown below EBITDA · related-party rent restated at market rate.</li>
+                  <li>This is a sample with made-up figures. Your report uses your own DBD filings.</li>
+                </ul>
+              ) : <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
                 <li>EBITDA shown as profit before tax plus interest; depreciation is not split out in the filed statements.</li>
                 <li>Cash and interest-bearing debt are not reported separately in the DBD filing.</li>
-              </ul>
+              </ul>}
               <p className="mt-2 text-[12px] text-[#6B7280]">Sources: DBD filings FY{years[0]}–{last} · audited statements · checked by PitchSnack analysts.</p>
             </>
           )}
-          {data && tab === "val" && (
+          {sample && tab === "val" && (() => {
+            const v = sample.valuation;
+            const lastEbitda = last ? metrics(sample.data, last).ebitda : null;
+            return (
+              <>
+                <Caption>Valuation range · equity value</Caption>
+                <div className="rounded-[12px] border border-[#E5E7EB] bg-white/80 p-4">
+                  <div className="grid grid-cols-3 text-center">
+                    {([["Low", v.low], ["Midpoint", v.mid], ["High", v.high]] as const).map(([k, x]) => (
+                      <div key={k}><div className="text-[12px] text-[#6B7280]">{k}</div><div className={cn("mt-1 text-[20px] font-bold tabular-nums", k === "Midpoint" && "text-[#B45309]")}>{mn(x)}M</div></div>
+                    ))}
+                  </div>
+                  <div className="relative mt-3 h-2 rounded-full bg-gradient-to-r from-[#E5E7EB] via-[#FDE68A] to-[#E5E7EB]">
+                    <span className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#F59E0B] shadow" />
+                  </div>
+                  {lastEbitda ? <div className="mt-2 text-center text-[12px] text-[#6B7280]">Midpoint ÷ FY{String(last).slice(-2)} EBITDA = {(v.mid / lastEbitda).toFixed(1)}×</div> : null}
+                </div>
+                <Caption>Methods</Caption>
+                <table className="w-full text-[13px]">
+                  <thead><tr className="text-[11.5px] text-[#6B7280]"><th className="py-1.5 text-left font-medium">Method</th><th className="py-1.5 text-left font-medium">Basis</th><th className="py-1.5 text-left font-medium">Multiple / rate</th><th className="py-1.5 text-right font-medium">Value</th></tr></thead>
+                  <tbody>{v.methods.map((m) => (
+                    <tr key={m.method} className="border-t border-[#F0F1F4]"><td className="py-2 font-medium">{m.method}</td><td className="py-2 text-[#6B7280]">{m.basis}</td><td className="py-2">{m.rate}</td><td className="py-2 text-right tabular-nums">{m.value}</td></tr>
+                  ))}</tbody>
+                </table>
+                <Caption>Adjustments</Caption>
+                <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">{v.adjustments.map((a) => <li key={a}>{a}</li>)}</ul>
+                <p className="mt-3 text-[12px] text-[#6B7280]">The asking price remains the seller's. This range is an independent estimate by PitchSnack analysts. Sample with made-up figures.</p>
+              </>
+            );
+          })()}
+          {!sample && data && tab === "val" && (
             <div className="py-10 text-[13px] text-[#374151]">
               <p>The estimated valuation for this business is delivered by PitchSnack analysts.</p>
               <p className="mt-2 text-[#6B7280]">The asking price remains the seller's. This range is an independent estimate by PitchSnack analysts.</p>
@@ -224,7 +268,9 @@ export function ReportViewer({ p, seller, viewerName, onClose }: { p: PipelineRo
       </div>
       <div className="flex items-center gap-2 border-t border-[#F0F1F4] bg-[#FAFAFB] px-6 py-3 text-[12.5px] text-[#6B7280]">
         <Lock className="h-3.5 w-3.5 shrink-0" />
-        {seller
+        {sample
+          ? "Sample report with a made-up company and figures. Your own report is prepared from your DBD filings."
+          : seller
           ? `This is what ${p.parties.buyerOrg} sees. You shared it on ${fmtDate(p.reportSharedAt)} · ${p.reportViewedAt ? `they last opened it on ${fmtDate(p.reportViewedAt)}` : "they have not opened it yet"}.`
           : `Shared with you by ${company} on ${fmtDate(p.reportSharedAt)} under the NDA. Confidential: the seller can see when you open this report.`}
       </div>

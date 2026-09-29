@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { useStartups } from "@/hooks/use-startups";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
-import { SampleReport, reportPrice } from "@/components/my-business/report-offers";
+import { reportPrice } from "@/components/my-business/report-offers";
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import catalog from "@/config/report-catalog.json";
+import { ReportViewer } from "@/components/pipeline/pipeline-dialogs";
+import { makeSampleReport } from "@/lib/sample-report";
 
 type Kind = "financials" | "valuation";
 
@@ -50,6 +52,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
   const mine = useMyBusinesses();
   const [picked, setPicked] = useState<string | null>(null);
   const [sample, setSample] = useState<Kind | null>(null);
+  const [sampleData, setSampleData] = useState<ReturnType<typeof makeSampleReport> | null>(null);
   const company = mine.find((m) => m.id === picked) ?? mine[0];
   const name = company?.startup_name ?? "Your company";
   const cfg = catalog.locked[kind];
@@ -155,14 +158,14 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
                   {order ? `Ordered · ${order.ref}` : `Pay · ${reportPrice(kind)}`}
                 </Button>
               </span>
-              <Button variant="outline" onClick={() => setSample(kind)}>View sample</Button>
+              <Button variant="outline" onClick={() => { setSampleData(makeSampleReport()); setSample(kind); }}>View sample</Button>
             </div>
 
             <p className="mt-3 text-[11.5px] text-muted-foreground">Includes VAT · invoice issued to {name} · refundable if your DBD filings cannot be read</p>
           </div>
         </div>
       </div>
-      <SampleReport kind={sample} onClose={() => setSample(null)} />
+      {sample && sampleData && <ReportViewer seller sample={sampleData} initialTab={sample === "valuation" ? "val" : "fin"} onClose={() => setSample(null)} />}
     </div>
   );
 }

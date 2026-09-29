@@ -1,0 +1,105 @@
+/**
+ * Made-up, internally consistent sample report for "View sample".
+ * Never touches real company data; a new pseudonym and figures each time.
+ */
+import type { ReportData } from "@/lib/pipeline.functions";
+
+export type SampleValuation = {
+  low: number; mid: number; high: number;
+  methods: { method: string; basis: string; rate: string; value: string }[];
+  adjustments: string[];
+};
+export type SampleReportData = { company: string; sector: string; data: ReportData; cash: Record<number, number>; debt: Record<number, number>; valuation: SampleValuation };
+
+const NAMES = ["Apex", "Horizon", "Lotus", "Cobalt", "Monsoon", "Saffron", "Teak", "Harbor", "Summit", "Jade"];
+const SUFFIX = ["Wave", "Trail", "Foundry", "Peak", "Bridge", "Grove", "Crest"];
+const SECTORS = ["B2B SaaS", "Cold-Chain Logistics", "F&B chain", "Healthcare clinics", "E-commerce retail", "Industrial packaging"];
+const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]!;
+const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+const M = 1e6;
+const fmtM = (v: number) => `฿${Math.round(v / M)}M`;
+
+export function makeSampleReport(): SampleReportData {
+  const years = [2021, 2022, 2023, 2024, 2025];
+  const income: ReportData["income"] = {};
+  const position: ReportData["position"] = {};
+  const set = (m: ReportData["income"], k: string, y: number, v: number) => ((m[k] ??= {})[y] = Math.round(v));
+  const cash: Record<number, number> = {};
+  const debt: Record<number, number> = {};
+  let rev = rnd(80, 200) * M;
+  const gm = rnd(0.4, 0.62);
+  let last = { rev: 0, ebitda: 0, net: 0, assets: 0, equity: 0, liab: 0, ca: 0, cl: 0, ar: 0, inv: 0 };
+  for (const y of years) {
+    if (y > 2021) rev *= 1 + rnd(0.12, 0.28);
+    const gross = rev * (gm + rnd(-0.02, 0.02));
+    const ebitda = rev * rnd(0.11, 0.2);
+    const interest = rev * rnd(0.004, 0.012);
+    const pbt = ebitda - interest - rev * 0.03;
+    const tax = Math.max(0, pbt * 0.2);
+    const net = pbt - tax;
+    const sga = gross - pbt - interest;
+    set(income, "revenue_sales_services", y, rev * 0.98);
+    set(income, "total_revenue", y, rev);
+    set(income, "cost_of_goods_sold", y, rev - gross);
+    set(income, "gross_profit_loss", y, gross);
+    set(income, "selling_admin_expenses", y, sga);
+    set(income, "total_expenses", y, rev - pbt - interest);
+    set(income, "interest_expenses", y, interest);
+    set(income, "profit_loss_before_income_tax", y, pbt);
+    set(income, "income_tax_expense", y, tax);
+    set(income, "net_profit_loss", y, net);
+    const assets = rev * rnd(0.7, 0.9);
+    const ar = rev * 0.14, inv = rev * 0.08, ca = assets * 0.52, cl = ca * rnd(0.4, 0.6);
+    const liab = assets * rnd(0.38, 0.5);
+    const equity = assets - liab;
+    for (const [k, v] of Object.entries({ accounts_receivable: ar, inventories: inv, total_current_assets: ca, property_plant_equipment: assets * 0.36, total_non_current_assets: assets - ca, total_assets: assets, total_current_liabilities: cl, total_non_current_liabilities: liab - cl, total_liabilities: liab, equity, total_liabilities_equity: assets })) set(position, k, y, v);
+    cash[y] = Math.round(ca * rnd(0.25, 0.4));
+    debt[y] = Math.round(liab * rnd(0.3, 0.5));
+    last = { rev, ebitda, net, assets, equity, liab, ca, cl, ar, inv };
+  }
+  const r = (code: string, label: string, value: number, unit: "percent" | "times") => ({ code, label, value: Math.round(value * 100) / 100, unit });
+  const ratios = [
+    r("return_on_assets", "Return on Assets (%)", (last.net / last.assets) * 100, "percent"),
+    r("return_on_equity", "Return on Equity (%)", (last.net / last.equity) * 100, "percent"),
+    r("gross_profit_margin", "Gross Profit Margin (%)", gm * 100, "percent"),
+    r("operating_income_on_revenue", "Operating Income on Revenue Ratio (%)", (last.ebitda / last.rev) * 100 - 3, "percent"),
+    r("net_profit_margin", "Net Profit Margin (%)", (last.net / last.rev) * 100, "percent"),
+    r("current_ratio", "Current Ratio (times)", last.ca / last.cl, "times"),
+    r("accounts_receivable_turnover", "Accounts Receivable Turnover (times)", last.rev / last.ar, "times"),
+    r("inventory_turnover", "Inventory Turnover (times)", (last.rev * (1 - gm)) / last.inv, "times"),
+    r("accounts_payable_turnover", "Accounts Payable Turnover (times)", rnd(6, 10), "times"),
+    r("total_assets_turnover", "Total Assets Turnover (times)", last.rev / last.assets, "times"),
+    r("operation_expense_to_revenue", "Operation Expense to Total Revenue Ratio (%)", rnd(28, 40), "percent"),
+    r("asset_to_equity", "Asset to Equity Ratio or Financial Leverage (times)", last.assets / last.equity, "times"),
+    r("debt_to_asset_ratio", "Debt to Asset Ratio (times)", last.liab / last.assets, "times"),
+    r("debt_to_equity_ratio", "Debt to Equity Ratio (times)", last.liab / last.equity, "times"),
+    r("debt_to_capital_ratio", "Debt to Capital Ratio (times)", last.liab / (last.liab + last.equity), "times"),
+  ];
+  const mult = rnd(7, 10.5);
+  const mid = last.ebitda * mult;
+  const low = mid * 0.84, high = mid * 1.17;
+  const company = `Project ${pick(NAMES)} ${pick(SUFFIX)}`;
+  return {
+    company, sector: pick(SECTORS), cash, debt,
+    data: {
+      years, income, position, ratios, valuationShared: true,
+      info: {
+        registration: `0105${Math.floor(rnd(550000000, 569999999))}`,
+        capital: Math.round(rnd(5, 50)) * M,
+        founded: String(2010 + Math.floor(rnd(0, 9))),
+        employees: `${Math.round(rnd(60, 260))}`,
+        directors: `${Math.round(rnd(2, 5))}`,
+        shareholders: `${Math.round(rnd(2, 8))}`,
+      },
+    },
+    valuation: {
+      low, mid, high,
+      methods: [
+        { method: "Comparable transactions", basis: "6 Thai deals 2024–26", rate: `${(mult - 1).toFixed(1)}× – ${(mult + 1).toFixed(1)}× EBITDA`, value: `${fmtM(last.ebitda * (mult - 1))} – ${fmtM(last.ebitda * (mult + 1))}` },
+        { method: "EV / Revenue", basis: `FY25 revenue ${fmtM(last.rev)}`, rate: `${((low / last.rev)).toFixed(1)}× – ${((high / last.rev)).toFixed(1)}×`, value: `${fmtM(low)} – ${fmtM(high)}` },
+        { method: "Discounted cash flow", basis: "5-year plan, 14% WACC", rate: "Terminal growth 3%", value: `${fmtM(mid * 0.94)} – ${fmtM(mid * 1.05)}` },
+      ],
+      adjustments: ["Key-person dependency (−5%)", "Customer concentration (−3%)", "Brand and recurring revenue (+4%)"],
+    },
+  };
+}
