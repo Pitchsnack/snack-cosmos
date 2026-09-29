@@ -159,7 +159,7 @@ function Chat({ c, seller, panel, setPanel, onBack, hiddenMobile }: { c: Conv; s
   const pipeBtn = useRef<HTMLButtonElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
 
-  const msgs = data?.messages ?? [];
+  const msgs: ThreadMessage[] = (data?.messages ?? []) as ThreadMessage[];
   const lastIn = [...msgs].reverse().find((m) => !m.mine)?.at;
   // Opening (and new incoming messages while open) marks the thread read.
   useEffect(() => {
