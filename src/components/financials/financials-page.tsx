@@ -28,7 +28,6 @@ import { FinIcon } from "@/components/financials/fin-icon";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS, fmtCapital } from "@/lib/financials";
 import { getStartupFinancials } from "@/lib/financials.functions";
 import { getCompanyInfoTh } from "@/lib/company-info.functions";
-import { ReportOrderStrip } from "@/components/reports/report-order-strip";
 import { CompanyInfoTab } from "@/components/financials/company-info-tab";
 import type { StartupFinancials } from "@/lib/financials.functions";
 import {
@@ -372,15 +371,6 @@ export function StartupFinancialsPage({
         />
       )}
 
-      {canManage && !editing && (
-        <ReportOrderStrip
-          startupId={id}
-          kind={tab === "valuation" ? "valuation" : "financials"}
-          regNo={(data as any)?.registeredNumber ?? (companyInfo as any)?.registration_number ?? null}
-          onGenerate={tab === "valuation" ? undefined : () => handleRefresh(true)}
-          onEdit={() => setEditing(true)}
-        />
-      )}
 
       {editing ? (
         <FinancialsEdit
