@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip as TT, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvider delayDuration={200}><TT>{children}</TT></TooltipProvider>;
 import { cn } from "@/lib/utils";
+import { PrivateNote } from "./private-note";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
 import type { SampleReportData } from "@/lib/sample-report";
 import {
@@ -534,42 +535,8 @@ export function CompareReports({ rows, onOpen, onClose }: { rows: PipelineRow[];
 }
 
 /* ---------------- investor profile ---------------- */
-export function InvestorProfile({ p, onClose, onNda, onLoi }: { p: PipelineRow; onClose: () => void; onNda: () => void; onLoi: () => void }) {
-  const f = useServerFn(investorProfile);
-  const { data } = useQuery({ queryKey: ["pipeline", "investor", p.id], queryFn: () => f({ data: { id: p.id } }) });
-  const link = "font-semibold text-[#2563EB]";
-  return (
-    <Shell width={520} onClose={onClose} label="Investor profile">
-      <div className="flex items-start gap-3 px-6 pb-2 pt-5">
-        <Tile30 name={data?.org ?? p.counterparty.name} />
-        <div className="min-w-0 flex-1">
-          <DialogTitle className="text-[17px] font-bold">{data?.org ?? p.counterparty.name}</DialogTitle>
-          <DialogDescription className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-[#6B7280]">
-            {[data?.type, data?.city].filter(Boolean).join(" · ") || "Buyer"}
-            {data?.verified && <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Verified buyer</span>}
-          </DialogDescription>
-        </div>
-        <CloseX onClose={onClose} />
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
-        {data?.about && <p className="text-[13px] text-[#374151]">{data.about}</p>}
-        <Caption>Investment mandate</Caption>
-        <Rows rows={[["Ticket size", null], ["Sectors", data?.sectors], ["Deal type", null], ["Fund size", null], ["Track record", data?.trackRecord]]} />
-        <Caption>Contact</Caption>
-        <Rows rows={[
-          ["Person", data?.person ? [data.person.name, data.person.role].filter(Boolean).join(" · ") : null],
-          ["Details", <Link to="/marketplace/my-contact" className={link}>Open in Contacts</Link>],
-        ]} />
-        <Caption>This deal</Caption>
-        <Rows rows={[
-          ["NDA", <>{fmtDate(p.ndaApprovedAt)} · approved by you · <button className={link} onClick={onNda}>View NDA</button></>],
-          ["Letter of intent", p.loiSentAt ? <>{p.loiAcceptedAt ? `accepted ${fmtDate(p.loiAcceptedAt)}` : `received ${fmtDate(p.loiSentAt)}`} · <button className={link} onClick={onLoi}>View LOI</button></> : "Not received"],
-          ["Financial report", p.reportSharedAt ? `shared ${fmtDate(p.reportSharedAt)}${p.reportViewedAt ? ` · viewed ${fmtDate(p.reportViewedAt)}` : ""}` : "not shared"],
-          ["Current step", STEPS[Math.min(currentStep(p), 6)]],
-        ]} />
-      </div>
-    </Shell>
-  );
+export function InvestorProfile({ p, onClose }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void }) {
+  return <PrivateNote pipelineId={p.id} onClose={onClose} />;
 }
 
 /* ---------------- NDA & LOI ---------------- */
@@ -760,52 +727,8 @@ export function LoiDialog({ p, seller, onClose }: { p: PipelineRow; seller: bool
 }
 
 /* ---------------- Seller profile (buyer) ---------------- */
-export function SellerProfile({ p, onClose, onNda, onLoi, onReport, onAsk }: { p: PipelineRow; onClose: () => void; onNda: () => void; onLoi: () => void; onReport: () => void; onAsk: () => void }) {
-  const f = useServerFn(sellerProfile);
-  const { data } = useQuery({ queryKey: ["pipeline", "seller", p.id], queryFn: () => f({ data: { id: p.id } }) });
-  const link = "font-semibold text-[#2563EB] hover:underline";
-  const name = data?.name ?? p.counterparty.name;
-  const logo = p.counterparty.logoUrl;
-  return (
-    <Shell width={520} onClose={onClose} label="Seller profile">
-      <div className="flex items-start gap-3 border-b border-[#F0F1F4] px-6 pb-4 pt-5">
-        {logo ? <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-[11px] border border-[#E5E7EB] object-contain" /> : <div className="[&>div]:!h-11 [&>div]:!w-11 [&>div]:!rounded-[11px]"><Tile30 name={name} /></div>}
-        <div className="min-w-0 flex-1">
-          <DialogTitle className="text-[18px] font-bold">{name}</DialogTitle>
-          <DialogDescription className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-[#6B7280]">
-            {[data?.industry, data?.city].filter(Boolean).join(" · ") || "Seller"}
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Verified seller</span>
-          </DialogDescription>
-        </div>
-        <CloseX onClose={onClose} />
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
-        {data?.about && <p className="text-[13.5px] text-[#374151]">{data.about}</p>}
-        <Caption>The deal</Caption>
-        <Rows rows={[["Asking price", data?.askingPrice != null ? money(data.askingPrice) : null], ["Stake for sale", data?.stakePct != null ? `${data.stakePct}%` : null], ["Deal type", data?.dealType], ["Reason for sale", data?.reason]]} />
-        <Caption>Company</Caption>
-        <Rows rows={[["Code name", data?.codeName], ["Founded", data?.founded], ["Employees", data?.employees],
-          ["Website", data?.website ? <a href={/^https?:/.test(data.website) ? data.website : `https://${data.website}`} target="_blank" rel="noreferrer" className={link}>{data.website.replace(/^https?:\/\//, "")}</a> : null]]} />
-        <Caption>Contact</Caption>
-        <Rows rows={[
-          ["Person", data?.person ? [data.person.name, data.person.role].filter(Boolean).join(" · ") : null],
-          ["Details", <Link to="/marketplace/my-contact" className={link}>Open in Contacts</Link>],
-        ]} />
-        <Caption>This deal</Caption>
-        <Rows rows={[
-          ["NDA", <>{fmtDate(p.ndaApprovedAt)} · approved by the seller · <button className={link} onClick={onNda}>View NDA</button></>],
-          ["Financial report", p.reportSharedAt ? <>received {fmtDate(p.reportSharedAt)} · <button className={link} onClick={onReport}>View report</button></>
-            : p.reportRequestedAt ? `requested ${fmtDate(p.reportRequestedAt)} · waiting for the seller`
-            : <>not received · <button className={link} onClick={onAsk}>Ask for it</button></>],
-          ...(p.loiSentAt ? [["Letter of intent", <>{p.loiAcceptedAt ? `accepted ${fmtDate(p.loiAcceptedAt)}` : `sent ${fmtDate(p.loiSentAt)} · waiting for the seller`} · <button className={link} onClick={onLoi}>View LOI</button></>] as [string, React.ReactNode]] : []),
-          ["Current step", STEPS[Math.min(currentStep(p), 6)]],
-        ]} />
-        <Button asChild variant="outline" size="sm" className="mt-5 h-8">
-          <Link to="/marketplace/browse" search={{ company: p.hiddenProfileId }}>Open full listing ›</Link>
-        </Button>
-      </div>
-    </Shell>
-  );
+export function SellerProfile({ p, onClose }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReport?: () => void; onAsk?: () => void }) {
+  return <PrivateNote pipelineId={p.id} onClose={onClose} />;
 }
 
 /** Left/right arrow keys move between the enabled tabs of a tablist. */
