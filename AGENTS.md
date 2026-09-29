@@ -1,7 +1,7 @@
 # Project decisions
 
 - Reuse `StartupCard` for the My Business private card and Startup Directory grid card so their presentation stays identical.
-- Show an anonymous Public view preview from existing business fields even before a listing exists; keep startup publication unavailable so owners can inspect without exposing it to buyers.- Marketplace listings go live only through Admin approval (approvals.functions.ts); a DB trigger blocks sellers from setting live/decision fields so they cannot self-publish.
+- Preview anonymous Public view from business fields before listing; only Admin approval publishes, enforced by DB trigger.
 
 - Public listing image is Admin-only (hidden_profiles.pending_cover, promoted to cover_image_url on approval); sellers never write it — keeps Marketplace cards consistent.
 - Admin listing review renders MyBusinessProfiles inside AdminReviewCtx instead of separate admin tables, so Admin sees exactly the seller screen.
@@ -10,4 +10,5 @@
 - Buyer↔seller deal steps live in deal_pipelines/deal_pipeline_events (pipeline.functions.ts); writes only via server functions after checking buyer or startup access, so neither side can skip a step.
 - Pipeline 'waiting on you' logic lives in pipeline-state.ts and drives both Tracking filters and the Pipeline menu badge, so the counts never drift; buyer report opens are logged server-side in getPipelineReport.
 - Marketplace messages live in marketplace_messages/marketplace_message_reads keyed 'p:<pipeline id>' or 'a:<user id>' (messages.functions.ts); membership is checked server-side via can_read_message_thread and pipeline events are read from deal_pipelines, never copied as messages.
-- Private notes on My Pipeline profiles live in private_notes (private-notes.functions.ts); generated per field with owner overrides on top, server-only access so the other party never sees them.
+- Private notes live in private_notes with owner overrides; server-only access hides them from the other party.
+- Keep Business Address on startups through shared StartupForm so seller and Control use one saved field.
