@@ -200,21 +200,23 @@ function FolderTab({ active, open, side, icon, title, sub, tone, onClick }: {
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "absolute flex items-center gap-2.5 overflow-hidden rounded-t-[12px] border border-b-0 px-4 text-left transition-[width,height,background-color] duration-200 ease-in-out",
+        "absolute flex items-center overflow-hidden rounded-t-[12px] border border-b-0 text-left transition-[width,height,background-color] duration-200 ease-in-out",
         side === "left" ? "left-0" : "right-0",
         active
-          ? cn("bottom-[-1px] z-[2] h-[59px] w-[58%] bg-card text-foreground",
+          ? cn("bottom-[-1px] z-[2] h-[59px] w-[56%] gap-2.5 bg-card px-4 text-foreground",
               open ? "border-accent" : "border-border",
               side === "left" ? "shadow-[7px_0_8px_-7px_rgba(16,24,40,.16)]" : "shadow-[-7px_0_8px_-7px_rgba(16,24,40,.16)]")
-          : cn("bottom-0 z-[1] h-[52px] w-[48%] border-[#E1E4EA] bg-[#ECEEF2] text-[#6B7385] hover:bg-[#E4E7EC] dark:border-border dark:bg-muted dark:text-muted-foreground",
-              side === "right" ? "pl-[calc(6%+16px)]" : "pr-[calc(6%+16px)]"),
+          : cn("bottom-0 z-[1] h-[52px] w-[50%] gap-2 border-[#E1E4EA] bg-[#ECEEF2] text-[#6B7385] hover:bg-[#E4E7EC] dark:border-border dark:bg-muted dark:text-muted-foreground",
+              side === "right" ? "pl-[calc(6%+12px)] pr-[14px]" : "pl-[14px] pr-[calc(6%+12px)]"),
       )}
     >
       {icon}
       <span className="min-w-0">
-        <span className="block text-[14px] font-bold leading-tight">{title}</span>
-        <span className={cn("block truncate text-[11.5px] leading-snug",
-          active ? (tone === "indigo" ? "text-indigo-700 dark:text-indigo-300" : "text-green-800 dark:text-green-400") : "text-[#8A93A0]")}>{sub}</span>
+        <span className={cn("block truncate whitespace-nowrap text-[14px] leading-tight", active ? "font-bold" : "font-semibold")}>{title}</span>
+        {active && (
+          <span className={cn("mt-px block truncate whitespace-nowrap text-[11.5px] leading-snug",
+            tone === "indigo" ? "text-indigo-700 dark:text-indigo-300" : "text-green-800 dark:text-green-400")}>{sub}</span>
+        )}
       </span>
     </button>
   );
