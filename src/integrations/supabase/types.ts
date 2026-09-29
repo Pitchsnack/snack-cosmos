@@ -103,6 +103,111 @@ export type Database = {
           },
         ]
       }
+      buyer_profiles: {
+        Row: {
+          address: string | null
+          aum_exact: string | null
+          aum_value: number | null
+          city: string | null
+          code_name: string
+          country: string | null
+          created_at: string
+          deal_types: string[]
+          decision_process: string | null
+          description: string | null
+          geography: string | null
+          headline: string | null
+          legal_name: string | null
+          live_since: string | null
+          logo_url: string | null
+          people: Json
+          pof_verified_at: string | null
+          portfolio: Json
+          private_description: string | null
+          profile_views_month: number
+          ref_no: string
+          sectors: string[]
+          show_name: boolean
+          stages: string[]
+          status: string
+          target_size: string | null
+          ticket_exact: string | null
+          ticket_max: number | null
+          ticket_min: number | null
+          track_record: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          aum_exact?: string | null
+          aum_value?: number | null
+          city?: string | null
+          code_name: string
+          country?: string | null
+          created_at?: string
+          deal_types?: string[]
+          decision_process?: string | null
+          description?: string | null
+          geography?: string | null
+          headline?: string | null
+          legal_name?: string | null
+          live_since?: string | null
+          logo_url?: string | null
+          people?: Json
+          pof_verified_at?: string | null
+          portfolio?: Json
+          private_description?: string | null
+          profile_views_month?: number
+          ref_no?: string
+          sectors?: string[]
+          show_name?: boolean
+          stages?: string[]
+          status?: string
+          target_size?: string | null
+          ticket_exact?: string | null
+          ticket_max?: number | null
+          ticket_min?: number | null
+          track_record?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          aum_exact?: string | null
+          aum_value?: number | null
+          city?: string | null
+          code_name?: string
+          country?: string | null
+          created_at?: string
+          deal_types?: string[]
+          decision_process?: string | null
+          description?: string | null
+          geography?: string | null
+          headline?: string | null
+          legal_name?: string | null
+          live_since?: string | null
+          logo_url?: string | null
+          people?: Json
+          pof_verified_at?: string | null
+          portfolio?: Json
+          private_description?: string | null
+          profile_views_month?: number
+          ref_no?: string
+          sectors?: string[]
+          show_name?: boolean
+          stages?: string[]
+          status?: string
+          target_size?: string | null
+          ticket_exact?: string | null
+          ticket_max?: number | null
+          ticket_min?: number | null
+          track_record?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       buyer_verifications: {
         Row: {
           assignee_id: string | null

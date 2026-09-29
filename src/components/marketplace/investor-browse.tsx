@@ -12,6 +12,11 @@ import { useInvestors } from "@/hooks/use-investors";
 import type { InvestorListItem } from "@/lib/investors.functions";
 import { useSavedIds } from "@/hooks/use-saved-ids";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listPublicBuyers } from "@/lib/buyer-profile.functions";
+import type { PublicBuyer } from "@/lib/buyer-profile";
+import { BuyerBrowseCard } from "@/components/marketplace/buyer-browse-card";
 
 function ticket(i: InvestorListItem) {
   const min = i.min_ticket_size?.trim();
@@ -122,6 +127,9 @@ function InvestorDetail({ i }: { i: InvestorListItem }) {
 /** Seller-side marketplace: investors and funds only — never SME listings. */
 export function InvestorBrowse() {
   const { data, isLoading } = useInvestors();
+  const fetchBuyers = useServerFn(listPublicBuyers);
+  const { data: buyerData } = useQuery({ queryKey: ["public-buyers"], queryFn: () => fetchBuyers() });
+  const buyers = (buyerData ?? []) as PublicBuyer[];
   const all = useMemo(() => (data ?? []) as InvestorListItem[], [data]);
 
   const { view, persist } = usePersistentView("ps-investor-browse-view", undefined);
@@ -192,6 +200,15 @@ export function InvestorBrowse() {
           </Button>
         )}
       </div>
+
+      {buyers.length > 0 && (
+        <div>
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Verified buyers on PitchSnack</div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {buyers.map((b) => <BuyerBrowseCard key={b.id} b={b} />)}
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

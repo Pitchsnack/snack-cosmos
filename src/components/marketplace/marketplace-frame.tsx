@@ -318,6 +318,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
           { to: "/marketplace/messages", label: "Messages", icon: MessageSquare },
         ]
       : [
+          { to: "/marketplace/my-company", label: "My Company", icon: Building2 },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
           { to: "/marketplace/my-contact", label: "Contacts", icon: Contact },
           { to: "/marketplace/messages", label: "Messages", icon: MessageSquare },
