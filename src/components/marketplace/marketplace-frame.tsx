@@ -78,7 +78,8 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
   const isMarket = useIsMarketplace();
   const { persona } = usePersona();
   const { roleLabel } = useUserIdentity();
-  const label = isMarket ? `Marketplace · ${persona} view` : `Admin · ${roleLabel}`;
+  const label = `Admin · ${roleLabel}`;
+  const seller = persona === "seller";
   return (
     <div className="sticky top-0 z-40 flex h-[54px] w-full shrink-0 items-center gap-3 bg-[#151a28] px-3 md:px-4">
       {showMenu && (
@@ -103,7 +104,21 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
       </button>
       <MarketplaceAdminSwitch />
       <div className="ml-auto flex items-center gap-2">
-        <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
+        {isMarket ? (
+          <span
+            className={cn(
+              "hidden items-center gap-1.5 rounded-full border px-[11px] py-1 text-[12px] font-semibold min-[1180px]:inline-flex",
+              seller
+                ? "border-[rgba(246,168,35,.35)] bg-[rgba(246,168,35,.14)] text-[#F6A823]"
+                : "border-[rgba(99,110,250,.40)] bg-[rgba(99,110,250,.16)] text-[#A5ADFF]",
+            )}
+          >
+            <span className={cn("h-[7px] w-[7px] rounded-full", seller ? "bg-[#F6A823]" : "bg-[#7C85FF]")} />
+            {seller ? "Seller view" : "Buyer view"}
+          </span>
+        ) : (
+          <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
+        )}
         <ThemeToggle />
       </div>
     </div>
@@ -133,7 +148,6 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
   const subtitle = [u?.title, org].filter(Boolean).join(" · ");
   const neutral = persona === "seller" ? workspace : u?.buyerType ?? null;
   const location = [u?.city, u?.country].filter(Boolean).join(", ");
-  const dark = persona === "seller";
   if (collapsed) {
     const tip = `${name} · ${persona === "seller" ? "Seller" : "Buyer"}`;
     return (
@@ -151,7 +165,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
             </span>
           )}
         </div>
-        <div role="tablist" aria-label="Persona" className="mt-3 flex flex-col gap-1 rounded-[10px] border border-sidebar-border bg-sidebar-accent p-1">
+        <div role="tablist" aria-label="Persona" className="mt-3 flex flex-col gap-1 rounded-[10px] bg-[var(--mkt-tray)] p-1">
           {(["seller", "buyer"] as const).map((p) => {
             const Icon = p === "seller" ? Building2 : Briefcase;
             const on = persona === p;
@@ -166,7 +180,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
                 onClick={() => setPersona(p)}
                 className={cn(
                   "grid h-[30px] w-[34px] place-items-center rounded-[7px] transition-colors",
-                  on ? "bg-white text-[#0f1115]" : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+                  on ? "bg-[var(--role-accent)] text-[var(--role-on)]" : "text-[var(--mkt-muted)] hover:text-sidebar-foreground",
                 )}
               >
                 <Icon className="h-[15px] w-[15px]" />
@@ -183,9 +197,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
       <div
         className={cn(
           "rounded-[14px] border p-4",
-          dark
-            ? "border-[#343846] bg-[#262933] text-[#e5e7eb]"
-            : "border-[#E6E8EC] bg-white text-[#0f1115] shadow-[0_1px_2px_rgba(16,24,40,.04),0_6px_16px_rgba(16,24,40,.06)]",
+          "border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[var(--mkt-card-shadow)]",
         )}
       >
         <div className="flex items-center gap-3">
@@ -200,7 +212,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
               <span
                 className={cn(
                   "absolute -bottom-1 -right-1 grid h-[18px] w-[18px] place-items-center rounded-full border-2 bg-[#16A34A] text-white",
-                  dark ? "border-[#262933]" : "border-white",
+                  "border-sidebar",
                 )}
               >
                 <Check className="h-[9px] w-[9px]" strokeWidth={4} />
@@ -217,7 +229,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
               )}
             </div>
             {subtitle && (
-              <div className={cn("mt-0.5 truncate text-[13px] leading-snug", dark ? "text-[#a1a6b3]" : "text-[#6b7280]")}>{subtitle}</div>
+              <div className={"mt-0.5 truncate text-[13px] leading-snug text-[var(--mkt-muted)]"}>{subtitle}</div>
             )}
           </div>
         </div>
@@ -225,7 +237,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           <span
             className={cn(
               "inline-flex items-center rounded-full px-[9px] py-1 text-[11px] font-bold uppercase tracking-[0.06em]",
-              dark ? "bg-[rgba(22,163,74,.16)] text-[#4ADE80]" : "bg-[#EEF0FF] text-[#4338CA]",
+              "bg-[var(--role-pill-bg)] text-[var(--role-pill-fg)]",
             )}
           >
             {persona}
@@ -234,7 +246,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
             <span
               className={cn(
                 "inline-flex items-center rounded-full px-[9px] py-1 text-[11px] font-semibold",
-                dark ? "bg-[#30343f] text-[#cbd0da]" : "bg-[#f3f4f6] text-[#374151]",
+                "bg-[var(--mkt-tray)] text-[var(--mkt-muted)]",
               )}
             >
               {neutral}
@@ -242,7 +254,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           )}
         </div>
         {location && (
-          <div className={cn("mt-2.5 flex items-center gap-1.5 truncate text-[12px]", dark ? "text-[#8b90a0]" : "text-[#6b7280]")}>
+          <div className={"mt-2.5 flex items-center gap-1.5 truncate text-[12px] text-[var(--mkt-muted)]"}>
             <MapPin className="h-[13px] w-[13px] shrink-0" />
             {location}
           </div>
@@ -251,7 +263,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
       <div
         role="tablist"
         aria-label="Persona"
-        className={cn("grid grid-cols-2 gap-1 rounded-[12px] p-1", dark ? "border border-[#343846] bg-[#262933]" : "bg-[#f3f4f6]")}
+        className="grid grid-cols-2 gap-1 rounded-[12px] bg-[var(--mkt-tray)] p-1"
       >
         {(["seller", "buyer"] as const).map((p) => {
           const Icon = p === "seller" ? Building2 : Briefcase;
@@ -265,8 +277,8 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
               className={cn(
                 "flex h-10 items-center justify-center gap-[7px] rounded-[9px] text-[14px] font-semibold transition-colors",
                 on
-                  ? cn("bg-white text-[#0f1115]", !dark && "shadow-[0_1px_3px_rgba(16,24,40,.12)]")
-                  : dark ? "text-[#9ca3af] hover:text-white" : "text-[#6b7280] hover:text-[#0f1115]",
+                  ? "bg-[var(--role-accent)] text-[var(--role-on)]"
+                  : "text-[var(--mkt-muted)] hover:text-sidebar-foreground",
               )}
             >
               <Icon className="h-[15px] w-[15px]" />
