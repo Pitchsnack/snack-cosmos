@@ -30,7 +30,7 @@ import {
   type HiddenProfileRow,
   type HiddenTextField,
 } from "@/lib/hidden-profile";
-import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, type ListingSource } from "@/lib/public-listing";
+import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, suggestHighlights, type ListingSource } from "@/lib/public-listing";
 import { useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +63,19 @@ export function HiddenProfileEditor({
   };
   const headlineIdea = useMemo(() => (source ? suggestHeadline(source) : ""), [source]);
   const descIdea = useMemo(() => (source ? suggestBusinessDescription(source) : ""), [source]);
+  const highlightIdeas = useMemo(() => (source ? suggestHighlights(source).filter(Boolean) : []), [source]);
+  const fillHighlights = () =>
+    set("highlights", d.highlights.map((h, i) => highlightIdeas[i] ?? h));
+  const fillAll = () =>
+    setD((p) => ({
+      ...p,
+      code_name: p.code_name.trim() || (codeIdeas[0] ?? suggestCodeName()),
+      headline: headlineIdea || p.headline,
+      description: descIdea || p.description,
+      highlights: p.highlights.map((h, i) => highlightIdeas[i] ?? h),
+    }));
+
+
 
 
   const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
