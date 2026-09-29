@@ -119,6 +119,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
   const [tab, setTab] = useState<"fin" | "val">(initialTab);
   const [allRatios, setAllRatios] = useState(false);
   const [valTab, setValTab] = useState<"summary" | "methods" | "adjustments" | "peers">("summary");
+  const [finTab, setFinTab] = useState<"overview" | "info" | "statements" | "ratios">("overview");
 
   const company = sample ? sample.company : p.parties.sellerCompany;
   const cashOf = (y: number) => sample?.cash[y] ?? null;
@@ -176,6 +177,15 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
           {data && !years.length && <div className="py-16 text-center text-[#6B7280]">The verified figures have not been published for this business yet.</div>}
           {data && years.length > 0 && tab === "fin" && m && (
             <>
+              <div className="sticky top-0 z-10 -mx-6 mb-1 border-b border-[#EAECEF] bg-white px-6 pb-[14px] pt-[10px]">
+                <div role="tablist" onKeyDown={tabArrowNav} className="inline-flex gap-0.5 rounded-[9px] border border-[#DCE3EF] bg-white p-[3px]">
+                  {([["overview", "Overview"], ["info", "Company Info"], ["statements", "Financial Statements"], ["ratios", "Financial Ratios"]] as const).map(([k, l]) => (
+                    <button key={k} type="button" role="tab" aria-selected={finTab === k} tabIndex={finTab === k ? 0 : -1} onClick={() => setFinTab(k)}
+                      className={cn("h-[30px] whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-medium", finTab === k ? "bg-[#F6A823] text-[#0E162F] shadow-[inset_0_0_0_1px_#DD971F]" : "text-[#5B6576] hover:bg-[#F1F4F9]")}>{l}</button>
+                  ))}
+                </div>
+              </div>
+              {finTab === "overview" && (<>
               <Caption>Key finance summary · FY{last}</Caption>
               <div className="grid grid-cols-4 gap-3">
                 {([
@@ -191,11 +201,15 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                   </div>
                 ))}
               </div>
+              </>)}
+              {finTab === "info" && (<>
               <Caption>Company info</Caption>
               <div className="grid grid-cols-2 gap-x-6">
                 <Rows rows={[...(sample ? [["Company name", sample.legalName] as [string, string]] : []), ["Registration no.", data.info.registration], ["Registered capital", data.info.capital != null ? `฿${data.info.capital.toLocaleString()}` : null], ["Founded", data.info.founded]]} />
                 <Rows rows={[["Employees", data.info.employees], ["Directors", data.info.directors], ["Shareholders", data.info.shareholders]]} />
               </div>
+              </>)}
+              {finTab === "statements" && (<>
               <Caption>Income statement · ฿ million</Caption>
               <FigTable years={years} yl={yl} rows={[
                 ["Revenue", (y) => metrics(data, y).revenue, null],
@@ -211,6 +225,8 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 ["Total liabilities", (y) => metrics(data, y).liabilities, null],
                 ["Equity", (y) => metrics(data, y).equity, null],
               ]} />
+              </>)}
+              {finTab === "ratios" && (<>
               <Caption>Financial ratios · FY{last}</Caption>
               <div className="grid grid-cols-4 gap-3">
                 {(allRatios ? data.ratios : data.ratios.slice(0, 8)).map((r) => (
@@ -226,6 +242,8 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                   <button className="font-semibold text-[#2563EB]" onClick={() => setAllRatios(!allRatios)}>{allRatios ? "Show fewer" : "Show all"}</button>
                 </div>
               )}
+              </>)}
+              {finTab === "overview" && (<>
               <Caption>Analyst notes</Caption>
               {sample ? (
                 <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
@@ -238,6 +256,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 <li>Cash and interest-bearing debt are not reported separately in the DBD filing.</li>
               </ul>}
               <p className="mt-2 text-[12px] text-[#6B7280]">Sources: DBD filings FY{years[0]}–{last} · audited statements · checked by PitchSnack analysts.</p>
+              </>)}
             </>
           )}
           {sample && tab === "val" && (() => {
