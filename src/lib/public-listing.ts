@@ -269,7 +269,7 @@ export function suggestBusinessDescription(s: ListingSource) {
     t = t.replace(/\s{2,}/g, " ").replace(/\s+\./g, ".").trim();
     if (!t || t === ".") continue;
     const next = out ? `${out} ${t}` : t;
-    if (next.length > DESCRIPTION_MAX) break;
+    if (next.length > DESCRIPTION_MAX) continue;
     out = next;
   }
   return out;
