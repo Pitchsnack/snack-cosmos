@@ -237,9 +237,9 @@ function scrub(text: string, guard?: { term: string; reason: string }[]) {
 const applyGeo = (a: ActivityProfile, o?: SuggestOpts) => (o && o.geo !== undefined ? { ...a, geo: o.geo } : a);
 
 /** Sector-true, anonymous deal code names — e.g. "Project Thai Packaging". */
-export function suggestCodeNames(s: ListingSource): string[] {
-  const a = activityProfile(s);
-  const terms = listingTerms(s);
+export function suggestCodeNames(s: ListingSource, o?: SuggestOpts): string[] {
+  const a = applyGeo(activityProfile(s), o);
+  const terms = [...listingTerms(s), ...(o?.guard ?? [])];
   const geo = GEO_ADJ(a.geo);
   const qualifier = a.certs.length ? "Certified" : a.customerTypes[0] ? titleCase(a.customerTypes[0]) : "Industrial";
   const family = a.role === "Manufacturer" ? "Industries" : a.role === "Distributor" ? "Trading" : a.role === "Provider" ? "Services" : "Group";
@@ -261,8 +261,8 @@ export function suggestCodeNameFor(s: ListingSource, index = 0): string {
 }
 
 /** Descriptive, anonymous headline built from the business profile. */
-export function suggestHeadline(s: ListingSource) {
-  const a = activityProfile(s);
+export function suggestHeadline(s: ListingSource, o?: SuggestOpts) {
+  const a = applyGeo(activityProfile(s), o);
   const credential = a.certs.some((c) => /^ISO/i.test(c))
     ? "ISO-Certified"
     : a.certs.length
