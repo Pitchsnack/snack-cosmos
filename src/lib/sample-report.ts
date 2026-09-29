@@ -17,13 +17,16 @@ export type SampleValuation = {
   peers: { name: string; revenue: number; growth: number; ebitdaMargin: number; netMargin: number; evEbitda: number }[];
   notes: string[];
 };
-export type SampleReportData = { company: string; sector: string; data: ReportData; cash: Record<number, number>; debt: Record<number, number>; valuation: SampleValuation };
+export type SampleReportData = { company: string; legalName: string; sector: string; data: ReportData; cash: Record<number, number>; debt: Record<number, number>; valuation: SampleValuation };
 
 
 const NAMES = ["Apex", "Horizon", "Lotus", "Cobalt", "Monsoon", "Saffron", "Teak", "Harbor", "Summit", "Jade"];
 const SUFFIX = ["Wave", "Trail", "Foundry", "Peak", "Bridge", "Grove", "Crest"];
 const SECTORS = ["B2B SaaS", "Cold-Chain Logistics", "F&B chain", "Healthcare clinics", "E-commerce retail", "Industrial packaging"];
+const FIRST = ["Somchai", "Naphat", "Pimchanok", "Thanakorn", "Kanya", "Wichai", "Suphansa", "Chalermpol", "Areeya", "Nattapong"];
+const LAST = ["Srisuk", "Wongphan", "Chaiyaporn", "Rattanakul", "Boonmee", "Intharat", "Tangsakul", "Phuwanart", "Siriwat", "Kittisak"];
 const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]!;
+const pickMany = <T,>(a: T[], n: number) => [...a].sort(() => Math.random() - 0.5).slice(0, n);
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const M = 1e6;
 const fmtM = (v: number) => `฿${Math.round(v / M)}M`;
@@ -110,7 +113,12 @@ export function makeSampleReport(): SampleReportData {
   const equityBefore = ev - lastDebt + lastCash;
   const mid = equityBefore * factor;
   const low = mid * 0.84, high = mid * 1.17;
-  const company = `Project ${pick(NAMES)} ${pick(SUFFIX)}`;
+  const brand = `${pick(NAMES)} ${pick(SUFFIX)}`;
+  const company = `Project ${brand}`;
+  const legalName = `${brand} (Thailand) Co., Ltd.`;
+  const people = pickMany(FIRST, 6).map((f, i) => `${f} ${pickMany(LAST, 6)[i]}`);
+  const directorNames = people.slice(0, 3);
+  const shareholderNames = [legalName.replace(" Co., Ltd.", " Holdings Co., Ltd."), people[3]!, people[4]!];
   const peerMult = [mult - rnd(1.5, 2.5), mult, mult + rnd(1.5, 3)];
   const peers = ["Siam Vertex PCL", "Chao Phraya Industries", "Asia Meridian Group", "Bangkok Nexus PCL", "Gulf Orchid Holdings"].map((name, i) => ({
     name,
@@ -121,7 +129,7 @@ export function makeSampleReport(): SampleReportData {
     evEbitda: Math.round((peerMult[i % 3]! + rnd(-0.8, 0.8)) * 10) / 10,
   }));
   return {
-    company, sector: pick(SECTORS), cash, debt,
+    company, legalName, sector: pick(SECTORS), cash, debt,
     data: {
       years, income, position, ratios, valuationShared: true,
       info: {
@@ -129,8 +137,8 @@ export function makeSampleReport(): SampleReportData {
         capital: Math.round(rnd(5, 50)) * M,
         founded: String(2010 + Math.floor(rnd(0, 9))),
         employees: `${Math.round(rnd(60, 260))}`,
-        directors: `${Math.round(rnd(2, 5))}`,
-        shareholders: `${Math.round(rnd(2, 8))}`,
+        directors: directorNames.join(", "),
+        shareholders: shareholderNames.join(", "),
       },
     },
     valuation: {
