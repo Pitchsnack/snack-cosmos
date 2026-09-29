@@ -82,6 +82,25 @@ export function HiddenProfileEditor({
       highlights: p.highlights.map((h, i) => highlightIdeas[i] ?? h),
     }));
 
+  // On first load of a listing, empty public fields are pre-filled with the
+  // generated (name-free) text so the seller starts from a draft, not blanks.
+  const [prefilled, setPrefilled] = useState<string | null>(null);
+  useEffect(() => {
+    if (prefilled === row.id) return;
+    if (!source) return;
+    if (!headlineIdea && !descIdea && !highlightIdeas.length && !codeIdeas.length) return;
+    setPrefilled(row.id);
+    setD((p) => ({
+      ...p,
+      code_name: p.code_name.trim() ? p.code_name : (codeIdeas[0] ?? p.code_name),
+      headline: p.headline.trim() ? p.headline : headlineIdea,
+      description: p.description.trim() ? p.description : descIdea,
+      highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
+    }));
+  }, [row.id, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, prefilled]);
+
+
+
 
 
 
