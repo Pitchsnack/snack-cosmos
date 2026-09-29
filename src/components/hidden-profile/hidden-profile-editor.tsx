@@ -61,6 +61,9 @@ export function HiddenProfileEditor({
     set("code_name", codeIdeas[codeIdx % codeIdeas.length]);
     setCodeIdx((i) => i + 1);
   };
+  const headlineIdea = useMemo(() => (source ? suggestHeadline(source) : ""), [source]);
+  const descIdea = useMemo(() => (source ? suggestBusinessDescription(source) : ""), [source]);
+
 
   const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const missing = useMemo(() => missingForPublish(d), [d]);

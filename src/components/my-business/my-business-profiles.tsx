@@ -333,6 +333,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
       <HiddenProfileEditor
         row={row}
         facts={facts}
+        source={{ ...(s as unknown as ListingSource), people: facts?.people ?? [] }}
         directoryDescription={s.short_description}
         autoPublish={publishOnOpen}
         onBack={() => { setEditing(false); setPublishOnOpen(false); }}
