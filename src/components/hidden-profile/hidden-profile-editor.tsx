@@ -54,16 +54,22 @@ export function HiddenProfileEditor({
   const a = useHiddenProfileActions();
   const [confirm, setConfirm] = useState<null | "publish" | "unpublish">(autoPublish ? "publish" : null);
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
-  const codeIdeas = useMemo(() => (source ? suggestCodeNames(source) : []), [source]);
+  // The public view may name the region but never the exact city, the registered
+  // name or any person — so generated text is guarded by the private facts.
+  const opts = useMemo(
+    () => ({ geo: d.region?.trim() || null, guard: facts ? identityTerms(facts) : [] }),
+    [d.region, facts],
+  );
+  const codeIdeas = useMemo(() => (source ? suggestCodeNames(source, opts) : []), [source, opts]);
   const [codeIdx, setCodeIdx] = useState(0);
   const nextCodeName = () => {
     if (!codeIdeas.length) return set("code_name", suggestCodeName());
     set("code_name", codeIdeas[codeIdx % codeIdeas.length]);
     setCodeIdx((i) => i + 1);
   };
-  const headlineIdea = useMemo(() => (source ? suggestHeadline(source) : ""), [source]);
-  const descIdea = useMemo(() => (source ? suggestBusinessDescription(source) : ""), [source]);
-  const highlightIdeas = useMemo(() => (source ? suggestHighlights(source).filter(Boolean) : []), [source]);
+  const headlineIdea = useMemo(() => (source ? suggestHeadline(source, opts) : ""), [source, opts]);
+  const descIdea = useMemo(() => (source ? suggestBusinessDescription(source, opts) : ""), [source, opts]);
+  const highlightIdeas = useMemo(() => (source ? suggestHighlights(source, opts).filter(Boolean) : []), [source, opts]);
   const fillHighlights = () =>
     set("highlights", d.highlights.map((h, i) => highlightIdeas[i] ?? h));
   const fillAll = () =>
