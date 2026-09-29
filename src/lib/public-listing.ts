@@ -247,8 +247,17 @@ export function suggestBusinessDescription(s: ListingSource) {
   const where = a.geo ? ` based in ${a.geo}` : "";
   const since = a.decade ? `, operating since the ${a.decade}` : "";
   const sentences: string[] = [`A ${a.noun.toLowerCase()}${where}${since}.`];
-  if (a.products.length) sentences.push(`The business ${a.verb} ${listOf(a.products)}.`);
-  if (a.markets.length) sentences.push(`It serves ${listOf(a.markets.slice(0, 3))}.`);
+  if (a.products.length) sentences.push(`The business ${a.verb} ${listOf(a.products.map(lower))}.`);
+  const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 3).map(lower);
+  const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
+  if (buyers.length || reach.length) {
+    sentences.push(
+      [
+        buyers.length ? `It serves ${listOf(buyers)} customers` : "It sells",
+        reach.length ? ` across ${listOf(reach)} markets` : "",
+      ].join("") + ".",
+    );
+  }
   if (a.certs.length) sentences.push(`Operations hold ${listOf(a.certs)}.`);
   const scale = [a.employees, a.revenue ? `annual revenue of ${a.revenue}` : null].filter(Boolean);
   if (scale.length) sentences.push(`The company reports ${listOf(scale as string[])}.`);
