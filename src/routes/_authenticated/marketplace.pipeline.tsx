@@ -459,7 +459,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
             {[p.counterparty.sub, p.loiAmount ? `${seller ? "offer" : "your offer"} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
             {" · "}
             <span className={cn("font-semibold", w.onYou ? "text-[#B45309]" : "text-[#6B7280]")}>
-              waiting on {w.onYou ? "you" : other}: {w.what}
+              {w.onYou && w.what === "send a letter of intent" ? "Pending: send a letter of intent" : `waiting on ${w.onYou ? "you" : other}: ${w.what}`}
             </span>
           </div>
         </div>
