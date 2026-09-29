@@ -130,6 +130,12 @@ const SERVICE_RE = /service|consult|software|platform|logistic|agency|clinic|edu
 const ROLE_WORD = /(manufacturer|producer|supplier|distributor|provider|operator|services|business|company|group)$/i;
 
 const CUSTOMER_RE = /\b(b2b|b2c|oem|odm|wholesale|retail|e-?commerce|export|distributors?|corporate)\b/i;
+const GENERIC_IND = /^(fmcg|sme|other|general|misc|b2b|b2c|industry|business)$/i;
+const CATEGORY_WORDS = [
+  "packaging", "logistics", "software", "beverage", "food", "textile", "garment", "furniture", "chemical",
+  "cosmetics", "electronics", "construction", "agriculture", "pharmaceutical", "automotive", "printing",
+  "plastics", "steel", "paper", "hospitality", "healthcare", "education", "energy", "apparel", "jewellery",
+];
 const GEO_RE = /\b(thailand|thai|asean|southeast asia|asia|domestic|international|global|export)\b/i;
 
 export interface ActivityProfile {
