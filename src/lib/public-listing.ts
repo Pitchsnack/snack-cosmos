@@ -167,15 +167,21 @@ export function activityProfile(s: ListingSource): ActivityProfile {
         : "Business";
   const verb = role === "Manufacturer" ? "manufactures" : role === "Distributor" ? "supplies" : role === "Provider" ? "provides" : "operates in";
 
-  const core = titleCase(base.split(/[,/&]| and /i)[0].trim().split(/\s+/).slice(0, 2).join(" "));
-  const noun = ROLE_WORD.test(core) ? core : titleCase(`${core} ${role}`);
+  const phrase = titleCase(base.split(/[,/&]| and /i)[0].trim().split(/\s+/).slice(0, 2).join(" "));
+  const noun = ROLE_WORD.test(phrase) ? phrase : titleCase(`${phrase} ${role}`);
+
+  // The code name uses the category noun (Packaging), not a leading adjective (Flexible).
+  const words = phrase.split(/\s+/);
+  const core = titleCase(
+    (industries[0] || sector || words[words.length - 1] || "Business").split(/[,/&]| and /i)[0].trim().split(/\s+/).slice(-1)[0],
+  );
 
   const geoTag = markets.find((m) => GEO_RE.test(m));
   const geo = provinceOnly(s.city, s.headquarters) || geoTag || s.headquarters || null;
 
   return {
     noun,
-    core: core.split(/\s+/)[0],
+    core,
     role,
     verb,
     products: products.slice(0, 4),
