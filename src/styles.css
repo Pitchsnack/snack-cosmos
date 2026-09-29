@@ -276,3 +276,6 @@ html:not(.dark) [data-mkt-view] {
 html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b7791f; }
 [data-mkt-view] a[data-status="active"] [data-mkt-badge] { background: #ffffff !important; color: var(--role-badge-fg) !important; }
 [data-mkt-view] [data-mkt-badge][data-rail] { box-shadow: 0 0 0 1.5px #ffffff; }
+@keyframes mkt-bump { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.4); } }
+.mkt-bump { animation: mkt-bump 0.6s ease-out; }
+@media (prefers-reduced-motion: reduce) { .mkt-bump { animation: none; } }
