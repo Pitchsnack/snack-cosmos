@@ -294,7 +294,7 @@ export function buildPublicListing(
   const dec = decadeLabel(s.year_founded);
   return {
     headline: p?.headline?.trim() || "",
-    description: p?.description?.trim() || suggestDescription(s.long_description || s.short_description, terms),
+    description: p?.description?.trim() || suggestBusinessDescription(s) || suggestDescription(s.long_description || s.short_description, terms),
     productTags: cleanTags(p?.product_tags ?? s.product_tags, terms),
     marketTags: cleanTags(p?.market_tags ?? s.market_tags, terms),
     revenueBand: revenueBand(s.last_year_revenue),
