@@ -111,8 +111,15 @@ export function HiddenProfileEditor({
           <Field id="code_name" label="Code name (unique in the Marketplace)">
             <div className="flex gap-2">
               <Input id="hp-code_name" value={d.code_name} onChange={(e) => set("code_name", e.target.value)} className={flagCls("code_name")} />
-              <Button type="button" variant="outline" onClick={() => set("code_name", suggestCodeName())}><Sparkles className="mr-1.5 h-3.5 w-3.5" />Suggest</Button>
+              <Button type="button" variant="outline" onClick={nextCodeName}><Sparkles className="mr-1.5 h-3.5 w-3.5" />Suggest</Button>
             </div>
+            {codeIdeas.length > 1 && (
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {codeIdeas.map((c) => (
+                  <button key={c} type="button" onClick={() => set("code_name", c)} className="rounded-full border border-border px-2 py-0.5 text-[11.5px] hover:bg-muted">{c}</button>
+                ))}
+              </div>
+            )}
             <Msg k="code_name" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
