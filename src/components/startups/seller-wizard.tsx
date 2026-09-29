@@ -99,6 +99,9 @@ export function SellerWizard({
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
   }, []);
   useEffect(() => setWebState("idle"), [d.web]);
+  // Never carry a pending check into another question.
+  useEffect(() => { if (cur.id !== "web") setWebState("idle"); }, [cur.id]);
+
 
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
   const go = (n: number) => set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
