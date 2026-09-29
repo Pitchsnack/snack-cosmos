@@ -408,20 +408,6 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
   };
   const ask = () => act(() => fAsk({ data: { id: p.id } }), `Request sent to ${p.counterparty.name}. You will be notified when the report is shared.`);
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
-  const link = "shrink-0 text-[12px] font-semibold text-[#2563EB] hover:underline";
-  const chip = (tone: "green" | "amber" | "gray", t: string) => (
-    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11.5px] font-semibold",
-      tone === "green" ? "bg-[#ECFDF3] text-[#15803D]" : tone === "amber" ? "bg-[#FFFBEB] text-[#B45309]" : "bg-[#F3F4F6] text-[#4B5563]")}>{t}</span>
-  );
-  const report = seller
-    ? p.reportSharedAt
-      ? <>{chip("green", p.reportViewedAt ? `Report viewed ${shortDate(p.reportViewedAt)}` : `Report shared ${shortDate(p.reportSharedAt)}`)}<button className={link} onClick={(e) => { stop(e); setDlg("report"); }}>View report</button></>
-      : chip("gray", "Report not shared")
-    : p.reportSharedAt
-      ? <>{chip("green", `Report received ${shortDate(p.reportSharedAt)}`)}<button className={link} onClick={(e) => { stop(e); setDlg("report"); }}>View report</button></>
-      : p.reportRequestedAt
-        ? chip("amber", `Report requested ${shortDate(p.reportRequestedAt)}`)
-        : <>{chip("gray", "Report not received")}<button className={link} onClick={(e) => { stop(e); ask(); }}>Ask for it</button></>;
   const w = waitState(p, seller);
   const other = seller ? "the buyer" : "the seller";
 
