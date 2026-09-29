@@ -241,6 +241,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                   <button className="font-semibold text-[#2563EB]" onClick={() => setAllRatios(!allRatios)}>{allRatios ? "Show fewer" : "Show all"}</button>
                 </div>
               )}
+              </>)}
               <Caption>Analyst notes</Caption>
               {sample ? (
                 <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
