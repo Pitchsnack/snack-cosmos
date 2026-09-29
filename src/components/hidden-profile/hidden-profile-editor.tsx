@@ -201,34 +201,41 @@ export function HiddenProfileEditor({
             </div>
           )}
           <Field label={`Headline (${d.headline.length}/120)`}>
-            <Input id="hp-headline" maxLength={120} value={d.headline} onChange={(e) => set("headline", e.target.value)} className={flagCls("headline")} />
+            <div className="flex gap-2">
+              <Input id="hp-headline" maxLength={120} value={d.headline} placeholder={headlineIdea} onChange={(e) => set("headline", e.target.value)} className={flagCls("headline")} />
+              {headlineIdea && <SuggestBtn onClick={() => set("headline", headlineIdea)} />}
+            </div>
             {headlineIdea && d.headline.trim() !== headlineIdea && (
               <button type="button" onClick={() => set("headline", headlineIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Use: {headlineIdea}</button>
             )}
             <Msg k="headline" />
           </Field>
           <Field label={`Description (${d.description.length}/420)`}>
-            <Textarea id="hp-description" maxLength={420} rows={4} value={d.description} onChange={(e) => set("description", e.target.value)} className={flagCls("description")} />
+            {descIdea && <div className="mb-1"><SuggestBtn onClick={() => set("description", descIdea)} /></div>}
+            <Textarea id="hp-description" maxLength={420} rows={4} value={d.description} placeholder={descIdea} onChange={(e) => set("description", e.target.value)} className={flagCls("description")} />
             {descIdea && d.description.trim() !== descIdea && (
               <button type="button" onClick={() => set("description", descIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Write it for me (no names)</button>
             )}
             <Msg k="description" />
           </Field>
           <Field label="Highlights (3 required)">
+            {highlightIdeas.length > 0 && <div className="mb-1"><SuggestBtn onClick={fillHighlights} /></div>}
             <div id="hp-highlights" className="space-y-1.5">
               {d.highlights.map((h, i) => (
                 <Input key={i} value={h} placeholder={highlightIdeas[i] || `Highlight ${i + 1}${i < 3 ? "" : " (optional)"}`} onChange={(e) => set("highlights", d.highlights.map((x, j) => (j === i ? e.target.value : x)))} className={flagCls("highlights")} />
               ))}
             </div>
-            {highlightIdeas.length > 0 && (
-              <button type="button" onClick={fillHighlights} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Suggest highlights (no names)</button>
-            )}
             <Msg k="highlights" />
           </Field>
           <Field label="Customers, described without names">
-            <Textarea id="hp-customers_summary" rows={2} value={d.customers_summary} onChange={(e) => set("customers_summary", e.target.value)} className={flagCls("customers_summary")} />
+            {customersIdea && <div className="mb-1"><SuggestBtn onClick={() => set("customers_summary", customersIdea)} /></div>}
+            <Textarea id="hp-customers_summary" rows={3} value={d.customers_summary} placeholder={customersIdea} onChange={(e) => set("customers_summary", e.target.value)} className={flagCls("customers_summary")} />
+            {customersIdea && d.customers_summary.trim() !== customersIdea && (
+              <button type="button" onClick={() => set("customers_summary", customersIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Write it for me (no names)</button>
+            )}
             <Msg k="customers_summary" />
           </Field>
+
         </Section>
 
         <Section n={3} title="Deal terms">
