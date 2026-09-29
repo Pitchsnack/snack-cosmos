@@ -1,0 +1,1 @@
+ALTER TABLE public.startups ADD COLUMN business_address text;
