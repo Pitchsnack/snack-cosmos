@@ -282,7 +282,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
 const MENU_LINK_BASE =
   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors";
 const MENU_LINK_ACTIVE = {
-  className: `${MENU_LINK_BASE} bg-sidebar-accent text-sidebar-primary font-medium`,
+  className: `${MENU_LINK_BASE} bg-[var(--role-accent)] text-[var(--role-on)] font-medium`,
 };
 const MENU_LINK_INACTIVE = {
   className: `${MENU_LINK_BASE} text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground`,
@@ -330,14 +330,14 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
           activeOptions={it.exact === false ? { exact: false } : undefined}
           title={tip}
           aria-label={tip}
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-primary font-medium" }}
+          activeProps={{ className: "bg-[var(--role-accent)] text-[var(--role-on)] font-medium" }}
           inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" }}
           className="relative flex items-center justify-center rounded-lg px-2 py-2.5 transition-colors"
         >
           <it.icon className="h-4 w-4 shrink-0" />
           {it.to === "/marketplace/pipeline" && <PipelineCountBadge collapsed />}
           {locked && (
-            <span className="absolute right-1 top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-accent text-accent-foreground">
+            <span data-mkt-badge data-rail className="absolute right-1 top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-accent text-accent-foreground">
               <Lock className="h-2 w-2" strokeWidth={3} />
             </span>
           )}
