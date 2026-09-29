@@ -55,7 +55,7 @@ export type PipelineRow = {
   legalAt: string | null;
   spaAt: string | null;
   paymentAt: string | null;
-  counterparty: { name: string; sub: string; person: string | null; verified: boolean };
+  counterparty: { name: string; sub: string; person: string | null; verified: boolean; logoUrl: string | null };
   askingPrice: number | null;
 };
 
@@ -158,7 +158,7 @@ export const listPipeline = createServerFn({ method: "GET" })
       : { data: [] };
     const hpMap = Object.fromEntries((hps ?? []).map((h: any) => [h.id, h]));
     const stIds = [...new Set(rows.map((r) => r.startup_id))];
-    const { data: sts } = stIds.length ? await sb.from("startups").select("id, startup_name, industry").in("id", stIds) : { data: [] };
+    const { data: sts } = stIds.length ? await sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : { data: [] };
     const stMap = Object.fromEntries((sts ?? []).map((s: any) => [s.id, s]));
     const buyerIds = [...new Set(rows.map((r) => r.buyer_user_id))];
     const names = await userNames(buyerIds);
@@ -177,6 +177,7 @@ export const listPipeline = createServerFn({ method: "GET" })
           sub: bv.buyer_type || "Buyer",
           person: names[r.buyer_user_id] ?? null,
           verified: bv.status === "verified",
+          logoUrl: null,
         }, asking);
       }
       const st = stMap[r.startup_id] ?? {};
@@ -186,6 +187,8 @@ export const listPipeline = createServerFn({ method: "GET" })
         sub: [st.industry, hp.region].filter(Boolean).join(" · "),
         person: null,
         verified: true,
+        // Identity stays hidden until the seller approves the NDA.
+        logoUrl: revealed ? st.logo_url ?? null : null,
       }, asking);
     });
     return items;
