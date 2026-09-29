@@ -280,9 +280,9 @@ export function suggestHeadline(s: ListingSource, o?: SuggestOpts) {
 }
 
 /** A brand-new anonymous description written from the profile, never from the company's own text. */
-export function suggestBusinessDescription(s: ListingSource) {
-  const a = activityProfile(s);
-  const terms = listingTerms(s);
+export function suggestBusinessDescription(s: ListingSource, o?: SuggestOpts) {
+  const a = applyGeo(activityProfile(s), o);
+  const terms = [...listingTerms(s), ...(o?.guard ?? [])];
   const where = a.geo ? ` based in ${a.geo}` : "";
   const since = a.decade ? `, operating since the ${a.decade}` : "";
   const sentences: string[] = [`A ${a.noun.toLowerCase()}${where}${since}.`];
