@@ -31,7 +31,7 @@ import {
   type HiddenProfileRow,
   type HiddenTextField,
 } from "@/lib/hidden-profile";
-import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, suggestHighlights, type ListingSource } from "@/lib/public-listing";
+import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, suggestHighlights, suggestCustomersSummary, type ListingSource } from "@/lib/public-listing";
 import { useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { cn } from "@/lib/utils";
 
