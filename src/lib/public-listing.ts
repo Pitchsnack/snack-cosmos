@@ -343,6 +343,34 @@ export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
   return [one, two, three].map((raw) => scrub(raw, terms));
 }
 
+/** Anonymous customer summary — buyer types and reach only, never client names. */
+export function suggestCustomersSummary(s: ListingSource, o?: SuggestOpts) {
+  const a = applyGeo(activityProfile(s), o);
+  const terms = [...listingTerms(s), ...(o?.guard ?? [])];
+  const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 4).map(lower);
+  const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
+
+  const first = [
+    buyers.length ? `The customer base is made up of ${listOf(buyers)} buyers` : "The customer base is made up of business buyers",
+    reach.length ? ` across ${listOf(reach)}` : a.geo ? ` in ${a.geo}` : "",
+  ].join("") + ".";
+  const second = a.products.length
+    ? `Most work is repeat business on ${listOf(a.products.slice(0, 3).map(lower))}, under supply arrangements rather than one-off orders.`
+    : `Most revenue comes from repeat accounts on ongoing supply arrangements rather than one-off orders.`;
+  const third = a.certs.length ? `Buyers are audited accounts that require ${listOf(a.certs)}.` : "";
+
+  let out = "";
+  for (const raw of [first, second, third]) {
+    const t = scrub(raw, terms);
+    if (!t || t === ".") continue;
+    const next = out ? `${out} ${t}` : t;
+    if (next.length > 420) continue;
+    out = next;
+  }
+  return out;
+}
+
+
 function listOf(items: string[]) {
   const v = items.map((x) => x.trim()).filter(Boolean);
   if (v.length <= 1) return v[0] ?? "";
