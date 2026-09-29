@@ -113,7 +113,76 @@ export const listReportOrders = createServerFn({ method: "GET" })
       if (fresh.length) await sb.from("report_order_events").insert(fresh.map((o: any) => ({ order_id: o.id, event: "overdue", actor_id: null,
         note: `Due ${fmtD(o.due_at)} · not published` })));
     }
-    return { orders };
+    // Report ready comes from the startup's own data, not the order.
+    const ids = [...new Set(orders.map((o: any) => o.startup_id))];
+    const ready: Record<string, { fin: string | null; val: string | null }> = {};
+    if (ids.length) {
+      const [{ data: fs }, { data: vs }] = await Promise.all([
+        sb.from("financial_statements").select("startup_id, created_at").in("startup_id", ids),
+        sb.from("valuation_settings").select("startup_id, created_at").in("startup_id", ids),
+      ]);
+      for (const r of fs ?? []) { const x = (ready[r.startup_id] ??= { fin: null, val: null }); if (!x.fin || r.created_at > x.fin) x.fin = r.created_at; }
+      for (const r of vs ?? []) { const x = (ready[r.startup_id] ??= { fin: null, val: null }); if (!x.val || r.created_at > x.val) x.val = r.created_at; }
+    }
+    const n = await names(sb, orders.map((o: any) => o.delivered_by));
+    return {
+      orders: orders.map((o: any) => {
+        const r = ready[o.startup_id];
+        const at = o.kind === "valuation" ? r?.val ?? (r?.fin && o.status !== "paid" ? r.fin : null) : r?.fin ?? null;
+        return { ...o, ready_at: at ?? (o.status !== "paid" ? o.generated_at : null), delivered_by_name: o.delivered_by ? n[o.delivered_by] ?? null : null };
+      }),
+    };
+  });
+
+/** Admin: Authorise seller — the order becomes delivered. Notification + History wait for finalise (after Undo window). */
+export const authoriseSeller = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ orderId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    await assertAdmin(ctx);
+    const sb = await admin();
+    const { data: prev } = await sb.from("report_orders").select("*").eq("id", data.orderId).single();
+    const now = new Date().toISOString();
+    const { data: o, error } = await sb.from("report_orders").update({ status: "delivered", delivered_at: now, delivered_by: ctx.userId,
+      generated_at: prev.generated_at ?? now, analyst_id: prev.analyst_id ?? ctx.userId }).eq("id", data.orderId).select("*").single();
+    if (error) throw new Error(error.message);
+    if (o.kind !== "valuation") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
+    return { prevStatus: prev.status as string };
+  });
+
+export const undoAuthorise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ orderId: z.string().uuid(), prevStatus: z.enum(["paid", "generated"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    await assertAdmin(ctx);
+    const sb = await admin();
+    const { data: o, error } = await sb.from("report_orders").update({ status: data.prevStatus, delivered_at: null, delivered_by: null })
+      .eq("id", data.orderId).select("*").single();
+    if (error) throw new Error(error.message);
+    if (o.kind !== "valuation") await sb.from("financial_statements").update({ verified_status: "draft" }).eq("startup_id", o.startup_id);
+    return { ok: true };
+  });
+
+/** After the Undo window: History event + seller notification (once). */
+export const finaliseAuthorise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ orderId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    await assertAdmin(ctx);
+    const sb = await admin();
+    const { data: o } = await sb.from("report_orders").select("*").eq("id", data.orderId).single();
+    if (o?.status !== "delivered") return { ok: false };
+    const { data: seen } = await sb.from("report_order_events").select("id").eq("order_id", o.id).eq("event", "published").maybeSingle();
+    if (seen) return { ok: true };
+    await sb.from("report_order_events").insert({ order_id: o.id, event: "published", actor_id: ctx.userId,
+      note: o.kind === "valuation" ? "Seller can see the valuation · seller notified" : "verified_status = verified · badge added · seller notified" });
+    if (o.ordered_by) await sb.from("notifications").insert({ user_id: o.ordered_by, notification_type: "approval",
+      title: "Your report is ready",
+      message: `Your ${o.kind === "valuation" ? "estimated valuation" : "verified financial report"} is ready. View it in My Financials and share it with buyers whose NDA you approved.` });
+    return { ok: true };
   });
 
 export const markReportGenerated = createServerFn({ method: "POST" })
