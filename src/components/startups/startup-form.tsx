@@ -754,7 +754,7 @@ export function StartupForm({
           r.regulatoryLicenses!
             .filter((l) => LICENCE_CATEGORIES.includes(l.category as LicenceCategory))
             .map((l) => ({ category: l.category as LicenceCategory, name: normaliseLicenceName(l.name) }))
-            .filter((l, i, arr) => !!l.name && arr.findIndex((x) => x.category === l.category && x.name.toLowerCase() === l.name.toLowerCase()) === i)
+            .filter((l, i, arr) => !!l.name && !isRegulatorOnly(l.name) && arr.findIndex((x) => x.category === l.category && x.name.toLowerCase() === l.name.toLowerCase()) === i)
             .slice(0, 10),
         ),
       ),
