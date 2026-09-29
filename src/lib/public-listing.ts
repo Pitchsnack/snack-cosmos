@@ -340,11 +340,7 @@ export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
     reach.length ? `across ${listOf(reach)} markets` : a.geo ? `in ${a.geo}` : "",
   ].filter(Boolean).join(" ");
 
-  return [one, two, three].map((raw) => {
-    let t = raw;
-    for (const h of [...findTermsIn(t, terms)].reverse()) t = t.slice(0, h.start) + t.slice(h.end);
-    return t.replace(/\s{2,}/g, " ").trim();
-  });
+  return [one, two, three].map((raw) => scrub(raw, terms));
 }
 
 function listOf(items: string[]) {
