@@ -210,10 +210,36 @@ export function activityProfile(s: ListingSource): ActivityProfile {
 const GEO_ADJ = (geo: string | null) =>
   !geo ? "" : /thai/i.test(geo) ? "Thai" : /asean|southeast/i.test(geo) ? "ASEAN" : titleCase(geo.split(",")[0].trim());
 
+/**
+ * geo: region shown in the public view (used instead of the exact city).
+ * guard: extra identity terms the generated text must never contain.
+ */
+export interface SuggestOpts {
+  geo?: string | null;
+  guard?: { term: string; reason: string }[];
+}
+
+/** Removes guarded identity terms and tidies the leftover punctuation. */
+function scrub(text: string, guard?: { term: string; reason: string }[]) {
+  let t = text;
+  if (guard?.length) for (const h of [...findTermsIn(t, guard)].reverse()) t = t.slice(0, h.start) + t.slice(h.end);
+  return t
+    .replace(/\s*,\s*,/g, ",")
+    .replace(/\b(in|across|of)\s*,\s*/gi, "$1 ")
+    .replace(/\b(in|across|based in)\s+(?=[.,]|$)/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,])/g, "$1")
+    .replace(/,\s*\./g, ".")
+    .trim()
+    .replace(/[,\s]+$/, "");
+}
+
+const applyGeo = (a: ActivityProfile, o?: SuggestOpts) => (o && o.geo !== undefined ? { ...a, geo: o.geo } : a);
+
 /** Sector-true, anonymous deal code names — e.g. "Project Thai Packaging". */
-export function suggestCodeNames(s: ListingSource): string[] {
-  const a = activityProfile(s);
-  const terms = listingTerms(s);
+export function suggestCodeNames(s: ListingSource, o?: SuggestOpts): string[] {
+  const a = applyGeo(activityProfile(s), o);
+  const terms = [...listingTerms(s), ...(o?.guard ?? [])];
   const geo = GEO_ADJ(a.geo);
   const qualifier = a.certs.length ? "Certified" : a.customerTypes[0] ? titleCase(a.customerTypes[0]) : "Industrial";
   const family = a.role === "Manufacturer" ? "Industries" : a.role === "Distributor" ? "Trading" : a.role === "Provider" ? "Services" : "Group";
@@ -235,8 +261,8 @@ export function suggestCodeNameFor(s: ListingSource, index = 0): string {
 }
 
 /** Descriptive, anonymous headline built from the business profile. */
-export function suggestHeadline(s: ListingSource) {
-  const a = activityProfile(s);
+export function suggestHeadline(s: ListingSource, o?: SuggestOpts) {
+  const a = applyGeo(activityProfile(s), o);
   const credential = a.certs.some((c) => /^ISO/i.test(c))
     ? "ISO-Certified"
     : a.certs.length
@@ -244,18 +270,19 @@ export function suggestHeadline(s: ListingSource) {
       : s.year_founded && new Date().getFullYear() - s.year_founded >= 10
         ? "Established"
         : "";
-  const geo = GEO_ADJ(a.geo);
+  const rawGeo = GEO_ADJ(a.geo);
+  const geo = rawGeo && !findTermsIn(rawGeo, o?.guard ?? []).length ? rawGeo : "";
   const audience = a.customerTypes[0] ? `Serving ${titleCase(a.customerTypes[0])} Clients` : "";
-  const parts = [credential, geo && !new RegExp(geo, "i").test(a.noun) ? geo : "", a.noun].filter(Boolean).join(" ");
-  const full = [parts, audience].filter(Boolean).join(" ");
+  const parts = scrub([credential, geo && !new RegExp(geo, "i").test(a.noun) ? geo : "", a.noun].filter(Boolean).join(" "), o?.guard);
+  const full = scrub([parts, audience].filter(Boolean).join(" "), o?.guard);
   const h = titleCase(full || "Established Business");
   return h.length > HEADLINE_MAX ? titleCase(parts).slice(0, HEADLINE_MAX).trimEnd() : h;
 }
 
 /** A brand-new anonymous description written from the profile, never from the company's own text. */
-export function suggestBusinessDescription(s: ListingSource) {
-  const a = activityProfile(s);
-  const terms = listingTerms(s);
+export function suggestBusinessDescription(s: ListingSource, o?: SuggestOpts) {
+  const a = applyGeo(activityProfile(s), o);
+  const terms = [...listingTerms(s), ...(o?.guard ?? [])];
   const where = a.geo ? ` based in ${a.geo}` : "";
   const since = a.decade ? `, operating since the ${a.decade}` : "";
   const sentences: string[] = [`A ${a.noun.toLowerCase()}${where}${since}.`];
@@ -276,15 +303,44 @@ export function suggestBusinessDescription(s: ListingSource) {
 
   let out = "";
   for (const raw of sentences) {
-    let t = raw;
-    for (const h of [...findTermsIn(t, terms)].reverse()) t = t.slice(0, h.start) + t.slice(h.end);
-    t = t.replace(/\s{2,}/g, " ").replace(/\s+\./g, ".").trim();
+    const t = `${scrub(raw, terms).replace(/\.$/, "")}.`;
     if (!t || t === ".") continue;
     const next = out ? `${out} ${t}` : t;
     if (next.length > DESCRIPTION_MAX) continue;
     out = next;
   }
   return out;
+}
+
+/**
+ * Three anonymous highlight bullets:
+ * 1. track record & scale, 2. capabilities & quality, 3. markets & clients.
+ */
+export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
+  const a = applyGeo(activityProfile(s), o);
+  const terms = [...listingTerms(s), ...(o?.guard ?? [])];
+  const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 3).map(lower);
+  const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
+
+  const one = [
+    a.decade ? `Operating since the ${a.decade}` : `Established ${a.noun.toLowerCase()}`,
+    a.employees ? `with ${a.employees.toLowerCase()}` : "",
+    a.geo ? `in ${a.geo}` : "",
+    a.revenue ? `and annual revenue of ${a.revenue}` : "",
+  ].filter(Boolean).join(" ");
+
+  const two = a.certs.length
+    ? `${listOf(a.certs)} ${a.role === "Manufacturer" ? "certified production" : "certified operations"}${a.products.length ? ` of ${listOf(a.products.map(lower))}` : ""}`
+    : a.products.length
+      ? `${titleCase(a.role)} of ${listOf(a.products.map(lower))}`
+      : `${a.noun} with in-house capability`;
+
+  const three = [
+    buyers.length ? `Serving ${listOf(buyers)} customers` : `Serving a repeat customer base`,
+    reach.length ? `across ${listOf(reach)} markets` : a.geo ? `in ${a.geo}` : "",
+  ].filter(Boolean).join(" ");
+
+  return [one, two, three].map((raw) => scrub(raw, terms));
 }
 
 function listOf(items: string[]) {
