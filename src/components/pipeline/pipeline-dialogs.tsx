@@ -147,12 +147,22 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
         <DownloadBtn allowed={!sample && (seller || p.reportAllowDownload)} reason={sample ? "Download is available once your own report is delivered" : "The seller has not allowed downloads for this report"} />
         <CloseX onClose={onClose} />
       </div>
-      <div className="flex gap-5 border-b border-[#F0F1F4] px-6">
-        <button onClick={() => setTab("fin")} className={cn("-mb-px border-b-2 py-2.5 text-[13.5px] font-semibold", tab === "fin" ? "border-[#111827]" : "border-transparent text-[#6B7280]")}>Financial report</button>
-        <button disabled={!data?.valuationShared} onClick={() => setTab("val")}
-          className={cn("-mb-px border-b-2 py-2.5 text-[13.5px] font-semibold", tab === "val" ? "border-[#111827]" : "border-transparent text-[#6B7280]", !data?.valuationShared && "cursor-not-allowed text-[#9CA3AF]")}>
-          Estimated valuation{!data?.valuationShared && <span className="ml-1.5 text-[11px] font-medium">not shared</span>}
-        </button>
+      <div className="px-6 pt-4">
+        <div role="tablist" onKeyDown={tabArrowNav} className="inline-flex gap-1 rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[5px]">
+          {([["fin", "Financial report"], ["val", "Estimated valuation"]] as const).map(([k, l]) => {
+            const off = k === "val" && !data?.valuationShared;
+            const on = tab === k;
+            return (
+              <button key={k} type="button" role="tab" aria-selected={on} aria-disabled={off || undefined} disabled={off} tabIndex={on ? 0 : -1}
+                onClick={() => !off && setTab(k)}
+                className={cn("flex h-[38px] items-center gap-1.5 whitespace-nowrap rounded-[7px] px-[14px] text-[13px] font-medium",
+                  on ? "bg-[#F6A823] text-[#0E162F] shadow-[0_1px_2px_rgba(15,23,42,.10)] ring-1 ring-[#DD971F]"
+                    : off ? "cursor-not-allowed text-[#A0A7B4]" : "text-[#5B6576] hover:bg-[#E6EBF3] hover:text-[#0F1B33]")}>
+                {l}{off && <span className="rounded-full bg-[#E7EBF2] px-[7px] py-px text-[10px] font-semibold text-[#6A7181]">not shared</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="relative min-h-0 flex-1 overflow-y-auto px-6 pb-6">
         <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden">
@@ -240,12 +250,15 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
             };
             return (
               <>
-                <div className="sticky top-0 z-10 -mx-6 mb-1 flex gap-4 border-b border-[#F0F1F4] bg-white/95 px-6 backdrop-blur">
-                  {([["summary", "Summary"], ["methods", "Methods"], ["adjustments", "Earnings adjustments"], ["peers", "Peer benchmarking"]] as const).map(([k, l]) => (
-                    <button key={k} onClick={() => setValTab(k)}
-                      className={cn("-mb-px border-b-2 py-2.5 text-[13px] font-semibold", valTab === k ? "border-[#B45309] text-[#B45309]" : "border-transparent text-[#6B7280]")}>{l}</button>
-                  ))}
+                <div className="sticky top-0 z-10 -mx-6 mb-1 border-b border-[#EAECEF] bg-white px-6 pb-[14px] pt-[10px]">
+                  <div role="tablist" onKeyDown={tabArrowNav} className="inline-flex gap-0.5 rounded-[9px] border border-[#DCE3EF] bg-white p-[3px]">
+                    {([["summary", "Summary"], ["methods", "Methods"], ["adjustments", "Earnings adjustments"], ["peers", "Peer benchmarking"]] as const).map(([k, l]) => (
+                      <button key={k} type="button" role="tab" aria-selected={valTab === k} tabIndex={valTab === k ? 0 : -1} onClick={() => setValTab(k)}
+                        className={cn("h-[30px] whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-medium", valTab === k ? "bg-[#F6A823] text-[#0E162F] shadow-[inset_0_0_0_1px_#DD971F]" : "text-[#5B6576] hover:bg-[#F1F4F9]")}>{l}</button>
+                    ))}
+                  </div>
                 </div>
+
 
                 {valTab === "summary" && (
                   <>
@@ -774,4 +787,13 @@ export function SellerProfile({ p, onClose, onNda, onLoi, onReport, onAsk }: { p
       </div>
     </Shell>
   );
+}
+
+/** Left/right arrow keys move between the enabled tabs of a tablist. */
+function tabArrowNav(e: React.KeyboardEvent<HTMLDivElement>) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const tabs = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]:not([disabled])'));
+  const i = tabs.indexOf(document.activeElement as HTMLButtonElement);
+  const next = tabs[(i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
+  if (next) { e.preventDefault(); next.focus(); next.click(); }
 }
