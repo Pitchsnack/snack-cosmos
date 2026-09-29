@@ -17,7 +17,7 @@ export function isPending(p: PipelineRow) {
 export function waitState(p: PipelineRow, seller: boolean): { onYou: boolean; what: string } {
   if (p.paymentAt) return { onYou: false, what: "deal completed" };
   if (seller) {
-    if (p.reportRequestedAt && !p.reportSharedAt) return { onYou: true, what: "share the financial report" };
+    if (p.reportRequestedAt && !p.share && (p.reports?.financials || p.reports?.valuation)) return { onYou: true, what: "share the financial report" };
     if (p.loiSentAt && !p.loiAcceptedAt) return { onYou: true, what: "review the letter of intent" };
     if (!p.loiSentAt) return { onYou: false, what: "letter of intent" };
     if (!p.legalAt) return { onYou: true, what: "share the legal folder" };
