@@ -66,6 +66,11 @@ export type PipelineRow = {
   parties: { sellerCompany: string; codeName: string | null; buyerOrg: string; buyerName: string | null; sellerName: string | null };
   counterparty: { name: string; sub: string; person: string | null; verified: boolean; logoUrl: string | null };
   askingPrice: number | null;
+  /** Active seller share (null when none / revoked). */
+  share: { financials: boolean; valuation: boolean; allowDownload: boolean; sharedAt: string } | null;
+  revokedAt: string | null;
+  /** Reports Admin has authorised for this business (buyer: only what's shared). */
+  reports: { financials: boolean; valuation: boolean };
 };
 
 function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: number | null, parties: PipelineRow["parties"], names: Record<string, string> = {}): PipelineRow {
@@ -99,6 +104,9 @@ function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: numbe
     parties,
     counterparty,
     askingPrice: asking,
+    share: null,
+    revokedAt: null,
+    reports: { financials: false, valuation: false },
   };
 }
 
@@ -228,6 +236,23 @@ export const listPipeline = createServerFn({ method: "GET" })
         logoUrl: revealed && st.logo_url ? (signedLogos[st.logo_url] ?? (/^https?:\/\//.test(st.logo_url) ? st.logo_url : null)) : null,
       }, asking, parties, names);
     });
+    // Report sharing state (server-only tables).
+    const { deliveredKinds, ndaActive } = await import("./report-shares.server");
+    const pipeIds = rows.map((r) => r.id);
+    const { data: shares } = pipeIds.length ? await sb.from("report_shares").select("*").in("pipeline_id", pipeIds).order("shared_at", { ascending: false }) : { data: [] };
+    const dk: Record<string, Awaited<ReturnType<typeof deliveredKinds>>> = {};
+    for (const id of stIds) dk[id] = await deliveredKinds(sb, id);
+    items.forEach((it, i) => {
+      const r = rows[i];
+      const mine = (shares ?? []).filter((x: any) => x.pipeline_id === r.id);
+      const act = mine.find((x: any) => !x.revoked_at);
+      const d = dk[r.startup_id];
+      const live = !!act && ndaActive(r);
+      it.share = live ? { financials: act.financials && d.financials, valuation: act.valuation && d.valuation, allowDownload: act.allow_download, sharedAt: act.shared_at } : null;
+      it.revokedAt = !act && mine[0]?.revoked_at ? mine[0].revoked_at : null;
+      it.reports = data.as === "seller" ? { financials: d.financials, valuation: d.valuation } : { financials: !!it.share?.financials, valuation: !!it.share?.valuation };
+      if (data.as === "buyer" && !it.share) it.reportSharedAt = null;
+    });
     return items;
   });
 
@@ -245,21 +270,40 @@ export const decideNda = createServerFn({ method: "POST" })
       await log(p.id, "nda_declined", context.userId);
       return { ok: true };
     }
-    await update(p.id, { nda_approved_at: now, nda_expires_at: new Date(Date.now() + 730 * 86_400_000).toISOString(), ...(data.shareReport ? { report_shared_at: now } : {}) });
+    await update(p.id, { nda_approved_at: now, nda_expires_at: new Date(Date.now() + 730 * 86_400_000).toISOString() });
     await log(p.id, "nda_approved", context.userId);
-    if (data.shareReport) await log(p.id, "report_shared", context.userId);
+    if (data.shareReport) {
+      const { saveShare } = await import("./report-shares.server");
+      try {
+        await saveShare(await admin(), await load(p.id), context.userId, { financials: true, valuation: true, allowDownload: false });
+        await log(p.id, "report_shared", context.userId);
+      } catch { /* no authorised report yet — seller can share later */ }
+    }
     return { ok: true };
   });
 
 export const shareReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.extend({ financials: z.boolean().default(true), valuation: z.boolean().default(false), allowDownload: z.boolean().default(false) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const p = await load(data.id);
+    await assertSeller(context, p.startup_id);
+    const { saveShare, activeShare } = await import("./report-shares.server");
+    const had = await activeShare(await admin(), p.id);
+    await saveShare(await admin(), p, context.userId, data);
+    await log(p.id, had ? "report_share_changed" : "report_shared", context.userId);
+    return { ok: true };
+  });
+
+export const revokeReportShare = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.parse(d))
   .handler(async ({ data, context }) => {
     const p = await load(data.id);
     await assertSeller(context, p.startup_id);
-    if (!p.nda_approved_at) throw new Error("Approve the NDA first");
-    await update(p.id, { report_shared_at: new Date().toISOString() });
-    await log(p.id, "report_shared", context.userId);
+    const { revokeShare } = await import("./report-shares.server");
+    await revokeShare(await admin(), p, context.userId);
+    await log(p.id, "report_revoked", context.userId);
     return { ok: true };
   });
 
@@ -396,13 +440,15 @@ export const getPipelineReport = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const p = await load(data.id);
     const role = await assertParty(context, p);
-    if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
-    if (!p.report_shared_at) throw new Error("The report has not been shared");
     if (role === "buyer") {
+      const { assertBuyerAccess } = await import("./report-shares.server");
+      const { share } = await assertBuyerAccess(await admin(), p, "any");
       await update(p.id, { report_viewed_at: new Date().toISOString() });
       await log(p.id, "report_viewed", context.userId);
+      const r = await buildReport(p.startup_id);
+      return { ...r, valuationShared: r.valuationShared && share.valuation, allowDownload: share.allow_download };
     }
-    return buildReport(p.startup_id);
+    return { ...(await buildReport(p.startup_id)), allowDownload: true };
   });
 
 /** Buyer: every received report side by side. */
@@ -412,8 +458,13 @@ export const compareReports = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: rows } = await sb.from("deal_pipelines").select("id, startup_id").eq("buyer_user_id", context.userId)
       .not("nda_approved_at", "is", null).not("report_shared_at", "is", null).neq("status", "declined");
+    const { assertBuyerAccess } = await import("./report-shares.server");
     const out: Record<string, ReportData> = {};
-    for (const r of rows ?? []) out[r.id] = await buildReport(r.startup_id);
+    for (const r of rows ?? []) {
+      const full = await load(r.id);
+      try { await assertBuyerAccess(sb, full, "financials"); } catch { continue; }
+      out[r.id] = await buildReport(r.startup_id);
+    }
     return out;
   });
 
