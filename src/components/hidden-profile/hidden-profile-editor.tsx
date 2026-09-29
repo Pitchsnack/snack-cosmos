@@ -71,6 +71,7 @@ export function HiddenProfileEditor({
   const headlineIdea = useMemo(() => (source ? suggestHeadline(source, opts) : ""), [source, opts]);
   const descIdea = useMemo(() => (source ? suggestBusinessDescription(source, opts) : ""), [source, opts]);
   const highlightIdeas = useMemo(() => (source ? suggestHighlights(source, opts).filter(Boolean) : []), [source, opts]);
+  const customersIdea = useMemo(() => (source ? suggestCustomersSummary(source, opts) : ""), [source, opts]);
   const fillHighlights = () =>
     set("highlights", d.highlights.map((h, i) => highlightIdeas[i] ?? h));
   const fillAll = () =>
@@ -80,6 +81,7 @@ export function HiddenProfileEditor({
       headline: headlineIdea || p.headline,
       description: descIdea || p.description,
       highlights: p.highlights.map((h, i) => highlightIdeas[i] ?? h),
+      customers_summary: customersIdea || p.customers_summary,
     }));
 
   // On first load of a listing, empty public fields are pre-filled with the
@@ -96,8 +98,17 @@ export function HiddenProfileEditor({
       headline: p.headline.trim() ? p.headline : headlineIdea,
       description: p.description.trim() ? p.description : descIdea,
       highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
+      customers_summary: p.customers_summary.trim() ? p.customers_summary : customersIdea,
     }));
-  }, [row.id, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, prefilled]);
+  }, [row.id, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, customersIdea, prefilled]);
+
+  /** Small "Suggest" button shown beside a field label. */
+  const SuggestBtn = ({ onClick, label = "Suggest" }: { onClick: () => void; label?: string }) => (
+    <button type="button" onClick={onClick} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11.5px] font-semibold text-profile hover:bg-muted">
+      <Sparkles className="h-3.5 w-3.5 shrink-0" />{label}
+    </button>
+  );
+
 
 
 
