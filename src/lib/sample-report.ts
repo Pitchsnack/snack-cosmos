@@ -84,10 +84,42 @@ export function makeSampleReport(): SampleReportData {
     r("debt_to_equity_ratio", "Debt to Equity Ratio (times)", last.liab / last.equity, "times"),
     r("debt_to_capital_ratio", "Debt to Capital Ratio (times)", last.liab / (last.liab + last.equity), "times"),
   ];
+  const lastYear = years[years.length - 1]!;
+  const lastCash = cash[lastYear]!;
+  const lastDebt = debt[lastYear]!;
+
+  // Earnings normalisation — reported EBITDA adjusted to a buyer-ready figure.
+  const earnings = [
+    { label: "Owner salary above market", amount: last.rev * rnd(0.004, 0.011), note: "Founder pay restated at a market rate for the role" },
+    { label: "Related-party rent", amount: last.rev * rnd(0.002, 0.006), note: "Premises rented from a shareholder, restated at market rent" },
+    { label: "One-off legal and advisory", amount: last.rev * rnd(0.001, 0.004), note: "Non-recurring costs in FY25, added back" },
+    { label: "Private motor and travel", amount: -last.rev * rnd(0.0005, 0.002), note: "Personal expenses removed from the business" },
+  ].map((a) => ({ ...a, amount: Math.round(a.amount) }));
+  const reportedEbitda = Math.round(last.ebitda);
+  const normalisedEbitda = reportedEbitda + earnings.reduce((s, a) => s + a.amount, 0);
+
   const mult = rnd(7, 10.5);
-  const mid = last.ebitda * mult;
+  const ev = normalisedEbitda * mult;
+  const discounts = [
+    { label: "Size discount", pct: Math.round(rnd(6, 12)), note: "Smaller than the listed peer set" },
+    { label: "Illiquidity discount", pct: Math.round(rnd(8, 15)), note: "Private shares, no ready market" },
+    { label: "Key-person dependency", pct: Math.round(rnd(3, 7)), note: "Founder holds the main customer relationships" },
+    { label: "Recurring revenue premium", pct: -Math.round(rnd(3, 6)), note: "Contracted revenue above the peer average" },
+  ];
+  const factor = discounts.reduce((f, d) => f * (1 - d.pct / 100), 1);
+  const equityBefore = ev - lastDebt + lastCash;
+  const mid = equityBefore * factor;
   const low = mid * 0.84, high = mid * 1.17;
   const company = `Project ${pick(NAMES)} ${pick(SUFFIX)}`;
+  const peerMult = [mult - rnd(1.5, 2.5), mult, mult + rnd(1.5, 3)];
+  const peers = ["Siam Vertex PCL", "Chao Phraya Industries", "Asia Meridian Group", "Bangkok Nexus PCL", "Gulf Orchid Holdings"].map((name, i) => ({
+    name,
+    revenue: Math.round(last.rev * rnd(0.6, 2.4)),
+    growth: Math.round(rnd(4, 22) * 10) / 10,
+    ebitdaMargin: Math.round(rnd(9, 22) * 10) / 10,
+    netMargin: Math.round(rnd(4, 14) * 10) / 10,
+    evEbitda: Math.round((peerMult[i % 3]! + rnd(-0.8, 0.8)) * 10) / 10,
+  }));
   return {
     company, sector: pick(SECTORS), cash, debt,
     data: {
@@ -102,13 +134,34 @@ export function makeSampleReport(): SampleReportData {
       },
     },
     valuation: {
-      low, mid, high,
+      low, mid, high, ev, reportedEbitda, normalisedEbitda, earnings, discounts, peers,
       methods: [
-        { method: "Comparable transactions", basis: "6 Thai deals 2024–26", rate: `${(mult - 1).toFixed(1)}× – ${(mult + 1).toFixed(1)}× EBITDA`, value: `${fmtM(last.ebitda * (mult - 1))} – ${fmtM(last.ebitda * (mult + 1))}` },
-        { method: "EV / Revenue", basis: `FY25 revenue ${fmtM(last.rev)}`, rate: `${((low / last.rev)).toFixed(1)}× – ${((high / last.rev)).toFixed(1)}×`, value: `${fmtM(low)} – ${fmtM(high)}` },
-        { method: "Discounted cash flow", basis: "5-year plan, 14% WACC", rate: "Terminal growth 3%", value: `${fmtM(mid * 0.94)} – ${fmtM(mid * 1.05)}` },
+        { method: "Listed peer multiples", basis: `5 SET peers · normalised EBITDA ${fmtM(normalisedEbitda)}`, rate: `${mult.toFixed(1)}× EBITDA`, value: fmtM(ev), weight: "45%", confidence: "High" },
+        { method: "Comparable transactions", basis: "6 Thai deals 2024–26", rate: `${(mult - 1).toFixed(1)}× – ${(mult + 1).toFixed(1)}× EBITDA`, value: `${fmtM(normalisedEbitda * (mult - 1))} – ${fmtM(normalisedEbitda * (mult + 1))}`, weight: "30%", confidence: "Medium" },
+        { method: "EV / Revenue cross-check", basis: `FY25 revenue ${fmtM(last.rev)}`, rate: `${(ev / last.rev).toFixed(1)}×`, value: `${fmtM(low)} – ${fmtM(high)}`, weight: "15%", confidence: "Medium" },
+        { method: "Discounted cash flow", basis: "5-year plan, 14% WACC", rate: "Terminal growth 3%", value: `${fmtM(mid * 0.94)} – ${fmtM(mid * 1.05)}`, weight: "10%", confidence: "Low" },
+        { method: "Net asset value", basis: `Equity ${fmtM(last.equity)}`, rate: "1.0× book", value: fmtM(last.equity), weight: "Sense check", confidence: "Low" },
       ],
-      adjustments: ["Key-person dependency (−5%)", "Customer concentration (−3%)", "Brand and recurring revenue (+4%)"],
+      multiples: [
+        { metric: "EV / EBITDA", company: `${mult.toFixed(1)}×`, peerLow: `${peerMult[0]!.toFixed(1)}×`, peerMedian: `${peerMult[1]!.toFixed(1)}×`, peerHigh: `${peerMult[2]!.toFixed(1)}×`, implied: fmtM(ev) },
+        { metric: "EV / Revenue", company: `${(ev / last.rev).toFixed(1)}×`, peerLow: `${(ev / last.rev * 0.7).toFixed(1)}×`, peerMedian: `${(ev / last.rev * 0.95).toFixed(1)}×`, peerHigh: `${(ev / last.rev * 1.4).toFixed(1)}×`, implied: fmtM(ev) },
+        { metric: "P / E", company: `${(mid / last.net).toFixed(1)}×`, peerLow: `${(mid / last.net * 0.75).toFixed(1)}×`, peerMedian: `${(mid / last.net * 1.02).toFixed(1)}×`, peerHigh: `${(mid / last.net * 1.35).toFixed(1)}×`, implied: fmtM(mid) },
+        { metric: "P / B", company: `${(mid / last.equity).toFixed(1)}×`, peerLow: `${(mid / last.equity * 0.7).toFixed(1)}×`, peerMedian: `${(mid / last.equity * 1.05).toFixed(1)}×`, peerHigh: `${(mid / last.equity * 1.5).toFixed(1)}×`, implied: fmtM(mid) },
+      ],
+      bridge: [
+        { label: "Enterprise value", value: ev, kind: "start" },
+        { label: "Less: interest-bearing debt", value: -lastDebt, kind: "less" },
+        { label: "Add: cash and equivalents", value: lastCash, kind: "add" },
+        { label: "Equity value before discounts", value: equityBefore, kind: "total" },
+        { label: "Discounts and premium applied", value: mid - equityBefore, kind: "less" },
+        { label: "Equity value · midpoint", value: mid, kind: "total" },
+      ],
+      notes: [
+        "Normalised EBITDA is used throughout; reported EBITDA is restated for owner pay, related-party rent and one-off costs.",
+        "The listed peer set is matched on sector and business model, then screened for size and profitability.",
+        "The asking price remains the seller's. This range is an independent estimate by PitchSnack analysts.",
+      ],
     },
   };
+
 }
