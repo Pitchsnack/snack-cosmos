@@ -243,6 +243,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 </div>
               )}
               </>)}
+              {finTab === "overview" && (<>
               <Caption>Analyst notes</Caption>
               {sample ? (
                 <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
