@@ -144,10 +144,16 @@ export function HiddenProfileEditor({
           )}
           <Field label={`Headline (${d.headline.length}/120)`}>
             <Input id="hp-headline" maxLength={120} value={d.headline} onChange={(e) => set("headline", e.target.value)} className={flagCls("headline")} />
+            {headlineIdea && d.headline.trim() !== headlineIdea && (
+              <button type="button" onClick={() => set("headline", headlineIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Use: {headlineIdea}</button>
+            )}
             <Msg k="headline" />
           </Field>
           <Field label={`Description (${d.description.length}/420)`}>
             <Textarea id="hp-description" maxLength={420} rows={4} value={d.description} onChange={(e) => set("description", e.target.value)} className={flagCls("description")} />
+            {descIdea && d.description.trim() !== descIdea && (
+              <button type="button" onClick={() => set("description", descIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Write it for me (no names)</button>
+            )}
             <Msg k="description" />
           </Field>
           <Field label="Highlights (3 required)">
