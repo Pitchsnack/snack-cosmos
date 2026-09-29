@@ -2623,6 +2623,62 @@ export type Database = {
           },
         ]
       }
+      private_notes: {
+        Row: {
+          direction: string
+          edited_at: string | null
+          generated: Json
+          generated_at: string
+          id: string
+          listing_id: string | null
+          my_notes: string | null
+          overrides: Json
+          owner_org_id: string
+          pipeline_id: string
+          subject_org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          direction: string
+          edited_at?: string | null
+          generated?: Json
+          generated_at?: string
+          id?: string
+          listing_id?: string | null
+          my_notes?: string | null
+          overrides?: Json
+          owner_org_id: string
+          pipeline_id: string
+          subject_org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          direction?: string
+          edited_at?: string | null
+          generated?: Json
+          generated_at?: string
+          id?: string
+          listing_id?: string | null
+          my_notes?: string | null
+          overrides?: Json
+          owner_org_id?: string
+          pipeline_id?: string
+          subject_org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_notes_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_order_events: {
         Row: {
           actor_id: string | null

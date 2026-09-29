@@ -183,6 +183,13 @@
       "when": 1790687861009,
       "tag": "0025_marketplace_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790711264403,
+      "tag": "0026_private_notes",
+      "breakpoints": true
     }
   ]
 }
