@@ -113,7 +113,12 @@ export function makeSampleReport(): SampleReportData {
   const equityBefore = ev - lastDebt + lastCash;
   const mid = equityBefore * factor;
   const low = mid * 0.84, high = mid * 1.17;
-  const company = `Project ${pick(NAMES)} ${pick(SUFFIX)}`;
+  const brand = `${pick(NAMES)} ${pick(SUFFIX)}`;
+  const company = `Project ${brand}`;
+  const legalName = `${brand} (Thailand) Co., Ltd.`;
+  const people = pickMany(FIRST, 6).map((f, i) => `${f} ${pickMany(LAST, 6)[i]}`);
+  const directorNames = people.slice(0, 3);
+  const shareholderNames = [legalName.replace(" Co., Ltd.", " Holdings Co., Ltd."), people[3]!, people[4]!];
   const peerMult = [mult - rnd(1.5, 2.5), mult, mult + rnd(1.5, 3)];
   const peers = ["Siam Vertex PCL", "Chao Phraya Industries", "Asia Meridian Group", "Bangkok Nexus PCL", "Gulf Orchid Holdings"].map((name, i) => ({
     name,
