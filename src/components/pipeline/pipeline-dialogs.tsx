@@ -57,6 +57,7 @@ function Shell({ width, onClose, children, label }: { width: number; onClose: ()
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         aria-label={label}
+        onOpenAutoFocus={(e) => e.preventDefault()}
         style={{ maxWidth: width }}
         className="flex max-h-[calc(100vh-64px)] w-[calc(100vw-32px)] flex-col gap-0 overflow-hidden rounded-[16px] border-0 bg-white p-0 font-['DM_Sans',system-ui,sans-serif] text-[#111827] shadow-[0_30px_70px_rgba(16,24,40,.28)] sm:rounded-[16px] [&>button:last-child]:hidden"
       >
