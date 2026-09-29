@@ -270,10 +270,11 @@ export function suggestHeadline(s: ListingSource, o?: SuggestOpts) {
       : s.year_founded && new Date().getFullYear() - s.year_founded >= 10
         ? "Established"
         : "";
-  const geo = GEO_ADJ(a.geo);
+  const rawGeo = GEO_ADJ(a.geo);
+  const geo = rawGeo && !findTermsIn(rawGeo, o?.guard ?? []).length ? rawGeo : "";
   const audience = a.customerTypes[0] ? `Serving ${titleCase(a.customerTypes[0])} Clients` : "";
-  const parts = [credential, geo && !new RegExp(geo, "i").test(a.noun) ? geo : "", a.noun].filter(Boolean).join(" ");
-  const full = [parts, audience].filter(Boolean).join(" ");
+  const parts = scrub([credential, geo && !new RegExp(geo, "i").test(a.noun) ? geo : "", a.noun].filter(Boolean).join(" "), o?.guard);
+  const full = scrub([parts, audience].filter(Boolean).join(" "), o?.guard);
   const h = titleCase(full || "Established Business");
   return h.length > HEADLINE_MAX ? titleCase(parts).slice(0, HEADLINE_MAX).trimEnd() : h;
 }
