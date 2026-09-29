@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronDown, ChevronRight, Lock } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Columns3, Lock } from "lucide-react";
 
 // Open/closed Tracking cards persist across tab/role switches; reset on reload.
 let sessionOpen = new Set<string>();
@@ -15,9 +15,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePersona } from "@/hooks/use-marketplace";
 import {
-  listPipeline, decideNda, decideLoi, shareReport, askForReport, sendLoi, shareStep, pipelineEvents,
+  listPipeline, decideNda, shareReport, askForReport, sendLoi, shareStep, pipelineEvents,
   type PipelineRow,
 } from "@/lib/pipeline.functions";
+import { STEPS, currentStep, isPending, waitState } from "@/lib/pipeline-state";
+import { ReportViewer, CompareReports, InvestorProfile, NdaDialog, LoiDialog as LoiDocDialog, shortDate } from "@/components/pipeline/pipeline-dialogs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_authenticated/marketplace/pipeline")({
   head: () => ({
@@ -33,16 +36,6 @@ export const Route = createFileRoute("/_authenticated/marketplace/pipeline")({
   component: PipelinePage,
 });
 
-const STEPS = ["NDA", "Financial & Valuation", "Letter of intent", "Contact M&A", "Legal", "Offer & SPA", "Payment"] as const;
-
-function stepDates(p: PipelineRow) {
-  return [p.ndaApprovedAt, p.reportSharedAt, p.loiAcceptedAt, p.contactAt, p.legalAt, p.spaAt, p.paymentAt];
-}
-function currentStep(p: PipelineRow) {
-  const d = stepDates(p);
-  const i = d.findIndex((x) => !x);
-  return i === -1 ? STEPS.length : i;
-}
 export function money(n: number | null | undefined) {
   if (n == null) return "—";
   if (n >= 1e9) return `฿${+(n / 1e9).toFixed(2)}B`;
@@ -55,10 +48,6 @@ function day(s: string | null) {
 function initials(s: string) {
   return s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 }
-function isPending(p: PipelineRow) {
-  return !p.ndaApprovedAt || (!!p.loiSentAt && !p.loiAcceptedAt);
-}
-
 function Avatar({ name, tone = "violet", logoUrl }: { name: string; tone?: "violet" | "orange"; logoUrl?: string | null }) {
   const [broken, setBroken] = useState(false);
   if (logoUrl && !broken) {
@@ -144,19 +133,68 @@ function PipelinePage() {
       ) : tab === "pending" ? (
         seller ? <SellerPending rows={pending} /> : <BuyerPending rows={pending} />
       ) : (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-[13px] text-muted-foreground">One card per {seller ? "buyer" : "business"}. Click a card to see each step; click again to fold it back to the timeline.</p>
-            {tracking.length > 0 && (
-              <button className="shrink-0 text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setOpenIds(allOpen ? [] : tracking.map((p) => p.id))}>
-                {allOpen ? "Collapse all" : "Expand all"}
-              </button>
-            )}
-          </div>
-          {tracking.length === 0 && <Empty text={seller ? "No buyers past the NDA yet." : "No seller has approved your NDA yet."} />}
-          {tracking.map((p) => <TrackingCard key={p.id} p={p} seller={seller} open={openIds.includes(p.id)} onToggle={() => toggle(p.id)} />)}
-        </div>
+        <TrackingList tracking={tracking} seller={seller} openIds={openIds} setOpenIds={setOpenIds} toggle={toggle} allOpen={allOpen} />
       )}
+    </div>
+  );
+}
+
+function TrackingList({ tracking, seller, openIds, setOpenIds, toggle, allOpen }: {
+  tracking: PipelineRow[]; seller: boolean; openIds: string[]; setOpenIds: (ids: string[]) => void; toggle: (id: string) => void; allOpen: boolean;
+}) {
+  const [filter, setFilter] = useState<"all" | "you" | "other">("all");
+  const [sort, setSort] = useState<"step" | "recent">("step");
+  const [compare, setCompare] = useState(false);
+  const [viewing, setViewing] = useState<PipelineRow | null>(null);
+  const you = tracking.filter((p) => waitState(p, seller).onYou);
+  const other = tracking.filter((p) => !waitState(p, seller).onYou);
+  const list = (filter === "you" ? you : filter === "other" ? other : tracking).slice().sort((a, b) =>
+    sort === "step" && currentStep(b) !== currentStep(a) ? currentStep(b) - currentStep(a) : +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  const received = tracking.filter((p) => p.reportSharedAt).length;
+  const pills: [typeof filter, string, number][] = [["all", "All", tracking.length], ["you", "Waiting on you", you.length], ["other", seller ? "Waiting on the buyer" : "Waiting on the seller", other.length]];
+  const cmpBtn = (
+    <button disabled={received < 2} onClick={() => setCompare(true)} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#2563EB] disabled:opacity-50">
+      <Columns3 className="h-4 w-4" />Compare reports {received}
+    </button>
+  );
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex rounded-[10px] border border-[#E5E7EB] bg-white p-[3px]">
+          {pills.map(([k, label, n]) => {
+            const on = filter === k; const red = k === "you" && n > 0;
+            return (
+              <button key={k} onClick={() => setFilter(k)} className={cn("flex h-[30px] items-center gap-1.5 rounded-[7px] px-3 text-[13px] font-semibold", on ? "bg-[#111827] text-white" : "text-[#374151]")}>
+                {label}
+                <span className={cn("rounded-full px-1.5 text-[11px] font-bold",
+                  red ? (on ? "bg-[#DC2626] text-white" : "bg-[#FEE2E2] text-[#B91C1C]") : on ? "bg-white/15 text-white" : "bg-[#F3F4F6] text-[#4B5563]")}>{n}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="ml-auto flex items-center gap-3">
+          <label className="flex items-center gap-2 text-[12.5px] text-[#6B7280]">Sort
+            <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-[30px] rounded-[8px] border border-[#E5E7EB] bg-white px-2 text-[12.5px] font-semibold text-[#111827]">
+              <option value="step">Furthest step first</option>
+              <option value="recent">Recently updated</option>
+            </select>
+          </label>
+          {!seller && (received < 2
+            ? <Tooltip><TooltipTrigger asChild><span tabIndex={0}>{cmpBtn}</span></TooltipTrigger><TooltipContent>Available when you have 2 or more reports</TooltipContent></Tooltip>
+            : cmpBtn)}
+          {!seller && <span className="h-4 w-px bg-[#E5E7EB]" />}
+          {tracking.length > 0 && (
+            <button className="shrink-0 text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setOpenIds(allOpen ? [] : tracking.map((p) => p.id))}>
+              {allOpen ? "Collapse all" : "Expand all"}
+            </button>
+          )}
+        </div>
+      </div>
+      {tracking.length === 0 && <Empty text={seller ? "No buyers past the NDA yet." : "No seller has approved your NDA yet."} />}
+      {tracking.length > 0 && list.length === 0 && <Empty text="No cards match this filter." />}
+      {list.map((p) => <TrackingCard key={p.id} p={p} seller={seller} open={openIds.includes(p.id)} onToggle={() => toggle(p.id)} />)}
+      {compare && <CompareReports rows={tracking} onOpen={(p) => setViewing(p)} onClose={() => setCompare(false)} />}
+      {viewing && <ReportViewer p={viewing} seller={false} onClose={() => setViewing(null)} />}
     </div>
   );
 }
@@ -300,35 +338,19 @@ function NdaDecision({ p }: { p: PipelineRow }) {
 }
 
 function LoiDecision({ p }: { p: PipelineRow }) {
-  const decide = useServerFn(decideLoi);
-  const refresh = useRefresh();
-  const [busy, setBusy] = useState(false);
-  const run = async (accept: boolean) => {
-    setBusy(true);
-    try { await decide({ data: { id: p.id, accept } }); toast.success(accept ? "Letter of intent accepted" : "Letter of intent declined"); refresh(); }
-    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-  };
+  const [review, setReview] = useState(false);
   return (
     <div className="space-y-4 rounded-[14px] border bg-card p-5">
       <PanelHead p={p}>
-        <Button variant="outline" disabled={busy} onClick={() => run(false)}>Decline</Button>
-        <Button disabled={busy} onClick={() => run(true)}>Accept LOI</Button>
+        <Button onClick={() => setReview(true)}>Review LOI</Button>
       </PanelHead>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[["Indicative price", money(p.loiAmount)], ["Exclusivity", `${p.loiExclusivityDays ?? 0} days`], ["Your asking price", money(p.askingPrice)]].map(([k, v]) => (
           <div key={k} className="rounded-[10px] bg-muted/60 p-3"><div className="text-[12px] text-muted-foreground">{k}</div><div className="font-bold">{v}</div></div>
         ))}
       </div>
-      {p.loiConditions && <div><div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Conditions</div><p className="mt-1 text-[13.5px]">{p.loiConditions}</p></div>}
-      <div>
-        <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Accepting means</div>
-        <ul className="mt-2 space-y-1.5 text-[13.5px]">
-          {["Contacts exchanged both ways", `Exclusivity clock starts (${p.loiExclusivityDays ?? 0} days)`].map((t) => (
-            <li key={t} className="flex items-center gap-2"><Check className="h-4 w-4 text-success" />{t}</li>
-          ))}
-        </ul>
-        <p className="mt-2 text-[12.5px] text-muted-foreground">Non-binding. The log keeps the record.</p>
-      </div>
+      <p className="text-[12.5px] text-muted-foreground">Read the full letter to the end and tick the box to accept. Non-binding, except exclusivity and confidentiality.</p>
+      {review && <LoiDocDialog p={p} seller onClose={() => setReview(false)} />}
     </div>
   );
 }
@@ -374,6 +396,7 @@ function Stepper({ cur }: { cur: number }) {
 function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void }) {
   const [loiOpen, setLoiOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
+  const [dlg, setDlg] = useState<null | "report" | "investor" | "nda" | "loi">(null);
   const cur = currentStep(p);
   const refresh = useRefresh();
   const fShare = useServerFn(shareReport);
@@ -382,27 +405,50 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
   const act = async (f: () => Promise<unknown>, msg: string) => {
     try { await f(); toast.success(msg); refresh(); } catch (e) { toast.error((e as Error).message); }
   };
-  const reportPill = p.reportSharedAt
-    ? <Pill tone="green">{seller ? "shared" : "received"}</Pill>
-    : <Pill tone="gray">{seller ? "not shared" : "not received"}</Pill>;
-  const waitingOn = seller
-    ? (!p.reportSharedAt && p.reportRequestedAt ? "asked for the financial report" : cur === 4 && !p.legalAt ? "waiting on you: legal folder" : null)
-    : (!p.loiSentAt && p.ndaApprovedAt ? "send a letter of intent when ready" : "nothing needed from you");
+  const ask = () => act(() => fAsk({ data: { id: p.id } }), `Request sent to ${p.counterparty.name}. You will be notified when the report is shared.`);
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const link = "shrink-0 text-[12px] font-semibold text-[#2563EB] hover:underline";
+  const chip = (tone: "green" | "amber" | "gray", t: string) => (
+    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11.5px] font-semibold",
+      tone === "green" ? "bg-[#ECFDF3] text-[#15803D]" : tone === "amber" ? "bg-[#FFFBEB] text-[#B45309]" : "bg-[#F3F4F6] text-[#4B5563]")}>{t}</span>
+  );
+  const report = seller
+    ? p.reportSharedAt
+      ? <>{chip("green", p.reportViewedAt ? `Report viewed ${shortDate(p.reportViewedAt)}` : `Report shared ${shortDate(p.reportSharedAt)}`)}<button className={link} onClick={(e) => { stop(e); setDlg("report"); }}>View report</button></>
+      : chip("gray", "Report not shared")
+    : p.reportSharedAt
+      ? <>{chip("green", `Report received ${shortDate(p.reportSharedAt)}`)}<button className={link} onClick={(e) => { stop(e); setDlg("report"); }}>View report</button></>
+      : p.reportRequestedAt
+        ? chip("amber", `Report requested ${shortDate(p.reportRequestedAt)}`)
+        : <>{chip("gray", "Report not received")}<button className={link} onClick={(e) => { stop(e); ask(); }}>Ask for it</button></>;
+  const w = waitState(p, seller);
   const other = seller ? "the buyer" : "the seller";
 
-  const rows: [string, string | null, string, React.ReactNode?][] = [
-    ["NDA", p.ndaApprovedAt, `Approved by ${seller ? "you" : "the seller"} · requested ${day(p.ndaRequestedAt)}`],
+  const reviewLoi = seller && !!p.loiSentAt && !p.loiAcceptedAt;
+  const rows: [string, string | null, React.ReactNode, React.ReactNode?][] = [
+    ["NDA", p.ndaApprovedAt, `Approved by ${seller ? "you" : "the seller"} · requested ${day(p.ndaRequestedAt)}`,
+      <>
+        <Button size="sm" variant="outline" onClick={() => setDlg("nda")}>View NDA</Button>
+        {seller && <Button size="sm" variant="outline" onClick={() => setDlg("investor")}>Investor profile</Button>}
+      </>],
     ["Financial & Valuation", p.reportSharedAt,
-      p.reportSharedAt ? `Verified financial report ${seller ? "shared" : "received"}` : p.reportRequestedAt ? `Requested by the buyer ${day(p.reportRequestedAt)}` : "Not shared yet",
-      seller && !p.reportSharedAt ? <Button size="sm" onClick={() => act(() => fShare({ data: { id: p.id } }), "Report shared")}>Share report</Button>
-        : !seller && !p.reportSharedAt && !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={() => act(() => fAsk({ data: { id: p.id } }), "Request sent")}>Ask for the report</Button> : undefined],
+      p.reportSharedAt ? `Verified financial report ${seller ? "shared" : "received"}`
+        : p.reportRequestedAt ? (seller ? `Requested by the buyer ${day(p.reportRequestedAt)}` : <><b>You asked for the report on {day(p.reportRequestedAt)}</b> · waiting for the seller</>)
+        : "Not shared yet",
+      p.reportSharedAt ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>View report</Button>
+        : seller ? (p.reportRequestedAt ? <Button size="sm" onClick={() => act(() => fShare({ data: { id: p.id } }), "Report shared")}>Share report</Button> : undefined)
+        : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>Ask for the report</Button> : undefined],
     ["Letter of intent", p.loiAcceptedAt,
       p.loiAcceptedAt ? `${money(p.loiAmount)} · accepted by ${seller ? "you" : "the seller"} · exclusivity ${p.loiExclusivityDays ?? 0} days`
         : p.loiSentAt ? `${money(p.loiAmount)} · sent ${day(p.loiSentAt)} · waiting for ${seller ? "you" : "the seller"}` : "No letter of intent yet",
-      !seller && !p.loiSentAt ? <Button size="sm" onClick={() => setLoiOpen(true)}>Send letter of intent</Button> : undefined],
-    ["Contact M&A", p.contactAt, p.contactAt ? "Contacts exchanged" : "After the letter of intent is accepted"],
+      reviewLoi ? <Button size="sm" onClick={() => setDlg("loi")}>Review LOI</Button>
+        : p.loiSentAt ? <Button size="sm" variant="outline" onClick={() => setDlg("loi")}>View LOI</Button>
+        : !seller ? <Button size="sm" onClick={() => setLoiOpen(true)}>Send letter of intent</Button> : undefined],
+    ["Contact M&A", p.contactAt,
+      p.contactAt ? (seller && !p.legalAt ? <><b>Exchange contacts</b> · introduce your M&A advisor</> : "Contacts exchanged") : "After the letter of intent is accepted",
+      seller && p.contactAt && !p.legalAt ? <Button size="sm" onClick={() => toast("Advisor introductions are coming soon.")}>Introduce advisor</Button> : undefined],
     ["Legal", p.legalAt, p.legalAt ? `Legal folder ${seller ? "shared" : "received"}` : "Legal folder not shared yet",
-      seller && p.contactAt && !p.legalAt ? <Button size="sm" onClick={() => act(() => fStep({ data: { id: p.id, step: "legal" } }), "Legal folder shared")}>Share documents</Button> : undefined],
+      seller && p.contactAt && !p.legalAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "legal" } }), "Legal folder shared")}>Share documents</Button> : undefined],
     ["Offer & SPA", p.spaAt, p.spaAt ? `SPA draft ${seller ? "shared" : "received"}` : `SPA draft not ${seller ? "shared" : "received"} yet`,
       seller && p.legalAt && !p.spaAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "spa" } }), "SPA draft shared")}>Share SPA draft</Button> : undefined],
     ["Payment", p.paymentAt, p.paymentAt ? "Completed" : "Not started · escrow and completion",
@@ -411,8 +457,9 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
 
   return (
     <div id={`deal-${p.id}`} className={cn("overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-card transition-shadow hover:border-[#D9DCE2]", open && "shadow-[0_6px_20px_rgba(16,24,40,.06)]")}>
-      <button type="button" onClick={onToggle} aria-expanded={open}
-        className="grid w-full grid-cols-[40px_1fr_auto] items-center gap-[14px] px-5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2563EB]">
+      <div role="button" tabIndex={0} onClick={onToggle} aria-expanded={open}
+        onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onToggle(); } }}
+        className="grid w-full cursor-pointer grid-cols-[40px_1fr_auto] items-center gap-[14px] px-5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2563EB]">
         <div className="[&>*]:!h-10 [&>*]:!w-10 [&>*]:!text-[14px]">
           <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} />
         </div>
@@ -420,21 +467,28 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
           <div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
             <span className="truncate text-[16px] font-bold">{p.counterparty.name}</span>
             <span className="shrink-0 rounded-[6px] border border-[#DBEAFE] bg-[#EFF6FF] px-1.5 py-0.5 text-[11.5px] font-semibold text-[#1D4ED8]">{STEPS[Math.min(cur, 6)]}</span>
-            <span className="shrink-0 text-[12px] text-[#6B7280]">Financial report</span>
-            <span className="shrink-0">{reportPill}</span>
+            {report}
           </div>
           <div className="truncate text-[12.5px] text-[#6B7280]">
             {[p.counterparty.sub, p.loiAmount ? `${seller ? "offer" : "your offer"} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
-            {waitingOn && <>{" · "}<span className="font-semibold text-[#B45309]">{waitingOn}</span></>}
+            {" · "}
+            <span className={cn("font-semibold", w.onYou ? "text-[#B45309]" : "text-[#6B7280]")}>
+              waiting on {w.onYou ? "you" : other}: {w.what}
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-[12.5px] font-semibold text-[#6B7280]">
-          {open ? "Hide details" : "Details"}
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-[8px] border border-[#E5E7EB]">
-            <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 motion-reduce:transition-none", open && "rotate-180")} />
+        <div className="flex items-center gap-[14px] text-[12.5px] font-semibold text-[#6B7280]">
+          {seller
+            ? <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("investor"); }}>Investor profile</button>
+            : <Link to="/marketplace/browse" search={{ company: p.hiddenProfileId }} onClick={stop} className="text-[12.5px] font-semibold text-[#2563EB] hover:underline">View listing</Link>}
+          <span className="flex items-center gap-2">
+            {open ? "Hide details" : "Details"}
+            <span className="grid h-[30px] w-[30px] place-items-center rounded-[8px] border border-[#E5E7EB]">
+              <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 motion-reduce:transition-none", open && "rotate-180")} />
+            </span>
           </span>
         </div>
-      </button>
+      </div>
       <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} /></div>
       <div className={cn("grid transition-[grid-template-rows] duration-[250ms] ease-in-out motion-reduce:transition-none", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
@@ -444,7 +498,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
                 <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-[#111827]" : "text-[#9CA3AF]")}>{label}</div>
                 <div className="text-muted-foreground">{day(date)}</div>
                 <div className="text-[#374151]">{text}</div>
-                <div>{action}</div>
+                <div className="flex justify-end gap-2 [&_button]:h-8">{action}</div>
               </div>
             ))}
           </div>
@@ -455,6 +509,10 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
       </div>
       {loiOpen && <LoiDialog id={p.id} onClose={() => setLoiOpen(false)} />}
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
+      {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
+      {dlg === "investor" && <InvestorProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
+      {dlg === "nda" && <NdaDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
+      {dlg === "loi" && <LoiDocDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
     </div>
   );
 }
@@ -497,7 +555,7 @@ function LoiDialog({ id, onClose }: { id: string; onClose: () => void }) {
 const EVENT_LABEL: Record<string, string> = {
   nda_requested: "NDA requested", nda_approved: "NDA approved", nda_declined: "NDA declined",
   report_requested: "Financial report requested", report_shared: "Financial report shared",
-  loi_sent: "Letter of intent sent", loi_accepted: "Letter of intent accepted", loi_declined: "Letter of intent declined",
+  loi_sent: "Letter of intent sent", loi_accepted: "Letter of intent accepted", loi_declined: "Letter of intent declined", loi_changes_requested: "Changes to the letter of intent requested", report_viewed: "Financial report opened",
   legal_shared: "Legal folder shared", spa_shared: "SPA draft shared", payment_shared: "Payment completed",
 };
 
