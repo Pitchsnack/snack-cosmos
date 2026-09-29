@@ -57,7 +57,7 @@ function isPending(p: PipelineRow) {
 }
 
 function Avatar({ name, tone = "violet", logoUrl }: { name: string; tone?: "violet" | "orange"; logoUrl?: string | null }) {
-  const [broken, setBroken] = React.useState(false);
+  const [broken, setBroken] = useState(false);
   if (logoUrl && !broken) {
     return (
       <img
@@ -317,7 +317,7 @@ function BuyerPending({ rows }: { rows: PipelineRow[] }) {
     <div className="space-y-2">
       {rows.map((p) => (
         <div key={p.id} className="flex items-center gap-3 rounded-[12px] border bg-card p-3">
-          <Avatar name={p.counterparty.name} tone="orange" />
+          <Avatar name={p.counterparty.name} tone="orange" logoUrl={p.counterparty.logoUrl} />
           <div className="min-w-0 flex-1">
             <div className="font-bold">{p.counterparty.name}</div>
             <div className="text-[12.5px] text-muted-foreground">
