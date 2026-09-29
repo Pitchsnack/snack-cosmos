@@ -122,8 +122,8 @@ export function StartupCard({
     ? "mb-1.5 flex items-start gap-3"
     : "mb-2 flex items-start gap-3";
   const descClass = isAcquisitionCard
-    ? "mb-1 line-clamp-2 text-[11px] leading-snug text-foreground/90"
-    : "mb-2 line-clamp-2 text-[11px] leading-relaxed text-foreground/90";
+    ? "mb-1 line-clamp-3 text-[11px] leading-snug text-foreground/90"
+    : "mb-2 line-clamp-3 text-[11px] leading-relaxed text-foreground/90";
   const dividerClass = isAcquisitionCard
     ? "my-1 border-t border-border/40"
     : "my-2 border-t border-border/40";
