@@ -10,6 +10,7 @@ import {
   HEADLINE_MAX,
   checkListing,
   listingTerms,
+  suggestBusinessDescription,
   suggestHeadline,
   type ListingSource,
   type PublicListing,
