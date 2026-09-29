@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/messages")({
 type Conv = { key: string; name: string; person: string | null; sub: string; codeName: string | null; p: PipelineRow | null; unread: number; last: { body: string; mine: boolean; at: string } | null };
 type Dialog = null | "nda" | "loi" | "report" | "profile";
 
-const ADVISOR = "PitchSnack Advisor";
+const ADVISOR = "PitchSnack Help";
 
 function initials(s: string) {
   return s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
