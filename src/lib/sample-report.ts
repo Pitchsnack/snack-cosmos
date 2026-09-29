@@ -6,10 +6,19 @@ import type { ReportData } from "@/lib/pipeline.functions";
 
 export type SampleValuation = {
   low: number; mid: number; high: number;
-  methods: { method: string; basis: string; rate: string; value: string }[];
-  adjustments: string[];
+  ev: number;
+  methods: { method: string; basis: string; rate: string; value: string; weight: string; confidence: "High" | "Medium" | "Low" }[];
+  multiples: { metric: string; company: string; peerLow: string; peerMedian: string; peerHigh: string; implied: string }[];
+  bridge: { label: string; value: number; kind: "start" | "add" | "less" | "total" }[];
+  discounts: { label: string; pct: number; note: string }[];
+  reportedEbitda: number;
+  normalisedEbitda: number;
+  earnings: { label: string; amount: number; note: string }[];
+  peers: { name: string; revenue: number; growth: number; ebitdaMargin: number; netMargin: number; evEbitda: number }[];
+  notes: string[];
 };
 export type SampleReportData = { company: string; sector: string; data: ReportData; cash: Record<number, number>; debt: Record<number, number>; valuation: SampleValuation };
+
 
 const NAMES = ["Apex", "Horizon", "Lotus", "Cobalt", "Monsoon", "Saffron", "Teak", "Harbor", "Summit", "Jade"];
 const SUFFIX = ["Wave", "Trail", "Foundry", "Peak", "Bridge", "Grove", "Crest"];
