@@ -316,9 +316,9 @@ export function suggestBusinessDescription(s: ListingSource, o?: SuggestOpts) {
  * Three anonymous highlight bullets:
  * 1. track record & scale, 2. capabilities & quality, 3. markets & clients.
  */
-export function suggestHighlights(s: ListingSource): string[] {
-  const a = activityProfile(s);
-  const terms = listingTerms(s);
+export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
+  const a = applyGeo(activityProfile(s), o);
+  const terms = [...listingTerms(s), ...(o?.guard ?? [])];
   const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 3).map(lower);
   const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
 
