@@ -104,7 +104,7 @@ function MessagesPage() {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-6 py-6 md:px-8">
       <h1 className="text-[30px] font-bold leading-tight">Messages</h1>
-      <div className="relative mt-5 flex h-[calc(100vh-190px)] min-h-[520px] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white">
+      <div className="relative mt-5 flex h-[calc(100vh-260px)] min-h-[520px] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white">
         {/* List */}
         <div className={cn("flex w-full shrink-0 flex-col border-r border-[#F0F1F4] min-[760px]:w-[300px]", mobileChat && "max-[759px]:hidden")}>
           <label className="flex h-14 shrink-0 items-center gap-2 border-b border-[#F0F1F4] px-5">
