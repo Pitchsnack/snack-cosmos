@@ -118,6 +118,8 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
   const error = sample ? null : q.error;
   const [tab, setTab] = useState<"fin" | "val">(initialTab);
   const [allRatios, setAllRatios] = useState(false);
+  const [valTab, setValTab] = useState<"summary" | "methods" | "adjustments" | "peers">("summary");
+
   const company = sample ? sample.company : p.parties.sellerCompany;
   const cashOf = (y: number) => sample?.cash[y] ?? null;
   const debtOf = (y: number) => sample?.debt[y] ?? null;
@@ -231,33 +233,173 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
           {sample && tab === "val" && (() => {
             const v = sample.valuation;
             const lastEbitda = last ? metrics(sample.data, last).ebitda : null;
+            const lastRev = last ? metrics(sample.data, last).revenue : null;
+            const med = (k: "growth" | "ebitdaMargin" | "netMargin" | "evEbitda") => {
+              const a = v.peers.map((p2) => p2[k]).sort((x, y) => x - y);
+              return a[Math.floor(a.length / 2)]!;
+            };
             return (
               <>
-                <Caption>Valuation range · equity value</Caption>
-                <div className="rounded-[12px] border border-[#E5E7EB] bg-white/80 p-4">
-                  <div className="grid grid-cols-3 text-center">
-                    {([["Low", v.low], ["Midpoint", v.mid], ["High", v.high]] as const).map(([k, x]) => (
-                      <div key={k}><div className="text-[12px] text-[#6B7280]">{k}</div><div className={cn("mt-1 text-[20px] font-bold tabular-nums", k === "Midpoint" && "text-[#B45309]")}>{mn(x)}M</div></div>
-                    ))}
-                  </div>
-                  <div className="relative mt-3 h-2 rounded-full bg-gradient-to-r from-[#E5E7EB] via-[#FDE68A] to-[#E5E7EB]">
-                    <span className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#F59E0B] shadow" />
-                  </div>
-                  {lastEbitda ? <div className="mt-2 text-center text-[12px] text-[#6B7280]">Midpoint ÷ FY{String(last).slice(-2)} EBITDA = {(v.mid / lastEbitda).toFixed(1)}×</div> : null}
+                <div className="sticky top-0 z-10 -mx-6 mb-1 flex gap-4 border-b border-[#F0F1F4] bg-white/95 px-6 backdrop-blur">
+                  {([["summary", "Summary"], ["methods", "Methods"], ["adjustments", "Earnings adjustments"], ["peers", "Peer benchmarking"]] as const).map(([k, l]) => (
+                    <button key={k} onClick={() => setValTab(k)}
+                      className={cn("-mb-px border-b-2 py-2.5 text-[13px] font-semibold", valTab === k ? "border-[#B45309] text-[#B45309]" : "border-transparent text-[#6B7280]")}>{l}</button>
+                  ))}
                 </div>
-                <Caption>Methods</Caption>
-                <table className="w-full text-[13px]">
-                  <thead><tr className="text-[11.5px] text-[#6B7280]"><th className="py-1.5 text-left font-medium">Method</th><th className="py-1.5 text-left font-medium">Basis</th><th className="py-1.5 text-left font-medium">Multiple / rate</th><th className="py-1.5 text-right font-medium">Value</th></tr></thead>
-                  <tbody>{v.methods.map((m) => (
-                    <tr key={m.method} className="border-t border-[#F0F1F4]"><td className="py-2 font-medium">{m.method}</td><td className="py-2 text-[#6B7280]">{m.basis}</td><td className="py-2">{m.rate}</td><td className="py-2 text-right tabular-nums">{m.value}</td></tr>
-                  ))}</tbody>
-                </table>
-                <Caption>Adjustments</Caption>
-                <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">{v.adjustments.map((a) => <li key={a}>{a}</li>)}</ul>
-                <p className="mt-3 text-[12px] text-[#6B7280]">The asking price remains the seller's. This range is an independent estimate by PitchSnack analysts. Sample with made-up figures.</p>
+
+                {valTab === "summary" && (
+                  <>
+                    <Caption>Valuation range · equity value</Caption>
+                    <div className="rounded-[12px] border border-[#E5E7EB] bg-white/80 p-4">
+                      <div className="grid grid-cols-3 text-center">
+                        {([["Low", v.low], ["Midpoint", v.mid], ["High", v.high]] as const).map(([k, x]) => (
+                          <div key={k}><div className="text-[12px] text-[#6B7280]">{k}</div><div className={cn("mt-1 text-[20px] font-bold tabular-nums", k === "Midpoint" && "text-[#B45309]")}>{mn(x)}M</div></div>
+                        ))}
+                      </div>
+                      <div className="relative mt-3 h-2 rounded-full bg-gradient-to-r from-[#E5E7EB] via-[#FDE68A] to-[#E5E7EB]">
+                        <span className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#F59E0B] shadow" />
+                      </div>
+                      {lastEbitda ? <div className="mt-2 text-center text-[12px] text-[#6B7280]">Midpoint ÷ FY{String(last).slice(-2)} normalised EBITDA = {(v.mid / v.normalisedEbitda).toFixed(1)}×</div> : null}
+                    </div>
+
+                    <Caption>Headline multiples · company vs listed peers</Caption>
+                    <table className="w-full text-[13px] tabular-nums">
+                      <thead><tr className="text-[11.5px] text-[#6B7280]">
+                        <th className="py-1.5 text-left font-medium">Metric</th><th className="py-1.5 text-right font-medium">This business</th>
+                        <th className="py-1.5 text-right font-medium">Peer low</th><th className="py-1.5 text-right font-medium">Peer median</th>
+                        <th className="py-1.5 text-right font-medium">Peer high</th><th className="py-1.5 text-right font-medium">Implied value</th>
+                      </tr></thead>
+                      <tbody>{v.multiples.map((r) => (
+                        <tr key={r.metric} className="border-t border-[#F0F1F4]">
+                          <td className="py-2 font-medium">{r.metric}</td>
+                          <td className="py-2 text-right font-semibold text-[#B45309]">{r.company}</td>
+                          <td className="py-2 text-right text-[#6B7280]">{r.peerLow}</td>
+                          <td className="py-2 text-right">{r.peerMedian}</td>
+                          <td className="py-2 text-right text-[#6B7280]">{r.peerHigh}</td>
+                          <td className="py-2 text-right">{r.implied}</td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+
+                    <Caption>From enterprise value to equity value</Caption>
+                    <div className="rounded-[12px] border border-[#E5E7EB] bg-white/80">
+                      {v.bridge.map((b) => (
+                        <div key={b.label} className={cn("flex items-center justify-between border-b border-[#F0F1F4] px-4 py-2.5 text-[13px] last:border-0", b.kind === "total" && "bg-[#FAFAFB] font-semibold")}>
+                          <span className={b.kind === "total" ? "text-[#111827]" : "text-[#6B7280]"}>{b.label}</span>
+                          <span className={cn("tabular-nums", b.value < 0 && "text-[#B91C1C]")}>{mn(b.value)}M</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Caption>Discounts and premiums applied</Caption>
+                    <div className="grid grid-cols-2 gap-3">
+                      {v.discounts.map((d) => (
+                        <div key={d.label} className="rounded-[12px] border border-[#E5E7EB] bg-white/80 p-3">
+                          <div className="flex items-baseline justify-between">
+                            <div className="text-[12.5px] font-medium">{d.label}</div>
+                            <div className={cn("text-[15px] font-bold tabular-nums", d.pct < 0 ? "text-[#15803D]" : "text-[#B45309]")}>{d.pct < 0 ? "+" : "−"}{Math.abs(d.pct)}%</div>
+                          </div>
+                          <div className="mt-1 text-[11.5px] text-[#6B7280]">{d.note}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {valTab === "methods" && (
+                  <>
+                    <Caption>Methods and weighting</Caption>
+                    <table className="w-full text-[13px]">
+                      <thead><tr className="text-[11.5px] text-[#6B7280]">
+                        <th className="py-1.5 text-left font-medium">Method</th><th className="py-1.5 text-left font-medium">Basis</th>
+                        <th className="py-1.5 text-left font-medium">Multiple / rate</th><th className="py-1.5 text-right font-medium">Value</th>
+                        <th className="py-1.5 text-right font-medium">Weight</th><th className="py-1.5 text-right font-medium">Confidence</th>
+                      </tr></thead>
+                      <tbody>{v.methods.map((m2) => (
+                        <tr key={m2.method} className="border-t border-[#F0F1F4]">
+                          <td className="py-2 font-medium">{m2.method}</td><td className="py-2 text-[#6B7280]">{m2.basis}</td>
+                          <td className="py-2">{m2.rate}</td><td className="py-2 text-right tabular-nums">{m2.value}</td>
+                          <td className="py-2 text-right tabular-nums">{m2.weight}</td>
+                          <td className="py-2 text-right"><span className={cn("rounded-full px-2 py-0.5 text-[11.5px] font-semibold", m2.confidence === "High" ? "bg-[#ECFDF3] text-[#15803D]" : m2.confidence === "Medium" ? "bg-[#FFFBEB] text-[#B45309]" : "bg-[#F3F4F6] text-[#6B7280]")}>{m2.confidence}</span></td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                    <Caption>How the range is built</Caption>
+                    <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
+                      <li>Each method is valued on normalised EBITDA of {mn(v.normalisedEbitda)}M, then weighted as shown above.</li>
+                      <li>Enterprise value of {mn(v.ev)}M is bridged to equity value by deducting debt and adding cash.</li>
+                      <li>The low and high points sit at −16% and +17% of the midpoint, reflecting deal outcome spread.</li>
+                    </ul>
+                  </>
+                )}
+
+                {valTab === "adjustments" && (
+                  <>
+                    <Caption>Reported to normalised EBITDA · FY{String(last).slice(-2)}</Caption>
+                    <div className="rounded-[12px] border border-[#E5E7EB] bg-white/80">
+                      <div className="flex items-center justify-between border-b border-[#F0F1F4] px-4 py-2.5 text-[13px]">
+                        <span className="text-[#6B7280]">Reported EBITDA</span><span className="tabular-nums font-semibold">{mn(v.reportedEbitda)}M</span>
+                      </div>
+                      {v.earnings.map((a) => (
+                        <div key={a.label} className="flex items-start justify-between gap-4 border-b border-[#F0F1F4] px-4 py-2.5 text-[13px]">
+                          <span><span className="font-medium">{a.label}</span><span className="block text-[11.5px] text-[#6B7280]">{a.note}</span></span>
+                          <span className={cn("tabular-nums", a.amount < 0 ? "text-[#B91C1C]" : "text-[#15803D]")}>{a.amount < 0 ? "" : "+"}{mn(a.amount)}M</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between bg-[#FAFAFB] px-4 py-2.5 text-[13px] font-semibold">
+                        <span>Normalised EBITDA</span><span className="tabular-nums text-[#B45309]">{mn(v.normalisedEbitda)}M</span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[12px] text-[#6B7280]">
+                      Normalised margin {lastRev ? pct((v.normalisedEbitda / lastRev) * 100) : "—"} against reported {lastRev ? pct((v.reportedEbitda / lastRev) * 100) : "—"}.
+                      Adjustments move earnings to what a buyer would inherit.
+                    </p>
+                  </>
+                )}
+
+                {valTab === "peers" && (
+                  <>
+                    <Caption>Listed peer set · FY{String(last).slice(-2)}</Caption>
+                    <table className="w-full text-[13px] tabular-nums">
+                      <thead><tr className="text-[11.5px] text-[#6B7280]">
+                        <th className="py-1.5 text-left font-medium">Company</th><th className="py-1.5 text-right font-medium">Revenue</th>
+                        <th className="py-1.5 text-right font-medium">Growth</th><th className="py-1.5 text-right font-medium">EBITDA margin</th>
+                        <th className="py-1.5 text-right font-medium">Net margin</th><th className="py-1.5 text-right font-medium">EV / EBITDA</th>
+                      </tr></thead>
+                      <tbody>
+                        {v.peers.map((p2) => (
+                          <tr key={p2.name} className="border-t border-[#F0F1F4]">
+                            <td className="py-2 font-medium">{p2.name}</td><td className="py-2 text-right">{mn(p2.revenue)}M</td>
+                            <td className="py-2 text-right">{pct(p2.growth)}</td><td className="py-2 text-right">{pct(p2.ebitdaMargin)}</td>
+                            <td className="py-2 text-right">{pct(p2.netMargin)}</td><td className="py-2 text-right">{p2.evEbitda.toFixed(1)}×</td>
+                          </tr>
+                        ))}
+                        <tr className="border-t border-[#E5E7EB] bg-[#FAFAFB] font-semibold">
+                          <td className="py-2">Peer median</td><td className="py-2 text-right">—</td>
+                          <td className="py-2 text-right">{pct(med("growth"))}</td><td className="py-2 text-right">{pct(med("ebitdaMargin"))}</td>
+                          <td className="py-2 text-right">{pct(med("netMargin"))}</td><td className="py-2 text-right">{med("evEbitda").toFixed(1)}×</td>
+                        </tr>
+                        <tr className="border-t border-[#E5E7EB] font-semibold text-[#B45309]">
+                          <td className="py-2">This business</td><td className="py-2 text-right">{mn(lastRev)}M</td>
+                          <td className="py-2 text-right">{growth != null ? pct(growth) : "—"}</td>
+                          <td className="py-2 text-right">{lastRev ? pct((v.normalisedEbitda / lastRev) * 100) : "—"}</td>
+                          <td className="py-2 text-right">{last ? pct(margin(metrics(sample.data, last).net, lastRev)) : "—"}</td>
+                          <td className="py-2 text-right">{(v.ev / v.normalisedEbitda).toFixed(1)}×</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p className="mt-2 text-[12px] text-[#6B7280]">Peers are matched on sector and business model, then screened for size and profitability.</p>
+                  </>
+                )}
+
+                <div className="mt-4 space-y-1 border-t border-[#F0F1F4] pt-3 text-[12px] text-[#6B7280]">
+                  {v.notes.map((n) => <p key={n}>{n}</p>)}
+                  <p>Sample with made-up figures.</p>
+                </div>
               </>
             );
           })()}
+
           {!sample && data && tab === "val" && (
             <div className="py-10 text-[13px] text-[#374151]">
               <p>The estimated valuation for this business is delivered by PitchSnack analysts.</p>
