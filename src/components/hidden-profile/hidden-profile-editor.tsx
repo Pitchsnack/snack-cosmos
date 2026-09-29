@@ -36,12 +36,14 @@ import { cn } from "@/lib/utils";
 export function HiddenProfileEditor({
   row,
   facts,
+  source,
   directoryDescription,
   onBack,
   autoPublish,
 }: {
   row: HiddenProfileRow;
   facts: EntryFacts | undefined;
+  source?: ListingSource;
   directoryDescription?: string | null;
   onBack: () => void;
   autoPublish?: boolean;
@@ -51,6 +53,13 @@ export function HiddenProfileEditor({
   const a = useHiddenProfileActions();
   const [confirm, setConfirm] = useState<null | "publish" | "unpublish">(autoPublish ? "publish" : null);
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
+  const codeIdeas = useMemo(() => (source ? suggestCodeNames(source) : []), [source]);
+  const [codeIdx, setCodeIdx] = useState(0);
+  const nextCodeName = () => {
+    if (!codeIdeas.length) return set("code_name", suggestCodeName());
+    set("code_name", codeIdeas[codeIdx % codeIdeas.length]);
+    setCodeIdx((i) => i + 1);
+  };
 
   const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const missing = useMemo(() => missingForPublish(d), [d]);
