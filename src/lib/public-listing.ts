@@ -210,6 +210,32 @@ export function activityProfile(s: ListingSource): ActivityProfile {
 const GEO_ADJ = (geo: string | null) =>
   !geo ? "" : /thai/i.test(geo) ? "Thai" : /asean|southeast/i.test(geo) ? "ASEAN" : titleCase(geo.split(",")[0].trim());
 
+/**
+ * geo: region shown in the public view (used instead of the exact city).
+ * guard: extra identity terms the generated text must never contain.
+ */
+export interface SuggestOpts {
+  geo?: string | null;
+  guard?: { term: string; reason: string }[];
+}
+
+/** Removes guarded identity terms and tidies the leftover punctuation. */
+function scrub(text: string, guard?: { term: string; reason: string }[]) {
+  let t = text;
+  if (guard?.length) for (const h of [...findTermsIn(t, guard)].reverse()) t = t.slice(0, h.start) + t.slice(h.end);
+  return t
+    .replace(/\s*,\s*,/g, ",")
+    .replace(/\b(in|across|of)\s*,\s*/gi, "$1 ")
+    .replace(/\b(in|across|based in)\s+(?=[.,]|$)/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,])/g, "$1")
+    .replace(/,\s*\./g, ".")
+    .trim()
+    .replace(/[,\s]+$/, "");
+}
+
+const applyGeo = (a: ActivityProfile, o?: SuggestOpts) => (o && o.geo !== undefined ? { ...a, geo: o.geo } : a);
+
 /** Sector-true, anonymous deal code names — e.g. "Project Thai Packaging". */
 export function suggestCodeNames(s: ListingSource): string[] {
   const a = activityProfile(s);
