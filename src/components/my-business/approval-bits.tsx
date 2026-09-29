@@ -125,7 +125,7 @@ export function ApprovalFooter({
   const a = useApprovalActions();
   const [confirm, setConfirm] = useState(false);
   const ready = !!row && missing.length === 0 && flagged === 0 && !blockedReason;
-  const submitBtn = (label = "Submit for approval") => (
+  const submitBtn = (label = "Submit ") => (
     <Button size="sm" disabled={!ready} onClick={() => setConfirm(true)} className="bg-[#1e2a4a] text-white hover:bg-[#1e2a4a]/90">{label}</Button>
   );
   let text: React.ReactNode;
