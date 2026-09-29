@@ -281,6 +281,14 @@ function listOf(items: string[]) {
   return `${v.slice(0, -1).join(", ")} and ${v[v.length - 1]}`;
 }
 
+/** Lower-cases a tag unless it is an acronym or a proper place/standard name. */
+function lower(t: string) {
+  return t
+    .split(" ")
+    .map((w) => (w.length <= 4 && w === w.toUpperCase() ? w : /^(thailand|asean|asia|europe|japan|china)$/i.test(w) ? w : w.toLowerCase()))
+    .join(" ");
+}
+
 export function certificationsOf(s: ListingSource) {
   return [
     ...(s.iso_standards ?? []).map((x) => x.split(" – ")[0]),
