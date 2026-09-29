@@ -204,7 +204,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           <div
             className={cn(
               "relative grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[14px] text-[18px] font-bold text-white",
-              dark ? "bg-gradient-to-br from-[#f59e0b] to-[#b45309]" : "bg-gradient-to-br from-[#fb923c] to-[#ea580c]",
+              "bg-gradient-to-br from-[#fb923c] to-[#ea580c]",
             )}
           >
             {initials}
