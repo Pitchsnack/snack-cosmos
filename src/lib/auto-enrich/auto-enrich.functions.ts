@@ -296,6 +296,20 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
       }
     }
 
+    // Compliance fields: keep only well-formed, in-vocabulary entries.
+    parsed.isoStandards = Array.isArray(parsed.isoStandards)
+      ? [...new Set(parsed.isoStandards.filter((s): s is string => typeof s === "string" && !!s.trim()).map((s) => s.trim().slice(0, 60)))].slice(0, 10)
+      : undefined;
+    parsed.regulatoryLicenses = Array.isArray(parsed.regulatoryLicenses)
+      ? parsed.regulatoryLicenses
+          .filter((l) => l && typeof l.name === "string" && !!l.name.trim())
+          .map((l) => ({
+            category: LICENCE_CATS.includes(String(l.category)) ? String(l.category) : "Business",
+            name: String(l.name).trim().slice(0, 120),
+          }))
+          .slice(0, 10)
+      : undefined;
+
     parsed._debug = {
       origin,
       pagesTried,
