@@ -160,6 +160,13 @@ export const listPipeline = createServerFn({ method: "GET" })
     const stIds = [...new Set(rows.map((r) => r.startup_id))];
     const { data: sts } = stIds.length ? await sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : { data: [] };
     const stMap = Object.fromEntries((sts ?? []).map((s: any) => [s.id, s]));
+    // Logos live in private storage; hand the browser a short-lived signed link.
+    const logoPaths = (sts ?? []).map((s: any) => s.logo_url).filter((p: any): p is string => !!p && !/^https?:\/\//.test(p));
+    const signedLogos: Record<string, string> = {};
+    if (logoPaths.length) {
+      const { data: signed } = await sb.storage.from("startup-media").createSignedUrls(logoPaths, 3600);
+      for (const d of signed ?? []) if (d.path && d.signedUrl) signedLogos[d.path] = d.signedUrl;
+    }
     const buyerIds = [...new Set(rows.map((r) => r.buyer_user_id))];
     const names = await userNames(buyerIds);
     const { data: bvs } = buyerIds.length
