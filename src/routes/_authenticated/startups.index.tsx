@@ -34,7 +34,7 @@ import { isPublicationPreview, listPreviewPublishedRefs } from "@/lib/publicatio
 import { usePreviewPublicationVersion } from "@/hooks/use-publication";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { ReportChip, Pill, orderState, dayMonth, useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
+import { ReportChip, useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
 import { SECTORS, BUSINESS_MODELS, businessModelLabel } from "@/lib/sectors";
 
 
@@ -394,7 +394,7 @@ function StartupsPageInner() {
               <div key={it.id} className="space-y-1.5">
                 <StartupCard s={it} onClick={() => openStartup(it.id, { tab: "full" })} compact={favOnly} />
                 {orderByStartup.get(it.id) && (
-                  <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><span className="shrink-0">Report:</span><ReportChip o={orderByStartup.get(it.id)!} /></div>
+                  <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><ReportChip o={orderByStartup.get(it.id)!} /></div>
                 )}
                 <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
                   <span className="shrink-0">Hidden profile:</span>
@@ -470,7 +470,7 @@ function StartupsPageInner() {
                       </div>
                       {orderByStartup.get(it.id) && (
                         <div className="flex items-center gap-2 px-2 pt-1 text-[11px] text-muted-foreground">
-                          Report: <ReportChip o={orderByStartup.get(it.id)!} />
+                          <ReportChip o={orderByStartup.get(it.id)!} />
                         </div>
                       )}
                     </div>
@@ -478,7 +478,7 @@ function StartupsPageInner() {
                 })}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
-            {selected && orderByStartup.get(selected) && <DirectoryReportStrip o={orderByStartup.get(selected)!} />}
+            
             {selected ? (
               <EntryProfileTabs id={selected} tab={tab} onTabChange={setTab} editing={editing} onEditingChange={setEditing} />
             ) : (
@@ -647,22 +647,3 @@ function FilterSelect({ label, value, options, onChange, optionLabel }: { label:
   );
 }
 
-function DirectoryReportStrip({ o }: { o: ReportOrder }) {
-  const st = orderState(o);
-  const done = st === "delivered";
-  return (
-    <div className={cn("mb-4 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3", done ? "border-[#A7F3D0] bg-[#ECFDF5]" : "border-[#FCD34D] bg-[#FFFBEB]")}>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 text-[13.5px] font-bold">
-          {o.kind === "valuation" ? "Estimated valuation" : "Verified financial report"}
-          {done ? <Pill tone="green">Delivered {dayMonth(o.delivered_at)}</Pill> : st === "overdue" ? <Pill tone="red">Overdue</Pill> : <Pill tone="amber">Paid</Pill>}
-        </div>
-        <div className="text-xs text-muted-foreground">
-          Order {o.ref} · paid {dayMonth(o.paid_at)} · due {dayMonth(o.due_at)} · {st === "generated" ? "generated · review" : done ? "published" : "not generated yet"}
-        </div>
-      </div>
-      <Link to="/startups/$id/financials" params={{ id: o.startup_id }} search={{ tab: o.kind === "valuation" ? "valuation" : undefined }}
-        className="rounded-lg bg-sidebar px-3.5 py-2 text-[13px] font-semibold text-sidebar-foreground">Open Financials →</Link>
-    </div>
-  );
-}

@@ -1,22 +1,24 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { Search } from "lucide-react";
+import { Loader2, Lock, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { StartupFinancialsPage } from "@/components/financials/financials-page";
+import { autoEnrichFinancials, clearStartupFinancials, saveStartupFinancials } from "@/lib/financials-edit.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listReportEvents } from "@/lib/report-orders.functions";
+import { authoriseSeller, finaliseAuthorise, listReportEvents, markReportGenerated, undoAuthorise } from "@/lib/report-orders.functions";
 import { cn } from "@/lib/utils";
-import {
-  OrderStatusPill, Pill, dayMonth, dayMonthTime, hpOf, kindLabel, money, orderState, overdueDays, type ReportOrder,
-} from "./report-order-bits";
+import { Pill, dayMonth, dayMonthTime, hpOf, kindLabel, money, type ReportOrder } from "./report-order-bits";
 
-export function Tile({ label, value, sub, amber }: { label: string; value: number; sub: string; amber?: boolean }) {
+export function Tile({ label, value, sub, amber, green }: { label: string; value: number; sub: string; amber?: boolean; green?: boolean }) {
   return (
     <div className="rounded-xl border border-border bg-card px-4 py-3">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={cn("text-2xl font-bold", amber && "text-amber-600")}>{value}</div>
+      <div className={cn("text-2xl font-bold", amber && "text-[#B45309]", green && "text-[#047857]")}>{value}</div>
       <div className="text-xs text-muted-foreground">{sub}</div>
     </div>
   );
@@ -36,78 +38,164 @@ function Company({ name, code, ref }: { name?: string | null; code?: string | nu
   );
 }
 
-export function PaidReports({ orders, overdue }: { orders: ReportOrder[]; overdue: ReportOrder[] }) {
-  const [show, setShow] = useState<"waiting" | "generated" | "delivered" | "all">("waiting");
-  const [sort, setSort] = useState<"due" | "paid">("due");
-  const counts = {
-    waiting: orders.filter((o) => o.status === "paid").length,
-    generated: orders.filter((o) => o.status === "generated").length,
-    delivered: orders.filter((o) => o.status === "delivered").length,
+export const businessDaysSince = (d: string) => {
+  let n = 0; const x = new Date(d); const now = new Date();
+  while (x < now) { x.setDate(x.getDate() + 1); if (x > now) break; const w = x.getDay(); if (w !== 0 && w !== 6) n++; }
+  return n;
+};
+/** Overdue: paid more than 2 business days ago and the seller still can't see it. */
+export const isOverdue = (o: ReportOrder) => o.status !== "delivered" && businessDaysSince(o.paid_at) > 2;
+export const overdueBy = (o: ReportOrder) => Math.max(1, businessDaysSince(o.paid_at) - 2);
+
+type GenState = "running" | "failed";
+
+export function PaidReports({ orders }: { orders: ReportOrder[] }) {
+  const qc = useQueryClient();
+  const enrich = useServerFn(autoEnrichFinancials);
+  const clear = useServerFn(clearStartupFinancials);
+  const save = useServerFn(saveStartupFinancials);
+  const genFn = useServerFn(markReportGenerated);
+  const authFn = useServerFn(authoriseSeller);
+  const undoFn = useServerFn(undoAuthorise);
+  const finFn = useServerFn(finaliseAuthorise);
+  const [show, setShow] = useState<"waiting" | "authorised" | "all">("waiting");
+  const [gen, setGen] = useState<Record<string, GenState>>({});
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<ReportOrder | null>(null);
+  const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["report-orders"] }); qc.invalidateQueries({ queryKey: ["approvals"] }); };
+
+  useEffect(() => {
+    if (!focusId) return;
+    const el = document.querySelector<HTMLButtonElement>(`[data-row-action="${focusId}"]`);
+    if (el && !el.disabled) { el.focus(); setFocusId(null); }
+  });
+
+  const waiting = orders.filter((o) => o.status !== "delivered").sort((a, b) => +new Date(a.paid_at) - +new Date(b.paid_at));
+  const authorised = orders.filter((o) => o.status === "delivered").sort((a, b) => +new Date(b.delivered_at ?? 0) - +new Date(a.delivered_at ?? 0));
+  const rows = show === "waiting" ? waiting : show === "authorised" ? authorised : [...waiting, ...authorised];
+  const overdue = waiting.filter(isOverdue);
+
+  const generate = async (o: ReportOrder) => {
+    setGen((g) => ({ ...g, [o.id]: "running" }));
+    try {
+      const r = await enrich({ data: { startupId: o.startup_id } });
+      if (r.status !== "ok" || !r.years?.length) throw new Error(r.message ?? "No data");
+      await clear({ data: { startupId: o.startup_id } });
+      await save({ data: { startupId: o.startup_id, years: r.years, ...(r.profile ? { profile: r.profile } : {}),
+        provenance: { source: "DBD_DATA_WAREHOUSE", sourceReference: r.sourceReference ?? null, matchedRegisteredNumber: r.matchedRegisteredNumber ?? null,
+          matchedRegisteredName: r.matchedRegisteredName ?? null, retrievedAt: r.retrievedAt ?? null } } as any });
+      const years = (r.years as any[]).map((y) => Number(y?.fiscalYear ?? y?.fiscal_year ?? y?.year)).filter(Boolean);
+      await genFn({ data: { orderId: o.id, years, regNo: r.matchedRegisteredNumber ?? null } });
+      setGen((g) => { const n = { ...g }; delete n[o.id]; return n; });
+      await qc.invalidateQueries({ queryKey: ["report-orders"] });
+      setFocusId(o.id);
+      toast.success(`Report ready for ${o.startups?.startup_name ?? "this company"}. Authorise the seller when you're happy with it.`);
+    } catch {
+      setGen((g) => ({ ...g, [o.id]: "failed" }));
+    }
   };
-  const rows = useMemo(() => {
-    const l = orders.filter((o) => show === "all" || (show === "waiting" ? o.status === "paid" : o.status === show));
-    const k = sort === "due" ? "due_at" : "paid_at";
-    return [...l].sort((a, b) => +new Date((a as any)[k] ?? 0) - +new Date((b as any)[k] ?? 0));
-  }, [orders, show, sort]);
+
+  const authorise = async (o: ReportOrder) => {
+    try {
+      const { prevStatus } = await authFn({ data: { orderId: o.id } });
+      await qc.invalidateQueries({ queryKey: ["report-orders"] });
+      setFocusId(o.id);
+      const name = o.startups?.startup_name ?? "The seller";
+      timers.current[o.id] = setTimeout(() => { delete timers.current[o.id]; void finFn({ data: { orderId: o.id } }).then(refresh); }, 6000);
+      toast.success(`${name} can now see its ${o.kind === "valuation" ? "estimated valuation" : "financial report"}.`, {
+        duration: 6000,
+        action: { label: "Undo", onClick: async () => {
+          clearTimeout(timers.current[o.id]); delete timers.current[o.id];
+          await undoFn({ data: { orderId: o.id, prevStatus: prevStatus === "generated" ? "generated" : "paid" } });
+          refresh();
+        } },
+      });
+    } catch (e) { toast.error((e as Error).message); }
+  };
+
+  const action = (o: ReportOrder) => {
+    const g = gen[o.id];
+    const base = "h-8 rounded-lg px-3 text-[13px] font-semibold";
+    if (o.status === "delivered") return <Button data-row-action={o.id} size="sm" variant="outline" className={base} onClick={() => setViewing(o)}>View report</Button>;
+    if (o.ready_at && g !== "running") return <Button data-row-action={o.id} size="sm" className={cn(base, "bg-[#111827] text-white hover:bg-[#111827]/90")} onClick={() => authorise(o)}>Authorise seller</Button>;
+    return <Button data-row-action={o.id} size="sm" variant="outline" className={base} disabled={g === "running"} onClick={() => generate(o)}>{g === "failed" ? "Try again" : "Generate report"}</Button>;
+  };
 
   return (
     <div className="space-y-3">
       {overdue.map((o) => (
         <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-[#FCD34D] bg-[#FFFBEB] px-4 py-2.5 text-sm">
-          <span className="flex-1">⚠️ <b>{o.startups?.startup_name}</b> paid on {dayMonth(o.paid_at)} and the report is {overdueDays(o)} day{overdueDays(o) === 1 ? "" : "s"} overdue</span>
-          <Link {...finLink(o)} className="rounded-lg bg-sidebar px-3 py-1.5 text-[13px] font-semibold text-sidebar-foreground">Open Financials →</Link>
+          <span className="flex-1">⚠ <b>{o.startups?.startup_name}</b> paid on {dayMonth(o.paid_at)} and still can't see the report · {overdueBy(o)} day{overdueBy(o) === 1 ? "" : "s"} overdue</span>
+          {action(o)}
         </div>
       ))}
-      <div className="flex flex-wrap gap-2">
-        <Select value={show} onValueChange={(v) => setShow(v as typeof show)}>
-          <SelectTrigger className="h-9 w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="waiting">Waiting ({counts.waiting})</SelectItem>
-            <SelectItem value="generated">Generated ({counts.generated})</SelectItem>
-            <SelectItem value="delivered">Delivered ({counts.delivered})</SelectItem>
-            <SelectItem value="all">All</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
-          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="due">Due date</SelectItem><SelectItem value="paid">Paid date</SelectItem></SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Show</span>
+        <div className="inline-flex rounded-lg bg-muted p-0.5">
+          {([["waiting", "Waiting", waiting.length], ["authorised", "Authorised", authorised.length], ["all", "All", orders.length]] as const).map(([k, l, n]) => (
+            <button key={k} type="button" onClick={() => setShow(k)}
+              className={cn("rounded-md px-3 py-1 text-[13px] font-semibold", show === k ? "bg-card text-foreground shadow-sm" : "text-muted-foreground")}>
+              {l} {n}
+            </button>
+          ))}
+        </div>
       </div>
-      <Tbl head={["Company", "Report", "Paid", "Due", "Status", ""]}>
-        {rows.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No orders here.</td></tr>}
-        {rows.map((o) => {
-          const st = orderState(o);
-          const hp = hpOf(o);
-          const daysLeft = o.due_at ? Math.ceil((+new Date(o.due_at) - Date.now()) / 86_400_000) : 0;
-          return (
-            <tr key={o.id} className="border-t border-border align-top">
-              <td className="p-3"><Company name={o.startups?.startup_name} code={hp?.code_name} ref={hp?.ref_no} /></td>
-              <td className="p-3">{kindLabel(o.kind)}<div className="text-xs text-muted-foreground">{o.ref}</div></td>
-              <td className="p-3">{dayMonthTime(o.paid_at)}<div className="text-xs text-muted-foreground">{o.method ?? "—"} · {money(o)}</div></td>
-              <td className="p-3">
-                <b>{dayMonth(o.due_at)}</b>
-                <div className={cn("text-xs", st === "delivered" ? "text-emerald-700" : st === "overdue" ? "font-bold text-red-700" : "text-amber-700")}>
-                  {st === "delivered" ? `delivered ${dayMonth(o.delivered_at)}` : st === "overdue" ? `overdue ${overdueDays(o)} day${overdueDays(o) === 1 ? "" : "s"}` : `${Math.max(0, daysLeft)} day${daysLeft === 1 ? "" : "s"}`}
-                </div>
-              </td>
-              <td className="p-3"><OrderStatusPill o={o} /></td>
-              <td className="p-3 text-right">
-                <div className="flex flex-col items-end gap-1">
-                  {st === "delivered" ? (
-                    <Button size="sm" variant="outline" asChild><Link {...finLink(o)}>View report</Link></Button>
-                  ) : (
-                    <Link {...finLink(o)} className="rounded-lg bg-sidebar px-3 py-1.5 text-[13px] font-semibold text-sidebar-foreground">
-                      {st === "generated" ? "Review & publish →" : "Open Financials →"}
-                    </Link>
-                  )}
-                  <Link {...dirLink(o.startup_id)} className="text-xs text-blue-600 hover:underline">Startup Directory ↗</Link>
-                </div>
-              </td>
-            </tr>
-          );
-        })}
-      </Tbl>
+      <p className="flex items-center gap-2 text-[13px] text-[#4B5563]"><Lock className="h-3.5 w-3.5 text-[#6B7280]" />A seller sees their report only after you authorise them. A report can be ready before the seller asks.</p>
+      <div className="overflow-x-auto rounded-[14px] border border-border bg-card">
+        <table className="w-full text-[13.5px]">
+          <thead className="bg-[#FAFBFC] text-left text-[10.5px] font-bold uppercase tracking-[.06em] text-[#6A7181]">
+            <tr>{["Company", "Report", "Seller asked", "Report ready", "Seller can see it", ""].map((h, i) => <th key={i} className="px-5 py-2.5">{h}</th>)}</tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No reports here.</td></tr>}
+            {rows.map((o) => {
+              const hp = hpOf(o);
+              const g = gen[o.id];
+              const before = o.ready_at && +new Date(o.ready_at) < +new Date(o.paid_at);
+              return (
+                <tr key={o.id} className="h-16 border-t border-[#EEF0F3] align-middle">
+                  <td className="px-5 py-3">
+                    <Link {...dirLink(o.startup_id)} className="text-[14px] font-semibold text-[#111827] hover:underline">{o.startups?.startup_name ?? "—"}</Link>
+                    <div className="text-xs text-[#6B7280]">{[hp?.code_name, hp?.ref_no].filter(Boolean).join(" · ")}</div>
+                  </td>
+                  <td className="px-5 py-3">{kindLabel(o.kind)}<div className="text-xs text-[#6B7280]">{o.ref}</div></td>
+                  <td className="px-5 py-3">{dayMonth(o.paid_at)}
+                    <div className="text-xs">{isOverdue(o) ? <span className="font-semibold text-[#B91C1C]">overdue {overdueBy(o)} day{overdueBy(o) === 1 ? "" : "s"}</span> : <span className="text-[#6B7280]">paid {money(o)}</span>}</div>
+                  </td>
+                  <td className="px-5 py-3">
+                    {g === "running" ? <span className="inline-flex items-center gap-1.5 text-[#B45309]"><Loader2 className="h-3.5 w-3.5 animate-spin" />Generating…</span>
+                      : g === "failed" ? <span className="text-[#B91C1C]">✗ Couldn't generate</span>
+                      : o.ready_at ? <span className="font-semibold text-[#047857]">✓ Ready · {dayMonth(o.ready_at)}</span>
+                      : <span className="text-[#9CA3AF]">✗ Not generated yet</span>}
+                    {before && !g && <div className="text-xs text-[#6B7280]">before the seller asked</div>}
+                  </td>
+                  <td className="px-5 py-3">
+                    {o.status === "delivered" ? <><span className="font-semibold text-[#047857]">✓ Authorised · {dayMonth(o.delivered_at)}</span>{o.delivered_by_name && <div className="text-xs text-[#6B7280]">by {o.delivered_by_name}</div>}</>
+                      : <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]"><Lock className="h-3.5 w-3.5" />Not yet</span>}
+                  </td>
+                  <td className="px-5 py-3 text-right">{action(o)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {viewing && <ReportViewerDialog order={viewing} onClose={() => setViewing(null)} />}
     </div>
+  );
+}
+
+function ReportViewerDialog({ order, onClose }: { order: ReportOrder; onClose: () => void }) {
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-[min(1100px,calc(100vw-32px))] p-0">
+        <DialogTitle className="px-5 pt-4 text-base">{order.startups?.startup_name} · {kindLabel(order.kind)}</DialogTitle>
+        <div className="max-h-[80vh] overflow-y-auto p-4">
+          <StartupFinancialsPage id={order.startup_id} workspace="startups" initialTab={order.kind === "valuation" ? "valuation" : undefined} />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -122,7 +210,7 @@ const LISTING_EVENT: Record<string, [string, Row["tone"], string]> = {
   more_info: ["Changes requested", "amber", "changes"], decline: ["Declined", "red", "declined"],
 };
 const REPORT_EVENT: Record<string, [string, Row["tone"], string]> = {
-  paid: ["Report paid", "amber", "paid"], generated: ["Report generated", "amber", "changes"], published: ["Report published", "green", "published"], overdue: ["Report overdue", "red", "overdue"],
+  paid: ["Report paid", "amber", "paid"], generated: ["Report generated", "amber", "changes"], published: ["Seller authorised", "green", "published"], overdue: ["Report overdue", "red", "overdue"],
 };
 
 export function HistoryTab({ approvalEvents, startupInfo, buyerInfo, names }: {
@@ -203,7 +291,7 @@ export function HistoryTab({ approvalEvents, startupInfo, buyerInfo, names }: {
           <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="Search company, code name, buyer or order ref…" className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" />
         </div>
         <Sel value={type} onChange={setType} opts={[["all", "All types"], ["listing", "Listings"], ["buyer", "Buyers"], ["report", "Reports"]]} />
-        <Sel value={ev} onChange={setEv} opts={[["all", "All events"], ["approved", "Approved"], ["changes", "Changes"], ["declined", "Declined"], ["paid", "Paid"], ["published", "Published"], ["overdue", "Overdue"]]} />
+        <Sel value={ev} onChange={setEv} opts={[["all", "All events"], ["approved", "Approved"], ["changes", "Changes"], ["declined", "Declined"], ["paid", "Paid"], ["published", "Authorised"], ["overdue", "Overdue"]]} />
         <Sel value={period} onChange={setPeriod} opts={[["30", "30 days"], ["90", "90 days"], ["all", "All"]]} />
         <Button variant="outline" size="sm" onClick={exportCsv}>Export CSV</Button>
       </div>

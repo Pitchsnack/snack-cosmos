@@ -7,7 +7,7 @@ export type ReportOrder = {
   id: string; ref: string; startup_id: string; kind: "financials" | "valuation" | "bundle"; amount: number; currency: string;
   status: "paid" | "generated" | "delivered" | "cancelled" | "refunded"; paid_at: string; due_at: string | null;
   payment_ref: string | null; method: string | null; ordered_by: string | null; generated_at: string | null;
-  analyst_id: string | null; delivered_at: string | null; delivered_by: string | null; invoice_no: string | null;
+  analyst_id: string | null; ready_at?: string | null; delivered_by_name?: string | null; delivered_at: string | null; delivered_by: string | null; invoice_no: string | null;
   startups?: { id: string; startup_name: string; registered_number: string | null; hidden_profiles?: { code_name: string | null; ref_no: string | null }[] | { code_name: string | null; ref_no: string | null } | null };
 };
 
@@ -46,13 +46,11 @@ export function OrderStatusPill({ o }: { o: ReportOrder }) {
     : s === "delivered" ? <Pill tone="green">Delivered</Pill> : <Pill tone="amber">Paid · not generated</Pill>;
 }
 
-/** Directory "Report:" chip text. */
+/** Directory "Report ·" line: can the seller see it yet? */
 export function ReportChip({ o }: { o: ReportOrder }) {
-  const s = orderState(o);
-  return s === "overdue" ? <Pill tone="red">฿ {kindLabel(o.kind)} · overdue</Pill>
-    : s === "generated" ? <Pill tone="violet">Report generated · review</Pill>
-    : s === "delivered" ? <Pill tone="green">Report delivered</Pill>
-    : <Pill tone="amber">฿ {kindLabel(o.kind)} · paid {dayMonth(o.paid_at)}</Pill>;
+  return o.status === "delivered"
+    ? <span className="font-semibold text-[#047857]">Report · seller can see it</span>
+    : <span className="font-semibold text-[#B45309]">Report · seller can't see it yet</span>;
 }
 
 export function useAllReportOrders(enabled = true) {

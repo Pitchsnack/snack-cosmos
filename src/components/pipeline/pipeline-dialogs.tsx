@@ -146,7 +146,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
           </DialogDescription>
         </div>
         <span className="inline-flex h-7 items-center gap-1 rounded-full bg-[#ECFDF3] px-2.5 text-[12px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />Verified by PitchSnack</span>
-        <DownloadBtn allowed={!sample && (seller || p.reportAllowDownload)} reason={sample ? "Download is available once your own report is delivered" : "The seller has not allowed downloads for this report"} />
+        <DownloadBtn allowed={!sample && (seller || !!p.share?.allowDownload)} reason={sample ? "Download is available once your own report is delivered" : "The seller has not allowed downloads for this report"} />
         <CloseX onClose={onClose} />
       </div>
       <div className="px-6 pt-4">

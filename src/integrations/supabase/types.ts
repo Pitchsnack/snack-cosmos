@@ -2890,6 +2890,104 @@ export type Database = {
           },
         ]
       }
+      report_share_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: string | null
+          event: string
+          id: string
+          share_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event: string
+          id?: string
+          share_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event?: string
+          id?: string
+          share_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_share_events_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "report_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_shares: {
+        Row: {
+          allow_download: boolean
+          business_id: string
+          buyer_id: string
+          financials: boolean
+          id: string
+          pipeline_id: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          shared_at: string
+          shared_by: string | null
+          updated_at: string
+          updated_by: string | null
+          valuation: boolean
+        }
+        Insert: {
+          allow_download?: boolean
+          business_id: string
+          buyer_id: string
+          financials?: boolean
+          id?: string
+          pipeline_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          shared_at?: string
+          shared_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          valuation?: boolean
+        }
+        Update: {
+          allow_download?: boolean
+          business_id?: string
+          buyer_id?: string
+          financials?: boolean
+          id?: string
+          pipeline_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          shared_at?: string
+          shared_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          valuation?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_shares_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_shares_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string
