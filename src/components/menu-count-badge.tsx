@@ -4,6 +4,7 @@ import { pendingApprovalsCount } from "@/lib/approvals.functions";
 import { listPipeline, type PipelineRow } from "@/lib/pipeline.functions";
 import { usePersona } from "@/hooks/use-marketplace";
 import { cn } from "@/lib/utils";
+import { waitingOnYouCount } from "@/lib/pipeline-state";
 
 /**
  * Shared sidebar count badge (Admin › Approvals, Marketplace › Pipeline).
@@ -48,10 +49,7 @@ export function PipelineCountBadge({ collapsed = false }: { collapsed?: boolean 
   const fn = useServerFn(listPipeline);
   const { data } = useQuery({ queryKey: ["pipeline", persona], queryFn: () => fn({ data: { as: persona } }) });
   const rows: PipelineRow[] = data ?? [];
-  // Same filters as the My Pipeline page tabs, so the badge matches the sum shown there.
-  const n =
-    rows.filter((p) => !p.ndaApprovedAt || (!!p.loiSentAt && !p.loiAcceptedAt)).length +
-    rows.filter((p) => !!p.ndaApprovedAt).length;
+  const n = waitingOnYouCount(rows, persona === "seller");
   if (!n) return null;
   return <CountPill count={n} collapsed={collapsed} />;
 }

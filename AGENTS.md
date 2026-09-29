@@ -8,3 +8,4 @@
 - Seller report offers live after the shared founder section via an optional slot; keep samples and prices in report-catalog.json so Directory cards remain unchanged and preview-only offers cannot be mistaken for paid orders.
 - Paid report orders live in report_orders/report_order_events (report-orders.functions.ts); seller My Financials unlocks only when the order is delivered, replacing the localStorage bypass — Admin must generate and publish.
 - Buyer↔seller deal steps live in deal_pipelines/deal_pipeline_events (pipeline.functions.ts); writes only via server functions after checking buyer or startup access, so neither side can skip a step.
+- Pipeline 'waiting on you' logic lives in pipeline-state.ts and drives both Tracking filters and the Pipeline menu badge, so the counts never drift; buyer report opens are logged server-side in getPipelineReport.
