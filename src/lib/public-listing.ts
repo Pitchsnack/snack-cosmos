@@ -287,6 +287,41 @@ export function suggestBusinessDescription(s: ListingSource) {
   return out;
 }
 
+/**
+ * Three anonymous highlight bullets:
+ * 1. track record & scale, 2. capabilities & quality, 3. markets & clients.
+ */
+export function suggestHighlights(s: ListingSource): string[] {
+  const a = activityProfile(s);
+  const terms = listingTerms(s);
+  const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 3).map(lower);
+  const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
+
+  const one = [
+    a.decade ? `Operating since the ${a.decade}` : `Established ${a.noun.toLowerCase()}`,
+    a.employees ? `with ${a.employees.toLowerCase()}` : "",
+    a.geo ? `in ${a.geo}` : "",
+    a.revenue ? `and annual revenue of ${a.revenue}` : "",
+  ].filter(Boolean).join(" ");
+
+  const two = a.certs.length
+    ? `${listOf(a.certs)} ${a.role === "Manufacturer" ? "certified production" : "certified operations"}${a.products.length ? ` of ${listOf(a.products.map(lower))}` : ""}`
+    : a.products.length
+      ? `${titleCase(a.role)} of ${listOf(a.products.map(lower))}`
+      : `${a.noun} with in-house capability`;
+
+  const three = [
+    buyers.length ? `Serving ${listOf(buyers)} customers` : `Serving a repeat customer base`,
+    reach.length ? `across ${listOf(reach)} markets` : a.geo ? `in ${a.geo}` : "",
+  ].filter(Boolean).join(" ");
+
+  return [one, two, three].map((raw) => {
+    let t = raw;
+    for (const h of [...findTermsIn(t, terms)].reverse()) t = t.slice(0, h.start) + t.slice(h.end);
+    return t.replace(/\s{2,}/g, " ").trim();
+  });
+}
+
 function listOf(items: string[]) {
   const v = items.map((x) => x.trim()).filter(Boolean);
   if (v.length <= 1) return v[0] ?? "";
