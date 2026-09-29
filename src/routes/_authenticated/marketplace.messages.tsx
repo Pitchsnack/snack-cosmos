@@ -101,10 +101,23 @@ function MessagesPage() {
   });
   const current = convs.find((c) => c.key === sel) ?? null;
 
+  // Card fills the window below the title with a 24px gap at the bottom.
+  const card = useRef<HTMLDivElement>(null);
+  const [cardH, setCardH] = useState<number | null>(null);
+  useEffect(() => {
+    const fit = () => {
+      const el = card.current;
+      if (el) setCardH(Math.max(520, window.innerHeight - el.getBoundingClientRect().top - window.scrollY - 24));
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-6 py-6 md:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-6 pt-6 md:px-8">
       <h1 className="text-[30px] font-bold leading-tight">Messages</h1>
-      <div className="relative mt-5 flex h-[calc(100vh-260px)] min-h-[520px] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white">
+      <div ref={card} style={{ height: cardH ?? undefined }} className="relative mt-5 flex h-[calc(100vh-260px)] min-h-[520px] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white">
         {/* List */}
         <div className={cn("flex w-full shrink-0 flex-col border-r border-[#F0F1F4] min-[760px]:w-[300px]", mobileChat && "max-[759px]:hidden")}>
           <label className="flex h-14 shrink-0 items-center gap-2 border-b border-[#F0F1F4] px-5">
@@ -121,7 +134,7 @@ function MessagesPage() {
               >
                 <div className="flex items-center">
                   <span className={cn("min-w-0 truncate text-[14px] text-[#111827]", c.unread ? "font-bold" : "font-medium")}>{c.name}</span>
-                  {c.unread > 0 && <span className="ml-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-[#F6A823] px-1.5 text-[10.5px] font-bold text-[#0E162F]">{c.unread > 9 ? "9+" : c.unread}</span>}
+                  <RowCount n={c.unread} />
                   <span className="ml-auto shrink-0 pl-2 text-[11.5px] text-[#9CA3AF]">{c.last ? listTime(c.last.at) : ""}</span>
                 </div>
                 <div className={cn("mt-0.5 truncate text-[13px]", c.unread ? "text-[#374151]" : "text-[#6B7280]")}>

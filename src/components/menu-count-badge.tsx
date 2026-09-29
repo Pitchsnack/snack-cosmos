@@ -7,6 +7,7 @@ import { listPipeline, type PipelineRow } from "@/lib/pipeline.functions";
 import { usePersona } from "@/hooks/use-marketplace";
 import { cn } from "@/lib/utils";
 import { waitingOnYouCount } from "@/lib/pipeline-state";
+import { useBump } from "@/hooks/use-bump";
 
 /**
  * Shared sidebar count badge (Admin › Approvals, Marketplace › Pipeline).
@@ -61,17 +62,18 @@ export function MessagesCountBadge({ collapsed = false }: { collapsed?: boolean 
   const { persona } = usePersona();
   const fn = useServerFn(threadSummaries);
   const active = useRouterState({ select: (s) => s.location.pathname === "/marketplace/messages" });
-  const { data } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => fn({ data: { as: persona } }), refetchInterval: 5000 });
+  const { data } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => fn({ data: { as: persona } }), refetchInterval: 2500, refetchIntervalInBackground: true });
   const n = (data ?? []).reduce((s, t) => s + t.unread, 0);
+  const bump = useBump(n);
   if (!n) return null;
   const label = n > 9 ? "9+" : String(n);
   const tone = active ? cn("bg-white", persona === "seller" ? "text-[#0E162F]" : "text-[#4338CA]") : "bg-[#F6A823] text-[#0E162F]";
   if (collapsed) {
     return (
-      <span data-mkt-badge data-rail className={cn("absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full px-1 text-[9px] font-bold leading-none", tone)}>
+      <span key={bump} data-mkt-badge data-rail className={cn("absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full px-1 text-[9px] font-bold leading-none", bump && "mkt-bump", tone)}>
         {label}
       </span>
     );
   }
-  return <span data-mkt-badge className={cn("ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold", tone)}>{label}</span>;
+  return <span key={bump} data-mkt-badge className={cn("ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold", bump && "mkt-bump", tone)}>{label}</span>;
 }
