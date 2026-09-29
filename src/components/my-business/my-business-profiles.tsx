@@ -51,7 +51,7 @@ function useCompleteness(s: StartupListItem) {
   return { items, pct, missingRequired: items.filter((i) => i.required && !i.done).length, hasData };
 }
 
-function Ring({ pct, size, stroke = 5, done }: { pct: number; size: number; stroke?: number; done?: boolean }) {
+export function Ring({ pct, size, stroke = 5, done }: { pct: number; size: number; stroke?: number; done?: boolean }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   return (
@@ -169,7 +169,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
   );
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+export function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-3">
       <div className="mb-1 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{title}</div>
@@ -178,7 +178,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function Row({ label, link, onClick, circle }: { label: string; link: string; onClick: () => void; circle: "solid" | "dashed" }) {
+export function Row({ label, link, onClick, circle }: { label: string; link: string; onClick: () => void; circle: "solid" | "dashed" }) {
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-2 py-1.5 text-left text-[13px]">
       <span className={cn("h-4 w-4 shrink-0 rounded-full border-2 border-muted-foreground/40", circle === "dashed" && "border-dashed")} />
@@ -190,7 +190,7 @@ function Row({ label, link, onClick, circle }: { label: string; link: string; on
 
 /* --------------------------- Left: tabbed card ---------------------------- */
 
-function FolderTab({ active, open, side, icon, title, sub, tone, onClick }: {
+export function FolderTab({ active, open, side, icon, title, sub, tone, onClick }: {
   active: boolean; open?: boolean; side: "left" | "right"; icon: React.ReactNode; title: string; sub: string; tone: "indigo" | "green"; onClick: () => void;
 }) {
   return (
@@ -293,7 +293,7 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
   );
 }
 
-function Intro({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+export function Intro({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="mb-4 flex items-start gap-2.5 rounded-[10px] bg-muted px-3 py-2.5 text-[13px] leading-relaxed text-foreground/80">
       <span className="mt-0.5 shrink-0">{icon}</span>
