@@ -290,7 +290,7 @@ export function SellerWizard({
                 <button type="button" onClick={() => setConfirmExit(true)}
                   className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">Save &amp; exit</button>
               )}
-              <button type="button" disabled={!valid[cur.id] || webState === "checking"}
+              <button type="button" disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
                 onClick={async () => {
                   if (cur.id === "review") return onFinish(d);
                   if (cur.id === "web") {
@@ -299,13 +299,15 @@ export function SellerWizard({
                     let ok = false;
                     try { ok = (await checkWeb({ data: { url } })).ok; } catch { ok = false; }
                     if (!ok) { setWebState("unreachable"); return; }
+                    setWebState("idle");
                     set({ web: url, step: step + 1 });
                     return;
                   }
                   go(step + 1);
                 }}
                 className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
-                {cur.id === "review" ? "Continue to auto-fill" : webState === "checking" ? "Checking…" : "Continue"}
+                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : "Continue"}
+
               </button>
             </div>
           </div>
