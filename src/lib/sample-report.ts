@@ -129,7 +129,7 @@ export function makeSampleReport(): SampleReportData {
     evEbitda: Math.round((peerMult[i % 3]! + rnd(-0.8, 0.8)) * 10) / 10,
   }));
   return {
-    company, sector: pick(SECTORS), cash, debt,
+    company, legalName, sector: pick(SECTORS), cash, debt,
     data: {
       years, income, position, ratios, valuationShared: true,
       info: {
