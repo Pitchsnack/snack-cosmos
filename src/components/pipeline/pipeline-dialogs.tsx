@@ -224,6 +224,8 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 ["Total liabilities", (y) => metrics(data, y).liabilities, null],
                 ["Equity", (y) => metrics(data, y).equity, null],
               ]} />
+              </>)}
+              {finTab === "ratios" && (<>
               <Caption>Financial ratios · FY{last}</Caption>
               <div className="grid grid-cols-4 gap-3">
                 {(allRatios ? data.ratios : data.ratios.slice(0, 8)).map((r) => (
