@@ -193,7 +193,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
               </div>
               <Caption>Company info</Caption>
               <div className="grid grid-cols-2 gap-x-6">
-                <Rows rows={[["Registration no.", data.info.registration], ["Registered capital", data.info.capital != null ? `฿${data.info.capital.toLocaleString()}` : null], ["Founded", data.info.founded]]} />
+                <Rows rows={[...(sample ? [["Company name", sample.legalName] as [string, string]] : []), ["Registration no.", data.info.registration], ["Registered capital", data.info.capital != null ? `฿${data.info.capital.toLocaleString()}` : null], ["Founded", data.info.founded]]} />
                 <Rows rows={[["Employees", data.info.employees], ["Directors", data.info.directors], ["Shareholders", data.info.shareholders]]} />
               </div>
               <Caption>Income statement · ฿ million</Caption>
