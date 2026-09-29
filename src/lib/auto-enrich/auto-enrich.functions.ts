@@ -45,8 +45,13 @@ export interface EnrichResult {
   marketTags?: string[];
   investmentStage?: string;
   founders?: Array<{ full_name: string; position?: string; linkedin_url?: string; bio?: string }>;
+  /** Certifications/licences explicitly stated on the site. Never inferred. */
+  regulatoryLicenses?: Array<{ category: string; name: string; number?: string | null }>;
+  isoStandards?: string[];
   _debug?: EnrichDebug;
 }
+
+const LICENCE_CATS = ["Financial", "Business", "Manufacturing", "Import & Export", "Raw Material"];
 
 const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
 const STAGES = ["Pre-Seed","Seed","Series A","Series B","Series C+","Growth","IPO","Acquired","Inactive"];
@@ -104,6 +109,11 @@ const CANDIDATE_PATHS = [
   "/imprint",
   "/impressum",
   "/legal",
+  "/certifications",
+  "/certificates",
+  "/certification",
+  "/quality",
+  "/standards",
 ];
 const MIN_CORPUS_CHARS = 400;
 // Below this raw-fetch corpus size we trigger the Firecrawl fallback for SPA shells.
