@@ -170,11 +170,17 @@ export function activityProfile(s: ListingSource): ActivityProfile {
   const phrase = titleCase(base.split(/[,/&]| and /i)[0].trim().split(/\s+/).slice(0, 2).join(" "));
   const noun = ROLE_WORD.test(phrase) ? phrase : titleCase(`${phrase} ${role}`);
 
-  // The code name uses the category noun (Packaging), not a leading adjective (Flexible).
+  // The code name uses the category noun (Packaging), not a leading adjective (Flexible)
+  // and not a vague industry label (FMCG, SME).
   const words = phrase.split(/\s+/);
-  const core = titleCase(
-    (industries[0] || sector || words[words.length - 1] || "Business").split(/[,/&]| and /i)[0].trim().split(/\s+/).slice(-1)[0],
-  );
+  const scan = [...products, ...industries, sector, s.business_model ?? ""].join(" ");
+  const known = CATEGORY_WORDS.find((w) => new RegExp(`\\b${w}`, "i").test(scan));
+  const fallback = (industries.find((i) => !GENERIC_IND.test(i)) || sector || words[words.length - 1] || "Business")
+    .split(/[,/&]| and /i)[0]
+    .trim()
+    .split(/\s+/)
+    .slice(-1)[0];
+  const core = titleCase(known ?? fallback);
 
   const geoTag = markets.find((m) => GEO_RE.test(m));
   const geo = provinceOnly(s.city, s.headquarters) || geoTag || s.headquarters || null;
