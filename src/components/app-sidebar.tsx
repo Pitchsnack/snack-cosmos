@@ -40,7 +40,8 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import { ApprovalsBadge } from "@/components/menu-count-badge";
 import logoWhite from "@/assets/pitchsnack-white.png";
-import { useIsMarketplace, rememberAdminPath } from "@/hooks/use-marketplace";
+import logoBlack from "@/assets/pitchsnack-black.png";
+import { useIsMarketplace, usePersona, rememberAdminPath } from "@/hooks/use-marketplace";
 import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marketplace/marketplace-frame";
 
 type NavPath =
