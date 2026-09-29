@@ -137,8 +137,8 @@ export function makeSampleReport(): SampleReportData {
         capital: Math.round(rnd(5, 50)) * M,
         founded: String(2010 + Math.floor(rnd(0, 9))),
         employees: `${Math.round(rnd(60, 260))}`,
-        directors: `${Math.round(rnd(2, 5))}`,
-        shareholders: `${Math.round(rnd(2, 8))}`,
+        directors: directorNames.join(", "),
+        shareholders: shareholderNames.join(", "),
       },
     },
     valuation: {
