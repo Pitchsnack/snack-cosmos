@@ -1,7 +1,5 @@
-import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
 import { threadSummaries } from "@/lib/messages.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { pendingApprovalsCount } from "@/lib/approvals.functions";
@@ -58,24 +56,12 @@ export function PipelineCountBadge({ collapsed = false }: { collapsed?: boolean 
   return <CountPill count={n} collapsed={collapsed} />;
 }
 
-/** Marketplace › Messages — total unread messages; also keeps the list live. */
+/** Marketplace › Messages — total unread messages; refreshed every few seconds. */
 export function MessagesCountBadge({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
   const fn = useServerFn(threadSummaries);
-  const qc = useQueryClient();
   const active = useRouterState({ select: (s) => s.location.pathname === "/marketplace/messages" });
-  const { data } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => fn({ data: { as: persona } }) });
-  useEffect(() => {
-    if (collapsed) return;
-    const ch = supabase
-      .channel(`mkt-messages-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "marketplace_messages" }, () => qc.invalidateQueries({ queryKey: ["messages"] }))
-      .on("postgres_changes", { event: "*", schema: "public", table: "marketplace_message_reads" }, () => qc.invalidateQueries({ queryKey: ["messages", "thread"] }))
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [qc, collapsed]);
+  const { data } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => fn({ data: { as: persona } }), refetchInterval: 5000 });
   const n = (data ?? []).reduce((s, t) => s + t.unread, 0);
   if (!n) return null;
   const label = n > 9 ? "9+" : String(n);
