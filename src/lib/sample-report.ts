@@ -17,13 +17,16 @@ export type SampleValuation = {
   peers: { name: string; revenue: number; growth: number; ebitdaMargin: number; netMargin: number; evEbitda: number }[];
   notes: string[];
 };
-export type SampleReportData = { company: string; sector: string; data: ReportData; cash: Record<number, number>; debt: Record<number, number>; valuation: SampleValuation };
+export type SampleReportData = { company: string; legalName: string; sector: string; data: ReportData; cash: Record<number, number>; debt: Record<number, number>; valuation: SampleValuation };
 
 
 const NAMES = ["Apex", "Horizon", "Lotus", "Cobalt", "Monsoon", "Saffron", "Teak", "Harbor", "Summit", "Jade"];
 const SUFFIX = ["Wave", "Trail", "Foundry", "Peak", "Bridge", "Grove", "Crest"];
 const SECTORS = ["B2B SaaS", "Cold-Chain Logistics", "F&B chain", "Healthcare clinics", "E-commerce retail", "Industrial packaging"];
+const FIRST = ["Somchai", "Naphat", "Pimchanok", "Thanakorn", "Kanya", "Wichai", "Suphansa", "Chalermpol", "Areeya", "Nattapong"];
+const LAST = ["Srisuk", "Wongphan", "Chaiyaporn", "Rattanakul", "Boonmee", "Intharat", "Tangsakul", "Phuwanart", "Siriwat", "Kittisak"];
 const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]!;
+const pickMany = <T,>(a: T[], n: number) => [...a].sort(() => Math.random() - 0.5).slice(0, n);
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const M = 1e6;
 const fmtM = (v: number) => `฿${Math.round(v / M)}M`;
