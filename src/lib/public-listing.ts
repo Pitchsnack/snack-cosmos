@@ -303,9 +303,7 @@ export function suggestBusinessDescription(s: ListingSource, o?: SuggestOpts) {
 
   let out = "";
   for (const raw of sentences) {
-    let t = raw;
-    for (const h of [...findTermsIn(t, terms)].reverse()) t = t.slice(0, h.start) + t.slice(h.end);
-    t = t.replace(/\s{2,}/g, " ").replace(/\s+\./g, ".").trim();
+    const t = `${scrub(raw, terms).replace(/\.$/, "")}.`;
     if (!t || t === ".") continue;
     const next = out ? `${out} ${t}` : t;
     if (next.length > DESCRIPTION_MAX) continue;
