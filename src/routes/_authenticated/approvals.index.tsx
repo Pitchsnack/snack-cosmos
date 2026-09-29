@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
-import { useAllReportOrders, orderState, type ReportOrder } from "@/components/reports/report-order-bits";
-import { PaidReports, HistoryTab, Tile } from "@/components/reports/approvals-report-tabs";
+import { useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
+import { PaidReports, HistoryTab, Tile, isOverdue } from "@/components/reports/approvals-report-tabs";
 
 export const Route = createFileRoute("/_authenticated/approvals/")({
   head: () => ({
@@ -74,8 +74,8 @@ function ApprovalsPage() {
   const names = (data?.names ?? {}) as Record<string, string>;
   const { data: od } = useAllReportOrders();
   const orders = (od?.orders ?? []) as ReportOrder[];
-  const overdueOrders = orders.filter((o) => orderState(o) === "overdue").sort((a, b) => +new Date(a.due_at!) - +new Date(b.due_at!));
-  const reportsWaiting = orders.filter((o) => o.status === "paid" || o.status === "generated").length;
+  const overdueOrders = orders.filter(isOverdue);
+  const reportsWaiting = orders.filter((o) => o.status !== "delivered").length;
   const deliveredWeek = orders.filter((o) => o.delivered_at && Date.now() - +new Date(o.delivered_at) < 7 * 86_400_000).length;
   const listingsWaiting = (data?.listings ?? []).filter((x: any) => x.approval_status === "in_review").length;
   const buyersWaiting = (data?.buyers ?? []).filter((b: any) => b.status === "pending").length;
@@ -94,8 +94,8 @@ function ApprovalsPage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Listings to review" value={listingsWaiting} sub={`oldest ${oldest} day${oldest === 1 ? "" : "s"}`} />
         <Tile label="Buyer verifications" value={buyersWaiting} sub="pending" />
-        <Tile label="Paid reports waiting" value={reportsWaiting} sub={`${overdueOrders.length} overdue`} amber />
-        <Tile label="Delivered this week" value={deliveredWeek} sub="reports" />
+        <Tile label="SELLERS TO AUTHORISE" value={reportsWaiting} sub={overdueOrders.length ? `${overdueOrders.length} overdue` : "asked, can't see their report yet"} amber />
+        <Tile label="AUTHORISED THIS WEEK" value={deliveredWeek} sub="sellers who can see their report" green />
       </div>
 
       <div className="flex gap-1 border-b border-border">
@@ -175,7 +175,7 @@ function ApprovalsPage() {
           ))}
         </Table>
       ) : tab === "reports" ? (
-        <PaidReports orders={orders} overdue={overdueOrders} />
+        <PaidReports orders={orders} />
       ) : (
         <HistoryTab approvalEvents={(data?.history ?? []) as any[]} startupInfo={(data as any)?.startupInfo ?? {}} buyerInfo={(data as any)?.buyerInfo ?? {}} names={names} />
       )}
