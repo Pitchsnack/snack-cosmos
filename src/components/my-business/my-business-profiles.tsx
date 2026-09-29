@@ -200,7 +200,7 @@ function FolderTab({ active, open, icon, title, sub, tone, onClick }: {
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "relative flex flex-1 items-center gap-2 rounded-t-[12px] px-3 py-2 text-left",
+        "relative flex flex-1 items-center gap-2 rounded-t-[12px] first:rounded-tl-none px-3 py-2 text-left",
         active
           ? cn("z-10 -mb-px border border-b-0 bg-card pb-[9px] text-foreground", open ? "border-accent" : "border-border")
           : "mb-0 border border-b-0 border-border bg-muted text-muted-foreground hover:text-foreground",
