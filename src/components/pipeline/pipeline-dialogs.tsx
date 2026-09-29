@@ -788,3 +788,12 @@ export function SellerProfile({ p, onClose, onNda, onLoi, onReport, onAsk }: { p
     </Shell>
   );
 }
+
+/** Left/right arrow keys move between the enabled tabs of a tablist. */
+function tabArrowNav(e: React.KeyboardEvent<HTMLDivElement>) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const tabs = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]:not([disabled])'));
+  const i = tabs.indexOf(document.activeElement as HTMLButtonElement);
+  const next = tabs[(i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
+  if (next) { e.preventDefault(); next.focus(); next.click(); }
+}
