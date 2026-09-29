@@ -20,7 +20,8 @@ import {
 } from "@/lib/pipeline.functions";
 import { STEPS, currentStep, isPending, waitState } from "@/lib/pipeline-state";
 import { ReportViewer, CompareReports, InvestorProfile, NdaDialog, LoiDialog as LoiDocDialog, shortDate } from "@/components/pipeline/pipeline-dialogs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip as TT, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvider delayDuration={200}><TT>{children}</TT></TooltipProvider>;
 
 export const Route = createFileRoute("/_authenticated/marketplace/pipeline")({
   head: () => ({
