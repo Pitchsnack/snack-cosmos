@@ -394,7 +394,7 @@ function StartupsPageInner() {
               <div key={it.id} className="space-y-1.5">
                 <StartupCard s={it} onClick={() => openStartup(it.id, { tab: "full" })} compact={favOnly} />
                 {orderByStartup.get(it.id) && (
-                  <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><span className="shrink-0">Report:</span><ReportChip o={orderByStartup.get(it.id)!} /></div>
+                  <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><ReportChip o={orderByStartup.get(it.id)!} /></div>
                 )}
                 <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
                   <span className="shrink-0">Hidden profile:</span>
@@ -470,7 +470,7 @@ function StartupsPageInner() {
                       </div>
                       {orderByStartup.get(it.id) && (
                         <div className="flex items-center gap-2 px-2 pt-1 text-[11px] text-muted-foreground">
-                          Report: <ReportChip o={orderByStartup.get(it.id)!} />
+                          <ReportChip o={orderByStartup.get(it.id)!} />
                         </div>
                       )}
                     </div>
@@ -478,7 +478,7 @@ function StartupsPageInner() {
                 })}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
-            {selected && orderByStartup.get(selected) && <DirectoryReportStrip o={orderByStartup.get(selected)!} />}
+            
             {selected ? (
               <EntryProfileTabs id={selected} tab={tab} onTabChange={setTab} editing={editing} onEditingChange={setEditing} />
             ) : (
