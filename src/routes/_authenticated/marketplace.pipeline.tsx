@@ -453,8 +453,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
             <span className="truncate text-[16px] font-bold">{p.counterparty.name}</span>
-            <span className="shrink-0 rounded-[6px] border border-[#DBEAFE] bg-[#EFF6FF] px-1.5 py-0.5 text-[11.5px] font-semibold text-[#1D4ED8]">{STEPS[Math.min(cur, 6)]}</span>
-            {report}
+
           </div>
           <div className="truncate text-[12.5px] text-[#6B7280]">
             {[p.counterparty.sub, p.loiAmount ? `${seller ? "offer" : "your offer"} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
