@@ -2361,6 +2361,51 @@ export type Database = {
           },
         ]
       }
+      marketplace_message_reads: {
+        Row: {
+          read_at: string
+          thread_key: string
+          user_id: string
+        }
+        Insert: {
+          read_at?: string
+          thread_key: string
+          user_id: string
+        }
+        Update: {
+          read_at?: string
+          thread_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_messages: {
+        Row: {
+          body: string
+          created_at: string
+          files: Json
+          id: string
+          sender_id: string
+          thread_key: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          files?: Json
+          id?: string
+          sender_id: string
+          thread_key: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          files?: Json
+          id?: string
+          sender_id?: string
+          thread_key?: string
+        }
+        Relationships: []
+      }
       master_agent_tenants: {
         Row: {
           created_at: string
@@ -4037,6 +4082,10 @@ export type Database = {
       }
       can_manage_startup: {
         Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_read_message_thread: {
+        Args: { _key: string; _uid: string }
         Returns: boolean
       }
       fn_import_global_startup: {
