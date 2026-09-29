@@ -1283,7 +1283,7 @@ export function StartupForm({
             placeholder="Street address, building, district and postal code"
             maxLength={1000}
             rows={1}
-            className="field-sizing-content min-h-10 max-h-[5.5rem] resize-none overflow-y-auto py-2"
+            className="field-sizing-content min-h-9 max-h-[4.75rem] resize-none overflow-y-auto px-3 py-2 text-sm shadow-sm"
           />
         </div>
       </div>
