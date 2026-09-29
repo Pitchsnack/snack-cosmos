@@ -323,6 +323,7 @@ export function StartupForm({
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? prefill?.startupName ?? "");
   const [companyType, setCompanyType] = useState<string>(startup?.company_type ?? "");
+  const [businessAddress, setBusinessAddress] = useState(startup?.business_address ?? "");
   const [registeredName, setRegisteredName] = useState(startup?.registered_name ?? "");
   const [registeredNumber, setRegisteredNumber] = useState(startup?.registered_number ?? prefill?.registeredNumber ?? "");
   const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? prefill?.yearFounded ?? "");
@@ -524,6 +525,7 @@ export function StartupForm({
     sector: sector || null,
     businessModel: businessModel || null,
     companyType: companyType || null,
+    businessAddress: businessAddress.trim() || null,
     registeredName: registeredName || null,
     registeredNumber: registeredNumber || null,
     companySize: companySize || null,
@@ -661,7 +663,7 @@ export function StartupForm({
   // ── Unsaved Changes: snapshot-diff dirty detection ──
   const currentSnapshot = buildStartupFormSnapshot({
     isEdit,
-    tenantId, startupName, companyType, registeredName, registeredNumber, companySize, lastYearRevenue,
+    tenantId, startupName, companyType, businessAddress, registeredName, registeredNumber, companySize, lastYearRevenue,
     yearFounded, email, headquarters,
     region, city, websiteUrl, linkedinUrl, shortDescription, longDescription,
     industries, productTags, marketTags, investmentStage,
@@ -1273,6 +1275,18 @@ export function StartupForm({
         </div>
       </div>
 
+
+      <div className="space-y-1.5">
+        <Label htmlFor="business-address">Business Address</Label>
+        <Textarea
+          id="business-address"
+          value={businessAddress}
+          onChange={(e) => setBusinessAddress(e.target.value)}
+          placeholder="Street address, building, district and postal code"
+          maxLength={1000}
+          rows={3}
+        />
+      </div>
 
       {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
       <div className="grid grid-cols-3 gap-4">

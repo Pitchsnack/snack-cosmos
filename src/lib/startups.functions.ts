@@ -99,6 +99,7 @@ export interface StartupRow {
   updated_at: string;
   logo_url: string | null;
   company_type: string | null;
+  business_address: string | null;
   registered_name: string | null;
   registered_number: string | null;
   company_size: string | null;
@@ -186,7 +187,7 @@ async function logActivity(
 const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, industry, sector, business_model,
   short_description, long_description, status, visibility, created_at, updated_at,
-  logo_url, company_type, registered_name, registered_number, company_size, last_year_revenue,
+   logo_url, company_type, business_address, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
   product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
@@ -363,7 +364,7 @@ export const getStartup = createServerFn({ method: "GET" })
       .select(`
         id, tenant_id, startup_name, website_url, linkedin_url, city, industry, sector, business_model,
         short_description, long_description, status, visibility, created_at, updated_at,
-        logo_url, company_type, registered_name, registered_number, company_size, last_year_revenue,
+         logo_url, company_type, business_address, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
         product_tags, market_tags, regulatory_licenses, iso_standards, url_key, source_global_id, imported_at,
         tenants!inner(tenant_name),
@@ -483,6 +484,7 @@ const MediaInput = z.object({
 const ProfileFields = {
   logoPath: z.string().max(1024).nullable().optional(),
   companyType: z.string().max(100).nullable().optional(),
+  businessAddress: z.string().max(1000).nullable().optional(),
   registeredName: z.string().max(255).nullable().optional(),
   registeredNumber: z.string().max(64).nullable().optional(),
   companySize: z.string().max(100).nullable().optional(),
@@ -660,6 +662,7 @@ export const createStartup = createServerFn({ method: "POST" })
         visibility: data.visibility,
         logo_url: emptyToNull(data.logoPath),
         company_type: emptyToNull(data.companyType),
+        business_address: emptyToNull(data.businessAddress),
         registered_name: emptyToNull(data.registeredName),
         registered_number: emptyToNull(data.registeredNumber),
         company_size: emptyToNull(data.companySize),
@@ -766,6 +769,7 @@ export const updateStartup = createServerFn({ method: "POST" })
     }
 
     if (data.companyType !== undefined) patch.company_type = data.companyType;
+    if (data.businessAddress !== undefined) patch.business_address = emptyToNull(data.businessAddress);
     if (data.registeredName !== undefined) patch.registered_name = emptyToNull(data.registeredName);
     if (data.registeredNumber !== undefined) patch.registered_number = emptyToNull(data.registeredNumber);
     if (data.companySize !== undefined) patch.company_size = emptyToNull(data.companySize);

@@ -20,6 +20,7 @@ export interface StartupFormSnapshotInput {
   tenantId: string;
   startupName: string;
   companyType: string;
+  businessAddress: string;
   registeredName: string;
   registeredNumber: string;
   companySize: string;
@@ -83,6 +84,7 @@ export function buildStartupFormSnapshot(input: StartupFormSnapshotInput): strin
     ...createOnly,
     startupName: s(input.startupName),
     companyType: s(input.companyType),
+    businessAddress: s(input.businessAddress),
     registeredName: s(input.registeredName),
     registeredNumber: s(input.registeredNumber),
     companySize: s(input.companySize),
