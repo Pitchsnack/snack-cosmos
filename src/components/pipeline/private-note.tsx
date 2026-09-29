@@ -26,7 +26,7 @@ function Row({ label, children, edit }: { label: string; children: React.ReactNo
       <div className="text-[#6B7280]">{label}</div>
       <div className="min-w-0 break-words font-normal text-[#374151]">{children}</div>
     </div>
-  )  );
+  );
 }
 
 export function PrivateNote({ pipelineId, onClose }: { pipelineId: string; onClose: () => void }) {

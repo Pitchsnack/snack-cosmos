@@ -10,3 +10,4 @@
 - Buyer↔seller deal steps live in deal_pipelines/deal_pipeline_events (pipeline.functions.ts); writes only via server functions after checking buyer or startup access, so neither side can skip a step.
 - Pipeline 'waiting on you' logic lives in pipeline-state.ts and drives both Tracking filters and the Pipeline menu badge, so the counts never drift; buyer report opens are logged server-side in getPipelineReport.
 - Marketplace messages live in marketplace_messages/marketplace_message_reads keyed 'p:<pipeline id>' or 'a:<user id>' (messages.functions.ts); membership is checked server-side via can_read_message_thread and pipeline events are read from deal_pipelines, never copied as messages.
+- Private notes on My Pipeline profiles live in private_notes (private-notes.functions.ts); generated per field with owner overrides on top, server-only access so the other party never sees them.
