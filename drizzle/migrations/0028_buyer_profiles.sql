@@ -1,0 +1,37 @@
+CREATE SEQUENCE IF NOT EXISTS public.buyer_profile_ref_seq START 1001;
+CREATE TABLE public.buyer_profiles (
+  user_id uuid PRIMARY KEY,
+  ref_no text NOT NULL DEFAULT ('INV-' || nextval('public.buyer_profile_ref_seq')::text),
+  code_name text NOT NULL,
+  headline text,
+  description text,
+  show_name boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','live','paused')),
+  live_since timestamptz,
+  legal_name text,
+  address text,
+  city text,
+  country text,
+  logo_url text,
+  private_description text,
+  aum_exact text,
+  ticket_exact text,
+  ticket_min numeric,
+  ticket_max numeric,
+  aum_value numeric,
+  track_record text,
+  decision_process text,
+  pof_verified_at timestamptz,
+  sectors text[] NOT NULL DEFAULT '{}',
+  stages text[] NOT NULL DEFAULT '{}',
+  deal_types text[] NOT NULL DEFAULT '{}',
+  target_size text,
+  geography text,
+  people jsonb NOT NULL DEFAULT '[]'::jsonb,
+  portfolio jsonb NOT NULL DEFAULT '[]'::jsonb,
+  profile_views_month integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+GRANT ALL ON public.buyer_profiles TO service_role;
+ALTER TABLE public.buyer_profiles ENABLE ROW LEVEL SECURITY;

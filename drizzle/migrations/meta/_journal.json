@@ -197,6 +197,13 @@
       "when": 1790712671948,
       "tag": "0027_add_startup_business_address",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1790719107784,
+      "tag": "0028_buyer_profiles",
+      "breakpoints": true
     }
   ]
 }
