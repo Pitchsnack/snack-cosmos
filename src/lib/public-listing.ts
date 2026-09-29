@@ -122,13 +122,183 @@ export function suggestDescription(overview: string | null | undefined, terms: {
 
 const titleCase = (s: string) => s.replace(/\w\S*/g, (w) => (w.length <= 3 && /^(and|of|for|the|a)$/i.test(w) ? w.toLowerCase() : w[0].toUpperCase() + w.slice(1)));
 
-export function suggestHeadline(s: ListingSource) {
+// ------------------------------------------------- activity profile (anonymous)
+
+const MAKER_RE = /manufact|packag|factory|production|producer|industrial|textile|chemical|plastic|food|beverage|electronic|furniture|garment|steel|paper|print/i;
+const TRADE_RE = /distribut|wholesal|trading|import|export|supply|retail/i;
+const SERVICE_RE = /service|consult|software|platform|logistic|agency|clinic|education|maintenance|hospitality|tourism|repair|marketing/i;
+const ROLE_WORD = /(manufacturer|producer|supplier|distributor|provider|operator|services|business|company|group)$/i;
+
+const CUSTOMER_RE = /\b(b2b|b2c|oem|odm|wholesale|retail|e-?commerce|export|distributors?|corporate)\b/i;
+const GENERIC_IND = /^(fmcg|sme|other|general|misc|b2b|b2c|industry|business)$/i;
+const CATEGORY_WORDS = [
+  "packaging", "logistics", "software", "beverage", "food", "textile", "garment", "furniture", "chemical",
+  "cosmetics", "electronics", "construction", "agriculture", "pharmaceutical", "automotive", "printing",
+  "plastics", "steel", "paper", "hospitality", "healthcare", "education", "energy", "apparel", "jewellery",
+];
+const GEO_RE = /\b(thailand|thai|asean|southeast asia|asia|domestic|international|global|export)\b/i;
+
+export interface ActivityProfile {
+  /** "Packaging Manufacturer" — never the company's own name. */
+  noun: string;
+  /** "Packaging" — the single core word used in code names. */
+  core: string;
+  role: "Manufacturer" | "Distributor" | "Provider" | "Business";
+  verb: string;
+  products: string[];
+  markets: string[];
+  customerTypes: string[];
+  geo: string | null;
+  certs: string[];
+  decade: string | null;
+  employees: string | null;
+  revenue: string | null;
+}
+
+export function activityProfile(s: ListingSource): ActivityProfile {
   const terms = listingTerms(s);
-  const cat = cleanTags(s.product_tags, terms)[0] ?? s.industry?.[0] ?? "";
-  const sector = s.sector ?? "";
-  const core = [cat, cat && sector && !cat.toLowerCase().includes(sector.toLowerCase()) ? "" : sector].filter(Boolean).join(" ") || sector || "Established Business";
-  const h = titleCase(`${core} Business Opens Investment Opportunity`);
-  return h.length > HEADLINE_MAX ? h.slice(0, HEADLINE_MAX).trimEnd() : h;
+  const products = cleanTags(s.product_tags, terms);
+  const markets = cleanTags(s.market_tags, terms);
+  const industries = cleanTags(s.industry, terms);
+  const sector = (s.sector ?? "").trim();
+  const base = (products[0] || industries[0] || sector || "Established").trim();
+  const hay = [base, sector, s.business_model ?? "", industries.join(" "), products.join(" ")].join(" ");
+
+  const role: ActivityProfile["role"] = MAKER_RE.test(hay)
+    ? "Manufacturer"
+    : TRADE_RE.test(hay)
+      ? "Distributor"
+      : SERVICE_RE.test(hay)
+        ? "Provider"
+        : "Business";
+  const verb = role === "Manufacturer" ? "manufactures" : role === "Distributor" ? "supplies" : role === "Provider" ? "provides" : "operates in";
+
+  const phrase = titleCase(base.split(/[,/&]| and /i)[0].trim().split(/\s+/).slice(0, 2).join(" "));
+  const noun = ROLE_WORD.test(phrase) ? phrase : titleCase(`${phrase} ${role}`);
+
+  // The code name uses the category noun (Packaging), not a leading adjective (Flexible)
+  // and not a vague industry label (FMCG, SME).
+  const words = phrase.split(/\s+/);
+  const scan = [...products, ...industries, sector, s.business_model ?? ""].join(" ");
+  const known = CATEGORY_WORDS.find((w) => new RegExp(`\\b${w}`, "i").test(scan));
+  const fallback = (industries.find((i) => !GENERIC_IND.test(i)) || sector || words[words.length - 1] || "Business")
+    .split(/[,/&]| and /i)[0]
+    .trim()
+    .split(/\s+/)
+    .slice(-1)[0];
+  const core = titleCase(known ?? fallback);
+
+  const geoTag = markets.find((m) => GEO_RE.test(m));
+  const geo = provinceOnly(s.city, s.headquarters) || geoTag || s.headquarters || null;
+
+  return {
+    noun,
+    core,
+    role,
+    verb,
+    products: products.slice(0, 4),
+    markets,
+    customerTypes: markets.filter((m) => CUSTOMER_RE.test(m)).slice(0, 3),
+    geo,
+    certs: certificationsOf(s).slice(0, 4),
+    decade: decadeLabel(s.year_founded),
+    employees: employeesBand(s.company_size),
+    revenue: revenueBand(s.last_year_revenue),
+  };
+}
+
+const GEO_ADJ = (geo: string | null) =>
+  !geo ? "" : /thai/i.test(geo) ? "Thai" : /asean|southeast/i.test(geo) ? "ASEAN" : titleCase(geo.split(",")[0].trim());
+
+/** Sector-true, anonymous deal code names — e.g. "Project Thai Packaging". */
+export function suggestCodeNames(s: ListingSource): string[] {
+  const a = activityProfile(s);
+  const terms = listingTerms(s);
+  const geo = GEO_ADJ(a.geo);
+  const qualifier = a.certs.length ? "Certified" : a.customerTypes[0] ? titleCase(a.customerTypes[0]) : "Industrial";
+  const family = a.role === "Manufacturer" ? "Industries" : a.role === "Distributor" ? "Trading" : a.role === "Provider" ? "Services" : "Group";
+  const out = [
+    geo && `${geo} ${a.core}`,
+    `${a.core} ${a.role}`,
+    `${qualifier} ${a.core}`,
+    `${a.core} ${family}`,
+  ]
+    .filter(Boolean)
+    .map((x) => `Project ${titleCase(String(x)).replace(/\s{2,}/g, " ").trim()}`)
+    .filter((x) => findTermsIn(x, terms).length === 0);
+  return [...new Set(out)];
+}
+
+export function suggestCodeNameFor(s: ListingSource, index = 0): string {
+  const list = suggestCodeNames(s);
+  return list.length ? list[index % list.length] : "Project Confidential Business";
+}
+
+/** Descriptive, anonymous headline built from the business profile. */
+export function suggestHeadline(s: ListingSource) {
+  const a = activityProfile(s);
+  const credential = a.certs.some((c) => /^ISO/i.test(c))
+    ? "ISO-Certified"
+    : a.certs.length
+      ? "Licensed"
+      : s.year_founded && new Date().getFullYear() - s.year_founded >= 10
+        ? "Established"
+        : "";
+  const geo = GEO_ADJ(a.geo);
+  const audience = a.customerTypes[0] ? `Serving ${titleCase(a.customerTypes[0])} Clients` : "";
+  const parts = [credential, geo && !new RegExp(geo, "i").test(a.noun) ? geo : "", a.noun].filter(Boolean).join(" ");
+  const full = [parts, audience].filter(Boolean).join(" ");
+  const h = titleCase(full || "Established Business");
+  return h.length > HEADLINE_MAX ? titleCase(parts).slice(0, HEADLINE_MAX).trimEnd() : h;
+}
+
+/** A brand-new anonymous description written from the profile, never from the company's own text. */
+export function suggestBusinessDescription(s: ListingSource) {
+  const a = activityProfile(s);
+  const terms = listingTerms(s);
+  const where = a.geo ? ` based in ${a.geo}` : "";
+  const since = a.decade ? `, operating since the ${a.decade}` : "";
+  const sentences: string[] = [`A ${a.noun.toLowerCase()}${where}${since}.`];
+  if (a.products.length) sentences.push(`The business ${a.verb} ${listOf(a.products.map(lower))}.`);
+  const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 3).map(lower);
+  const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
+  if (buyers.length || reach.length) {
+    sentences.push(
+      [
+        buyers.length ? `It serves ${listOf(buyers)} customers` : "It sells",
+        reach.length ? ` across ${listOf(reach)} markets` : "",
+      ].join("") + ".",
+    );
+  }
+  if (a.certs.length) sentences.push(`Operations hold ${listOf(a.certs)}.`);
+  const scale = [a.employees, a.revenue ? `annual revenue of ${a.revenue}` : null].filter(Boolean);
+  if (scale.length) sentences.push(`The company reports ${listOf(scale as string[])}.`);
+
+  let out = "";
+  for (const raw of sentences) {
+    let t = raw;
+    for (const h of [...findTermsIn(t, terms)].reverse()) t = t.slice(0, h.start) + t.slice(h.end);
+    t = t.replace(/\s{2,}/g, " ").replace(/\s+\./g, ".").trim();
+    if (!t || t === ".") continue;
+    const next = out ? `${out} ${t}` : t;
+    if (next.length > DESCRIPTION_MAX) continue;
+    out = next;
+  }
+  return out;
+}
+
+function listOf(items: string[]) {
+  const v = items.map((x) => x.trim()).filter(Boolean);
+  if (v.length <= 1) return v[0] ?? "";
+  return `${v.slice(0, -1).join(", ")} and ${v[v.length - 1]}`;
+}
+
+/** Lower-cases a tag unless it is an acronym or a proper place/standard name. */
+function lower(t: string) {
+  return t
+    .split(" ")
+    .map((w) => (w.length <= 4 && w === w.toUpperCase() ? w : /^(thailand|asean|asia|europe|japan|china)$/i.test(w) ? w : w.toLowerCase()))
+    .join(" ");
 }
 
 export function certificationsOf(s: ListingSource) {
@@ -159,7 +329,7 @@ export function buildPublicListing(
   const dec = decadeLabel(s.year_founded);
   return {
     headline: p?.headline?.trim() || "",
-    description: p?.description?.trim() || suggestDescription(s.long_description || s.short_description, terms),
+    description: p?.description?.trim() || suggestBusinessDescription(s) || suggestDescription(s.long_description || s.short_description, terms),
     productTags: cleanTags(p?.product_tags ?? s.product_tags, terms),
     marketTags: cleanTags(p?.market_tags ?? s.market_tags, terms),
     revenueBand: revenueBand(s.last_year_revenue),

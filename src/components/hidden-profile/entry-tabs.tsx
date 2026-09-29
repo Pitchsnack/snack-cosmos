@@ -101,6 +101,7 @@ export function EntryProfileTabs({
       <HiddenProfileEditor
         row={row}
         facts={facts}
+        source={s ? { ...(s as unknown as ListingSource), people: facts?.people ?? [] } : undefined}
         directoryDescription={s?.short_description}
         autoPublish={publishOnOpen}
         onBack={() => { onEditingChange(false); setPublishOnOpen(false); }}

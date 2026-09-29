@@ -10,6 +10,7 @@ import {
   HEADLINE_MAX,
   checkListing,
   listingTerms,
+  suggestBusinessDescription,
   suggestHeadline,
   type ListingSource,
   type PublicListing,
@@ -23,8 +24,9 @@ export function PublicListingEditor({ row, source, listing, onClose, onFullEdit 
   row: HiddenProfileRow; source: ListingSource; listing: PublicListing; onClose: () => void; onFullEdit: () => void;
 }) {
   const suggestion = useMemo(() => suggestHeadline(source), [source]);
+  const descSuggestion = useMemo(() => suggestBusinessDescription(source), [source]);
   const [headline, setHeadline] = useState(row.headline.trim() || suggestion);
-  const [description, setDescription] = useState(listing.description);
+  const [description, setDescription] = useState(listing.description || descSuggestion);
   const [products, setProducts] = useState(listing.productTags.join(", "));
   const [markets, setMarkets] = useState(listing.marketTags.join(", "));
   const { save } = useHiddenProfileActions();
@@ -58,7 +60,12 @@ export function PublicListingEditor({ row, source, listing, onClose, onFullEdit 
           <div>
             <label className="mb-1 block font-semibold">Description</label>
             <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
-            <div className={`mt-1 text-right text-[11.5px] ${description.length > DESCRIPTION_MAX ? "text-destructive" : "text-muted-foreground"}`}>{description.length}/{DESCRIPTION_MAX}</div>
+            <div className="mt-1 flex items-center justify-between gap-3 text-[11.5px] text-muted-foreground">
+              {descSuggestion && description.trim() !== descSuggestion ? (
+                <button type="button" onClick={() => setDescription(descSuggestion)} className="inline-flex items-start gap-1 text-left font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Write it for me (no names)</button>
+              ) : <span>Written from your business profile. No company or people names.</span>}
+              <span className={description.length > DESCRIPTION_MAX ? "text-destructive" : ""}>{description.length}/{DESCRIPTION_MAX}</span>
+            </div>
           </div>
           <div>
             <label className="mb-1 block font-semibold">Products & services <span className="font-normal text-muted-foreground">(comma separated)</span></label>

@@ -30,18 +30,21 @@ import {
   type HiddenProfileRow,
   type HiddenTextField,
 } from "@/lib/hidden-profile";
+import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, type ListingSource } from "@/lib/public-listing";
 import { useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { cn } from "@/lib/utils";
 
 export function HiddenProfileEditor({
   row,
   facts,
+  source,
   directoryDescription,
   onBack,
   autoPublish,
 }: {
   row: HiddenProfileRow;
   facts: EntryFacts | undefined;
+  source?: ListingSource;
   directoryDescription?: string | null;
   onBack: () => void;
   autoPublish?: boolean;
@@ -51,6 +54,16 @@ export function HiddenProfileEditor({
   const a = useHiddenProfileActions();
   const [confirm, setConfirm] = useState<null | "publish" | "unpublish">(autoPublish ? "publish" : null);
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
+  const codeIdeas = useMemo(() => (source ? suggestCodeNames(source) : []), [source]);
+  const [codeIdx, setCodeIdx] = useState(0);
+  const nextCodeName = () => {
+    if (!codeIdeas.length) return set("code_name", suggestCodeName());
+    set("code_name", codeIdeas[codeIdx % codeIdeas.length]);
+    setCodeIdx((i) => i + 1);
+  };
+  const headlineIdea = useMemo(() => (source ? suggestHeadline(source) : ""), [source]);
+  const descIdea = useMemo(() => (source ? suggestBusinessDescription(source) : ""), [source]);
+
 
   const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const missing = useMemo(() => missingForPublish(d), [d]);
@@ -101,8 +114,15 @@ export function HiddenProfileEditor({
           <Field id="code_name" label="Code name (unique in the Marketplace)">
             <div className="flex gap-2">
               <Input id="hp-code_name" value={d.code_name} onChange={(e) => set("code_name", e.target.value)} className={flagCls("code_name")} />
-              <Button type="button" variant="outline" onClick={() => set("code_name", suggestCodeName())}><Sparkles className="mr-1.5 h-3.5 w-3.5" />Suggest</Button>
+              <Button type="button" variant="outline" onClick={nextCodeName}><Sparkles className="mr-1.5 h-3.5 w-3.5" />Suggest</Button>
             </div>
+            {codeIdeas.length > 1 && (
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {codeIdeas.map((c) => (
+                  <button key={c} type="button" onClick={() => set("code_name", c)} className="rounded-full border border-border px-2 py-0.5 text-[11.5px] hover:bg-muted">{c}</button>
+                ))}
+              </div>
+            )}
             <Msg k="code_name" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
@@ -127,10 +147,16 @@ export function HiddenProfileEditor({
           )}
           <Field label={`Headline (${d.headline.length}/120)`}>
             <Input id="hp-headline" maxLength={120} value={d.headline} onChange={(e) => set("headline", e.target.value)} className={flagCls("headline")} />
+            {headlineIdea && d.headline.trim() !== headlineIdea && (
+              <button type="button" onClick={() => set("headline", headlineIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Use: {headlineIdea}</button>
+            )}
             <Msg k="headline" />
           </Field>
           <Field label={`Description (${d.description.length}/420)`}>
             <Textarea id="hp-description" maxLength={420} rows={4} value={d.description} onChange={(e) => set("description", e.target.value)} className={flagCls("description")} />
+            {descIdea && d.description.trim() !== descIdea && (
+              <button type="button" onClick={() => set("description", descIdea)} className="mt-1 inline-flex items-start gap-1 text-left text-[11.5px] font-semibold text-profile"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />Write it for me (no names)</button>
+            )}
             <Msg k="description" />
           </Field>
           <Field label="Highlights (3 required)">
