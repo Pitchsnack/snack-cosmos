@@ -21,7 +21,7 @@ import {
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { ComplianceFields } from "@/components/startups/compliance-fields";
 import { SectorBusinessModelFields } from "@/components/startups/sector-fields";
-import { ISO_STANDARDS, type RegulatoryLicence } from "@/lib/compliance";
+import { ISO_STANDARDS, LICENCE_CATEGORIES, isRegulatorOnly, normaliseLicenceName, sortLicences, type LicenceCategory, type RegulatoryLicence } from "@/lib/compliance";
 
 type ISOStandard = string;
 import {
@@ -745,6 +745,20 @@ export function StartupForm({
     handle("Industries", !!r.industries?.length, industries.length === 0, () => setIndustries(r.industries!.slice(0, 5)));
     handle("Product Tags", !!r.productTags?.length, productTags.length === 0, () => setProductTags(r.productTags!.slice(0, 5)));
     handle("Market Tags", !!r.marketTags?.length, marketTags.length === 0, () => setMarketTags(r.marketTags!.slice(0, 5)));
+    handle("ISO & Standards", !!r.isoStandards?.length, isoStandards.length === 0, () =>
+      setIsoStandards([...new Set(r.isoStandards!.map((s) => s.trim()).filter(Boolean))].slice(0, 10)),
+    );
+    handle("Regulatory Licences", !!r.regulatoryLicenses?.length, regulatoryLicenses.length === 0, () =>
+      setRegulatoryLicenses(
+        sortLicences(
+          r.regulatoryLicenses!
+            .filter((l) => LICENCE_CATEGORIES.includes(l.category as LicenceCategory))
+            .map((l) => ({ category: l.category as LicenceCategory, name: normaliseLicenceName(l.name) }))
+            .filter((l, i, arr) => !!l.name && !isRegulatorOnly(l.name) && arr.findIndex((x) => x.category === l.category && x.name.toLowerCase() === l.name.toLowerCase()) === i)
+            .slice(0, 10),
+        ),
+      ),
+    );
     handle("Founders", !!r.founders?.length, founders.length === 0, () => {
       setFounders(
         r.founders!.slice(0, 10).map((f) => ({
