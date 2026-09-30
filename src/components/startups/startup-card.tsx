@@ -108,25 +108,12 @@ export function StartupCard({
     },
   };
 
-  // Rebalanced (~50/50) spacing applies ONLY to the My Startups vector card,
-  // i.e. when a compact acquisitionSection is supplied. Startup Directory and
-  // other cards keep their original spacing/layout untouched.
-  const isAcquisitionCard = Boolean(acquisitionSection);
-  const headerRowClass = isAcquisitionCard
-    ? "mb-1.5 flex items-start gap-3"
-    : "mb-2 flex items-start gap-3";
-  const descClass = isAcquisitionCard
-    ? "mb-1 line-clamp-3 text-[11px] leading-snug text-foreground/90"
-    : "mb-2 line-clamp-3 text-[11px] leading-relaxed text-foreground/90";
-  const dividerClass = isAcquisitionCard
-    ? "my-1 border-t border-border/40"
-    : "my-2 border-t border-border/40";
-  // For acquisition cards, reserve the top ~50% and clip overflow. For every
-  // other card, `contents` makes the wrapper transparent so layout is
-  // byte-for-byte identical to having no wrapper at all.
-  const startupInfoWrapClass = isAcquisitionCard
-    ? "flex min-h-0 basis-[42%] flex-col overflow-hidden"
-    : "contents";
+  const headerRowClass = "mb-2 flex items-start gap-3";
+  const descClass = "mb-2 line-clamp-3 text-[11px] leading-relaxed text-foreground/90";
+  const dividerClass = "my-2 border-t border-border/40";
+  // `contents` keeps the wrapper transparent so layout is byte-for-byte
+  // identical to having no wrapper at all.
+  const startupInfoWrapClass = "contents";
 
   const inner = (
     <>
