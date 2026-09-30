@@ -24,5 +24,3 @@ function Page() {
   const { company, from } = Route.useSearch();
   return <MyReportsPage kind="financials" company={company} from={from} />;
 }
-
-});
