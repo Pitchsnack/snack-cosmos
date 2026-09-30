@@ -113,24 +113,26 @@ export const listReportOrders = createServerFn({ method: "GET" })
       if (fresh.length) await sb.from("report_order_events").insert(fresh.map((o: any) => ({ order_id: o.id, event: "overdue", actor_id: null,
         note: `Due ${fmtD(o.due_at)} · not published` })));
     }
-    // Report ready comes from the startup's own data, not the order.
+    // Report ready is per company: one generated DBD report serves the
+    // financial report and the estimated valuation alike.
     const ids = [...new Set(orders.map((o: any) => o.startup_id))];
-    const ready: Record<string, { fin: string | null; val: string | null }> = {};
+    const ready: Record<string, string | null> = {};
+    const keep = (id: string, at: string | null | undefined) => {
+      if (!at) return;
+      if (!ready[id] || at > ready[id]!) ready[id] = at;
+    };
     if (ids.length) {
-      const [{ data: fs }, { data: vs }] = await Promise.all([
-        sb.from("financial_statements").select("startup_id, created_at").in("startup_id", ids),
-        sb.from("valuation_settings").select("startup_id, created_at").in("startup_id", ids),
-      ]);
-      for (const r of fs ?? []) { const x = (ready[r.startup_id] ??= { fin: null, val: null }); if (!x.fin || r.created_at > x.fin) x.fin = r.created_at; }
-      for (const r of vs ?? []) { const x = (ready[r.startup_id] ??= { fin: null, val: null }); if (!x.val || r.created_at > x.val) x.val = r.created_at; }
+      const { data: fs } = await sb.from("financial_statements").select("startup_id, created_at, retrieved_at").in("startup_id", ids);
+      for (const r of fs ?? []) { keep(r.startup_id, r.created_at); keep(r.startup_id, r.retrieved_at); }
     }
+    for (const o of orders) keep(o.startup_id, o.generated_at);
     const n = await names(sb, orders.map((o: any) => o.delivered_by));
     return {
-      orders: orders.map((o: any) => {
-        const r = ready[o.startup_id];
-        const at = o.kind === "valuation" ? r?.val ?? (r?.fin && o.status !== "paid" ? r.fin : null) : r?.fin ?? null;
-        return { ...o, ready_at: at ?? (o.status !== "paid" ? o.generated_at : null), delivered_by_name: o.delivered_by ? n[o.delivered_by] ?? null : null };
-      }),
+      orders: orders.map((o: any) => ({
+        ...o,
+        ready_at: ready[o.startup_id] ?? null,
+        delivered_by_name: o.delivered_by ? n[o.delivered_by] ?? null : null,
+      })),
     };
   });
 
