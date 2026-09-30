@@ -48,7 +48,8 @@ export function GlobalRouteLoading({ delay = 180 }: { delay?: number }) {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 top-[54px] bottom-0 z-30 flex items-start justify-center bg-background/55 pt-[18vh] backdrop-blur-[1px]"
+      style={{ left: "var(--sidebar-width, 0px)" }}
+      className="pointer-events-none fixed right-0 top-[54px] bottom-0 z-30 flex items-start justify-center bg-background/55 pt-[18vh] backdrop-blur-[1px]"
     >
       <div className="pointer-events-none flex flex-col items-center gap-3">
         <HatMark size="lg" />
