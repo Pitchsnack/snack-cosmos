@@ -62,6 +62,8 @@ export type PipelineRow = {
   loiStakePct: number | null;
   loiAcceptedByName: string | null;
   loiChangesRequestedAt: string | null;
+  /** Open seller request for a letter of intent (cleared when the buyer sends one or the seller withdraws). */
+  loiRequest: { at: string; note: string | null; price: number | null; days: number | null; respondBy: string | null } | null;
   exclusivityUntil: string | null;
   updatedAt: string;
   parties: { sellerCompany: string; codeName: string | null; buyerOrg: string; buyerName: string | null; sellerName: string | null };
@@ -100,6 +102,7 @@ function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: numbe
     loiStakePct: r.loi_stake_pct != null ? Number(r.loi_stake_pct) : null,
     loiAcceptedByName: r.loi_accepted_by ? names[r.loi_accepted_by] ?? null : null,
     loiChangesRequestedAt: r.loi_changes_requested_at ?? null,
+    loiRequest: r.loi_requested_at ? { at: r.loi_requested_at, note: r.loi_request_note ?? null, price: r.loi_request_price != null ? Number(r.loi_request_price) : null, days: r.loi_request_days ?? null, respondBy: r.loi_request_respond_by ?? null } : null,
     exclusivityUntil: r.exclusivity_until ?? null,
     updatedAt: r.updated_at,
     parties,
@@ -396,16 +399,17 @@ export const loiParties = createServerFn({ method: "GET" })
   .inputValidator((d) => Id.parse(d))
   .handler(async ({ data, context }) => {
     const p = await load(data.id);
-    if (p.buyer_user_id !== context.userId) throw new Error("Not your pipeline");
+    await assertParty(context, p);
     if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
+    const buyerId = p.buyer_user_id as string;
     const sb = await admin();
     const [{ data: ci }, { data: st }, { data: hp }, { data: bp }, { data: bv }, { data: up }] = await Promise.all([
       sb.from("company_info_th").select("legal_name_th, legal_name_en, registration_number").eq("startup_id", p.startup_id).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
       sb.from("startups").select("startup_name, registered_name, registered_number").eq("id", p.startup_id).maybeSingle(),
       sb.from("hidden_profiles").select("ref_no").eq("id", p.hidden_profile_id).maybeSingle(),
-      sb.from("buyer_profiles").select("legal_name, investor_id").eq("user_id", context.userId).maybeSingle(),
-      sb.from("buyer_verifications").select("company_name, registration_no").eq("user_id", context.userId).maybeSingle(),
-      sb.from("user_profiles").select("organisation").eq("user_id", context.userId).maybeSingle(),
+      sb.from("buyer_profiles").select("legal_name, investor_id").eq("user_id", buyerId).maybeSingle(),
+      sb.from("buyer_verifications").select("company_name, registration_no").eq("user_id", buyerId).maybeSingle(),
+      sb.from("user_profiles").select("organisation").eq("user_id", buyerId).maybeSingle(),
     ]);
     const { data: inv } = bp?.investor_id
       ? await sb.from("investors").select("investor_name, legal_name").eq("id", bp.investor_id).maybeSingle()
@@ -451,7 +455,10 @@ export const sendLoi = createServerFn({ method: "POST" })
       loi_sent_at: now,
       loi_accepted_at: null,
       loi_changes_requested_at: null,
+      loi_requested_at: null,
+      loi_requested_by: null,
     });
+    if (p.loi_requested_at) await log(p.id, "loi_request_fulfilled", context.userId);
     // Buyer's agreement (who · when · text) is kept on the event log.
     await log(p.id, "loi_sent", context.userId, `Buyer consent at ${now}: ${data.consent}`);
     const sb = await admin();
@@ -464,6 +471,52 @@ export const sendLoi = createServerFn({ method: "POST" })
         title: "New letter of intent", message: "A buyer sent you a letter of intent. Open Pipeline to review it.",
       })));
     }
+    return { ok: true };
+  });
+
+/** Seller asks the buyer to send a letter of intent, with optional suggested terms. */
+export const requestLoi = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    Id.extend({
+      note: z.string().trim().max(2000).optional(),
+      price: z.number().positive().max(1e15).nullable().optional(),
+      days: z.number().int().min(0).max(365).nullable().optional(),
+      respondBy: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const p = await load(data.id);
+    await assertSeller(context, p.startup_id);
+    if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
+    if (p.loi_sent_at && !p.loi_accepted_at) throw new Error("The buyer has already sent a letter of intent");
+    if (p.loi_accepted_at) throw new Error("A letter of intent was already accepted");
+    if (p.loi_requested_at) throw new Error("A request is already open");
+    const now = new Date().toISOString();
+    await update(p.id, {
+      loi_requested_at: now, loi_requested_by: context.userId,
+      loi_request_note: data.note || null, loi_request_price: data.price ?? null,
+      loi_request_days: data.days ?? null, loi_request_respond_by: data.respondBy ?? null,
+    });
+    await log(p.id, "loi_requested", context.userId, data.note || undefined);
+    const sb = await admin();
+    const { data: st } = await sb.from("startups").select("tenant_id").eq("id", p.startup_id).maybeSingle();
+    await sb.from("notifications").insert({
+      user_id: p.buyer_user_id, tenant_id: st?.tenant_id ?? null, notification_type: "approval",
+      title: "Letter of intent requested", message: "A seller asked you to send a letter of intent. Open Pipeline to respond.",
+    });
+    return { ok: true };
+  });
+
+export const withdrawLoiRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.parse(d))
+  .handler(async ({ data, context }) => {
+    const p = await load(data.id);
+    await assertSeller(context, p.startup_id);
+    if (!p.loi_requested_at) return { ok: true };
+    await update(p.id, { loi_requested_at: null, loi_requested_by: null });
+    await log(p.id, "loi_request_withdrawn", context.userId);
     return { ok: true };
   });
 

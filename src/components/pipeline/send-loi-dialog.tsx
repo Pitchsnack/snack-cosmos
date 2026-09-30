@@ -5,7 +5,7 @@ import { ChevronLeft, FileText, Lock, X } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { loiParties, sendLoi, type LoiParty } from "@/lib/pipeline.functions";
+import { loiParties, requestLoi, sendLoi, type LoiParty, type PipelineRow } from "@/lib/pipeline.functions";
 
 const TH = { fontFamily: "'Noto Sans Thai', 'DM Sans', sans-serif" };
 const GROTESK = { fontFamily: "'Space Grotesk', 'DM Sans', sans-serif" };
@@ -105,10 +105,13 @@ export function SendLoiDialog({
   id,
   onClose,
   onSent,
+  request,
 }: {
   id: string;
   onClose: () => void;
   onSent: () => void;
+  /** Open seller request: shows the banner and pre-fills price + exclusivity. */
+  request?: PipelineRow["loiRequest"];
 }) {
   const fetchParties = useServerFn(loiParties);
   const send = useServerFn(sendLoi);
@@ -116,8 +119,8 @@ export function SendLoiDialog({
     queryKey: ["pipeline", "loi-parties", id],
     queryFn: () => fetchParties({ data: { id } }),
   });
-  const [price, setPrice] = useState("");
-  const [days, setDays] = useState("60");
+  const [price, setPrice] = useState(request?.price ? withCommas(String(Math.round(request.price))) : "");
+  const [days, setDays] = useState(request?.days != null ? String(request.days) : "60");
   const [cond, setCond] = useState("");
   const [tick, setTick] = useState(false);
   const [terms, setTerms] = useState(false);
@@ -224,6 +227,7 @@ export function SendLoiDialog({
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-4">
+            {request && <RequestBanner r={request} seller={data?.seller.short ?? "The seller"} />}
             <div className="rounded-[12px] border border-[#E5E7EB] bg-[#F8F9FB] px-4 text-[13px]">
               {(
                 [
@@ -570,5 +574,144 @@ function LetterPreview({
         </div>
       </div>
     </div>
+  );
+}
+
+const fmtDay = (d?: string | null) =>
+  d ? new Date(d.length === 10 ? `${d}T00:00:00` : d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "";
+
+function RequestBanner({ r, seller }: { r: NonNullable<PipelineRow["loiRequest"]>; seller: string }) {
+  const sugg = [
+    r.price ? `฿${withCommas(String(Math.round(r.price)))}` : null,
+    r.days != null ? `${r.days} days exclusivity` : null,
+    r.respondBy ? `respond by ${fmtDay(r.respondBy)}` : null,
+  ].filter(Boolean);
+  return (
+    <div className="mb-4 rounded-[10px] border border-[#F7D9A8] border-l-[3px] border-l-[#F6A823] bg-[#FFEDD5] px-[14px] py-3 text-[13px] text-[#151A28]">
+      <div className="font-semibold">◆ {seller} requested a letter of intent · {fmtDay(r.at)}</div>
+      {r.note && <p className="mt-1 whitespace-pre-line italic text-[#374151]">“{r.note}”</p>}
+      {sugg.length > 0 && <div className="mt-1.5 font-medium">Suggested: {sugg.join(" · ")}</div>}
+      {sugg.length > 0 && <div className="mt-1 text-[12px] text-[#6B7280]">These have pre-filled your letter below — change anything before you send.</div>}
+    </div>
+  );
+}
+
+/** Seller → buyer: ask for a letter of intent, with optional suggested terms. */
+export function RequestLoiDialog({ id, onClose, onSent }: { id: string; onClose: () => void; onSent: () => void }) {
+  const fetchParties = useServerFn(loiParties);
+  const send = useServerFn(requestLoi);
+  const { data } = useQuery({ queryKey: ["pipeline", "loi-parties", id], queryFn: () => fetchParties({ data: { id } }) });
+  const plus7 = new Date(Date.now() + 7 * 86_400_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const [note, setNote] = useState("");
+  const [price, setPrice] = useState("");
+  const [days, setDays] = useState("60");
+  const [by, setBy] = useState(`${plus7.getFullYear()}-${pad(plus7.getMonth() + 1)}-${pad(plus7.getDate())}`);
+  const [busy, setBusy] = useState(false);
+  const priceRef = useRef<HTMLInputElement>(null);
+  const digits = price.replace(/\D/g, "");
+  const amount = digits ? Number(digits) : 0;
+
+  const onPrice = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const el = e.target;
+    const caret = el.selectionStart ?? el.value.length;
+    const before = el.value.slice(0, caret).replace(/\D/g, "").length;
+    const f = withCommas(el.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 15));
+    setPrice(f);
+    requestAnimationFrame(() => {
+      if (!priceRef.current) return;
+      let pos = 0, seen = 0;
+      while (pos < f.length && seen < before) { if (/\d/.test(f[pos])) seen++; pos++; }
+      priceRef.current.setSelectionRange(pos, pos);
+    });
+  };
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await send({ data: { id, note: note.trim() || undefined, price: amount || null, days: days === "" ? null : Math.max(0, Math.min(365, Math.round(Number(days) || 0))), respondBy: by || null } });
+      toast.success("Request sent · waiting for the buyer");
+      onSent();
+      onClose();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const label = "mb-1.5 block text-[13px] font-medium text-[#151A28]";
+  const field = "w-full rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[14px] text-[#151A28] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20";
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent
+        className="flex max-h-[calc(100vh-32px)] w-[560px] max-w-[calc(100vw-24px)] flex-col gap-0 overflow-hidden rounded-2xl border border-[#DCDFE5] p-0 [&>button]:hidden"
+        style={{ fontFamily: "'DM Sans', sans-serif", boxShadow: "0 24px 64px rgba(16,24,40,.28),0 4px 12px rgba(16,24,40,.12)" }}
+      >
+        <div className="flex items-start gap-3 px-6 pt-5">
+          <div className="min-w-0 flex-1">
+            <DialogTitle className="text-[19px] font-semibold text-[#151A28]">Request a letter of intent</DialogTitle>
+            <DialogDescription className="mt-0.5 text-[13.5px] text-[#6B7280]">Ask the buyer to send a non-binding letter of intent.</DialogDescription>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-[#6B7280] hover:bg-[#F8F9FB]"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-4">
+          <div className="rounded-[12px] border border-[#E5E7EB] bg-[#F8F9FB] px-4 text-[13px]">
+            {([["From", data?.seller, data?.listingCode], ["To", data?.buyer, null]] as const).map(([k, p, code], i) => (
+              <div key={k} className={`flex gap-3 py-2.5 ${i ? "border-t border-[#E5E7EB]" : ""}`}>
+                <span className="w-[42px] flex-none pt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{k}</span>
+                <div className="min-w-0 flex-1 leading-snug">
+                  <div><PartyName p={p} /></div>
+                  <div className="mt-0.5 text-[12px] text-[#6B7280]">
+                    {regLine(p)}
+                    {code && <> · Listing <b className="font-semibold text-[#151A28]">{code}</b></>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <label className={label} htmlFor="req-note">Note to the buyer</label>
+            <textarea id="req-note" rows={3} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)}
+              placeholder="Tell the buyer what you'd like to see — e.g. indicative price, the stake and a timeline."
+              className={`${field} resize-y py-2`} />
+          </div>
+
+          <div className="mt-4 rounded-[12px] border border-[#E5E7EB] bg-[#F8F9FB] px-4 py-3">
+            <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[#6B7280]">Suggested terms · optional</div>
+            <p className="mt-0.5 text-[12.5px] italic text-[#6B7280]">The buyer can change these — they pre-fill the buyer's letter.</p>
+            <div className="mt-3">
+              <label className={label} htmlFor="req-price">Guide price (฿)</label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-[#6B7280]">฿</span>
+                <input id="req-price" ref={priceRef} inputMode="numeric" autoComplete="off" value={price} onChange={onPrice} placeholder="120,000,000" className={`${field} h-10 pl-7`} />
+              </div>
+              {amount > 0 && <div className="mt-1 text-[12.5px] italic text-[#6B7280]">in words: {toWords(amount)} baht</div>}
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className={label} htmlFor="req-days">Exclusivity (days)</label>
+                <input id="req-days" type="number" min={0} max={365} value={days} onChange={(e) => setDays(e.target.value)} className={`${field} h-10`} />
+              </div>
+              <div>
+                <label className={label} htmlFor="req-by">Respond by</label>
+                <input id="req-by" type="date" value={by} onChange={(e) => setBy(e.target.value)} className={`${field} h-10`} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-[#E5E7EB] px-6 py-3.5 sm:flex-row sm:items-center">
+          <span className="min-w-0 flex-1 truncate whitespace-nowrap text-[12.5px] text-[#6B7280]">The buyer can respond with their own terms.</span>
+          <div className="flex justify-end gap-2">
+            <button onClick={onClose} className="inline-flex h-9 items-center rounded-[10px] border border-[#DCDFE5] bg-white px-3.5 text-[13.5px] font-medium text-[#151A28] hover:bg-[#F8F9FB]">Cancel</button>
+            <button onClick={submit} disabled={busy} className="inline-flex h-9 items-center rounded-[10px] bg-[#192957] px-4 text-[13.5px] font-semibold text-white hover:bg-[#101D43] disabled:bg-[#C7CBD6]">Send request</button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
