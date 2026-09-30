@@ -286,12 +286,13 @@ function LowerPanel({ t }: { t: Teaser }) {
   );
 }
 
-function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
+function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; directId?: string | null }) {
   const fn = useServerFn(listMarketplaceTeasers);
   const enabled = useHasSession();
   const { data, isLoading } = useQuery({ queryKey: ["marketplace-teasers"], queryFn: () => fn(), enabled });
   const all = (data ?? []) as Teaser[];
-  const teasers = ownOnly ? all.filter((t) => t.id === ownOnly) : all;
+  const focus = ownOnly ?? directId ?? null;
+  const teasers = focus ? all.filter((t) => t.id === focus) : all;
 
   const { view, persist } = usePersistentView("ps-browse-view", undefined);
   const { ids: savedIds, toggle: toggleSave } = useSavedListings();
