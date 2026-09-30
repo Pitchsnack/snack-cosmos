@@ -384,7 +384,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Store className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p>{ownOnly ? "Your company is not live on the Marketplace yet." : hasFilter ? "No listings match your filters yet." : "This listing isn't available."}</p>
+          <p>{ownOnly ? "Your company is not live on the Marketplace yet." : directId ? "This listing isn't available." : hasFilter ? "No listings match your filters yet." : "Approved businesses appear here."}</p>
         </div>
       ) : !ownOnly && view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
