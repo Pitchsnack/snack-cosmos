@@ -45,10 +45,6 @@ const searchSchema = z.object({
   view: z.enum(VIEW).optional(),
   selected: z.string().optional(),
   panel: z.string().optional(),
-  // Acquisition overlays: startup id, panel type, and entry id.
-  ap: z.string().optional(),
-  apt: z.enum(["target", "competitor", "requirements"]).optional(),
-  apid: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
 });
