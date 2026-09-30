@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ChevronDown, ChevronLeft, ChevronRight, Info, Plus, Rocket, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Info, Plus, Rocket, Search, X } from "lucide-react";
+import { Highlight, matchesTerm } from "@/components/peer-comparables/tab-toolbar";
 import { SECTOR_GROUPS } from "@/lib/sectors";
 import { addSectorImage, deleteSectorImage, type SectorImage } from "@/lib/sector-images.functions";
 import { SECTOR_IMAGES_KEY, useSectorImages } from "@/hooks/use-sector-images";
@@ -28,22 +29,22 @@ export const Route = createFileRoute("/_authenticated/startups/sector-images")({
   component: SectorImagesPage,
 });
 
-const RULE = "Use a JPG or PNG, landscape, at least 1600 × 900 px, up to 5 MB.";
+const RULE = "Use a JPG, PNG or WebP, landscape, at least 1200 × 675 px, up to 5 MB.";
 const plural = (n: number) => (n === 1 ? "1 image" : `${n} images`);
 const mb = (b: number) => (b / (1024 * 1024)).toFixed(1);
 const fmtDate = (s: string) => new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 /** Checks the file, redraws it (drops EXIF/GPS) and scales it to fit 1920 × 1080. */
 async function prepare(file: File) {
-  if (!["image/jpeg", "image/png"].includes(file.type) || file.size > 5 * 1024 * 1024) return null;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) return null;
   const bmp = await createImageBitmap(file).catch(() => null);
-  if (!bmp || bmp.width < 1600 || bmp.height < 900 || bmp.width <= bmp.height) return null;
+  if (!bmp || bmp.width < 1200 || bmp.height < 675 || bmp.width <= bmp.height) return null;
   const k = Math.min(1, 1920 / bmp.width, 1080 / bmp.height);
   const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
   const c = document.createElement("canvas");
   c.width = w; c.height = h;
   c.getContext("2d")!.drawImage(bmp, 0, 0, w, h);
-  const mime = file.type as "image/jpeg" | "image/png";
+  const mime: "image/jpeg" | "image/png" = file.type === "image/png" ? "image/png" : "image/jpeg";
   const blob: Blob | null = await new Promise((r) => c.toBlob(r, mime, mime === "image/jpeg" ? 0.85 : undefined));
   if (!blob || blob.size > 5 * 1024 * 1024) return null;
   const buf = new Uint8Array(await blob.arrayBuffer());
@@ -65,6 +66,12 @@ function SectorImagesPage() {
   const [confirm, setConfirm] = useState<SectorImage | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [back, setBack] = useState<Record<string, unknown>>({});
+  const [q, setQ] = useState("");
+  const term = q.trim();
+  const fileHit = (s: string) => !!term && images.some((i) => i.sector_key === s && matchesTerm(term, i.file_name));
+  const showSector = (group: string, s: string) => !term || matchesTerm(term, s, group) || fileHit(s);
+  const isOpenRow = (group: string, s: string) => open.has(s) || (!!term && !matchesTerm(term, s, group) && fileHit(s));
+  const anyShown = SECTOR_GROUPS.some((g) => g.sectors.some((s) => showSector(g.group, s)));
 
   useEffect(() => {
     try { setBack(JSON.parse(sessionStorage.getItem(DIRECTORY_SEARCH_KEY) || "{}")); } catch { /* ignore */ }
@@ -120,27 +127,48 @@ function SectorImagesPage() {
         <p className="mt-1 text-[13.5px] text-muted-foreground">Images for each sector. Buyers see them as listing covers until their NDA is approved.</p>
         <p className="mt-2 flex items-start gap-2 text-[13px] text-foreground/80">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-          Use pictures without company names, logos, signs or people's faces. JPG or PNG, landscape, at least 1600 × 900 px, up to 5 MB.
+          Use pictures without company names, logos, signs or people's faces. JPG, PNG or WebP, landscape, at least 1200 × 675 px, up to 5 MB.
         </p>
       </div>
 
       <div className="max-w-[760px]">
-        {SECTOR_GROUPS.map((g) => (
+        <div className="mt-1 flex h-[38px] items-center gap-2 rounded-[9px] border border-input bg-muted px-3 focus-within:border-muted-foreground focus-within:bg-background">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") setQ(""); }}
+            placeholder="Search sectors or file names…"
+            className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-muted-foreground"
+          />
+          {q && (
+            <button type="button" aria-label="Clear search" onClick={() => setQ("")} className="grid h-6 w-6 place-items-center text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        {!anyShown && (
+          <p className="mt-5 text-[13.5px] text-muted-foreground">
+            No sectors or images match “{term}”.{" "}
+            <button type="button" onClick={() => setQ("")} className="font-semibold text-primary hover:underline">Clear search</button>
+          </p>
+        )}
+        {SECTOR_GROUPS.filter((g) => g.sectors.some((s) => showSector(g.group, s))).map((g) => (
           <section key={g.group}>
             <div className="mb-2 mt-[22px] text-[11.5px] font-semibold uppercase tracking-[.08em] text-muted-foreground">{g.group}</div>
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-              {g.sectors.map((s, idx) => {
+              {g.sectors.filter((s) => showSector(g.group, s)).map((s, idx) => {
                 const imgs = bySector(s);
-                const isOpen = open.has(s);
+                const isOpen = isOpenRow(g.group, s);
                 return (
                   <div key={s} id={`sector-${s}`} className={cn(idx > 0 && "border-t border-border/60")}>
                     <button
                       type="button"
                       aria-expanded={isOpen}
-                      onClick={() => setOpen((o) => { const n = new Set(o); n.has(s) ? n.delete(s) : n.add(s); return n; })}
+                      onClick={() => setOpen((o) => { const n = new Set(o); isOpen ? n.delete(s) : n.add(s); return n; })}
                       className={cn("flex h-12 w-full items-center gap-3 pl-4 pr-3 text-left hover:bg-muted/40", isOpen && "bg-muted/40")}
                     >
-                      <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{s}</span>
+                      <span className="min-w-0 flex-1 truncate text-[14px] font-medium"><Highlight text={s} term={term} /></span>
                       <span className={cn("text-[13px]", imgs.length ? "text-muted-foreground" : "text-muted-foreground/70")}>{imgs.length ? plural(imgs.length) : "No images"}</span>
                       {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground/70" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/70" />}
                     </button>
@@ -161,9 +189,9 @@ function SectorImagesPage() {
                               <button type="button" onClick={() => setView({ sector: s, id: i.id })} className="block h-[84px] w-[150px] cursor-zoom-in overflow-hidden rounded-lg border border-border bg-secondary hover:border-muted-foreground">
                                 {i.url && <img src={i.url} alt={i.file_name} className="h-full w-full object-cover" />}
                               </button>
-                              <div className="mt-1.5 truncate text-[12.5px]" title={i.file_name}>{i.file_name}</div>
+                              <div className="mt-1.5 truncate text-[12.5px]" title={i.file_name}><Highlight text={i.file_name} term={term} /></div>
                               <div className="text-[12px] text-muted-foreground">
-                                {mb(i.size_bytes)} MB · <button type="button" onClick={() => setConfirm(i)} className="hover:text-destructive hover:underline">Delete</button>
+                                {Math.max(0.1, i.size_bytes / 1048576).toFixed(1)} MB · <button type="button" onClick={() => setConfirm(i)} className="hover:text-destructive hover:underline">Delete</button>
                               </div>
                             </div>
                           ))}
