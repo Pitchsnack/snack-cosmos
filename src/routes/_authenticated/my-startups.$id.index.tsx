@@ -50,11 +50,6 @@ function MyStartupDetailPage() {
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/my-startups/$id/acquisition" params={{ id }}>
-                <Target className="mr-1 h-3.5 w-3.5" /> Acquisition Strategy
-              </Link>
-            </Button>
             {canManage && (
               <Button asChild size="sm" variant="outline">
                 <Link to="/my-startups/$id/edit" params={{ id }}>
