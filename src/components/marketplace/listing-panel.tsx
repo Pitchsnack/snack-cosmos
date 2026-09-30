@@ -163,7 +163,7 @@ export function DealTerms({ t }: { t: Teaser }) {
 const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contact"];
 
 /** Right panel body for anonymous listings — public read model only. */
-export function ListingDetail({ t, requested }: { t: Teaser; requested?: boolean }) {
+export function ListingDetail({ t, requested, onRequested }: { t: Teaser; requested?: boolean; onRequested?: (id: string) => void }) {
   const l = t.listing;
   const [more, setMore] = useState(false);
   useEffect(() => setMore(false), [t.id]);
@@ -176,7 +176,7 @@ export function ListingDetail({ t, requested }: { t: Teaser; requested?: boolean
           <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? "Show less ▴" : "Show more ▾"}</button>
         </Section>
       )}
-      <LowerPanel t={t} requested={requested} />
+      <LowerPanel t={t} requested={requested} onRequested={onRequested} />
     </div>
   );
 }
@@ -191,7 +191,7 @@ export function NdaRequestedBadge() {
 
 type NdaStatus = "none" | "requested" | "approved" | "exchanged";
 
-function LowerPanel({ t, requested }: { t: Teaser; requested?: boolean }) {
+function LowerPanel({ t, requested, onRequested }: { t: Teaser; requested?: boolean; onRequested?: (id: string) => void }) {
   const l = t.listing;
   const x = t as Teaser & { growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus };
   const { data: ndaMap } = useNdaStatuses();
@@ -245,7 +245,7 @@ function LowerPanel({ t, requested }: { t: Teaser; requested?: boolean }) {
             <div className="text-sm font-bold text-[#78350F]">Request the NDA to unlock</div>
             <p className="mt-0.5 text-[12.5px] text-[#92400E]">{unlockList.join(" · ")}</p>
           </div>
-          <NdaButton listingId={t.id} />
+          <NdaButton listingId={t.id} onRequested={onRequested} />
         </div>
       )}
 

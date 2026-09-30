@@ -214,7 +214,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
                       </div>
                     )}
                   </div>
-                  <div className="overflow-y-auto p-5"><ListingDetail t={current} /></div>
+                  <div className="overflow-y-auto p-5"><ListingDetail t={current} onRequested={onRequested} /></div>
                 </>
               ) : (
                 <p className="py-16 text-center text-sm text-muted-foreground">Select a listing to see the details.</p>
@@ -252,7 +252,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
                 <SaveButton saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} />
                 <NdaButton listingId={modal.id} onRequested={onRequested} />
               </div>
-              <ListingDetail t={modal} />
+              <ListingDetail t={modal} onRequested={onRequested} />
             </div>
           )}
         </DialogContent>
