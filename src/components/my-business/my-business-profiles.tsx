@@ -247,9 +247,9 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   );
   return (
     <>
-      <CoverView cover={null} fallbackArt={d?.cover_art ?? s.sector ?? s.industry?.[0]} className="h-[120px] w-full rounded-none">
+      <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} sector={s.sector} imageId={(row as { public_image_id?: string | null } | null)?.public_image_id ?? null} className="h-[120px] w-full rounded-none">
         {badge}
-      </CoverView>
+      </SectorArt>
       <div className="px-3 pb-3">
         <div className="pt-2.5">
           <div className="truncate text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>

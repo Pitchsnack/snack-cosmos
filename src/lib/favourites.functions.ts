@@ -83,7 +83,7 @@ export const listFavourites = createServerFn({ method: "GET" })
 
     const { data: hps } = await sb
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, published_at, live, approval_status, startups!inner(startup_name, registered_name, website_url, email, city, region, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards, logo_url)")
+      .select("id, startup_id, ref_no, published_at, live, approval_status, public_image_id, startups!inner(startup_name, registered_name, website_url, email, city, region, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards, logo_url)")
       .in("id", ids)
       .in("approval_status", [...BUYER_VISIBLE])
       .not("live", "is", null);
@@ -119,7 +119,7 @@ export const listFavourites = createServerFn({ method: "GET" })
     const out: Favourite[] = rows.map((r: any) => {
       const live = (r.live ?? {}) as any;
       const st = Array.isArray(r.startups) ? r.startups[0] : r.startups;
-      const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
+      const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: r.public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       const p = pipeBy.get(r.id);
       const state = p ? ndaState(p) : null;
       const status: FavStatus = state ?? "saved";

@@ -209,7 +209,7 @@ export const getListingReview = createServerFn({ method: "GET" })
     const previous = subs?.[1] ?? null;
     const { buildPublicListing } = await import("@/lib/public-listing");
     const snap = current?.snapshot ?? (await buildSnapshot(sb, hp.startup_id, hp));
-    const listing = buildPublicListing(snap.private, { ...snap.public, ref_no: hp.ref_no, live: false, published_at: hp.published_at }, (fin ?? []).length > 0);
+    const listing = buildPublicListing(snap.private, { ...snap.public, ref_no: hp.ref_no, public_image_id: hp.public_image_id ?? null, live: false, published_at: hp.published_at }, (fin ?? []).length > 0);
     const changed = previous ? diffKeys(previous.snapshot.public, snap.public) : [];
     const ids = [hp.submitted_by, hp.assignee_id, ...(events ?? []).map((e: any) => e.actor_id)].filter(Boolean);
     const { data: edits } = await sb.from("listing_admin_edits").select("*").eq("hidden_profile_id", hp.id).eq("version", hp.version ?? 0).is("undone_at", null).order("created_at", { ascending: false });

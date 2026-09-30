@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link2, Lock, ArrowLeftRight, Waves, Building2, Factory, ShoppingBag, Truck, HeartPulse, Utensils, Monitor, Clapperboard, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveCover, useSectorImages } from "@/hooks/use-sector-images";
 import { findTermsIn, STATUS_LABEL, type HiddenStatus } from "@/lib/hidden-profile";
 
 const TONE: Record<HiddenStatus, string> = {

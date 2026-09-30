@@ -48,6 +48,8 @@ export interface PublicListing {
   coverArt: string | null;
   /** Uploaded cover picture (startup-media storage path); null = sector vector art. */
   coverImage: string | null;
+  /** Sector image picked in Set public image (cover rule step 1). */
+  publicImageId: string | null;
   live: boolean;
   publishedAt: string | null;
 }
@@ -403,6 +405,7 @@ export function buildPublicListing(
     ref_no?: string | null;
     cover_art?: string | null;
     cover_image_url?: string | null;
+    public_image_id?: string | null;
     live?: boolean;
     published_at?: string | null;
   } | null,
@@ -430,6 +433,7 @@ export function buildPublicListing(
     coverArt: p?.cover_art ?? null,
     // Public image is set by Admin and only shows once a version has been approved.
     coverImage: p?.live ? p?.cover_image_url ?? null : null,
+    publicImageId: p?.public_image_id ?? null,
     live: !!p?.live,
     publishedAt: p?.published_at ?? null,
   };
