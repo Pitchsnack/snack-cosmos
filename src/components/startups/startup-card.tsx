@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Factory, ShoppingCart, Users } from "lucide-react";
@@ -290,17 +290,11 @@ export function StartupCard({
 
         </div>
 
-        {/* BOTTOM ~50% — Compact Acquisition section (My Startups grid cards) */}
-        {acquisitionSection}
       </div>
     </>
   );
 
-  const cardClass = compact
-    ? COMPACT_CARD_CLASS
-    : acquisitionSection
-      ? ACQUISITION_CARD_CLASS
-      : CARD_CLASS;
+  const cardClass = compact ? COMPACT_CARD_CLASS : CARD_CLASS;
 
   return (
     <TooltipProvider disableHoverableContent>
