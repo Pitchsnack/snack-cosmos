@@ -2,7 +2,7 @@ import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
+import { RequestLoiDialog, SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ChevronDown, ChevronRight, Columns3, Lock } from "lucide-react";
 
@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePersona } from "@/hooks/use-marketplace";
 import {
-  listPipeline, decideNda, shareReport, revokeReportShare, askForReport, sendLoi, shareStep, pipelineEvents,
+  listPipeline, decideNda, shareReport, revokeReportShare, askForReport, sendLoi, withdrawLoiRequest, shareStep, pipelineEvents,
   type PipelineRow,
 } from "@/lib/pipeline.functions";
 import { STEPS, currentStep, isPending, waitState } from "@/lib/pipeline-state";
@@ -398,6 +398,9 @@ function Stepper({ cur }: { cur: number }) {
 
 function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void }) {
   const [loiOpen, setLoiOpen] = useState(false);
+  const [reqOpen, setReqOpen] = useState(false);
+  const withdrawReq = useServerFn(withdrawLoiRequest);
+  const lr = p.loiRequest;
   const [histOpen, setHistOpen] = useState(false);
   const [dlg, setDlg] = useState<null | "report" | "investor" | "seller" | "nda" | "loi" | "share">(null);
   const cur = currentStep(p);
@@ -431,10 +434,16 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
         : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>Ask for the report</Button> : undefined],
     ["Letter of intent", p.loiAcceptedAt,
       p.loiAcceptedAt ? `${money(p.loiAmount)} · accepted by ${seller ? "you" : "the seller"} · exclusivity ${p.loiExclusivityDays ?? 0} days`
-        : p.loiSentAt ? `${money(p.loiAmount)} · sent ${day(p.loiSentAt)} · waiting for ${seller ? "you" : "the seller"}` : "No letter of intent yet",
-      reviewLoi ? <Button size="sm" onClick={() => setDlg("loi")}>Review LOI</Button>
+        : p.loiSentAt ? `${money(p.loiAmount)} · sent ${day(p.loiSentAt)} · waiting for ${seller ? "you" : "the seller"}`
+        : lr ? (seller ? `Requested ${day(lr.at)} · waiting for the buyer` : `Seller requested a letter of intent · ${day(lr.at)}`)
+        : "No letter of intent yet",
+      reviewLoi ? <Button size="sm" onClick={() => setDlg("loi")}>View / Accept LOI</Button>
         : p.loiSentAt ? <Button size="sm" variant="outline" onClick={() => setDlg("loi")}>View LOI</Button>
-        : !seller ? <Button size="sm" onClick={() => setLoiOpen(true)}>Send letter of intent</Button> : undefined],
+        : !seller ? <Button size="sm" onClick={() => setLoiOpen(true)}>Send letter of intent</Button>
+        : lr ? <button type="button" className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={async () => {
+            try { await withdrawReq({ data: { id: p.id } }); toast.success("Request withdrawn"); refresh(); } catch (e) { toast.error((e as Error).message); }
+          }}>Withdraw request</button>
+        : p.ndaApprovedAt ? <Button size="sm" onClick={() => setReqOpen(true)}>Request letter of intent</Button> : undefined],
     ["Contact M&A", p.contactAt,
       p.contactAt ? (seller && !p.legalAt ? <><b>Exchange contacts</b> · introduce your M&A advisor</> : "Contacts exchanged") : "After the letter of intent is accepted",
       seller && p.contactAt && !p.legalAt ? <Button size="sm" onClick={() => toast("Advisor introductions are coming soon.")}>Introduce advisor</Button> : undefined],
@@ -497,7 +506,8 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
           </div>
         </div>
       </div>
-      {loiOpen && <SendLoiDialog id={p.id} onClose={() => setLoiOpen(false)} onSent={refresh} />}
+      {loiOpen && <SendLoiDialog id={p.id} request={lr} onClose={() => setLoiOpen(false)} onSent={refresh} />}
+      {reqOpen && <RequestLoiDialog id={p.id} onClose={() => setReqOpen(false)} onSent={refresh} />}
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "share" && <ShareAccessDialog p={p} mode={p.share ? "manage" : "share"} onClose={() => setDlg(null)} onDone={refresh} />}
@@ -512,7 +522,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
 const EVENT_LABEL: Record<string, string> = {
   nda_requested: "NDA requested", nda_approved: "NDA approved", nda_declined: "NDA declined",
   report_requested: "Financial report requested", report_shared: "Report shared", report_share_changed: "Report sharing changed", report_revoked: "Seller stopped sharing the report",
-  loi_sent: "Letter of intent sent", loi_accepted: "Letter of intent accepted", loi_declined: "Letter of intent declined", loi_changes_requested: "Changes to the letter of intent requested", report_viewed: "Financial report opened",
+  loi_sent: "Letter of intent sent", loi_accepted: "Letter of intent accepted", loi_declined: "Letter of intent declined", loi_changes_requested: "Changes to the letter of intent requested", loi_requested: "Seller requested a letter of intent", loi_request_withdrawn: "Letter of intent request withdrawn", loi_request_fulfilled: "Letter of intent request answered", report_viewed: "Financial report opened",
   legal_shared: "Legal folder shared", spa_shared: "SPA draft shared", payment_shared: "Payment completed",
 };
 

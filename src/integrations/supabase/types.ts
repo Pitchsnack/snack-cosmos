@@ -943,6 +943,12 @@ export type Database = {
           loi_conditions: string | null
           loi_consent_text: string | null
           loi_exclusivity_days: number | null
+          loi_request_days: number | null
+          loi_request_note: string | null
+          loi_request_price: number | null
+          loi_request_respond_by: string | null
+          loi_requested_at: string | null
+          loi_requested_by: string | null
           loi_sent_at: string | null
           loi_stake_pct: number | null
           nda_approved_at: string | null
@@ -974,6 +980,12 @@ export type Database = {
           loi_conditions?: string | null
           loi_consent_text?: string | null
           loi_exclusivity_days?: number | null
+          loi_request_days?: number | null
+          loi_request_note?: string | null
+          loi_request_price?: number | null
+          loi_request_respond_by?: string | null
+          loi_requested_at?: string | null
+          loi_requested_by?: string | null
           loi_sent_at?: string | null
           loi_stake_pct?: number | null
           nda_approved_at?: string | null
@@ -1005,6 +1017,12 @@ export type Database = {
           loi_conditions?: string | null
           loi_consent_text?: string | null
           loi_exclusivity_days?: number | null
+          loi_request_days?: number | null
+          loi_request_note?: string | null
+          loi_request_price?: number | null
+          loi_request_respond_by?: string | null
+          loi_requested_at?: string | null
+          loi_requested_by?: string | null
           loi_sent_at?: string | null
           loi_stake_pct?: number | null
           nda_approved_at?: string | null
