@@ -25,9 +25,9 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
   head: () => ({
     meta: [
       { title: "Favourites — PitchSnack" },
-      { name: "description", content: "Listings you saved or requested an NDA for, with the private view once the seller approves." },
+      { name: "description", content: "Listings you starred or requested an NDA for, with the private view once the seller approves." },
       { property: "og:title", content: "Favourites — PitchSnack" },
-      { property: "og:description", content: "Listings you saved or requested an NDA for, with the private view once the seller approves." },
+      { property: "og:description", content: "Listings you starred or requested an NDA for, with the private view once the seller approves." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
 });
 
 type Filter = "all" | FavStatus;
-const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Saved"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
+const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Starred"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
 const baht = (n: number | null) => {
@@ -55,6 +55,14 @@ function ApprovedBadge() {
   );
 }
 
+function StarredBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-[10.5px] font-bold text-[#374151]">
+      <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />Starred
+    </span>
+  );
+}
+
 function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, toggleSave, wrapMeta }: {
   f: Favourite; selected?: boolean; onSelect?: () => void; expanded?: boolean; onToggleExpand?: () => void;
   savedIds: Set<string>; toggleSave: (id: string) => void; wrapMeta?: boolean;
@@ -69,7 +77,7 @@ function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, to
       expanded={expanded}
       onToggleExpand={onToggleExpand}
       wrapMeta={wrapMeta}
-      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : undefined}
+      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <StarredBadge />}
       priv={p ? { name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees } : undefined}
       topRight={f.status === "saved" ? <SaveButton square saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} /> : undefined}
     />
@@ -127,7 +135,7 @@ function FavouritesPage() {
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Star className="h-3.5 w-3.5" /> Discover</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Favourites</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Listings you saved or requested an NDA for</p>
+          <p className="mt-1 text-sm text-muted-foreground">Listings you starred or requested an NDA for</p>
         </div>
         <ViewToggle value={view} onChange={persist} />
       </div>
@@ -217,7 +225,7 @@ function FavouritesPage() {
 function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void }) {
   const code = [f.listing.codeName, f.listing.refNo].filter(Boolean).join(" · ");
   if (f.status === "approved" && f.priv) return <PrivatePanel f={f} code={code} />;
-  if (f.status === "requested") return <RequestedPanel f={f} code={code} />;
+  if (f.status === "requested") return <RequestedPanel f={f} code={code} savedIds={savedIds} />;
   return (
     <>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
@@ -232,7 +240,7 @@ function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<str
   );
 }
 
-function RequestedPanel({ f, code }: { f: Favourite; code: string }) {
+function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; savedIds: Set<string> }) {
   const withdraw = useServerFn(withdrawNdaRequest);
   const invalidate = useInvalidateListings();
   const [busy, setBusy] = useState(false);
@@ -245,7 +253,8 @@ function RequestedPanel({ f, code }: { f: Favourite; code: string }) {
         </div>
         <Button variant="outline" size="sm" disabled={busy} onClick={async () => {
           setBusy(true);
-          try { await withdraw({ data: { id: f.id } }); toast.success("NDA request withdrawn."); invalidate(); }
+          try { await withdraw({ data: { id: f.id } }); const name = f.listing.codeName || f.listing.refNo || "This listing";
+            toast.success(savedIds.has(f.id) ? `Request withdrawn. ${name} stays in Favourites as starred.` : `Request withdrawn. ${name} has left Favourites.`); invalidate(); }
           catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
         }}>Withdraw request</Button>
       </div>
