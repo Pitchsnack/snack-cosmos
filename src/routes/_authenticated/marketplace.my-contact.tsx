@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Clock, Info, Link2, Lock, Mail, Phone, Search, X } from "lucide-react";
+import { Building2, Clock, Info, Link2, Lock, Mail, Phone, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePersona } from "@/hooks/use-marketplace";
 import { listContacts, type ContactPerson } from "@/lib/contacts.functions";
@@ -70,15 +70,15 @@ function ContactsPage() {
           </span>
           <Link to="/my-page" className="ml-auto text-[12.5px] font-semibold text-blue-600 hover:underline">Edit</Link>
         </div>
-        <div className="mt-3 grid items-end gap-6" style={{ gridTemplateColumns: "1.45fr 1fr 0.75fr 1fr" }}>
+        <div className="mt-3 grid items-end gap-6" style={{ gridTemplateColumns: "1.25fr 1fr 1.15fr 0.8fr 0.8fr" }}>
           <div className="flex min-w-0 items-center gap-3">
             <Avatar name={my?.name ?? "Me"} size={40} />
             <div className="min-w-0">
               <div className="truncate text-[13.5px] font-semibold" title={my?.name}>{my?.name ?? "…"}</div>
-              <div className="truncate text-[12.5px] text-muted-foreground">{[my?.role, my?.company].filter(Boolean).join(" · ") || "—"}</div>
+              <div className="truncate text-[12.5px] text-muted-foreground">{my?.role || "—"}</div>
             </div>
           </div>
-          {([["Email", my?.email], ["Phone", my?.phone], ["LinkedIn", handle(my?.linkedin ?? null)]] as const).map(([k, v]) => (
+          {([["Company", my?.company], ["Email", my?.email], ["Phone", my?.phone], ["LinkedIn", handle(my?.linkedin ?? null)]] as const).map(([k, v]) => (
             <div key={k} className="min-w-0">
               <Cap>{k}</Cap>
               <div className="truncate text-[13.5px] font-semibold" title={v ?? ""}>{v || "—"}</div>
@@ -103,8 +103,8 @@ function ContactsPage() {
       </div>
 
       <div className="overflow-hidden rounded-[14px] border bg-card">
-        <div className="grid gap-6 bg-muted/40 px-5 py-2.5 text-[10.5px] font-bold uppercase tracking-wide text-muted-foreground/70" style={{ gridTemplateColumns: "1.4fr 1.15fr 0.8fr 0.85fr" }}>
-          <div>Contact</div><div>Email</div><div>Phone</div><div>LinkedIn</div>
+        <div className="grid gap-6 bg-muted/40 px-5 py-2.5 text-[10.5px] font-bold uppercase tracking-wide text-muted-foreground/70" style={{ gridTemplateColumns: "1.25fr 1fr 1.15fr 0.8fr 0.8fr" }}>
+          <div>Contact</div><div>Company</div><div>Email</div><div>Phone</div><div>LinkedIn</div>
         </div>
         {shown.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-muted-foreground">No contacts match.</div>
@@ -134,16 +134,17 @@ function Row({ c, active, onOpen }: { c: ContactPerson; active: boolean; onOpen:
       onClick={onOpen}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } }}
       className={`relative grid cursor-pointer items-center gap-6 border-t border-border/60 px-5 py-4 outline-none first:border-t-0 focus-visible:bg-muted/40 ${active ? "bg-amber-50" : "hover:bg-muted/40"}`}
-      style={{ gridTemplateColumns: "1.4fr 1.15fr 0.8fr 0.85fr" }}
+      style={{ gridTemplateColumns: "1.25fr 1fr 1.15fr 0.8fr 0.8fr" }}
     >
       {active && <span className="absolute inset-y-0 left-0 w-[3px] bg-amber-500" />}
       <div className="flex min-w-0 items-center gap-3">
         <Avatar name={c.name} size={38} />
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold" title={c.name}>{c.name}</div>
-          <div className="truncate text-[12.5px] text-muted-foreground">{[c.role, c.company].filter(Boolean).join(" · ")}</div>
+          <div className="truncate text-[12.5px] text-muted-foreground" title={c.role ?? ""}>{c.role}</div>
         </div>
       </div>
+      <div className="min-w-0">{c.company ? <span title={c.company} className="flex min-w-0 items-center gap-1.5 text-[13.5px] font-medium"><Building2 className="h-3.5 w-3.5 flex-none text-muted-foreground" /><span className="truncate">{c.company}</span></span> : <span className="text-muted-foreground">—</span>}</div>
       <div className="min-w-0">{c.email ? <a href={`mailto:${c.email}`} onClick={stop} title={c.email} className="flex min-w-0 items-center gap-1.5 text-sm hover:underline"><Mail className="h-3.5 w-3.5 flex-none text-muted-foreground" /><span className="truncate">{c.email}</span></a> : "—"}</div>
       <div className="min-w-0">{c.phone ? <a href={`tel:${c.phone}`} onClick={stop} title={c.phone} className="flex min-w-0 items-center gap-1.5 text-sm hover:underline"><Phone className="h-3.5 w-3.5 flex-none text-muted-foreground" /><span className="truncate">{c.phone}</span></a> : "—"}</div>
       <div className="min-w-0">{h && c.linkedin ? <a href={liUrl(c.linkedin)} target="_blank" rel="noreferrer" onClick={stop} title={h} className="block truncate text-sm text-blue-600 hover:underline">{h}</a> : "—"}</div>
