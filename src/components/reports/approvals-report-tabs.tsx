@@ -149,10 +149,10 @@ export function PaidReports({ orders }: { orders: ReportOrder[] }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">Show</span>
         <div className="inline-flex rounded-lg bg-muted p-0.5">
-          {([["waiting", "Waiting", waiting.length], ["authorised", "Authorised", authorised.length], ["all", "All", orders.length]] as const).map(([k, l, n]) => (
+          {([["waiting", "Waiting", waiting.length], ["authorised", "Authorised ", authorised.length], ["all", "All ", orders.length]] as const).map(([k, l, n]) => (
             <button key={k} type="button" onClick={() => setShow(k)}
               className={cn("rounded-md px-3 py-1 text-[13px] font-semibold", show === k ? "bg-card text-foreground shadow-sm" : "text-muted-foreground")}>
-              {l} {n}
+              {l}
             </button>
           ))}
         </div>
