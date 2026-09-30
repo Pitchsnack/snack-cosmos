@@ -14,7 +14,7 @@ async function signLogo(
   if (!path) return null;
   if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:")) return path;
   const parts = path.split("/");
-  if (parts.length < 3 || !LOGO_UUID_RE.test(parts[0]) || !LOGO_UUID_RE.test(parts[1])) return null;
+  if (parts.length < 3 || !LOGO_UUID_RE.test(parts[0]) || !LOGO_UUID_RE.test(parts[1].replace(/^draft-/, ""))) return null;
   const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(path, LOGO_SIGN_TTL);
   return data?.signedUrl ?? null;
 }
@@ -167,7 +167,6 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
           ci?.registration_date_th_raw as string | null,
           ci?.registration_date as string | null,
           s.registered_date as string | null,
-          startup.year_founded ? String(startup.year_founded) : null,
         ),
         registeredCapital: firstDbd(
           ci?.registered_capital_th_raw as string | null,

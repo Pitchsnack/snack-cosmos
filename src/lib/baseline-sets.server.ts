@@ -61,10 +61,15 @@ export async function generateBaselineSets(
     .is("business_model", null);
   if (sErr) throw new Error(sErr.message);
 
+  // Only auto-generated sets are managed here; hand-built sector-wide sets are never touched.
   const wideSets = new Map<string, string>();
-  for (const s of (sets ?? []) as { id: string; sector: string | null }[]) {
-    if (s.sector) wideSets.set(s.sector, s.id);
+  const handBuilt = new Set<string>();
+  for (const s of (sets ?? []) as { id: string; sector: string | null; is_baseline: boolean | null }[]) {
+    if (!s.sector) continue;
+    if (s.is_baseline) wideSets.set(s.sector, s.id);
+    else handBuilt.add(s.sector);
   }
+  for (const sector of handBuilt) bySector.delete(sector);
 
   const setIds = [...wideSets.values()];
   const membersBySet = new Map<string, Set<string>>();

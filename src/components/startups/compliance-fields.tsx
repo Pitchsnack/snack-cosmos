@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -47,6 +48,7 @@ export function ComplianceFields({
 }) {
   const [category, setCategory] = useState<LicenceCategory>("Financial");
   const [number, setNumber] = useState("");
+  const [pending, setPending] = useState<string | null>(null);
   const [freshIso, setFreshIso] = useState<string[]>([]);
 
   const { data: recorded = [] } = useQuery({
@@ -102,6 +104,7 @@ export function ComplianceFields({
     }
     onLicencesChange([...licences, { category, name: clean, number: number.trim() || null }]);
     setNumber("");
+    setPending(null);
   };
 
   const addIso = (raw: string, isNew: boolean) => {
@@ -153,8 +156,8 @@ export function ComplianceFields({
           </div>
         )}
 
-        <div className="grid grid-cols-[150px_1fr_180px] items-start gap-[9px]">
-          <Select value={category} onValueChange={(v) => setCategory(v as LicenceCategory)}>
+        <div className="grid grid-cols-[150px_1fr_180px_auto] items-start gap-[9px]">
+          <Select value={category} onValueChange={(v) => { setCategory(v as LicenceCategory); setPending(null); }}>
             <SelectTrigger className="h-[42px] bg-white">
               <SelectValue />
             </SelectTrigger>
@@ -166,20 +169,42 @@ export function ComplianceFields({
               ))}
             </SelectContent>
           </Select>
-          <SuggestCombobox
-            id="licence-name"
-            options={licenceOptions}
-            noun="licence"
-            placeholder="Search licences…"
-            onSelect={(v) => addLicence(v)}
-          />
+          {pending ? (
+            <button
+              type="button"
+              onClick={() => setPending(null)}
+              className="inline-flex h-[42px] items-center justify-between rounded-md border bg-white px-3 text-left text-sm"
+              title="Change licence"
+            >
+              <span className="truncate">{pending}</span> <X className="h-3 w-3 opacity-65" />
+            </button>
+          ) : (
+            <SuggestCombobox
+              id="licence-name"
+              options={licenceOptions}
+              noun="licence"
+              placeholder="Search licences…"
+              onSelect={(v) => setPending(v)}
+            />
+          )}
           <Input
             value={number}
             maxLength={120}
             placeholder="Licence no. (optional)"
             className="h-[42px] bg-white"
             onChange={(e) => setNumber(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && pending) { e.preventDefault(); addLicence(pending); }
+            }}
           />
+          <Button
+            type="button"
+            className="h-[42px]"
+            disabled={!pending}
+            onClick={() => pending && addLicence(pending)}
+          >
+            Add
+          </Button>
         </div>
       </div>
 

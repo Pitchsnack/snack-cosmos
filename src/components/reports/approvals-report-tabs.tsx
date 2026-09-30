@@ -65,6 +65,22 @@ export function PaidReports({ orders }: { orders: ReportOrder[] }) {
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const refresh = () => { qc.invalidateQueries({ queryKey: ["report-orders"] }); qc.invalidateQueries({ queryKey: ["approvals"] }); };
 
+  // Catch-up: finalise authorisations whose Undo window passed without the timer firing
+  // (tab closed / navigated away). finaliseAuthorise is idempotent.
+  const swept = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    for (const o of orders) {
+      if (o.status !== "delivered" || !o.delivered_at || timers.current[o.id] || swept.current.has(o.id)) continue;
+      if (Date.now() - new Date(o.delivered_at).getTime() < 7000) continue;
+      swept.current.add(o.id);
+      void finFn({ data: { orderId: o.id } });
+    }
+  }, [orders, finFn]);
+  // On unmount, finalise pending authorisations immediately instead of dropping them.
+  useEffect(() => () => {
+    for (const [id, t] of Object.entries(timers.current)) { clearTimeout(t); void finFn({ data: { orderId: id } }); }
+  }, [finFn]);
+
   useEffect(() => {
     if (!focusId) return;
     const el = document.querySelector<HTMLButtonElement>(`[data-row-action="${focusId}"]`);
