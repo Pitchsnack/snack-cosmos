@@ -219,7 +219,8 @@ export const discardHiddenChanges = createServerFn({ method: "POST" })
  */
 export const listMarketplaceTeasers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .inputValidator((d?: { excludeNda?: boolean }) => ({ excludeNda: !!d?.excludeNda }))
+  .handler(async ({ data: input, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { buildPublicListing } = await import("@/lib/public-listing");
     const { data, error } = await supabaseAdmin
@@ -235,7 +236,14 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
       : { data: [] as { startup_id: string }[] };
     const withFin = new Set((fin ?? []).map((f) => f.startup_id));
     // Private fields are used here only to strip names; only the public listing leaves the server.
-    return (data ?? []).map((r) => {
+    // Buyer Browse: listings with an active NDA live in Favourites instead.
+    let rowsIn = data ?? [];
+    if (input.excludeNda) {
+      const { activeNdaIds } = await import("@/lib/favourites.functions");
+      const nda = await activeNdaIds(context.userId);
+      rowsIn = rowsIn.filter((r) => !nda.has(r.id));
+    }
+    return rowsIn.map((r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
       const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, live: true, published_at: r.published_at }, withFin.has(r.startup_id));

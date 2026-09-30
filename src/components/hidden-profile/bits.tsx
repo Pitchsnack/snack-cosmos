@@ -76,7 +76,7 @@ export function Flagged({ text, terms }: { text: string; terms: { term: string; 
   return <>{out}</>;
 }
 
-export function SectorArt({ art, className, children }: { art?: string | null; className?: string; children?: ReactNode }) {
+export function SectorArt({ art, className, children, tile }: { art?: string | null; className?: string; children?: ReactNode; tile?: ReactNode }) {
   const name = art || "Business";
   const lower = name.toLowerCase();
   const Icon = /food|beverage|restaurant|agri/.test(lower) ? Utensils
@@ -91,7 +91,7 @@ export function SectorArt({ art, className, children }: { art?: string | null; c
     <div className={cn("relative grid place-items-center overflow-hidden bg-secondary text-secondary-foreground", className)}>
       <div aria-hidden="true" className="absolute inset-0 opacity-40" style={{ backgroundImage: "repeating-linear-gradient(135deg,transparent 0px,transparent 24px,var(--border) 25px,transparent 26px)" }} />
       <div className="relative flex flex-col items-center gap-1.5 text-center">
-        <div className="grid h-12 w-12 place-items-center rounded-lg border border-border bg-card shadow-sm"><Icon className="h-6 w-6 text-profile" strokeWidth={1.5} /></div>
+        <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-lg border border-border bg-card shadow-sm">{tile ?? <Icon className="h-6 w-6 text-profile" strokeWidth={1.5} />}</div>
         <span className="max-w-[160px] truncate text-[11px] font-semibold">{name}</span>
       </div>
       {children}

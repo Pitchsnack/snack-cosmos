@@ -123,6 +123,13 @@ export const requestNda = createServerFn({ method: "POST" })
     const { data: bv } = await sb.from("buyer_verifications").select("status").eq("user_id", context.userId).maybeSingle();
     const { data: uv } = await sb.from("user_verifications").select("user_id").eq("user_id", context.userId).maybeSingle();
     if (!uv && bv?.status !== "verified") throw new Error("Verify your buyer profile first");
+    // A withdrawn or declined request can be made again: reopen the same row.
+    const { data: prev } = await sb.from("deal_pipelines").select("id, status").eq("hidden_profile_id", hp.id).eq("buyer_user_id", context.userId).maybeSingle();
+    if (prev && ["withdrawn", "declined"].includes(prev.status)) {
+      await update(prev.id, { status: "active", nda_requested_at: new Date().toISOString(), nda_approved_at: null, buyer_message: data.message ?? null });
+      await log(prev.id, "nda_requested", context.userId);
+      return { ok: true };
+    }
     const { data: row, error } = await sb
       .from("deal_pipelines")
       .upsert(
@@ -146,6 +153,7 @@ export const myNdaStatuses = createServerFn({ method: "GET" })
       .eq("buyer_user_id", context.userId);
     const out: Record<string, "requested" | "approved" | "exchanged" | "declined"> = {};
     for (const r of data ?? []) {
+      if (r.status === "withdrawn") continue;
       out[r.hidden_profile_id] = r.status === "declined" ? "declined" : r.contact_at ? "exchanged" : r.nda_approved_at ? "approved" : "requested";
     }
     return out;
@@ -168,7 +176,7 @@ export const listPipeline = createServerFn({ method: "GET" })
     const sb = await admin();
     let rows: any[] = [];
     if (data.as === "buyer") {
-      const r = await sb.from("deal_pipelines").select("*").eq("buyer_user_id", context.userId).neq("status", "declined").order("updated_at", { ascending: false });
+      const r = await sb.from("deal_pipelines").select("*").eq("buyer_user_id", context.userId).not("status", "in", "(declined,withdrawn)").order("updated_at", { ascending: false });
       rows = r.data ?? [];
     } else {
       // Only businesses the caller owns (not every business an Admin can see).
@@ -176,7 +184,7 @@ export const listPipeline = createServerFn({ method: "GET" })
       const { data: su } = await sb.from("startup_users").select("startup_id").eq("user_id", context.userId);
       const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
       if (ids.length) {
-        const r = await sb.from("deal_pipelines").select("*").in("startup_id", ids).neq("status", "declined").order("updated_at", { ascending: false });
+        const r = await sb.from("deal_pipelines").select("*").in("startup_id", ids).not("status", "in", "(declined,withdrawn)").order("updated_at", { ascending: false });
         rows = r.data ?? [];
       }
     }
@@ -267,14 +275,14 @@ export const pipelineBadgeCount = createServerFn({ method: "GET" })
     const cols = "id, startup_id, status, nda_approved_at, nda_expires_at, report_requested_at, report_shared_at, loi_sent_at, loi_accepted_at, legal_at, spa_at, payment_at";
     let rows: any[] = [];
     if (data.as === "buyer") {
-      rows = (await sb.from("deal_pipelines").select(cols).eq("buyer_user_id", context.userId).neq("status", "declined")).data ?? [];
+      rows = (await sb.from("deal_pipelines").select(cols).eq("buyer_user_id", context.userId).not("status", "in", "(declined,withdrawn)")).data ?? [];
     } else {
       const [{ data: own }, { data: su }] = await Promise.all([
         sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId),
         sb.from("startup_users").select("startup_id").eq("user_id", context.userId),
       ]);
       const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
-      if (ids.length) rows = (await sb.from("deal_pipelines").select(cols).in("startup_id", ids).neq("status", "declined")).data ?? [];
+      if (ids.length) rows = (await sb.from("deal_pipelines").select(cols).in("startup_id", ids).not("status", "in", "(declined,withdrawn)")).data ?? [];
     }
     const seller = data.as === "seller";
     // Only seller rows waiting on a report share need report/share lookups.

@@ -3035,6 +3035,32 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_listings: {
+        Row: {
+          created_at: string
+          hidden_profile_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hidden_profile_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hidden_profile_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_listings_hidden_profile_id_fkey"
+            columns: ["hidden_profile_id"]
+            isOneToOne: false
+            referencedRelation: "hidden_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_searches: {
         Row: {
           created_at: string
