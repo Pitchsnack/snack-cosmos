@@ -78,6 +78,7 @@ import { Route as AuthenticatedStartupsIdCoverRouteImport } from './routes/_auth
 import { Route as AuthenticatedMyStartupsIdFinancialsRouteImport } from './routes/_authenticated/my-startups.$id.financials'
 import { Route as AuthenticatedMyStartupsIdEditRouteImport } from './routes/_authenticated/my-startups.$id.edit'
 import { Route as AuthenticatedMyStartupsIdCoverRouteImport } from './routes/_authenticated/my-startups.$id.cover'
+import { Route as AuthenticatedMarketplaceMyCompanyEditRouteImport } from './routes/_authenticated/marketplace.my-company.edit'
 import { Route as AuthenticatedInvestorsIdPortfolioRouteImport } from './routes/_authenticated/investors.$id.portfolio'
 import { Route as AuthenticatedInvestorsIdEditRouteImport } from './routes/_authenticated/investors.$id.edit'
 import { Route as AuthenticatedApprovalsListingsIdRouteImport } from './routes/_authenticated/approvals.listings.$id'
@@ -475,6 +476,12 @@ const AuthenticatedMyStartupsIdCoverRoute =
     path: '/cover',
     getParentRoute: () => AuthenticatedMyStartupsIdRoute,
   } as any)
+const AuthenticatedMarketplaceMyCompanyEditRoute =
+  AuthenticatedMarketplaceMyCompanyEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedMarketplaceMyCompanyRoute,
+  } as any)
 const AuthenticatedInvestorsIdPortfolioRoute =
   AuthenticatedInvestorsIdPortfolioRouteImport.update({
     id: '/portfolio',
@@ -561,6 +568,7 @@ export interface FileRoutesByFullPath {
   '/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/investors/$id/portfolio': typeof AuthenticatedInvestorsIdPortfolioRoute
+  '/marketplace/my-company/edit': typeof AuthenticatedMarketplaceMyCompanyEditRoute
   '/my-startups/$id/cover': typeof AuthenticatedMyStartupsIdCoverRoute
   '/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
   '/my-startups/$id/financials': typeof AuthenticatedMyStartupsIdFinancialsRoute
@@ -624,6 +632,7 @@ export interface FileRoutesByTo {
   '/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/investors/$id/portfolio': typeof AuthenticatedInvestorsIdPortfolioRoute
+  '/marketplace/my-company/edit': typeof AuthenticatedMarketplaceMyCompanyEditRoute
   '/my-startups/$id/cover': typeof AuthenticatedMyStartupsIdCoverRoute
   '/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
   '/my-startups/$id/financials': typeof AuthenticatedMyStartupsIdFinancialsRoute
@@ -700,6 +709,7 @@ export interface FileRoutesById {
   '/_authenticated/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/_authenticated/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
   '/_authenticated/investors/$id/portfolio': typeof AuthenticatedInvestorsIdPortfolioRoute
+  '/_authenticated/marketplace/my-company/edit': typeof AuthenticatedMarketplaceMyCompanyEditRoute
   '/_authenticated/my-startups/$id/cover': typeof AuthenticatedMyStartupsIdCoverRoute
   '/_authenticated/my-startups/$id/edit': typeof AuthenticatedMyStartupsIdEditRoute
   '/_authenticated/my-startups/$id/financials': typeof AuthenticatedMyStartupsIdFinancialsRoute
@@ -776,6 +786,7 @@ export interface FileRouteTypes {
     | '/approvals/listings/$id'
     | '/investors/$id/edit'
     | '/investors/$id/portfolio'
+    | '/marketplace/my-company/edit'
     | '/my-startups/$id/cover'
     | '/my-startups/$id/edit'
     | '/my-startups/$id/financials'
@@ -839,6 +850,7 @@ export interface FileRouteTypes {
     | '/approvals/listings/$id'
     | '/investors/$id/edit'
     | '/investors/$id/portfolio'
+    | '/marketplace/my-company/edit'
     | '/my-startups/$id/cover'
     | '/my-startups/$id/edit'
     | '/my-startups/$id/financials'
@@ -914,6 +926,7 @@ export interface FileRouteTypes {
     | '/_authenticated/approvals/listings/$id'
     | '/_authenticated/investors/$id/edit'
     | '/_authenticated/investors/$id/portfolio'
+    | '/_authenticated/marketplace/my-company/edit'
     | '/_authenticated/my-startups/$id/cover'
     | '/_authenticated/my-startups/$id/edit'
     | '/_authenticated/my-startups/$id/financials'
@@ -1422,6 +1435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyStartupsIdCoverRouteImport
       parentRoute: typeof AuthenticatedMyStartupsIdRoute
     }
+    '/_authenticated/marketplace/my-company/edit': {
+      id: '/_authenticated/marketplace/my-company/edit'
+      path: '/edit'
+      fullPath: '/marketplace/my-company/edit'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMyCompanyEditRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceMyCompanyRoute
+    }
     '/_authenticated/investors/$id/portfolio': {
       id: '/_authenticated/investors/$id/portfolio'
       path: '/portfolio'
@@ -1532,11 +1552,14 @@ const AuthenticatedInvestorsRouteWithChildren =
   )
 
 interface AuthenticatedMarketplaceMyCompanyRouteChildren {
+  AuthenticatedMarketplaceMyCompanyEditRoute: typeof AuthenticatedMarketplaceMyCompanyEditRoute
   AuthenticatedMarketplaceMyCompanyIndexRoute: typeof AuthenticatedMarketplaceMyCompanyIndexRoute
 }
 
 const AuthenticatedMarketplaceMyCompanyRouteChildren: AuthenticatedMarketplaceMyCompanyRouteChildren =
   {
+    AuthenticatedMarketplaceMyCompanyEditRoute:
+      AuthenticatedMarketplaceMyCompanyEditRoute,
     AuthenticatedMarketplaceMyCompanyIndexRoute:
       AuthenticatedMarketplaceMyCompanyIndexRoute,
   }
