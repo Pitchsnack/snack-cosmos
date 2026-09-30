@@ -454,7 +454,7 @@ export function StartupFinancialsPage({
             />
           )}
 
-          <div className="px-[18px] pb-[18px]">
+          <div className={tab === "valuation" ? "hidden" : "px-[18px] pb-[18px]"}>
             {tab === "overview" && (
               <div className="pt-4">
                 <FinancialsOverview
