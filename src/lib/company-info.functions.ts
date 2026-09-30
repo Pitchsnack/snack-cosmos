@@ -145,6 +145,7 @@ export const saveCompanyInfoTh = createServerFn({ method: "POST" })
       tenantId: startup.tenant_id as string,
       info: {
         legalNameTh: data.info.legalNameTh ?? null,
+        legalNameEn: data.info.legalNameEn ?? null,
         registrationNumber: data.info.registrationNumber ?? null,
         legalEntityTypeTh: data.info.legalEntityTypeTh ?? null,
         legalEntityStatusTh: data.info.legalEntityStatusTh ?? null,
