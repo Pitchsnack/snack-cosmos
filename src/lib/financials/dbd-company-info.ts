@@ -348,6 +348,20 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
     nullish(text.match(/ชื่อนิติบุคคล\s*:?\s*([^:]{3,160}?)\s*เลขทะเบียนนิติบุคคล/)?.[1] ?? null) ??
     get(["ชื่อนิติบุคคล"]);
 
+  // DBD publishes the English registered name under its own label. Keep it
+  // exactly as registered; anything not Latin-scripted is ignored so the Thai
+  // name is never duplicated into the English slot.
+  const legalNameEn = (() => {
+    const raw =
+      nullish(
+        text.match(/ชื่อนิติบุคคล(?:ภาษาอังกฤษ|\s*\(ภาษาอังกฤษ\))\s*:?\s*([^:]{3,200}?)\s*(?=[ก-๙]{3,}|$)/)?.[1] ??
+          null,
+      ) ?? get(["ชื่อนิติบุคคลภาษาอังกฤษ", "ชื่อภาษาอังกฤษ"]);
+    if (!raw) return null;
+    if (/[ก-๙]/.test(raw)) return null;
+    return /[A-Za-z]{2,}/.test(raw) ? raw : null;
+  })();
+
   const dateRaw = get(["วันที่จดทะเบียนจัดตั้ง", "วันที่จดทะเบียน"]);
   const capitalRaw = get(["ทุนจดทะเบียน"]);
 
