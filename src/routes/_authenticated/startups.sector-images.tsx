@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/startups/sector-images")({
 
 const RULE = "Use a JPG, PNG or WebP, landscape, at least 1200 × 675 px, up to 5 MB.";
 const plural = (n: number) => (n === 1 ? "1 image" : `${n} images`);
-const mb = (b: number) => (b / (1024 * 1024)).toFixed(1);
+const mb = (b: number) => Math.max(0.1, b / (1024 * 1024)).toFixed(1);
 const fmtDate = (s: string) => new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 /** Checks the file, redraws it (drops EXIF/GPS) and scales it to fit 1920 × 1080. */
@@ -227,7 +227,7 @@ function AddBox({ onFiles }: { onFiles: (f: FileList) => void }) {
       <button type="button" onClick={() => ref.current?.click()} className="flex h-[84px] w-[150px] items-center justify-center gap-1 rounded-lg border-[1.5px] border-dashed border-input bg-card text-[13px] font-semibold text-foreground/80 hover:bg-muted">
         <Plus className="h-3.5 w-3.5" /> Add image
       </button>
-      <input ref={ref} type="file" accept="image/jpeg,image/png" multiple hidden onChange={(e) => { if (e.target.files?.length) onFiles(e.target.files); e.target.value = ""; }} />
+      <input ref={ref} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => { if (e.target.files?.length) onFiles(e.target.files); e.target.value = ""; }} />
     </>
   );
 }
