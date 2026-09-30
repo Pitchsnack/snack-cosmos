@@ -200,10 +200,8 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           </div>
           {wide && (
             <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
-              {false ? null              ) : current ? (
-                <>
-                  <BrowsePanel t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
-                </>
+              {current ? (
+                <BrowsePanel t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
               ) : (
                 <p className="py-16 text-center text-sm text-muted-foreground">Select a listing to see the details.</p>
               )}
