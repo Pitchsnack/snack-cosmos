@@ -30,7 +30,7 @@ function useFirstLoadCount() {
 }
 
 export function GlobalRouteLoading({ delay = 300 }: { delay?: number }) {
-  const routerLoading = useRouterState({ select: (s) => s.status === "pending" || s.isLoading });
+  const routerLoading = useRouterState({ select: (s) => s.isLoading || s.matches.some((m) => m.status === "pending") });
   const firstLoads = useFirstLoadCount();
   const busy = routerLoading || firstLoads > 0;
   const [show, setShow] = useState(false);
