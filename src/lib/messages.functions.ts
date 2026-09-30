@@ -73,6 +73,24 @@ export const threadSummaries = createServerFn({ method: "GET" })
     });
   });
 
+/** Light unread total for the Messages menu badge. */
+export const messagesBadgeCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ as: z.enum(["seller", "buyer"]) }).parse(d))
+  .handler(async ({ data, context }): Promise<number> => {
+    const sb = await admin();
+    const keys = [...(await myPipelineIds(sb, context.userId, data.as)).map((id: string) => `p:${id}`), `a:${context.userId}`];
+    const { data: reads } = await sb.from("marketplace_message_reads").select("thread_key, read_at").eq("user_id", context.userId).in("thread_key", keys);
+    const readAt: Record<string, string> = Object.fromEntries((reads ?? []).map((r: any) => [r.thread_key, r.read_at]));
+    const counts = await Promise.all(keys.map(async (key) => {
+      let q = sb.from("marketplace_messages").select("id", { count: "exact", head: true }).eq("thread_key", key).neq("sender_id", context.userId);
+      if (readAt[key]) q = q.gt("created_at", readAt[key]);
+      const { count } = await q;
+      return count ?? 0;
+    }));
+    return counts.reduce((a, b) => a + b, 0);
+  });
+
 export const threadMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ key: Key }).parse(d))

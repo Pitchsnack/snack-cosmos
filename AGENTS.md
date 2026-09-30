@@ -14,3 +14,4 @@
 - Keep Business Address on startups through shared StartupForm so seller and Control use one saved field.
 - Buyer My Company uses one buyer_profiles row per user with directory-style views; seller reads use toPublic() only, protecting private data until NDA.
 - Seller My Financials/Company Valuation are one tabbed page (my-reports-page.tsx) on two routes with ?company=; last pick and share-panel state live in seller_report_prefs so they follow the user across devices.
+- The page loading overlay is opt-in: only router pending matches and queries with meta.pageLoading count; menu badges use their own light count functions (pipelineBadgeCount, messagesBadgeCount), so background queries never freeze a page.

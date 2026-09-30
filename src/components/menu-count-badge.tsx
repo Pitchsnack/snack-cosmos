@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { threadSummaries } from "@/lib/messages.functions";
+import { messagesBadgeCount } from "@/lib/messages.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { pendingApprovalsCount } from "@/lib/approvals.functions";
-import { listPipeline, type PipelineRow } from "@/lib/pipeline.functions";
+import { pipelineBadgeCount } from "@/lib/pipeline.functions";
 import { usePersona } from "@/hooks/use-marketplace";
 import { cn } from "@/lib/utils";
-import { waitingOnYouCount } from "@/lib/pipeline-state";
 import { useBump } from "@/hooks/use-bump";
 
 /**
@@ -49,10 +48,9 @@ export function ApprovalsBadge() {
 /** Marketplace › Pipeline — Pending approval count + Tracking count on My Pipeline. */
 export function PipelineCountBadge({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
-  const fn = useServerFn(listPipeline);
-  const { data } = useQuery({ queryKey: ["pipeline", persona], queryFn: () => fn({ data: { as: persona } }) });
-  const rows: PipelineRow[] = data ?? [];
-  const n = waitingOnYouCount(rows, persona === "seller");
+  const fn = useServerFn(pipelineBadgeCount);
+  // Own light count query; cached 60s, refreshed on focus and whenever ["pipeline"] is invalidated.
+  const { data: n } = useQuery({ queryKey: ["pipeline", "count", persona], queryFn: () => fn({ data: { as: persona } }), staleTime: 60_000, refetchOnWindowFocus: true });
   if (!n) return null;
   return <CountPill count={n} collapsed={collapsed} />;
 }
@@ -60,10 +58,10 @@ export function PipelineCountBadge({ collapsed = false }: { collapsed?: boolean 
 /** Marketplace › Messages — total unread messages; refreshed every few seconds. */
 export function MessagesCountBadge({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
-  const fn = useServerFn(threadSummaries);
+  const fn = useServerFn(messagesBadgeCount);
   const active = useRouterState({ select: (s) => s.location.pathname === "/marketplace/messages" });
-  const { data } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => fn({ data: { as: persona } }), refetchInterval: 2500, refetchIntervalInBackground: true });
-  const n = (data ?? []).reduce((s, t) => s + t.unread, 0);
+  const { data } = useQuery({ queryKey: ["messages", "count", persona], queryFn: () => fn({ data: { as: persona } }), staleTime: 60_000, refetchOnWindowFocus: true, refetchInterval: 2500, refetchIntervalInBackground: true });
+  const n = data ?? 0;
   const bump = useBump(n);
   if (!n) return null;
   const label = n > 9 ? "9+" : String(n);

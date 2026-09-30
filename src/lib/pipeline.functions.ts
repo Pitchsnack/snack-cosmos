@@ -181,27 +181,31 @@ export const listPipeline = createServerFn({ method: "GET" })
       }
     }
     const hpIds = [...new Set(rows.map((r) => r.hidden_profile_id))];
-    const { data: hps } = hpIds.length
-      ? await sb.from("hidden_profiles").select("id, code_name, region, asking_price, startup_id").in("id", hpIds)
-      : { data: [] };
-    const hpMap = Object.fromEntries((hps ?? []).map((h: any) => [h.id, h]));
     const stIds = [...new Set(rows.map((r) => r.startup_id))];
-    const { data: sts } = stIds.length ? await sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : { data: [] };
+    const buyerIds = [...new Set(rows.map((r) => r.buyer_user_id))];
+    const pipeIds = rows.map((r) => r.id);
+    const { deliveredKinds, ndaActive } = await import("./report-shares.server");
+    const empty = { data: [] as any[] };
+    // Independent lookups run in parallel.
+    const [{ data: hps }, { data: sts }, { data: owners }, { data: bvs }, { data: shares }, dkList] = await Promise.all([
+      hpIds.length ? sb.from("hidden_profiles").select("id, code_name, region, asking_price, startup_id").in("id", hpIds) : empty,
+      stIds.length ? sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : empty,
+      stIds.length ? sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds) : empty,
+      buyerIds.length ? sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", buyerIds) : empty,
+      pipeIds.length ? sb.from("report_shares").select("*").in("pipeline_id", pipeIds).order("shared_at", { ascending: false }) : empty,
+      Promise.all(stIds.map((id) => deliveredKinds(sb, id))),
+    ]);
+    const hpMap = Object.fromEntries((hps ?? []).map((h: any) => [h.id, h]));
     const stMap = Object.fromEntries((sts ?? []).map((s: any) => [s.id, s]));
-    // Logos live in private storage; hand the browser a short-lived signed link.
+    const ownerMap = Object.fromEntries((owners ?? []).map((o: any) => [o.startup_id, o.owning_agent_user_id]));
+    // Logos live in private storage; one batched signing call.
     const logoPaths = (sts ?? []).map((s: any) => s.logo_url).filter((p: any): p is string => !!p && !/^https?:\/\//.test(p));
     const signedLogos: Record<string, string> = {};
-    if (logoPaths.length) {
-      const { data: signed } = await sb.storage.from("startup-media").createSignedUrls(logoPaths, 3600);
-      for (const d of signed ?? []) if (d.path && d.signedUrl) signedLogos[d.path] = d.signedUrl;
-    }
-    const buyerIds = [...new Set(rows.map((r) => r.buyer_user_id))];
-    const { data: owners } = stIds.length ? await sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds) : { data: [] };
-    const ownerMap = Object.fromEntries((owners ?? []).map((o: any) => [o.startup_id, o.owning_agent_user_id]));
-    const names = await userNames([...new Set([...buyerIds, ...Object.values(ownerMap), ...rows.map((r) => r.loi_accepted_by).filter(Boolean)])] as string[]);
-    const { data: bvs } = buyerIds.length
-      ? await sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", buyerIds)
-      : { data: [] };
+    const [names, signedRes] = await Promise.all([
+      userNames([...new Set([...buyerIds, ...Object.values(ownerMap), ...rows.map((r) => r.loi_accepted_by).filter(Boolean)])] as string[]),
+      data.as === "buyer" && logoPaths.length ? sb.storage.from("startup-media").createSignedUrls(logoPaths, 3600) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    for (const d of (signedRes as any).data ?? []) if (d.path && d.signedUrl) signedLogos[d.path] = d.signedUrl;
     const bvMap = Object.fromEntries((bvs ?? []).map((b: any) => [b.user_id, b]));
 
     const items = rows.map((r) => {
@@ -238,12 +242,8 @@ export const listPipeline = createServerFn({ method: "GET" })
         logoUrl: revealed && st.logo_url ? (signedLogos[st.logo_url] ?? (/^https?:\/\//.test(st.logo_url) ? st.logo_url : null)) : null,
       }, asking, parties, names);
     });
-    // Report sharing state (server-only tables).
-    const { deliveredKinds, ndaActive } = await import("./report-shares.server");
-    const pipeIds = rows.map((r) => r.id);
-    const { data: shares } = pipeIds.length ? await sb.from("report_shares").select("*").in("pipeline_id", pipeIds).order("shared_at", { ascending: false }) : { data: [] };
     const dk: Record<string, Awaited<ReturnType<typeof deliveredKinds>>> = {};
-    for (const id of stIds) dk[id] = await deliveredKinds(sb, id);
+    stIds.forEach((id, i) => { dk[id] = dkList[i]; });
     items.forEach((it, i) => {
       const r = rows[i];
       const mine = (shares ?? []).filter((x: any) => x.pipeline_id === r.id);
@@ -256,6 +256,54 @@ export const listPipeline = createServerFn({ method: "GET" })
       if (data.as === "buyer" && !it.share) it.reportSharedAt = null;
     });
     return items;
+  });
+
+/** Light count for the Pipeline menu badge (same rule as waitingOnYouCount). */
+export const pipelineBadgeCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ as: z.enum(["seller", "buyer"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = await admin();
+    const cols = "id, startup_id, status, nda_approved_at, nda_expires_at, report_requested_at, report_shared_at, loi_sent_at, loi_accepted_at, legal_at, spa_at, payment_at";
+    let rows: any[] = [];
+    if (data.as === "buyer") {
+      rows = (await sb.from("deal_pipelines").select(cols).eq("buyer_user_id", context.userId).neq("status", "declined")).data ?? [];
+    } else {
+      const [{ data: own }, { data: su }] = await Promise.all([
+        sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId),
+        sb.from("startup_users").select("startup_id").eq("user_id", context.userId),
+      ]);
+      const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
+      if (ids.length) rows = (await sb.from("deal_pipelines").select(cols).in("startup_id", ids).neq("status", "declined")).data ?? [];
+    }
+    const seller = data.as === "seller";
+    // Only seller rows waiting on a report share need report/share lookups.
+    const need = seller ? rows.filter((r) => r.nda_approved_at && !r.payment_at && r.report_requested_at) : [];
+    let shareMap: Record<string, boolean> = {};
+    const dk: Record<string, any> = {};
+    if (need.length) {
+      const { deliveredKinds, ndaActive } = await import("./report-shares.server");
+      const sIds = [...new Set(need.map((r) => r.startup_id))];
+      const [{ data: shares }, kinds] = await Promise.all([
+        sb.from("report_shares").select("pipeline_id, revoked_at").in("pipeline_id", need.map((r) => r.id)).is("revoked_at", null),
+        Promise.all(sIds.map((id: string) => deliveredKinds(sb, id))),
+      ]);
+      sIds.forEach((id, i) => { dk[id] = kinds[i]; });
+      shareMap = Object.fromEntries(need.map((r) => [r.id, !!(shares ?? []).find((x: any) => x.pipeline_id === r.id) && ndaActive(r)]));
+    }
+    let n = 0;
+    for (const r of rows) {
+      if (!r.nda_approved_at) { if (seller) n++; continue; }
+      if (r.payment_at) continue;
+      if (seller) {
+        const d = dk[r.startup_id];
+        if (r.report_requested_at && !shareMap[r.id] && d && (d.financials || d.valuation)) { n++; continue; }
+        if (r.loi_sent_at && !r.loi_accepted_at) { n++; continue; }
+        if (!r.loi_sent_at) continue;
+        n++;
+      } else if (!(r.report_requested_at && !r.report_shared_at) && !r.loi_sent_at) n++;
+    }
+    return n;
   });
 
 const Id = z.object({ id: z.string().uuid() });
