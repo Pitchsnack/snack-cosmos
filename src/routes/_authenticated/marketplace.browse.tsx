@@ -44,7 +44,9 @@ function BrowseRoute() {
   const { persona } = usePersona();
   const { company } = Route.useSearch();
   if (persona === "seller" && !company) return <InvestorBrowse />;
-  return <BrowseListingsPage ownOnly={persona === "seller" ? (company ?? null) : null} />;
+  if (persona === "seller") return <BrowseListingsPage ownOnly={company ?? null} />;
+  // A buyer's direct link only opens the listing when it is approved and live.
+  return <BrowseListingsPage directId={company ?? null} />;
 }
 
 
@@ -284,12 +286,13 @@ function LowerPanel({ t }: { t: Teaser }) {
   );
 }
 
-function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
+function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; directId?: string | null }) {
   const fn = useServerFn(listMarketplaceTeasers);
   const enabled = useHasSession();
   const { data, isLoading } = useQuery({ queryKey: ["marketplace-teasers"], queryFn: () => fn(), enabled });
   const all = (data ?? []) as Teaser[];
-  const teasers = ownOnly ? all.filter((t) => t.id === ownOnly) : all;
+  const focus = ownOnly ?? directId ?? null;
+  const teasers = focus ? all.filter((t) => t.id === focus) : all;
 
   const { view, persist } = usePersistentView("ps-browse-view", undefined);
   const { ids: savedIds, toggle: toggleSave } = useSavedListings();
@@ -381,7 +384,7 @@ function BrowseListingsPage({ ownOnly }: { ownOnly?: string | null }) {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Store className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p>{ownOnly ? "Your company is not live on the Marketplace yet." : "No listings match your filters yet."}</p>
+          <p>{ownOnly ? "Your company is not live on the Marketplace yet." : directId ? "This listing isn't available." : hasFilter ? "No listings match your filters yet." : "Approved businesses appear here."}</p>
         </div>
       ) : !ownOnly && view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

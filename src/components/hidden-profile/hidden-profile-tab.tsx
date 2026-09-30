@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   hiddenStatusOf,
+  isBuyerVisible,
   isStartupEntry,
   runIdentityCheck,
   type EntryFacts,
@@ -74,8 +75,8 @@ export function HiddenProfileTab({
     );
   }
   const status = hiddenStatusOf(row, companyType);
-  const live = row.status === "live";
-  const ap = (row.approval_status ?? (live ? "live" : "draft")) as string;
+  const live = isBuyerVisible(row);
+  const ap = (row.approval_status ?? "draft") as string;
   void status; void onPublish; void publishBlocked; void startup;
   const src: ListingSource = { ...source, people: facts?.people ?? source.people };
   const terms = listingTerms(src);

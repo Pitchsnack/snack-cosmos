@@ -76,7 +76,7 @@ function ListingReview() {
   const decidable = hp.approval_status === "in_review";
   const item = (items as any)?.items?.[0] ?? (items as any)?.rows?.[0] ?? (Array.isArray(items) ? items[0] : null);
   const ctx: AdminReview = {
-    pendingCover: hp.pending_cover ?? (hp.status === "live" ? hp.cover_image_url : null),
+    pendingCover: hp.pending_cover ?? (hp.live ? hp.cover_image_url : null),
     editsCount: edits.length,
     notify: hp.notify_admin_edits !== false,
     onToggleNotify: (x) => notify.mutate(x),
@@ -85,7 +85,7 @@ function ListingReview() {
     onEditPrivate: () => navigate({ to: "/startups/$id/edit", params: { id: hp.startup_id } }),
     onEditMedia: () => navigate({ to: "/startups/$id/edit", params: { id: hp.startup_id } }),
   };
-  const statusLabel = hp.approval_status === "in_review" && hp.status === "live" ? "Live · edits pending" : STATUS[hp.approval_status] ?? hp.approval_status;
+  const statusLabel = hp.approval_status === "in_review" && !!hp.live ? "Live · edits pending" : STATUS[hp.approval_status] ?? hp.approval_status;
 
   return (
     <div className="space-y-5" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>

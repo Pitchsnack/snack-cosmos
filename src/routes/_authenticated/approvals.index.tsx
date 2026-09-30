@@ -58,8 +58,8 @@ function ApprovalsPage() {
 
   const listings = useMemo(() => {
     let l = (data?.listings ?? []) as any[];
-    if (status === "waiting") l = l.filter((x) => x.approval_status === "in_review" && x.status !== "live");
-    if (status === "edits") l = l.filter((x) => x.approval_status === "in_review" && x.status === "live");
+    if (status === "waiting") l = l.filter((x) => x.approval_status === "in_review" && !x.has_live);
+    if (status === "edits") l = l.filter((x) => x.approval_status === "in_review" && x.has_live);
     if (status === "changes") l = l.filter((x) => x.approval_status === "changes_requested");
     if (type !== "all") l = l.filter((x) => typeOf(x) === type);
     if (q) l = l.filter((x) => `${x.code_name} ${x.ref_no} ${x.startups?.startup_name} ${data?.emails?.[x.submitted_by] ?? ""}`.toLowerCase().includes(q.toLowerCase()));
@@ -186,7 +186,7 @@ function ApprovalsPage() {
 function typeOf(l: any) { return /startup/i.test(l.startups?.company_type ?? "") ? "Startup" : "Business"; }
 function QueueChip({ l }: { l: any }) {
   const [label, tone] = l.approval_status === "changes_requested" ? ["Changes requested", "bg-purple-500/15 text-purple-700"]
-    : l.status === "live" ? ["Live · edits pending", "bg-blue-500/15 text-blue-700"] : ["In review", "bg-amber-500/15 text-amber-800"];
+    : l.has_live ? ["Live · edits pending", "bg-blue-500/15 text-blue-700"] : ["In review", "bg-amber-500/15 text-amber-800"];
   return <span className={cn("inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold", tone)}>{label}</span>;
 }
 export function StatusPill({ s }: { s: string }) {
