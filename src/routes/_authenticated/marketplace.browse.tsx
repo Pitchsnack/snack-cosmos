@@ -44,7 +44,9 @@ function BrowseRoute() {
   const { persona } = usePersona();
   const { company } = Route.useSearch();
   if (persona === "seller" && !company) return <InvestorBrowse />;
-  return <BrowseListingsPage ownOnly={persona === "seller" ? (company ?? null) : null} />;
+  if (persona === "seller") return <BrowseListingsPage ownOnly={company ?? null} />;
+  // A buyer's direct link only opens the listing when it is approved and live.
+  return <BrowseListingsPage directId={company ?? null} />;
 }
 
 
