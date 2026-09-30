@@ -22,7 +22,7 @@ import { runIdentityCheck } from "@/lib/hidden-profile";
 import { ApprovalFooter, ApprovalNotice, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
-import { CoverView } from "@/components/hidden-profile/public-listing-card";
+import { SectorArt } from "@/components/hidden-profile/bits";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { ReportOffers, ReportHeaderAction, reportPrice } from "@/components/my-business/report-offers";
 

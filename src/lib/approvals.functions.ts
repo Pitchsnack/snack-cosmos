@@ -137,7 +137,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: listings } = await sb
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, cover_art, live, approval_status, version, submitted_at, submitted_by, assignee_id, decided_at, startups!inner(startup_name, sector, last_year_revenue, company_type)")
+      .select("id, startup_id, ref_no, code_name, cover_art, public_image_id, live, approval_status, version, submitted_at, submitted_by, assignee_id, decided_at, startups!inner(startup_name, sector, last_year_revenue, company_type)")
       .in("approval_status", ["in_review", "changes_requested"])
       .order("submitted_at", { ascending: true });
     const { data: buyers } = await sb.from("buyer_verifications").select("*").in("status", ["pending", "more_info"]).order("submitted_at", { ascending: true });
