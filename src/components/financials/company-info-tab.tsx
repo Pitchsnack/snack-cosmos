@@ -39,6 +39,7 @@ const C = {
   sage2: "#2F6555",
   sagebg: "#E8F1EE",
   blue: "#2B6F9E",
+  blue2: "#9DC1DA",
   line: "#E3E6EB",
   line2: "#EEF0F3",
   fill: "#F7F8FA",
