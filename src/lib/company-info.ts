@@ -19,6 +19,7 @@ export interface CompanyBusinessTh {
 export interface CompanyInfoTh {
   exists: boolean;
   legalNameTh: string | null;
+  legalNameEn: string | null;
   registrationNumber: string | null;
   legalEntityTypeTh: string | null;
   legalEntityStatusTh: string | null;
@@ -43,6 +44,7 @@ export interface CompanyInfoTh {
 export const EMPTY_COMPANY_INFO: CompanyInfoTh = {
   exists: false,
   legalNameTh: null,
+  legalNameEn: null,
   registrationNumber: null,
   legalEntityTypeTh: null,
   legalEntityStatusTh: null,

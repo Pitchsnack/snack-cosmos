@@ -15,6 +15,7 @@ export interface DbdBusinessTh {
 
 export interface DbdCompanyInfoTh {
   legalNameTh: string | null;
+  legalNameEn: string | null;
   registrationNumber: string | null;
   legalEntityTypeTh: string | null;
   legalEntityStatusTh: string | null;
@@ -36,6 +37,7 @@ export interface DbdCompanyInfoTh {
 
 export const EMPTY_COMPANY_INFO_TH: DbdCompanyInfoTh = {
   legalNameTh: null,
+  legalNameEn: null,
   registrationNumber: null,
   legalEntityTypeTh: null,
   legalEntityStatusTh: null,
