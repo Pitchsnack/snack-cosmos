@@ -192,6 +192,8 @@ function readText(text: string, labels: string[], stops: string[]): string | nul
 }
 
 const KNOWN_LABELS = [
+  "ชื่อนิติบุคคลภาษาอังกฤษ",
+  "ชื่อภาษาอังกฤษ",
   "ชื่อนิติบุคคล",
   "เลขทะเบียนนิติบุคคล",
   "ประเภทนิติบุคคล",
