@@ -190,3 +190,14 @@ export const withdrawNdaRequest = createServerFn({ method: "POST" })
     await sb.from("deal_pipeline_events").insert({ pipeline_id: p.id, event: "nda_withdrawn", actor_id: context.userId });
     return { ok: true };
   });
+
+/** Browse listings: how many live listings the buyer has an active NDA for. */
+export const favouritesNdaCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const ids = [...(await activeNdaIds(context.userId))];
+    if (!ids.length) return 0;
+    const sb = await admin();
+    const { count } = await sb.from("hidden_profiles").select("id", { count: "exact", head: true }).in("id", ids).in("approval_status", [...BUYER_VISIBLE]).not("live", "is", null);
+    return count ?? 0;
+  });
