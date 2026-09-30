@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, Check, ChevronDown, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
+import { BuyerPrivateCardBody, BuyerPrivatePanel, useBuyerInvestor } from "@/components/my-business/buyer-private-view";
 
 type View = "public" | "private";
 type Section = "public" | "company" | "fund" | "people" | "mandate" | "portfolio";
@@ -141,6 +143,8 @@ export function BuyerMyCompany() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [layout, setLayout] = useState<Layout>("profiles");
+  const inv = useBuyerInvestor();
+  const navigate = useNavigate();
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your investor profile. Please refresh.</p>;
@@ -164,7 +168,7 @@ export function BuyerMyCompany() {
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm">
       {view === "public"
         ? <PublicPanel p={p} org={org} pill={pill} onEdit={setEdit} />
-        : <PrivatePanel p={p} org={org} pill={pill} onEdit={setEdit} />}
+        : inv.data ? <BuyerPrivatePanel d={inv.data} /> : <Skeleton className="h-[520px]" />}
     </div>
   );
 
@@ -226,7 +230,7 @@ export function BuyerMyCompany() {
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No companies match your filters</div>
       ) : layout === "profiles" ? (
         <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-          <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} /></div>
+          <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} /> : <Skeleton className="h-[260px]" />} /></div>
           <div className="min-w-0 lg:self-start">{rightPanel}</div>
         </div>
       ) : layout === "split" ? (
@@ -252,7 +256,7 @@ export function BuyerMyCompany() {
           <p className="text-sm text-muted-foreground">Your buyer account already has an investor profile. You can update it here; another profile cannot be added to this account.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewOpen(false)}>Cancel</Button>
-            <Button onClick={() => { setNewOpen(false); setView("private"); setEdit("company"); }}>Edit my profile</Button>
+            <Button onClick={() => { setNewOpen(false); void navigate({ to: "/marketplace/my-company/edit" }); }}>Edit my profile</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -262,7 +266,7 @@ export function BuyerMyCompany() {
 }
 
 /** Seller-style folder-tab card (Public view / Private view) for the investor profile. */
-function BuyerFolderCard({ p, org, view, onView }: { p: BuyerProfile; org: BuyerOrg; view: View; onView: (v: View) => void }) {
+function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
   const tone = typeTone(org.type);
   const na = <span className="font-normal text-[#9CA3AF]">Not added</span>;
   const shell = "overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card";
@@ -289,22 +293,7 @@ function BuyerFolderCard({ p, org, view, onView }: { p: BuyerProfile; org: Buyer
           </div>
         </div>
       ) : (
-        <div className={shell}>
-          <div className="p-3">
-            <div className="flex items-start gap-3">
-              <Logo p={p} org={org} size={48} />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-bold">{org.name ?? na}</div>
-                <div className="truncate text-[11.5px] text-muted-foreground">{[org.type, p.country].filter(Boolean).join(" · ") || na}</div>
-              </div>
-              <Ring pct={pct} size={36} done={missingRequired === 0 && pct >= 100} />
-            </div>
-            <p className="mb-2 mt-2 line-clamp-2 text-[12.5px] text-muted-foreground">{p.private_description || na}</p>
-            <RowLine label="Website">{org.website ? org.website.replace(/^https?:\/\//, "") : na}</RowLine>
-            <RowLine label="Verification">{org.verified ? "Verified" : "Pending"}</RowLine>
-            <RowLine label="Proof of funds">{p.pof_verified_at ? "Verified" : na}</RowLine>
-          </div>
-        </div>
+        <div className={shell}>{privateBody}</div>
       )}
     </div>
   );
@@ -321,7 +310,7 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit }: {
     </div>
     {view === "public"
       ? <PublicPanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />
-      : <PrivatePanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />}
+      : <SplitPrivate />}
   </div>;
 }
 
@@ -638,4 +627,9 @@ function EditDialog({ section, p, org, onClose }: { section: Section; p: BuyerPr
       </DialogContent>
     </Dialog>
   );
+}
+
+function SplitPrivate() {
+  const inv = useBuyerInvestor();
+  return inv.data ? <BuyerPrivatePanel d={inv.data} /> : <Skeleton className="h-[520px]" />;
 }

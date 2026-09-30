@@ -239,6 +239,13 @@
       "when": 1790764585266,
       "tag": "0033_seller_report_prefs",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790788175349,
+      "tag": "0034_buyer_profiles_investor_link",
+      "breakpoints": true
     }
   ]
 }
