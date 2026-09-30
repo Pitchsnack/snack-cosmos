@@ -167,7 +167,7 @@ export function BuyerMyCompany() {
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm">
       {view === "public"
         ? <PublicPanel p={p} org={org} pill={pill} onEdit={setEdit} />
-        : inv.data ? <BuyerPrivatePanel d={inv.data} /> : <Skeleton className="h-[520px]" />}
+        : inv.data ? <BuyerPrivatePanel d={inv.data} view={view} onView={setView} /> : <Skeleton className="h-[520px]" />}
     </div>
   );
 
@@ -188,7 +188,7 @@ export function BuyerMyCompany() {
             <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", favOnly ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground")}>0</span>
           </button>
           <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>Profiles</Button>
-          <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={setLayout} />
+          <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={(l) => { setLayout(l); if (l === "split") setView("private"); }} />
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setNewOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Investor Profile
           </Button>
@@ -229,14 +229,14 @@ export function BuyerMyCompany() {
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No companies match your filters</div>
       ) : layout === "profiles" ? (
         <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-          <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} /> : <Skeleton className="h-[260px]" />} /></div>
+          <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div>
           <div className="min-w-0 lg:self-start">{rightPanel}</div>
         </div>
       ) : layout === "split" ? (
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
-          <BuyerDirectoryItem p={p} org={org} mode="split" selected onClick={() => {}} />
+          {inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected onSelect={() => setView("private")} /> : <Skeleton className="h-[220px]" />}
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
-            {profilePanel}
+            {view === "public" ? profilePanel : inv.data ? <BuyerPrivatePanel d={inv.data} view={view} onView={setView} /> : <Skeleton className="h-[520px]" />}
           </div>
         </div>
       ) : layout === "grid" ? (

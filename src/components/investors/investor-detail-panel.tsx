@@ -48,7 +48,7 @@ function monogram(name: string) {
     .join("");
 }
 
-type InvestorDetail = {
+export type InvestorDetail = {
   id: string;
   investor_name: string;
   investor_type: string | null;
@@ -87,8 +87,19 @@ export function InvestorDetailPanel({
   directorySearch,
   onSelectStartup,
   onSelectInvestor,
+  buyer,
 }: {
   id: string;
+  /** Buyer option (Buyer › My Company). Off in the Investors Directory. */
+  buyer?: {
+    data: InvestorDetail;
+    topBar?: React.ReactNode;
+    chips?: React.ReactNode;
+    intro?: React.ReactNode;
+    mediaAdd?: React.ReactNode;
+    afterPortfolio?: React.ReactNode;
+    footer?: React.ReactNode;
+  };
   showEdit?: boolean;
   compact?: boolean;
   onClose?: () => void;
@@ -97,7 +108,10 @@ export function InvestorDetailPanel({
   onSelectStartup?: (id: string) => void;
   onSelectInvestor?: (id: string) => void;
 }) {
-  const { data, isLoading, error } = useInvestor(id);
+  const q = useInvestor(buyer ? undefined : id);
+  const data = buyer ? buyer.data : q.data;
+  const isLoading = buyer ? false : q.isLoading;
+  const error = buyer ? null : q.error;
   const connectionState = useConnectionState(id);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("investors.write");
@@ -161,6 +175,7 @@ export function InvestorDetailPanel({
 
   return (
     <div className="space-y-[14px] text-foreground">
+      {buyer?.topBar}
       {/* Header */}
       <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
         <div className="flex items-start gap-4">
@@ -192,8 +207,8 @@ export function InvestorDetailPanel({
               />
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
-              {!compact && i.tenants?.tenant_name && <span>{i.tenants.tenant_name}</span>}
-              {!compact && i.tenants?.tenant_name && (i.country || i.investor_type) && (
+              {!buyer && !compact && i.tenants?.tenant_name && <span>{i.tenants.tenant_name}</span>}
+              {!buyer && !compact && i.tenants?.tenant_name && (i.country || i.investor_type) && (
                 <span aria-hidden>·</span>
               )}
               {i.country && <span>{i.country}</span>}
@@ -201,6 +216,7 @@ export function InvestorDetailPanel({
               {i.investor_type && <span>{i.investor_type}</span>}
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
+              {buyer ? buyer.chips : <>
               {i.status && (
                 <Badge variant="outline" className="text-[10px]">
                   {i.status}
@@ -211,12 +227,13 @@ export function InvestorDetailPanel({
                   {i.visibility}
                 </Badge>
               )}
+              </>}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          {showEdit && canManage && !compact && (
+          {!buyer && showEdit && canManage && !compact && (
             <Button
               asChild
               size="sm"
@@ -269,25 +286,28 @@ export function InvestorDetailPanel({
         </div>
       </header>
 
+      {buyer?.intro}
       {/* Relationship state (Connect → Requested → Share) */}
-      <ConnectionStateCard
-        startupRef={id}
-        counterpartName={i.investor_name}
-        counterpartRole={i.investor_type}
-      />
+      {!buyer && (
+        <ConnectionStateCard
+          startupRef={id}
+          counterpartName={i.investor_name}
+          counterpartRole={i.investor_type}
+        />
+      )}
 
       {connectionState === "requested" ? null : (
         <>
           {/* Media */}
-          {mediaSlots.length > 0 && (
+          {(mediaSlots.length > 0 || buyer?.mediaAdd) && (
             <div
               className={cn(
                 "grid gap-3",
-                mediaSlots.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3",
+                mediaSlots.length === 1 && !buyer?.mediaAdd ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3",
               )}
             >
               {mediaSlots.map((m) => {
-                const single = mediaSlots.length === 1;
+                const single = mediaSlots.length === 1 && !buyer?.mediaAdd;
                 return (
                   <button
                     key={m.slot}
@@ -307,6 +327,7 @@ export function InvestorDetailPanel({
                   </button>
                 );
               })}
+              {mediaSlots.length < 3 && buyer?.mediaAdd}
             </div>
           )}
 
@@ -487,7 +508,7 @@ export function InvestorDetailPanel({
             icon={Building2}
             title={`Portfolio startups${linked.length > 0 ? ` (${linked.length})` : ""}`}
             right={
-              linked.length > 0 ? (
+              linked.length > 0 && !buyer ? (
                 <Link
                   to="/investors/$id/portfolio"
                   params={{ id: i.id }}
@@ -548,8 +569,10 @@ export function InvestorDetailPanel({
             </Section>
           )}
 
+          {buyer?.afterPortfolio}
         </>
       )}
+      {buyer?.footer}
     </div>
   );
 }
@@ -566,7 +589,7 @@ export function InvestorDetailEmpty() {
   );
 }
 
-function Section({
+export function Section({
   icon: Icon,
   title,
   children,

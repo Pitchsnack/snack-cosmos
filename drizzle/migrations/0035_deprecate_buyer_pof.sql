@@ -1,0 +1,2 @@
+COMMENT ON COLUMN public.buyer_profiles.pof_path IS 'DEPRECATED: proof of funds removed from buyer profile';
+COMMENT ON COLUMN public.buyer_profiles.pof_verified_at IS 'DEPRECATED: proof of funds removed from buyer profile';
