@@ -11,3 +11,4 @@
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
 - Page loading overlay is opt-in (meta.pageLoading); badges use light count functions.
+- Seller LOI request's starting note lives in config/loi-request.json so its editable default can change without changing dialog behavior.
