@@ -22,7 +22,7 @@ import { runIdentityCheck } from "@/lib/hidden-profile";
 import { ApprovalFooter, ApprovalNotice, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
-import { CoverView } from "@/components/hidden-profile/public-listing-card";
+import { SectorArt } from "@/components/hidden-profile/bits";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { ReportOffers, ReportHeaderAction, reportPrice } from "@/components/my-business/report-offers";
 
@@ -247,9 +247,9 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   );
   return (
     <>
-      <CoverView cover={null} fallbackArt={d?.cover_art ?? s.sector ?? s.industry?.[0]} className="h-[120px] w-full rounded-none">
+      <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} sector={s.sector} imageId={(row as { public_image_id?: string | null } | null)?.public_image_id ?? null} className="h-[120px] w-full rounded-none">
         {badge}
-      </CoverView>
+      </SectorArt>
       <div className="px-3 pb-3">
         <div className="pt-2.5">
           <div className="truncate text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>

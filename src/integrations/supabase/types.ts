@@ -1690,6 +1690,7 @@ export type Database = {
           pending_cover: string | null
           process: string | null
           product_tags: string[] | null
+          public_image_id: string | null
           published_at: string | null
           published_by: string | null
           reason: string | null
@@ -1742,6 +1743,7 @@ export type Database = {
           pending_cover?: string | null
           process?: string | null
           product_tags?: string[] | null
+          public_image_id?: string | null
           published_at?: string | null
           published_by?: string | null
           reason?: string | null
@@ -1794,6 +1796,7 @@ export type Database = {
           pending_cover?: string | null
           process?: string | null
           product_tags?: string[] | null
+          public_image_id?: string | null
           published_at?: string | null
           published_by?: string | null
           reason?: string | null
@@ -1813,6 +1816,13 @@ export type Database = {
           views?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "hidden_profiles_public_image_id_fkey"
+            columns: ["public_image_id"]
+            isOneToOne: false
+            referencedRelation: "sector_images"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "hidden_profiles_startup_id_fkey"
             columns: ["startup_id"]
@@ -3103,6 +3113,42 @@ export type Database = {
           search_query?: Json
           tenant_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      sector_images: {
+        Row: {
+          file_name: string
+          height: number
+          id: string
+          sector_key: string
+          size_bytes: number
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          width: number
+        }
+        Insert: {
+          file_name: string
+          height: number
+          id?: string
+          sector_key: string
+          size_bytes: number
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          width: number
+        }
+        Update: {
+          file_name?: string
+          height?: number
+          id?: string
+          sector_key?: string
+          size_bytes?: number
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          width?: number
         }
         Relationships: []
       }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link2, Lock, ArrowLeftRight, Waves, Building2, Factory, ShoppingBag, Truck, HeartPulse, Utensils, Monitor, Clapperboard, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveCover, useSectorImages } from "@/hooks/use-sector-images";
 import { findTermsIn, STATUS_LABEL, type HiddenStatus } from "@/lib/hidden-profile";
 
 const TONE: Record<HiddenStatus, string> = {
@@ -76,7 +77,26 @@ export function Flagged({ text, terms }: { text: string; terms: { term: string; 
   return <>{out}</>;
 }
 
-export function SectorArt({ art, className, children, tile }: { art?: string | null; className?: string; children?: ReactNode; tile?: ReactNode }) {
+/**
+ * Listing cover. Follows the shared cover rule (picked image → sector's first
+ * image → drawn default). `plain` always draws the default cover.
+ */
+export function SectorArt({ art, sector, imageId, plain, className, children, tile }: { art?: string | null; sector?: string | null; imageId?: string | null; plain?: boolean; className?: string; children?: ReactNode; tile?: ReactNode }) {
+  const { data: images } = useSectorImages();
+  const img = plain ? null : resolveCover(images, sector ?? art, imageId);
+  if (img?.url) {
+    return (
+      <div className={cn("relative overflow-hidden bg-secondary", className)}>
+        <img src={img.url} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        {tile && <div className="absolute inset-0 grid place-items-center"><div className="grid h-12 w-12 place-items-center overflow-hidden rounded-lg border border-border bg-card shadow-sm">{tile}</div></div>}
+        {children}
+      </div>
+    );
+  }
+  return <DrawnCover art={art ?? sector} className={className} tile={tile}>{children}</DrawnCover>;
+}
+
+function DrawnCover({ art, className, children, tile }: { art?: string | null; className?: string; children?: ReactNode; tile?: ReactNode }) {
   const name = art || "Business";
   const lower = name.toLowerCase();
   const Icon = /food|beverage|restaurant|agri/.test(lower) ? Utensils

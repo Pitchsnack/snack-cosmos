@@ -143,7 +143,7 @@ function ApprovalsPage() {
               <tr key={l.id} className="border-t border-border">
                 <td className="p-3">
                   <div className="flex items-center gap-2.5">
-                    <SectorArt art={l.cover_art ?? l.startups?.sector} className="h-9 w-12 shrink-0 rounded-md" />
+                    <SectorArt art={l.cover_art ?? l.startups?.sector} sector={l.startups?.sector} imageId={l.public_image_id} className="h-9 w-12 shrink-0 rounded-md" />
                     <div className="min-w-0"><div className="font-semibold">{l.startups?.startup_name ?? l.code_name}</div><div className="truncate text-xs text-muted-foreground">{l.ref_no} · {data?.emails?.[l.submitted_by] || names[l.submitted_by] || "—"}</div></div>
                   </div>
                 </td>

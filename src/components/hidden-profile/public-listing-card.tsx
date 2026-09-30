@@ -127,7 +127,7 @@ export function PublicListingCard({
       )}
       style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
     >
-      <SectorArt art={l.coverArt ?? l.sector} className="h-[112px] w-full shrink-0" tile={priv ? <PrivLogo name={priv.name} path={priv.logoPath} /> : undefined}>
+      <SectorArt art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[112px] w-full shrink-0" tile={priv ? <PrivLogo name={priv.name} path={priv.logoPath} /> : undefined}>
         {badge ? <span className="absolute left-2.5 top-2.5">{badge}</span> : <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
           seller ? (l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]") : "bg-background/95 text-foreground")}>
           {!seller && <Lock className="h-3 w-3" />}{badgeLabel}

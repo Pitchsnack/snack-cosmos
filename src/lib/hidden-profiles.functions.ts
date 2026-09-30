@@ -225,7 +225,7 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
     const { buildPublicListing } = await import("@/lib/public-listing");
     const { data, error } = await supabaseAdmin
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, published_at, live, approval_status, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards)")
+      .select("id, startup_id, ref_no, published_at, live, approval_status, public_image_id, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards)")
       // Approval is the only source of truth, and only the approved snapshot is served.
       .in("approval_status", [...BUYER_VISIBLE, "in_review"])
       .not("live", "is", null);
@@ -246,7 +246,7 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
     return rowsIn.map((r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
       const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
-      const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
+      const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: (r as { public_image_id?: string | null }).public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, stakePct: live.stake_pct };
     });
   });

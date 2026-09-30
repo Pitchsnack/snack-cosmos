@@ -199,7 +199,7 @@ function FavouritesPage() {
             return (
               <div key={f.id} role="button" tabIndex={0} onClick={() => setModalId(f.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(f.id); }}
                 className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
-                <SectorArt art={l.coverArt ?? l.sector} className="h-[54px] w-[96px] shrink-0 rounded-md" />
+                <SectorArt art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[54px] w-[96px] shrink-0 rounded-md" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-foreground">{f.priv?.companyName ?? (l.headline || l.codeName)}</div>
                   <div className="truncate text-[12px] text-muted-foreground">

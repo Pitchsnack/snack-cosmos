@@ -25,6 +25,7 @@ import { hiddenStatusOf, type HiddenStatus } from "@/lib/hidden-profile";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InvestorDetailPanel } from "@/components/investors/investor-detail-panel";
 import { ViewToggle } from "@/components/shared/view-toggle";
+import { SectorImagesMenu } from "@/components/startups/sector-images-menu";
 import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
@@ -264,6 +265,7 @@ function StartupsPageInner() {
               <Plus className="mr-2 h-4 w-4" /> New startup
             </Button>
           )}
+          <SectorImagesMenu directorySearch={s} />
         </div>
       </div>
 

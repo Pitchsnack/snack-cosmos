@@ -14,9 +14,11 @@ import { AdminReviewCtx, type AdminReview } from "@/components/my-business/admin
 import { listStartups } from "@/lib/startups.functions";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import {
-  addLibraryImage, assignApproval, createLibraryUpload, decideListing, FIELD_LABEL, getListingReview, listImageLibrary,
-  setNotifyAdminEdits, setPublicImage, undoAdminEdit,
+  assignApproval, decideListing, FIELD_LABEL, getListingReview,
+  setNotifyAdminEdits, undoAdminEdit,
 } from "@/lib/approvals.functions";
+import { setListingPublicImage } from "@/lib/sector-images.functions";
+import { useSectorImages } from "@/hooks/use-sector-images";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/approvals/listings/$id")({
@@ -129,81 +131,52 @@ function ListingReview() {
         <ApproveDialog name={hp.code_name} sector={v.sector ?? ""} editsCount={edits.length} notify={ctx.notify} hasImage={!!ctx.pendingCover} pending={decide.isPending}
           onClose={() => setApprove(false)} onConfirm={(o) => decide.mutate({ id, action: "approve", ...o })} />
       )}
-      {library && <ImageLibraryDialog id={id} current={ctx.pendingCover} sector={v.sector} onClose={() => setLibrary(false)} onDone={refresh} />}
+      {library && <ImageLibraryDialog id={id} current={hp.public_image_id ?? null} sector={v.sector} onClose={() => setLibrary(false)} onDone={refresh} />}
       {editsOpen && <AdminEditsDialog edits={edits} names={names} onClose={() => setEditsOpen(false)} onDone={refresh} />}
     </div>
   );
 }
 
-const ART = ["Food & Beverage", "Manufacturing", "Technology", "Retail & Consumer", "Logistics", "Healthcare", "Media", "Business Services"];
-
+/** Set public image: only the listing's own sector images (oldest first), or the default cover. */
 function ImageLibraryDialog({ id, current, sector, onClose, onDone }: { id: string; current: string | null; sector?: string; onClose: () => void; onDone: () => void }) {
-  const listFn = useServerFn(listImageLibrary);
-  const setFn = useServerFn(setPublicImage);
-  const uploadFn = useServerFn(createLibraryUpload);
-  const addFn = useServerFn(addLibraryImage);
-  const { data: lib, refetch } = useQuery({ queryKey: ["approvals", "library"], queryFn: () => listFn() });
-  const [pick, setPick] = useState<string | null>(current);
+  const setFn = useServerFn(setListingPublicImage);
+  const { data: all } = useSectorImages();
+  const imgs = (all ?? []).filter((i) => i.sector_key === sector);
+  const [pick, setPick] = useState<string | null>(current && imgs.some((i) => i.id === current) ? current : imgs[0]?.id ?? null);
   const [busy, setBusy] = useState(false);
-  const arts = sector && !ART.includes(sector) ? [sector, ...ART] : ART;
-  const upload = async (file: File) => {
-    const ext = (file.name.split(".").pop() ?? "").toLowerCase();
-    if (!["jpg", "jpeg", "png", "webp"].includes(ext)) return toast.error("Use a JPG, PNG or WebP image");
-    if (file.size > 8 * 1024 * 1024) return toast.error("Max 8 MB");
-    setBusy(true);
-    try {
-      const { path, uploadUrl } = await uploadFn({ data: { ext: ext as "jpg" } });
-      const res = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "content-type": file.type } });
-      if (!res.ok) throw new Error("Upload failed");
-      await addFn({ data: { path, label: file.name.replace(/\.[^.]+$/, "").slice(0, 80) } });
-      await refetch();
-      setPick(path);
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-  };
   const save = async () => {
     setBusy(true);
-    try { await setFn({ data: { id, cover: pick } }); onDone(); toast.success("Public image set · goes live on approval"); onClose(); }
+    try { await setFn({ data: { id, imageId: pick } }); onDone(); toast.success("Public image saved"); onClose(); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
-  const Tile = ({ value, children }: { value: string; children: React.ReactNode }) => (
-    <button type="button" onClick={() => setPick(value)} className={cn("overflow-hidden rounded-[10px] border-2 text-left", pick === value ? "border-primary" : "border-transparent")}>{children}</button>
-  );
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-[720px]">
         <DialogTitle>Set public image</DialogTitle>
-        <DialogDescription>Only Admin sets the Marketplace picture. It replaces the locked placeholder when you approve.</DialogDescription>
-        <div className="max-h-[60vh] space-y-4 overflow-y-auto">
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Image library</span>
-              <label className="cursor-pointer text-[13px] font-semibold text-primary">{busy ? "Working…" : "Upload to library"}
-                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); e.target.value = ""; }} />
-              </label>
+        <DialogDescription>Only Admin sets the Marketplace picture. Buyers see it as the listing cover.</DialogDescription>
+        <div className="max-h-[60vh] overflow-y-auto">
+          {imgs.length === 0 ? (
+            <div className="space-y-3">
+              <SectorArt art={sector} plain className="h-28 w-52 rounded-[10px]" />
+              <p className="text-[13px] text-muted-foreground">No images for {sector || "this sector"} yet. Add them in Sector images.</p>
             </div>
-            {(lib ?? []).length === 0 ? <p className="text-[13px] text-muted-foreground">No uploaded pictures yet.</p> : (
-              <div className="grid grid-cols-3 gap-2">
-                {(lib ?? []).map((r: any) => (
-                  <Tile key={r.id} value={r.path}>
-                    <div className="relative h-24 bg-muted">{r.url && <img src={r.url} alt={r.label} className="absolute inset-0 h-full w-full object-cover" />}</div>
-                    <div className="truncate px-2 py-1 text-[11.5px]">{r.label || "Untitled"}</div>
-                  </Tile>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <div className="mb-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Sector artwork</div>
-            <div className="grid grid-cols-4 gap-2">
-              {arts.map((a) => (
-                <Tile key={a} value={`art:${a}`}><SectorArt art={a} className="h-20 w-full" /><div className="truncate px-2 py-1 text-[11.5px]">{a}</div></Tile>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {imgs.map((r) => (
+                <button key={r.id} type="button" onClick={() => setPick(r.id)} className={cn("overflow-hidden rounded-[10px] border-2 text-left", pick === r.id ? "border-primary" : "border-transparent")}>
+                  <div className="relative h-24 bg-muted">{r.url && <img src={r.url} alt={r.file_name} className="absolute inset-0 h-full w-full object-cover" />}</div>
+                  <div className="truncate px-2 py-1 text-[11.5px]">{r.file_name}</div>
+                </button>
               ))}
             </div>
-          </div>
+          )}
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button disabled={busy || !pick || pick === current} onClick={() => void save()}>Use this image</Button>
+        <div className="flex items-center justify-between gap-2">
+          <Link to="/startups/sector-images" search={{ sector: sector || undefined }} className="text-[13px] font-semibold text-primary hover:underline">Manage sector images →</Link>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button disabled={busy || imgs.length === 0 || pick === current} onClick={() => void save()}>Save</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
