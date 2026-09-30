@@ -28,9 +28,6 @@ const CARD_CLASS =
 const COMPACT_CARD_CLASS =
   "group relative flex h-[380px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
-/** Grid card with the compact Acquisition section pinned to the bottom. */
-const ACQUISITION_CARD_CLASS =
-  "group relative flex h-[600px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
   borderColor: "var(--accent)",
