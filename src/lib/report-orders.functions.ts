@@ -194,14 +194,19 @@ export const markReportGenerated = createServerFn({ method: "POST" })
     const ctx = context as Ctx;
     await assertAdmin(ctx);
     const sb = await admin();
-    const { data: o, error } = await sb.from("report_orders").update({ status: "generated", generated_at: new Date().toISOString(), analyst_id: ctx.userId })
-      .eq("id", data.orderId).select("*").single();
+    const { data: base } = await sb.from("report_orders").select("startup_id").eq("id", data.orderId).single();
+    if (!base) throw new Error("Order not found");
+    // One generation per company: every still-open (paid) order of that company
+    // becomes ready. Delivered, cancelled and refunded orders are left alone.
+    const { data: rows, error } = await sb.from("report_orders")
+      .update({ status: "generated", generated_at: new Date().toISOString(), analyst_id: ctx.userId })
+      .eq("startup_id", base.startup_id).eq("status", "paid").select("*");
     if (error) throw new Error(error.message);
-    await sb.from("financial_statements").update({ verified_status: "draft" }).eq("startup_id", o.startup_id);
+    await sb.from("financial_statements").update({ verified_status: "draft" }).eq("startup_id", base.startup_id);
     const yrs = (data.years ?? []).slice().sort();
-    await sb.from("report_order_events").insert({ order_id: o.id, event: "generated", actor_id: ctx.userId,
-      note: ["DBD e-Filing", yrs.length ? `FY${yrs[0]}–${yrs[yrs.length - 1]}` : null, data.regNo ? `reg. ${data.regNo}` : null].filter(Boolean).join(" · ") });
-    return o;
+    const note = ["DBD e-Filing", yrs.length ? `FY${yrs[0]}–${yrs[yrs.length - 1]}` : null, data.regNo ? `reg. ${data.regNo}` : null].filter(Boolean).join(" · ");
+    if (rows?.length) await sb.from("report_order_events").insert(rows.map((r: any) => ({ order_id: r.id, event: "generated", actor_id: ctx.userId, note })));
+    return (rows ?? []).find((r: any) => r.id === data.orderId) ?? rows?.[0] ?? null;
   });
 
 export const publishReport = createServerFn({ method: "POST" })
