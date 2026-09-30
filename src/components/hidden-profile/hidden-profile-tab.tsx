@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   hiddenStatusOf,
+  isBuyerVisible,
   isStartupEntry,
   runIdentityCheck,
   type EntryFacts,
