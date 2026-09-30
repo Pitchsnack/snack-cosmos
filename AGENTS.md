@@ -1,17 +1,13 @@
 # Project decisions
 
-- Reuse `StartupCard` for the My Business private card and Startup Directory grid card so their presentation stays identical.
-- Preview anonymous Public view from business fields before listing; only Admin approval publishes, enforced by DB trigger.
-
-- Public listing image is Admin-only (hidden_profiles.pending_cover, promoted to cover_image_url on approval); sellers never write it — keeps Marketplace cards consistent.
-- Admin listing review renders MyBusinessProfiles inside AdminReviewCtx instead of separate admin tables, so Admin sees exactly the seller screen.
-- Seller report offers live after the shared founder section via an optional slot; keep samples and prices in report-catalog.json so Directory cards remain unchanged and preview-only offers cannot be mistaken for paid orders.
-- Paid report orders live in report_orders/report_order_events (report-orders.functions.ts); seller My Financials unlocks only when the order is delivered, replacing the localStorage bypass — Admin must generate and publish.
-- Buyer↔seller deal steps live in deal_pipelines/deal_pipeline_events (pipeline.functions.ts); writes only via server functions after checking buyer or startup access, so neither side can skip a step.
-- Pipeline 'waiting on you' logic lives in pipeline-state.ts and drives both Tracking filters and the Pipeline menu badge, so the counts never drift; buyer report opens are logged server-side in getPipelineReport.
-- Marketplace messages live in marketplace_messages/marketplace_message_reads keyed 'p:<pipeline id>' or 'a:<user id>' (messages.functions.ts); membership is checked server-side via can_read_message_thread and pipeline events are read from deal_pipelines, never copied as messages.
-- Private notes live in private_notes with owner overrides; server-only access hides them from the other party.
-- Keep Business Address on startups through shared StartupForm so seller and Control use one saved field.
-- Buyer My Company: one buyer_profiles row per user linked via investor_id to its Investors Directory record (buyer-investor.functions.ts, service client scoped to the caller); buyer Edit profile and Admin Edit investor write the same row; seller reads use toPublic() only until NDA.
-- Seller My Financials/Company Valuation are one tabbed page (my-reports-page.tsx) on two routes with ?company=; last pick and share-panel state live in seller_report_prefs so they follow the user across devices.
-- The page loading overlay is opt-in: only router pending matches and queries with meta.pageLoading count; menu badges use their own light count functions (pipelineBadgeCount, messagesBadgeCount), so background queries never freeze a page.
+- Reuse `StartupCard` for My Business private card and Directory grid card so they stay identical.
+- Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Listing image is Admin-only (pending_cover → cover_image_url).
+- Admin listing review renders MyBusinessProfiles in AdminReviewCtx so Admin sees the seller screen.
+- Report offers/prices live in report-catalog.json; paid orders in report_orders(+_events); My Financials unlocks only on delivered orders.
+- Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
+- Messages: marketplace_messages keyed 'p:<pipeline>'/'a:<user>', membership via can_read_message_thread; pipeline events never copied.
+- Private notes (private_notes) are server-only so the other party never sees them.
+- Business Address stays on startups via shared StartupForm.
+- Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
+- My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
+- Page loading overlay is opt-in (meta.pageLoading); badges use light count functions.
