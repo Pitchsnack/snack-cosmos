@@ -496,7 +496,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
           </div>
         </div>
       </div>
-      {loiOpen && <LoiDialog id={p.id} onClose={() => setLoiOpen(false)} />}
+      {loiOpen && <SendLoiDialog id={p.id} onClose={() => setLoiOpen(false)} onSent={refresh} />}
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "share" && <ShareAccessDialog p={p} mode={p.share ? "manage" : "share"} onClose={() => setDlg(null)} onDone={refresh} />}
