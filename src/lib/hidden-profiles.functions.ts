@@ -226,7 +226,7 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
       .from("hidden_profiles")
       .select("id, startup_id, ref_no, published_at, live, approval_status, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards)")
       // Approval is the only source of truth, and only the approved snapshot is served.
-      .in("approval_status", BUYER_VISIBLE)
+      .in("approval_status", [...BUYER_VISIBLE, "in_review"])
       .not("live", "is", null);
     if (error) throw new Error(error.message);
     const ids = (data ?? []).map((r) => r.startup_id);

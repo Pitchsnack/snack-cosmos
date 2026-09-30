@@ -124,8 +124,14 @@ export const BUYER_VISIBLE: ApprovalStatus[] = ["live", "live_edits_pending"];
  * `status` column is derived from it and never read to decide what buyers see.
  */
 export const isBuyerVisible = (
-  row: { approval_status?: string | null } | null | undefined,
-): boolean => !!row && BUYER_VISIBLE.includes((row.approval_status ?? "draft") as ApprovalStatus);
+  row: { approval_status?: string | null; live?: unknown } | null | undefined,
+): boolean => {
+  if (!row) return false;
+  const ap = (row.approval_status ?? "draft") as ApprovalStatus;
+  if (BUYER_VISIBLE.includes(ap)) return true;
+  // While Admin reviews edits to an approved listing, buyers keep seeing the approved version.
+  return ap === "in_review" && !!row.live;
+};
 
 /** Legacy `status` value for an approval state — written, never read for visibility. */
 export const statusFromApproval = (approval?: string | null): "draft" | "live" =>
