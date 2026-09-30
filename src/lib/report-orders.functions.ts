@@ -181,9 +181,7 @@ export const finaliseAuthorise = createServerFn({ method: "POST" })
     if (seen) return { ok: true };
     await sb.from("report_order_events").insert({ order_id: o.id, event: "published", actor_id: ctx.userId,
       note: o.kind === "valuation" ? "Seller can see the valuation · seller notified" : "verified_status = verified · badge added · seller notified" });
-    if (o.ordered_by) await sb.from("notifications").insert({ user_id: o.ordered_by, notification_type: "approval",
-      title: "Your report is ready",
-      message: `Your ${o.kind === "valuation" ? "estimated valuation" : "verified financial report"} is ready. View it in My Financials and share it with buyers whose NDA you approved.` });
+    if (o.ordered_by) await notifyReady(sb, o);
     return { ok: true };
   });
 
@@ -223,8 +221,7 @@ export const publishReport = createServerFn({ method: "POST" })
     if (o.kind !== "valuation") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
     await sb.from("report_order_events").insert({ order_id: o.id, event: "published", actor_id: ctx.userId,
       note: o.kind === "valuation" ? "Valuation published · seller notified" : "verified_status = verified · badge added · seller notified" });
-    if (o.ordered_by) await sb.from("notifications").insert({ user_id: o.ordered_by, notification_type: "approval",
-      title: "Your report is ready", message: o.kind === "valuation" ? "Your company valuation is ready." : "Your verified financial report is ready in My Financials." });
+    if (o.ordered_by) await notifyReady(sb, o);
     return o;
   });
 
@@ -247,4 +244,14 @@ export async function countOpenOrders() {
   const sb = await admin();
   const { count } = await sb.from("report_orders").select("id", { count: "exact", head: true }).in("status", ["paid", "generated"]);
   return count ?? 0;
+}
+
+/** "Report ready" notification: names the company and links to that report's tab. */
+async function notifyReady(sb: any, o: any) {
+  const { data: st } = await sb.from("startups").select("startup_name").eq("id", o.startup_id).maybeSingle();
+  const company = st?.startup_name ?? "your company";
+  const val = o.kind === "valuation";
+  await sb.from("notifications").insert({ user_id: o.ordered_by, notification_type: "approval", title: "Your report is ready",
+    message: `Your ${val ? "estimated valuation" : "verified financial report"} for ${company} is ready. View it and share it with buyers whose NDA you approved.`,
+    link_url: `${val ? "/my-valuation" : "/my-financials"}?company=${o.startup_id}&from=notification` });
 }
