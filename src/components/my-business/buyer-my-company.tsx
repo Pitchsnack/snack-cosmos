@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Check, ChevronDown, EyeOff, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Briefcase } from "lucide-react";
+import { BadgeCheck, Check, ChevronDown, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FolderTab, Group, Intro, Ring, Row } from "@/components/my-business/my-business-profiles";
-import { BuyerBrowseCard, BuyerCover, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { Group, Intro, Ring, Row } from "@/components/my-business/my-business-profiles";
+import { BuyerBrowseCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing } from "@/lib/buyer-profile.functions";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
@@ -237,54 +237,11 @@ function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
   </Button>;
 }
 
-function PublicCard({ p, org }: { p: BuyerProfile; org: BuyerOrg }) {
-  const title = p.show_name && org.name ? org.name : p.code_name;
-  return (
-    <>
-      <BuyerCover type={org.type} className="h-[120px] w-full">
-        <span className="absolute left-2.5 top-2.5"><StatusChip status={p.status === "live" ? "live" : "draft"} /></span>
-      </BuyerCover>
-      <div className="px-3 pb-3 pt-2.5">
-        <div className="truncate text-[16px] font-bold">{title}</div>
-        <div className="mt-0.5 truncate text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{[p.ref_no, org.type ?? "Investor", p.country].filter(Boolean).join(" · ")}</div>
-        <p className="mb-2 mt-1.5 line-clamp-2 text-[13px] text-muted-foreground">{p.description || p.headline || <em>No description yet</em>}</p>
-        <Line label="Ticket size">{ticketRange(p.ticket_min, p.ticket_max) ?? "Not set"}</Line>
-        <Line label="Browse investors">{p.status === "live" ? <span className="text-emerald-700 dark:text-emerald-400">✓ Live</span> : STATUS_LABEL[p.status]}</Line>
-        <Line label="Identity">
-          {p.show_name
-            ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">Name shown</span>
-            : <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"><EyeOff className="h-3 w-3" />Name hidden</span>}
-        </Line>
-      </div>
-    </>
-  );
-}
-
 function Logo({ p, org, size }: { p: BuyerProfile; org: BuyerOrg; size: number }) {
   const tone = typeTone(org.type);
   return p.logo_url
     ? <img src={p.logo_url} alt="" className="shrink-0 rounded-[12px] border border-border object-cover" style={{ width: size, height: size }} />
     : <div className={cn("grid shrink-0 place-items-center rounded-[12px] text-[16px] font-bold", tone.bg, tone.fg)} style={{ width: size, height: size }}>{(org.name ?? "?").slice(0, 1).toUpperCase()}</div>;
-}
-
-function PrivateCard({ p, org }: { p: BuyerProfile; org: BuyerOrg }) {
-  const { pct } = buyerCompleteness(p, org);
-  return (
-    <div className="p-3">
-      <div className="flex items-start gap-3">
-        <Logo p={p} org={org} size={48} />
-        <div className="min-w-0 flex-1">
-          <div className="line-clamp-2 text-[15px] font-bold leading-snug">{org.name ?? "Your firm"}</div>
-          <div className="truncate text-[12.5px] text-muted-foreground">{[org.type ?? "Investor", p.country].filter(Boolean).join(" · ")}</div>
-        </div>
-        <Ring pct={pct} size={44} done={pct >= 100} />
-      </div>
-      <p className="mb-2 mt-2.5 line-clamp-3 text-[13px] text-muted-foreground">{p.private_description || p.description || <em>No description yet</em>}</p>
-      <Line label="Website">{org.website ? <a href={org.website.startsWith("http") ? org.website : `https://${org.website}`} target="_blank" rel="noreferrer" className="font-medium text-blue-600">{org.website.replace(/^https?:\/\//, "")}</a> : <span className="text-[#9CA3AF]">Not added</span>}</Line>
-      <Line label="Verification">{org.verified ? <span className="text-emerald-700 dark:text-emerald-400">✓ Verified buyer</span> : <span className="text-[#9CA3AF]">Pending</span>}</Line>
-      <Line label="Proof of funds">{p.pof_verified_at ? <span className="text-emerald-700 dark:text-emerald-400">✓ Verified {monthYear(p.pof_verified_at)}</span> : <span className="text-[#9CA3AF]">Not added</span>}</Line>
-    </div>
-  );
 }
 
 function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind: View; thumb: React.ReactNode; title: string; meta: string; editLabel: string; onEdit: () => void; pill: React.ReactNode }) {
