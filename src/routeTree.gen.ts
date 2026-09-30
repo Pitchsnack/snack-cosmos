@@ -9,94 +9,85 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
-import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
-import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
-import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
-import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
-import { Route as AuthenticatedEntityControlRouteImport } from './routes/_authenticated/entity-control'
-import { Route as AuthenticatedIndustryMapRouteImport } from './routes/_authenticated/industry-map'
-import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
-import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
-import { Route as AuthenticatedMarketplaceRouteImport } from './routes/_authenticated/marketplace'
-import { Route as AuthenticatedMyFinancialsRouteImport } from './routes/_authenticated/my-financials'
-import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
-import { Route as AuthenticatedMyValuationRouteImport } from './routes/_authenticated/my-valuation'
-import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
-import { Route as AuthenticatedPeerComparablesRouteImport } from './routes/_authenticated/peer-comparables'
-import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
-import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
-import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
-import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_authenticated/startup-activity'
-import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
-import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
-import { Route as AuthenticatedApprovalsIndexRouteImport } from './routes/_authenticated/approvals.index'
-import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts.index'
-import { Route as AuthenticatedContactsQuickAddRouteImport } from './routes/_authenticated/contacts.quick-add'
-import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
-import { Route as AuthenticatedDealsIdRouteImport } from './routes/_authenticated/deals.$id'
-import { Route as AuthenticatedDealsNewRouteImport } from './routes/_authenticated/deals.new'
-import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
-import { Route as AuthenticatedGlobalStartupsIdRouteImport } from './routes/_authenticated/global-startups.$id'
-import { Route as AuthenticatedGlobalStartupsBrowseRouteImport } from './routes/_authenticated/global-startups.browse'
-import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authenticated/investors.index'
-import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
-import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
-import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace.index'
-import { Route as AuthenticatedMarketplaceBrowseRouteImport } from './routes/_authenticated/marketplace.browse'
-import { Route as AuthenticatedMarketplaceFavouritesRouteImport } from './routes/_authenticated/marketplace.favourites'
-import { Route as AuthenticatedMarketplaceMessagesRouteImport } from './routes/_authenticated/marketplace.messages'
-import { Route as AuthenticatedMarketplaceMyCompanyRouteImport } from './routes/_authenticated/marketplace.my-company'
-import { Route as AuthenticatedMarketplaceMyContactRouteImport } from './routes/_authenticated/marketplace.my-contact'
-import { Route as AuthenticatedMarketplacePipelineRouteImport } from './routes/_authenticated/marketplace.pipeline'
-import { Route as AuthenticatedMyStartupsIndexRouteImport } from './routes/_authenticated/my-startups.index'
-import { Route as AuthenticatedMyStartupsIdRouteImport } from './routes/_authenticated/my-startups.$id'
-import { Route as AuthenticatedMyStartupsNewRouteImport } from './routes/_authenticated/my-startups.new'
-import { Route as AuthenticatedSettingsDefaultIntakeRouteImport } from './routes/_authenticated/settings.default-intake'
-import { Route as AuthenticatedSharedDealsIndexRouteImport } from './routes/_authenticated/shared-deals.index'
-import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
+import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_authenticated/startup-activity'
+import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
+import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
+import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
+import { Route as AuthenticatedPeerComparablesRouteImport } from './routes/_authenticated/peer-comparables'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedMyValuationRouteImport } from './routes/_authenticated/my-valuation'
+import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
+import { Route as AuthenticatedMyFinancialsRouteImport } from './routes/_authenticated/my-financials'
+import { Route as AuthenticatedMarketplaceRouteImport } from './routes/_authenticated/marketplace'
+import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authenticated/investors'
+import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
+import { Route as AuthenticatedIndustryMapRouteImport } from './routes/_authenticated/industry-map'
+import { Route as AuthenticatedEntityControlRouteImport } from './routes/_authenticated/entity-control'
+import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
+import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
+import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
+import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
+import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authenticated/startups.index'
-import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
+import { Route as AuthenticatedSharedDealsIndexRouteImport } from './routes/_authenticated/shared-deals.index'
+import { Route as AuthenticatedMyStartupsIndexRouteImport } from './routes/_authenticated/my-startups.index'
+import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace.index'
+import { Route as AuthenticatedInvestorsIndexRouteImport } from './routes/_authenticated/investors.index'
+import { Route as AuthenticatedGlobalStartupsIndexRouteImport } from './routes/_authenticated/global-startups.index'
+import { Route as AuthenticatedDealsIndexRouteImport } from './routes/_authenticated/deals.index'
+import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts.index'
+import { Route as AuthenticatedApprovalsIndexRouteImport } from './routes/_authenticated/approvals.index'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
-import { Route as AuthenticatedApprovalsBuyersIdRouteImport } from './routes/_authenticated/approvals.buyers.$id'
-import { Route as AuthenticatedApprovalsListingsIdRouteImport } from './routes/_authenticated/approvals.listings.$id'
-import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
-import { Route as AuthenticatedInvestorsIdIndexRouteImport } from './routes/_authenticated/investors.$id.index'
-import { Route as AuthenticatedInvestorsIdEditRouteImport } from './routes/_authenticated/investors.$id.edit'
-import { Route as AuthenticatedInvestorsIdPortfolioRouteImport } from './routes/_authenticated/investors.$id.portfolio'
-import { Route as AuthenticatedMarketplaceMyCompanyIndexRouteImport } from './routes/_authenticated/marketplace.my-company.index'
-import { Route as AuthenticatedMarketplaceMyCompanyEditRouteImport } from './routes/_authenticated/marketplace.my-company.edit'
-import { Route as AuthenticatedMyStartupsIdIndexRouteImport } from './routes/_authenticated/my-startups.$id.index'
-import { Route as AuthenticatedMyStartupsIdCoverRouteImport } from './routes/_authenticated/my-startups.$id.cover'
-import { Route as AuthenticatedMyStartupsIdEditRouteImport } from './routes/_authenticated/my-startups.$id.edit'
-import { Route as AuthenticatedMyStartupsIdFinancialsRouteImport } from './routes/_authenticated/my-startups.$id.financials'
+import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
+import { Route as AuthenticatedSharedDealsIdRouteImport } from './routes/_authenticated/shared-deals.$id'
+import { Route as AuthenticatedSettingsDefaultIntakeRouteImport } from './routes/_authenticated/settings.default-intake'
+import { Route as AuthenticatedMyStartupsNewRouteImport } from './routes/_authenticated/my-startups.new'
+import { Route as AuthenticatedMyStartupsIdRouteImport } from './routes/_authenticated/my-startups.$id'
+import { Route as AuthenticatedMarketplacePipelineRouteImport } from './routes/_authenticated/marketplace.pipeline'
+import { Route as AuthenticatedMarketplaceMyContactRouteImport } from './routes/_authenticated/marketplace.my-contact'
+import { Route as AuthenticatedMarketplaceMyCompanyRouteImport } from './routes/_authenticated/marketplace.my-company'
+import { Route as AuthenticatedMarketplaceMessagesRouteImport } from './routes/_authenticated/marketplace.messages'
+import { Route as AuthenticatedMarketplaceFavouritesRouteImport } from './routes/_authenticated/marketplace.favourites'
+import { Route as AuthenticatedMarketplaceBrowseRouteImport } from './routes/_authenticated/marketplace.browse'
+import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
+import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
+import { Route as AuthenticatedGlobalStartupsBrowseRouteImport } from './routes/_authenticated/global-startups.browse'
+import { Route as AuthenticatedGlobalStartupsIdRouteImport } from './routes/_authenticated/global-startups.$id'
+import { Route as AuthenticatedDealsNewRouteImport } from './routes/_authenticated/deals.new'
+import { Route as AuthenticatedDealsIdRouteImport } from './routes/_authenticated/deals.$id'
+import { Route as AuthenticatedContactsQuickAddRouteImport } from './routes/_authenticated/contacts.quick-add'
 import { Route as AuthenticatedStartupsIdIndexRouteImport } from './routes/_authenticated/startups.$id.index'
-import { Route as AuthenticatedStartupsIdCoverRouteImport } from './routes/_authenticated/startups.$id.cover'
-import { Route as AuthenticatedStartupsIdEditRouteImport } from './routes/_authenticated/startups.$id.edit'
-import { Route as AuthenticatedStartupsIdFinancialsRouteImport } from './routes/_authenticated/startups.$id.financials'
+import { Route as AuthenticatedMyStartupsIdIndexRouteImport } from './routes/_authenticated/my-startups.$id.index'
+import { Route as AuthenticatedMarketplaceMyCompanyIndexRouteImport } from './routes/_authenticated/marketplace.my-company.index'
+import { Route as AuthenticatedInvestorsIdIndexRouteImport } from './routes/_authenticated/investors.$id.index'
+import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
 import { Route as AuthenticatedStartupsIdInvestorsRouteImport } from './routes/_authenticated/startups.$id.investors'
+import { Route as AuthenticatedStartupsIdFinancialsRouteImport } from './routes/_authenticated/startups.$id.financials'
+import { Route as AuthenticatedStartupsIdEditRouteImport } from './routes/_authenticated/startups.$id.edit'
+import { Route as AuthenticatedStartupsIdCoverRouteImport } from './routes/_authenticated/startups.$id.cover'
+import { Route as AuthenticatedMyStartupsIdFinancialsRouteImport } from './routes/_authenticated/my-startups.$id.financials'
+import { Route as AuthenticatedMyStartupsIdEditRouteImport } from './routes/_authenticated/my-startups.$id.edit'
+import { Route as AuthenticatedMyStartupsIdCoverRouteImport } from './routes/_authenticated/my-startups.$id.cover'
+import { Route as AuthenticatedMarketplaceMyCompanyEditRouteImport } from './routes/_authenticated/marketplace.my-company.edit'
+import { Route as AuthenticatedInvestorsIdPortfolioRouteImport } from './routes/_authenticated/investors.$id.portfolio'
+import { Route as AuthenticatedInvestorsIdEditRouteImport } from './routes/_authenticated/investors.$id.edit'
+import { Route as AuthenticatedApprovalsListingsIdRouteImport } from './routes/_authenticated/approvals.listings.$id'
+import { Route as AuthenticatedApprovalsBuyersIdRouteImport } from './routes/_authenticated/approvals.buyers.$id'
 
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AcceptInviteRoute = AcceptInviteRouteImport.update({
-  id: '/accept-invite',
-  path: '/accept-invite',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -104,9 +95,23 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcceptInviteRoute = AcceptInviteRouteImport.update({
+  id: '/accept-invite',
+  path: '/accept-invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Sp2GatewayIndexRoute = Sp2GatewayIndexRouteImport.update({
+  id: '/sp2-gateway/',
+  path: '/sp2-gateway/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -114,93 +119,37 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAccessManagementRoute =
-  AuthenticatedAccessManagementRouteImport.update({
-    id: '/access-management',
-    path: '/access-management',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAiAgentsRoute = AuthenticatedAiAgentsRouteImport.update({
-  id: '/ai-agents',
-  path: '/ai-agents',
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
+const AuthenticatedStartupsRoute = AuthenticatedStartupsRouteImport.update({
+  id: '/startups',
+  path: '/startups',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedConnectionsRoute =
-  AuthenticatedConnectionsRouteImport.update({
-    id: '/connections',
-    path: '/connections',
+const AuthenticatedStartupActivityRoute =
+  AuthenticatedStartupActivityRouteImport.update({
+    id: '/startup-activity',
+    path: '/startup-activity',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedContactsRoute = AuthenticatedContactsRouteImport.update({
-  id: '/contacts',
-  path: '/contacts',
+const AuthenticatedSharedDealsRoute =
+  AuthenticatedSharedDealsRouteImport.update({
+    id: '/shared-deals',
+    path: '/shared-deals',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
-  id: '/deals',
-  path: '/deals',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEntityControlRoute =
-  AuthenticatedEntityControlRouteImport.update({
-    id: '/entity-control',
-    path: '/entity-control',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIndustryMapRoute =
-  AuthenticatedIndustryMapRouteImport.update({
-    id: '/industry-map',
-    path: '/industry-map',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIntakeQueueRoute =
-  AuthenticatedIntakeQueueRouteImport.update({
-    id: '/intake-queue',
-    path: '/intake-queue',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedInvestorsRoute = AuthenticatedInvestorsRouteImport.update({
-  id: '/investors',
-  path: '/investors',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedMarketplaceRoute =
-  AuthenticatedMarketplaceRouteImport.update({
-    id: '/marketplace',
-    path: '/marketplace',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedMyFinancialsRoute =
-  AuthenticatedMyFinancialsRouteImport.update({
-    id: '/my-financials',
-    path: '/my-financials',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedMyPageRoute = AuthenticatedMyPageRouteImport.update({
-  id: '/my-page',
-  path: '/my-page',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedMyValuationRoute =
-  AuthenticatedMyValuationRouteImport.update({
-    id: '/my-valuation',
-    path: '/my-valuation',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedNotificationsRoute =
-  AuthenticatedNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
+const AuthenticatedPreferencesRoute =
+  AuthenticatedPreferencesRouteImport.update({
+    id: '/preferences',
+    path: '/preferences',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedPeerComparablesRoute =
@@ -209,154 +158,106 @@ const AuthenticatedPeerComparablesRoute =
     path: '/peer-comparables',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedPreferencesRoute =
-  AuthenticatedPreferencesRouteImport.update({
-    id: '/preferences',
-    path: '/preferences',
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
+const AuthenticatedMyValuationRoute =
+  AuthenticatedMyValuationRouteImport.update({
+    id: '/my-valuation',
+    path: '/my-valuation',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMyPageRoute = AuthenticatedMyPageRouteImport.update({
+  id: '/my-page',
+  path: '/my-page',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedSharedDealsRoute =
-  AuthenticatedSharedDealsRouteImport.update({
-    id: '/shared-deals',
-    path: '/shared-deals',
+const AuthenticatedMyFinancialsRoute =
+  AuthenticatedMyFinancialsRouteImport.update({
+    id: '/my-financials',
+    path: '/my-financials',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedStartupActivityRoute =
-  AuthenticatedStartupActivityRouteImport.update({
-    id: '/startup-activity',
-    path: '/startup-activity',
+const AuthenticatedMarketplaceRoute =
+  AuthenticatedMarketplaceRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedStartupsRoute = AuthenticatedStartupsRouteImport.update({
-  id: '/startups',
-  path: '/startups',
+const AuthenticatedInvestorsRoute = AuthenticatedInvestorsRouteImport.update({
+  id: '/investors',
+  path: '/investors',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AuthenticatedIntakeQueueRoute =
+  AuthenticatedIntakeQueueRouteImport.update({
+    id: '/intake-queue',
+    path: '/intake-queue',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIndustryMapRoute =
+  AuthenticatedIndustryMapRouteImport.update({
+    id: '/industry-map',
+    path: '/industry-map',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEntityControlRoute =
+  AuthenticatedEntityControlRouteImport.update({
+    id: '/entity-control',
+    path: '/entity-control',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const Sp2GatewayIndexRoute = Sp2GatewayIndexRouteImport.update({
-  id: '/sp2-gateway/',
-  path: '/sp2-gateway/',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedApprovalsIndexRoute =
-  AuthenticatedApprovalsIndexRouteImport.update({
-    id: '/approvals/',
-    path: '/approvals/',
+const AuthenticatedContactsRoute = AuthenticatedContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedConnectionsRoute =
+  AuthenticatedConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedContactsIndexRoute =
-  AuthenticatedContactsIndexRouteImport.update({
+const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAiAgentsRoute = AuthenticatedAiAgentsRouteImport.update({
+  id: '/ai-agents',
+  path: '/ai-agents',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAccessManagementRoute =
+  AuthenticatedAccessManagementRouteImport.update({
+    id: '/access-management',
+    path: '/access-management',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStartupsIndexRoute =
+  AuthenticatedStartupsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedContactsRoute,
+    getParentRoute: () => AuthenticatedStartupsRoute,
   } as any)
-const AuthenticatedContactsQuickAddRoute =
-  AuthenticatedContactsQuickAddRouteImport.update({
-    id: '/quick-add',
-    path: '/quick-add',
-    getParentRoute: () => AuthenticatedContactsRoute,
-  } as any)
-const AuthenticatedDealsIndexRoute = AuthenticatedDealsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedDealsRoute,
-} as any)
-const AuthenticatedDealsIdRoute = AuthenticatedDealsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedDealsRoute,
-} as any)
-const AuthenticatedDealsNewRoute = AuthenticatedDealsNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthenticatedDealsRoute,
-} as any)
-const AuthenticatedGlobalStartupsIndexRoute =
-  AuthenticatedGlobalStartupsIndexRouteImport.update({
-    id: '/global-startups/',
-    path: '/global-startups/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedGlobalStartupsIdRoute =
-  AuthenticatedGlobalStartupsIdRouteImport.update({
-    id: '/global-startups/$id',
-    path: '/global-startups/$id',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedGlobalStartupsBrowseRoute =
-  AuthenticatedGlobalStartupsBrowseRouteImport.update({
-    id: '/global-startups/browse',
-    path: '/global-startups/browse',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedInvestorsIndexRoute =
-  AuthenticatedInvestorsIndexRouteImport.update({
+const AuthenticatedSharedDealsIndexRoute =
+  AuthenticatedSharedDealsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedInvestorsRoute,
-  } as any)
-const AuthenticatedInvestorsIdRoute =
-  AuthenticatedInvestorsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedInvestorsRoute,
-  } as any)
-const AuthenticatedInvestorsNewRoute =
-  AuthenticatedInvestorsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedInvestorsRoute,
-  } as any)
-const AuthenticatedMarketplaceIndexRoute =
-  AuthenticatedMarketplaceIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedMarketplaceRoute,
-  } as any)
-const AuthenticatedMarketplaceBrowseRoute =
-  AuthenticatedMarketplaceBrowseRouteImport.update({
-    id: '/browse',
-    path: '/browse',
-    getParentRoute: () => AuthenticatedMarketplaceRoute,
-  } as any)
-const AuthenticatedMarketplaceFavouritesRoute =
-  AuthenticatedMarketplaceFavouritesRouteImport.update({
-    id: '/favourites',
-    path: '/favourites',
-    getParentRoute: () => AuthenticatedMarketplaceRoute,
-  } as any)
-const AuthenticatedMarketplaceMessagesRoute =
-  AuthenticatedMarketplaceMessagesRouteImport.update({
-    id: '/messages',
-    path: '/messages',
-    getParentRoute: () => AuthenticatedMarketplaceRoute,
-  } as any)
-const AuthenticatedMarketplaceMyCompanyRoute =
-  AuthenticatedMarketplaceMyCompanyRouteImport.update({
-    id: '/my-company',
-    path: '/my-company',
-    getParentRoute: () => AuthenticatedMarketplaceRoute,
-  } as any)
-const AuthenticatedMarketplaceMyContactRoute =
-  AuthenticatedMarketplaceMyContactRouteImport.update({
-    id: '/my-contact',
-    path: '/my-contact',
-    getParentRoute: () => AuthenticatedMarketplaceRoute,
-  } as any)
-const AuthenticatedMarketplacePipelineRoute =
-  AuthenticatedMarketplacePipelineRouteImport.update({
-    id: '/pipeline',
-    path: '/pipeline',
-    getParentRoute: () => AuthenticatedMarketplaceRoute,
+    getParentRoute: () => AuthenticatedSharedDealsRoute,
   } as any)
 const AuthenticatedMyStartupsIndexRoute =
   AuthenticatedMyStartupsIndexRouteImport.update({
@@ -364,10 +265,62 @@ const AuthenticatedMyStartupsIndexRoute =
     path: '/my-startups/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedMyStartupsIdRoute =
-  AuthenticatedMyStartupsIdRouteImport.update({
-    id: '/my-startups/$id',
-    path: '/my-startups/$id',
+const AuthenticatedMarketplaceIndexRoute =
+  AuthenticatedMarketplaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
+const AuthenticatedInvestorsIndexRoute =
+  AuthenticatedInvestorsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedInvestorsRoute,
+  } as any)
+const AuthenticatedGlobalStartupsIndexRoute =
+  AuthenticatedGlobalStartupsIndexRouteImport.update({
+    id: '/global-startups/',
+    path: '/global-startups/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDealsIndexRoute = AuthenticatedDealsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedDealsRoute,
+} as any)
+const AuthenticatedContactsIndexRoute =
+  AuthenticatedContactsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedContactsRoute,
+  } as any)
+const AuthenticatedApprovalsIndexRoute =
+  AuthenticatedApprovalsIndexRouteImport.update({
+    id: '/approvals/',
+    path: '/approvals/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStartupsNewRoute =
+  AuthenticatedStartupsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedStartupsRoute,
+  } as any)
+const AuthenticatedStartupsIdRoute = AuthenticatedStartupsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedStartupsRoute,
+} as any)
+const AuthenticatedSharedDealsIdRoute =
+  AuthenticatedSharedDealsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedSharedDealsRoute,
+  } as any)
+const AuthenticatedSettingsDefaultIntakeRoute =
+  AuthenticatedSettingsDefaultIntakeRouteImport.update({
+    id: '/settings/default-intake',
+    path: '/settings/default-intake',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedMyStartupsNewRoute =
@@ -376,112 +329,87 @@ const AuthenticatedMyStartupsNewRoute =
     path: '/my-startups/new',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedSettingsDefaultIntakeRoute =
-  AuthenticatedSettingsDefaultIntakeRouteImport.update({
-    id: '/settings/default-intake',
-    path: '/settings/default-intake',
+const AuthenticatedMyStartupsIdRoute =
+  AuthenticatedMyStartupsIdRouteImport.update({
+    id: '/my-startups/$id',
+    path: '/my-startups/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedSharedDealsIndexRoute =
-  AuthenticatedSharedDealsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedSharedDealsRoute,
+const AuthenticatedMarketplacePipelineRoute =
+  AuthenticatedMarketplacePipelineRouteImport.update({
+    id: '/pipeline',
+    path: '/pipeline',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
-const AuthenticatedSharedDealsIdRoute =
-  AuthenticatedSharedDealsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedSharedDealsRoute,
+const AuthenticatedMarketplaceMyContactRoute =
+  AuthenticatedMarketplaceMyContactRouteImport.update({
+    id: '/my-contact',
+    path: '/my-contact',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
-const AuthenticatedStartupsIndexRoute =
-  AuthenticatedStartupsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedStartupsRoute,
+const AuthenticatedMarketplaceMyCompanyRoute =
+  AuthenticatedMarketplaceMyCompanyRouteImport.update({
+    id: '/my-company',
+    path: '/my-company',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
-const AuthenticatedStartupsIdRoute = AuthenticatedStartupsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedStartupsRoute,
-} as any)
-const AuthenticatedStartupsNewRoute =
-  AuthenticatedStartupsNewRouteImport.update({
+const AuthenticatedMarketplaceMessagesRoute =
+  AuthenticatedMarketplaceMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
+const AuthenticatedMarketplaceFavouritesRoute =
+  AuthenticatedMarketplaceFavouritesRouteImport.update({
+    id: '/favourites',
+    path: '/favourites',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
+const AuthenticatedMarketplaceBrowseRoute =
+  AuthenticatedMarketplaceBrowseRouteImport.update({
+    id: '/browse',
+    path: '/browse',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
+const AuthenticatedInvestorsNewRoute =
+  AuthenticatedInvestorsNewRouteImport.update({
     id: '/new',
     path: '/new',
-    getParentRoute: () => AuthenticatedStartupsRoute,
+    getParentRoute: () => AuthenticatedInvestorsRoute,
   } as any)
-const AuthenticatedApprovalsBuyersIdRoute =
-  AuthenticatedApprovalsBuyersIdRouteImport.update({
-    id: '/approvals/buyers/$id',
-    path: '/approvals/buyers/$id',
+const AuthenticatedInvestorsIdRoute =
+  AuthenticatedInvestorsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedInvestorsRoute,
+  } as any)
+const AuthenticatedGlobalStartupsBrowseRoute =
+  AuthenticatedGlobalStartupsBrowseRouteImport.update({
+    id: '/global-startups/browse',
+    path: '/global-startups/browse',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedApprovalsListingsIdRoute =
-  AuthenticatedApprovalsListingsIdRouteImport.update({
-    id: '/approvals/listings/$id',
-    path: '/approvals/listings/$id',
+const AuthenticatedGlobalStartupsIdRoute =
+  AuthenticatedGlobalStartupsIdRouteImport.update({
+    id: '/global-startups/$id',
+    path: '/global-startups/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDealsIdIndexRoute =
-  AuthenticatedDealsIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedDealsIdRoute,
-  } as any)
-const AuthenticatedInvestorsIdIndexRoute =
-  AuthenticatedInvestorsIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedInvestorsIdRoute,
-  } as any)
-const AuthenticatedInvestorsIdEditRoute =
-  AuthenticatedInvestorsIdEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
-    getParentRoute: () => AuthenticatedInvestorsIdRoute,
-  } as any)
-const AuthenticatedInvestorsIdPortfolioRoute =
-  AuthenticatedInvestorsIdPortfolioRouteImport.update({
-    id: '/portfolio',
-    path: '/portfolio',
-    getParentRoute: () => AuthenticatedInvestorsIdRoute,
-  } as any)
-const AuthenticatedMarketplaceMyCompanyIndexRoute =
-  AuthenticatedMarketplaceMyCompanyIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedMarketplaceMyCompanyRoute,
-  } as any)
-const AuthenticatedMarketplaceMyCompanyEditRoute =
-  AuthenticatedMarketplaceMyCompanyEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
-    getParentRoute: () => AuthenticatedMarketplaceMyCompanyRoute,
-  } as any)
-const AuthenticatedMyStartupsIdIndexRoute =
-  AuthenticatedMyStartupsIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
-  } as any)
-const AuthenticatedMyStartupsIdCoverRoute =
-  AuthenticatedMyStartupsIdCoverRouteImport.update({
-    id: '/cover',
-    path: '/cover',
-    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
-  } as any)
-const AuthenticatedMyStartupsIdEditRoute =
-  AuthenticatedMyStartupsIdEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
-    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
-  } as any)
-const AuthenticatedMyStartupsIdFinancialsRoute =
-  AuthenticatedMyStartupsIdFinancialsRouteImport.update({
-    id: '/financials',
-    path: '/financials',
-    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
+const AuthenticatedDealsNewRoute = AuthenticatedDealsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthenticatedDealsRoute,
+} as any)
+const AuthenticatedDealsIdRoute = AuthenticatedDealsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedDealsRoute,
+} as any)
+const AuthenticatedContactsQuickAddRoute =
+  AuthenticatedContactsQuickAddRouteImport.update({
+    id: '/quick-add',
+    path: '/quick-add',
+    getParentRoute: () => AuthenticatedContactsRoute,
   } as any)
 const AuthenticatedStartupsIdIndexRoute =
   AuthenticatedStartupsIdIndexRouteImport.update({
@@ -489,16 +417,34 @@ const AuthenticatedStartupsIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedStartupsIdRoute,
   } as any)
-const AuthenticatedStartupsIdCoverRoute =
-  AuthenticatedStartupsIdCoverRouteImport.update({
-    id: '/cover',
-    path: '/cover',
-    getParentRoute: () => AuthenticatedStartupsIdRoute,
+const AuthenticatedMyStartupsIdIndexRoute =
+  AuthenticatedMyStartupsIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
   } as any)
-const AuthenticatedStartupsIdEditRoute =
-  AuthenticatedStartupsIdEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
+const AuthenticatedMarketplaceMyCompanyIndexRoute =
+  AuthenticatedMarketplaceMyCompanyIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMarketplaceMyCompanyRoute,
+  } as any)
+const AuthenticatedInvestorsIdIndexRoute =
+  AuthenticatedInvestorsIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedInvestorsIdRoute,
+  } as any)
+const AuthenticatedDealsIdIndexRoute =
+  AuthenticatedDealsIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDealsIdRoute,
+  } as any)
+const AuthenticatedStartupsIdInvestorsRoute =
+  AuthenticatedStartupsIdInvestorsRouteImport.update({
+    id: '/investors',
+    path: '/investors',
     getParentRoute: () => AuthenticatedStartupsIdRoute,
   } as any)
 const AuthenticatedStartupsIdFinancialsRoute =
@@ -507,11 +453,65 @@ const AuthenticatedStartupsIdFinancialsRoute =
     path: '/financials',
     getParentRoute: () => AuthenticatedStartupsIdRoute,
   } as any)
-const AuthenticatedStartupsIdInvestorsRoute =
-  AuthenticatedStartupsIdInvestorsRouteImport.update({
-    id: '/investors',
-    path: '/investors',
+const AuthenticatedStartupsIdEditRoute =
+  AuthenticatedStartupsIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
     getParentRoute: () => AuthenticatedStartupsIdRoute,
+  } as any)
+const AuthenticatedStartupsIdCoverRoute =
+  AuthenticatedStartupsIdCoverRouteImport.update({
+    id: '/cover',
+    path: '/cover',
+    getParentRoute: () => AuthenticatedStartupsIdRoute,
+  } as any)
+const AuthenticatedMyStartupsIdFinancialsRoute =
+  AuthenticatedMyStartupsIdFinancialsRouteImport.update({
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
+  } as any)
+const AuthenticatedMyStartupsIdEditRoute =
+  AuthenticatedMyStartupsIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
+  } as any)
+const AuthenticatedMyStartupsIdCoverRoute =
+  AuthenticatedMyStartupsIdCoverRouteImport.update({
+    id: '/cover',
+    path: '/cover',
+    getParentRoute: () => AuthenticatedMyStartupsIdRoute,
+  } as any)
+const AuthenticatedMarketplaceMyCompanyEditRoute =
+  AuthenticatedMarketplaceMyCompanyEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedMarketplaceMyCompanyRoute,
+  } as any)
+const AuthenticatedInvestorsIdPortfolioRoute =
+  AuthenticatedInvestorsIdPortfolioRouteImport.update({
+    id: '/portfolio',
+    path: '/portfolio',
+    getParentRoute: () => AuthenticatedInvestorsIdRoute,
+  } as any)
+const AuthenticatedInvestorsIdEditRoute =
+  AuthenticatedInvestorsIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedInvestorsIdRoute,
+  } as any)
+const AuthenticatedApprovalsListingsIdRoute =
+  AuthenticatedApprovalsListingsIdRouteImport.update({
+    id: '/approvals/listings/$id',
+    path: '/approvals/listings/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedApprovalsBuyersIdRoute =
+  AuthenticatedApprovalsBuyersIdRouteImport.update({
+    id: '/approvals/buyers/$id',
+    path: '/approvals/buyers/$id',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -965,25 +965,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/accept-invite': {
-      id: '/accept-invite'
-      path: '/accept-invite'
-      fullPath: '/accept-invite'
-      preLoaderRoute: typeof AcceptInviteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -993,11 +979,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accept-invite': {
+      id: '/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof AcceptInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sp2-gateway/': {
+      id: '/sp2-gateway/'
+      path: '/sp2-gateway'
+      fullPath: '/sp2-gateway/'
+      preLoaderRoute: typeof Sp2GatewayIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -1007,151 +1014,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/access-management': {
-      id: '/_authenticated/access-management'
-      path: '/access-management'
-      fullPath: '/access-management'
-      preLoaderRoute: typeof AuthenticatedAccessManagementRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/ai-agents': {
-      id: '/_authenticated/ai-agents'
-      path: '/ai-agents'
-      fullPath: '/ai-agents'
-      preLoaderRoute: typeof AuthenticatedAiAgentsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/audit': {
-      id: '/_authenticated/audit'
-      path: '/audit'
-      fullPath: '/audit'
-      preLoaderRoute: typeof AuthenticatedAuditRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/connections': {
-      id: '/_authenticated/connections'
-      path: '/connections'
-      fullPath: '/connections'
-      preLoaderRoute: typeof AuthenticatedConnectionsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/contacts': {
-      id: '/_authenticated/contacts'
-      path: '/contacts'
-      fullPath: '/contacts'
-      preLoaderRoute: typeof AuthenticatedContactsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/deals': {
-      id: '/_authenticated/deals'
-      path: '/deals'
-      fullPath: '/deals'
-      preLoaderRoute: typeof AuthenticatedDealsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/entity-control': {
-      id: '/_authenticated/entity-control'
-      path: '/entity-control'
-      fullPath: '/entity-control'
-      preLoaderRoute: typeof AuthenticatedEntityControlRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/industry-map': {
-      id: '/_authenticated/industry-map'
-      path: '/industry-map'
-      fullPath: '/industry-map'
-      preLoaderRoute: typeof AuthenticatedIndustryMapRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/intake-queue': {
-      id: '/_authenticated/intake-queue'
-      path: '/intake-queue'
-      fullPath: '/intake-queue'
-      preLoaderRoute: typeof AuthenticatedIntakeQueueRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/investors': {
-      id: '/_authenticated/investors'
-      path: '/investors'
-      fullPath: '/investors'
-      preLoaderRoute: typeof AuthenticatedInvestorsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/marketplace': {
-      id: '/_authenticated/marketplace'
-      path: '/marketplace'
-      fullPath: '/marketplace'
-      preLoaderRoute: typeof AuthenticatedMarketplaceRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/my-financials': {
-      id: '/_authenticated/my-financials'
-      path: '/my-financials'
-      fullPath: '/my-financials'
-      preLoaderRoute: typeof AuthenticatedMyFinancialsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/my-page': {
-      id: '/_authenticated/my-page'
-      path: '/my-page'
-      fullPath: '/my-page'
-      preLoaderRoute: typeof AuthenticatedMyPageRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/my-valuation': {
-      id: '/_authenticated/my-valuation'
-      path: '/my-valuation'
-      fullPath: '/my-valuation'
-      preLoaderRoute: typeof AuthenticatedMyValuationRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/notifications': {
-      id: '/_authenticated/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/peer-comparables': {
-      id: '/_authenticated/peer-comparables'
-      path: '/peer-comparables'
-      fullPath: '/peer-comparables'
-      preLoaderRoute: typeof AuthenticatedPeerComparablesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/preferences': {
-      id: '/_authenticated/preferences'
-      path: '/preferences'
-      fullPath: '/preferences'
-      preLoaderRoute: typeof AuthenticatedPreferencesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/security': {
-      id: '/_authenticated/security'
-      path: '/security'
-      fullPath: '/security'
-      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/shared-deals': {
-      id: '/_authenticated/shared-deals'
-      path: '/shared-deals'
-      fullPath: '/shared-deals'
-      preLoaderRoute: typeof AuthenticatedSharedDealsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/startup-activity': {
-      id: '/_authenticated/startup-activity'
-      path: '/startup-activity'
-      fullPath: '/startup-activity'
-      preLoaderRoute: typeof AuthenticatedStartupActivityRouteImport
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/startups': {
@@ -1161,180 +1028,159 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartupsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/users': {
-      id: '/_authenticated/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+    '/_authenticated/startup-activity': {
+      id: '/_authenticated/startup-activity'
+      path: '/startup-activity'
+      fullPath: '/startup-activity'
+      preLoaderRoute: typeof AuthenticatedStartupActivityRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/sp2-gateway/': {
-      id: '/sp2-gateway/'
-      path: '/sp2-gateway'
-      fullPath: '/sp2-gateway/'
-      preLoaderRoute: typeof Sp2GatewayIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/approvals/': {
-      id: '/_authenticated/approvals/'
-      path: '/approvals'
-      fullPath: '/approvals/'
-      preLoaderRoute: typeof AuthenticatedApprovalsIndexRouteImport
+    '/_authenticated/shared-deals': {
+      id: '/_authenticated/shared-deals'
+      path: '/shared-deals'
+      fullPath: '/shared-deals'
+      preLoaderRoute: typeof AuthenticatedSharedDealsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/contacts/': {
-      id: '/_authenticated/contacts/'
+    '/_authenticated/security': {
+      id: '/_authenticated/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/preferences': {
+      id: '/_authenticated/preferences'
+      path: '/preferences'
+      fullPath: '/preferences'
+      preLoaderRoute: typeof AuthenticatedPreferencesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/peer-comparables': {
+      id: '/_authenticated/peer-comparables'
+      path: '/peer-comparables'
+      fullPath: '/peer-comparables'
+      preLoaderRoute: typeof AuthenticatedPeerComparablesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-valuation': {
+      id: '/_authenticated/my-valuation'
+      path: '/my-valuation'
+      fullPath: '/my-valuation'
+      preLoaderRoute: typeof AuthenticatedMyValuationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-page': {
+      id: '/_authenticated/my-page'
+      path: '/my-page'
+      fullPath: '/my-page'
+      preLoaderRoute: typeof AuthenticatedMyPageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-financials': {
+      id: '/_authenticated/my-financials'
+      path: '/my-financials'
+      fullPath: '/my-financials'
+      preLoaderRoute: typeof AuthenticatedMyFinancialsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/marketplace': {
+      id: '/_authenticated/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof AuthenticatedMarketplaceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/investors': {
+      id: '/_authenticated/investors'
+      path: '/investors'
+      fullPath: '/investors'
+      preLoaderRoute: typeof AuthenticatedInvestorsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/intake-queue': {
+      id: '/_authenticated/intake-queue'
+      path: '/intake-queue'
+      fullPath: '/intake-queue'
+      preLoaderRoute: typeof AuthenticatedIntakeQueueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/industry-map': {
+      id: '/_authenticated/industry-map'
+      path: '/industry-map'
+      fullPath: '/industry-map'
+      preLoaderRoute: typeof AuthenticatedIndustryMapRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/entity-control': {
+      id: '/_authenticated/entity-control'
+      path: '/entity-control'
+      fullPath: '/entity-control'
+      preLoaderRoute: typeof AuthenticatedEntityControlRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/deals': {
+      id: '/_authenticated/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof AuthenticatedDealsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/contacts': {
+      id: '/_authenticated/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof AuthenticatedContactsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/connections': {
+      id: '/_authenticated/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof AuthenticatedConnectionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/audit': {
+      id: '/_authenticated/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuthenticatedAuditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ai-agents': {
+      id: '/_authenticated/ai-agents'
+      path: '/ai-agents'
+      fullPath: '/ai-agents'
+      preLoaderRoute: typeof AuthenticatedAiAgentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/access-management': {
+      id: '/_authenticated/access-management'
+      path: '/access-management'
+      fullPath: '/access-management'
+      preLoaderRoute: typeof AuthenticatedAccessManagementRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/startups/': {
+      id: '/_authenticated/startups/'
       path: '/'
-      fullPath: '/contacts/'
-      preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
-      parentRoute: typeof AuthenticatedContactsRoute
-    }
-    '/_authenticated/contacts/quick-add': {
-      id: '/_authenticated/contacts/quick-add'
-      path: '/quick-add'
-      fullPath: '/contacts/quick-add'
-      preLoaderRoute: typeof AuthenticatedContactsQuickAddRouteImport
-      parentRoute: typeof AuthenticatedContactsRoute
-    }
-    '/_authenticated/deals/': {
-      id: '/_authenticated/deals/'
-      path: '/'
-      fullPath: '/deals/'
-      preLoaderRoute: typeof AuthenticatedDealsIndexRouteImport
-      parentRoute: typeof AuthenticatedDealsRoute
-    }
-    '/_authenticated/deals/$id': {
-      id: '/_authenticated/deals/$id'
-      path: '/$id'
-      fullPath: '/deals/$id'
-      preLoaderRoute: typeof AuthenticatedDealsIdRouteImport
-      parentRoute: typeof AuthenticatedDealsRoute
-    }
-    '/_authenticated/deals/new': {
-      id: '/_authenticated/deals/new'
-      path: '/new'
-      fullPath: '/deals/new'
-      preLoaderRoute: typeof AuthenticatedDealsNewRouteImport
-      parentRoute: typeof AuthenticatedDealsRoute
-    }
-    '/_authenticated/global-startups/': {
-      id: '/_authenticated/global-startups/'
-      path: '/global-startups'
-      fullPath: '/global-startups/'
-      preLoaderRoute: typeof AuthenticatedGlobalStartupsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/global-startups/$id': {
-      id: '/_authenticated/global-startups/$id'
-      path: '/global-startups/$id'
-      fullPath: '/global-startups/$id'
-      preLoaderRoute: typeof AuthenticatedGlobalStartupsIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/global-startups/browse': {
-      id: '/_authenticated/global-startups/browse'
-      path: '/global-startups/browse'
-      fullPath: '/global-startups/browse'
-      preLoaderRoute: typeof AuthenticatedGlobalStartupsBrowseRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/investors/': {
-      id: '/_authenticated/investors/'
-      path: '/'
-      fullPath: '/investors/'
-      preLoaderRoute: typeof AuthenticatedInvestorsIndexRouteImport
-      parentRoute: typeof AuthenticatedInvestorsRoute
-    }
-    '/_authenticated/investors/$id': {
-      id: '/_authenticated/investors/$id'
-      path: '/$id'
-      fullPath: '/investors/$id'
-      preLoaderRoute: typeof AuthenticatedInvestorsIdRouteImport
-      parentRoute: typeof AuthenticatedInvestorsRoute
-    }
-    '/_authenticated/investors/new': {
-      id: '/_authenticated/investors/new'
-      path: '/new'
-      fullPath: '/investors/new'
-      preLoaderRoute: typeof AuthenticatedInvestorsNewRouteImport
-      parentRoute: typeof AuthenticatedInvestorsRoute
-    }
-    '/_authenticated/marketplace/': {
-      id: '/_authenticated/marketplace/'
-      path: '/'
-      fullPath: '/marketplace/'
-      preLoaderRoute: typeof AuthenticatedMarketplaceIndexRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceRoute
-    }
-    '/_authenticated/marketplace/browse': {
-      id: '/_authenticated/marketplace/browse'
-      path: '/browse'
-      fullPath: '/marketplace/browse'
-      preLoaderRoute: typeof AuthenticatedMarketplaceBrowseRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceRoute
-    }
-    '/_authenticated/marketplace/favourites': {
-      id: '/_authenticated/marketplace/favourites'
-      path: '/favourites'
-      fullPath: '/marketplace/favourites'
-      preLoaderRoute: typeof AuthenticatedMarketplaceFavouritesRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceRoute
-    }
-    '/_authenticated/marketplace/messages': {
-      id: '/_authenticated/marketplace/messages'
-      path: '/messages'
-      fullPath: '/marketplace/messages'
-      preLoaderRoute: typeof AuthenticatedMarketplaceMessagesRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceRoute
-    }
-    '/_authenticated/marketplace/my-company': {
-      id: '/_authenticated/marketplace/my-company'
-      path: '/my-company'
-      fullPath: '/marketplace/my-company'
-      preLoaderRoute: typeof AuthenticatedMarketplaceMyCompanyRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceRoute
-    }
-    '/_authenticated/marketplace/my-contact': {
-      id: '/_authenticated/marketplace/my-contact'
-      path: '/my-contact'
-      fullPath: '/marketplace/my-contact'
-      preLoaderRoute: typeof AuthenticatedMarketplaceMyContactRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceRoute
-    }
-    '/_authenticated/marketplace/pipeline': {
-      id: '/_authenticated/marketplace/pipeline'
-      path: '/pipeline'
-      fullPath: '/marketplace/pipeline'
-      preLoaderRoute: typeof AuthenticatedMarketplacePipelineRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceRoute
-    }
-    '/_authenticated/my-startups/': {
-      id: '/_authenticated/my-startups/'
-      path: '/my-startups'
-      fullPath: '/my-startups/'
-      preLoaderRoute: typeof AuthenticatedMyStartupsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/my-startups/$id': {
-      id: '/_authenticated/my-startups/$id'
-      path: '/my-startups/$id'
-      fullPath: '/my-startups/$id'
-      preLoaderRoute: typeof AuthenticatedMyStartupsIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/my-startups/new': {
-      id: '/_authenticated/my-startups/new'
-      path: '/my-startups/new'
-      fullPath: '/my-startups/new'
-      preLoaderRoute: typeof AuthenticatedMyStartupsNewRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/settings/default-intake': {
-      id: '/_authenticated/settings/default-intake'
-      path: '/settings/default-intake'
-      fullPath: '/settings/default-intake'
-      preLoaderRoute: typeof AuthenticatedSettingsDefaultIntakeRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/startups/'
+      preLoaderRoute: typeof AuthenticatedStartupsIndexRouteImport
+      parentRoute: typeof AuthenticatedStartupsRoute
     }
     '/_authenticated/shared-deals/': {
       id: '/_authenticated/shared-deals/'
@@ -1343,18 +1189,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSharedDealsIndexRouteImport
       parentRoute: typeof AuthenticatedSharedDealsRoute
     }
-    '/_authenticated/shared-deals/$id': {
-      id: '/_authenticated/shared-deals/$id'
-      path: '/$id'
-      fullPath: '/shared-deals/$id'
-      preLoaderRoute: typeof AuthenticatedSharedDealsIdRouteImport
-      parentRoute: typeof AuthenticatedSharedDealsRoute
+    '/_authenticated/my-startups/': {
+      id: '/_authenticated/my-startups/'
+      path: '/my-startups'
+      fullPath: '/my-startups/'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/startups/': {
-      id: '/_authenticated/startups/'
+    '/_authenticated/marketplace/': {
+      id: '/_authenticated/marketplace/'
       path: '/'
-      fullPath: '/startups/'
-      preLoaderRoute: typeof AuthenticatedStartupsIndexRouteImport
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof AuthenticatedMarketplaceIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/investors/': {
+      id: '/_authenticated/investors/'
+      path: '/'
+      fullPath: '/investors/'
+      preLoaderRoute: typeof AuthenticatedInvestorsIndexRouteImport
+      parentRoute: typeof AuthenticatedInvestorsRoute
+    }
+    '/_authenticated/global-startups/': {
+      id: '/_authenticated/global-startups/'
+      path: '/global-startups'
+      fullPath: '/global-startups/'
+      preLoaderRoute: typeof AuthenticatedGlobalStartupsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/deals/': {
+      id: '/_authenticated/deals/'
+      path: '/'
+      fullPath: '/deals/'
+      preLoaderRoute: typeof AuthenticatedDealsIndexRouteImport
+      parentRoute: typeof AuthenticatedDealsRoute
+    }
+    '/_authenticated/contacts/': {
+      id: '/_authenticated/contacts/'
+      path: '/'
+      fullPath: '/contacts/'
+      preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
+      parentRoute: typeof AuthenticatedContactsRoute
+    }
+    '/_authenticated/approvals/': {
+      id: '/_authenticated/approvals/'
+      path: '/approvals'
+      fullPath: '/approvals/'
+      preLoaderRoute: typeof AuthenticatedApprovalsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/startups/new': {
+      id: '/_authenticated/startups/new'
+      path: '/new'
+      fullPath: '/startups/new'
+      preLoaderRoute: typeof AuthenticatedStartupsNewRouteImport
       parentRoute: typeof AuthenticatedStartupsRoute
     }
     '/_authenticated/startups/$id': {
@@ -1364,96 +1252,124 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartupsIdRouteImport
       parentRoute: typeof AuthenticatedStartupsRoute
     }
-    '/_authenticated/startups/new': {
-      id: '/_authenticated/startups/new'
+    '/_authenticated/shared-deals/$id': {
+      id: '/_authenticated/shared-deals/$id'
+      path: '/$id'
+      fullPath: '/shared-deals/$id'
+      preLoaderRoute: typeof AuthenticatedSharedDealsIdRouteImport
+      parentRoute: typeof AuthenticatedSharedDealsRoute
+    }
+    '/_authenticated/settings/default-intake': {
+      id: '/_authenticated/settings/default-intake'
+      path: '/settings/default-intake'
+      fullPath: '/settings/default-intake'
+      preLoaderRoute: typeof AuthenticatedSettingsDefaultIntakeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-startups/new': {
+      id: '/_authenticated/my-startups/new'
+      path: '/my-startups/new'
+      fullPath: '/my-startups/new'
+      preLoaderRoute: typeof AuthenticatedMyStartupsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-startups/$id': {
+      id: '/_authenticated/my-startups/$id'
+      path: '/my-startups/$id'
+      fullPath: '/my-startups/$id'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/marketplace/pipeline': {
+      id: '/_authenticated/marketplace/pipeline'
+      path: '/pipeline'
+      fullPath: '/marketplace/pipeline'
+      preLoaderRoute: typeof AuthenticatedMarketplacePipelineRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/marketplace/my-contact': {
+      id: '/_authenticated/marketplace/my-contact'
+      path: '/my-contact'
+      fullPath: '/marketplace/my-contact'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMyContactRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/marketplace/my-company': {
+      id: '/_authenticated/marketplace/my-company'
+      path: '/my-company'
+      fullPath: '/marketplace/my-company'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMyCompanyRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/marketplace/messages': {
+      id: '/_authenticated/marketplace/messages'
+      path: '/messages'
+      fullPath: '/marketplace/messages'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMessagesRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/marketplace/favourites': {
+      id: '/_authenticated/marketplace/favourites'
+      path: '/favourites'
+      fullPath: '/marketplace/favourites'
+      preLoaderRoute: typeof AuthenticatedMarketplaceFavouritesRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/marketplace/browse': {
+      id: '/_authenticated/marketplace/browse'
+      path: '/browse'
+      fullPath: '/marketplace/browse'
+      preLoaderRoute: typeof AuthenticatedMarketplaceBrowseRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/investors/new': {
+      id: '/_authenticated/investors/new'
       path: '/new'
-      fullPath: '/startups/new'
-      preLoaderRoute: typeof AuthenticatedStartupsNewRouteImport
-      parentRoute: typeof AuthenticatedStartupsRoute
+      fullPath: '/investors/new'
+      preLoaderRoute: typeof AuthenticatedInvestorsNewRouteImport
+      parentRoute: typeof AuthenticatedInvestorsRoute
     }
-    '/_authenticated/approvals/buyers/$id': {
-      id: '/_authenticated/approvals/buyers/$id'
-      path: '/approvals/buyers/$id'
-      fullPath: '/approvals/buyers/$id'
-      preLoaderRoute: typeof AuthenticatedApprovalsBuyersIdRouteImport
+    '/_authenticated/investors/$id': {
+      id: '/_authenticated/investors/$id'
+      path: '/$id'
+      fullPath: '/investors/$id'
+      preLoaderRoute: typeof AuthenticatedInvestorsIdRouteImport
+      parentRoute: typeof AuthenticatedInvestorsRoute
+    }
+    '/_authenticated/global-startups/browse': {
+      id: '/_authenticated/global-startups/browse'
+      path: '/global-startups/browse'
+      fullPath: '/global-startups/browse'
+      preLoaderRoute: typeof AuthenticatedGlobalStartupsBrowseRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/approvals/listings/$id': {
-      id: '/_authenticated/approvals/listings/$id'
-      path: '/approvals/listings/$id'
-      fullPath: '/approvals/listings/$id'
-      preLoaderRoute: typeof AuthenticatedApprovalsListingsIdRouteImport
+    '/_authenticated/global-startups/$id': {
+      id: '/_authenticated/global-startups/$id'
+      path: '/global-startups/$id'
+      fullPath: '/global-startups/$id'
+      preLoaderRoute: typeof AuthenticatedGlobalStartupsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/deals/$id/': {
-      id: '/_authenticated/deals/$id/'
-      path: '/'
-      fullPath: '/deals/$id/'
-      preLoaderRoute: typeof AuthenticatedDealsIdIndexRouteImport
-      parentRoute: typeof AuthenticatedDealsIdRoute
+    '/_authenticated/deals/new': {
+      id: '/_authenticated/deals/new'
+      path: '/new'
+      fullPath: '/deals/new'
+      preLoaderRoute: typeof AuthenticatedDealsNewRouteImport
+      parentRoute: typeof AuthenticatedDealsRoute
     }
-    '/_authenticated/investors/$id/': {
-      id: '/_authenticated/investors/$id/'
-      path: '/'
-      fullPath: '/investors/$id/'
-      preLoaderRoute: typeof AuthenticatedInvestorsIdIndexRouteImport
-      parentRoute: typeof AuthenticatedInvestorsIdRoute
+    '/_authenticated/deals/$id': {
+      id: '/_authenticated/deals/$id'
+      path: '/$id'
+      fullPath: '/deals/$id'
+      preLoaderRoute: typeof AuthenticatedDealsIdRouteImport
+      parentRoute: typeof AuthenticatedDealsRoute
     }
-    '/_authenticated/investors/$id/edit': {
-      id: '/_authenticated/investors/$id/edit'
-      path: '/edit'
-      fullPath: '/investors/$id/edit'
-      preLoaderRoute: typeof AuthenticatedInvestorsIdEditRouteImport
-      parentRoute: typeof AuthenticatedInvestorsIdRoute
-    }
-    '/_authenticated/investors/$id/portfolio': {
-      id: '/_authenticated/investors/$id/portfolio'
-      path: '/portfolio'
-      fullPath: '/investors/$id/portfolio'
-      preLoaderRoute: typeof AuthenticatedInvestorsIdPortfolioRouteImport
-      parentRoute: typeof AuthenticatedInvestorsIdRoute
-    }
-    '/_authenticated/marketplace/my-company/': {
-      id: '/_authenticated/marketplace/my-company/'
-      path: '/'
-      fullPath: '/marketplace/my-company/'
-      preLoaderRoute: typeof AuthenticatedMarketplaceMyCompanyIndexRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceMyCompanyRoute
-    }
-    '/_authenticated/marketplace/my-company/edit': {
-      id: '/_authenticated/marketplace/my-company/edit'
-      path: '/edit'
-      fullPath: '/marketplace/my-company/edit'
-      preLoaderRoute: typeof AuthenticatedMarketplaceMyCompanyEditRouteImport
-      parentRoute: typeof AuthenticatedMarketplaceMyCompanyRoute
-    }
-    '/_authenticated/my-startups/$id/': {
-      id: '/_authenticated/my-startups/$id/'
-      path: '/'
-      fullPath: '/my-startups/$id/'
-      preLoaderRoute: typeof AuthenticatedMyStartupsIdIndexRouteImport
-      parentRoute: typeof AuthenticatedMyStartupsIdRoute
-    }
-    '/_authenticated/my-startups/$id/cover': {
-      id: '/_authenticated/my-startups/$id/cover'
-      path: '/cover'
-      fullPath: '/my-startups/$id/cover'
-      preLoaderRoute: typeof AuthenticatedMyStartupsIdCoverRouteImport
-      parentRoute: typeof AuthenticatedMyStartupsIdRoute
-    }
-    '/_authenticated/my-startups/$id/edit': {
-      id: '/_authenticated/my-startups/$id/edit'
-      path: '/edit'
-      fullPath: '/my-startups/$id/edit'
-      preLoaderRoute: typeof AuthenticatedMyStartupsIdEditRouteImport
-      parentRoute: typeof AuthenticatedMyStartupsIdRoute
-    }
-    '/_authenticated/my-startups/$id/financials': {
-      id: '/_authenticated/my-startups/$id/financials'
-      path: '/financials'
-      fullPath: '/my-startups/$id/financials'
-      preLoaderRoute: typeof AuthenticatedMyStartupsIdFinancialsRouteImport
-      parentRoute: typeof AuthenticatedMyStartupsIdRoute
+    '/_authenticated/contacts/quick-add': {
+      id: '/_authenticated/contacts/quick-add'
+      path: '/quick-add'
+      fullPath: '/contacts/quick-add'
+      preLoaderRoute: typeof AuthenticatedContactsQuickAddRouteImport
+      parentRoute: typeof AuthenticatedContactsRoute
     }
     '/_authenticated/startups/$id/': {
       id: '/_authenticated/startups/$id/'
@@ -1462,18 +1378,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartupsIdIndexRouteImport
       parentRoute: typeof AuthenticatedStartupsIdRoute
     }
-    '/_authenticated/startups/$id/cover': {
-      id: '/_authenticated/startups/$id/cover'
-      path: '/cover'
-      fullPath: '/startups/$id/cover'
-      preLoaderRoute: typeof AuthenticatedStartupsIdCoverRouteImport
-      parentRoute: typeof AuthenticatedStartupsIdRoute
+    '/_authenticated/my-startups/$id/': {
+      id: '/_authenticated/my-startups/$id/'
+      path: '/'
+      fullPath: '/my-startups/$id/'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIdIndexRouteImport
+      parentRoute: typeof AuthenticatedMyStartupsIdRoute
     }
-    '/_authenticated/startups/$id/edit': {
-      id: '/_authenticated/startups/$id/edit'
-      path: '/edit'
-      fullPath: '/startups/$id/edit'
-      preLoaderRoute: typeof AuthenticatedStartupsIdEditRouteImport
+    '/_authenticated/marketplace/my-company/': {
+      id: '/_authenticated/marketplace/my-company/'
+      path: '/'
+      fullPath: '/marketplace/my-company/'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMyCompanyIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceMyCompanyRoute
+    }
+    '/_authenticated/investors/$id/': {
+      id: '/_authenticated/investors/$id/'
+      path: '/'
+      fullPath: '/investors/$id/'
+      preLoaderRoute: typeof AuthenticatedInvestorsIdIndexRouteImport
+      parentRoute: typeof AuthenticatedInvestorsIdRoute
+    }
+    '/_authenticated/deals/$id/': {
+      id: '/_authenticated/deals/$id/'
+      path: '/'
+      fullPath: '/deals/$id/'
+      preLoaderRoute: typeof AuthenticatedDealsIdIndexRouteImport
+      parentRoute: typeof AuthenticatedDealsIdRoute
+    }
+    '/_authenticated/startups/$id/investors': {
+      id: '/_authenticated/startups/$id/investors'
+      path: '/investors'
+      fullPath: '/startups/$id/investors'
+      preLoaderRoute: typeof AuthenticatedStartupsIdInvestorsRouteImport
       parentRoute: typeof AuthenticatedStartupsIdRoute
     }
     '/_authenticated/startups/$id/financials': {
@@ -1483,12 +1420,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartupsIdFinancialsRouteImport
       parentRoute: typeof AuthenticatedStartupsIdRoute
     }
-    '/_authenticated/startups/$id/investors': {
-      id: '/_authenticated/startups/$id/investors'
-      path: '/investors'
-      fullPath: '/startups/$id/investors'
-      preLoaderRoute: typeof AuthenticatedStartupsIdInvestorsRouteImport
+    '/_authenticated/startups/$id/edit': {
+      id: '/_authenticated/startups/$id/edit'
+      path: '/edit'
+      fullPath: '/startups/$id/edit'
+      preLoaderRoute: typeof AuthenticatedStartupsIdEditRouteImport
       parentRoute: typeof AuthenticatedStartupsIdRoute
+    }
+    '/_authenticated/startups/$id/cover': {
+      id: '/_authenticated/startups/$id/cover'
+      path: '/cover'
+      fullPath: '/startups/$id/cover'
+      preLoaderRoute: typeof AuthenticatedStartupsIdCoverRouteImport
+      parentRoute: typeof AuthenticatedStartupsIdRoute
+    }
+    '/_authenticated/my-startups/$id/financials': {
+      id: '/_authenticated/my-startups/$id/financials'
+      path: '/financials'
+      fullPath: '/my-startups/$id/financials'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIdFinancialsRouteImport
+      parentRoute: typeof AuthenticatedMyStartupsIdRoute
+    }
+    '/_authenticated/my-startups/$id/edit': {
+      id: '/_authenticated/my-startups/$id/edit'
+      path: '/edit'
+      fullPath: '/my-startups/$id/edit'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIdEditRouteImport
+      parentRoute: typeof AuthenticatedMyStartupsIdRoute
+    }
+    '/_authenticated/my-startups/$id/cover': {
+      id: '/_authenticated/my-startups/$id/cover'
+      path: '/cover'
+      fullPath: '/my-startups/$id/cover'
+      preLoaderRoute: typeof AuthenticatedMyStartupsIdCoverRouteImport
+      parentRoute: typeof AuthenticatedMyStartupsIdRoute
+    }
+    '/_authenticated/marketplace/my-company/edit': {
+      id: '/_authenticated/marketplace/my-company/edit'
+      path: '/edit'
+      fullPath: '/marketplace/my-company/edit'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMyCompanyEditRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceMyCompanyRoute
+    }
+    '/_authenticated/investors/$id/portfolio': {
+      id: '/_authenticated/investors/$id/portfolio'
+      path: '/portfolio'
+      fullPath: '/investors/$id/portfolio'
+      preLoaderRoute: typeof AuthenticatedInvestorsIdPortfolioRouteImport
+      parentRoute: typeof AuthenticatedInvestorsIdRoute
+    }
+    '/_authenticated/investors/$id/edit': {
+      id: '/_authenticated/investors/$id/edit'
+      path: '/edit'
+      fullPath: '/investors/$id/edit'
+      preLoaderRoute: typeof AuthenticatedInvestorsIdEditRouteImport
+      parentRoute: typeof AuthenticatedInvestorsIdRoute
+    }
+    '/_authenticated/approvals/listings/$id': {
+      id: '/_authenticated/approvals/listings/$id'
+      path: '/approvals/listings/$id'
+      fullPath: '/approvals/listings/$id'
+      preLoaderRoute: typeof AuthenticatedApprovalsListingsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/approvals/buyers/$id': {
+      id: '/_authenticated/approvals/buyers/$id'
+      path: '/approvals/buyers/$id'
+      fullPath: '/approvals/buyers/$id'
+      preLoaderRoute: typeof AuthenticatedApprovalsBuyersIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
