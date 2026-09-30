@@ -189,7 +189,7 @@ function Form({ data }: { data: Data }) {
           <Field label="Investor Classification">
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
-              <SelectContent><SelectItem value="none">— Select —</SelectItem>{INVESTOR_CLASSIFICATIONS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              <SelectContent><SelectItem value="none">— Select —</SelectItem>{Array.from(new Set([...INVESTOR_CLASSIFICATIONS, ...(f.investor_type ? [f.investor_type] : [])])).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
           </Field>
         </div>

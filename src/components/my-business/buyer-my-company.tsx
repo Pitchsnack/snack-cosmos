@@ -310,7 +310,7 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit }: {
     </div>
     {view === "public"
       ? <PublicPanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />
-      : <PrivatePanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />}
+      : <SplitPrivate />}
   </div>;
 }
 
@@ -627,4 +627,9 @@ function EditDialog({ section, p, org, onClose }: { section: Section; p: BuyerPr
       </DialogContent>
     </Dialog>
   );
+}
+
+function SplitPrivate() {
+  const inv = useBuyerInvestor();
+  return inv.data ? <BuyerPrivatePanel d={inv.data} /> : <Skeleton className="h-[520px]" />;
 }
