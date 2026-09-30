@@ -89,7 +89,7 @@ export function dealLine(d?: ListingDeal) {
  * art — photos and logos only appear in the Private view after NDA.
  */
 export function PublicListingCard({
-  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight,
+  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta,
 }: {
   l: PublicListing;
   seller?: boolean;
@@ -101,9 +101,15 @@ export function PublicListingCard({
   selected?: boolean;
   onSelect?: () => void;
   topRight?: React.ReactNode;
+  /** Replaces the top-left "Identity hidden" badge. */
+  badge?: React.ReactNode;
+  /** Unlocked (approved NDA) fields — only ever sent by the server for the buyer's own valid NDAs. */
+  priv?: { name: string; logoPath: string | null; revenueText: string | null; fy: number | null; employees: string | null };
+  wrapMeta?: boolean;
 }) {
   const badgeLabel = seller ? (l.live ? "Live" : l.refNo ? "Draft" : "Preview") : "Identity hidden";
-  const meta = [l.sector, l.subSector, l.location?.replace(/, Thailand$/, ""), l.employees].filter(Boolean).join(" · ");
+  const emp = priv?.employees ? (/employee/i.test(priv.employees) ? priv.employees : `${priv.employees} employees`) : l.employees;
+  const meta = [l.sector, l.subSector, l.location?.replace(/, Thailand$/, ""), emp].filter(Boolean).join(" · ");
   const dl = dealLine(deal);
   const interactive = !!onSelect;
   return (
@@ -121,29 +127,35 @@ export function PublicListingCard({
       )}
       style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
     >
-      <SectorArt art={l.coverArt ?? l.sector} className="h-[112px] w-full shrink-0">
-        <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+      <SectorArt art={l.coverArt ?? l.sector} className="h-[112px] w-full shrink-0" tile={priv ? <PrivLogo name={priv.name} path={priv.logoPath} /> : undefined}>
+        {badge ? <span className="absolute left-2.5 top-2.5">{badge}</span> : <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
           seller ? (l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]") : "bg-background/95 text-foreground")}>
           {!seller && <Lock className="h-3 w-3" />}{badgeLabel}
-        </span>
+        </span>}
         {topRight && <div className="absolute right-2.5 top-2.5">{topRight}</div>}
       </SectorArt>
       <div className="flex flex-1 flex-col p-3.5">
-        <h3 className="line-clamp-2 text-[15px] font-bold leading-[1.3]">{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
+        {priv && <div className="truncate text-[16px] font-bold text-[#111827]" title={priv.name}>{priv.name}</div>}
+        <h3 className={priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]"}>{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1">
           {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>Verified company</Badge>}
           {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>Verified financials</Badge>
             : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>Verified financials · optional</Badge>}
-          <Badge tone="violet" icon={<Lock className="h-3 w-3" />}>Identity after NDA</Badge>
+          {!priv && <Badge tone="violet" icon={<Lock className="h-3 w-3" />}>Identity after NDA</Badge>}
         </div>
-        {l.revenueBand && (
+        {priv ? (priv.revenueText && (
+          <div className="mt-2.5 flex items-center gap-2">
+            <span className="text-[13px] text-muted-foreground">Revenue FY{priv.fy != null ? String(priv.fy).slice(-2) : "25"}</span>
+            <span className="text-[14px] font-bold">{priv.revenueText}</span>
+          </div>
+        )) : l.revenueBand && (
           <div className="mt-2.5 flex items-center gap-2">
             <span className="text-[13px] text-muted-foreground">Revenue FY25</span>
             <span className="text-[14px] font-bold">{l.revenueBand}</span>
             <span className="rounded bg-[#EEF0FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#4338CA]">Range</span>
           </div>
         )}
-        {meta && <div className="mt-1.5 truncate text-[12.5px] text-muted-foreground">{meta}</div>}
+        {meta && <div className={cn("mt-1.5 text-[12.5px] text-muted-foreground", !wrapMeta && "truncate")}>{meta}</div>}
         {expanded && (
           <div className="mt-3 space-y-2.5 border-t border-border pt-3">
             {l.description && <p className="text-[13px] text-foreground/80">{l.description}</p>}
@@ -174,4 +186,12 @@ export function PublicListingCard({
       </div>
     </div>
   );
+}
+
+function PrivLogo({ name, path }: { name: string; path: string | null }) {
+  const url = useMediaUrl(path);
+  const ini = name.split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+  return url
+    ? <img src={url} alt="" className="h-full w-full object-contain" />
+    : <span className="text-[15px] font-bold text-foreground">{ini}</span>;
 }
