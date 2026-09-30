@@ -117,7 +117,7 @@ export const requestNda = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ listingId: z.string().uuid(), message: z.string().max(1000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await admin();
-    const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, approval_status").eq("id", data.listingId).maybeSingle();
+    const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, approval_status, live").eq("id", data.listingId).maybeSingle();
     // Approval is the only source of truth for what a buyer may reach.
     if (!isBuyerVisible(hp)) throw new Error("This listing isn't available");
     const { data: bv } = await sb.from("buyer_verifications").select("status").eq("user_id", context.userId).maybeSingle();
