@@ -131,6 +131,7 @@ export function BuyerMyCompany() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
   const { view: layout, persist: setLayout } = usePersistentView("sp2-buyer-my-company-view");
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
@@ -154,7 +155,7 @@ export function BuyerMyCompany() {
         </div>
         <div className="flex items-center gap-2">
           <ViewToggle value={layout} onChange={setLayout} />
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => { setSelected(true); setView("private"); setEdit("company"); }}>
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setNewOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> New investor
           </Button>
         </div>
@@ -171,7 +172,7 @@ export function BuyerMyCompany() {
       {!matches ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No investors match your search.</div>
       ) : layout === "split" ? (
-        <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
           <BuyerDirectoryItem p={p} org={org} mode="split" selected={selected} onClick={() => setSelected(true)} />
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
             {selected ? profilePanel : <div className="flex min-h-[380px] items-center justify-center text-sm text-muted-foreground">Select an investor to view details.</div>}
@@ -186,6 +187,16 @@ export function BuyerMyCompany() {
       )}
       <Dialog open={panelOpen && layout !== "split"} onOpenChange={setPanelOpen}>
         <DialogContent className="max-h-[85vh] max-w-[760px] overflow-y-auto">{profilePanel}</DialogContent>
+      </Dialog>
+      <Dialog open={newOpen} onOpenChange={setNewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Investor profile</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Your buyer account already has an investor profile. You can update it here; another profile cannot be added to this account.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewOpen(false)}>Cancel</Button>
+            <Button onClick={() => { setNewOpen(false); setSelected(true); setView("private"); setEdit("company"); }}>Edit my profile</Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
       {edit && <EditDialog section={edit} p={p} org={org} onClose={() => setEdit(null)} />}
     </div>
