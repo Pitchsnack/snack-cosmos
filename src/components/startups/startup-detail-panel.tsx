@@ -26,7 +26,6 @@ import {
   BarChart3,
   Clock,
   Plus,
-  Target,
   Hash,
   Info,
   Loader2,

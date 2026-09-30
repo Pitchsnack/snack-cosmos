@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Building2, Pencil, Target } from "lucide-react";
+import { ArrowLeft, Building2, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
