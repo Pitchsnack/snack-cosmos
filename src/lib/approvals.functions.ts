@@ -87,9 +87,9 @@ export const withdrawListing = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ startupId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
-    const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, tenant_id, version, status, code_name").eq("startup_id", data.startupId).maybeSingle();
+    const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, tenant_id, version, live, code_name").eq("startup_id", data.startupId).maybeSingle();
     if (!hp) throw new Error("Not found");
-    const next = hp.status === "live" ? "live_edits_pending" : "draft";
+    const next = hp.live ? "live_edits_pending" : "draft";
     const { error } = await sb.from("hidden_profiles").update({ approval_status: next, updated_by: context.userId }).eq("id", hp.id);
     if (error) throw new Error(error.message);
     await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: context.userId, version: hp.version, action: "withdraw", actor_id: context.userId });
@@ -137,7 +137,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: listings } = await sb
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, cover_art, status, approval_status, version, submitted_at, submitted_by, assignee_id, decided_at, startups!inner(startup_name, sector, last_year_revenue, company_type)")
+      .select("id, startup_id, ref_no, code_name, cover_art, live, approval_status, version, submitted_at, submitted_by, assignee_id, decided_at, startups!inner(startup_name, sector, last_year_revenue, company_type)")
       .in("approval_status", ["in_review", "changes_requested"])
       .order("submitted_at", { ascending: true });
     const { data: buyers } = await sb.from("buyer_verifications").select("*").in("status", ["pending", "more_info"]).order("submitted_at", { ascending: true });
@@ -161,7 +161,9 @@ export const listApprovals = createServerFn({ method: "GET" })
       for (const b of bv ?? []) buyerInfo[b.id] = b;
       Object.assign(names, await userNames(sb, (bv ?? []).map((b: any) => b.user_id)));
     }
-    return { listings: listings ?? [], buyers: buyers ?? [], history: history ?? [], names, emails, me: context.userId, startupInfo, buyerInfo };
+    // "Live · edits pending" is derived from the approved snapshot, never the legacy status column.
+    const listingRows = (listings ?? []).map(({ live, ...l }: any) => ({ ...l, has_live: !!live }));
+    return { listings: listingRows, buyers: buyers ?? [], history: history ?? [], names, emails, me: context.userId, startupInfo, buyerInfo };
   });
 
 async function userNames(sb: any, ids: string[]) {
@@ -265,7 +267,7 @@ export const decideListing = createServerFn({ method: "POST" })
         ...base, approval_status: "live", status: "live", live: pub, live_snapshot: sub?.snapshot ? { ...sub.snapshot, public: pub } : null,
         cover_image_url: cover, directory_category: data.category ?? hp.directory_category ?? null, featured: !!data.featured,
         new_until: data.isNew === false ? null : new Date(Date.now() + 14 * 86_400_000).toISOString(),
-        has_unpublished_changes: false, published_at: hp.status === "live" && hp.published_at ? hp.published_at : now, published_by: context.userId,
+        has_unpublished_changes: false, published_at: hp.live && hp.published_at ? hp.published_at : now, published_by: context.userId,
       };
     } else if (data.action === "request_changes") {
       patch = { ...base, approval_status: "changes_requested" };

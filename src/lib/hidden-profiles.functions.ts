@@ -136,7 +136,7 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
       .update({
         ...draftNoCover,
         highlights: data.draft.highlights,
-        has_unpublished_changes: cur.status === "live",
+        has_unpublished_changes: isBuyerVisible(cur as { approval_status?: string | null }),
         ...approvalPatch,
         updated_by: context.userId,
       })
