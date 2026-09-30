@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Factory, ShoppingCart, Users } from "lucide-react";
@@ -28,9 +28,6 @@ const CARD_CLASS =
 const COMPACT_CARD_CLASS =
   "group relative flex h-[380px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
-/** Grid card with the compact Acquisition section pinned to the bottom. */
-const ACQUISITION_CARD_CLASS =
-  "group relative flex h-[600px] w-full cursor-pointer flex-col rounded-xl border border-border bg-card text-left shadow-card transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
 const HOVER_CARD_STYLE: CSSProperties = {
   borderColor: "var(--accent)",
@@ -69,13 +66,10 @@ export function StartupCard({
   s,
   onClick,
   compact = false,
-  acquisitionSection,
 }: {
   s: StartupListItem;
   onClick?: () => void;
   compact?: boolean;
-  /** Compact Acquisition preview block pinned to the card bottom (My Startups). */
-  acquisitionSection?: ReactNode;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const { isFavorite } = useFavoriteStartups();
@@ -114,25 +108,12 @@ export function StartupCard({
     },
   };
 
-  // Rebalanced (~50/50) spacing applies ONLY to the My Startups vector card,
-  // i.e. when a compact acquisitionSection is supplied. Startup Directory and
-  // other cards keep their original spacing/layout untouched.
-  const isAcquisitionCard = Boolean(acquisitionSection);
-  const headerRowClass = isAcquisitionCard
-    ? "mb-1.5 flex items-start gap-3"
-    : "mb-2 flex items-start gap-3";
-  const descClass = isAcquisitionCard
-    ? "mb-1 line-clamp-3 text-[11px] leading-snug text-foreground/90"
-    : "mb-2 line-clamp-3 text-[11px] leading-relaxed text-foreground/90";
-  const dividerClass = isAcquisitionCard
-    ? "my-1 border-t border-border/40"
-    : "my-2 border-t border-border/40";
-  // For acquisition cards, reserve the top ~50% and clip overflow. For every
-  // other card, `contents` makes the wrapper transparent so layout is
-  // byte-for-byte identical to having no wrapper at all.
-  const startupInfoWrapClass = isAcquisitionCard
-    ? "flex min-h-0 basis-[42%] flex-col overflow-hidden"
-    : "contents";
+  const headerRowClass = "mb-2 flex items-start gap-3";
+  const descClass = "mb-2 line-clamp-3 text-[11px] leading-relaxed text-foreground/90";
+  const dividerClass = "my-2 border-t border-border/40";
+  // `contents` keeps the wrapper transparent so layout is byte-for-byte
+  // identical to having no wrapper at all.
+  const startupInfoWrapClass = "contents";
 
   const inner = (
     <>
@@ -309,17 +290,11 @@ export function StartupCard({
 
         </div>
 
-        {/* BOTTOM ~50% — Compact Acquisition section (My Startups grid cards) */}
-        {acquisitionSection}
       </div>
     </>
   );
 
-  const cardClass = compact
-    ? COMPACT_CARD_CLASS
-    : acquisitionSection
-      ? ACQUISITION_CARD_CLASS
-      : CARD_CLASS;
+  const cardClass = compact ? COMPACT_CARD_CLASS : CARD_CLASS;
 
   return (
     <TooltipProvider disableHoverableContent>

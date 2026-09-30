@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Building2, Pencil, Target } from "lucide-react";
+import { ArrowLeft, Building2, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
@@ -50,11 +50,6 @@ function MyStartupDetailPage() {
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/my-startups/$id/acquisition" params={{ id }}>
-                <Target className="mr-1 h-3.5 w-3.5" /> Acquisition Strategy
-              </Link>
-            </Button>
             {canManage && (
               <Button asChild size="sm" variant="outline">
                 <Link to="/my-startups/$id/edit" params={{ id }}>

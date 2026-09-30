@@ -25,14 +25,6 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { PublicationStatusBadge } from "@/components/startups/publication-actions";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
-import {
-  AcquisitionCardSection,
-  type AcquisitionPanelRequest,
-} from "@/components/acquisition/acquisition-card-section";
-import { AcquisitionCompanyPanel } from "@/components/acquisition/acquisition-company-panel";
-import { AcquisitionRequirementsPanel } from "@/components/acquisition/acquisition-requirements-panel";
-import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
-import { useAcquisitionStrategy } from "@/lib/acquisition/strategy-store";
 import { cn } from "@/lib/utils";
 import { MyBusinessProfiles } from "@/components/my-business/my-business-profiles";
 
@@ -53,10 +45,6 @@ const searchSchema = z.object({
   view: z.enum(VIEW).optional(),
   selected: z.string().optional(),
   panel: z.string().optional(),
-  // Acquisition overlays: startup id, panel type, and entry id.
-  ap: z.string().optional(),
-  apt: z.enum(["target", "competitor", "requirements"]).optional(),
-  apid: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
 });
@@ -106,46 +94,6 @@ function MyStartupsPageInner() {
     setModalId(id);
     navigate({ search: (prev: typeof s) => ({ ...prev, panel: id }), replace: true });
   };
-
-  // Acquisition overlays (target / competitor / requirements panels). They are
-  // temporary views over this page: opening pushes a history entry so the
-  // browser Back button closes the panel, and closing always lands the user on
-  // this same My Startups page with its view and scroll position intact.
-  const acqStartupId = s.ap ?? null;
-  const acqType = s.apt ?? null;
-  const { strategy: acqStrategy } = useAcquisitionStrategy(acqStartupId ?? undefined);
-  const acqTarget =
-    acqStartupId && acqType === "target" && s.apid
-      ? (acqStrategy.targets.find((t) => t.id === s.apid) ?? null)
-      : null;
-  const acqCompetitor =
-    acqStartupId && acqType === "competitor" && s.apid
-      ? (acqStrategy.competitors.find((c) => c.id === s.apid) ?? null)
-      : null;
-
-  const openAcqPanel = (startupId: string, req: AcquisitionPanelRequest) =>
-    navigate({
-      search: (prev: typeof s) => ({
-        ...prev,
-        ap: startupId,
-        apt: req.type,
-        apid: "id" in req ? req.id : undefined,
-      }),
-    });
-  const closeAcqPanel = () =>
-    navigate({
-      search: (prev: typeof s) => ({ ...prev, ap: undefined, apt: undefined, apid: undefined }),
-      replace: true,
-    });
-  const openStrategy = (
-    startupId: string,
-    tab: "overview" | "targets" | "competitors" | "requirements",
-  ) =>
-    navigate({
-      to: "/my-startups/$id/acquisition",
-      params: { id: startupId },
-      search: { tab },
-    });
 
   const pageSize = 100; // fetch enough to filter client-side to mine
 
@@ -332,15 +280,6 @@ function MyStartupsPageInner() {
                 s={it}
                 onClick={() => openStartup(it.id)}
                 compact={favOnly}
-                acquisitionSection={
-                  favOnly ? undefined : (
-                    <AcquisitionCardSection
-                      startupId={it.id}
-                      onOpenPanel={(req) => openAcqPanel(it.id, req)}
-                      onOpenStrategy={(tab) => openStrategy(it.id, tab)}
-                    />
-                  )
-                }
               />
             </div>
           ))}
@@ -425,24 +364,6 @@ function MyStartupsPageInner() {
         </DialogContent>
       </Dialog>
 
-      {/* Acquisition overlays — temporary views that always return here. */}
-      <LinkedStartupPanel
-        startupId={acqTarget?.linkedStartupId ?? null}
-        onClose={closeAcqPanel}
-        backLabel="Back to My Startups"
-      />
-      <AcquisitionCompanyPanel
-        target={acqTarget && !acqTarget.linkedStartupId ? acqTarget : null}
-        competitor={acqCompetitor}
-        onClose={closeAcqPanel}
-      />
-      <AcquisitionRequirementsPanel
-        open={!!acqStartupId && acqType === "requirements"}
-        requirements={acqStrategy.requirements}
-        updatedAt={acqStrategy.updatedAt}
-        onClose={closeAcqPanel}
-        onEdit={acqStartupId ? () => openStrategy(acqStartupId, "requirements") : undefined}
-      />
     </div>
   );
 }
