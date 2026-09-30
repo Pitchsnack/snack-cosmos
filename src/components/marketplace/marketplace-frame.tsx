@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { PipelineCountBadge, MessagesCountBadge } from "@/components/menu-count-badge";
 import { cn } from "@/lib/utils";
@@ -308,7 +308,13 @@ function RailDivider() {
 
 export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
-  const discover: MenuItem[] = [{ to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid }];
+  const discover: MenuItem[] =
+    persona === "buyer"
+      ? [
+          { to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid },
+          { to: "/marketplace/favourites", label: "Favourites", icon: Star },
+        ]
+      : [{ to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid }];
   const workspace: MenuItem[] =
     persona === "seller"
       ? [
