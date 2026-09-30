@@ -78,7 +78,7 @@ export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; on
 
 export function NdaApprovedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[10.5px] font-bold text-[#15803D]">
+    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[10.5px] font-bold text-[#15803D]">
       <LockOpen className="h-3 w-3" />NDA approved
     </span>
   );
@@ -192,7 +192,7 @@ export function ListingDetail({ t, requested, approved, onRequested }: { t: Teas
 
 export function NdaRequestedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2 py-0.5 text-[10.5px] font-bold text-[#B45309]">
+    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2 py-0.5 text-[10.5px] font-bold text-[#B45309]">
       <Clock className="h-3 w-3" />NDA requested
     </span>
   );
