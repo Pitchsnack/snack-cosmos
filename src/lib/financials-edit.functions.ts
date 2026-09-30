@@ -200,6 +200,7 @@ async function persistCompanyInfo(
       retrievedAt: new Date().toISOString(),
       info: {
         legalNameTh: info.legalNameTh,
+        legalNameEn: info.legalNameEn,
         registrationNumber: info.registrationNumber,
         legalEntityTypeTh: info.legalEntityTypeTh,
         legalEntityStatusTh: info.legalEntityStatusTh,

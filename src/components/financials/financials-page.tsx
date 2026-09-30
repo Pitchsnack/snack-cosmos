@@ -98,8 +98,17 @@ function CompanyProfileCard({
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="mb-3 border-b border-[#EFF1F4] pb-2 text-[15.5px] font-bold" style={{ color: NAVY }}>
-            Company Profile
+          {/* Registered names exactly as filed: Thai at title size, English
+              beside it in smaller grey letters, wrapping as a whole. */}
+          <div className="mb-3 flex flex-wrap items-baseline gap-x-[10px] border-b border-[#EFF1F4] pb-2">
+            <span className="text-[15.5px] font-bold" style={{ color: "#151A28" }}>
+              {data.legalNameTh || data.registeredName || data.startupName}
+            </span>
+            {data.legalNameEn ? (
+              <span className="text-[14px] font-medium" style={{ color: "#6A7181" }}>
+                {data.legalNameEn}
+              </span>
+            ) : null}
           </div>
           <div className="grid gap-y-2 gap-x-7 md:[grid-template-columns:1fr_1fr_1.15fr]">
             {rows.map((col, i) => (
@@ -297,7 +306,8 @@ export function StartupFinancialsPage({
             {section === "valuation" ? "Company Valuation" : "Financial Overview"}
           </h1>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
-            Juristic Name : {data.registeredName || data.startupName}
+            Juristic Name :{" "}
+            {data.legalNameEn || data.legalNameTh || data.registeredName || data.startupName}
             {sortedYears.length ? ` · Summary for ${range}` : ""}
           </p>
         </div>

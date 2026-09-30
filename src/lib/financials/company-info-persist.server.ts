@@ -57,6 +57,7 @@ export async function writeCompanyInfoTh(
     startup_id: startupId,
     tenant_id: tenantId,
     legal_name_th: keep(trim(info.legalNameTh), existing?.legal_name_th),
+    legal_name_en: keep(trim(info.legalNameEn), existing?.legal_name_en),
     registration_number: keep(trim(info.registrationNumber), existing?.registration_number),
     legal_entity_type_th: keep(trim(info.legalEntityTypeTh), existing?.legal_entity_type_th),
     legal_entity_status_th: keep(trim(info.legalEntityStatusTh), existing?.legal_entity_status_th),

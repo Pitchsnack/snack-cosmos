@@ -446,6 +446,7 @@ export type Database = {
           id: string
           legal_entity_status_th: string | null
           legal_entity_type_th: string | null
+          legal_name_en: string | null
           legal_name_th: string | null
           manually_edited_at: string | null
           manually_edited_by: string | null
@@ -472,6 +473,7 @@ export type Database = {
           id?: string
           legal_entity_status_th?: string | null
           legal_entity_type_th?: string | null
+          legal_name_en?: string | null
           legal_name_th?: string | null
           manually_edited_at?: string | null
           manually_edited_by?: string | null
@@ -498,6 +500,7 @@ export type Database = {
           id?: string
           legal_entity_status_th?: string | null
           legal_entity_type_th?: string | null
+          legal_name_en?: string | null
           legal_name_th?: string | null
           manually_edited_at?: string | null
           manually_edited_by?: string | null

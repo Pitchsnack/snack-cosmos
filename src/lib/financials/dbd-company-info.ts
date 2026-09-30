@@ -15,6 +15,7 @@ export interface DbdBusinessTh {
 
 export interface DbdCompanyInfoTh {
   legalNameTh: string | null;
+  legalNameEn: string | null;
   registrationNumber: string | null;
   legalEntityTypeTh: string | null;
   legalEntityStatusTh: string | null;
@@ -36,6 +37,7 @@ export interface DbdCompanyInfoTh {
 
 export const EMPTY_COMPANY_INFO_TH: DbdCompanyInfoTh = {
   legalNameTh: null,
+  legalNameEn: null,
   registrationNumber: null,
   legalEntityTypeTh: null,
   legalEntityStatusTh: null,
@@ -190,6 +192,8 @@ function readText(text: string, labels: string[], stops: string[]): string | nul
 }
 
 const KNOWN_LABELS = [
+  "ชื่อนิติบุคคลภาษาอังกฤษ",
+  "ชื่อภาษาอังกฤษ",
   "ชื่อนิติบุคคล",
   "เลขทะเบียนนิติบุคคล",
   "ประเภทนิติบุคคล",
@@ -344,6 +348,20 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
     nullish(text.match(/ชื่อนิติบุคคล\s*:?\s*([^:]{3,160}?)\s*เลขทะเบียนนิติบุคคล/)?.[1] ?? null) ??
     get(["ชื่อนิติบุคคล"]);
 
+  // DBD publishes the English registered name under its own label. Keep it
+  // exactly as registered; anything not Latin-scripted is ignored so the Thai
+  // name is never duplicated into the English slot.
+  const legalNameEn = (() => {
+    const raw =
+      nullish(
+        text.match(/ชื่อนิติบุคคล(?:ภาษาอังกฤษ|\s*\(ภาษาอังกฤษ\))\s*:?\s*([^:]{3,200}?)\s*(?=[ก-๙]{3,}|$)/)?.[1] ??
+          null,
+      ) ?? get(["ชื่อนิติบุคคลภาษาอังกฤษ", "ชื่อภาษาอังกฤษ"]);
+    if (!raw) return null;
+    if (/[ก-๙]/.test(raw)) return null;
+    return /[A-Za-z]{2,}/.test(raw) ? raw : null;
+  })();
+
   const dateRaw = get(["วันที่จดทะเบียนจัดตั้ง", "วันที่จดทะเบียน"]);
   const capitalRaw = get(["ทุนจดทะเบียน"]);
 
@@ -374,6 +392,7 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
 
   return {
     legalNameTh,
+    legalNameEn,
     registrationNumber,
     legalEntityTypeTh: get(["ประเภทนิติบุคคล"]),
     legalEntityStatusTh: get(["สถานะนิติบุคคล"]),

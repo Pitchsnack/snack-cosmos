@@ -46,6 +46,7 @@ export const getCompanyInfoTh = createServerFn({ method: "GET" })
     return {
       exists: true,
       legalNameTh: row.legal_name_th ?? null,
+      legalNameEn: row.legal_name_en ?? null,
       registrationNumber: row.registration_number ?? null,
       legalEntityTypeTh: row.legal_entity_type_th ?? null,
       legalEntityStatusTh: row.legal_entity_status_th ?? null,
@@ -97,6 +98,7 @@ export const saveCompanyInfoTh = createServerFn({ method: "POST" })
         startupId: z.string().uuid(),
         info: z.object({
           legalNameTh: nullableText,
+          legalNameEn: nullableText,
           registrationNumber: z.string().max(20).nullable().optional(),
           legalEntityTypeTh: nullableText,
           legalEntityStatusTh: nullableText,
@@ -143,6 +145,7 @@ export const saveCompanyInfoTh = createServerFn({ method: "POST" })
       tenantId: startup.tenant_id as string,
       info: {
         legalNameTh: data.info.legalNameTh ?? null,
+        legalNameEn: data.info.legalNameEn ?? null,
         registrationNumber: data.info.registrationNumber ?? null,
         legalEntityTypeTh: data.info.legalEntityTypeTh ?? null,
         legalEntityStatusTh: data.info.legalEntityStatusTh ?? null,
