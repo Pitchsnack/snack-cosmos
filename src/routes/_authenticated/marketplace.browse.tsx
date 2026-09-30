@@ -49,6 +49,17 @@ function BrowseRoute() {
 }
 
 
+function useWide() {
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    const m = window.matchMedia("(min-width: 1100px)");
+    const f = () => setWide(m.matches);
+    f(); m.addEventListener("change", f);
+    return () => m.removeEventListener("change", f);
+  }, []);
+  return wide;
+}
+
 function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; directId?: string | null }) {
   const fn = useServerFn(listMarketplaceTeasers);
   const enabled = useHasSession();
