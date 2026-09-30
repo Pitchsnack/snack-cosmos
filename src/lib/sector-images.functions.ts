@@ -63,8 +63,8 @@ export const addSectorImage = createServerFn({ method: "POST" })
     z.object({
       sector: z.string().refine((s) => SECTORS.includes(s), "Unknown sector"),
       fileName: z.string().min(1).max(200),
-      width: z.number().int().min(1600).max(1920),
-      height: z.number().int().min(900).max(1080),
+      width: z.number().int().min(1).max(1920),
+      height: z.number().int().min(1).max(1080),
       mime: z.enum(["image/jpeg", "image/png"]),
       base64: z.string().min(10).max(7_500_000),
     }).refine((d) => d.width > d.height, "Landscape only").parse(d),
