@@ -21,8 +21,6 @@ export function useBuyerInvestor() {
   return useQuery({ queryKey: BUYER_INVESTOR_KEY, queryFn: () => fn(), staleTime: 30_000 });
 }
 
-const na = <span className="font-normal text-[#9CA3AF]">Not added</span>;
-const ticket = (a: string | null, b: string | null) => (a && b ? `${a} – ${b}` : a ? `From ${a}` : b ? `Up to ${b}` : null);
 const initials = (s: string) => s.split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 3).join("").toUpperCase() || "?";
 
 /** Directory list-item DTO from the buyer's own investor record. */
