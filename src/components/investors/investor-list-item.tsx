@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { MapPin, Building2, Coins } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -31,10 +31,13 @@ export function InvestorListItem({
   i,
   selected,
   onSelect,
+  badge,
 }: {
   i: InvestorListItemDTO;
   selected: boolean;
   onSelect: () => void;
+  /** Buyer option: replaces the bookmark with a status badge (the buyer's own profile). */
+  badge?: ReactNode;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -72,9 +75,13 @@ export function InvestorListItem({
         setIsPressed(false);
       }}
     >
-      <FavoriteToggle id={i.id} entity="investors" size="md" className="absolute right-3 top-3" />
+      {badge ? (
+        <span className="absolute right-3 top-3">{badge}</span>
+      ) : (
+        <FavoriteToggle id={i.id} entity="investors" size="md" className="absolute right-3 top-3" />
+      )}
 
-      <div className="flex w-full items-start gap-3 pr-8">
+      <div className={cn("flex w-full items-start gap-3", badge ? "pr-14" : "pr-8")}>
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {i.logo_signed_url ? (
             <img src={i.logo_signed_url} alt="" className="h-full w-full object-contain" />
