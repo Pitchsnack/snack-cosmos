@@ -44,6 +44,9 @@ export type StartupFinancials = {
   startupId: string;
   startupName: string;
   registeredName: string | null;
+  /** Registered names exactly as filed with DBD; null when not on record. */
+  legalNameTh: string | null;
+  legalNameEn: string | null;
   logoUrl: string | null;
   profile: {
     registeredType: string | null;
