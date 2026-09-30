@@ -116,13 +116,28 @@ export interface EntryFacts {
 // Any business type can have a hidden/buyer card; the old startup restriction is retired.
 export const isStartupEntry = (_companyType?: string | null) => false;
 
+/** The only approval states a buyer may ever see. */
+export const BUYER_VISIBLE: ApprovalStatus[] = ["live", "live_edits_pending"];
+
+/**
+ * Approval is the single source of truth for buyer visibility. The legacy
+ * `status` column is derived from it and never read to decide what buyers see.
+ */
+export const isBuyerVisible = (
+  row: { approval_status?: string | null } | null | undefined,
+): boolean => !!row && BUYER_VISIBLE.includes((row.approval_status ?? "draft") as ApprovalStatus);
+
+/** Legacy `status` value for an approval state — written, never read for visibility. */
+export const statusFromApproval = (approval?: string | null): "draft" | "live" =>
+  BUYER_VISIBLE.includes((approval ?? "draft") as ApprovalStatus) ? "live" : "draft";
+
 export function hiddenStatusOf(
-  row: Pick<HiddenProfileRow, "status" | "has_unpublished_changes"> | null | undefined,
+  row: Pick<HiddenProfileRow, "status" | "has_unpublished_changes" | "approval_status"> | null | undefined,
   _companyType?: string | null,
 ): HiddenStatus {
 
   if (!row) return "none";
-  if (row.status === "live") return row.has_unpublished_changes ? "live_edited" : "live";
+  if (isBuyerVisible(row)) return row.approval_status === "live_edits_pending" || row.has_unpublished_changes ? "live_edited" : "live";
   return "draft";
 }
 
