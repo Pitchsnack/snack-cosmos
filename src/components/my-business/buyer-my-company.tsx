@@ -154,7 +154,7 @@ export function BuyerMyCompany() {
         </div>
         <div className="flex items-center gap-2">
           <ViewToggle value={layout} onChange={setLayout} />
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setEdit("company")}>
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => { setSelected(true); setView("private"); setEdit("company"); }}>
             <Plus className="mr-2 h-4 w-4" /> New investor
           </Button>
         </div>
@@ -222,11 +222,11 @@ function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold group-hover:text-accent">{name}</div>
         <div className="mt-1 text-xs font-normal text-muted-foreground">{[org.type, p.country].filter(Boolean).join(" · ") || "Investor"}</div>
-        <StatusChip status={p.status} />
+        <div className="mt-1"><StatusChip status={p.status} /></div>
       </div>
     </div>
     <div className={cn("min-w-0 text-xs font-normal text-foreground/80", mode === "list" ? "hidden flex-1 md:block" : "w-full")}>
-      {p.private_description || p.description || p.headline || "No description yet"}
+      <p className="line-clamp-2">{p.private_description || p.description || p.headline || "No description yet"}</p>
       {p.stages.length > 0 && <div className="mt-2 truncate text-muted-foreground">{p.stages.join(" · ")}</div>}
       {p.sectors.length > 0 && <div className="mt-1 truncate text-muted-foreground">{p.sectors.join(" · ")}</div>}
     </div>
