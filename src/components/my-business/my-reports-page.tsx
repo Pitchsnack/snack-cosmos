@@ -86,7 +86,7 @@ function Switcher({ companies, selected, kind, onPick }: { companies: MyReportCo
   return (
     <div className="relative flex flex-col items-end max-md:w-full max-md:items-stretch">
       <span className="mb-[5px] text-right text-[11px] font-semibold uppercase tracking-[.07em] text-[#9CA3AF]">Company</span>
-      <button ref={btn} type="button" aria-haspopup="listbox" aria-expanded={open} disabled={single && false}
+      <button ref={btn} type="button" aria-haspopup="listbox" aria-expanded={open}
         onClick={() => !single && setOpen(!open)}
         className={`flex h-[46px] min-w-[300px] items-center gap-2.5 rounded-[11px] border bg-white pl-2 pr-3 text-left shadow-[0_1px_2px_rgba(16,24,40,.04)] max-md:w-full ${open ? "border-[#9CA3AF] ring-[3px] ring-[rgba(17,24,39,.06)]" : "border-[#DCDFE5] hover:border-[#C7CBD4]"} ${single ? "cursor-default" : ""}`}>
         <Tile c={selected} index={Math.max(0, selIdx)} />

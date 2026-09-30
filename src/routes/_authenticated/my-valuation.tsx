@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LockedReportPage } from "@/components/my-business/locked-report-page";
+import { z } from "zod";
+import { MyReportsPage } from "@/components/my-business/my-reports-page";
 
 export const Route = createFileRoute("/_authenticated/my-valuation")({
   head: () => ({
@@ -12,5 +13,16 @@ export const Route = createFileRoute("/_authenticated/my-valuation")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <LockedReportPage kind="valuation" />,
+  validateSearch: (s: Record<string, unknown>) => z.object({ company: z.string().optional(), from: z.string().optional() }).parse({
+    company: typeof s.company === "string" ? s.company : undefined,
+    from: typeof s.from === "string" ? s.from : undefined,
+  }),
+  component: Page,
+});
+
+function Page() {
+  const { company, from } = Route.useSearch();
+  return <MyReportsPage kind="valuation" company={company} from={from} />;
+}
+
 });
