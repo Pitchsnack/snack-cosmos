@@ -107,7 +107,6 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         updated_at: inv.updated_at as string,
       },
       people: (p.people ?? []) as { name: string; role: string; email: string; phone: string }[],
-      pof: { path: p.pof_path as string | null, verified_at: p.pof_verified_at as string | null },
       verification: {
         status: (bv?.status ?? "none") as "none" | "pending" | "verified" | "more_info" | "declined",
         note: bv?.decision_note as string | null,
@@ -126,7 +125,6 @@ const Patch = z.object({
   portfolio_extra: arr(50), logo_path: txt(1000),
   media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(1000) })).max(3).optional(),
   people: z.array(z.object({ name: z.string().max(120), role: z.string().max(120).default(""), email: z.string().max(200).default(""), phone: z.string().max(60).default("") })).max(20).optional(),
-  pof_path: txt(1000),
 });
 
 export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
@@ -134,8 +132,8 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
   .inputValidator((d) => Patch.parse(d))
   .handler(async ({ data, context }) => {
     const { sb, investorId } = await ensureLinked(context.userId);
-    const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${investorId}/`) || x.startsWith(`buyer-pof/${context.userId}/`);
-    if (!own(data.logo_path) || !own(data.pof_path) || (data.media ?? []).some((m) => !own(m.image_path))) throw new Error("Invalid file.");
+    const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${investorId}/`);
+    if (!own(data.logo_path) || (data.media ?? []).some((m) => !own(m.image_path))) throw new Error("Invalid file.");
     const n = (v?: string | null) => (v === undefined ? undefined : v || null);
     const inv: Record<string, unknown> = {
       investor_name: data.investor_name, investor_type: n(data.investor_type), year_founded: data.year_founded ?? null,
@@ -164,7 +162,6 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     if (data.preferred_industries) bp.sectors = data.preferred_industries;
     if (data.portfolio_extra) bp.portfolio = data.portfolio_extra.map((name) => ({ name, note: "" }));
     if (data.people) bp.people = data.people.filter((m) => m.name.trim());
-    if (data.pof_path !== undefined) bp.pof_path = data.pof_path || null;
     const { error: e2 } = await sb.from("buyer_profiles").update(bp).eq("user_id", context.userId);
     if (e2) throw new Error(e2.message);
     await sb.from("investor_activity").insert({ investor_id: investorId, tenant_id: (await sb.from("investors").select("tenant_id").eq("id", investorId).single()).data.tenant_id, activity_type: "buyer_profile_updated", activity_details: {}, created_by: context.userId });
@@ -173,12 +170,12 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
 
 export const createMyBuyerUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["logo", "slot-1", "slot-2", "slot-3", "pof"]), ext: z.string().regex(/^[a-z0-9]{2,5}$/i) }).parse(d))
+  .inputValidator((d) => z.object({ kind: z.enum(["logo", "slot-1", "slot-2", "slot-3"]), ext: z.string().regex(/^[a-z0-9]{2,5}$/i) }).parse(d))
   .handler(async ({ data, context }) => {
     const { sb, investorId } = await ensureLinked(context.userId);
     const { data: inv } = await sb.from("investors").select("tenant_id").eq("id", investorId).single();
     const file = `${data.kind}-${Date.now()}.${data.ext.toLowerCase()}`;
-    const path = data.kind === "pof" ? `buyer-pof/${context.userId}/${file}` : `${inv.tenant_id}/${investorId}/${file}`;
+    const path = `${inv.tenant_id}/${investorId}/${file}`;
     const { data: s, error } = await sb.storage.from(BUCKET).createSignedUploadUrl(path);
     if (error) throw new Error(error.message);
     return { path, token: s.token as string };
