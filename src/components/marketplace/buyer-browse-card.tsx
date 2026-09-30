@@ -1,4 +1,4 @@
-import { BadgeCheck, Briefcase, Building2, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, Users, Wallet } from "lucide-react";
+import { BadgeCheck, Briefcase, Building2, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, Users } from "lucide-react";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +57,6 @@ export function BuyerBrowseCard({ b, className, onClick, selected }: { b: Public
         <div className="text-[15px] font-semibold leading-snug text-foreground">{b.headline || b.name || b.codeName}</div>
         <div className="flex flex-wrap gap-1.5">
           {b.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Verified investor</Pill>}
-          {b.proofOfFunds && <Pill tone="ok"><Wallet className="h-3 w-3" />Proof of funds</Pill>}
           {hidden && <Pill tone="amber"><Lock className="h-3 w-3" />Name after NDA</Pill>}
         </div>
         <div className="flex items-center gap-2 text-[13px]">

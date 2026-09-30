@@ -66,13 +66,12 @@ export function typeTone(type: string | null): BuyerTone {
   return { bg: "bg-slate-100 dark:bg-slate-800/60", fg: "text-slate-700 dark:text-slate-300" };
 }
 
-export type BuyerItemKey = "mandate" | "headline" | "pof" | "people" | "company" | "portfolio";
+export type BuyerItemKey = "mandate" | "headline" | "people" | "company" | "portfolio";
 export function buyerCompleteness(p: BuyerProfile | null, org: BuyerOrg | null) {
   const items: { key: BuyerItemKey; label: string; weight: number; required: boolean; done: boolean }[] = [
-    { key: "mandate", label: "Mandate", weight: 30, required: true, done: !!p && (p.ticket_min != null || p.ticket_max != null) && p.sectors.length > 0 && p.stages.length > 0 && p.deal_types.length > 0 },
-    { key: "headline", label: "Public headline", weight: 25, required: true, done: !!p?.headline?.trim() },
-    { key: "pof", label: "Proof of funds", weight: 15, required: false, done: !!p?.pof_verified_at },
-    { key: "people", label: "Decision makers", weight: 10, required: false, done: (p?.people.length ?? 0) > 0 },
+    { key: "mandate", label: "Mandate", weight: 35, required: true, done: !!p && (p.ticket_min != null || p.ticket_max != null) && p.sectors.length > 0 && p.stages.length > 0 && p.deal_types.length > 0 },
+    { key: "headline", label: "Public headline", weight: 30, required: true, done: !!p?.headline?.trim() },
+    { key: "people", label: "Decision makers", weight: 15, required: false, done: (p?.people.length ?? 0) > 0 },
     { key: "company", label: "Company details", weight: 10, required: false, done: !!org?.name && !!p?.address && !!org?.website },
     { key: "portfolio", label: "Portfolio", weight: 10, required: false, done: (p?.portfolio.length ?? 0) > 0 },
   ];

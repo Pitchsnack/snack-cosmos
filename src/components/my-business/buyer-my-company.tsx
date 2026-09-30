@@ -63,7 +63,6 @@ function Line({ label, children }: { label: string; children: React.ReactNode })
 const HELP: Record<BuyerItemKey, { cta: string; link: string; help: string; section: Section; view: View }> = {
   mandate: { cta: "Set your mandate", link: "Set →", help: "Ticket size, sectors, stages and deal types sellers filter on.", section: "mandate", view: "private" },
   headline: { cta: "Write public headline", link: "Write →", help: "One line sellers see on your Browse investors card.", section: "public", view: "public" },
-  pof: { cta: "Add proof of funds", link: "Add →", help: "PitchSnack verifies it; sellers see a Proof of funds badge.", section: "fund", view: "private" },
   people: { cta: "Add decision makers", link: "Add →", help: "Shared with sellers only after they approve your NDA.", section: "people", view: "private" },
   company: { cta: "Complete company details", link: "Add →", help: "Legal name, website and address for the private view.", section: "company", view: "private" },
   portfolio: { cta: "Add portfolio", link: "Add →", help: "Optional list of current holdings.", section: "portfolio", view: "private" },
@@ -439,7 +438,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         ]} />
         <Box title="Fund · shown as ranges" rows={[
           ["Investor type", org.type], ["AUM", aumRange(p.aum_value)],
-          ["Proof of funds", p.pof_verified_at ? "Verified" : null], ["Activity", `${org.ndas} NDA${org.ndas === 1 ? "" : "s"} · ${org.lois} LOI`],
+          ["Activity", `${org.ndas} NDA${org.ndas === 1 ? "" : "s"} · ${org.lois} LOI`],
           ["Verified by PitchSnack", org.verified ? "Yes" : "Pending"],
         ]} />
       </div>
@@ -498,7 +497,6 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
       <Sec title="Fund" onEdit={() => onEdit("fund")}>
         <R label="Assets under management" value={p.aum_exact} /><R label="Ticket size" value={p.ticket_exact} />
         <R label="Track record" value={p.track_record} /><R label="Decision process" value={p.decision_process} />
-        <R label="Proof of funds" value={p.pof_verified_at ? `Verified by PitchSnack · ${monthYear(p.pof_verified_at)}` : null} />
       </Sec>
       <Sec title="Decision makers" onEdit={() => onEdit("people")}>
         {p.people.map((m, i) => (
@@ -585,7 +583,6 @@ function EditDialog({ section, p, org, onClose }: { section: Section; p: BuyerPr
             <F label="Ticket size (exact)"><Input value={f.ticket_exact} onChange={set("ticket_exact")} placeholder="$4M – $12M" /></F>
             <F label="Track record"><Textarea value={f.track_record} onChange={set("track_record")} rows={2} /></F>
             <F label="Decision process"><Textarea value={f.decision_process} onChange={set("decision_process")} rows={2} /></F>
-            <p className="text-[12px] text-muted-foreground">Proof of funds is added by the PitchSnack team after they check your documents.</p>
           </>}
           {section === "mandate" && <>
             <div className="grid grid-cols-2 gap-3">

@@ -142,7 +142,6 @@ function Form({ data }: { data: Data }) {
   const [portfolio, setPortfolio] = useState(inv.portfolio_extra);
   const [media, setMedia] = useState<EntityMediaState>(() => initialMedia(inv));
   const [people, setPeople] = useState(data.people.length ? data.people : []);
-  const [pof, setPof] = useState<string | null>(data.pof.path);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const back = () => navigate({ to: "/marketplace/my-company" });
 
@@ -181,18 +180,6 @@ function Form({ data }: { data: Data }) {
     setCustomIndustry("");
   };
 
-  const pickPof = async (file?: File | null) => {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) return toast.error("File must be under 10 MB.");
-    try {
-      const ext = (file.name.split(".").pop() ?? "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "bin";
-      const { path, token } = await getUrl({ data: { kind: "pof", ext } });
-      const { error } = await supabase.storage.from("startup-media").uploadToSignedUrl(path, token, file, { upsert: true });
-      if (error) throw new Error(error.message);
-      setPof(path);
-    } catch (e) { toast.error((e as Error).message); }
-  };
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!f.investor_name.trim()) return toast.error("Company Name is required.");
@@ -212,7 +199,7 @@ function Form({ data }: { data: Data }) {
         min_ticket_size: t(f.min_ticket_size), max_ticket_size: t(f.max_ticket_size), short_description: t(f.short_description),
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, portfolio_extra: portfolio,
         logo_path: logoPath, media: resolvedMedia,
-        people: people.filter((p) => p.name.trim()), pof_path: pof,
+        people: people.filter((p) => p.name.trim()),
       } });
       await qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
       await qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
@@ -481,17 +468,6 @@ function Form({ data }: { data: Data }) {
               <Button type="button" variant="outline" size="sm" onClick={() => setPeople((o) => [...o, { name: "", role: "", email: "", phone: "" }])}>
                 <Plus className="mr-1 h-4 w-4" />Add decision maker
               </Button>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Proof of funds</Label>
-            <div className="flex items-center gap-3">
-              <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input px-3 text-sm hover:bg-accent">
-                <Upload className="h-4 w-4" />{pof ? "Replace file" : "Upload file"}
-                <input type="file" accept=".pdf,image/*" className="hidden" onChange={(e) => void pickPof(e.target.files?.[0])} />
-              </label>
-              {pof && <span className="truncate text-sm text-muted-foreground">{pof.split("/").pop()}</span>}
-              {pof && <Button type="button" variant="ghost" size="sm" onClick={() => setPof(null)}>Remove</Button>}
             </div>
           </div>
         </div>
