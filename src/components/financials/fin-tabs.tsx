@@ -190,16 +190,32 @@ export function SubTabRow({
   value,
   onChange,
   meta,
+  primary = false,
 }: {
   tabs: SubTab[];
   value: string;
   onChange: (value: string) => void;
   /** Context line, shown on the right. */
   meta?: React.ReactNode;
+  /** Sit where the main tab bar sits, with the same size and font. */
+  primary?: boolean;
 }) {
   return (
-    <div className="mt-2.5 flex flex-wrap items-center gap-3.5 border-y border-[#EAECEF] bg-[#FBFCFE] px-[18px] py-3">
-      <nav role="tablist" className="inline-flex gap-0.5 rounded-[9px] border border-[#DCE3EF] bg-white p-[3px]">
+    <div
+      className={
+        primary
+          ? "flex flex-wrap items-center gap-3.5 px-3"
+          : "mt-2.5 flex flex-wrap items-center gap-3.5 border-y border-[#EAECEF] bg-[#FBFCFE] px-[18px] py-3"
+      }
+    >
+      <nav
+        role="tablist"
+        className={
+          primary
+            ? "inline-flex gap-1 rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[5px]"
+            : "inline-flex gap-0.5 rounded-[9px] border border-[#DCE3EF] bg-white p-[3px]"
+        }
+      >
         {tabs.map((t) => {
           const on = t.value === value;
           return (
@@ -209,13 +225,19 @@ export function SubTabRow({
               role="tab"
               aria-selected={on}
               onClick={() => onChange(t.value)}
-              className={`flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-medium ${
+              className={`flex items-center whitespace-nowrap font-medium ${
+                primary
+                  ? "h-[38px] gap-[7px] rounded-[7px] px-[14px] text-[13px]"
+                  : "h-[30px] gap-1.5 rounded-[6px] px-3 text-[12.5px]"
+              } ${
                 on
-                  ? "bg-accent text-accent-foreground shadow-[inset_0_0_0_1px_var(--accent-dark)]"
-                  : "text-[#5B6576] hover:bg-[#F1F4F9] hover:text-[#0F1B33]"
+                  ? primary
+                    ? "bg-accent text-accent-foreground shadow-[0_1px_2px_rgba(15,23,42,.10)] ring-1 ring-accent-dark"
+                    : "bg-accent text-accent-foreground shadow-[inset_0_0_0_1px_var(--accent-dark)]"
+                  : "text-[#5B6576] hover:bg-[#E6EBF3] hover:text-[#0F1B33]"
               }`}
             >
-              <TabIcon name={t.icon} small />
+              <TabIcon name={t.icon} small={!primary} />
               {t.label}
               {t.dot && (
                 <span

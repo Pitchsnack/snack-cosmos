@@ -504,6 +504,7 @@ export function ValuationTab({
       {/* Summary / Methods / Adjustments */}
       <div>
         <SubTabRow
+          primary
           value={subTab}
           onChange={(v) => setSubTab(v as typeof subTab)}
           tabs={[
