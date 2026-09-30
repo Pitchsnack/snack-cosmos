@@ -222,7 +222,7 @@ export function FolderTab({ active, open, side, icon, title, sub, tone, onClick 
   );
 }
 
-function RowLine({ label, children }: { label: string; children: React.ReactNode }) {
+export function RowLine({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-2 border-t border-border py-1.5 text-[12.5px]">
       <span className="text-muted-foreground">{label}</span>
