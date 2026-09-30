@@ -66,13 +66,10 @@ export function StartupCard({
   s,
   onClick,
   compact = false,
-  acquisitionSection,
 }: {
   s: StartupListItem;
   onClick?: () => void;
   compact?: boolean;
-  /** Compact Acquisition preview block pinned to the card bottom (My Startups). */
-  acquisitionSection?: ReactNode;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const { isFavorite } = useFavoriteStartups();
