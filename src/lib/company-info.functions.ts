@@ -98,6 +98,7 @@ export const saveCompanyInfoTh = createServerFn({ method: "POST" })
         startupId: z.string().uuid(),
         info: z.object({
           legalNameTh: nullableText,
+          legalNameEn: nullableText,
           registrationNumber: z.string().max(20).nullable().optional(),
           legalEntityTypeTh: nullableText,
           legalEntityStatusTh: nullableText,
