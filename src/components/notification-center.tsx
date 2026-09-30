@@ -72,7 +72,8 @@ export function NotificationCenter() {
                       {n.message}
                     </p>
                   )}
-                  <div className="mt-1 text-[10px] text-muted-foreground">
+                  {n.linkUrl && (<a href={n.linkUrl} onClick={() => !n.isRead && markRead(n.id)} className="mt-0.5 text-xs block font-semibold text-[#2563EB]">View it</a>)}
+<div className="mt-1 text-[10px] text-muted-foreground">
                     {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                   </div>
                 </div>

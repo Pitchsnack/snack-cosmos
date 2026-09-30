@@ -10,6 +10,7 @@ export type NotificationDTO = {
   message: string | null;
   isRead: boolean;
   createdAt: string;
+  linkUrl: string | null;
 };
 
 export const listNotifications = createServerFn({ method: "GET" })
@@ -18,7 +19,7 @@ export const listNotifications = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data } = await supabase
       .from("notifications")
-      .select("id, tenant_id, notification_type, title, message, is_read, created_at")
+      .select("id, tenant_id, notification_type, title, message, is_read, created_at, link_url")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -30,6 +31,7 @@ export const listNotifications = createServerFn({ method: "GET" })
       message: (r.message as string | null) ?? null,
       isRead: !!r.is_read,
       createdAt: r.created_at as string,
+      linkUrl: (r.link_url as string | null) ?? null,
     }));
     return { notifications: rows, unread: rows.filter((r) => !r.isRead).length };
   });

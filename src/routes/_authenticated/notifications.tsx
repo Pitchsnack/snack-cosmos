@@ -64,7 +64,8 @@ function NotificationsPage() {
               {n.message && (
                 <p className="mt-1 text-sm text-muted-foreground">{n.message}</p>
               )}
-              <div className="mt-1 text-xs text-muted-foreground">
+              {n.linkUrl && (<a href={n.linkUrl} onClick={() => !n.isRead && markRead(n.id)} className="mt-1 text-sm block font-semibold text-[#2563EB]">View it</a>)}
+<div className="mt-1 text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
               </div>
             </div>
