@@ -79,7 +79,7 @@ export const saveMyReportsPrefs = createServerFn({ method: "POST" })
       const ids = await myCompanyIds(await admin(), context.userId);
       if (!ids.includes(data.lastCompanyId)) throw new Error("Not your company");
     }
-    const patch: Record<string, unknown> = { user_id: context.userId, updated_at: new Date().toISOString() };
+    const patch: { user_id: string; updated_at: string; last_company_id?: string; share_panel_hidden?: boolean } = { user_id: context.userId, updated_at: new Date().toISOString() };
     if (data.lastCompanyId) patch.last_company_id = data.lastCompanyId;
     if (data.sharePanelHidden !== undefined) patch.share_panel_hidden = data.sharePanelHidden;
     const { error } = await context.supabase.from("seller_report_prefs").upsert(patch, { onConflict: "user_id" });
