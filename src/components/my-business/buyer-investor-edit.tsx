@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
+import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
+import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
 import {
   EntityMediaEditor, EMPTY_SLOT, uploadPending,
   type EntityMediaState, type SlotState,
@@ -143,6 +145,35 @@ function Form({ data }: { data: Data }) {
   const [pof, setPof] = useState<string | null>(data.pof.path);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const back = () => navigate({ to: "/marketplace/my-company" });
+
+  /** Auto Enrich merge — back-fills ONLY empty fields, same as Edit investor. */
+  const applyEnrichment = (r: EnrichInvestorResult) => {
+    setF((o) => {
+      const t = (cur: string, next?: string) => (!cur.trim() && next?.trim() ? next.trim() : cur);
+      const country = t(o.country, r.headquarters);
+      return {
+        ...o,
+        investor_name: t(o.investor_name, r.investorName),
+        firm_name: t(o.firm_name, r.firmName),
+        investor_type: t(o.investor_type, r.investorType),
+        email: t(o.email, r.email),
+        business_address: t(o.business_address, r.businessAddress),
+        city: t(o.city, r.city),
+        linkedin_url: t(o.linkedin_url, r.linkedinUrl),
+        short_description: t(o.short_description, r.bio),
+        aum: t(o.aum, r.aum),
+        min_ticket_size: t(o.min_ticket_size, r.minTicketSize),
+        max_ticket_size: t(o.max_ticket_size, r.maxTicketSize),
+        year_founded: !o.year_founded.trim() && r.yearFounded ? String(r.yearFounded) : o.year_founded,
+        country,
+        region: !o.region && country !== o.country ? regionForCountry(country) || o.region : o.region,
+      };
+    });
+    if (keywords.length === 0 && r.keywords?.length) setKeywords(r.keywords.slice(0, 5));
+    if (stages.length === 0 && r.preferredStages?.length) setStages(r.preferredStages);
+    if (industries.length === 0 && r.preferredIndustries?.length) setIndustries(r.preferredIndustries.slice(0, 5));
+    if (focus.length === 0 && r.investmentFocus?.length) setFocus(r.investmentFocus.slice(0, 10));
+  };
 
   const addCustomIndustry = () => {
     const v = customIndustry.trim();
