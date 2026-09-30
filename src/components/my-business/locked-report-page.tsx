@@ -48,9 +48,10 @@ function useMyBusinesses() {
   return useMemo(() => selectMyStartups(raw, meId, roles.includes("STARTUP_USER")), [raw, meId, roles]);
 }
 
-export function LockedReportPage({ kind }: { kind: Kind }) {
+export function LockedReportPage({ kind, companyId, embedded = false, onGoFinancials }: { kind: Kind; companyId?: string; embedded?: boolean; onGoFinancials?: () => void }) {
   const mine = useMyBusinesses();
-  const [picked, setPicked] = useState<string | null>(null);
+  const [pickedState, setPicked] = useState<string | null>(null);
+  const picked = companyId ?? pickedState;
   const [sample, setSample] = useState<Kind | null>(null);
   const [sampleData, setSampleData] = useState<ReturnType<typeof makeSampleReport> | null>(null);
   const company = mine.find((m) => m.id === picked) ?? mine[0];
@@ -87,6 +88,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
   if (company && delivered && hasData) {
     return (
       <div className="font-sans" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+        {!embedded && (
         <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4 md:px-7 md:pt-7">
           <div>
             <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">My Workspace</div>
@@ -98,6 +100,7 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
             <PitchsnackTag />
           </div>
         </div>
+        )}
         <StartupFinancialsPage
           id={company.id}
           workspace="my-startups"
@@ -110,7 +113,8 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
   }
 
   return (
-    <div className="p-4 font-sans md:p-7" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className={embedded ? "font-sans" : "p-4 font-sans md:p-7"} style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      {!embedded && (
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">My Workspace</div>
@@ -122,9 +126,9 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11.5px] font-bold text-amber-800">{order ? `Ordered · due ${dayMonth(order.due_at)}` : "Not ordered"}</span>
         </div>
       </div>
+      )}
 
-
-      <div className="relative mt-4 min-h-[640px]">
+      <div className={embedded ? "relative min-h-[640px]" : "relative mt-4 min-h-[640px]"}>
         <SampleBehind />
         <div className="absolute inset-0 flex items-start justify-center bg-gradient-to-b from-background/20 to-background/90 px-2 pt-14">
           <div className="w-full max-w-[640px] rounded-2xl border border-profile-line bg-card p-7 shadow-2xl">
@@ -160,6 +164,12 @@ export function LockedReportPage({ kind }: { kind: Kind }) {
               </span>
               <Button variant="outline" onClick={() => { setSampleData(makeSampleReport()); setSample(kind); }}>View sample</Button>
             </div>
+            {needsFinancials && (
+              <p className="mt-2.5 text-[12.5px] text-[#6B7280]">
+                {orderFor("financials") ? "You can order it once your verified financial report is ready." : "Order the verified financial report first. The valuation is built from it."}{" "}
+                {onGoFinancials && <button type="button" onClick={onGoFinancials} className="text-[13px] font-semibold text-[#2563EB] hover:underline">Go to Financial report</button>}
+              </p>
+            )}
 
             <p className="mt-3 text-[11.5px] text-muted-foreground">Includes VAT · invoice issued to {name} · refundable if your DBD filings cannot be read</p>
           </div>
