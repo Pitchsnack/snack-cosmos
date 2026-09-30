@@ -3,6 +3,7 @@ import type { StartupListItem } from "@/lib/startups.functions";
 import {
   hiddenStatusOf,
   identityTerms,
+  isBuyerVisible,
   isStartupEntry,
   moneyRange,
   staffRange,
