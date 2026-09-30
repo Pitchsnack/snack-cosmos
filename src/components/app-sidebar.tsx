@@ -43,6 +43,7 @@ import logoWhite from "@/assets/pitchsnack-white.png";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { useIsMarketplace, usePersona, rememberAdminPath } from "@/hooks/use-marketplace";
 import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marketplace/marketplace-frame";
+import { GlobalRouteLoading } from "@/components/ui/global-loading";
 
 type NavPath =
   | "/"
@@ -539,6 +540,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         </Sheet>
         <main className="flex-1 overflow-y-auto p-4">
           <RouteBreadcrumbs className="mb-3" />
+          <GlobalRouteLoading />
           {children}
         </main>
       </div>
@@ -573,6 +575,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="h-full min-w-0 overflow-y-auto overflow-x-hidden">
+        <GlobalRouteLoading />
         <div className="mx-auto max-w-7xl px-8 py-10">
           <WorkspaceHeader />
           <RouteBreadcrumbs className="sticky top-14 z-10 -mx-8 mb-4 border-b border-border/60 bg-background/95 px-8 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70" />
