@@ -55,6 +55,14 @@ function ApprovedBadge() {
   );
 }
 
+function StarredBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-[10.5px] font-bold text-[#374151]">
+      <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />Starred
+    </span>
+  );
+}
+
 function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, toggleSave, wrapMeta }: {
   f: Favourite; selected?: boolean; onSelect?: () => void; expanded?: boolean; onToggleExpand?: () => void;
   savedIds: Set<string>; toggleSave: (id: string) => void; wrapMeta?: boolean;
@@ -69,7 +77,7 @@ function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, to
       expanded={expanded}
       onToggleExpand={onToggleExpand}
       wrapMeta={wrapMeta}
-      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : undefined}
+      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <StarredBadge />}
       priv={p ? { name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees } : undefined}
       topRight={f.status === "saved" ? <SaveButton square saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} /> : undefined}
     />
