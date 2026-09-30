@@ -117,10 +117,12 @@ export type Database = {
           description: string | null
           geography: string | null
           headline: string | null
+          investor_id: string | null
           legal_name: string | null
           live_since: string | null
           logo_url: string | null
           people: Json
+          pof_path: string | null
           pof_verified_at: string | null
           portfolio: Json
           private_description: string | null
@@ -151,10 +153,12 @@ export type Database = {
           description?: string | null
           geography?: string | null
           headline?: string | null
+          investor_id?: string | null
           legal_name?: string | null
           live_since?: string | null
           logo_url?: string | null
           people?: Json
+          pof_path?: string | null
           pof_verified_at?: string | null
           portfolio?: Json
           private_description?: string | null
@@ -185,10 +189,12 @@ export type Database = {
           description?: string | null
           geography?: string | null
           headline?: string | null
+          investor_id?: string | null
           legal_name?: string | null
           live_since?: string | null
           logo_url?: string | null
           people?: Json
+          pof_path?: string | null
           pof_verified_at?: string | null
           portfolio?: Json
           private_description?: string | null
@@ -206,7 +212,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "buyer_profiles_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       buyer_verifications: {
         Row: {
