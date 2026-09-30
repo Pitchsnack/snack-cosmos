@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Check, ChevronDown, EyeOff, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { BadgeCheck, Check, ChevronDown, EyeOff, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import {
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
+import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
+import { usePersistentView } from "@/hooks/use-persistent-view";
 
 type View = "public" | "private";
 type Section = "public" | "company" | "fund" | "people" | "mandate" | "portfolio";
@@ -123,34 +125,116 @@ function BuyerPill({ p, org, onItem }: { p: BuyerProfile; org: BuyerOrg; onItem:
 
 export function BuyerMyCompany() {
   const fetchMe = useServerFn(getMyBuyerProfile);
-  const { data, isLoading, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe() });
+  const { data, isLoading, isFetching, refetch, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe() });
   const [view, setView] = useState<View>("public");
   const [edit, setEdit] = useState<Section | null>(null);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const { view: layout, persist: setLayout } = usePersistentView("sp2-buyer-my-company-view");
 
-  if (isLoading) return <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px] rounded-[14px]" /><Skeleton className="h-[520px] rounded-[14px]" /></div>;
+  if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your investor profile. Please refresh.</p>;
   const { profile: p, org } = data as { profile: BuyerProfile; org: BuyerOrg };
   const onItem = (k: BuyerItemKey) => { setView(HELP[k].view); setEdit(HELP[k].section); };
+  const matches = !search.trim() || [org.name, org.type, p.code_name, p.headline, p.description, p.country, ...p.sectors, ...p.stages]
+    .some((value) => value?.toLowerCase().includes(search.trim().toLowerCase()));
+  const openProfile = () => { setSelected(true); setPanelOpen(true); };
+  const profilePanel = (
+    <BuyerProfilePanel p={p} org={org} view={view} setView={setView} onItem={onItem} onEdit={setEdit} />
+  );
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <div>
-        <div role="tablist" className="relative z-10 h-[58px]">
-          <FolderTab side="left" active={view === "public"} open icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Seller preview" tone="indigo" onClick={() => setView("public")} />
-          <FolderTab side="right" active={view === "private"} open icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" tone="green" onClick={() => setView("private")} />
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Briefcase className="h-3.5 w-3.5" /> My investor profile</div>
+          <h2 className="mt-1 text-2xl font-semibold">Investors</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{matches ? "1 investor" : "No matching investors"}</p>
         </div>
-        <div className="overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card">
-          {view === "public" ? <PublicCard p={p} org={org} /> : <PrivateCard p={p} org={org} />}
+        <div className="flex items-center gap-2">
+          <ViewToggle value={layout} onChange={setLayout} />
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setEdit("company")}>
+            <Plus className="mr-2 h-4 w-4" /> New investor
+          </Button>
         </div>
       </div>
-      <div className="rounded-[14px] border border-border bg-card p-5">
-        {view === "public"
-          ? <PublicPanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={setEdit} />
-          : <PrivatePanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={setEdit} />}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-md bg-muted/60 px-3">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, description, type, country…" className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" />
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching} className="gap-2">
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
+        </Button>
       </div>
+      {!matches ? (
+        <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No investors match your search.</div>
+      ) : layout === "split" ? (
+        <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
+          <BuyerDirectoryItem p={p} org={org} mode="split" selected={selected} onClick={() => setSelected(true)} />
+          <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
+            {selected ? profilePanel : <div className="flex min-h-[380px] items-center justify-center text-sm text-muted-foreground">Select an investor to view details.</div>}
+          </div>
+        </div>
+      ) : layout === "grid" ? (
+        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <BuyerDirectoryItem p={p} org={org} mode="grid" selected={false} onClick={openProfile} />
+        </div>
+      ) : (
+        <BuyerDirectoryItem p={p} org={org} mode="list" selected={false} onClick={openProfile} />
+      )}
+      <Dialog open={panelOpen && layout !== "split"} onOpenChange={setPanelOpen}>
+        <DialogContent className="max-h-[85vh] max-w-[760px] overflow-y-auto">{profilePanel}</DialogContent>
+      </Dialog>
       {edit && <EditDialog section={edit} p={p} org={org} onClose={() => setEdit(null)} />}
     </div>
   );
+}
+
+function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit }: {
+  p: BuyerProfile; org: BuyerOrg; view: View; setView: (v: View) => void;
+  onItem: (k: BuyerItemKey) => void; onEdit: (s: Section) => void;
+}) {
+  return <div className="space-y-5">
+    <div role="tablist" aria-label="Profile visibility" className="flex gap-1 border-b border-border pb-2">
+      <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => setView("public")}><Eye className="mr-2 h-4 w-4" /> Public view</Button>
+      <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => setView("private")}><Lock className="mr-2 h-4 w-4" /> Private view</Button>
+    </div>
+    {view === "public"
+      ? <PublicPanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />
+      : <PrivatePanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />}
+  </div>;
+}
+
+function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
+  p: BuyerProfile; org: BuyerOrg; mode: ViewMode; selected: boolean; onClick: () => void;
+}) {
+  const name = org.name || p.code_name;
+  const initials = name.split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("");
+  const ticket = ticketRange(p.ticket_min, p.ticket_max);
+  return <Button type="button" variant="outline" onClick={onClick}
+    className={cn("group relative flex h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-lg border-border bg-card p-3 text-left shadow-card hover:border-accent hover:bg-card", mode === "grid" ? "min-h-[228px] flex-col" : mode === "split" ? "min-h-[180px] flex-col" : "min-h-[100px] flex-row items-center", selected && "border-accent ring-1 ring-accent/30")}>
+    <div className="flex w-full min-w-0 items-start gap-3">
+      <div className="flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
+        {p.logo_url ? <img src={p.logo_url} alt="" className="h-full w-full object-contain" /> : <span className="text-xs font-semibold text-muted-foreground">{initials}</span>}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold group-hover:text-accent">{name}</div>
+        <div className="mt-1 text-xs font-normal text-muted-foreground">{[org.type, p.country].filter(Boolean).join(" · ") || "Investor"}</div>
+        <StatusChip status={p.status} />
+      </div>
+    </div>
+    <div className={cn("min-w-0 text-xs font-normal text-foreground/80", mode === "list" ? "hidden flex-1 md:block" : "w-full")}>
+      {p.private_description || p.description || p.headline || "No description yet"}
+      {p.stages.length > 0 && <div className="mt-2 truncate text-muted-foreground">{p.stages.join(" · ")}</div>}
+      {p.sectors.length > 0 && <div className="mt-1 truncate text-muted-foreground">{p.sectors.join(" · ")}</div>}
+    </div>
+    <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "ml-auto shrink-0" : "mt-auto w-full justify-between")}>
+      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {p.city || p.country || "—"}</>}</span>
+      <ArrowRight className="h-3.5 w-3.5 text-accent" />
+    </div>
+  </Button>;
 }
 
 function PublicCard({ p, org }: { p: BuyerProfile; org: BuyerOrg }) {
