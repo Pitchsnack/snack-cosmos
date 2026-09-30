@@ -309,58 +309,13 @@ export function HiddenProfileEditor({
       </div>
 
       <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border bg-background/95 px-5 py-3 backdrop-blur">
-        {isLive && liveChanged && <span className="w-full text-xs text-muted-foreground">Your changes aren't published yet. Buyers still see the published version.</span>}
-        {!isLive ? (
-          <>
-            <Button variant="outline" disabled={busy || !dirty} onClick={() => a.save.mutate(payload)}>Save </Button>
-            <Button disabled={busy || !canPublish} onClick={() => setConfirm("publish")} className="ml-auto bg-accent text-accent-foreground hover:bg-accent/90">Publish to Marketplace</Button>
-          </>
-        ) : liveChanged ? (
-          <>
-            {dirty && <Button variant="outline" disabled={busy} onClick={() => a.save.mutate(payload)}>Save</Button>}
-            <Button variant="ghost" disabled={busy} onClick={() => a.discard.mutate({ startupId: row.startup_id })}>Discard changes</Button>
-            <Button disabled={busy || !canPublish} onClick={() => setConfirm("publish")} className="ml-auto bg-accent text-accent-foreground hover:bg-accent/90">Publish changes</Button>
-          </>
-        ) : (
-          <>
-            <Button variant="outline" disabled={busy} onClick={() => setConfirm("unpublish")}>Unpublish</Button>
-            <Button variant="outline" asChild className="ml-auto"><Link to="/marketplace/browse" search={{ company: row.id }}>View in Marketplace</Link></Button>
-          </>
+        {isLive && liveChanged && <span className="w-full text-xs text-muted-foreground">Your changes aren't approved yet. Buyers still see the approved version.</span>}
+        <span className="text-xs text-muted-foreground">Saving keeps this a draft. Submit it for approval to reach buyers.</span>
+        <Button variant="outline" disabled={busy || !dirty} onClick={() => a.save.mutate(payload)} className="ml-auto">Save</Button>
+        {isLive && (
+          <Button variant="outline" asChild><Link to="/marketplace/browse" search={{ company: row.id }}>View in Marketplace</Link></Button>
         )}
       </div>
-
-      <AlertDialog open={confirm === "publish"} onOpenChange={(o) => !o && setConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Publish {d.code_name} to SME Takeover?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2 text-sm">
-                <p><strong>Buyers see:</strong> code name, sector image, region, headline, description, highlights, customers described, deal terms, and revenue and staff as ranges.</p>
-                <p><strong>Hidden until the NDA:</strong> company name, logo, photos, website, email, LinkedIn, address, people's names, exact figures and the data room.</p>
-                <p><strong>NDA requests approved by:</strong> {d.nda_approver === "seller" ? "the seller" : "Admin, for the seller"}.</p>
-                <p className={canPublish ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>Identity check: {canPublish ? "Passed" : "Not passed"}</p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={!canPublish} onClick={() => a.publish.mutate(payload)} className="bg-accent text-accent-foreground hover:bg-accent/90">Publish</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={confirm === "unpublish"} onOpenChange={(o) => !o && setConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unpublish {row.live?.code_name ?? d.code_name}?</AlertDialogTitle>
-            <AlertDialogDescription>Buyers can no longer find the listing, and it goes back to draft.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => a.unpublish.mutate({ startupId: row.startup_id })}>Unpublish</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
