@@ -306,7 +306,7 @@ export function StartupFinancialsPage({
             </Link>
           </Button>}
           <h1 className="text-[25px] font-bold tracking-[-0.015em]" style={{ color: NAVY }}>
-            {section === "valuation" ? "Company Valuation" : "Financial Overview"}
+            {section === "valuation" ? "Indicative Valuation" : "Financial Overview"}
           </h1>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
             Juristic Name :{" "}
