@@ -12,3 +12,4 @@
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
 - Page loading overlay is opt-in (meta.pageLoading); badges use light count functions.
 - Seller LOI request's starting note lives in config/loi-request.json so its editable default can change without changing dialog behavior.
+- Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
