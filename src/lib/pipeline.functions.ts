@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isBuyerVisible } from "@/lib/hidden-profile";
 
 /**
  * Deal pipeline: one row per buyer × listing. Buyer requests the NDA, seller
