@@ -104,6 +104,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
           : path === "/my-startups/new" ? "Add My Business"
           : path === "/marketplace/my-contact" ? "Contacts"
           : path === "/marketplace/my-company" ? "My Company"
+          : path === "/marketplace/my-company/edit" ? "Edit profile"
           : path === "/marketplace/messages" ? "Messages"
           : path === "/my-financials" ? "My Financials"
           : path === "/my-valuation" ? "Company Valuation"
