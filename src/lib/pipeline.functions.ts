@@ -159,6 +159,19 @@ export const myNdaStatuses = createServerFn({ method: "GET" })
     return out;
   });
 
+/** When the buyer requested each of their NDAs (for the Browse panel note). */
+export const myNdaRequestDates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("deal_pipelines")
+      .select("hidden_profile_id, status, created_at")
+      .eq("buyer_user_id", context.userId);
+    const out: Record<string, string> = {};
+    for (const r of data ?? []) if (r.status !== "withdrawn" && r.status !== "declined") out[r.hidden_profile_id] = r.created_at;
+    return out;
+  });
+
 async function userNames(ids: string[]) {
   if (!ids.length) return {} as Record<string, string>;
   const sb = await admin();

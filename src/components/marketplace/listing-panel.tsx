@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bookmark, Clock, Lock } from "lucide-react";
+import { Clock, Lock, LockOpen, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
@@ -43,7 +43,7 @@ export function useSavedListings() {
     qc.setQueryData<string[]>(["saved-listings"], (prev = []) => (saved ? [...prev, id] : prev.filter((x) => x !== id)));
     try {
       await toggleFn({ data: { id, saved } });
-      toast.success(saved ? "Saved to Favourites." : "Removed from Favourites.");
+      toast.success(saved ? "Added to Favourites." : "Removed from Favourites.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -53,25 +53,34 @@ export function useSavedListings() {
   return { ids, toggle };
 }
 
-/** Save + Request NDA — the only actions a buyer has on a listing. */
-export function SaveButton({ saved, onClick, square }: { saved: boolean; onClick: () => void; square?: boolean }) {
-  const tip = saved ? "Remove from Favourites" : "Save to Favourites";
+/** Star = Add to Favourites. With an NDA the star is filled and fixed. */
+export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; onClick: () => void; square?: boolean; nda?: boolean }) {
+  const on = saved || !!nda;
+  const tip = nda ? "In Favourites because of your NDA" : saved ? "Remove from Favourites" : "Add to Favourites";
+  const star = <Star className={cn("h-4 w-4", on ? "fill-[#F59E0B] text-[#D97706]" : "text-[#4B5563]")} />;
+  if (square) {
+    const cls = cn("inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border bg-white", on ? "border-[#FDE68A]" : "border-[#E5E7EB]");
+    if (nda) return <span className={cls} title={tip} aria-label={tip} onClick={(e) => e.stopPropagation()}>{star}</span>;
+    return (
+      <button type="button" aria-label={tip} aria-pressed={saved} title={tip} className={cls}
+        onClick={(e) => { e.stopPropagation(); onClick(); }}>{star}</button>
+    );
+  }
   return (
-    <button
-      type="button"
-      aria-label={tip}
-      aria-pressed={saved}
-      title={tip}
+    <button type="button" aria-pressed={saved} title={tip}
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={cn(
-        "inline-flex items-center justify-center gap-1.5 border text-sm font-medium transition-colors",
-        square ? "h-[30px] w-[30px] rounded-md border-border bg-background" : "h-[34px] rounded-md px-3",
-        !square && (saved ? "border-accent/50 bg-accent/10 text-accent" : "border-border bg-background text-foreground hover:bg-muted"),
-      )}
-    >
-      <Bookmark className={cn("h-4 w-4", saved && "fill-accent text-accent")} />
-      {!square && (saved ? "Saved" : "Save")}
+      className={cn("inline-flex h-[34px] items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors",
+        saved ? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]" : "border-border bg-background text-foreground hover:bg-muted")}>
+      {star}{saved ? "In Favourites" : "Add to Favourites"}
     </button>
+  );
+}
+
+export function NdaApprovedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[10.5px] font-bold text-[#15803D]">
+      <LockOpen className="h-3 w-3" />NDA approved
+    </span>
   );
 }
 
@@ -163,20 +172,20 @@ export function DealTerms({ t }: { t: Teaser }) {
 const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contact"];
 
 /** Right panel body for anonymous listings — public read model only. */
-export function ListingDetail({ t, requested, onRequested }: { t: Teaser; requested?: boolean; onRequested?: (id: string) => void }) {
+export function ListingDetail({ t, requested, approved, onRequested }: { t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string) => void }) {
   const l = t.listing;
   const [more, setMore] = useState(false);
   useEffect(() => setMore(false), [t.id]);
   return (
     <div className="space-y-5">
-      <PublicListingCard l={l} deal={t} badge={requested ? <NdaRequestedBadge /> : undefined} />
+      <PublicListingCard l={l} deal={t} badge={approved ? <NdaApprovedBadge /> : requested ? <NdaRequestedBadge /> : undefined} />
       {l.description && (
         <Section title="Business overview">
           <p className={cn("text-[13.5px] text-foreground/80", !more && "line-clamp-3")}>{l.description}</p>
           <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? "Show less ▴" : "Show more ▾"}</button>
         </Section>
       )}
-      <LowerPanel t={t} requested={requested} onRequested={onRequested} />
+      {approved ? <div className="grid gap-3 sm:grid-cols-2"><DealTerms t={t} /></div> : <LowerPanel t={t} requested={requested} onRequested={onRequested} />}
     </div>
   );
 }
