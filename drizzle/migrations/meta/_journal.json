@@ -232,6 +232,13 @@
       "when": 1790759690486,
       "tag": "0032_company_info_th_legal_name_en",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790762788577,
+      "tag": "0033_report_company_pick_and_notification_link",
+      "breakpoints": true
     }
   ]
 }

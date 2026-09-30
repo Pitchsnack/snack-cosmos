@@ -2578,6 +2578,7 @@ export type Database = {
           created_at: string
           id: string
           is_read: boolean
+          link_url: string | null
           message: string | null
           notification_type: string
           tenant_id: string | null
@@ -2588,6 +2589,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          link_url?: string | null
           message?: string | null
           notification_type: string
           tenant_id?: string | null
@@ -2598,6 +2600,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          link_url?: string | null
           message?: string | null
           notification_type?: string
           tenant_id?: string | null
@@ -4281,6 +4284,7 @@ export type Database = {
           default_landing_page: string
           id: string
           items_per_page: number
+          last_report_company_id: string | null
           sidebar_collapsed: boolean
           tenant_id: string | null
           theme: string
@@ -4292,6 +4296,7 @@ export type Database = {
           default_landing_page?: string
           id?: string
           items_per_page?: number
+          last_report_company_id?: string | null
           sidebar_collapsed?: boolean
           tenant_id?: string | null
           theme?: string
@@ -4303,6 +4308,7 @@ export type Database = {
           default_landing_page?: string
           id?: string
           items_per_page?: number
+          last_report_company_id?: string | null
           sidebar_collapsed?: boolean
           tenant_id?: string | null
           theme?: string
