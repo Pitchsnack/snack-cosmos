@@ -4,6 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
+  BUYER_VISIBLE,
+  isBuyerVisible,
   missingForPublish,
   pickDraft,
   runIdentityCheck,
@@ -222,8 +224,10 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
     const { buildPublicListing } = await import("@/lib/public-listing");
     const { data, error } = await supabaseAdmin
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, published_at, live, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards)")
-      .eq("status", "live");
+      .select("id, startup_id, ref_no, published_at, live, approval_status, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards)")
+      // Approval is the only source of truth, and only the approved snapshot is served.
+      .in("approval_status", BUYER_VISIBLE)
+      .not("live", "is", null);
     if (error) throw new Error(error.message);
     const ids = (data ?? []).map((r) => r.startup_id);
     const { data: fin } = ids.length
