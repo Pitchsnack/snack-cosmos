@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Check, ChevronDown, EyeOff, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { BadgeCheck, Check, ChevronDown, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,14 +10,16 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FolderTab, Group, Intro, Ring, Row } from "@/components/my-business/my-business-profiles";
-import { BuyerBrowseCard, BuyerCover, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { Group, Intro, Ring, Row } from "@/components/my-business/my-business-profiles";
+import { BuyerBrowseCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing } from "@/lib/buyer-profile.functions";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
+import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
+import { usePersistentView } from "@/hooks/use-persistent-view";
 
 type View = "public" | "private";
 type Section = "public" | "company" | "fund" | "people" | "mandate" | "portfolio";
@@ -123,57 +125,127 @@ function BuyerPill({ p, org, onItem }: { p: BuyerProfile; org: BuyerOrg; onItem:
 
 export function BuyerMyCompany() {
   const fetchMe = useServerFn(getMyBuyerProfile);
-  const { data, isLoading, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe() });
+  const { data, isLoading, isFetching, refetch, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe() });
   const [view, setView] = useState<View>("public");
   const [edit, setEdit] = useState<Section | null>(null);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
+  const { view: layout, persist: setLayout } = usePersistentView("sp2-buyer-my-company-view");
 
-  if (isLoading) return <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px] rounded-[14px]" /><Skeleton className="h-[520px] rounded-[14px]" /></div>;
+  if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your investor profile. Please refresh.</p>;
   const { profile: p, org } = data as { profile: BuyerProfile; org: BuyerOrg };
   const onItem = (k: BuyerItemKey) => { setView(HELP[k].view); setEdit(HELP[k].section); };
+  const matches = !search.trim() || [org.name, org.type, p.code_name, p.headline, p.description, p.country, ...p.sectors, ...p.stages]
+    .some((value) => value?.toLowerCase().includes(search.trim().toLowerCase()));
+  const openProfile = () => { setSelected(true); setPanelOpen(true); };
+  const profilePanel = (
+    <BuyerProfilePanel p={p} org={org} view={view} setView={setView} onItem={onItem} onEdit={setEdit} />
+  );
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <div>
-        <div role="tablist" className="relative z-10 h-[58px]">
-          <FolderTab side="left" active={view === "public"} open icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Seller preview" tone="indigo" onClick={() => setView("public")} />
-          <FolderTab side="right" active={view === "private"} open icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" tone="green" onClick={() => setView("private")} />
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Briefcase className="h-3.5 w-3.5" /> My investor profile</div>
+          <h2 className="mt-1 text-2xl font-semibold">Investors</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{matches ? "1 investor" : "No matching investors"}</p>
         </div>
-        <div className="overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card">
-          {view === "public" ? <PublicCard p={p} org={org} /> : <PrivateCard p={p} org={org} />}
+        <div className="flex items-center gap-2">
+          <ViewToggle value={layout} onChange={setLayout} />
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setNewOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> New investor
+          </Button>
         </div>
       </div>
-      <div className="rounded-[14px] border border-border bg-card p-5">
-        {view === "public"
-          ? <PublicPanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={setEdit} />
-          : <PrivatePanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={setEdit} />}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-md bg-muted/60 px-3">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, description, type, country…" className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" />
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching} className="gap-2">
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
+        </Button>
       </div>
+      {!matches ? (
+        <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No investors match your search.</div>
+      ) : layout === "split" ? (
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
+          <BuyerDirectoryItem p={p} org={org} mode="split" selected={selected} onClick={() => setSelected(true)} />
+          <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
+            {selected ? profilePanel : <div className="flex min-h-[380px] items-center justify-center text-sm text-muted-foreground">Select an investor to view details.</div>}
+          </div>
+        </div>
+      ) : layout === "grid" ? (
+        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <BuyerDirectoryItem p={p} org={org} mode="grid" selected={false} onClick={openProfile} />
+        </div>
+      ) : (
+        <BuyerDirectoryItem p={p} org={org} mode="list" selected={false} onClick={openProfile} />
+      )}
+      <Dialog open={panelOpen && layout !== "split"} onOpenChange={setPanelOpen}>
+        <DialogContent className="max-h-[85vh] max-w-[760px] overflow-y-auto">{profilePanel}</DialogContent>
+      </Dialog>
+      <Dialog open={newOpen} onOpenChange={setNewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Investor profile</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Your buyer account already has an investor profile. You can update it here; another profile cannot be added to this account.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewOpen(false)}>Cancel</Button>
+            <Button onClick={() => { setNewOpen(false); setSelected(true); setView("private"); setEdit("company"); }}>Edit my profile</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {edit && <EditDialog section={edit} p={p} org={org} onClose={() => setEdit(null)} />}
     </div>
   );
 }
 
-function PublicCard({ p, org }: { p: BuyerProfile; org: BuyerOrg }) {
-  const title = p.show_name && org.name ? org.name : p.code_name;
-  return (
-    <>
-      <BuyerCover type={org.type} className="h-[120px] w-full">
-        <span className="absolute left-2.5 top-2.5"><StatusChip status={p.status === "live" ? "live" : "draft"} /></span>
-      </BuyerCover>
-      <div className="px-3 pb-3 pt-2.5">
-        <div className="truncate text-[16px] font-bold">{title}</div>
-        <div className="mt-0.5 truncate text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{[p.ref_no, org.type ?? "Investor", p.country].filter(Boolean).join(" · ")}</div>
-        <p className="mb-2 mt-1.5 line-clamp-2 text-[13px] text-muted-foreground">{p.description || p.headline || <em>No description yet</em>}</p>
-        <Line label="Ticket size">{ticketRange(p.ticket_min, p.ticket_max) ?? "Not set"}</Line>
-        <Line label="Browse investors">{p.status === "live" ? <span className="text-emerald-700 dark:text-emerald-400">✓ Live</span> : STATUS_LABEL[p.status]}</Line>
-        <Line label="Identity">
-          {p.show_name
-            ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">Name shown</span>
-            : <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"><EyeOff className="h-3 w-3" />Name hidden</span>}
-        </Line>
+function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit }: {
+  p: BuyerProfile; org: BuyerOrg; view: View; setView: (v: View) => void;
+  onItem: (k: BuyerItemKey) => void; onEdit: (s: Section) => void;
+}) {
+  return <div className="space-y-5">
+    <div role="tablist" aria-label="Profile visibility" className="flex gap-1 border-b border-border pb-2">
+      <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => setView("public")}><Eye className="mr-2 h-4 w-4" /> Public view</Button>
+      <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => setView("private")}><Lock className="mr-2 h-4 w-4" /> Private view</Button>
+    </div>
+    {view === "public"
+      ? <PublicPanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />
+      : <PrivatePanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />}
+  </div>;
+}
+
+function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
+  p: BuyerProfile; org: BuyerOrg; mode: ViewMode; selected: boolean; onClick: () => void;
+}) {
+  const name = org.name || p.code_name;
+  const initials = name.split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("");
+  const ticket = ticketRange(p.ticket_min, p.ticket_max);
+  return <Button type="button" variant="outline" onClick={onClick}
+    className={cn("group relative flex h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-lg border-border bg-card p-3 text-left shadow-card hover:border-accent hover:bg-card", mode === "grid" ? "min-h-[228px] flex-col" : mode === "split" ? "min-h-[180px] flex-col" : "min-h-[100px] flex-row items-center", selected && "border-accent ring-1 ring-accent/30")}>
+    <div className="flex w-full min-w-0 items-start gap-3">
+      <div className="flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
+        {p.logo_url ? <img src={p.logo_url} alt="" className="h-full w-full object-contain" /> : <span className="text-xs font-semibold text-muted-foreground">{initials}</span>}
       </div>
-    </>
-  );
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold group-hover:text-accent">{name}</div>
+        <div className="mt-1 text-xs font-normal text-muted-foreground">{[org.type, p.country].filter(Boolean).join(" · ") || "Investor"}</div>
+        <div className="mt-1"><StatusChip status={p.status} /></div>
+      </div>
+    </div>
+    <div className={cn("min-w-0 text-xs font-normal text-foreground/80", mode === "list" ? "hidden flex-1 md:block" : "w-full")}>
+      <p className="line-clamp-2">{p.private_description || p.description || p.headline || "No description yet"}</p>
+      {p.stages.length > 0 && <div className="mt-2 truncate text-muted-foreground">{p.stages.join(" · ")}</div>}
+      {p.sectors.length > 0 && <div className="mt-1 truncate text-muted-foreground">{p.sectors.join(" · ")}</div>}
+    </div>
+    <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "ml-auto shrink-0" : "mt-auto w-full justify-between")}>
+      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {p.city || p.country || "—"}</>}</span>
+      <ArrowRight className="h-3.5 w-3.5 text-accent" />
+    </div>
+  </Button>;
 }
 
 function Logo({ p, org, size }: { p: BuyerProfile; org: BuyerOrg; size: number }) {
@@ -181,26 +253,6 @@ function Logo({ p, org, size }: { p: BuyerProfile; org: BuyerOrg; size: number }
   return p.logo_url
     ? <img src={p.logo_url} alt="" className="shrink-0 rounded-[12px] border border-border object-cover" style={{ width: size, height: size }} />
     : <div className={cn("grid shrink-0 place-items-center rounded-[12px] text-[16px] font-bold", tone.bg, tone.fg)} style={{ width: size, height: size }}>{(org.name ?? "?").slice(0, 1).toUpperCase()}</div>;
-}
-
-function PrivateCard({ p, org }: { p: BuyerProfile; org: BuyerOrg }) {
-  const { pct } = buyerCompleteness(p, org);
-  return (
-    <div className="p-3">
-      <div className="flex items-start gap-3">
-        <Logo p={p} org={org} size={48} />
-        <div className="min-w-0 flex-1">
-          <div className="line-clamp-2 text-[15px] font-bold leading-snug">{org.name ?? "Your firm"}</div>
-          <div className="truncate text-[12.5px] text-muted-foreground">{[org.type ?? "Investor", p.country].filter(Boolean).join(" · ")}</div>
-        </div>
-        <Ring pct={pct} size={44} done={pct >= 100} />
-      </div>
-      <p className="mb-2 mt-2.5 line-clamp-3 text-[13px] text-muted-foreground">{p.private_description || p.description || <em>No description yet</em>}</p>
-      <Line label="Website">{org.website ? <a href={org.website.startsWith("http") ? org.website : `https://${org.website}`} target="_blank" rel="noreferrer" className="font-medium text-blue-600">{org.website.replace(/^https?:\/\//, "")}</a> : <span className="text-[#9CA3AF]">Not added</span>}</Line>
-      <Line label="Verification">{org.verified ? <span className="text-emerald-700 dark:text-emerald-400">✓ Verified buyer</span> : <span className="text-[#9CA3AF]">Pending</span>}</Line>
-      <Line label="Proof of funds">{p.pof_verified_at ? <span className="text-emerald-700 dark:text-emerald-400">✓ Verified {monthYear(p.pof_verified_at)}</span> : <span className="text-[#9CA3AF]">Not added</span>}</Line>
-    </div>
-  );
 }
 
 function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind: View; thumb: React.ReactNode; title: string; meta: string; editLabel: string; onEdit: () => void; pill: React.ReactNode }) {
