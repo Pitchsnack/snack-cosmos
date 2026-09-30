@@ -68,9 +68,10 @@ export const listContacts = createServerFn({ method: "GET" })
     }
 
     const stIds = [...new Set(rows.map((r) => r.startup_id))];
-    const { data: sts } = stIds.length
-      ? await sb.from("startups").select("id, startup_name, industry, website, country, city").in("id", stIds)
+    const { data: stsRaw } = stIds.length
+      ? await sb.from("startups").select("id, startup_name, industry, website_url, region, city").in("id", stIds)
       : { data: [] };
+    const sts = (stsRaw ?? []).map((s: any) => ({ ...s, website: s.website_url, country: s.region }));
     const stMap = Object.fromEntries((sts ?? []).map((s: any) => [s.id, s]));
     const { data: owners } = stIds.length
       ? await sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds)
@@ -94,7 +95,7 @@ export const listContacts = createServerFn({ method: "GET" })
       const p = profs[pid] ?? {};
       const st = stMap[r.startup_id] ?? {};
       const bv = bvMap[pid] ?? {};
-      const company = data.as === "seller" ? bv.company_name || p.organisation : st.startup_name;
+      const company = p.organisation || (data.as === "seller" ? bv.company_name : st.startup_name);
       contacts.push({
         id: r.id,
         group: "counterparty",
@@ -115,7 +116,7 @@ export const listContacts = createServerFn({ method: "GET" })
 
     const me = users[context.userId];
     const mp = profs[context.userId] ?? {};
-    const myCompany = data.as === "seller" ? (stMap[stIds[0]]?.startup_name ?? mp.organisation) : mp.organisation;
+    const myCompany = mp.organisation || (data.as === "seller" ? stMap[stIds[0]]?.startup_name : null);
     const my: MyCard = {
       name: fullName(me) ?? "Me",
       role: mp.title ?? null,
