@@ -12,5 +12,5 @@
 - Marketplace messages live in marketplace_messages/marketplace_message_reads keyed 'p:<pipeline id>' or 'a:<user id>' (messages.functions.ts); membership is checked server-side via can_read_message_thread and pipeline events are read from deal_pipelines, never copied as messages.
 - Private notes live in private_notes with owner overrides; server-only access hides them from the other party.
 - Keep Business Address on startups through shared StartupForm so seller and Control use one saved field.
-- Buyer investor profile lives in buyer_profiles (buyer-profile.functions.ts, service_role only); sellers only ever receive toPublic() output so private fields never leave the server before NDA.
+- Buyer My Company uses one buyer_profiles row per user with directory-style views; seller reads use toPublic() only, protecting private data until NDA.
 - Seller My Financials/Company Valuation are one tabbed page (my-reports-page.tsx) on two routes with ?company=; last pick and share-panel state live in seller_report_prefs so they follow the user across devices.
