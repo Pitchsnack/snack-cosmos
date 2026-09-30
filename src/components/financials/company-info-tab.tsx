@@ -39,6 +39,7 @@ const C = {
   sage2: "#2F6555",
   sagebg: "#E8F1EE",
   blue: "#2B6F9E",
+  blue2: "#9DC1DA",
   line: "#E3E6EB",
   line2: "#EEF0F3",
   fill: "#F7F8FA",
@@ -347,6 +348,7 @@ export function CompanyInfoTab({
                   title="Net profit"
                   years={years}
                   values={snapshot.netProfit.map((v) => (v === null ? null : v / MILLION))}
+                  barColor={C.blue2}
                 />
               </div>
 
@@ -746,10 +748,12 @@ function BarChart({
   title,
   years,
   values,
+  barColor = C.blue,
 }: {
   title: string;
   years: number[];
   values: (number | null)[];
+  barColor?: string;
 }) {
   const max = Math.max(...values.map((v) => (v === null ? 0 : Math.abs(v))), 1);
   const width = 380;
@@ -773,7 +777,7 @@ function BarChart({
               {v !== null && (
                 <path
                   d={`M${left} 100 V${top + 4} a4 4 0 0 1 4 -4 h${barW - 8} a4 4 0 0 1 4 4 V100 Z`}
-                  fill={C.blue}
+                  fill={barColor}
                 />
               )}
               {(first || lastBar) && v !== null && (
