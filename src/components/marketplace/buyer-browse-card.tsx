@@ -1,4 +1,4 @@
-import { BadgeCheck, Briefcase, Building2, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, Users, Wallet } from "lucide-react";
+import { BadgeCheck, Briefcase, Building2, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, Users } from "lucide-react";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 

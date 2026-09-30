@@ -104,6 +104,10 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         media: media.map((m) => ({ slot: m.slot, image_path: m.image_path, url: sign(m.image_path) })),
         portfolio: Array.from(new Set([...dirStartups, ...extra])),
         portfolio_extra: extra,
+        portfolio_links: [
+          ...(links ?? []).map((l: any) => l.startups).filter(Boolean).map((x: any) => ({ id: x.id as string, name: x.startup_name as string })),
+          ...extra.map((n) => ({ id: `extra:${n}`, name: n })),
+        ],
         updated_at: inv.updated_at as string,
       },
       people: (p.people ?? []) as { name: string; role: string; email: string; phone: string }[],

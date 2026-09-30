@@ -470,17 +470,6 @@ function Form({ data }: { data: Data }) {
               </Button>
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label>Proof of funds</Label>
-            <div className="flex items-center gap-3">
-              <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input px-3 text-sm hover:bg-accent">
-                <Upload className="h-4 w-4" />{pof ? "Replace file" : "Upload file"}
-                <input type="file" accept=".pdf,image/*" className="hidden" onChange={(e) => void pickPof(e.target.files?.[0])} />
-              </label>
-              {pof && <span className="truncate text-sm text-muted-foreground">{pof.split("/").pop()}</span>}
-              {pof && <Button type="button" variant="ghost" size="sm" onClick={() => setPof(null)}>Remove</Button>}
-            </div>
-          </div>
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
