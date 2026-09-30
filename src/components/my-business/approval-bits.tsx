@@ -14,8 +14,9 @@ import type { ApprovalStatus, HiddenProfileRow } from "@/lib/hidden-profile";
 import { cn } from "@/lib/utils";
 import { reportPrice } from "@/components/my-business/report-offers";
 
+// Approval is the only source of truth; the legacy status column is never read.
 export const approvalOf = (row: HiddenProfileRow | null | undefined): ApprovalStatus =>
-  (row?.approval_status as ApprovalStatus) ?? (row?.status === "live" ? "live" : "draft");
+  (row?.approval_status as ApprovalStatus) ?? "draft";
 
 export const APPROVAL_LABEL: Record<ApprovalStatus, string> = {
   draft: "Draft",
