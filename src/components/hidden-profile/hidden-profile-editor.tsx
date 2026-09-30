@@ -15,6 +15,7 @@ import {
   OPEN_TO,
   decadeOf,
   exactMoney,
+  isBuyerVisible,
   missingForPublish,
   moneyRange,
   pickDraft,
@@ -49,7 +50,7 @@ export function HiddenProfileEditor({
   const [d, setD] = useState<HiddenDraft>(() => pickDraft(row));
   useEffect(() => setD(pickDraft(row)), [row.id, row.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
   const a = useHiddenProfileActions();
-  const [confirm, setConfirm] = useState<null | "publish" | "unpublish">(autoPublish ? "publish" : null);
+  void autoPublish; // Publishing moved to Admin approval; the editor only saves.
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
   // The public view may name the region but never the exact city, the registered
   // name or any person — so generated text is guarded by the private facts.
@@ -118,11 +119,10 @@ export function HiddenProfileEditor({
     for (const f of findings) m.set(f.field, [...(m.get(f.field) ?? []), `"${f.term}" (${f.reason.toLowerCase()})`]);
     return m;
   }, [findings]);
-  const canPublish = findings.length === 0 && missing.length === 0;
   const dirty = JSON.stringify(pickDraft(row)) !== JSON.stringify(d);
-  const isLive = row.status === "live";
+  const isLive = isBuyerVisible(row);
   const liveChanged = isLive && (row.has_unpublished_changes || dirty);
-  const busy = a.save.isPending || a.publish.isPending || a.unpublish.isPending || a.discard.isPending;
+  const busy = a.save.isPending;
   const payload = { startupId: row.startup_id, draft: { ...d, highlights: d.highlights.map((h) => h.trim()) } };
   const f = facts ?? ({} as EntryFacts);
 
