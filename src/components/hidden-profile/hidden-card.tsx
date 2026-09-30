@@ -66,7 +66,7 @@ export function HiddenCard({
   }
 
   const status = hiddenStatusOf(row, s.company_type);
-  const showLive = row.status === "live" && row.live;
+  const showLive = isBuyerVisible(row) && !!row.live;
   const d = (showLive ? row.live : row) as HiddenDraft;
   const terms = showLive ? [] : identityTerms(s);
   const industry = s.sector || s.industry?.[0] || "SME";
@@ -88,7 +88,7 @@ export function HiddenCard({
     >
       {variant === "grid" && (
         <SectorArt art={d.cover_art} className="h-[110px] w-full shrink-0">
-          {isNew(row.published_at) && row.status === "live" && (
+          {isNew(row.published_at) && isBuyerVisible(row) && (
             <span className="absolute left-3 top-3"><Chip>New</Chip></span>
           )}
         </SectorArt>
