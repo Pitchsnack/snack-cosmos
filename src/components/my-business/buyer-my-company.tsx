@@ -188,7 +188,7 @@ export function BuyerMyCompany() {
             <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", favOnly ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground")}>0</span>
           </button>
           <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>Profiles</Button>
-          <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={setLayout} />
+          <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={(l) => { setLayout(l); if (l === "split") setView("private"); }} />
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setNewOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Investor Profile
           </Button>
