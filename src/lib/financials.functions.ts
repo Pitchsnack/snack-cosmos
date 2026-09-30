@@ -119,7 +119,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       supabase
         .from("company_info_th")
         .select(
-          "legal_entity_type_th, legal_entity_status_th, registration_date, registration_date_th_raw, registered_capital_thb, registered_capital_th_raw, registration_number, business_size",
+          "legal_name_th, legal_name_en, legal_entity_type_th, legal_entity_status_th, registration_date, registration_date_th_raw, registered_capital_thb, registered_capital_th_raw, registration_number, business_size",
         )
         .eq("startup_id", startupId)
         .maybeSingle(),
@@ -152,6 +152,21 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
       startupId,
       startupName: startup.startup_name,
       registeredName: startup.registered_name ?? null,
+      // The DBD record is authoritative for the registered names. Without one,
+      // the card falls back to the startup's own Registered Name / Company Name.
+      legalNameTh: firstDbd(
+        ci?.legal_name_th as string | null,
+        startup.registered_name as string | null,
+        startup.startup_name as string | null,
+      ),
+      legalNameEn: firstDbd(
+        ci?.legal_name_en as string | null,
+        // A Latin-script Registered Name doubles as the English name only when
+        // the Thai name came from DBD, so the two lines never repeat each other.
+        ci?.legal_name_th && !/[ก-๙]/.test((startup.registered_name as string | null) ?? "ก")
+          ? (startup.registered_name as string | null)
+          : null,
+      ),
       logoUrl: await signLogo(supabase, (s.logo_url as string | null) ?? null),
       profile: {
         // Prefer the DBD Company Info (Thai, authoritative) over the startup's
