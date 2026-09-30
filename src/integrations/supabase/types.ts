@@ -3075,6 +3075,35 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_report_prefs: {
+        Row: {
+          last_company_id: string | null
+          share_panel_hidden: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_company_id?: string | null
+          share_panel_hidden?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_company_id?: string | null
+          share_panel_hidden?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_report_prefs_last_company_id_fkey"
+            columns: ["last_company_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startup_activity: {
         Row: {
           activity_details: Json
