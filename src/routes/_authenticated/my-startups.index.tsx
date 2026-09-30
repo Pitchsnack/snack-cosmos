@@ -25,14 +25,6 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { PublicationStatusBadge } from "@/components/startups/publication-actions";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
-import {
-  AcquisitionCardSection,
-  type AcquisitionPanelRequest,
-} from "@/components/acquisition/acquisition-card-section";
-import { AcquisitionCompanyPanel } from "@/components/acquisition/acquisition-company-panel";
-import { AcquisitionRequirementsPanel } from "@/components/acquisition/acquisition-requirements-panel";
-import { LinkedStartupPanel } from "@/components/acquisition/linked-startup-panel";
-import { useAcquisitionStrategy } from "@/lib/acquisition/strategy-store";
 import { cn } from "@/lib/utils";
 import { MyBusinessProfiles } from "@/components/my-business/my-business-profiles";
 
