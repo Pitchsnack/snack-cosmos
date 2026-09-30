@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { loiParties, requestLoi, sendLoi, type LoiParty, type PipelineRow } from "@/lib/pipeline.functions";
+import loiRequestSettings from "@/config/loi-request.json";
 
 const TH = { fontFamily: "'Noto Sans Thai', 'DM Sans', sans-serif" };
 const GROTESK = { fontFamily: "'Space Grotesk', 'DM Sans', sans-serif" };
@@ -603,7 +604,7 @@ export function RequestLoiDialog({ id, onClose, onSent }: { id: string; onClose:
   const { data } = useQuery({ queryKey: ["pipeline", "loi-parties", id], queryFn: () => fetchParties({ data: { id } }) });
   const plus7 = new Date(Date.now() + 7 * 86_400_000);
   const pad = (n: number) => String(n).padStart(2, "0");
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(() => loiRequestSettings.defaultNoteToBuyer);
   const [price, setPrice] = useState("");
   const [days, setDays] = useState("60");
   const [by, setBy] = useState(`${plus7.getFullYear()}-${pad(plus7.getMonth() + 1)}-${pad(plus7.getDate())}`);
