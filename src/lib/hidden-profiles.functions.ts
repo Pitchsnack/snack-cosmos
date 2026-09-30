@@ -145,6 +145,10 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
     return row as unknown as HiddenProfileRow;
   });
 
+/**
+ * Save-only. Only Admin approval (decideListing) can make a listing live, so
+ * this never touches status, approval_status or the published snapshot.
+ */
 export const publishHiddenProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ startupId: z.string().uuid(), draft: DraftSchema }).parse(d))
@@ -157,19 +161,15 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
     if (findings.length) throw new Error(`Identity check failed: ${findings.length} detail(s) could name the company`);
     const missing = missingForPublish(draft);
     if (missing.length) throw new Error(`Missing: ${missing.join(", ")}`);
-    const { data: cur } = await sb.from("hidden_profiles").select("status, published_at").eq("startup_id", data.startupId).maybeSingle();
-    const firstPublish = !cur || cur.status !== "live";
-    const now = new Date().toISOString();
+    const { data: cur } = await sb.from("hidden_profiles").select("approval_status").eq("startup_id", data.startupId).maybeSingle();
+    const wasLive = isBuyerVisible(cur as { approval_status?: string | null } | null);
     const cleaned = { ...draft, highlights: draft.highlights.filter((h) => h.trim()) };
     const { data: row, error } = await sb
       .from("hidden_profiles")
       .update({
         ...cleaned,
-        status: "live",
-        live: cleaned as never,
-        has_unpublished_changes: false,
-        published_at: firstPublish ? now : cur?.published_at ?? now,
-        published_by: context.userId,
+        has_unpublished_changes: wasLive,
+        ...(wasLive ? { approval_status: "live_edits_pending" } : {}),
         updated_by: context.userId,
       })
       .eq("startup_id", data.startupId)
@@ -185,7 +185,7 @@ export const unpublishHiddenProfile = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("hidden_profiles")
-      .update({ status: "draft", live: null, has_unpublished_changes: false, unpublished_at: new Date().toISOString(), updated_by: context.userId })
+      .update({ approval_status: "unpublished", status: "draft", live: null, has_unpublished_changes: false, unpublished_at: new Date().toISOString(), updated_by: context.userId })
       .eq("startup_id", data.startupId)
       .select(COLS)
       .single();
