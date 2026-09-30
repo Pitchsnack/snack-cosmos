@@ -22,13 +22,14 @@ function useFirstLoadCount() {
     () =>
       cache
         .getAll()
-        .filter((q) => q.state.status === "pending" && q.state.fetchStatus === "fetching" && q.getObserversCount() > 0)
+        // Opt-in: only a page's own main query (meta.pageLoading) counts.
+        .filter((q) => q.meta?.pageLoading === true && q.state.status === "pending" && q.state.fetchStatus === "fetching" && q.getObserversCount() > 0)
         .length,
     () => 0,
   );
 }
 
-export function GlobalRouteLoading({ delay = 180 }: { delay?: number }) {
+export function GlobalRouteLoading({ delay = 300 }: { delay?: number }) {
   const routerLoading = useRouterState({ select: (s) => s.status === "pending" || s.isLoading });
   const firstLoads = useFirstLoadCount();
   const busy = routerLoading || firstLoads > 0;

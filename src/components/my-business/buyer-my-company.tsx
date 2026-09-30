@@ -125,11 +125,11 @@ function BuyerPill({ p, org, onItem }: { p: BuyerProfile; org: BuyerOrg; onItem:
 
 export function BuyerMyCompany() {
   const fetchMe = useServerFn(getMyBuyerProfile);
-  const { data, isLoading, isFetching, refetch, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe() });
+  const { data, isLoading, isFetching, refetch, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe(), meta: { pageLoading: true } });
   const [view, setView] = useState<View>("public");
   const [edit, setEdit] = useState<Section | null>(null);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState(false);
+  const [selected, setSelected] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const { view: layout, persist: setLayout } = usePersistentView("sp2-buyer-my-company-view");
@@ -170,12 +170,12 @@ export function BuyerMyCompany() {
         </Button>
       </div>
       {!matches ? (
-        <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No investors match your search.</div>
+        <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No companies match your filters</div>
       ) : layout === "split" ? (
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
           <BuyerDirectoryItem p={p} org={org} mode="split" selected={selected} onClick={() => setSelected(true)} />
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
-            {selected ? profilePanel : <div className="flex min-h-[380px] items-center justify-center text-sm text-muted-foreground">Select an investor to view details.</div>}
+            {profilePanel}
           </div>
         </div>
       ) : layout === "grid" ? (
