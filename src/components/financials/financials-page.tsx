@@ -306,7 +306,8 @@ export function StartupFinancialsPage({
             {section === "valuation" ? "Company Valuation" : "Financial Overview"}
           </h1>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
-            Juristic Name : {data.registeredName || data.startupName}
+            Juristic Name :{" "}
+            {data.legalNameEn || data.legalNameTh || data.registeredName || data.startupName}
             {sortedYears.length ? ` · Summary for ${range}` : ""}
           </p>
         </div>
