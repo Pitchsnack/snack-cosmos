@@ -368,23 +368,81 @@ export const askForReport = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export type LoiParty = { nameTh: string | null; nameEn: string | null; regNo: string | null; short: string };
+/** Buyer: registered identity of both parties for the LOI (already visible post-NDA). */
+export const loiParties = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.parse(d))
+  .handler(async ({ data, context }) => {
+    const p = await load(data.id);
+    if (p.buyer_user_id !== context.userId) throw new Error("Not your pipeline");
+    if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
+    const sb = await admin();
+    const [{ data: ci }, { data: st }, { data: hp }, { data: bp }, { data: bv }, { data: up }] = await Promise.all([
+      sb.from("company_info_th").select("legal_name_th, legal_name_en, registration_number").eq("startup_id", p.startup_id).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+      sb.from("startups").select("startup_name, registered_name, registered_number").eq("id", p.startup_id).maybeSingle(),
+      sb.from("hidden_profiles").select("ref_no").eq("id", p.hidden_profile_id).maybeSingle(),
+      sb.from("buyer_profiles").select("legal_name, investor_id").eq("user_id", context.userId).maybeSingle(),
+      sb.from("buyer_verifications").select("company_name, registration_no").eq("user_id", context.userId).maybeSingle(),
+      sb.from("user_profiles").select("organisation").eq("user_id", context.userId).maybeSingle(),
+    ]);
+    const { data: inv } = bp?.investor_id
+      ? await sb.from("investors").select("investor_name, legal_name").eq("id", bp.investor_id).maybeSingle()
+      : { data: null };
+    const thai = (s?: string | null) => !!s && /[\u0E00-\u0E7F]/.test(s);
+    const bLegal = inv?.legal_name || bp?.legal_name || bv?.company_name || null;
+    const buyer: LoiParty = {
+      nameTh: thai(bLegal) ? bLegal : null,
+      nameEn: thai(bLegal) ? null : bLegal,
+      regNo: bv?.registration_no ?? null,
+      short: inv?.investor_name || bv?.company_name || up?.organisation || "the buyer",
+    };
+    const sTh = ci?.legal_name_th || (thai(st?.registered_name) ? st?.registered_name : null) || null;
+    const sEn = ci?.legal_name_en || (!thai(st?.registered_name) ? st?.registered_name : null) || null;
+    const seller: LoiParty = {
+      nameTh: sTh,
+      nameEn: sEn || (!sTh ? st?.startup_name ?? null : null),
+      regNo: ci?.registration_number || st?.registered_number || null,
+      short: st?.startup_name || sEn || sTh || "the seller",
+    };
+    return { buyer, seller, listingCode: (hp?.ref_no as string | null) ?? null };
+  });
+
 export const sendLoi = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    Id.extend({ amount: z.number().positive(), exclusivityDays: z.number().int().min(0).max(365), conditions: z.string().max(2000).optional() }).parse(d),
+    Id.extend({
+      amount: z.number().positive(),
+      exclusivityDays: z.number().int().min(0).max(365),
+      conditions: z.string().max(2000).optional(),
+      consent: z.string().min(10).max(2000),
+    }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const p = await load(data.id);
     if (p.buyer_user_id !== context.userId) throw new Error("Not your pipeline");
     if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
+    const now = new Date().toISOString();
     await update(p.id, {
       loi_amount: data.amount,
       loi_exclusivity_days: data.exclusivityDays,
       loi_conditions: data.conditions ?? null,
-      loi_sent_at: new Date().toISOString(),
+      loi_sent_at: now,
       loi_accepted_at: null,
+      loi_changes_requested_at: null,
     });
-    await log(p.id, "loi_sent", context.userId);
+    // Buyer's agreement (who · when · text) is kept on the event log.
+    await log(p.id, "loi_sent", context.userId, `Buyer consent at ${now}: ${data.consent}`);
+    const sb = await admin();
+    const { data: owners } = await sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id);
+    const { data: st } = await sb.from("startups").select("tenant_id").eq("id", p.startup_id).maybeSingle();
+    const ids = [...new Set((owners ?? []).map((o: any) => o.owning_agent_user_id).filter(Boolean))];
+    if (ids.length) {
+      await sb.from("notifications").insert(ids.map((uid) => ({
+        user_id: uid, tenant_id: st?.tenant_id ?? null, notification_type: "approval",
+        title: "New letter of intent", message: "A buyer sent you a letter of intent. Open Pipeline to review it.",
+      })));
+    }
     return { ok: true };
   });
 

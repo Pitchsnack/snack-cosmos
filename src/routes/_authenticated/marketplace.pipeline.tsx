@@ -2,6 +2,7 @@ import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ChevronDown, ChevronRight, Columns3, Lock } from "lucide-react";
 
@@ -496,7 +497,7 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
           </div>
         </div>
       </div>
-      {loiOpen && <LoiDialog id={p.id} onClose={() => setLoiOpen(false)} />}
+      {loiOpen && <SendLoiDialog id={p.id} onClose={() => setLoiOpen(false)} onSent={refresh} />}
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "share" && <ShareAccessDialog p={p} mode={p.share ? "manage" : "share"} onClose={() => setDlg(null)} onDone={refresh} />}
@@ -505,41 +506,6 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
       {dlg === "nda" && <NdaDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "loi" && <LoiDocDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
     </div>
-  );
-}
-
-function LoiDialog({ id, onClose }: { id: string; onClose: () => void }) {
-  const f = useServerFn(sendLoi);
-  const refresh = useRefresh();
-  const [amount, setAmount] = useState("");
-  const [days, setDays] = useState("60");
-  const [cond, setCond] = useState("");
-  const [busy, setBusy] = useState(false);
-  const submit = async () => {
-    const a = Number(amount.replace(/,/g, "")) * 1e6;
-    if (!a) return toast.error("Enter a price");
-    setBusy(true);
-    try { await f({ data: { id, amount: a, exclusivityDays: Number(days) || 0, conditions: cond || undefined } }); toast.success("Letter of intent sent"); refresh(); onClose(); }
-    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-  };
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Send a letter of intent</DialogTitle>
-          <DialogDescription>Non-binding. The seller can accept or decline.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <label className="block text-sm font-medium">Indicative price (฿ million)<Input className="mt-1" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /></label>
-          <label className="block text-sm font-medium">Exclusivity (days)<Input className="mt-1" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} /></label>
-          <label className="block text-sm font-medium">Conditions<Textarea className="mt-1" value={cond} onChange={(e) => setCond(e.target.value)} /></label>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button disabled={busy} onClick={submit}>Send</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
