@@ -106,6 +106,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
           workspace="my-startups"
           readOnly
           section={kind}
+          embedded={embedded}
           {...(kind === "valuation" ? { initialTab: "valuation" } : {})}
         />
       </div>

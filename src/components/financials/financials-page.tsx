@@ -164,7 +164,10 @@ export function StartupFinancialsPage({
   initialTab,
   readOnly = false,
   section,
+  embedded = false,
 }: {
+  /** Inside the seller's tabbed reports page: no Back, page edges. */
+  embedded?: boolean;
   id: string;
   workspace?: "startups" | "my-startups";
   initialTab?: string;
@@ -294,14 +297,14 @@ export function StartupFinancialsPage({
   );
 
   return (
-    <div className="space-y-4 bg-[#F4F6FA] p-6">
-      <div className="flex flex-wrap items-start gap-3">
+    <div className={embedded ? "space-y-4 pt-2" : "space-y-4 bg-[#F4F6FA] p-6"}>
+      <div className={embedded ? "flex flex-wrap items-center gap-3" : "flex flex-wrap items-start gap-3"}>
         <div className="min-w-0">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1 text-muted-foreground">
+          {!embedded && <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1 text-muted-foreground">
             <Link to={backTo} search={{ panel: id } as never}>
               <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back
             </Link>
-          </Button>
+          </Button>}
           <h1 className="text-[25px] font-bold tracking-[-0.015em]" style={{ color: NAVY }}>
             {section === "valuation" ? "Company Valuation" : "Financial Overview"}
           </h1>
