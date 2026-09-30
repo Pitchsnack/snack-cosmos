@@ -46,6 +46,7 @@ export const getCompanyInfoTh = createServerFn({ method: "GET" })
     return {
       exists: true,
       legalNameTh: row.legal_name_th ?? null,
+      legalNameEn: row.legal_name_en ?? null,
       registrationNumber: row.registration_number ?? null,
       legalEntityTypeTh: row.legal_entity_type_th ?? null,
       legalEntityStatusTh: row.legal_entity_status_th ?? null,

@@ -392,6 +392,7 @@ export function parseCompanyInfoTh(html: string): DbdCompanyInfoTh {
 
   return {
     legalNameTh,
+    legalNameEn,
     registrationNumber,
     legalEntityTypeTh: get(["ประเภทนิติบุคคล"]),
     legalEntityStatusTh: get(["สถานะนิติบุคคล"]),
