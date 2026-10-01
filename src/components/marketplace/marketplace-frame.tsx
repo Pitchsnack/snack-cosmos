@@ -403,8 +403,8 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       {it.lock && (isReportOrdered(it.lock) ? <PitchsnackTag /> : <PadlockTile />)}
     </Link>
   );
-  const title = (t: string) => (
-    <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">{t}</div>
+  const title = (text: string) => (
+    <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">{t(text)}</div>
   );
   return (
     <div className="space-y-4">

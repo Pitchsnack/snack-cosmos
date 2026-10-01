@@ -71,4 +71,9 @@ export const TH: Record<string, string> = {
   Search: "ค้นหา",
   Back: "ย้อนกลับ",
   Language: "ภาษา",
+  Discover: "ค้นหาโอกาส",
+  "My Workspace": "พื้นที่ทำงานของฉัน",
+  Tools: "เครื่องมือ",
+  Account: "บัญชีผู้ใช้",
+  "Account & Activity": "บัญชีและความเคลื่อนไหว",
 };
