@@ -299,12 +299,12 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate text-[16px] font-bold">{p.companyName}</span>
-              <span className="inline-flex h-[22px] flex-none items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 text-[11.5px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />NDA approved</span>
+              <span className="inline-flex h-[22px] flex-none items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 text-[11.5px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />{t("NDA approved")}</span>
             </div>
             <div className="truncate text-[12.5px] text-[#6A7181]">{code}</div>
           </div>
         </div>
-        <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">Open full profile</Link></Button>
+        <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">{t("Open full profile")}</Link></Button>
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
         <div className="flex flex-wrap items-start gap-2 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-[14px] py-[11px] text-[13.5px] text-[#166534]">
