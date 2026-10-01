@@ -73,6 +73,7 @@ export const TH: Record<string, string> = {
   Language: "ภาษา",
   Discover: "ค้นหาโอกาส",
   "My Workspace": "พื้นที่ทำงานของฉัน",
+  "My workspace": "พื้นที่ทำงานของฉัน",
   Tools: "เครื่องมือ",
   Account: "บัญชีผู้ใช้",
   "Account & Activity": "บัญชีและความเคลื่อนไหว",
