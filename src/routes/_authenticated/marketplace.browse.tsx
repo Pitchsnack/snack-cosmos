@@ -62,6 +62,7 @@ function useWide() {
 }
 
 function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; directId?: string | null }) {
+  const { t } = useTranslation();
   const fn = useServerFn(listMarketplaceTeasers);
   const enabled = useHasSession();
   const buyer = !ownOnly;
