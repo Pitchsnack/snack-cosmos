@@ -15,6 +15,7 @@ export const TH: Record<string, string> = {
 
   // Marketplace menu
   "Browse listings": "ดูประกาศขาย",
+  "Browse investors": "ดูนักลงทุน",
   Favourites: "รายการโปรด",
   "My Company": "บริษัทของฉัน",
   Pipeline: "ดีลที่ดำเนินอยู่",
