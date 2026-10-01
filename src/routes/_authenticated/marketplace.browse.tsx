@@ -205,7 +205,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
               {current ? (
                 <BrowsePanel t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
               ) : (
-                <p className="py-16 text-center text-sm text-muted-foreground">Select a listing to see the details.</p>
+                <p className="py-16 text-center text-sm text-muted-foreground">{t("Select a listing to see the details.")}</p>
               )}
             </div>
           )}
