@@ -315,28 +315,28 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
         <PublicListingCard l={f.listing} deal={f} wrapMeta badge={<ApprovedBadge />}
           priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
         {p.description && (
-          <Section title="Business overview">
+          <Section title={t("Business overview")}>
             <p className={cn("whitespace-pre-line text-[13.5px] text-foreground/80", !more && "line-clamp-2")}>{p.description}</p>
-            <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? "Show less ▴" : "Show more ▾"}</button>
+            <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? t("Show less ▴") : t("Show more ▾")}</button>
           </Section>
         )}
         <div className="grid gap-3 sm:grid-cols-2">
           <DealTerms t={f} />
           <div className={BOX}>
-            <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Financials · FY{fy(p.fy)}</h4>
+            <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("Financials")} · FY{fy(p.fy)}</h4>
             <KV rows={[
-              [`Revenue FY${fy(p.fy)}`, baht(p.revenue)],
-              [`Net profit FY${fy(p.fy)}`, baht(p.netProfit)],
-              ["Revenue growth", p.growthPct != null && p.fy != null ? `${p.growthPct >= 0 ? "+" : ""}${p.growthPct.toFixed(1)}% vs FY${fy(p.fy - 1)}` : null],
-              ["Verified by", f.listing.hasFinancials ? <span className="text-[#16A34A]">✓ PitchSnack analysts</span> : null],
+              [`${t("Revenue")} FY${fy(p.fy)}`, baht(p.revenue)],
+              [`${t("Net profit")} FY${fy(p.fy)}`, baht(p.netProfit)],
+              [t("Revenue growth"), p.growthPct != null && p.fy != null ? `${p.growthPct >= 0 ? "+" : ""}${p.growthPct.toFixed(1)}% ${t("vs")} FY${fy(p.fy - 1)}` : null],
+              [t("Verified by"), f.listing.hasFinancials ? <span className="text-[#16A34A]">✓ PitchSnack {t("analysts")}</span> : null],
             ]} />
           </div>
         </div>
         <div className={BOX}>
-          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Company</h4>
+          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("Company")}</h4>
           <div className="grid gap-x-6 sm:grid-cols-2">
-            {cell("Legal name", (p.legalNameEn || p.legalNameTh) ? <>{p.legalNameEn ?? p.legalNameTh}{p.legalNameEn && p.legalNameTh && <div className="text-[12px] font-normal text-[#6A7181]" style={{ fontFamily: "'Noto Sans Thai', 'DM Sans', sans-serif" }}>{p.legalNameTh}</div>}</> : null)}
-            {cell("Registration no.", p.regNo)}
+            {cell(t("Legal name"), (p.legalNameEn || p.legalNameTh) ? <>{p.legalNameEn ?? p.legalNameTh}{p.legalNameEn && p.legalNameTh && <div className="text-[12px] font-normal text-[#6A7181]" style={{ fontFamily: "'Noto Sans Thai', 'DM Sans', sans-serif" }}>{p.legalNameTh}</div>}</> : null)}
+            {cell(t("Registration no."), p.regNo)}
             {cell("Website", web ? <a href={web} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1 break-all text-[#2563EB] hover:underline">{p.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}<ExternalLink className="h-3 w-3" /></a> : null)}
             {cell("Location", p.location)}
             {cell("Founded", p.founded)}
