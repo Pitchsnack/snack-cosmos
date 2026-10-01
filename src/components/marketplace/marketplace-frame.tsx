@@ -321,7 +321,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
           { to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid },
           { to: "/marketplace/favourites", label: "Favourites", icon: Star },
         ]
-      : [{ to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid }];
+      : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }];
   const workspace: MenuItem[] =
     persona === "seller"
       ? [

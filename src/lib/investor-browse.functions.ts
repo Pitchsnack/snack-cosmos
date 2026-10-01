@@ -24,24 +24,24 @@ export const listBrowseInvestors = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const sb = supabaseAdmin as any;
 
-    // Same set the caller could already reach, plus investors behind live buyer profiles.
-    const [{ data: visible }, { data: buyers }] = await Promise.all([
-      context.supabase.from("investors").select("id").limit(500),
-      sb.from("buyer_profiles").select("*").eq("status", "live").not("investor_id", "is", null).limit(500),
-    ]);
-    const buyerByInv = new Map<string, any>((buyers ?? []).map((b: any) => [b.investor_id, b]));
-    const ids = Array.from(new Set([...(visible ?? []).map((r: any) => r.id as string), ...buyerByInv.keys()]));
+    // Like Buyer › Browse listings: only Admin-verified buyers whose profile is Live.
+    // Directory/CRM investors without a verified, live buyer account never reach sellers.
+    const { data: buyers } = await sb.from("buyer_profiles").select("*")
+      .eq("status", "live").not("investor_id", "is", null).limit(500);
+    const userIds = (buyers ?? []).map((b: any) => b.user_id as string);
+    if (!userIds.length) return [] as PublicInvestor[];
+    const { data: bvs } = await sb.from("buyer_verifications")
+      .select("user_id, company_name, buyer_type, status").in("user_id", userIds).eq("status", "verified");
+    const bvByUser = new Map<string, any>((bvs ?? []).map((b: any) => [b.user_id, b]));
+    const buyerByInv = new Map<string, any>(
+      (buyers ?? []).filter((b: any) => bvByUser.has(b.user_id)).map((b: any) => [b.investor_id, b]),
+    );
+    const ids = [...buyerByInv.keys()];
     if (!ids.length) return [] as PublicInvestor[];
 
-    const [{ data: rows }, { data: bvs }] = await Promise.all([
-      sb.from("investors")
-        .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, created_at")
-        .in("id", ids).order("created_at", { ascending: false }),
-      buyerByInv.size
-        ? sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", [...buyerByInv.values()].map((b) => b.user_id))
-        : Promise.resolve({ data: [] }),
-    ]);
-    const bvByUser = new Map<string, any>((bvs ?? []).map((b: any) => [b.user_id, b]));
+    const { data: rows } = await sb.from("investors")
+      .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, created_at")
+      .in("id", ids).order("created_at", { ascending: false });
 
     return (rows ?? []).map((r: any): PublicInvestor => {
       const bp = buyerByInv.get(r.id);
