@@ -509,6 +509,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   }
 
   function buildProfile() {
+    const revBand = parseRevenueBandValue(revenueBand);
     return {
       firmName: firmName || null,
       email: email || null,
@@ -1252,15 +1253,18 @@ export function InvestorForm({ investor, controlReturn }: Props) {
       {/* Buying Requirement */}
       <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
         <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
-        <Label>Revenue minimum</Label>
-        <Select value={revenueMin || "none"} onValueChange={(v) => setRevenueMin(v === "none" ? "" : v)}>
+        <Label>Revenue band</Label>
+        <Select value={revenueBand || "none"} onValueChange={(v) => setRevenueBand(v === "none" ? "" : v)}>
           <SelectTrigger className="max-w-[320px]"><SelectValue placeholder="Not set" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Not set</SelectItem>
             {REVENUE_MIN_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            {revenueBand && !REVENUE_MIN_OPTIONS.some((o) => o.value === revenueBand) && (
+              <SelectItem value={revenueBand}>{moneyTHB(Number(revenueBand) * 1e6)} minimum</SelectItem>
+            )}
           </SelectContent>
         </Select>
-        <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
+        <p className="text-[12px] text-muted-foreground">The company revenue range you'll buy. Sellers can filter by it.</p>
       </div>
 
       {/* About */}
