@@ -20,6 +20,7 @@ import { InvestorBrowse } from "@/components/marketplace/investor-browse";
 import { usePersona } from "@/hooks/use-marketplace";
 import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { SectorArt } from "@/components/hidden-profile/bits";
+import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/browse")({
