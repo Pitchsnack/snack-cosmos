@@ -262,11 +262,11 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
           {nda === "approved" && <NdaApprovedBadge />}
         </div>
         {ownOnly ? (
-          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">Buyer preview</span>
+          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{tr("Buyer preview")}</span>
         ) : nda === "requested" ? (
-          <Button asChild variant="outline" size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><Star className="mr-1.5 h-4 w-4" />Open in Favourites</Link></Button>
+          <Button asChild variant="outline" size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><Star className="mr-1.5 h-4 w-4" />{tr("Open in Favourites")}</Link></Button>
         ) : nda === "approved" ? (
-          <Button asChild size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><LockOpen className="mr-1.5 h-4 w-4" />Open private view</Link></Button>
+          <Button asChild size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><LockOpen className="mr-1.5 h-4 w-4" />{tr("Open private view")}</Link></Button>
         ) : (
           <div className="flex shrink-0 gap-2">
             <SaveButton saved={saved} onClick={onToggleSave} />
