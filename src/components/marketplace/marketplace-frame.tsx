@@ -9,6 +9,8 @@ import { usePreferences } from "@/hooks/use-preferences";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { useIsMarketplace, usePersona, lastAdminPath, type Persona } from "@/hooks/use-marketplace";
 import logoWhite from "@/assets/pitchsnack-white.png";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useTranslation } from "@/i18n/language";
 
 export function useUserIdentity() {
   const { data } = useSessionContext();
@@ -119,6 +121,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
         ) : (
           <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
         )}
+        <LanguageSwitcher tone="dark" />
         <ThemeToggle />
       </div>
     </div>
