@@ -75,9 +75,9 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   };
   // After Request NDA the listing stays in Browse, marked NDA requested.
   const onRequested = (id: string) => {
-    const t = all.find((x) => x.id === id);
-    const codeName = t?.listing.codeName || t?.listing.refNo || "This listing";
-    toast.success(`NDA requested. ${codeName} is in your Favourites.`);
+    const item = all.find((x) => x.id === id);
+    const codeName = item?.listing.codeName || item?.listing.refNo || t("This listing");
+    toast.success(`${t("NDA requested.")} ${codeName} ${t("is in your Favourites.")}`);
   };
   const star = (id: string) => <SaveButton square nda={!!ndaOf(id)} saved={savedIds.has(id)} onClick={() => toggleSave(id)} />;
   const badgeOf = (id: string) => { const n = ndaOf(id); return n === "approved" ? <NdaApprovedBadge /> : n === "requested" ? <NdaRequestedBadge /> : undefined; };
