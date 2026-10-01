@@ -178,6 +178,7 @@ const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contac
 
 /** Right panel body for anonymous listings — public read model only. */
 export function ListingDetail({ t, requested, approved, onRequested }: { t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string) => void }) {
+  const { t: tr } = useTranslation();
   const l = t.listing;
   const [more, setMore] = useState(false);
   useEffect(() => setMore(false), [t.id]);
@@ -185,9 +186,9 @@ export function ListingDetail({ t, requested, approved, onRequested }: { t: Teas
     <div className="space-y-5">
       <PublicListingCard l={l} deal={t} badge={approved ? <NdaApprovedBadge /> : requested ? <NdaRequestedBadge /> : undefined} />
       {l.description && (
-        <Section title="Business overview">
+        <Section title={tr("Business overview")}>
           <p className={cn("text-[13.5px] text-foreground/80", !more && "line-clamp-3")}>{l.description}</p>
-          <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? "Show less ▴" : "Show more ▾"}</button>
+          <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? tr("Show less ▴") : tr("Show more ▾")}</button>
         </Section>
       )}
       {approved ? <div className="grid gap-3 sm:grid-cols-2"><DealTerms t={t} /></div> : <LowerPanel t={t} requested={requested} onRequested={onRequested} />}
