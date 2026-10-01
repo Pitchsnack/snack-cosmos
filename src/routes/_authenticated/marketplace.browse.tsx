@@ -278,7 +278,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
         {nda === "requested" && (
           <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
             <Clock className="mt-0.5 h-4 w-4 flex-none" />
-            <span>You requested the NDA{when ? ` on ${when}` : ""}. This listing is in your Favourites, and its private view opens there once the seller approves.</span>
+            <span>{tr("You requested the NDA")}{when ? ` ${tr("on")} ${when}` : ""}. {tr("This listing is in your Favourites, and its private view opens there once the seller approves.")}</span>
           </div>
         )}
         {nda === "approved" && (
