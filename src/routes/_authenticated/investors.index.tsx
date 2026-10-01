@@ -22,6 +22,7 @@ import { useInvestors } from "@/hooks/use-investors";
 import { useFavoriteInvestors } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
+import { InvestorImagesMenu } from "@/components/investors/investor-images-menu";
 import { cn } from "@/lib/utils";
 
 const SORT = ["updated_desc", "created_desc", "name_asc", "name_desc"] as const;
@@ -204,6 +205,7 @@ function InvestorsPageInner() {
               <Plus className="mr-2 h-4 w-4" /> New investor
             </Button>
           )}
+          <InvestorImagesMenu directorySearch={s} />
         </div>
       </div>
 
