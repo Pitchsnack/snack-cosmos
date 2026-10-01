@@ -197,9 +197,10 @@ export function ListingDetail({ t, requested, approved, onRequested }: { t: Teas
 }
 
 export function NdaRequestedBadge() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2 py-0.5 text-[10.5px] font-bold text-[#B45309]">
-      <Clock className="h-3 w-3" />NDA requested
+      <Clock className="h-3 w-3" />{t("NDA requested")}
     </span>
   );
 }
