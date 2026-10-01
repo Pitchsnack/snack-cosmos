@@ -33,6 +33,7 @@ export function useInvalidateListings() {
 
 /** Saved listings are stored per buyer on the server (they feed Favourites). */
 export function useSavedListings() {
+  const { t } = useTranslation();
   const list = useServerFn(mySavedListingIds);
   const toggleFn = useServerFn(toggleSavedListing);
   const invalidate = useInvalidateListings();
@@ -44,7 +45,7 @@ export function useSavedListings() {
     qc.setQueryData<string[]>(["saved-listings"], (prev = []) => (saved ? [...prev, id] : prev.filter((x) => x !== id)));
     try {
       await toggleFn({ data: { id, saved } });
-      toast.success(saved ? "Added to Favourites." : "Removed from Favourites.");
+      toast.success(saved ? t("Added to Favourites.") : t("Removed from Favourites."));
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
