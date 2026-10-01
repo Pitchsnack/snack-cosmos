@@ -56,8 +56,9 @@ export function useSavedListings() {
 
 /** Star = Add to Favourites. With an NDA the star is filled and fixed. */
 export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; onClick: () => void; square?: boolean; nda?: boolean }) {
+  const { t } = useTranslation();
   const on = saved || !!nda;
-  const tip = nda ? "In Favourites because of your NDA" : saved ? "Remove from Favourites" : "Add to Favourites";
+  const tip = nda ? t("In Favourites because of your NDA") : saved ? t("Remove from Favourites") : t("Add to Favourites");
   const star = <Star className={cn("h-4 w-4", on ? "fill-[#F59E0B] text-[#D97706]" : "text-[#4B5563]")} />;
   if (square) {
     const cls = cn("inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border bg-white", on ? "border-[#FDE68A]" : "border-[#E5E7EB]");
@@ -72,15 +73,16 @@ export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; on
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={cn("inline-flex h-[34px] items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors",
         saved ? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]" : "border-border bg-background text-foreground hover:bg-muted")}>
-      {star}{saved ? "In Favourites" : "Add to Favourites"}
+      {star}{saved ? t("In Favourites") : t("Add to Favourites")}
     </button>
   );
 }
 
 export function NdaApprovedBadge() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[10.5px] font-bold text-[#15803D]">
-      <LockOpen className="h-3 w-3" />NDA approved
+      <LockOpen className="h-3 w-3" />{t("NDA approved")}
     </span>
   );
 }
