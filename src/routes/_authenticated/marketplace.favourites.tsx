@@ -309,8 +309,8 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
       <div className="space-y-5 overflow-y-auto p-5">
         <div className="flex flex-wrap items-start gap-2 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-[14px] py-[11px] text-[13.5px] text-[#166534]">
           <LockOpen className="mt-0.5 h-4 w-4 flex-none" />
-          <span className="rounded-[6px] bg-[#E8F6EE] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide">Private view</span>
-          <span className="min-w-0 flex-1">Shared with you under your NDA, approved {fmtDate(p.ndaApprovedAt)} and valid until {fmtDate(p.ndaValidUntil)}.</span>
+          <span className="rounded-[6px] bg-[#E8F6EE] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide">{t("Private view")}</span>
+          <span className="min-w-0 flex-1">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</span>
         </div>
         <PublicListingCard l={f.listing} deal={f} wrapMeta badge={<ApprovedBadge />}
           priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
