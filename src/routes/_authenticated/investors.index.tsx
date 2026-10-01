@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Search, Briefcase, RefreshCw, X, Star, ArrowLeft } from "lucide-react";
+import { Plus, Search, Briefcase, RefreshCw, X, Star, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { PublicInvestorCard } from "@/components/marketplace/buyer-browse-card";
+import { toHiddenInvestorCard } from "@/lib/investor-hidden-card";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,7 @@ export const investorDirectorySearchSchema = z.object({
   panel: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
+  cards: z.enum(["full", "hidden"]).optional(),
 });
 
 export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSchema>;
@@ -86,6 +89,7 @@ function InvestorsPageInner() {
   const { view, persist: persistView } = usePersistentView("sp2-investors-view", s.view);
   const selected = s.selected;
   const favOnly = !!s.fav;
+  const cardsMode = s.cards ?? "full";
   const { ids: favIds } = useFavoriteInvestors();
 
   const pageSize = favOnly ? 100 : view === "split" ? 50 : view === "list" ? 25 : 24;
@@ -268,6 +272,27 @@ function InvestorsPageInner() {
         </Button>
       </div>
 
+      {view !== "list" && (
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-xs text-muted-foreground">
+            {cardsMode === "hidden"
+              ? "What sellers see in Browse investors before an NDA is approved. Only Admin sees the Full card."
+              : "Hidden cards are what sellers see in Browse investors before the NDA."}
+          </span>
+          <div className="ml-auto inline-flex items-center gap-1 rounded-md bg-muted/60 p-1 text-xs">
+            <span className="px-2 text-muted-foreground">Cards:</span>
+            {(["full", "hidden"] as const).map((k) => (
+              <button key={k} type="button" aria-pressed={cardsMode === k}
+                onClick={() => navigate({ search: (p: typeof s) => ({ ...p, cards: k === "full" ? undefined : k }) })}
+                className={cn("inline-flex items-center gap-1 rounded px-2 py-1 font-medium", cardsMode === k ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                {k === "full" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                {k === "full" ? "Full" : "Hidden"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isLoading && items.length === 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
           {Array.from({ length: 8 }).map((_, idx) => (
@@ -302,13 +327,21 @@ function InvestorsPageInner() {
               : "sm:grid-cols-2 lg:grid-cols-3",
           )}
         >
-          {items.map((it) => (
-            <InvestorCard
-              key={it.id}
-              i={it}
-              onClick={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: it.id }) })}
-            />
-          ))}
+          {items.map((it) =>
+            cardsMode === "hidden" ? (
+              <PublicInvestorCard
+                key={it.id}
+                i={toHiddenInvestorCard(it)}
+                onClick={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: it.id }) })}
+              />
+            ) : (
+              <InvestorCard
+                key={it.id}
+                i={it}
+                onClick={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: it.id }) })}
+              />
+            ),
+          )}
         </div>
       ) : view === "list" ? (
         <div className="space-y-2">
@@ -330,14 +363,23 @@ function InvestorsPageInner() {
           )}
         >
           <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
-            {items.map((it) => (
-              <InvestorListItem
-                key={it.id}
-                i={it}
-                selected={selected === it.id}
-                onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
-              />
-            ))}
+            {items.map((it) =>
+              cardsMode === "hidden" ? (
+                <PublicInvestorCard
+                  key={it.id}
+                  i={toHiddenInvestorCard(it)}
+                  selected={selected === it.id}
+                  onClick={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
+                />
+              ) : (
+                <InvestorListItem
+                  key={it.id}
+                  i={it}
+                  selected={selected === it.id}
+                  onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
+                />
+              ),
+            )}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
             {selected ? <InvestorDetailPanel id={selected} directorySearch={s} /> : <InvestorDetailEmpty />}
