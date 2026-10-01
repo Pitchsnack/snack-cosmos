@@ -227,6 +227,7 @@ function FavouritesPage() {
 }
 
 function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void }) {
+  const { t } = useTranslation();
   const code = [f.listing.codeName, f.listing.refNo].filter(Boolean).join(" · ");
   if (f.status === "approved" && f.priv) return <PrivatePanel f={f} code={code} />;
   if (f.status === "requested") return <RequestedPanel f={f} code={code} savedIds={savedIds} />;
@@ -236,7 +237,7 @@ function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<str
         <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
         <div className="flex shrink-0 gap-2">
           <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
-          <NdaButton listingId={f.id} onRequested={() => toast.success("NDA requested.")} />
+          <NdaButton listingId={f.id} onRequested={() => toast.success(t("NDA requested."))} />
         </div>
       </div>
       <div className="overflow-y-auto p-5"><ListingDetail t={f} /></div>
