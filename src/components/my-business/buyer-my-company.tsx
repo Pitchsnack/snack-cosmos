@@ -420,7 +420,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">How sellers see it in Browse investors</span>
           <StatusChip status={p.status === "live" ? "live" : "draft"} />
         </div>
-        <BuyerBrowseCard b={pub} revenueMinM={inv.data?.investor.revenue_min_m ?? null} className="mx-auto max-w-[380px]" />
+        <BuyerBrowseCard b={pub} revenueMinM={inv.data?.investor.revenue_min_m ?? null} revenueMaxM={inv.data?.investor.revenue_max_m ?? null} className="mx-auto max-w-[380px]" />
       </div>
       <div className="mt-4 flex items-center justify-between gap-4 rounded-[12px] border border-border p-3.5">
         <div className="min-w-0">
