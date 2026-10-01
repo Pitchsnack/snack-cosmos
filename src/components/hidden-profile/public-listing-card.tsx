@@ -179,10 +179,10 @@ export function PublicListingCard({
           <span className="min-w-0 truncate">{[l.codeName, l.refNo].filter(Boolean).join(" · ")}</span>
           {onToggleExpand ? (
             <button type="button" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} className="shrink-0 font-semibold text-foreground hover:underline">
-              {expanded ? "Show less ▴" : "Show more ▾"}
+              {expanded ? t("Show less ▴") : t("Show more ▾")}
             </button>
           ) : (
-            <span className="shrink-0">{l.live && l.publishedAt ? `Posted ${fmt(l.publishedAt)}` : "Not published yet"}</span>
+            <span className="shrink-0">{l.live && l.publishedAt ? `${t("Posted")} ${fmt(l.publishedAt)}` : t("Not published yet")}</span>
           )}
         </div>
       </div>
