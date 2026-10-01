@@ -18,6 +18,7 @@ import {
   BOX, DealTerms, KV, ListingDetail, NdaButton, NdaRequestedBadge, SaveButton, Section, useInvalidateListings, useSavedListings,
 } from "@/components/marketplace/listing-panel";
 import { listFavourites, withdrawNdaRequest, type Favourite, type FavStatus } from "@/lib/favourites.functions";
+import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
