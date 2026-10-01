@@ -111,7 +111,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
   return (
     <button
       type="button"
-      title={locked ? "Submit for verification on My Profile first" : undefined}
+      title={locked ? t("Submit for verification on My Profile first") : undefined}
       disabled={locked || busy}
       onClick={async (e) => {
         e.stopPropagation();
