@@ -49,6 +49,7 @@ function ThemeToggle() {
 
 export function MarketplaceAdminSwitch() {
   const isMarket = useIsMarketplace();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const base =
     "inline-flex h-8 items-center gap-1.5 rounded-[9px] px-3 text-[13px] font-semibold transition-colors";
@@ -61,7 +62,7 @@ export function MarketplaceAdminSwitch() {
         className={cn(base, isMarket ? "bg-white text-[#141a2b]" : "text-[#a9b0c3] hover:text-white")}
       >
         <LayoutGrid className="h-4 w-4" />
-        <span className="hidden sm:inline">Marketplace</span>
+        <span className="hidden sm:inline">{t("Marketplace")}</span>
       </button>
       <button
         role="tab"
@@ -70,7 +71,7 @@ export function MarketplaceAdminSwitch() {
         className={cn(base, !isMarket ? "bg-[#2c3656] text-white" : "text-[#a9b0c3] hover:text-white")}
       >
         <Shield className="h-4 w-4" />
-        <span className="hidden sm:inline">Admin</span>
+        <span className="hidden sm:inline">{t("Admin")}</span>
       </button>
     </div>
   );
@@ -78,6 +79,7 @@ export function MarketplaceAdminSwitch() {
 
 export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; showMenu: boolean; onLogo?: () => void }) {
   const isMarket = useIsMarketplace();
+  const { t } = useTranslation();
   const { persona } = usePersona();
   const { roleLabel } = useUserIdentity();
   const label = `Admin · ${roleLabel}`;
@@ -116,7 +118,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
             )}
           >
             <span className={cn("h-[7px] w-[7px] rounded-full", seller ? "bg-[#F6A823]" : "bg-[#7C85FF]")} />
-            {seller ? "Seller view" : "Buyer view"}
+            {t(seller ? "Seller view" : "Buyer view")}
           </span>
         ) : (
           <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
@@ -172,7 +174,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           {(["seller", "buyer"] as const).map((p) => {
             const Icon = p === "seller" ? Building2 : Briefcase;
             const on = persona === p;
-            const label = p === "seller" ? "I'm Seller" : "I'm Buyer";
+            const label = t(p === "seller" ? "I'm Seller" : "I'm Buyer");
             return (
               <button
                 key={p}
@@ -311,6 +313,7 @@ function RailDivider() {
 
 export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
+  const { t } = useTranslation();
   const discover: MenuItem[] =
     persona === "buyer"
       ? [
@@ -344,7 +347,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   if (collapsed) {
     const railItem = (it: MenuItem) => {
       const locked = it.lock ? !isReportOrdered(it.lock) : false;
-      const tip = locked ? `${it.label} · locked` : it.label;
+      const tip = locked ? `${t(it.label)} · locked` : t(it.label);
       return (
         <Link
           key={it.to}
@@ -393,7 +396,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       inactiveProps={MENU_LINK_INACTIVE}
     >
       <it.icon className="h-4 w-4 shrink-0" />
-      <span>{it.label}</span>
+      <span>{t(it.label)}</span>
       {it.to === "/marketplace/pipeline" && <PipelineCountBadge />}
       {it.to === "/marketplace/messages" && <MessagesCountBadge />}
       {it.lock && (isReportOrdered(it.lock) ? <PitchsnackTag /> : <PadlockTile />)}
