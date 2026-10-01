@@ -108,10 +108,11 @@ export function PublicListingCard({
   priv?: { name: string; logoPath: string | null; revenueText: string | null; fy: number | null; employees: string | null };
   wrapMeta?: boolean;
 }) {
-  const badgeLabel = seller ? (l.live ? "Live" : l.refNo ? "Draft" : "Preview") : "Identity hidden";
-  const emp = priv?.employees ? (/employee/i.test(priv.employees) ? priv.employees : `${priv.employees} employees`) : l.employees;
+  const { t } = useTranslation();
+  const badgeLabel = seller ? (l.live ? t("Live") : l.refNo ? t("Draft") : t("Preview")) : t("Identity hidden");
+  const emp = priv?.employees ? (/employee/i.test(priv.employees) ? priv.employees : `${priv.employees} ${t("employees")}`) : l.employees;
   const meta = [l.sector, l.subSector, l.location?.replace(/, Thailand$/, ""), emp].filter(Boolean).join(" · ");
-  const dl = dealLine(deal);
+  const dl = dealLine(deal, t);
   const interactive = !!onSelect;
   return (
     <div
