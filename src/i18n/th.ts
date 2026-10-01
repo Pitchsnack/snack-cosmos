@@ -355,7 +355,6 @@ export const TH: Record<string, string> = {
   "Requested by the buyer": "ผู้ซื้อขอเมื่อ",
   "not shared": "ยังไม่ได้แบ่งปัน",
   // History events
-  "NDA approved ": "อนุมัติ NDA แล้ว",
   "NDA declined": "ปฏิเสธ NDA",
   "Financial report requested": "ขอรายงานการเงิน",
   "Report shared": "แบ่งปันรายงาน",
