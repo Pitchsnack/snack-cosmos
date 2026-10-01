@@ -49,17 +49,19 @@ const baht = (n: number | null) => {
 const fy = (y: number | null) => (y != null ? String(y).slice(-2) : "25");
 
 function ApprovedBadge() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[10.5px] font-bold text-[#15803D]">
-      <LockOpen className="h-3 w-3" />NDA approved
+      <LockOpen className="h-3 w-3" />{t("NDA approved")}
     </span>
   );
 }
 
 function StarredBadge() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-[10.5px] font-bold text-[#374151]">
-      <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />Starred
+      <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />{t("Starred")}
     </span>
   );
 }
