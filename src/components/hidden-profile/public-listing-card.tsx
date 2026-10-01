@@ -138,23 +138,23 @@ export function PublicListingCard({
       </SectorArt>
       <div className="flex flex-1 flex-col p-3.5">
         {priv && <div className="truncate text-[16px] font-bold text-[#111827]" title={priv.name}>{priv.name}</div>}
-        <h3 className={priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]"}>{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
+        <h3 className={priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]"}>{l.headline || <span className="text-muted-foreground">{t("Add a headline")}</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1">
-          {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>Verified company</Badge>}
-          {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>Verified financials</Badge>
-            : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>Verified financials · optional</Badge>}
-          {!priv && <Badge tone="violet" icon={<Lock className="h-3 w-3" />}>Identity after NDA</Badge>}
+          {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>{t("Verified company")}</Badge>}
+          {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>{t("Verified financials")}</Badge>
+            : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>{t("Verified financials · optional")}</Badge>}
+          {!priv && <Badge tone="violet" icon={<Lock className="h-3 w-3" />}>{t("Identity after NDA")}</Badge>}
         </div>
         {priv ? (priv.revenueText && (
           <div className="mt-2.5 flex items-center gap-2">
-            <span className="text-[13px] text-muted-foreground">Revenue FY{priv.fy != null ? String(priv.fy).slice(-2) : "25"}</span>
+            <span className="text-[13px] text-muted-foreground">{t("Revenue")} FY{priv.fy != null ? String(priv.fy).slice(-2) : "25"}</span>
             <span className="text-[14px] font-bold">{priv.revenueText}</span>
           </div>
         )) : l.revenueBand && (
           <div className="mt-2.5 flex items-center gap-2">
-            <span className="text-[13px] text-muted-foreground">Revenue FY25</span>
+            <span className="text-[13px] text-muted-foreground">{t("Revenue")} FY25</span>
             <span className="text-[14px] font-bold">{l.revenueBand}</span>
-            <span className="rounded bg-[#EEF0FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#4338CA]">Range</span>
+            <span className="rounded bg-[#EEF0FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#4338CA]">{t("Range")}</span>
           </div>
         )}
         {meta && <div className={cn("mt-1.5 text-[12.5px] text-muted-foreground", !wrapMeta && "truncate")}>{meta}</div>}
