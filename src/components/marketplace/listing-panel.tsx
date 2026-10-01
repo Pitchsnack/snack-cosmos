@@ -155,19 +155,20 @@ export function KV({ rows }: { rows: [string, React.ReactNode][] }) {
 export const BOX = "rounded-[12px] border border-border px-[14px] py-3";
 
 export function DealTerms({ t }: { t: Teaser }) {
+  const { t: tr } = useTranslation();
   const x = t as Teaser & { reason?: string | null; ndaCount?: number | null; loiCount?: number | null };
   const interest = x.ndaCount != null || x.loiCount != null
     ? [x.ndaCount != null && `${x.ndaCount} NDAs`, x.loiCount != null && `${x.loiCount} LOIs`].filter(Boolean).join(" · ")
     : null;
   return (
     <div className={BOX}>
-      <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Deal terms</h4>
+      <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Deal terms")}</h4>
       <KV rows={[
-        ["Stake offered", t.stakePct != null ? `${t.stakePct}%` : null],
-        ["Asking price", t.askingPrice == null ? "On request" : `฿${t.askingPrice}M`],
-        ["Deal type", t.dealType ?? null],
-        ["Reason", x.reason ?? null],
-        ["Buyer interest", interest],
+        [tr("Stake offered"), t.stakePct != null ? `${t.stakePct}%` : null],
+        [tr("Asking price"), t.askingPrice == null ? tr("On request") : `฿${t.askingPrice}M`],
+        [tr("Deal type"), t.dealType ?? null],
+        [tr("Reason"), x.reason ?? null],
+        [tr("Buyer interest"), interest],
       ]} />
     </div>
   );
