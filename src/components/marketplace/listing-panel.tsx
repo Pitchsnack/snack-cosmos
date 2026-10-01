@@ -125,7 +125,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
       }}
       className={cn("h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
     >
-      {locked ? "Available after verification" : "Request NDA"}
+      {locked ? t("Available after verification") : t("Request NDA")}
     </button>
   );
 }
