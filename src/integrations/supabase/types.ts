@@ -1999,6 +1999,42 @@ export type Database = {
           },
         ]
       }
+      investor_images: {
+        Row: {
+          file_name: string
+          height: number
+          id: string
+          size_bytes: number
+          storage_path: string
+          type_key: string
+          uploaded_at: string
+          uploaded_by: string | null
+          width: number
+        }
+        Insert: {
+          file_name: string
+          height: number
+          id?: string
+          size_bytes: number
+          storage_path: string
+          type_key: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          width: number
+        }
+        Update: {
+          file_name?: string
+          height?: number
+          id?: string
+          size_bytes?: number
+          storage_path?: string
+          type_key?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          width?: number
+        }
+        Relationships: []
+      }
       investor_investors: {
         Row: {
           created_at: string

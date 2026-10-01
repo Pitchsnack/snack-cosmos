@@ -288,6 +288,13 @@
       "when": 1790854804489,
       "tag": "0040_add_investor_revenue_max_m",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790884281369,
+      "tag": "0041_investor_images",
+      "breakpoints": true
     }
   ]
 }
