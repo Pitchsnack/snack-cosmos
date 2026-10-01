@@ -18,6 +18,7 @@ import {
   BOX, DealTerms, KV, ListingDetail, NdaButton, NdaRequestedBadge, SaveButton, Section, useInvalidateListings, useSavedListings,
 } from "@/components/marketplace/listing-panel";
 import { listFavourites, withdrawNdaRequest, type Favourite, type FavStatus } from "@/lib/favourites.functions";
+import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
@@ -48,17 +49,19 @@ const baht = (n: number | null) => {
 const fy = (y: number | null) => (y != null ? String(y).slice(-2) : "25");
 
 function ApprovedBadge() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[10.5px] font-bold text-[#15803D]">
-      <LockOpen className="h-3 w-3" />NDA approved
+      <LockOpen className="h-3 w-3" />{t("NDA approved")}
     </span>
   );
 }
 
 function StarredBadge() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-[10.5px] font-bold text-[#374151]">
-      <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />Starred
+      <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />{t("Starred")}
     </span>
   );
 }
@@ -85,6 +88,7 @@ function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, to
 }
 
 function FavouritesPage() {
+  const { t } = useTranslation();
   const fn = useServerFn(listFavourites);
   const enabled = useHasSession();
   const { id: wantId } = Route.useSearch();
@@ -133,22 +137,22 @@ function FavouritesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Star className="h-3.5 w-3.5" /> Discover</div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Favourites</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Listings you starred or requested an NDA for</p>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Star className="h-3.5 w-3.5" /> {t("Discover")}</div>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{t("Favourites")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("Listings you starred or requested an NDA for")}</p>
         </div>
         <ViewToggle value={view} onChange={persist} />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Filter by status" className="inline-flex flex-wrap gap-0.5 rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[3px]">
+        <div role="tablist" aria-label={t("Filter by status")} className="inline-flex flex-wrap gap-0.5 rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[3px]">
           {FILTERS.map(([k, label]) => {
             const on = filter === k;
             return (
               <button key={k} role="tab" aria-selected={on} onClick={() => setFilter(k)}
                 className={cn("inline-flex h-8 items-center gap-1.5 rounded-[8px] px-3 text-[13.5px]",
                   on ? "bg-white font-semibold text-[#111827] shadow-[inset_0_0_0_1px_#DCE3EF]" : "font-medium text-[#5B6576] hover:text-[#111827]")}>
-                {label}
+                {t(label)}
                 <span className={cn("grid h-[18px] min-w-[18px] place-items-center rounded-full px-1.5 text-[11px] font-bold", on ? "bg-[#EEF0FF] text-[#4338CA]" : "bg-[#E3E8F0] text-[#4B5563]")}>{counts[k]}</span>
               </button>
             );
@@ -156,7 +160,7 @@ function FavouritesPage() {
         </div>
         <div className="relative w-full sm:w-[380px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search Favourites" className="pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search Favourites")} className="pl-9" />
         </div>
       </div>
 
@@ -168,9 +172,9 @@ function FavouritesPage() {
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Star className="mx-auto mb-2 h-8 w-8 opacity-50" />
           {all.length === 0 && !q ? (
-            <p>Nothing here yet. Save a listing or request an NDA in <Link to="/marketplace/browse" className="font-semibold text-[#2563EB] hover:underline">Browse listings</Link>.</p>
+            <p>{t("Nothing here yet. Save a listing or request an NDA in")} <Link to="/marketplace/browse" className="font-semibold text-[#2563EB] hover:underline">{t("Browse listings")}</Link>.</p>
           ) : (
-            <p>No listings with this status.</p>
+            <p>{t("No listings with this status.")}</p>
           )}
         </div>
       ) : view === "grid" ? (
@@ -203,7 +207,7 @@ function FavouritesPage() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-foreground">{f.priv?.companyName ?? (l.headline || l.codeName)}</div>
                   <div className="truncate text-[12px] text-muted-foreground">
-                    {[f.priv ? l.headline : null, f.priv ? (f.priv.revenue != null ? `Revenue FY${fy(f.priv.fy)} ${baht(f.priv.revenue)}` : null) : l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
+                    {[f.priv ? l.headline : null, f.priv ? (f.priv.revenue != null ? `${t("Revenue")} FY${fy(f.priv.fy)} ${baht(f.priv.revenue)}` : null) : l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
                   </div>
                 </div>
                 {f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />}
@@ -223,6 +227,7 @@ function FavouritesPage() {
 }
 
 function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void }) {
+  const { t } = useTranslation();
   const code = [f.listing.codeName, f.listing.refNo].filter(Boolean).join(" · ");
   if (f.status === "approved" && f.priv) return <PrivatePanel f={f} code={code} />;
   if (f.status === "requested") return <RequestedPanel f={f} code={code} savedIds={savedIds} />;
@@ -232,7 +237,7 @@ function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<str
         <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
         <div className="flex shrink-0 gap-2">
           <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
-          <NdaButton listingId={f.id} onRequested={() => toast.success("NDA requested.")} />
+          <NdaButton listingId={f.id} onRequested={() => toast.success(t("NDA requested."))} />
         </div>
       </div>
       <div className="overflow-y-auto p-5"><ListingDetail t={f} /></div>
@@ -241,6 +246,7 @@ function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<str
 }
 
 function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; savedIds: Set<string> }) {
+  const { t } = useTranslation();
   const withdraw = useServerFn(withdrawNdaRequest);
   const invalidate = useInvalidateListings();
   const [busy, setBusy] = useState(false);
@@ -253,15 +259,15 @@ function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; sav
         </div>
         <Button variant="outline" size="sm" disabled={busy} onClick={async () => {
           setBusy(true);
-          try { await withdraw({ data: { id: f.id } }); const name = f.listing.codeName || f.listing.refNo || "This listing";
-            toast.success(savedIds.has(f.id) ? `Request withdrawn. ${name} stays in Favourites as starred.` : `Request withdrawn. ${name} has left Favourites.`); invalidate(); }
+          try { await withdraw({ data: { id: f.id } }); const name = f.listing.codeName || f.listing.refNo || t("This listing");
+            toast.success(savedIds.has(f.id) ? `${t("Request withdrawn.")} ${name} ${t("stays in Favourites as starred.")}` : `${t("Request withdrawn.")} ${name} ${t("has left Favourites.")}`); invalidate(); }
           catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-        }}>Withdraw request</Button>
+        }}>{t("Withdraw request")}</Button>
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
         <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
           <Clock className="mt-0.5 h-4 w-4 flex-none" />
-          <span>You requested the NDA on {fmtDate(f.ndaRequestedAt)}. The seller usually replies within 2 days, and the private view opens here once they approve.</span>
+          <span>{t("You requested the NDA on")} {fmtDate(f.ndaRequestedAt)}. {t("The seller usually replies within 2 days, and the private view opens here once they approve.")}</span>
         </div>
         <ListingDetail t={f} requested />
       </div>
@@ -270,6 +276,7 @@ function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; sav
 }
 
 function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
+  const { t } = useTranslation();
   const p = f.priv!;
   const logo = useMediaUrl(p.logoPath);
   const [more, setMore] = useState(false);
@@ -292,48 +299,48 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate text-[16px] font-bold">{p.companyName}</span>
-              <span className="inline-flex h-[22px] flex-none items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 text-[11.5px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />NDA approved</span>
+              <span className="inline-flex h-[22px] flex-none items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 text-[11.5px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />{t("NDA approved")}</span>
             </div>
             <div className="truncate text-[12.5px] text-[#6A7181]">{code}</div>
           </div>
         </div>
-        <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">Open full profile</Link></Button>
+        <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">{t("Open full profile")}</Link></Button>
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
         <div className="flex flex-wrap items-start gap-2 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-[14px] py-[11px] text-[13.5px] text-[#166534]">
           <LockOpen className="mt-0.5 h-4 w-4 flex-none" />
-          <span className="rounded-[6px] bg-[#E8F6EE] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide">Private view</span>
-          <span className="min-w-0 flex-1">Shared with you under your NDA, approved {fmtDate(p.ndaApprovedAt)} and valid until {fmtDate(p.ndaValidUntil)}.</span>
+          <span className="rounded-[6px] bg-[#E8F6EE] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide">{t("Private view")}</span>
+          <span className="min-w-0 flex-1">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</span>
         </div>
         <PublicListingCard l={f.listing} deal={f} wrapMeta badge={<ApprovedBadge />}
           priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
         {p.description && (
-          <Section title="Business overview">
+          <Section title={t("Business overview")}>
             <p className={cn("whitespace-pre-line text-[13.5px] text-foreground/80", !more && "line-clamp-2")}>{p.description}</p>
-            <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? "Show less ▴" : "Show more ▾"}</button>
+            <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? t("Show less ▴") : t("Show more ▾")}</button>
           </Section>
         )}
         <div className="grid gap-3 sm:grid-cols-2">
           <DealTerms t={f} />
           <div className={BOX}>
-            <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Financials · FY{fy(p.fy)}</h4>
+            <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("Financials")} · FY{fy(p.fy)}</h4>
             <KV rows={[
-              [`Revenue FY${fy(p.fy)}`, baht(p.revenue)],
-              [`Net profit FY${fy(p.fy)}`, baht(p.netProfit)],
-              ["Revenue growth", p.growthPct != null && p.fy != null ? `${p.growthPct >= 0 ? "+" : ""}${p.growthPct.toFixed(1)}% vs FY${fy(p.fy - 1)}` : null],
-              ["Verified by", f.listing.hasFinancials ? <span className="text-[#16A34A]">✓ PitchSnack analysts</span> : null],
+              [`${t("Revenue")} FY${fy(p.fy)}`, baht(p.revenue)],
+              [`${t("Net profit")} FY${fy(p.fy)}`, baht(p.netProfit)],
+              [t("Revenue growth"), p.growthPct != null && p.fy != null ? `${p.growthPct >= 0 ? "+" : ""}${p.growthPct.toFixed(1)}% ${t("vs")} FY${fy(p.fy - 1)}` : null],
+              [t("Verified by"), f.listing.hasFinancials ? <span className="text-[#16A34A]">✓ PitchSnack {t("analysts")}</span> : null],
             ]} />
           </div>
         </div>
         <div className={BOX}>
-          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Company</h4>
+          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("Company")}</h4>
           <div className="grid gap-x-6 sm:grid-cols-2">
-            {cell("Legal name", (p.legalNameEn || p.legalNameTh) ? <>{p.legalNameEn ?? p.legalNameTh}{p.legalNameEn && p.legalNameTh && <div className="text-[12px] font-normal text-[#6A7181]" style={{ fontFamily: "'Noto Sans Thai', 'DM Sans', sans-serif" }}>{p.legalNameTh}</div>}</> : null)}
-            {cell("Registration no.", p.regNo)}
-            {cell("Website", web ? <a href={web} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1 break-all text-[#2563EB] hover:underline">{p.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}<ExternalLink className="h-3 w-3" /></a> : null)}
-            {cell("Location", p.location)}
-            {cell("Founded", p.founded)}
-            {cell("Employees", p.employees)}
+            {cell(t("Legal name"), (p.legalNameEn || p.legalNameTh) ? <>{p.legalNameEn ?? p.legalNameTh}{p.legalNameEn && p.legalNameTh && <div className="text-[12px] font-normal text-[#6A7181]" style={{ fontFamily: "'Noto Sans Thai', 'DM Sans', sans-serif" }}>{p.legalNameTh}</div>}</> : null)}
+            {cell(t("Registration no."), p.regNo)}
+            {cell(t("Website"), web ? <a href={web} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1 break-all text-[#2563EB] hover:underline">{p.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}<ExternalLink className="h-3 w-3" /></a> : null)}
+            {cell(t("Location"), p.location)}
+            {cell(t("Founded"), p.founded)}
+            {cell(t("Employees"), p.employees)}
           </div>
         </div>
       </div>

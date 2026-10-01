@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/i18n/language";
 import type { PublicListing } from "@/lib/public-listing";
 import { getStartupSignedUrl } from "@/lib/startups.functions";
 import { SectorArt } from "./bits";
@@ -74,12 +75,12 @@ function Fact({ icon, children, full }: { icon: React.ReactNode; children: React
 
 export type ListingDeal = { dealType?: string | null; askingPrice?: number | null; stakePct?: number | null };
 
-export function dealLine(d?: ListingDeal) {
+export function dealLine(d?: ListingDeal, t: (s: string) => string = (s) => s) {
   if (!d) return "";
   return [
     d.dealType,
-    d.stakePct != null ? `${d.stakePct}% stake` : null,
-    d.askingPrice == null ? "price on request" : `฿${d.askingPrice}M asking`,
+    d.stakePct != null ? `${d.stakePct}% ${t("stake")}` : null,
+    d.askingPrice == null ? t("price on request") : `฿${d.askingPrice}M ${t("asking")}`,
   ].filter(Boolean).join(" · ");
 }
 
@@ -107,10 +108,11 @@ export function PublicListingCard({
   priv?: { name: string; logoPath: string | null; revenueText: string | null; fy: number | null; employees: string | null };
   wrapMeta?: boolean;
 }) {
-  const badgeLabel = seller ? (l.live ? "Live" : l.refNo ? "Draft" : "Preview") : "Identity hidden";
-  const emp = priv?.employees ? (/employee/i.test(priv.employees) ? priv.employees : `${priv.employees} employees`) : l.employees;
+  const { t } = useTranslation();
+  const badgeLabel = seller ? (l.live ? t("Live") : l.refNo ? t("Draft") : t("Preview")) : t("Identity hidden");
+  const emp = priv?.employees ? (/employee/i.test(priv.employees) ? priv.employees : `${priv.employees} ${t("employees")}`) : l.employees;
   const meta = [l.sector, l.subSector, l.location?.replace(/, Thailand$/, ""), emp].filter(Boolean).join(" · ");
-  const dl = dealLine(deal);
+  const dl = dealLine(deal, t);
   const interactive = !!onSelect;
   return (
     <div
@@ -136,23 +138,23 @@ export function PublicListingCard({
       </SectorArt>
       <div className="flex flex-1 flex-col p-3.5">
         {priv && <div className="truncate text-[16px] font-bold text-[#111827]" title={priv.name}>{priv.name}</div>}
-        <h3 className={priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]"}>{l.headline || <span className="text-muted-foreground">Add a headline</span>}</h3>
+        <h3 className={priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]"}>{l.headline || <span className="text-muted-foreground">{t("Add a headline")}</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1">
-          {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>Verified company</Badge>}
-          {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>Verified financials</Badge>
-            : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>Verified financials · optional</Badge>}
-          {!priv && <Badge tone="violet" icon={<Lock className="h-3 w-3" />}>Identity after NDA</Badge>}
+          {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>{t("Verified company")}</Badge>}
+          {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>{t("Verified financials")}</Badge>
+            : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>{t("Verified financials · optional")}</Badge>}
+          {!priv && <Badge tone="violet" icon={<Lock className="h-3 w-3" />}>{t("Identity after NDA")}</Badge>}
         </div>
         {priv ? (priv.revenueText && (
           <div className="mt-2.5 flex items-center gap-2">
-            <span className="text-[13px] text-muted-foreground">Revenue FY{priv.fy != null ? String(priv.fy).slice(-2) : "25"}</span>
+            <span className="text-[13px] text-muted-foreground">{t("Revenue")} FY{priv.fy != null ? String(priv.fy).slice(-2) : "25"}</span>
             <span className="text-[14px] font-bold">{priv.revenueText}</span>
           </div>
         )) : l.revenueBand && (
           <div className="mt-2.5 flex items-center gap-2">
-            <span className="text-[13px] text-muted-foreground">Revenue FY25</span>
+            <span className="text-[13px] text-muted-foreground">{t("Revenue")} FY25</span>
             <span className="text-[14px] font-bold">{l.revenueBand}</span>
-            <span className="rounded bg-[#EEF0FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#4338CA]">Range</span>
+            <span className="rounded bg-[#EEF0FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#4338CA]">{t("Range")}</span>
           </div>
         )}
         {meta && <div className={cn("mt-1.5 text-[12.5px] text-muted-foreground", !wrapMeta && "truncate")}>{meta}</div>}
@@ -160,11 +162,11 @@ export function PublicListingCard({
           <div className="mt-3 space-y-2.5 border-t border-border pt-3">
             {l.description && <p className="text-[13px] text-foreground/80">{l.description}</p>}
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
-              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Products & services</span>
+              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Products & services")}</span>
               <TagChips tags={l.productTags} />
             </div>
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
-              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Markets</span>
+              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Markets")}</span>
               <TagChips tags={l.marketTags} green />
             </div>
             {l.certifications.length > 0 && (
@@ -177,10 +179,10 @@ export function PublicListingCard({
           <span className="min-w-0 truncate">{[l.codeName, l.refNo].filter(Boolean).join(" · ")}</span>
           {onToggleExpand ? (
             <button type="button" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} className="shrink-0 font-semibold text-foreground hover:underline">
-              {expanded ? "Show less ▴" : "Show more ▾"}
+              {expanded ? t("Show less ▴") : t("Show more ▾")}
             </button>
           ) : (
-            <span className="shrink-0">{l.live && l.publishedAt ? `Posted ${fmt(l.publishedAt)}` : "Not published yet"}</span>
+            <span className="shrink-0">{l.live && l.publishedAt ? `${t("Posted")} ${fmt(l.publishedAt)}` : t("Not published yet")}</span>
           )}
         </div>
       </div>

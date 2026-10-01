@@ -20,6 +20,7 @@ import { InvestorBrowse } from "@/components/marketplace/investor-browse";
 import { usePersona } from "@/hooks/use-marketplace";
 import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { SectorArt } from "@/components/hidden-profile/bits";
+import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/browse")({
@@ -61,6 +62,7 @@ function useWide() {
 }
 
 function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; directId?: string | null }) {
+  const { t } = useTranslation();
   const fn = useServerFn(listMarketplaceTeasers);
   const enabled = useHasSession();
   const buyer = !ownOnly;
@@ -73,9 +75,9 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   };
   // After Request NDA the listing stays in Browse, marked NDA requested.
   const onRequested = (id: string) => {
-    const t = all.find((x) => x.id === id);
-    const codeName = t?.listing.codeName || t?.listing.refNo || "This listing";
-    toast.success(`NDA requested. ${codeName} is in your Favourites.`);
+    const item = all.find((x) => x.id === id);
+    const codeName = item?.listing.codeName || item?.listing.refNo || t("This listing");
+    toast.success(`${t("NDA requested.")} ${codeName} ${t("is in your Favourites.")}`);
   };
   const star = (id: string) => <SaveButton square nda={!!ndaOf(id)} saved={savedIds.has(id)} onClick={() => toggleSave(id)} />;
   const badgeOf = (id: string) => { const n = ndaOf(id); return n === "approved" ? <NdaApprovedBadge /> : n === "requested" ? <NdaRequestedBadge /> : undefined; };
@@ -125,13 +127,13 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Store className="h-3.5 w-3.5" /> {ownOnly ? "My listing" : "Discover"}
+            <Store className="h-3.5 w-3.5" /> {ownOnly ? t("My listing") : t("Discover")}
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{ownOnly ? "My company on the Marketplace" : "Browse listings"}</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{ownOnly ? t("My company on the Marketplace") : t("Browse listings")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {ownOnly
-              ? "This is exactly how buyers see your company. Other companies are not shown here."
-              : items.length > 0 ? `${items.length} live listing${items.length === 1 ? "" : "s"}` : "Approved businesses appear here."}
+              ? t("This is exactly how buyers see your company. Other companies are not shown here.")
+              : items.length > 0 ? `${items.length} ${items.length === 1 ? t("live listing") : t("live listings")}` : t("Approved businesses appear here.")}
           </p>
         </div>
         {!ownOnly && <ViewToggle value={view} onChange={persist} />}
@@ -141,25 +143,25 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search listings" className="pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search listings")} className="pl-9" />
         </div>
         <Select value={sector} onValueChange={setSector}>
-          <SelectTrigger className="w-[190px]"><SelectValue placeholder="Sector" /></SelectTrigger>
+          <SelectTrigger className="w-[190px]"><SelectValue placeholder={t("Sector")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All sectors</SelectItem>
+            <SelectItem value="all">{t("All sectors")}</SelectItem>
             {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={deal} onValueChange={setDeal}>
-          <SelectTrigger className="w-[190px]"><SelectValue placeholder="Deal type" /></SelectTrigger>
+          <SelectTrigger className="w-[190px]"><SelectValue placeholder={t("Deal type")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All deal types</SelectItem>
+            <SelectItem value="all">{t("All deal types")}</SelectItem>
             {dealTypes.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
         {hasFilter && (
           <Button variant="ghost" size="sm" onClick={() => { setQ(""); setSector("all"); setDeal("all"); }}>
-            <X className="mr-1 h-4 w-4" />Clear
+            <X className="mr-1 h-4 w-4" />{t("Clear")}
           </Button>
         )}
       </div>
@@ -173,7 +175,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Store className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p>{ownOnly ? "Your company is not live on the Marketplace yet." : directId ? "This listing isn't available." : hasFilter ? "No listings match your filters yet." : "Approved businesses appear here."}</p>
+          <p>{ownOnly ? t("Your company is not live on the Marketplace yet.") : directId ? t("This listing isn't available.") : hasFilter ? t("No listings match your filters yet.") : t("Approved businesses appear here.")}</p>
         </div>
       ) : !ownOnly && view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -203,27 +205,27 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
               {current ? (
                 <BrowsePanel t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
               ) : (
-                <p className="py-16 text-center text-sm text-muted-foreground">Select a listing to see the details.</p>
+                <p className="py-16 text-center text-sm text-muted-foreground">{t("Select a listing to see the details.")}</p>
               )}
             </div>
           )}
         </div>
       ) : (
         <div className="space-y-2">
-          {items.map((t) => {
-            const l = t.listing;
+          {items.map((item) => {
+            const l = item.listing;
             return (
-              <div key={t.id} role="button" tabIndex={0} onClick={() => setModalId(t.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(t.id); }}
+              <div key={item.id} role="button" tabIndex={0} onClick={() => setModalId(item.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(item.id); }}
                 className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
                 <SectorArt art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[54px] w-[96px] shrink-0 rounded-md" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-foreground">{l.headline || l.codeName}</div>
                   <div className="truncate text-[12px] text-muted-foreground">
-                    {[l.verified && "Verified company", l.hasFinancials && "Verified financials", l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
+                    {[l.verified && t("Verified company"), l.hasFinancials && t("Verified financials"), l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
                   </div>
                 </div>
-                {badgeOf(t.id)}
-                {star(t.id)}
+                {badgeOf(item.id)}
+                {star(item.id)}
               </div>
             );
           })}
@@ -246,6 +248,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
 function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
   t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string) => void;
 }) {
+  const { t: tr } = useTranslation();
   const datesFn = useServerFn(myNdaRequestDates);
   const { data: dates } = useQuery({ queryKey: ["pipeline", "nda-dates"], queryFn: () => datesFn(), enabled: nda === "requested" });
   const d = dates?.[t.id];
@@ -259,11 +262,11 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
           {nda === "approved" && <NdaApprovedBadge />}
         </div>
         {ownOnly ? (
-          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">Buyer preview</span>
+          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{tr("Buyer preview")}</span>
         ) : nda === "requested" ? (
-          <Button asChild variant="outline" size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><Star className="mr-1.5 h-4 w-4" />Open in Favourites</Link></Button>
+          <Button asChild variant="outline" size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><Star className="mr-1.5 h-4 w-4" />{tr("Open in Favourites")}</Link></Button>
         ) : nda === "approved" ? (
-          <Button asChild size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><LockOpen className="mr-1.5 h-4 w-4" />Open private view</Link></Button>
+          <Button asChild size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><LockOpen className="mr-1.5 h-4 w-4" />{tr("Open private view")}</Link></Button>
         ) : (
           <div className="flex shrink-0 gap-2">
             <SaveButton saved={saved} onClick={onToggleSave} />
@@ -275,13 +278,13 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
         {nda === "requested" && (
           <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
             <Clock className="mt-0.5 h-4 w-4 flex-none" />
-            <span>You requested the NDA{when ? ` on ${when}` : ""}. This listing is in your Favourites, and its private view opens there once the seller approves.</span>
+            <span>{tr("You requested the NDA")}{when ? ` ${tr("on")} ${when}` : ""}. {tr("This listing is in your Favourites, and its private view opens there once the seller approves.")}</span>
           </div>
         )}
         {nda === "approved" && (
           <div className="flex items-start gap-2 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-[14px] py-[11px] text-[13.5px] text-[#166534]">
             <Star className="mt-0.5 h-4 w-4 flex-none" />
-            <span>Your NDA is approved. This listing is in your Favourites, where its private view shows the company’s name and exact figures.</span>
+            <span>{tr("Your NDA is approved. This listing is in your Favourites, where its private view shows the company’s name and exact figures.")}</span>
           </div>
         )}
         <ListingDetail t={t} requested={nda === "requested"} approved={nda === "approved"} onRequested={onRequested} />
