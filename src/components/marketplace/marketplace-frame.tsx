@@ -147,6 +147,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
   const { persona, setPersona } = usePersona();
   const { data } = useSessionContext();
   const { name, initials } = useUserIdentity();
+  const { t } = useTranslation();
   const u = data?.user;
   const workspace = data?.activeWorkspace?.tenantName ?? data?.tenants?.[0]?.tenantName ?? null;
   const org = u?.organisation ?? workspace;
