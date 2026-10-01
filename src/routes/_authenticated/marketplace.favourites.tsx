@@ -207,7 +207,7 @@ function FavouritesPage() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-foreground">{f.priv?.companyName ?? (l.headline || l.codeName)}</div>
                   <div className="truncate text-[12px] text-muted-foreground">
-                    {[f.priv ? l.headline : null, f.priv ? (f.priv.revenue != null ? `Revenue FY${fy(f.priv.fy)} ${baht(f.priv.revenue)}` : null) : l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
+                    {[f.priv ? l.headline : null, f.priv ? (f.priv.revenue != null ? `${t("Revenue")} FY${fy(f.priv.fy)} ${baht(f.priv.revenue)}` : null) : l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
                   </div>
                 </div>
                 {f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />}
