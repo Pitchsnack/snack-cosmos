@@ -94,6 +94,7 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         aum: inv.aum as string | null,
         min_ticket_size: inv.min_ticket_size as string | null,
         max_ticket_size: inv.max_ticket_size as string | null,
+        revenue_min_m: inv.revenue_min_m == null ? null : Number(inv.revenue_min_m),
         short_description: inv.short_description as string | null,
         keywords: (inv.keywords ?? []) as string[],
         investment_focus: (inv.investment_focus ?? []) as string[],
@@ -126,7 +127,7 @@ const Patch = z.object({
   country: txt(120), city: txt(120), email: txt(255), website_url: txt(500), linkedin_url: txt(500),
   firm_name: txt(200), business_address: txt(1000), aum: txt(120), min_ticket_size: txt(60), max_ticket_size: txt(60),
   short_description: txt(4000), keywords: arr(5), investment_focus: arr(10), preferred_stages: arr(12), preferred_industries: arr(20),
-  portfolio_extra: arr(50), logo_path: txt(1000),
+  portfolio_extra: arr(50), logo_path: txt(1000), revenue_min_m: z.number().min(0).max(100000).nullable().optional(),
   media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(1000) })).max(3).optional(),
   people: z.array(z.object({ name: z.string().max(120), role: z.string().max(120).default(""), email: z.string().max(200).default(""), phone: z.string().max(60).default("") })).max(20).optional(),
 });
@@ -146,6 +147,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       min_ticket_size: n(data.min_ticket_size), max_ticket_size: n(data.max_ticket_size), short_description: n(data.short_description),
       updated_by: context.userId, updated_at: new Date().toISOString(),
     };
+    if (data.revenue_min_m !== undefined) inv.revenue_min_m = data.revenue_min_m;
     if (data.keywords) inv.keywords = data.keywords;
     if (data.investment_focus) inv.investment_focus = data.investment_focus;
     if (data.preferred_stages) inv.preferred_stages = data.preferred_stages;

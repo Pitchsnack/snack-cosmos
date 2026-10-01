@@ -1,0 +1,2 @@
+ALTER TABLE public.investors ADD COLUMN IF NOT EXISTS revenue_min_m numeric CHECK (revenue_min_m IS NULL OR revenue_min_m >= 0);
+COMMENT ON COLUMN public.investors.revenue_min_m IS 'Buying requirement: smallest company revenue the investor will buy, in baht millions. NULL = not set, 0 = no minimum. Public.';

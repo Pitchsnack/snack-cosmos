@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -122,8 +122,12 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   const modal = teasers.find((t) => t.id === modalId) ?? null;
   const hasFilter = !!q || sector !== "all" || deal !== "all";
 
+  const listRef = useRef<HTMLDivElement>(null);
+  const splitFixed = wide && (ownOnly || view === "split") && !isLoading && items.length > 0;
+  useEffect(() => { listRef.current?.scrollTo({ top: 0 }); }, [q, sector, deal]);
+
   return (
-    <div className="space-y-6">
+    <div className={splitFixed ? "flex h-[calc(100vh-7.5rem)] min-h-[520px] flex-col gap-6 [&>*]:shrink-0" : "space-y-6"}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
@@ -184,8 +188,8 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           ))}
         </div>
       ) : ownOnly || view === "split" ? (
-        <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
-          <div className="space-y-3">
+        <div className={splitFixed ? "!shrink grid min-h-0 flex-1 grid-cols-[400px_minmax(0,1fr)] gap-[18px]" : "grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]"}>
+          <div ref={listRef} className={splitFixed ? "min-h-0 space-y-3 overflow-y-scroll pr-2 [scrollbar-gutter:stable]" : "space-y-3"}>
             {items.map((t) => (
               <PublicListingCard
                 key={t.id}
@@ -201,7 +205,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
             ))}
           </div>
           {wide && (
-            <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
+            <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
               {current ? (
                 <BrowsePanel t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
               ) : (
@@ -255,7 +259,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
   const when = d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : null;
   return (
     <>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
         <div className="flex min-w-0 items-center gap-2">
           <span className="min-w-0 truncate text-sm font-semibold">{[t.listing.codeName, t.listing.refNo].filter(Boolean).join(" · ")}</span>
           {nda === "requested" && <NdaRequestedBadge />}
@@ -274,7 +278,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
           </div>
         )}
       </div>
-      <div className="space-y-5 overflow-y-auto p-5">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
         {nda === "requested" && (
           <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
             <Clock className="mt-0.5 h-4 w-4 flex-none" />

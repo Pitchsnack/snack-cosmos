@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { REVENUE_MIN_OPTIONS } from "@/lib/investor-browse";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
@@ -133,6 +134,7 @@ function Form({ data }: { data: Data }) {
     firm_name: inv.firm_name ?? "", business_address: inv.business_address ?? "",
     aum: inv.aum ?? "", min_ticket_size: inv.min_ticket_size ?? "", max_ticket_size: inv.max_ticket_size ?? "",
     short_description: inv.short_description ?? "",
+    revenue_min_m: inv.revenue_min_m == null ? "" : String(inv.revenue_min_m),
   });
   const [keywords, setKeywords] = useState(inv.keywords);
   const [focus, setFocus] = useState(inv.investment_focus);
@@ -197,6 +199,7 @@ function Form({ data }: { data: Data }) {
         country: t(f.country), city: t(f.city), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
         firm_name: t(f.firm_name), business_address: t(f.business_address), aum: t(f.aum),
         min_ticket_size: t(f.min_ticket_size), max_ticket_size: t(f.max_ticket_size), short_description: t(f.short_description),
+        revenue_min_m: f.revenue_min_m === "" ? null : Number(f.revenue_min_m),
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, portfolio_extra: portfolio,
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
@@ -384,6 +387,19 @@ function Form({ data }: { data: Data }) {
               </Select>
             </div>
           ))}
+        </div>
+        {/* Buying Requirement */}
+        <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
+          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
+          <Label>Revenue minimum</Label>
+          <Select value={f.revenue_min_m || "none"} onValueChange={(v) => setF((o) => ({ ...o, revenue_min_m: v === "none" ? "" : v }))}>
+            <SelectTrigger className="max-w-[320px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {REVENUE_MIN_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
         </div>
 
         {/* About */}
