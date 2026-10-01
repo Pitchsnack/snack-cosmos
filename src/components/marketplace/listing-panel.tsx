@@ -208,57 +208,60 @@ export function NdaRequestedBadge() {
 type NdaStatus = "none" | "requested" | "approved" | "exchanged";
 
 function LowerPanel({ t, requested, onRequested }: { t: Teaser; requested?: boolean; onRequested?: (id: string) => void }) {
+  const { t: tr, language } = useTranslation();
   const l = t.listing;
   const x = t as Teaser & { growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus };
   const { data: ndaMap } = useNdaStatuses();
   const raw = ndaMap?.[t.id];
   const status: NdaStatus = requested ? "requested" : ((raw && raw !== "declined" ? raw : undefined) as NdaStatus | undefined) ?? x.ndaStatus ?? "none";
-  const unlockList = [
+  const unlockList = ([
     "Company name & logo",
     "website & contacts",
     (l as { people?: string[] }).people?.length !== 0 && "founder names",
     l.hasFinancials && "exact financials FY23–25",
     "valuation report",
     "data room",
-  ].filter(Boolean) as string[];
+  ].filter(Boolean) as string[]).map((u) => tr(u));
+  // Thai has no letter case, so only English chips get the capital.
+  const chipLabel = (u: string) => (language === "th" ? u : u.charAt(0).toUpperCase() + u.slice(1));
   const step = { none: 0, requested: 1, approved: 2, exchanged: 3 }[status];
-  const subs = [status === "none" ? "You are here" : "", status === "requested" ? "waiting for the seller" : "usually 2 days", "identity, financials, data room", "talk directly"];
+  const subs = [status === "none" ? tr("You are here") : "", status === "requested" ? tr("waiting for the seller") : tr("usually 2 days"), tr("identity, financials, data room"), tr("talk directly")];
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2">
         <DealTerms t={t} />
         <div className={BOX}>
-          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Financials · ranges before NDA</h4>
+          <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Financials · ranges before NDA")}</h4>
           <KV rows={[
-            ["Revenue FY25", l.revenueBand],
-            ["Growth", x.growthBand ?? null],
-            ["EBITDA margin", x.ebitdaMargin ?? null],
-            ["Net cash", x.netCash ?? null],
-            ["Verified by", l.hasFinancials
-              ? <span className="text-[#16A34A]">✓ PitchSnack analysts</span>
-              : <span className="font-normal text-muted-foreground">Seller-provided, not verified</span>],
+            [tr("Revenue FY25"), l.revenueBand],
+            [tr("Growth"), x.growthBand ?? null],
+            [tr("EBITDA margin"), x.ebitdaMargin ?? null],
+            [tr("Net cash"), x.netCash ?? null],
+            [tr("Verified by"), l.hasFinancials
+              ? <span className="text-[#16A34A]">{tr("✓ PitchSnack analysts")}</span>
+              : <span className="font-normal text-muted-foreground">{tr("Seller-provided, not verified")}</span>],
           ]} />
         </div>
       </div>
 
       {status === "requested" ? (
         <div className={BOX}>
-          <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Shown after the seller approves</h4>
+          <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Shown after the seller approves")}</h4>
           <div className="flex flex-wrap gap-1.5">
             {unlockList.map((u) => (
-              <span key={u} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11.5px] font-semibold text-foreground/70"><Lock className="h-3 w-3" />{u.charAt(0).toUpperCase() + u.slice(1)}</span>
+              <span key={u} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11.5px] font-semibold text-foreground/70"><Lock className="h-3 w-3" />{chipLabel(u)}</span>
             ))}
           </div>
         </div>
       ) : status === "approved" || status === "exchanged" ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#86EFAC] bg-[#F0FDF4] px-[14px] py-3">
-          <div className="text-sm font-bold text-[#166534]">NDA approved · full profile unlocked</div>
-          <Button size="sm">Open full profile</Button>
+          <div className="text-sm font-bold text-[#166534]">{tr("NDA approved · full profile unlocked")}</div>
+          <Button size="sm">{tr("Open full profile")}</Button>
         </div>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#FCD34D] bg-[#FFFBEB] px-[14px] py-3">
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-bold text-[#78350F]">Request the NDA to unlock</div>
+            <div className="text-sm font-bold text-[#78350F]">{tr("Request the NDA to unlock")}</div>
             <p className="mt-0.5 text-[12.5px] text-[#92400E]">{unlockList.join(" · ")}</p>
           </div>
           <NdaButton listingId={t.id} onRequested={onRequested} />
@@ -266,7 +269,7 @@ function LowerPanel({ t, requested, onRequested }: { t: Teaser; requested?: bool
       )}
 
       <section>
-        <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How it works</h4>
+        <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("How it works")}</h4>
         <ol className="relative grid grid-cols-4">
           <span className="absolute left-[12.5%] right-[12.5%] top-[7px] h-[2px] bg-[#E5E7EB]" />
           {STEPS.map((s, i) => (
@@ -277,7 +280,7 @@ function LowerPanel({ t, requested, onRequested }: { t: Teaser; requested?: bool
                 i === step && "bg-[#6D28D9] ring-4 ring-[#6D28D9]/20",
                 i > step && "border-2 border-[#D1D5DB] bg-card",
               )} />
-              <span className={cn("mt-2 text-[12.5px]", i === step ? "font-bold" : "text-foreground/80")}>{s}</span>
+              <span className={cn("mt-2 text-[12.5px]", i === step ? "font-bold" : "text-foreground/80")}>{tr(s)}</span>
               {subs[i] && <span className="text-[11px] text-muted-foreground">{subs[i]}</span>}
             </li>
           ))}
