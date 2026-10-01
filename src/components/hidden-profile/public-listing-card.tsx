@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/i18n/language";
 import type { PublicListing } from "@/lib/public-listing";
 import { getStartupSignedUrl } from "@/lib/startups.functions";
 import { SectorArt } from "./bits";
