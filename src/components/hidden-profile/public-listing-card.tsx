@@ -162,7 +162,7 @@ export function PublicListingCard({
           <div className="mt-3 space-y-2.5 border-t border-border pt-3">
             {l.description && <p className="text-[13px] text-foreground/80">{l.description}</p>}
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
-              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Products & services</span>
+              <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Products & services")}</span>
               <TagChips tags={l.productTags} />
             </div>
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
