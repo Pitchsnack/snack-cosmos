@@ -246,6 +246,7 @@ function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<str
 }
 
 function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; savedIds: Set<string> }) {
+  const { t } = useTranslation();
   const withdraw = useServerFn(withdrawNdaRequest);
   const invalidate = useInvalidateListings();
   const [busy, setBusy] = useState(false);
@@ -258,15 +259,15 @@ function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; sav
         </div>
         <Button variant="outline" size="sm" disabled={busy} onClick={async () => {
           setBusy(true);
-          try { await withdraw({ data: { id: f.id } }); const name = f.listing.codeName || f.listing.refNo || "This listing";
-            toast.success(savedIds.has(f.id) ? `Request withdrawn. ${name} stays in Favourites as starred.` : `Request withdrawn. ${name} has left Favourites.`); invalidate(); }
+          try { await withdraw({ data: { id: f.id } }); const name = f.listing.codeName || f.listing.refNo || t("This listing");
+            toast.success(savedIds.has(f.id) ? `${t("Request withdrawn.")} ${name} ${t("stays in Favourites as starred.")}` : `${t("Request withdrawn.")} ${name} ${t("has left Favourites.")}`); invalidate(); }
           catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-        }}>Withdraw request</Button>
+        }}>{t("Withdraw request")}</Button>
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
         <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
           <Clock className="mt-0.5 h-4 w-4 flex-none" />
-          <span>You requested the NDA on {fmtDate(f.ndaRequestedAt)}. The seller usually replies within 2 days, and the private view opens here once they approve.</span>
+          <span>{t("You requested the NDA on")} {fmtDate(f.ndaRequestedAt)}. {t("The seller usually replies within 2 days, and the private view opens here once they approve.")}</span>
         </div>
         <ListingDetail t={f} requested />
       </div>
