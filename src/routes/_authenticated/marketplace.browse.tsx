@@ -248,6 +248,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
 function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
   t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string) => void;
 }) {
+  const { t: tr } = useTranslation();
   const datesFn = useServerFn(myNdaRequestDates);
   const { data: dates } = useQuery({ queryKey: ["pipeline", "nda-dates"], queryFn: () => datesFn(), enabled: nda === "requested" });
   const d = dates?.[t.id];
