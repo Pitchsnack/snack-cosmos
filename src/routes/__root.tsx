@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { ViewModeProvider } from "@/context/view-mode-context";
+import { LanguageProvider } from "@/i18n/language";
 
 function NotFoundComponent() {
   return (
@@ -133,9 +134,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthStateSync />
-      <ViewModeProvider>
-        <Outlet />
-      </ViewModeProvider>
+      <LanguageProvider>
+        <ViewModeProvider>
+          <Outlet />
+        </ViewModeProvider>
+      </LanguageProvider>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

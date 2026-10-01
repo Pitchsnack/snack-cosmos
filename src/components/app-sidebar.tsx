@@ -44,6 +44,7 @@ import logoBlack from "@/assets/pitchsnack-black.png";
 import { useIsMarketplace, usePersona, rememberAdminPath } from "@/hooks/use-marketplace";
 import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marketplace/marketplace-frame";
 import { GlobalRouteLoading } from "@/components/ui/global-loading";
+import { useTranslation } from "@/i18n/language";
 
 type NavPath =
   | "/"
@@ -265,6 +266,7 @@ function SidebarBody({
   const { persona } = usePersona();
   const showLabels = !collapsed || isMobile;
   const { has, isControl, isResolved, roles } = useEffectivePermissions();
+  const { t } = useTranslation();
   const { data: sessionData } = useSessionContext();
 
   // While permissions are unresolved AND we have no cached session data,
@@ -329,8 +331,8 @@ function SidebarBody({
                   title={
                     !showLabels
                       ? item.disabled
-                        ? `${item.label} (coming soon)`
-                        : item.label
+                        ? `${t(item.label)} (${t("Coming Soon").toLowerCase()})`
+                        : t(item.label)
                       : item.disabled
                         ? "Coming soon"
                         : undefined
@@ -341,10 +343,10 @@ function SidebarBody({
                   <item.icon className="h-4 w-4 shrink-0" />
                   {showLabels && (
                     <span className="flex flex-1 items-center justify-between">
-                      {item.label}
+                      {t(item.label)}
                       {item.disabled && !hideSoonBadge && (
                         <span className="text-[9px] uppercase tracking-wider text-sidebar-foreground/40">
-                          Soon
+                          {t("Soon")}
                         </span>
                       )}
                     </span>
@@ -358,11 +360,11 @@ function SidebarBody({
                 key={`${item.label}-${idx}`}
                 to={item.path}
                 onClick={onNavigate}
-                title={!showLabels ? item.label : undefined}
+                title={!showLabels ? t(item.label) : undefined}
                 className={baseClass}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                {showLabels && <span className="whitespace-pre">{item.label}{item.label === "Investors Directory" ? "\n" : ""}</span>}
+                {showLabels && <span className="whitespace-pre">{t(item.label)}{item.label === "Investors Directory" ? "\n" : ""}</span>}
                 {showLabels && item.label === "Approvals" && <ApprovalsBadge />}
               </Link>
             );
@@ -394,7 +396,7 @@ function SidebarBody({
                 <div key={group.title} className="space-y-1">
                   {showLabels && (
                     <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                      {group.title}
+                      {t(group.title)}
                     </div>
                   )}
                   {group.items.map((it, i) => renderItem(it, i, group.title === "Coming Soon"))}

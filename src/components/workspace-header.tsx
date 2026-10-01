@@ -5,6 +5,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { Badge } from "@/components/ui/badge";
 import { ViewAsSwitcher } from "@/components/view-switcher/view-as-switcher";
 import { ViewModeBadge } from "@/components/view-switcher/view-mode-badge";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -52,6 +53,7 @@ export function WorkspaceHeader() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <ViewModeBadge />
         <ViewAsSwitcher />
         <GlobalSearch />
