@@ -276,6 +276,7 @@ function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; sav
 }
 
 function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
+  const { t } = useTranslation();
   const p = f.priv!;
   const logo = useMediaUrl(p.logoPath);
   const [more, setMore] = useState(false);
