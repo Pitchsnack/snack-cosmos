@@ -172,9 +172,9 @@ function FavouritesPage() {
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Star className="mx-auto mb-2 h-8 w-8 opacity-50" />
           {all.length === 0 && !q ? (
-            <p>Nothing here yet. Save a listing or request an NDA in <Link to="/marketplace/browse" className="font-semibold text-[#2563EB] hover:underline">Browse listings</Link>.</p>
+            <p>{t("Nothing here yet. Save a listing or request an NDA in")} <Link to="/marketplace/browse" className="font-semibold text-[#2563EB] hover:underline">{t("Browse listings")}</Link>.</p>
           ) : (
-            <p>No listings with this status.</p>
+            <p>{t("No listings with this status.")}</p>
           )}
         </div>
       ) : view === "grid" ? (
