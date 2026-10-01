@@ -2239,6 +2239,7 @@ export type Database = {
           min_ticket_size: string | null
           preferred_industries: string[] | null
           preferred_stages: string[] | null
+          revenue_max_m: number | null
           revenue_min_m: number | null
           short_description: string | null
           source_global_id: string | null
@@ -2275,6 +2276,7 @@ export type Database = {
           min_ticket_size?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
+          revenue_max_m?: number | null
           revenue_min_m?: number | null
           short_description?: string | null
           source_global_id?: string | null
@@ -2311,6 +2313,7 @@ export type Database = {
           min_ticket_size?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
+          revenue_max_m?: number | null
           revenue_min_m?: number | null
           short_description?: string | null
           source_global_id?: string | null

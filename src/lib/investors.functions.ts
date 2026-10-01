@@ -210,7 +210,7 @@ export const getInvestor = createServerFn({ method: "GET" })
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url, media,
         firm_name, email, business_address, year_founded,
-        min_ticket_size, max_ticket_size, bio, revenue_min_m,
+        min_ticket_size, max_ticket_size, bio, revenue_min_m, revenue_max_m,
         keywords, preferred_stages, preferred_industries, investment_focus,
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
@@ -332,6 +332,7 @@ const ProfileFields = {
   minTicketSize: z.string().max(50).nullable().optional(),
   maxTicketSize: z.string().max(50).nullable().optional(),
   revenueMinM: z.number().min(0).max(100000).nullable().optional(),
+  revenueMaxM: z.number().min(0).max(100000).nullable().optional(),
   bio: z.string().max(2000).nullable().optional(),
   keywords: z.array(z.string()).max(20).optional(),
   
@@ -423,6 +424,7 @@ export const createInvestor = createServerFn({ method: "POST" })
         min_ticket_size: data.minTicketSize || null,
         max_ticket_size: data.maxTicketSize || null,
         revenue_min_m: data.revenueMinM ?? null,
+        revenue_max_m: data.revenueMaxM ?? null,
         short_description: data.shortDescription || null,
         long_description: data.longDescription || null,
         bio: data.bio || null,
@@ -526,6 +528,7 @@ export const updateInvestor = createServerFn({ method: "POST" })
     if (data.minTicketSize !== undefined) patch.min_ticket_size = data.minTicketSize;
     if (data.maxTicketSize !== undefined) patch.max_ticket_size = data.maxTicketSize;
     if (data.revenueMinM !== undefined) patch.revenue_min_m = data.revenueMinM;
+    if (data.revenueMaxM !== undefined) patch.revenue_max_m = data.revenueMaxM;
     if (data.bio !== undefined) patch.bio = data.bio;
     if (data.keywords !== undefined) patch.keywords = data.keywords;
     

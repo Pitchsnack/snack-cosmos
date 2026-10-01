@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BadgeCheck, Briefcase, Building2, ChevronDown, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, Users } from "lucide-react";
-import { isCorporateBuyer } from "@/lib/investor-browse";
+import { isCorporateBuyer, revenueBandLabel } from "@/lib/investor-browse";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 
@@ -43,13 +43,16 @@ export type CardInvestor = {
   city: string | null; country: string | null; description: string | null;
   sectors: string[]; stages: string[]; dealTypes: string[]; geography: string | null;
   verified: boolean; proofOfFunds: boolean;
-  ticketLabel: string | null; aumLabel: string | null; revenueMinM: number | null;
+  ticketLabel: string | null; aumLabel: string | null;
+  revenueMinM: number | null; revenueMaxM: number | null;
 };
 
-function revLabel(m: number | null) {
-  if (m == null) return null;
-  if (m === 0) return "No revenue minimum";
-  return m >= 1000 ? `฿${+(m / 1000).toFixed(1)}B` : `฿${m}M`;
+function revLine(i: CardInvestor): React.ReactNode | null {
+  if (i.revenueMinM == null) return null;
+  const label = revenueBandLabel(i.revenueMinM, i.revenueMaxM);
+  if (!label) return null;
+  if (label === "No minimum") return <span key="r">No revenue minimum</span>;
+  return <span key="r">Revenue <b className="font-semibold text-[#434A5C] dark:text-foreground">{label}</b></span>;
 }
 
 /** The one public investor card sellers see in Browse investors. Only public fields reach it. */
@@ -62,12 +65,10 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
   const toggle = onToggleExpand ?? (() => setLocalOpen((o) => !o));
   const hidden = !i.name;
   const corp = isCorporateBuyer(i.type);
-  const rev = revLabel(i.revenueMinM);
+  const rev = revLine(i);
   const sub: React.ReactNode[] = [];
   sub.push(<span key="a">{corp ? "Group revenue" : "AUM"} {i.aumLabel ? <b className="font-semibold text-[#434A5C] dark:text-foreground">{i.aumLabel}</b> : "undisclosed"}</span>);
-  if (rev) sub.push(i.revenueMinM === 0
-    ? <span key="r">No revenue minimum</span>
-    : <span key="r">Revenue min. <b className="font-semibold text-[#434A5C] dark:text-foreground">{rev}</b></span>);
+  if (rev) sub.push(rev);
   const facts = [[i.city, i.country].filter(Boolean).join(", "), i.stages.join(", "), i.dealTypes.join(", "), i.geography].filter(Boolean).join(" · ");
   return (
     <div
@@ -122,12 +123,12 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
 }
 
 /** Buyer's own "How sellers see it" preview — same card. */
-export function BuyerBrowseCard({ b, className, revenueMinM = null }: { b: PublicBuyer; className?: string; revenueMinM?: number | null }) {
+export function BuyerBrowseCard({ b, className, revenueMinM = null, revenueMaxM = null }: { b: PublicBuyer; className?: string; revenueMinM?: number | null; revenueMaxM?: number | null }) {
   return (
     <PublicInvestorCard className={className} i={{
       refNo: b.refNo, codeName: b.codeName, name: b.name, type: b.type, city: b.city, country: b.country,
       description: b.description || b.headline, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: null,
-      verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revenueMinM,
+      verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revenueMinM, revenueMaxM,
     }} />
   );
 }

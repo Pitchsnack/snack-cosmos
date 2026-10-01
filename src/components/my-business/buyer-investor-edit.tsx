@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { REVENUE_MIN_OPTIONS } from "@/lib/investor-browse";
+import { REVENUE_MIN_OPTIONS, bandValue, findRevenueBand, moneyTHB, parseRevenueBandValue } from "@/lib/investor-browse";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
@@ -122,6 +122,11 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
 
 function Form({ data }: { data: Data }) {
   const inv = data.investor;
+  const revBandInit = (() => {
+    if (inv.revenue_min_m == null) return "";
+    const b = findRevenueBand(inv.revenue_min_m, inv.revenue_max_m ?? null);
+    return b ? bandValue(b[0], b[1]) : String(inv.revenue_min_m);
+  })();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveMyBuyerInvestor);
@@ -134,7 +139,7 @@ function Form({ data }: { data: Data }) {
     firm_name: inv.firm_name ?? "", business_address: inv.business_address ?? "",
     aum: inv.aum ?? "", min_ticket_size: inv.min_ticket_size ?? "", max_ticket_size: inv.max_ticket_size ?? "",
     short_description: inv.short_description ?? "",
-    revenue_min_m: inv.revenue_min_m == null ? "" : String(inv.revenue_min_m),
+    revenue_band: revBandInit,
   });
   const [keywords, setKeywords] = useState(inv.keywords);
   const [focus, setFocus] = useState(inv.investment_focus);
@@ -189,6 +194,7 @@ function Form({ data }: { data: Data }) {
     setBusy(true);
     try {
       const t = (v: string) => v.trim() || null;
+      const revBand = parseRevenueBandValue(f.revenue_band);
       const { logoPath, media: resolvedMedia } = await uploadPending(
         media,
         ({ kind, ext }) => getUrl({ data: { kind, ext } }),
@@ -199,7 +205,8 @@ function Form({ data }: { data: Data }) {
         country: t(f.country), city: t(f.city), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
         firm_name: t(f.firm_name), business_address: t(f.business_address), aum: t(f.aum),
         min_ticket_size: t(f.min_ticket_size), max_ticket_size: t(f.max_ticket_size), short_description: t(f.short_description),
-        revenue_min_m: f.revenue_min_m === "" ? null : Number(f.revenue_min_m),
+        revenue_min_m: revBand ? revBand.lo : null,
+        revenue_max_m: revBand ? revBand.hi : null,
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, portfolio_extra: portfolio,
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
@@ -391,15 +398,18 @@ function Form({ data }: { data: Data }) {
         {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
           <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
-          <Label>Revenue minimum</Label>
-          <Select value={f.revenue_min_m || "none"} onValueChange={(v) => setF((o) => ({ ...o, revenue_min_m: v === "none" ? "" : v }))}>
+          <Label>Revenue band</Label>
+          <Select value={f.revenue_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, revenue_band: v === "none" ? "" : v }))}>
             <SelectTrigger className="max-w-[320px]"><SelectValue placeholder="Not set" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Not set</SelectItem>
               {REVENUE_MIN_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              {f.revenue_band && !REVENUE_MIN_OPTIONS.some((o) => o.value === f.revenue_band) && (
+                <SelectItem value={f.revenue_band}>{moneyTHB(Number(f.revenue_band) * 1e6)} minimum</SelectItem>
+              )}
             </SelectContent>
           </Select>
-          <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
+          <p className="text-[12px] text-muted-foreground">The company revenue range you'll buy. Sellers can filter by it.</p>
         </div>
 
         {/* About */}

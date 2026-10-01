@@ -14,7 +14,7 @@ import { useSavedIds } from "@/hooks/use-saved-ids";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { listBrowseInvestors } from "@/lib/investor-browse.functions";
 import {
-  AUM_FILTER, REVENUE_FILTER, TICKET_FILTER, isCorporateBuyer, matchAum, matchRevenue, matchTicket, revenueMinLabel,
+  AUM_FILTER, REVENUE_FILTER, TICKET_FILTER, isCorporateBuyer, matchAum, matchRevenue, matchTicket, revenueCardText,
   type FilterOpt, type PublicInvestor,
 } from "@/lib/investor-browse";
 import { cn } from "@/lib/utils";
@@ -105,7 +105,7 @@ function Detail({ i, saved, onSave }: { i: PublicInvestor; saved: boolean; onSav
     ["Investor type", i.type || "—"],
     ["Ticket size", i.ticketLabel || "—"],
     [corp ? "Group revenue" : "Assets under management", i.aumLabel || "Undisclosed"],
-    ["Revenue minimum", revenueMinLabel(i.revenueMinM) ?? "Not stated"],
+    ["Revenue band", revenueCardText(i.revenueMinM, i.revenueMaxM) ?? "Not stated"],
     ["Preferred stages", i.stages.join(", ") || "—"],
     ["Deal types", i.dealTypes.join(", ") || "—"],
     ["Geography", i.geography || "—"],
@@ -258,8 +258,8 @@ export function InvestorBrowse() {
         <FilterMenu label="Ticket size" heading="Ticket size" options={TICKET_FILTER} value={ticket} onChange={setTicket} countFor={count("ticket")}
           hint="Pick the amount you're raising or selling for. Shows investors whose ticket range covers it."
           foot="Exact ticket sizes are shown only after the NDA is approved." />
-        <FilterMenu label="Revenue minimum" heading="Revenue minimum" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={count("revenue")}
-          hint="The smallest company revenue each investor will buy. Shows investors whose minimum is at or below your pick." />
+        <FilterMenu label="Revenue band" heading="Revenue band" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={count("revenue")}
+          hint="Pick the revenue range of the company you're selling. Shows investors who buy in that range." />
       </div>
 
       <div className="flex shrink-0 items-start gap-2 rounded-[10px] bg-muted/60 px-3 py-2 text-[12.5px] text-muted-foreground">
@@ -309,7 +309,7 @@ export function InvestorBrowse() {
                 <div className="truncate text-sm font-semibold text-foreground">{i.name || i.codeName} <span className="font-normal text-muted-foreground">· {i.refNo}</span></div>
                 <div className="truncate text-[12px] text-muted-foreground">
                   {[i.type, i.country, i.ticketLabel && `Ticket ${i.ticketLabel}`, i.aumLabel && `AUM ${i.aumLabel}`,
-                    i.revenueMinM != null && (i.revenueMinM === 0 ? "No revenue minimum" : `Revenue min. ${revenueMinLabel(i.revenueMinM)}`)].filter(Boolean).join(" · ")}
+                    i.revenueMinM != null && revenueCardText(i.revenueMinM, i.revenueMaxM)].filter(Boolean).join(" · ")}
                 </div>
               </div>
               {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}

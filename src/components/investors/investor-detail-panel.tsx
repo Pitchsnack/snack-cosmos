@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { revenueMinLabel } from "@/lib/investor-browse";
+import { revenueBandLabel } from "@/lib/investor-browse";
 import { Link } from "@tanstack/react-router";
 import { type InvestorDirectorySearch } from "@/routes/_authenticated/investors.index";
 import {
@@ -65,6 +65,7 @@ export type InvestorDetail = {
   min_ticket_size?: string | null;
   max_ticket_size?: string | null;
   revenue_min_m?: number | null;
+  revenue_max_m?: number | null;
   short_description: string | null;
   long_description: string | null;
   bio?: string | null;
@@ -174,7 +175,10 @@ export function InvestorDetailPanel({
   if (i.country) metaItems.push({ icon: MapPin, label: i.country });
   if (i.aum) metaItems.push({ icon: Coins, label: `AUM ${i.aum}` });
   if (ticket) metaItems.push({ icon: Layers, label: `Ticket ${ticket}` });
-  if (i.revenue_min_m != null) metaItems.push({ icon: Coins, label: i.revenue_min_m === 0 ? "Revenue minimum: none" : `Revenue minimum ${revenueMinLabel(Number(i.revenue_min_m))}` });
+  if (i.revenue_min_m != null) {
+    const rl = revenueBandLabel(Number(i.revenue_min_m), i.revenue_max_m == null ? null : Number(i.revenue_max_m));
+    if (rl) metaItems.push({ icon: Coins, label: rl === "No minimum" ? "Revenue: no minimum" : `Revenue band ${rl}` });
+  }
 
   return (
     <div className="space-y-[14px] text-foreground">

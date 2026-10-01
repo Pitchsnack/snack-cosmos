@@ -35,7 +35,7 @@ export const listBrowseInvestors = createServerFn({ method: "GET" })
 
     const [{ data: rows }, { data: bvs }] = await Promise.all([
       sb.from("investors")
-        .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, created_at")
+        .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, created_at")
         .in("id", ids).order("created_at", { ascending: false }),
       buyerByInv.size
         ? sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", [...buyerByInv.values()].map((b) => b.user_id))
@@ -82,6 +82,7 @@ export const listBrowseInvestors = createServerFn({ method: "GET" })
         ticketHi: ticketLo == null && ticketHi == null ? null : ticketHi,
         ticketLabel: ticketLo == null && !tMax ? null : rangeLabel(ticketLo ?? 0, ticketHi),
         revenueMinM: r.revenue_min_m == null ? null : Number(r.revenue_min_m),
+        revenueMaxM: r.revenue_max_m == null ? null : Number(r.revenue_max_m),
       };
     });
   });
