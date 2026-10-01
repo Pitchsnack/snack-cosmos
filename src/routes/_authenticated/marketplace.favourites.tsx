@@ -137,9 +137,9 @@ function FavouritesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Star className="h-3.5 w-3.5" /> Discover</div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Favourites</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Listings you starred or requested an NDA for</p>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Star className="h-3.5 w-3.5" /> {t("Discover")}</div>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{t("Favourites")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("Listings you starred or requested an NDA for")}</p>
         </div>
         <ViewToggle value={view} onChange={persist} />
       </div>
