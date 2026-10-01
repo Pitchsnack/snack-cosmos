@@ -127,13 +127,13 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Store className="h-3.5 w-3.5" /> {ownOnly ? "My listing" : "Discover"}
+            <Store className="h-3.5 w-3.5" /> {ownOnly ? t("My listing") : t("Discover")}
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{ownOnly ? "My company on the Marketplace" : "Browse listings"}</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{ownOnly ? t("My company on the Marketplace") : t("Browse listings")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {ownOnly
-              ? "This is exactly how buyers see your company. Other companies are not shown here."
-              : items.length > 0 ? `${items.length} live listing${items.length === 1 ? "" : "s"}` : "Approved businesses appear here."}
+              ? t("This is exactly how buyers see your company. Other companies are not shown here.")
+              : items.length > 0 ? `${items.length} ${items.length === 1 ? t("live listing") : t("live listings")}` : t("Approved businesses appear here.")}
           </p>
         </div>
         {!ownOnly && <ViewToggle value={view} onChange={persist} />}
