@@ -134,9 +134,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthStateSync />
-      <ViewModeProvider>
-        <Outlet />
-      </ViewModeProvider>
+      <LanguageProvider>
+        <ViewModeProvider>
+          <Outlet />
+        </ViewModeProvider>
+      </LanguageProvider>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
