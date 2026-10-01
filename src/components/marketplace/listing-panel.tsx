@@ -9,6 +9,7 @@ import { useMyVerification } from "@/components/marketplace/buyer-verification";
 import { myNdaStatuses, requestNda } from "@/lib/pipeline.functions";
 import { mySavedListingIds, toggleSavedListing } from "@/lib/favourites.functions";
 import type { PublicListing } from "@/lib/public-listing";
+import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 
 export type Teaser = {
