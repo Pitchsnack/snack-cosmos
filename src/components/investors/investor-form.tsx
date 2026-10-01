@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
-import { REVENUE_MIN_OPTIONS } from "@/lib/investor-browse";
+import { REVENUE_MIN_OPTIONS, bandValue, findRevenueBand, moneyTHB, parseRevenueBandValue } from "@/lib/investor-browse";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -171,6 +171,7 @@ export interface InvestorEditModel {
   min_ticket_size: string | null;
   max_ticket_size: string | null;
   revenue_min_m?: number | null;
+  revenue_max_m?: number | null;
   bio: string | null;
   keywords: string[] | null;
   
@@ -323,7 +324,11 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [aum, setAum] = useState(investor?.aum ?? "");
   const [minTicket, setMinTicket] = useState(investor?.min_ticket_size ?? "");
   const [maxTicket, setMaxTicket] = useState(investor?.max_ticket_size ?? "");
-  const [revenueMin, setRevenueMin] = useState(investor?.revenue_min_m == null ? "" : String(investor.revenue_min_m));
+  const [revenueBand, setRevenueBand] = useState<string>(() => {
+    if (investor?.revenue_min_m == null) return "";
+    const b = findRevenueBand(investor.revenue_min_m, investor.revenue_max_m ?? null);
+    return b ? bandValue(b[0], b[1]) : String(investor.revenue_min_m);
+  });
   const [bio, setBio] = useState(investor?.bio ?? "");
   const [keywords, setKeywords] = useState<string[]>(investor?.keywords ?? []);
   const [keywordDraft, setKeywordDraft] = useState("");
@@ -512,7 +517,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
       aum: aum || null,
       minTicketSize: minTicket || null,
       maxTicketSize: maxTicket || null,
-      revenueMinM: revenueMin === "" ? null : Number(revenueMin),
+      revenueMinM: revBand?.lo ?? null,
+      revenueMaxM: revBand?.hi ?? null,
       ticketSize:
         minTicket && maxTicket ? `${minTicket} – ${maxTicket}` : minTicket || maxTicket || null,
       bio: bio || null,

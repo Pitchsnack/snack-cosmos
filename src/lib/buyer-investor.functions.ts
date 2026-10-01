@@ -128,7 +128,9 @@ const Patch = z.object({
   country: txt(120), city: txt(120), email: txt(255), website_url: txt(500), linkedin_url: txt(500),
   firm_name: txt(200), business_address: txt(1000), aum: txt(120), min_ticket_size: txt(60), max_ticket_size: txt(60),
   short_description: txt(4000), keywords: arr(5), investment_focus: arr(10), preferred_stages: arr(12), preferred_industries: arr(20),
-  portfolio_extra: arr(50), logo_path: txt(1000), revenue_min_m: z.number().min(0).max(100000).nullable().optional(),
+  portfolio_extra: arr(50), logo_path: txt(1000),
+  revenue_min_m: z.number().min(0).max(100000).nullable().optional(),
+  revenue_max_m: z.number().min(0).max(100000).nullable().optional(),
   media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(1000) })).max(3).optional(),
   people: z.array(z.object({ name: z.string().max(120), role: z.string().max(120).default(""), email: z.string().max(200).default(""), phone: z.string().max(60).default("") })).max(20).optional(),
 });
