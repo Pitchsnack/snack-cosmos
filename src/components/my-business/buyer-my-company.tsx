@@ -404,6 +404,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   });
   const tone = typeTone(org.type);
   const pub = toPublicLocal(p, org);
+  const inv = useBuyerInvestor();
   const title = p.show_name && org.name ? org.name : p.code_name;
   const LOCKS = ["Name & logo", "Website & address", "Decision makers", "Emails & phones", "Exact AUM & ticket", "Portfolio", "Decision process"];
   return (
@@ -419,7 +420,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">How sellers see it in Browse investors</span>
           <StatusChip status={p.status === "live" ? "live" : "draft"} />
         </div>
-        <BuyerBrowseCard b={pub} className="mx-auto max-w-[380px]" />
+        <BuyerBrowseCard b={pub} revenueMinM={inv.data?.investor.revenue_min_m ?? null} className="mx-auto max-w-[380px]" />
       </div>
       <div className="mt-4 flex items-center justify-between gap-4 rounded-[12px] border border-border p-3.5">
         <div className="min-w-0">
