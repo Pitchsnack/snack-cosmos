@@ -75,12 +75,12 @@ function Fact({ icon, children, full }: { icon: React.ReactNode; children: React
 
 export type ListingDeal = { dealType?: string | null; askingPrice?: number | null; stakePct?: number | null };
 
-export function dealLine(d?: ListingDeal) {
+export function dealLine(d?: ListingDeal, t: (s: string) => string = (s) => s) {
   if (!d) return "";
   return [
     d.dealType,
-    d.stakePct != null ? `${d.stakePct}% stake` : null,
-    d.askingPrice == null ? "price on request" : `฿${d.askingPrice}M asking`,
+    d.stakePct != null ? `${d.stakePct}% ${t("stake")}` : null,
+    d.askingPrice == null ? t("price on request") : `฿${d.askingPrice}M ${t("asking")}`,
   ].filter(Boolean).join(" · ");
 }
 
