@@ -143,25 +143,25 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search listings" className="pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search listings")} className="pl-9" />
         </div>
         <Select value={sector} onValueChange={setSector}>
-          <SelectTrigger className="w-[190px]"><SelectValue placeholder="Sector" /></SelectTrigger>
+          <SelectTrigger className="w-[190px]"><SelectValue placeholder={t("Sector")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All sectors</SelectItem>
+            <SelectItem value="all">{t("All sectors")}</SelectItem>
             {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={deal} onValueChange={setDeal}>
-          <SelectTrigger className="w-[190px]"><SelectValue placeholder="Deal type" /></SelectTrigger>
+          <SelectTrigger className="w-[190px]"><SelectValue placeholder={t("Deal type")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All deal types</SelectItem>
+            <SelectItem value="all">{t("All deal types")}</SelectItem>
             {dealTypes.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
         {hasFilter && (
           <Button variant="ghost" size="sm" onClick={() => { setQ(""); setSector("all"); setDeal("all"); }}>
-            <X className="mr-1 h-4 w-4" />Clear
+            <X className="mr-1 h-4 w-4" />{t("Clear")}
           </Button>
         )}
       </div>
