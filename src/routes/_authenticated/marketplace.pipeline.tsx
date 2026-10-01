@@ -11,11 +11,10 @@ let sessionOpen = new Set<string>();
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePersona } from "@/hooks/use-marketplace";
+import { useTranslation } from "@/i18n/language";
 import {
   listPipeline, decideNda, shareReport, revokeReportShare, askForReport, sendLoi, withdrawLoiRequest, shareStep, pipelineEvents,
   type PipelineRow,
@@ -24,6 +23,8 @@ import { STEPS, currentStep, isPending, waitState } from "@/lib/pipeline-state";
 import { ReportViewer, CompareReports, InvestorProfile, SellerProfile, NdaDialog, LoiDialog as LoiDocDialog } from "@/components/pipeline/pipeline-dialogs";
 import { Tooltip as TT, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvider delayDuration={200}><TT>{children}</TT></TooltipProvider>;
+
+type T = (s: string) => string;
 
 export const Route = createFileRoute("/_authenticated/marketplace/pipeline")({
   head: () => ({
@@ -82,6 +83,7 @@ function useRefresh() {
 
 function PipelinePage() {
   const { persona } = usePersona();
+  const { t } = useTranslation();
   const fn = useServerFn(listPipeline);
   const { data = [], isLoading } = useQuery({ queryKey: ["pipeline", persona], queryFn: () => fn({ data: { as: persona } }) });
   const pending = data.filter(isPending);
@@ -106,21 +108,21 @@ function PipelinePage() {
     <div className="mx-auto max-w-[1180px] space-y-6 p-6 md:p-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-link">My workspace</div>
-          <h1 className="mt-2 text-[30px] font-bold leading-tight">My Pipeline</h1>
+          <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-link">{t("My workspace")}</div>
+          <h1 className="mt-2 text-[30px] font-bold leading-tight">{t("My Pipeline")}</h1>
           <p className="mt-2 max-w-[560px] text-muted-foreground">
-            Find Investors Aligned With Your Business: 1 decision is waiting for you.
+            {t("Find Investors Aligned With Your Business: 1 decision is waiting for you.")}
           </p>
         </div>
         {seller && data[0] && (
-          <Button asChild variant="outline"><Link to="/marketplace/browse" search={{ company: data[0].hiddenProfileId }}>Open my listing</Link></Button>
+          <Button asChild variant="outline"><Link to="/marketplace/browse" search={{ company: data[0].hiddenProfileId }}>{t("Open my listing")}</Link></Button>
         )}
       </div>
 
-      {seller && <SellerStats rows={data} waiting={waiting} />}
+      {seller && <SellerStats rows={data} waiting={waiting} t={t} />}
 
       <div className="flex gap-1 border-b">
-        {([["pending", "Pending approval", pending.length], ["tracking", "Tracking", tracking.length]] as const).map(([k, label, n]) => (
+        {([["pending", t("Pending approval"), pending.length], ["tracking", t("Tracking"), tracking.length]] as const).map(([k, label, n]) => (
           <button key={k} onClick={() => setTab(k)}
             className={cn("-mb-px flex items-center gap-2 border-b-2 px-4 py-3 text-[15px] font-semibold",
               tab === k ? "border-link text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
@@ -132,18 +134,18 @@ function PipelinePage() {
       </div>
 
       {isLoading ? (
-        <div className="py-16 text-center text-muted-foreground">Loading…</div>
+        <div className="py-16 text-center text-muted-foreground">{t("Loading…")}</div>
       ) : tab === "pending" ? (
-        seller ? <SellerPending rows={pending} /> : <BuyerPending rows={pending} />
+        seller ? <SellerPending rows={pending} t={t} /> : <BuyerPending rows={pending} t={t} />
       ) : (
-        <TrackingList tracking={tracking} seller={seller} openIds={openIds} setOpenIds={setOpenIds} toggle={toggle} allOpen={allOpen} />
+        <TrackingList tracking={tracking} seller={seller} openIds={openIds} setOpenIds={setOpenIds} toggle={toggle} allOpen={allOpen} t={t} />
       )}
     </div>
   );
 }
 
-function TrackingList({ tracking, seller, openIds, setOpenIds, toggle, allOpen }: {
-  tracking: PipelineRow[]; seller: boolean; openIds: string[]; setOpenIds: (ids: string[]) => void; toggle: (id: string) => void; allOpen: boolean;
+function TrackingList({ tracking, seller, openIds, setOpenIds, toggle, allOpen, t }: {
+  tracking: PipelineRow[]; seller: boolean; openIds: string[]; setOpenIds: (ids: string[]) => void; toggle: (id: string) => void; allOpen: boolean; t: T;
 }) {
   const [filter, setFilter] = useState<"all" | "you" | "other">("all");
   const [sort, setSort] = useState<"step" | "recent">("step");
@@ -154,10 +156,10 @@ function TrackingList({ tracking, seller, openIds, setOpenIds, toggle, allOpen }
   const list = (filter === "you" ? you : filter === "other" ? other : tracking).slice().sort((a, b) =>
     sort === "step" && currentStep(b) !== currentStep(a) ? currentStep(b) - currentStep(a) : +new Date(b.updatedAt) - +new Date(a.updatedAt));
   const received = tracking.filter((p) => p.reportSharedAt).length;
-  const pills: [typeof filter, string, number][] = [["all", "All", tracking.length], ["you", "Waiting on you", you.length], ["other", seller ? "Waiting on the buyer" : "Waiting on the seller", other.length]];
+  const pills: [typeof filter, string, number][] = [["all", t("All"), tracking.length], ["you", t("Waiting on you"), you.length], ["other", seller ? t("Waiting on the buyer") : t("Waiting on the seller"), other.length]];
   const cmpBtn = (
     <button disabled={received < 2} onClick={() => setCompare(true)} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#2563EB] disabled:opacity-50">
-      <Columns3 className="h-4 w-4" />Compare reports {received}
+      <Columns3 className="h-4 w-4" />{t("Compare reports")} {received}
     </button>
   );
   return (
@@ -176,26 +178,26 @@ function TrackingList({ tracking, seller, openIds, setOpenIds, toggle, allOpen }
           })}
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <label className="flex items-center gap-2 text-[12.5px] text-[#6B7280]">Sort
+          <label className="flex items-center gap-2 text-[12.5px] text-[#6B7280]">{t("Sort")}
             <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-[30px] rounded-[8px] border border-[#E5E7EB] bg-white px-2 text-[12.5px] font-semibold text-[#111827]">
-              <option value="step">Furthest step first</option>
-              <option value="recent">Recently updated</option>
+              <option value="step">{t("Furthest step first")}</option>
+              <option value="recent">{t("Recently updated")}</option>
             </select>
           </label>
           {!seller && (received < 2
-            ? <Tooltip><TooltipTrigger asChild><span tabIndex={0}>{cmpBtn}</span></TooltipTrigger><TooltipContent>Available when you have 2 or more reports</TooltipContent></Tooltip>
+            ? <Tooltip><TooltipTrigger asChild><span tabIndex={0}>{cmpBtn}</span></TooltipTrigger><TooltipContent>{t("Available when you have 2 or more reports")}</TooltipContent></Tooltip>
             : cmpBtn)}
           {!seller && <span className="h-4 w-px bg-[#E5E7EB]" />}
           {tracking.length > 0 && (
             <button className="shrink-0 text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setOpenIds(allOpen ? [] : tracking.map((p) => p.id))}>
-              {allOpen ? "Collapse all" : "Expand all"}
+              {allOpen ? t("Collapse all") : t("Expand all")}
             </button>
           )}
         </div>
       </div>
-      {tracking.length === 0 && <Empty text={seller ? "No buyers past the NDA yet." : "No seller has approved your NDA yet."} />}
-      {tracking.length > 0 && list.length === 0 && <Empty text="No cards match this filter." />}
-      {list.map((p) => <TrackingCard key={p.id} p={p} seller={seller} open={openIds.includes(p.id)} onToggle={() => toggle(p.id)} />)}
+      {tracking.length === 0 && <Empty text={seller ? t("No buyers past the NDA yet.") : t("No seller has approved your NDA yet.")} />}
+      {tracking.length > 0 && list.length === 0 && <Empty text={t("No cards match this filter.")} />}
+      {list.map((p) => <TrackingCard key={p.id} p={p} seller={seller} open={openIds.includes(p.id)} onToggle={() => toggle(p.id)} t={t} />)}
       {compare && <CompareReports rows={tracking} onOpen={(p) => setViewing(p)} onClose={() => setCompare(false)} />}
       {viewing && <ReportViewer p={viewing} seller={false} onClose={() => setViewing(null)} />}
     </div>
@@ -216,7 +218,7 @@ function Tile({ label, value, sub, amber }: { label: string; value: React.ReactN
   );
 }
 
-function SellerStats({ rows, waiting }: { rows: PipelineRow[]; waiting: number }) {
+function SellerStats({ rows, waiting, t }: { rows: PipelineRow[]; waiting: number; t: T }) {
   const ndaReq = rows.filter((p) => !p.ndaApprovedAt).length;
   const loiReq = rows.filter((p) => p.loiSentAt && !p.loiAcceptedAt).length;
   const approved = rows.filter((p) => p.ndaApprovedAt).length;
@@ -224,21 +226,23 @@ function SellerStats({ rows, waiting }: { rows: PipelineRow[]; waiting: number }
   const best = Math.max(0, ...rows.map((p) => p.loiAmount ?? 0));
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Tile label="Waiting for you" value={waiting} amber={waiting > 0} sub={`${ndaReq} NDA request${ndaReq === 1 ? "" : "s"} · ${loiReq} letter${loiReq === 1 ? "" : "s"} of intent`} />
-      <Tile label="Interested buyers" value={rows.length} sub={`${approved} NDA${approved === 1 ? "" : "s"} signed`} />
-      <Tile label="Financial report shared with" value={shared} sub={`of ${approved} approved buyer${approved === 1 ? "" : "s"} · case by case`} />
-      <Tile label="Best offer" value={best ? money(best) : "—"} sub={`Asking ${money(rows[0]?.askingPrice)}`} />
+      <Tile label={t("Waiting for you")} value={waiting} amber={waiting > 0}
+        sub={`${ndaReq} ${t(ndaReq === 1 ? "NDA request" : "NDA requests")} · ${loiReq} ${t(loiReq === 1 ? "letter of intent" : "letters of intent")}`} />
+      <Tile label={t("Interested buyers")} value={rows.length} sub={`${approved} ${t(approved === 1 ? "NDA signed" : "NDAs signed")}`} />
+      <Tile label={t("Financial report shared with")} value={shared}
+        sub={`${t("of")} ${approved} ${t(approved === 1 ? "approved buyer" : "approved buyers")} · ${t("case by case")}`} />
+      <Tile label={t("Best offer")} value={best ? money(best) : "—"} sub={`${t("Asking")} ${money(rows[0]?.askingPrice)}`} />
     </div>
   );
 }
 
-function SellerPending({ rows }: { rows: PipelineRow[] }) {
+function SellerPending({ rows, t }: { rows: PipelineRow[]; t: T }) {
   const [selId, setSelId] = useState<string | null>(null);
   const sel = rows.find((r) => r.id === selId) ?? rows[0];
-  if (!rows.length) return <Empty text="Nothing is waiting for you." />;
+  if (!rows.length) return <Empty text={t("Nothing is waiting for you.")} />;
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-muted-foreground">Click a buyer to review. Nothing is shared with a buyer until you approve.</p>
+      <p className="text-[13px] text-muted-foreground">{t("Click a buyer to review. Nothing is shared with a buyer until you approve.")}</p>
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
         <div className="space-y-2">
           {rows.map((p) => {
@@ -250,7 +254,7 @@ function SellerPending({ rows }: { rows: PipelineRow[] }) {
                 <Avatar name={p.counterparty.name} tone={loi ? "orange" : "violet"} logoUrl={p.counterparty.logoUrl} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-bold">{p.counterparty.name}</div>
-                  <div className="text-[12.5px] font-semibold text-accent-dark">{loi ? "Letter of intent" : "NDA request"}</div>
+                  <div className="text-[12.5px] font-semibold text-accent-dark">{loi ? t("Letter of intent") : t("NDA request")}</div>
                   <div className="truncate text-[12px] text-muted-foreground">{[p.counterparty.person, p.counterparty.sub, day(loi ? p.loiSentAt : p.ndaRequestedAt)].filter(Boolean).join(" · ")}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -258,13 +262,13 @@ function SellerPending({ rows }: { rows: PipelineRow[] }) {
             );
           })}
         </div>
-        {sel && (sel.ndaApprovedAt ? <LoiDecision p={sel} /> : <NdaDecision p={sel} />)}
+        {sel && (sel.ndaApprovedAt ? <LoiDecision p={sel} t={t} /> : <NdaDecision p={sel} t={t} />)}
       </div>
     </div>
   );
 }
 
-function PanelHead({ p, children }: { p: PipelineRow; children: React.ReactNode }) {
+function PanelHead({ p, t, children }: { p: PipelineRow; t: T; children: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-start gap-3 border-b pb-4">
       <Avatar name={p.counterparty.name} logoUrl={p.counterparty.logoUrl} />
@@ -272,7 +276,7 @@ function PanelHead({ p, children }: { p: PipelineRow; children: React.ReactNode 
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[18px] font-bold">{p.counterparty.name}</span>
           <Pill tone="blue">{p.counterparty.sub}</Pill>
-          {p.counterparty.verified && <Pill tone="green">✓ Verified buyer</Pill>}
+          {p.counterparty.verified && <Pill tone="green">✓ {t("Verified buyer")}</Pill>}
         </div>
         {p.counterparty.person && <div className="text-[13px] text-muted-foreground">{p.counterparty.person}</div>}
       </div>
@@ -281,7 +285,7 @@ function PanelHead({ p, children }: { p: PipelineRow; children: React.ReactNode 
   );
 }
 
-function NdaDecision({ p }: { p: PipelineRow }) {
+function NdaDecision({ p, t }: { p: PipelineRow; t: T }) {
   const decide = useServerFn(decideNda);
   const refresh = useRefresh();
   const [share, setShare] = useState(false);
@@ -291,48 +295,51 @@ function NdaDecision({ p }: { p: PipelineRow }) {
     setBusy(true);
     try {
       await decide({ data: { id: p.id, approve, shareReport: share } });
-      toast.success(approve ? "NDA approved" : "Request declined");
+      toast.success(approve ? t("NDA approved") : t("Request declined"));
       setConfirm(false);
       refresh();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
     <div className="space-y-4 rounded-[14px] border bg-card p-5">
-      <PanelHead p={p}>
-        <Button variant="outline" disabled={busy} onClick={() => run(false)}>Decline</Button>
-        <Button disabled={busy} onClick={() => setConfirm(true)}>Approve NDA</Button>
+      <PanelHead p={p} t={t}>
+        <Button variant="outline" disabled={busy} onClick={() => run(false)}>{t("Decline")}</Button>
+        <Button disabled={busy} onClick={() => setConfirm(true)}>{t("Approve NDA")}</Button>
       </PanelHead>
       {p.buyerMessage && (
         <div className="rounded-[10px] bg-muted/60 p-3">
-          <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Message to you</div>
+          <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{t("Message to you")}</div>
           <p className="mt-1 italic">“{p.buyerMessage}”</p>
         </div>
       )}
       <div>
-        <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">What approving unlocks for this buyer</div>
+        <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{t("What approving unlocks for this buyer")}</div>
         <ul className="mt-2 grid gap-1.5 text-[13.5px] sm:grid-cols-2">
-          {["Company name & logo", "Website & contacts", "Founder names", "Full profile"].map((t) => (
-            <li key={t} className="flex items-center gap-2"><Check className="h-4 w-4 text-success" />{t}</li>
+          {["Company name & logo", "Website & contacts", "Founder names", "Full profile"].map((s) => (
+            <li key={s} className="flex items-center gap-2"><Check className="h-4 w-4 text-success" />{t(s)}</li>
           ))}
-          <li className="flex items-center gap-2 text-muted-foreground"><Lock className="h-4 w-4" />Verified financial report · only if you share it</li>
+          <li className="flex items-center gap-2 text-muted-foreground"><Lock className="h-4 w-4" />{t("Verified financial report · only if you share it")}</li>
         </ul>
       </div>
       <label className="flex items-start gap-3 rounded-[10px] border border-accent/40 bg-accent/5 p-3">
         <Checkbox checked={share} onCheckedChange={(v) => setShare(!!v)} className="mt-0.5" />
-        <span className="text-[13.5px]"><b>Also share the verified financial report with {p.counterparty.name}.</b> Case by case — you can share it later from Tracking instead. Buyers see only ranges until you do.</span>
+        <span className="text-[13.5px]">
+          <b>{t("Also share the verified financial report with")} {p.counterparty.name}.</b>{" "}
+          {t("Case by case — you can share it later from Tracking instead. Buyers see only ranges until you do.")}
+        </span>
       </label>
       <Dialog open={confirm} onOpenChange={setConfirm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Approve NDA for {p.counterparty.name}?</DialogTitle>
+            <DialogTitle>{t("Approve NDA for")} {p.counterparty.name}?</DialogTitle>
             <DialogDescription>
-              Your company name, logo, website, contacts and founder names become visible to {p.counterparty.person ?? "this buyer"}.
-              {share ? " The verified financial report is shared too." : " The verified financial report stays private."}
+              {t("Your company name, logo, website, contacts and founder names become visible to")} {p.counterparty.person ?? t("this buyer")}.
+              {share ? ` ${t("The verified financial report is shared too.")}` : ` ${t("The verified financial report stays private.")}`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirm(false)}>Back</Button>
-            <Button disabled={busy} onClick={() => run(true)}>Approve</Button>
+            <Button variant="outline" onClick={() => setConfirm(false)}>{t("Back")}</Button>
+            <Button disabled={busy} onClick={() => run(true)}>{t("Approve")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -340,26 +347,26 @@ function NdaDecision({ p }: { p: PipelineRow }) {
   );
 }
 
-function LoiDecision({ p }: { p: PipelineRow }) {
+function LoiDecision({ p, t }: { p: PipelineRow; t: T }) {
   const [review, setReview] = useState(false);
   return (
     <div className="space-y-4 rounded-[14px] border bg-card p-5">
-      <PanelHead p={p}>
-        <Button onClick={() => setReview(true)}>Review LOI</Button>
+      <PanelHead p={p} t={t}>
+        <Button onClick={() => setReview(true)}>{t("Review LOI")}</Button>
       </PanelHead>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {[["Indicative price", money(p.loiAmount)], ["Exclusivity", `${p.loiExclusivityDays ?? 0} days`], ["Your asking price", money(p.askingPrice)]].map(([k, v]) => (
+        {[[t("Indicative price"), money(p.loiAmount)], [t("Exclusivity"), `${p.loiExclusivityDays ?? 0} ${t("days")}`], [t("Your asking price"), money(p.askingPrice)]].map(([k, v]) => (
           <div key={k} className="rounded-[10px] bg-muted/60 p-3"><div className="text-[12px] text-muted-foreground">{k}</div><div className="font-bold">{v}</div></div>
         ))}
       </div>
-      <p className="text-[12.5px] text-muted-foreground">Read the full letter to the end and tick the box to accept. Non-binding, except exclusivity and confidentiality.</p>
+      <p className="text-[12.5px] text-muted-foreground">{t("Read the full letter to the end and tick the box to accept. Non-binding, except exclusivity and confidentiality.")}</p>
       {review && <LoiDocDialog p={p} seller onClose={() => setReview(false)} />}
     </div>
   );
 }
 
-function BuyerPending({ rows }: { rows: PipelineRow[] }) {
-  if (!rows.length) return <Empty text="Nothing is waiting on a seller." />;
+function BuyerPending({ rows, t }: { rows: PipelineRow[]; t: T }) {
+  if (!rows.length) return <Empty text={t("Nothing is waiting on a seller.")} />;
   return (
     <div className="space-y-2">
       {rows.map((p) => (
@@ -368,17 +375,19 @@ function BuyerPending({ rows }: { rows: PipelineRow[] }) {
           <div className="min-w-0 flex-1">
             <div className="font-bold">{p.counterparty.name}</div>
             <div className="text-[12.5px] text-muted-foreground">
-              {p.ndaApprovedAt ? `Letter of intent ${money(p.loiAmount)} sent ${day(p.loiSentAt)}` : `NDA requested ${day(p.ndaRequestedAt)}`} · waiting for the seller
+              {p.ndaApprovedAt
+                ? `${t("Letter of intent")} ${money(p.loiAmount)} ${t("sent")} ${day(p.loiSentAt)}`
+                : `${t("NDA requested")} ${day(p.ndaRequestedAt)}`} · {t("waiting for the seller")}
             </div>
           </div>
-          <Pill tone="amber">{p.ndaApprovedAt ? "LOI pending" : "NDA pending"}</Pill>
+          <Pill tone="amber">{p.ndaApprovedAt ? t("LOI pending") : t("NDA pending")}</Pill>
         </div>
       ))}
     </div>
   );
 }
 
-function Stepper({ cur }: { cur: number }) {
+function Stepper({ cur, t }: { cur: number; t: T }) {
   return (
     <div className="grid grid-cols-7 pt-3">
       {STEPS.map((s, i) => {
@@ -388,7 +397,7 @@ function Stepper({ cur }: { cur: number }) {
             {i > 0 && <div className={cn("absolute right-1/2 top-[6px] h-[2px] w-[calc(100%-18px)] -translate-x-[9px]", i <= cur ? "bg-success" : "bg-border")} />}
             <div className={cn("relative z-10 h-[14px] w-[14px] rounded-full border-2",
               done ? "border-success bg-success" : now ? "border-accent bg-accent ring-4 ring-accent/20" : "border-border bg-card")} />
-            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{s}</div>
+            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}</div>
           </div>
         );
       })}
@@ -396,7 +405,7 @@ function Stepper({ cur }: { cur: number }) {
   );
 }
 
-function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void }) {
+function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; t: T }) {
   const [loiOpen, setLoiOpen] = useState(false);
   const [reqOpen, setReqOpen] = useState(false);
   const withdrawReq = useServerFn(withdrawLoiRequest);
@@ -411,48 +420,48 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
   const act = async (f: () => Promise<unknown>, msg: string) => {
     try { await f(); toast.success(msg); refresh(); } catch (e) { toast.error((e as Error).message); }
   };
-  const ask = () => act(() => fAsk({ data: { id: p.id } }), `Request sent to ${p.counterparty.name}. You will be notified when the report is shared.`);
+  const ask = () => act(() => fAsk({ data: { id: p.id } }), `${t("Request sent to")} ${p.counterparty.name}. ${t("You will be notified when the report is shared.")}`);
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
   const w = waitState(p, seller);
-  const other = seller ? "the buyer" : "the seller";
+  const other = seller ? t("the buyer") : t("the seller");
 
   const reviewLoi = seller && !!p.loiSentAt && !p.loiAcceptedAt;
   const rows: [string, string | null, React.ReactNode, React.ReactNode?][] = [
-    ["NDA", p.ndaApprovedAt, `Approved by ${seller ? "you" : "the seller"} · requested ${day(p.ndaRequestedAt)}`,
+    ["NDA", p.ndaApprovedAt, `${t("Approved by")} ${seller ? t("you") : t("the seller")} · ${t("requested")} ${day(p.ndaRequestedAt)}`,
       <>
-        <Button size="sm" variant="outline" onClick={() => setDlg("nda")}>View NDA</Button>
-        <Button size="sm" variant="outline" onClick={() => setDlg(seller ? "investor" : "seller")}>{seller ? "Investor profile" : "Seller profile"}</Button>
+        <Button size="sm" variant="outline" onClick={() => setDlg("nda")}>{t("View NDA")}</Button>
+        <Button size="sm" variant="outline" onClick={() => setDlg(seller ? "investor" : "seller")}>{seller ? t("Investor profile") : t("Seller profile")}</Button>
       </>],
     ["Financial & Valuation", p.share ? p.share.sharedAt : null,
-      seller ? sellerReportLine(p) : p.share ? `${sharedWhat(p.share)} received${p.share.allowDownload ? " · download allowed" : " · view only"}`
-        : p.revokedAt ? `The seller stopped sharing the report on ${day(p.revokedAt)}`
-        : p.reportRequestedAt ? <><b>You asked for the report on {day(p.reportRequestedAt)}</b> · waiting for the seller</>
-        : "Not shared yet",
-      seller ? (p.share ? <><Button size="sm" variant="outline" onClick={() => setDlg("share")}>Manage access</Button><Button size="sm" variant="outline" onClick={() => setDlg("report")}>View report</Button></>
-          : p.reports.financials || p.reports.valuation ? <Button size="sm" onClick={() => setDlg("share")}>Share report</Button> : undefined)
-        : p.share ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>View report</Button>
-        : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>Ask for the report</Button> : undefined],
+      seller ? sellerReportLine(p, t) : p.share ? `${sharedWhat(p.share, t)} ${t("received")}${p.share.allowDownload ? ` · ${t("download allowed")}` : ` · ${t("view only")}`}`
+        : p.revokedAt ? `${t("The seller stopped sharing the report on")} ${day(p.revokedAt)}`
+        : p.reportRequestedAt ? <><b>{t("You asked for the report on")} {day(p.reportRequestedAt)}</b> · {t("waiting for the seller")}</>
+        : t("Not shared yet"),
+      seller ? (p.share ? <><Button size="sm" variant="outline" onClick={() => setDlg("share")}>{t("Manage access")}</Button><Button size="sm" variant="outline" onClick={() => setDlg("report")}>{t("View report")}</Button></>
+          : p.reports.financials || p.reports.valuation ? <Button size="sm" onClick={() => setDlg("share")}>{t("Share report")}</Button> : undefined)
+        : p.share ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>{t("View report")}</Button>
+        : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>{t("Ask for the report")}</Button> : undefined],
     ["Letter of intent", p.loiAcceptedAt,
-      p.loiAcceptedAt ? `${money(p.loiAmount)} · accepted by ${seller ? "you" : "the seller"} · exclusivity ${p.loiExclusivityDays ?? 0} days`
-        : p.loiSentAt ? `${money(p.loiAmount)} · sent ${day(p.loiSentAt)} · waiting for ${seller ? "you" : "the seller"}`
-        : lr ? (seller ? `Requested ${day(lr.at)} · waiting for the buyer` : `Seller requested a letter of intent · ${day(lr.at)}`)
-        : "No letter of intent yet",
-      reviewLoi ? <Button size="sm" onClick={() => setDlg("loi")}>View / Accept LOI</Button>
-        : p.loiSentAt ? <Button size="sm" variant="outline" onClick={() => setDlg("loi")}>View LOI</Button>
-        : !seller ? <Button size="sm" onClick={() => setLoiOpen(true)}>Send letter of intent</Button>
+      p.loiAcceptedAt ? `${money(p.loiAmount)} · ${t("accepted by")} ${seller ? t("you") : t("the seller")} · ${t("exclusivity")} ${p.loiExclusivityDays ?? 0} ${t("days")}`
+        : p.loiSentAt ? `${money(p.loiAmount)} · ${t("sent")} ${day(p.loiSentAt)} · ${t("waiting for")} ${seller ? t("you") : t("the seller")}`
+        : lr ? (seller ? `${t("Requested")} ${day(lr.at)} · ${t("waiting for the buyer")}` : `${t("Seller requested a letter of intent")} · ${day(lr.at)}`)
+        : t("No letter of intent yet"),
+      reviewLoi ? <Button size="sm" onClick={() => setDlg("loi")}>{t("View / Accept LOI")}</Button>
+        : p.loiSentAt ? <Button size="sm" variant="outline" onClick={() => setDlg("loi")}>{t("View LOI")}</Button>
+        : !seller ? <Button size="sm" onClick={() => setLoiOpen(true)}>{t("Send letter of intent")}</Button>
         : lr ? <button type="button" className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={async () => {
-            try { await withdrawReq({ data: { id: p.id } }); toast.success("Request withdrawn"); refresh(); } catch (e) { toast.error((e as Error).message); }
-          }}>Withdraw request</button>
-        : p.ndaApprovedAt ? <Button size="sm" onClick={() => setReqOpen(true)}>Request letter of intent</Button> : undefined],
+            try { await withdrawReq({ data: { id: p.id } }); toast.success(t("Request withdrawn")); refresh(); } catch (e) { toast.error((e as Error).message); }
+          }}>{t("Withdraw request")}</button>
+        : p.ndaApprovedAt ? <Button size="sm" onClick={() => setReqOpen(true)}>{t("Request letter of intent")}</Button> : undefined],
     ["Contact M&A", p.contactAt,
-      p.contactAt ? (seller && !p.legalAt ? <><b>Exchange contacts</b> · introduce your M&A advisor</> : "Contacts exchanged") : "After the letter of intent is accepted",
-      seller && p.contactAt && !p.legalAt ? <Button size="sm" onClick={() => toast("Advisor introductions are coming soon.")}>Introduce advisor</Button> : undefined],
-    ["Legal", p.legalAt, p.legalAt ? `Legal folder ${seller ? "shared" : "received"}` : "Legal folder not shared yet",
-      seller && p.contactAt && !p.legalAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "legal" } }), "Legal folder shared")}>Share documents</Button> : undefined],
-    ["Offer & SPA", p.spaAt, p.spaAt ? `SPA draft ${seller ? "shared" : "received"}` : `SPA draft not ${seller ? "shared" : "received"} yet`,
-      seller && p.legalAt && !p.spaAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "spa" } }), "SPA draft shared")}>Share SPA draft</Button> : undefined],
-    ["Payment", p.paymentAt, p.paymentAt ? "Completed" : "Not started · escrow and completion",
-      seller && p.spaAt && !p.paymentAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "payment" } }), "Marked complete")}>Mark complete</Button> : undefined],
+      p.contactAt ? (seller && !p.legalAt ? <><b>{t("Exchange contacts")}</b> · {t("introduce your M&A advisor")}</> : t("Contacts exchanged")) : t("After the letter of intent is accepted"),
+      seller && p.contactAt && !p.legalAt ? <Button size="sm" onClick={() => toast(t("Advisor introductions are coming soon."))}>{t("Introduce advisor")}</Button> : undefined],
+    ["Legal", p.legalAt, p.legalAt ? (seller ? t("Legal folder shared") : t("Legal folder received")) : t("Legal folder not shared yet"),
+      seller && p.contactAt && !p.legalAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "legal" } }), t("Legal folder shared"))}>{t("Share documents")}</Button> : undefined],
+    ["Offer & SPA", p.spaAt, p.spaAt ? (seller ? t("SPA draft shared") : t("SPA draft received")) : (seller ? t("SPA draft not shared yet") : t("SPA draft not received yet")),
+      seller && p.legalAt && !p.spaAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "spa" } }), t("SPA draft shared"))}>{t("Share SPA draft")}</Button> : undefined],
+    ["Payment", p.paymentAt, p.paymentAt ? t("Completed") : t("Not started · escrow and completion"),
+      seller && p.spaAt && !p.paymentAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "payment" } }), t("Marked complete"))}>{t("Mark complete")}</Button> : undefined],
   ];
 
   return (
@@ -469,32 +478,34 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
 
           </div>
           <div className="truncate text-[12.5px] text-[#6B7280]">
-            {[p.counterparty.sub, p.loiAmount ? `${seller ? "offer" : "your offer"} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
+            {[p.counterparty.sub, p.loiAmount ? `${seller ? t("offer") : t("your offer")} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
             {" · "}
             <span className={cn("font-semibold", w.onYou ? "text-[#B45309]" : "text-[#6B7280]")}>
-              {w.onYou && w.what === "send a letter of intent" ? "Pending: send a letter of intent" : `waiting on ${w.onYou ? "you" : other}: ${w.what}`}
+              {w.onYou && w.what === "send a letter of intent"
+                ? `${t("Pending")}: ${t("send a letter of intent")}`
+                : `${t("waiting on")} ${w.onYou ? t("you") : other}: ${t(w.what)}`}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-[14px] text-[12.5px] font-semibold text-[#6B7280]">
           {seller
-            ? <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("investor"); }}>Investor profile</button>
-            : <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("seller"); }}>Seller profile</button>}
+            ? <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("investor"); }}>{t("Investor profile")}</button>
+            : <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("seller"); }}>{t("Seller profile")}</button>}
           <span className="flex items-center gap-2">
-            {open ? "Hide details" : "Details"}
+            {open ? t("Hide details") : t("Details")}
             <span className="grid h-[30px] w-[30px] place-items-center rounded-[8px] border border-[#E5E7EB]">
               <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 motion-reduce:transition-none", open && "rotate-180")} />
             </span>
           </span>
         </div>
       </div>
-      <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} /></div>
+      <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} t={t} /></div>
       <div className={cn("grid transition-[grid-template-rows] duration-[250ms] ease-in-out motion-reduce:transition-none", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
           <div className="mx-5 border-t border-[#F0F1F4]">
             {rows.map(([label, date, text, action]) => (
               <div key={label} className="grid min-h-[50px] grid-cols-[168px_72px_1fr_auto] items-center gap-4 border-b border-[#F0F1F4] py-2 text-[13.5px]">
-                <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-[#111827]" : "text-[#9CA3AF]")}>{label}</div>
+                <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-[#111827]" : "text-[#9CA3AF]")}>{t(label)}</div>
                 <div className="text-muted-foreground">{day(date)}</div>
                 <div className="text-[#374151]">{text}</div>
                 <div className="flex justify-end gap-2 [&_button]:h-8">{action}</div>
@@ -502,13 +513,13 @@ function TrackingCard({ p, seller, open, onToggle }: { p: PipelineRow; seller: b
             ))}
           </div>
           <div className="flex justify-end px-5 pb-4 pt-2.5">
-            <button className="text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setHistOpen(true)}>History</button>
+            <button className="text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setHistOpen(true)}>{t("History")}</button>
           </div>
         </div>
       </div>
       {loiOpen && <SendLoiDialog id={p.id} request={lr} onClose={() => setLoiOpen(false)} onSent={refresh} />}
       {reqOpen && <RequestLoiDialog id={p.id} onClose={() => setReqOpen(false)} onSent={refresh} />}
-      {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} />}
+      {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} t={t} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "share" && <ShareAccessDialog p={p} mode={p.share ? "manage" : "share"} onClose={() => setDlg(null)} onDone={refresh} />}
       {dlg === "investor" && <InvestorProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
@@ -526,35 +537,34 @@ const EVENT_LABEL: Record<string, string> = {
   legal_shared: "Legal folder shared", spa_shared: "SPA draft shared", payment_shared: "Payment completed",
 };
 
-function HistoryDialog({ id, onClose }: { id: string; other: string; onClose: () => void }) {
+function HistoryDialog({ id, onClose, t }: { id: string; other: string; onClose: () => void; t: T }) {
   const f = useServerFn(pipelineEvents);
   const { data = [] } = useQuery({ queryKey: ["pipeline", "events", id], queryFn: () => f({ data: { id } }) });
   const list = useMemo(() => data as { event: string; created_at: string }[], [data]);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>History</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t("History")}</DialogTitle></DialogHeader>
         <ul className="divide-y">
           {list.map((e, i) => (
             <li key={i} className="flex justify-between py-2 text-sm">
-              <span>{EVENT_LABEL[e.event] ?? e.event}</span>
+              <span>{EVENT_LABEL[e.event] ? t(EVENT_LABEL[e.event]) : e.event}</span>
               <span className="text-muted-foreground">{new Date(e.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
             </li>
           ))}
-          {list.length === 0 && <li className="py-4 text-center text-muted-foreground">No events yet.</li>}
+          {list.length === 0 && <li className="py-4 text-center text-muted-foreground">{t("No events yet.")}</li>}
         </ul>
       </DialogContent>
     </Dialog>
   );
 }
 
-const sharedWhat = (s: { financials: boolean; valuation: boolean }) =>
-  s.financials && s.valuation ? "Financial report + valuation" : s.financials ? "Verified financial report" : "Estimated valuation";
+const sharedWhat = (s: { financials: boolean; valuation: boolean }, t: T) =>
+  s.financials && s.valuation ? t("Financial report + valuation") : s.financials ? t("Verified financial report") : t("Estimated valuation");
 
-function sellerReportLine(p: PipelineRow) {
-  if (p.share) return `${sharedWhat(p.share)} shared ${day(p.share.sharedAt)} · ${p.share.allowDownload ? "download allowed" : "view only"}${p.reportViewedAt ? ` · opened ${day(p.reportViewedAt)}` : " · not opened yet"}`;
-  if (!p.reports.financials && !p.reports.valuation) return <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Lock className="h-3.5 w-3.5" />Your report isn't ready yet — PitchSnack will let you know</span>;
-  if (p.revokedAt) return `You stopped sharing on ${day(p.revokedAt)}`;
-  return p.reportRequestedAt ? `Requested by the buyer ${day(p.reportRequestedAt)} · not shared` : "Not shared yet";
+function sellerReportLine(p: PipelineRow, t: T) {
+  if (p.share) return `${sharedWhat(p.share, t)} ${t("shared")} ${day(p.share.sharedAt)} · ${p.share.allowDownload ? t("download allowed") : t("view only")}${p.reportViewedAt ? ` · ${t("opened")} ${day(p.reportViewedAt)}` : ` · ${t("not opened yet")}`}`;
+  if (!p.reports.financials && !p.reports.valuation) return <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Lock className="h-3.5 w-3.5" />{t("Your report isn't ready yet — PitchSnack will let you know")}</span>;
+  if (p.revokedAt) return `${t("You stopped sharing on")} ${day(p.revokedAt)}`;
+  return p.reportRequestedAt ? `${t("Requested by the buyer")} ${day(p.reportRequestedAt)} · ${t("not shared")}` : t("Not shared yet");
 }
-
