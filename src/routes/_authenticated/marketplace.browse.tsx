@@ -284,7 +284,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
         {nda === "approved" && (
           <div className="flex items-start gap-2 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-[14px] py-[11px] text-[13.5px] text-[#166534]">
             <Star className="mt-0.5 h-4 w-4 flex-none" />
-            <span>Your NDA is approved. This listing is in your Favourites, where its private view shows the company’s name and exact figures.</span>
+            <span>{tr("Your NDA is approved. This listing is in your Favourites, where its private view shows the company’s name and exact figures.")}</span>
           </div>
         )}
         <ListingDetail t={t} requested={nda === "requested"} approved={nda === "approved"} onRequested={onRequested} />
