@@ -104,7 +104,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
   if (st && st !== "declined") {
     return (
       <span className={cn("inline-flex h-[34px] items-center rounded-md border px-3 text-sm font-medium text-muted-foreground", className)}>
-        {st === "requested" ? "NDA requested" : "NDA approved"}
+        {st === "requested" ? t("NDA requested") : t("NDA approved")}
       </span>
     );
   }
