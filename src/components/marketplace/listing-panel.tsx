@@ -93,6 +93,7 @@ export function useNdaStatuses() {
 }
 
 export function NdaButton({ className, listingId, onRequested }: { className?: string; listingId: string; onRequested?: (id: string) => void }) {
+  const { t } = useTranslation();
   const { data } = useMyVerification();
   const { data: statuses } = useNdaStatuses();
   const req = useServerFn(requestNda);
