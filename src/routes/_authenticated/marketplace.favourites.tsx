@@ -337,10 +337,10 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
           <div className="grid gap-x-6 sm:grid-cols-2">
             {cell(t("Legal name"), (p.legalNameEn || p.legalNameTh) ? <>{p.legalNameEn ?? p.legalNameTh}{p.legalNameEn && p.legalNameTh && <div className="text-[12px] font-normal text-[#6A7181]" style={{ fontFamily: "'Noto Sans Thai', 'DM Sans', sans-serif" }}>{p.legalNameTh}</div>}</> : null)}
             {cell(t("Registration no."), p.regNo)}
-            {cell("Website", web ? <a href={web} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1 break-all text-[#2563EB] hover:underline">{p.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}<ExternalLink className="h-3 w-3" /></a> : null)}
-            {cell("Location", p.location)}
-            {cell("Founded", p.founded)}
-            {cell("Employees", p.employees)}
+            {cell(t("Website"), web ? <a href={web} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1 break-all text-[#2563EB] hover:underline">{p.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}<ExternalLink className="h-3 w-3" /></a> : null)}
+            {cell(t("Location"), p.location)}
+            {cell(t("Founded"), p.founded)}
+            {cell(t("Employees"), p.employees)}
           </div>
         </div>
       </div>
