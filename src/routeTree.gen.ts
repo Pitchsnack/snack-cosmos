@@ -62,6 +62,7 @@ import { Route as AuthenticatedMarketplaceMessagesRouteImport } from './routes/_
 import { Route as AuthenticatedMarketplaceFavouritesRouteImport } from './routes/_authenticated/marketplace.favourites'
 import { Route as AuthenticatedMarketplaceBrowseRouteImport } from './routes/_authenticated/marketplace.browse'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
+import { Route as AuthenticatedInvestorsInvestorImagesRouteImport } from './routes/_authenticated/investors.investor-images'
 import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenticated/investors.$id'
 import { Route as AuthenticatedGlobalStartupsBrowseRouteImport } from './routes/_authenticated/global-startups.browse'
 import { Route as AuthenticatedGlobalStartupsIdRouteImport } from './routes/_authenticated/global-startups.$id'
@@ -384,6 +385,12 @@ const AuthenticatedInvestorsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedInvestorsRoute,
   } as any)
+const AuthenticatedInvestorsInvestorImagesRoute =
+  AuthenticatedInvestorsInvestorImagesRouteImport.update({
+    id: '/investor-images',
+    path: '/investor-images',
+    getParentRoute: () => AuthenticatedInvestorsRoute,
+  } as any)
 const AuthenticatedInvestorsIdRoute =
   AuthenticatedInvestorsIdRouteImport.update({
     id: '/$id',
@@ -557,6 +564,7 @@ export interface FileRoutesByFullPath {
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
+  '/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/favourites': typeof AuthenticatedMarketplaceFavouritesRoute
@@ -626,6 +634,7 @@ export interface FileRoutesByTo {
   '/deals/new': typeof AuthenticatedDealsNewRoute
   '/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
+  '/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/favourites': typeof AuthenticatedMarketplaceFavouritesRoute
@@ -702,6 +711,7 @@ export interface FileRoutesById {
   '/_authenticated/global-startups/$id': typeof AuthenticatedGlobalStartupsIdRoute
   '/_authenticated/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
+  '/_authenticated/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/_authenticated/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/_authenticated/marketplace/favourites': typeof AuthenticatedMarketplaceFavouritesRoute
@@ -781,6 +791,7 @@ export interface FileRouteTypes {
     | '/global-startups/$id'
     | '/global-startups/browse'
     | '/investors/$id'
+    | '/investors/investor-images'
     | '/investors/new'
     | '/marketplace/browse'
     | '/marketplace/favourites'
@@ -850,6 +861,7 @@ export interface FileRouteTypes {
     | '/deals/new'
     | '/global-startups/$id'
     | '/global-startups/browse'
+    | '/investors/investor-images'
     | '/investors/new'
     | '/marketplace/browse'
     | '/marketplace/favourites'
@@ -925,6 +937,7 @@ export interface FileRouteTypes {
     | '/_authenticated/global-startups/$id'
     | '/_authenticated/global-startups/browse'
     | '/_authenticated/investors/$id'
+    | '/_authenticated/investors/investor-images'
     | '/_authenticated/investors/new'
     | '/_authenticated/marketplace/browse'
     | '/_authenticated/marketplace/favourites'
@@ -1349,6 +1362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorsNewRouteImport
       parentRoute: typeof AuthenticatedInvestorsRoute
     }
+    '/_authenticated/investors/investor-images': {
+      id: '/_authenticated/investors/investor-images'
+      path: '/investor-images'
+      fullPath: '/investors/investor-images'
+      preLoaderRoute: typeof AuthenticatedInvestorsInvestorImagesRouteImport
+      parentRoute: typeof AuthenticatedInvestorsRoute
+    }
     '/_authenticated/investors/$id': {
       id: '/_authenticated/investors/$id'
       path: '/$id'
@@ -1575,6 +1595,7 @@ const AuthenticatedInvestorsIdRouteWithChildren =
 
 interface AuthenticatedInvestorsRouteChildren {
   AuthenticatedInvestorsIdRoute: typeof AuthenticatedInvestorsIdRouteWithChildren
+  AuthenticatedInvestorsInvestorImagesRoute: typeof AuthenticatedInvestorsInvestorImagesRoute
   AuthenticatedInvestorsNewRoute: typeof AuthenticatedInvestorsNewRoute
   AuthenticatedInvestorsIndexRoute: typeof AuthenticatedInvestorsIndexRoute
 }
@@ -1582,6 +1603,8 @@ interface AuthenticatedInvestorsRouteChildren {
 const AuthenticatedInvestorsRouteChildren: AuthenticatedInvestorsRouteChildren =
   {
     AuthenticatedInvestorsIdRoute: AuthenticatedInvestorsIdRouteWithChildren,
+    AuthenticatedInvestorsInvestorImagesRoute:
+      AuthenticatedInvestorsInvestorImagesRoute,
     AuthenticatedInvestorsNewRoute: AuthenticatedInvestorsNewRoute,
     AuthenticatedInvestorsIndexRoute: AuthenticatedInvestorsIndexRoute,
   }
