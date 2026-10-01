@@ -88,6 +88,7 @@ function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, to
 }
 
 function FavouritesPage() {
+  const { t } = useTranslation();
   const fn = useServerFn(listFavourites);
   const enabled = useHasSession();
   const { id: wantId } = Route.useSearch();
