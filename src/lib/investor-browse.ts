@@ -27,8 +27,9 @@ export type PublicInvestor = {
   ticketLo: number | null;
   ticketHi: number | null;
   ticketLabel: string | null;
-  /** Baht millions. null = not set, 0 = no minimum. */
+  /** Buying revenue band, baht millions. hi null = open-ended (legacy rows hold a single minimum). */
   revenueMinM: number | null;
+  revenueMaxM: number | null;
 };
 
 export const isCorporateBuyer = (type: string | null) => {
@@ -43,10 +44,47 @@ export function moneyTHB(n: number) {
   return `฿${n}`;
 }
 
-export function revenueMinLabel(m: number | null) {
-  if (m == null) return null;
-  if (m === 0) return "No minimum";
-  return moneyTHB(m * 1e6);
+// ---------- revenue bands ----------
+export const REVENUE_BANDS: [number, number | null, string][] = [
+  [0, 100, "Below ฿100M"],
+  [100, 250, "฿100M – ฿250M"],
+  [250, 500, "฿250M – ฿500M"],
+  [500, 850, "฿500M – ฿850M"],
+  [850, 1000, "฿850M – ฿1B"],
+  [1000, null, "฿1B and above"],
+];
+
+export const bandValue = (lo: number, hi: number | null) => `${lo}:${hi ?? ""}`;
+
+/** Parse a stored selector value ("0:100", "1000:", or a legacy plain "50"). */
+export function parseRevenueBandValue(v: string): { lo: number; hi: number | null } | null {
+  if (!v) return null;
+  const parts = v.split(":");
+  const lo = Number(parts[0]);
+  if (!Number.isFinite(lo)) return null;
+  return { lo, hi: parts.length > 1 && parts[1] !== "" ? Number(parts[1]) : null };
+}
+
+/** The band matching a stored pair, or null for a legacy single minimum. */
+export function findRevenueBand(lo: number | null, hi: number | null): (typeof REVENUE_BANDS)[number] | null {
+  if (lo == null) return null;
+  return REVENUE_BANDS.find((b) => b[0] === lo && (b[1] ?? null) === (hi ?? null)) ?? null;
+}
+
+export const revenueBandLabel = (lo: number | null, hi: number | null) => {
+  if (lo == null) return null;
+  if (lo === 0 && hi == null) return "No minimum";
+  if (hi == null) return `${moneyTHB(lo * 1e6)}+`;
+  if (lo === 0) return `Below ${moneyTHB(hi * 1e6)}`;
+  return hi === lo ? moneyTHB(lo * 1e6) : `${moneyTHB(lo * 1e6)} – ${moneyTHB(hi * 1e6)}`;
+};
+
+/** Card/list line for the buying revenue band; null = not set. */
+export function revenueCardText(lo: number | null, hi: number | null): string | null {
+  if (lo == null) return null;
+  const label = revenueBandLabel(lo, hi);
+  if (!label) return null;
+  return label === "No minimum" ? "No revenue minimum" : `Revenue ${label}`;
 }
 
 const unit = (s: string) => {
@@ -91,18 +129,15 @@ export const TICKET_FILTER: FilterOpt[] = [
 ];
 
 export const REVENUE_FILTER: FilterOpt[] = [
-  { value: "", label: "Any minimum" },
-  { value: "0", label: "No minimum", active: "No revenue minimum" },
-  ...[10, 50, 100, 250, 500, 1000].map((m) => {
-    const l = m >= 1000 ? `฿${m / 1000}B` : `฿${m}M`;
-    return { value: String(m), label: `Up to ${l}`, active: `Revenue min. up to ${l}` };
-  }),
+  { value: "", label: "Any revenue" },
+  ...REVENUE_BANDS.map(([lo, hi, l]) => ({ value: bandValue(lo, hi), label: l, active: `Revenue ${l}` })),
 ];
 
-export const REVENUE_MIN_OPTIONS = [
-  { value: "0", label: "No minimum" },
-  ...[10, 50, 100, 250, 500, 1000].map((m) => ({ value: String(m), label: m >= 1000 ? "฿1B" : `฿${m}M` })),
-];
+/** Buying-requirement selector options: revenue bands, in baht millions. */
+export const REVENUE_MIN_OPTIONS: FilterOpt[] = REVENUE_BANDS.map(([lo, hi, l]) => ({
+  value: bandValue(lo, hi),
+  label: l,
+}));
 
 export type InvestorFilters = { aum: string; ticket: string; revenue: string };
 
@@ -120,8 +155,14 @@ export function matchTicket(i: PublicInvestor, v: string) {
   const tMax = i.ticketHi ?? Infinity;
   return tMin < bandHi && tMax >= bandLo;
 }
+/** True when the investor's buying revenue band overlaps the picked band. */
 export function matchRevenue(i: PublicInvestor, v: string) {
   if (!v) return true;
   if (i.revenueMinM == null) return false;
-  return i.revenueMinM <= Number(v);
+  const [a, b] = v.split(":");
+  const slo = Number(a);
+  const shi = b ? Number(b) : Infinity;
+  const blo = i.revenueMinM;
+  const bhi = i.revenueMaxM == null ? Infinity : i.revenueMaxM;
+  return blo < shi && bhi > slo;
 }

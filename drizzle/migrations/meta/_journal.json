@@ -281,6 +281,13 @@
       "when": 1790850398080,
       "tag": "0039_investor_revenue_minimum",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790854804489,
+      "tag": "0040_add_investor_revenue_max_m",
+      "breakpoints": true
     }
   ]
 }

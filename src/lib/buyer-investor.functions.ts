@@ -95,6 +95,7 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         min_ticket_size: inv.min_ticket_size as string | null,
         max_ticket_size: inv.max_ticket_size as string | null,
         revenue_min_m: inv.revenue_min_m == null ? null : Number(inv.revenue_min_m),
+        revenue_max_m: inv.revenue_max_m == null ? null : Number(inv.revenue_max_m),
         short_description: inv.short_description as string | null,
         keywords: (inv.keywords ?? []) as string[],
         investment_focus: (inv.investment_focus ?? []) as string[],
@@ -148,6 +149,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       updated_by: context.userId, updated_at: new Date().toISOString(),
     };
     if (data.revenue_min_m !== undefined) inv.revenue_min_m = data.revenue_min_m;
+    if (data.revenue_max_m !== undefined) inv.revenue_max_m = data.revenue_max_m;
     if (data.keywords) inv.keywords = data.keywords;
     if (data.investment_focus) inv.investment_focus = data.investment_focus;
     if (data.preferred_stages) inv.preferred_stages = data.preferred_stages;
