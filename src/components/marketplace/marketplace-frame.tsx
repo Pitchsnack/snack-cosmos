@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { PipelineCountBadge, MessagesCountBadge } from "@/components/menu-count-badge";
 import { cn } from "@/lib/utils";
@@ -306,7 +306,7 @@ const MENU_LINK_INACTIVE = {
   className: `${MENU_LINK_BASE} text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground`,
 };
 
-type MenuItem = { to: string; label: string; icon: typeof LayoutGrid; exact?: boolean; lock?: "financials" | "valuation" };
+type MenuItem = { to: string; label: string; icon: typeof LayoutGrid; exact?: boolean; lock?: "financials" | "valuation" | "risk" };
 
 function RailDivider() {
   return <div aria-hidden className="mx-auto my-3 h-px w-7 bg-sidebar-border" />;

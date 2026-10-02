@@ -23,6 +23,7 @@ export const TH: Record<string, string> = {
   Messages: "ข้อความ",
   "My Financials": "งบการเงินของฉัน",
   "Company Valuation": "มูลค่ากิจการ",
+  "Company Risk": "ความเสี่ยงกิจการ",
   "Indicative Valuation": "มูลค่าโดยประมาณ",
   "My Profile": "โปรไฟล์ของฉัน",
 
