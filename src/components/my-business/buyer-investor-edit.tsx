@@ -1,6 +1,10 @@
 import { useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { REVENUE_MIN_OPTIONS, bandValue, findRevenueBand, moneyTHB, parseRevenueBandValue } from "@/lib/investor-browse";
+import { isCorporateBuyer } from "@/lib/investor-browse";
+import {
+  AUM_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
+  descriptionError, descriptionLeaks, regError, showsStages, yearError,
+} from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
@@ -27,7 +31,7 @@ import { REGION_OPTIONS, regionForCountry } from "@/lib/country-region";
 export const BUYER_INVESTOR_KEY = ["buyer-investor", "me"];
 
 // Same taxonomies as Investors Directory › Edit investor.
-export const INVESTOR_CLASSIFICATIONS = ["Angel", "Venture Capital", "Private Equity", "Corporate VC", "Family Office", "Corporate Enterprise", "Sovereign Fund", "Incubator/Accelerator"];
+export const INVESTOR_CLASSIFICATIONS = [INDIVIDUAL_TYPE, "Angel", "Venture Capital", "Private Equity", "Corporate VC", "Family Office", "Corporate Enterprise", "Sovereign Fund", "Incubator/Accelerator"];
 const AUM_OPTIONS = [
   { value: "50M-100M", label: "50M – 100M" },
   { value: "100M-250M", label: "100M – 250M" },
@@ -107,7 +111,21 @@ export function BuyerInvestorEdit() {
   return <Form data={data} />;
 }
 
-type Data = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
+export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
+export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void };
+
+/** Review & complete in the setup wizard: the same form, with source tags. */
+export function BuyerInvestorForm({ data, setup }: { data: Data; setup?: SetupMode }) {
+  return <Form data={data} setup={setup} />;
+}
+
+function Tag({ s }: { s?: SourceTag }) {
+  if (!s) return null;
+  const cls = s === "Your answer" ? "bg-[#EEF1F7] text-[#1E2A4A] dark:bg-[#1B2140] dark:text-[#C7CEF5]" : s === "Auto Enrich" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-muted text-muted-foreground";
+  return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{s}</span>;
+}
+
+export type Data = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
 
 function initialMedia(inv: Data["investor"]): EntityMediaState {
   const slots = [1, 2, 3].map((n): SlotState => {
@@ -120,13 +138,12 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data }: { data: Data }) {
+function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
   const inv = data.investor;
-  const revBandInit = (() => {
-    if (inv.revenue_min_m == null) return "";
-    const b = findRevenueBand(inv.revenue_min_m, inv.revenue_max_m ?? null);
-    return b ? bandValue(b[0], b[1]) : String(inv.revenue_min_m);
-  })();
+  const src = setup?.sources ?? {};
+  const rel = data.buyer.relation;
+  const individual = rel === "individual";
+  const [errs, setErrs] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveMyBuyerInvestor);
@@ -139,8 +156,11 @@ function Form({ data }: { data: Data }) {
     firm_name: inv.firm_name ?? "", business_address: inv.business_address ?? "",
     aum: inv.aum ?? "", min_ticket_size: inv.min_ticket_size ?? "", max_ticket_size: inv.max_ticket_size ?? "",
     short_description: inv.short_description ?? "",
-    revenue_band: revBandInit,
+    aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
+    aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
+    registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
   });
+  const [deals, setDeals] = useState<string[]>(data.buyer.deal_types);
   const [keywords, setKeywords] = useState(inv.keywords);
   const [focus, setFocus] = useState(inv.investment_focus);
   const [stages, setStages] = useState(inv.preferred_stages);
@@ -148,9 +168,13 @@ function Form({ data }: { data: Data }) {
   const [customIndustry, setCustomIndustry] = useState("");
   const [portfolio, setPortfolio] = useState(inv.portfolio_extra);
   const [media, setMedia] = useState<EntityMediaState>(() => initialMedia(inv));
-  const [people, setPeople] = useState(data.people.length ? data.people : []);
+  const [people, setPeople] = useState(() => {
+    if (data.people.length) return data.people;
+    if (setup && rel !== "agent" && data.account.name) return [{ name: data.account.name, role: data.account.title, email: "", phone: "" }];
+    return [];
+  });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
-  const back = () => navigate({ to: "/marketplace/my-company" });
+  const back = () => (setup ? setup.onBack() : navigate({ to: "/marketplace/my-company" }));
 
   /** Auto Enrich merge — back-fills ONLY empty fields, same as Edit investor. */
   const applyEnrichment = (r: EnrichInvestorResult) => {
@@ -187,46 +211,79 @@ function Form({ data }: { data: Data }) {
     setCustomIndustry("");
   };
 
+  const leaks = descriptionLeaks(f.description, f.investor_name, f.website_url);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!f.investor_name.trim()) return toast.error("Company Name is required.");
-    const yr = f.year_founded.trim() ? Number(f.year_founded) : null;
+    const checks: [string, string | null][] = [
+      ["year_founded", individual ? null : yearError(f.year_founded)],
+      ["investor_name", f.investor_name.trim().length < 2 ? "Add your firm's name." : null],
+      ["website_url", /^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(f.website_url.trim()) ? null : "Enter a valid website address, e.g. www.yourfirm.com"],
+      ["description", f.description.trim() ? descriptionError(f.description) || (leaks.length ? "leak" : null) : null],
+      ["registration_no", individual ? null : regError(f.registration_no, f.country)],
+    ];
+    const bad = checks.find(([, m]) => m);
+    if (bad) {
+      setErrs({ [bad[0]]: bad[1]! });
+      document.getElementById(`f-${bad[0]}`)?.focus();
+      return;
+    }
+    setErrs({});
+    const yr = individual ? null : Number(f.year_founded);
     setBusy(true);
     try {
       const t = (v: string) => v.trim() || null;
-      const revBand = parseRevenueBandValue(f.revenue_band);
       const { logoPath, media: resolvedMedia } = await uploadPending(
         media,
         ({ kind, ext }) => getUrl({ data: { kind, ext } }),
         supabase.storage.from("startup-media"),
       );
+      const exact = Number(f.aum_exact.replace(/[^\d.]/g, ""));
       await save({ data: {
         investor_name: f.investor_name.trim(), investor_type: t(f.investor_type), year_founded: yr && Number.isFinite(yr) ? yr : null,
         country: t(f.country), city: t(f.city), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
-        firm_name: t(f.firm_name), business_address: t(f.business_address), aum: t(f.aum),
-        min_ticket_size: t(f.min_ticket_size), max_ticket_size: t(f.max_ticket_size), short_description: t(f.short_description),
-        revenue_min_m: revBand ? revBand.lo : null,
-        revenue_max_m: revBand ? revBand.hi : null,
+        firm_name: t(f.firm_name), business_address: t(f.business_address),
+        short_description: t(f.short_description),
+        aum_band: individual || rel === "agent" ? null : (f.aum_band || null) as never,
+        ticket_band: (f.ticket_band || null) as never,
+        revenue_min_band: (f.rev_band || null) as never,
+        aum_exact_usd: f.aum_exact.trim() && Number.isFinite(exact) ? exact : null,
+        registration_no: individual ? null : t(f.registration_no),
+        description: f.description.trim(), deal_types: deals,
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, portfolio_extra: portfolio,
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
       } });
       await qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
       await qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
-      toast.success("Profile saved");
-      back();
+      const live = data.buyer.status === "live";
+      const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(f.investor_type) || stages.length > 0);
+      const msg = live ? "Profile saved. Sellers see the changes in Browse investors."
+        : ready ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the required items to publish.";
+      if (setup) setup.onSaved(msg);
+      else { toast.success(msg); back(); }
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
+  const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{errs[k]}</p> : null;
+  const req = <span className="ml-[3px] text-[12px] font-semibold text-[#B42318] relative -top-0.5">*</span>;
+  const corp = isCorporateBuyer(f.investor_type);
+  const allStages = Array.from(new Set([...STAGE_OPTIONS, ...stages]));
+  const allGeo = Array.from(new Set([...GEOGRAPHY, ...focus]));
+  const allDeals = Array.from(new Set([...DEAL_TYPES, ...deals]));
+  const agnostic = industries.includes(SECTOR_AGNOSTIC);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <Link to="/marketplace/my-company" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to My Company
-      </Link>
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Edit profile</h1>
-        <p className="mt-1 text-sm text-muted-foreground">The same investor record Admin edits in Investors Directory. Changes show in both places.</p>
-      </div>
+    <div className={setup ? "space-y-6" : "mx-auto max-w-3xl space-y-6"}>
+      {!setup && (
+        <>
+          <Link to="/marketplace/my-company" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back to My Company
+          </Link>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Edit profile</h1>
+            <p className="mt-1 text-sm text-muted-foreground">The same investor record Admin edits in Investors Directory. Changes show in both places.</p>
+          </div>
+        </>
+      )}
 
       <form onSubmit={submit} className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm">
         {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
@@ -253,15 +310,20 @@ function Form({ data }: { data: Data }) {
         {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className="grid grid-cols-[100px_1fr_220px] gap-4">
           <div className="space-y-1.5">
-            <Label>Year Founded</Label>
-            <Input type="number" min={1900} max={2030} value={f.year_founded} onChange={set("year_founded")} placeholder="e.g. 2020" />
+            <Label>Year Founded{!individual && req}<Tag s={src.year_founded} /></Label>
+            <Input id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
+              onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder="e.g. 2014"
+              className={errs.year_founded ? "border-[#B42318]" : ""} />
+            <Err k="year_founded" />
           </div>
           <div className="space-y-1.5">
-            <Label>Company Name <span className="text-destructive">*</span></Label>
-            <Input value={f.investor_name} onChange={set("investor_name")} placeholder="e.g. Sequoia Capital" maxLength={100} required />
+            <Label>Company Name{req}<Tag s={src.investor_name} /></Label>
+            <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder="e.g. Acme Ventures" maxLength={120}
+              className={errs.investor_name ? "border-[#B42318]" : ""} />
+            <Err k="investor_name" />
           </div>
           <div className="space-y-1.5">
-            <Label>Investor Classification</Label>
+            <Label>Investor Classification<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
               <SelectContent>
@@ -342,11 +404,13 @@ function Form({ data }: { data: Data }) {
           </div>
           <div className="space-y-1.5">
             <EditableUrlField
-              label="Company URL"
+              label="Company URL *"
               value={f.website_url}
               onChange={(v) => setF((o) => ({ ...o, website_url: v }))}
-              placeholder="https://example.com"
+              placeholder="https://www.yourfirm.com"
             />
+            <input id="f-website_url" className="sr-only" readOnly tabIndex={-1} aria-hidden value={f.website_url} />
+            <Err k="website_url" />
           </div>
           <EditableUrlField
             label="LinkedIn URL"
@@ -368,48 +432,57 @@ function Form({ data }: { data: Data }) {
           </div>
         </div>
 
-        {/* Row 5: AUM | Min Ticket | Max Ticket */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <Label>Fund's AUM</Label>
-            <Select value={f.aum || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum: v === "none" ? "" : v }))}>
-              <SelectTrigger><SelectValue placeholder="Select Fund Size" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Select Fund Size —</SelectItem>
-                {AUM_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                {f.aum && !AUM_OPTIONS.some((o) => o.value === f.aum) && <SelectItem value={f.aum}>{f.aum}</SelectItem>}
-              </SelectContent>
-            </Select>
-          </div>
-          {(["min_ticket_size", "max_ticket_size"] as const).map((k) => (
-            <div key={k} className="space-y-1.5">
-              <Label>{k === "min_ticket_size" ? "Min Ticket Size" : "Max Ticket Size"}</Label>
-              <Select value={f[k] || "none"} onValueChange={(v) => setF((o) => ({ ...o, [k]: v === "none" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder={k === "min_ticket_size" ? "Select Min" : "Select Max"} /></SelectTrigger>
+        {/* Fund & ticket — US$ bands */}
+        {!individual && rel !== "agent" && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{corp ? "Group revenue band" : "Fund's AUM band"}<Tag s={src.aum_band} /></Label>
+              <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{k === "min_ticket_size" ? "— Select Min —" : "— Select Max —"}</SelectItem>
-                  {TICKET_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                  {f[k] && !TICKET_OPTIONS.some((o) => o.value === f[k]) && <SelectItem value={f[k]}>{f[k]}</SelectItem>}
+                  {!inv.aum_band && <SelectItem value="none">Not set</SelectItem>}
+                  {AUM_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-[12px] text-muted-foreground">Sellers see this band on your card.</p>
             </div>
-          ))}
+            <div className="space-y-1.5">
+              <Label>{corp ? "Exact group revenue (US$)" : "Exact AUM (US$)"} <span className="text-[#9CA3AF] font-normal">optional</span></Label>
+              <Input inputMode="numeric" value={f.aum_exact} placeholder="e.g. 120,000,000"
+                onChange={(e) => { const d = e.target.value.replace(/[^\d]/g, ""); setF((o) => ({ ...o, aum_exact: d ? Number(d).toLocaleString("en-US") : "" })); }} />
+              <p className="text-[12px] text-muted-foreground">Private. Only sellers who approve your NDA see it.</p>
+            </div>
+          </div>
+        )}
+        <div className="space-y-1.5">
+          <Label>Average investment per deal<Tag s={src.ticket_band} /></Label>
+          <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
+            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {TICKET_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size. Sellers see this range on your card and filter Browse investors by it.</p>
         </div>
         {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
           <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
-          <Label>Revenue band</Label>
-          <Select value={f.revenue_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, revenue_band: v === "none" ? "" : v }))}>
-            <SelectTrigger className="max-w-[320px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+          <Label>Revenue minimum<Tag s={src.revenue_min_band} /></Label>
+          <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
+            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Not set</SelectItem>
-              {REVENUE_MIN_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-              {f.revenue_band && !REVENUE_MIN_OPTIONS.some((o) => o.value === f.revenue_band) && (
-                <SelectItem value={f.revenue_band}>{moneyTHB(Number(f.revenue_band) * 1e6)} minimum</SelectItem>
-              )}
+              {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
             </SelectContent>
           </Select>
-          <p className="text-[12px] text-muted-foreground">The company revenue range you'll buy. Sellers can filter by it.</p>
+          <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Investment Focus<Tag s={src.deal_types} /></Label>
+          <div className="flex flex-wrap gap-2">
+            {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{d}</Pill>)}
+          </div>
         </div>
 
         {/* About */}
@@ -428,25 +501,32 @@ function Form({ data }: { data: Data }) {
 
         {/* Geography */}
         <div className="space-y-1.5">
-          <Label>Geography <span className="text-xs text-muted-foreground">({focus.length}/10)</span></Label>
-          <TagEditor values={focus} onChange={setFocus} max={10} placeholder="Add country..." />
-        </div>
-
-        {/* Preferred Stages */}
-        <div className="space-y-1.5">
-          <Label>Preferred Stages</Label>
+          <Label>Geography<Tag s={src.geography} /></Label>
           <div className="flex flex-wrap gap-2">
-            {STAGES.map((s) => (
-              <Pill key={s} active={stages.includes(s)} onClick={() => setStages(toggle(stages, s))}>{s}</Pill>
-            ))}
+            {allGeo.map((g) => <Pill key={g} active={focus.includes(g)} onClick={() => setFocus(toggle(focus, g, 10))}>{g}</Pill>)}
           </div>
         </div>
 
+        {/* Preferred Stages */}
+        {showsStages(f.investor_type) && <div className="space-y-1.5">
+          <Label>Preferred Stages</Label>
+          <div className="flex flex-wrap gap-2">
+            {allStages.map((s) => (
+              <Pill key={s} active={stages.includes(s)} onClick={() => setStages(toggle(stages, s))}>{s}</Pill>
+            ))}
+          </div>
+        </div>}
+
         {/* Preferred Industries */}
         <div className="space-y-1.5">
-          <Label>Preferred Industries</Label>
-          <div className="mb-2 flex flex-wrap gap-2">
-            {INVESTOR_INDUSTRIES.map((ind) => (
+          <Label>Preferred Industries<Tag s={src.preferred_industries} /></Label>
+          <label className="flex items-center gap-2 text-[13px]">
+            <input type="checkbox" checked={agnostic} onChange={() => setIndustries(agnostic ? industries.filter((x) => x !== SECTOR_AGNOSTIC) : [SECTOR_AGNOSTIC, ...industries])} />
+            <b className="font-semibold">Sector agnostic</b> <span className="text-muted-foreground">I look at companies in every industry</span>
+          </label>
+          {agnostic && <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.</p>}
+          <div className={`mb-2 flex flex-wrap gap-2 ${agnostic ? "pointer-events-none opacity-50" : ""}`}>
+            {INVESTOR_INDUSTRIES.filter((x) => x !== SECTOR_AGNOSTIC).map((ind) => (
               <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>{ind}</Pill>
             ))}
             {industries.filter((i) => !INVESTOR_INDUSTRIES.includes(i)).map((c) => (
@@ -463,6 +543,19 @@ function Form({ data }: { data: Data }) {
           </div>
         </div>
 
+        {/* Public view */}
+        <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public view · sellers see this before an NDA</h3>
+          <Label>Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span><Tag s={src.description} /></Label>
+          <Textarea id="f-description" value={f.description} onChange={(e) => setF((o) => ({ ...o, description: e.target.value.slice(0, 140) }))} rows={3} maxLength={140}
+            placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans" className={errs.description ? "border-[#B42318]" : ""} />
+          <div className="flex justify-between text-[12px]">
+            <span className="text-[#B42318]">{errs.description && errs.description !== "leak" ? errs.description : ""}</span>
+            <span className="text-muted-foreground">{f.description.length} / 140</span>
+          </div>
+          {leaks.length > 0 && <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Your description mentions <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
+        </div>
+
         {/* Portfolio Startups */}
         <div className="space-y-1.5">
           <Label>Portfolio Startups</Label>
@@ -477,6 +570,17 @@ function Form({ data }: { data: Data }) {
         {/* For verification */}
         <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">For verification · also visible to Admin</h3>
+          {!individual && (
+            <div className="space-y-1.5">
+              <Label>{f.country === "Thailand" ? <>Company Registration Number (เลขทะเบียนนิติบุคคล){req}</> : <>Company registration number <span className="font-normal text-[#9CA3AF]">optional</span></>}<Tag s={src.registration_no} /></Label>
+              <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
+                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
+                inputMode={f.country === "Thailand" ? "numeric" : undefined}
+                onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
+                className={errs.registration_no ? "border-[#B42318]" : ""} />
+              <Err k="registration_no" />
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Decision makers</Label>
             <div className="space-y-2">
@@ -503,8 +607,8 @@ function Form({ data }: { data: Data }) {
             Required fields are marked with <span className="text-destructive">*</span>
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
-            <Button type="submit" disabled={busy || !f.investor_name.trim()}>{busy ? "Saving…" : "Save changes"}</Button>
+            <Button type="button" variant="outline" onClick={back} disabled={busy}>{setup ? "Back to answers" : "Cancel"}</Button>
+            <Button type="submit" disabled={busy}>{busy ? "Saving…" : setup ? "Save profile" : "Save changes"}</Button>
           </div>
         </div>
       </form>
