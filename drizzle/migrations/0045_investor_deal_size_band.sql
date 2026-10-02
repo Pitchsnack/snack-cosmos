@@ -1,0 +1,2 @@
+ALTER TABLE public.investors ADD COLUMN IF NOT EXISTS deal_size_band text;
+ALTER TABLE public.investors ADD CONSTRAINT investors_deal_size_band_chk CHECK (deal_size_band IS NULL OR deal_size_band IN ('deal_below_5','deal_5_10','deal_10_25','deal_25_50','deal_50_plus'));

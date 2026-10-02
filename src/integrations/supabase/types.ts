@@ -2263,6 +2263,7 @@ export type Database = {
           country: string | null
           created_at: string
           created_by: string | null
+          deal_size_band: string | null
           email: string | null
           firm_name: string | null
           id: string
@@ -2307,6 +2308,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          deal_size_band?: string | null
           email?: string | null
           firm_name?: string | null
           id?: string
@@ -2351,6 +2353,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          deal_size_band?: string | null
           email?: string | null
           firm_name?: string | null
           id?: string
