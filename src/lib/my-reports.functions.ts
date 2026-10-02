@@ -14,6 +14,7 @@ export type MyReportCompany = {
   logoUrl: string | null;
   financials: ReportStatus;
   valuation: ReportStatus;
+  risk: ReportStatus;
 };
 
 async function admin() {
@@ -27,8 +28,8 @@ async function myCompanyIds(sb: any, userId: string) {
   return [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))];
 }
 
-function statusFor(orders: any[], kind: "financials" | "valuation"): ReportStatus {
-  const mine = orders.filter((o) => o.kind === kind || o.kind === "bundle");
+function statusFor(orders: any[], kind: "financials" | "valuation" | "risk"): ReportStatus {
+  const mine = orders.filter((o) => o.kind === kind || (o.kind === "bundle" && kind !== "risk"));
   const done = mine.filter((o) => o.status === "delivered").sort((a, b) => String(b.delivered_at).localeCompare(String(a.delivered_at)))[0];
   if (done) return { status: "ready", at: done.delivered_at, ref: done.ref ?? null };
   const open = mine.sort((a, b) => String(b.paid_at).localeCompare(String(a.paid_at)))[0];
@@ -61,6 +62,7 @@ export const getMyReportsState = createServerFn({ method: "GET" })
         logoUrl: s.logo_url ? signed[s.logo_url] ?? (/^https?:\/\//.test(s.logo_url) ? s.logo_url : null) : null,
         financials: statusFor(o, "financials"),
         valuation: statusFor(o, "valuation"),
+        risk: statusFor(o, "risk"),
       };
     });
     const { data: pref } = await context.supabase.from("seller_report_prefs").select("last_company_id, share_panel_hidden").eq("user_id", context.userId).maybeSingle();

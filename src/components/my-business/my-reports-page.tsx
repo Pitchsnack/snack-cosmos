@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Calculator, Check, ChevronDown, FileBarChart } from "lucide-react";
+import { Calculator, Check, ChevronDown, FileBarChart, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { getMyReportsState, saveMyReportsPrefs, type MyReportCompany, type ReportStatus } from "@/lib/my-reports.functions";
 import { LockedReportPage } from "@/components/my-business/locked-report-page";
@@ -16,9 +16,10 @@ import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
  * is its own route so the title, breadcrumb, menu highlight and URL follow it;
  * ?company= keeps the company across tabs and reloads.
  */
-type Kind = "financials" | "valuation";
-const ROUTE: Record<Kind, "/my-financials" | "/my-valuation"> = { financials: "/my-financials", valuation: "/my-valuation" };
-const REPORT: Record<Kind, string> = { financials: "verified financial report", valuation: "estimated valuation" };
+type Kind = "financials" | "valuation" | "risk";
+const ROUTE: Record<Kind, "/my-financials" | "/my-valuation" | "/my-risk"> = { financials: "/my-financials", valuation: "/my-valuation", risk: "/my-risk" };
+const TITLE: Record<Kind, string> = { financials: "My Financials", valuation: "Company Valuation", risk: "Company Risk" };
+const REPORT: Record<Kind, string> = { financials: "verified financial report", valuation: "estimated valuation", risk: "company risk report" };
 const TILE_COLOURS = ["#2563EB", "#0F766E", "#B45309", "#7C3AED", "#BE123C", "#0369A1"];
 
 const PILL = {
@@ -106,11 +107,11 @@ function Switcher({ companies, selected, kind, onPick }: { companies: MyReportCo
                 <Tile c={c} index={i} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[14px] font-semibold text-[#111827]">{c.name}</div>
-                  <div className="mt-0.5 grid gap-x-3 text-[12px] text-[#6B7280] [grid-template-columns:164px_auto]">
-                    {(["financials", "valuation"] as Kind[]).map((k) => (
+                  <div className="mt-0.5 grid gap-x-3 text-[12px] text-[#6B7280] [grid-template-columns:auto_auto_auto]">
+                    {(["financials", "valuation", "risk"] as Kind[]).map((k) => (
                       <span key={k} className="inline-flex items-center gap-1.5 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full" style={{ background: PILL[c[k].status].dot }} />
-                        {k === "financials" ? "Financials" : "Valuation"}: {PILL[c[k].status].label}
+                        {k === "financials" ? "Financials" : k === "risk" ? "Risk" : "Valuation"}: {PILL[c[k].status].label}
                       </span>
                     ))}
                   </div>
@@ -130,9 +131,11 @@ function Tabs({ kind, company, onChange }: { kind: Kind; company: MyReportCompan
   const tabs: { k: Kind; label: string; Icon: typeof FileBarChart }[] = [
     { k: "financials", label: "Financial report", Icon: FileBarChart },
     { k: "valuation", label: "Estimated valuation", Icon: Calculator },
+    { k: "risk", label: "Company risk", Icon: ShieldAlert },
   ];
+  const order: Kind[] = ["financials", "valuation", "risk"];
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); onChange(kind === "financials" ? "valuation" : "financials"); }
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); const i = order.indexOf(kind); onChange(order[(i + (e.key === "ArrowRight" ? 1 : 2)) % 3]); }
   };
   return (
     <div role="tablist" onKeyDown={onKey} className="inline-flex gap-1 rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[5px]">
@@ -171,7 +174,7 @@ export function MyReportsPage({ kind, company: linked, from }: { kind: Kind; com
   if (!companies.length) {
     return (
       <div className="p-4 md:p-7">
-        <h1 className="text-[26px] font-bold tracking-tight">{kind === "financials" ? "My Financials" : "Company Valuation"}</h1>
+        <h1 className="text-[26px] font-bold tracking-tight">{TITLE[kind]}</h1>
         <p className="mt-2 text-[13.5px] text-muted-foreground">Add your company first to order its reports.</p>
       </div>
     );
@@ -219,7 +222,7 @@ export function MyReportsPage({ kind, company: linked, from }: { kind: Kind; com
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
             <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">My Workspace</div>
-            <h1 className="text-[26px] font-bold tracking-tight">{kind === "financials" ? "My Financials" : "Company Valuation"}</h1>
+            <h1 className="text-[26px] font-bold tracking-tight">{TITLE[kind]}</h1>
             <p className="text-[13.5px] text-muted-foreground">{subtitle(company, kind)}</p>
           </div>
           <Switcher companies={companies} selected={company} kind={kind} onPick={pickCompany} />

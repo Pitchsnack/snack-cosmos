@@ -309,6 +309,13 @@
       "when": 1790971845732,
       "tag": "0043_buyer_setup_wizard",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1790973892860,
+      "tag": "0044_company_risk_report_kind",
+      "breakpoints": true
     }
   ]
 }

@@ -25,6 +25,7 @@ import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPeerComparablesRouteImport } from './routes/_authenticated/peer-comparables'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyValuationRouteImport } from './routes/_authenticated/my-valuation'
+import { Route as AuthenticatedMyRiskRouteImport } from './routes/_authenticated/my-risk'
 import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
 import { Route as AuthenticatedMyFinancialsRouteImport } from './routes/_authenticated/my-financials'
 import { Route as AuthenticatedMarketplaceRouteImport } from './routes/_authenticated/marketplace'
@@ -173,6 +174,11 @@ const AuthenticatedMyValuationRoute =
     path: '/my-valuation',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMyRiskRoute = AuthenticatedMyRiskRouteImport.update({
+  id: '/my-risk',
+  path: '/my-risk',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedMyPageRoute = AuthenticatedMyPageRouteImport.update({
   id: '/my-page',
   path: '/my-page',
@@ -554,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/marketplace': typeof AuthenticatedMarketplaceRouteWithChildren
   '/my-financials': typeof AuthenticatedMyFinancialsRoute
   '/my-page': typeof AuthenticatedMyPageRoute
+  '/my-risk': typeof AuthenticatedMyRiskRoute
   '/my-valuation': typeof AuthenticatedMyValuationRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -628,6 +635,7 @@ export interface FileRoutesByTo {
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
   '/my-financials': typeof AuthenticatedMyFinancialsRoute
   '/my-page': typeof AuthenticatedMyPageRoute
+  '/my-risk': typeof AuthenticatedMyRiskRoute
   '/my-valuation': typeof AuthenticatedMyValuationRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -702,6 +710,7 @@ export interface FileRoutesById {
   '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteWithChildren
   '/_authenticated/my-financials': typeof AuthenticatedMyFinancialsRoute
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
+  '/_authenticated/my-risk': typeof AuthenticatedMyRiskRoute
   '/_authenticated/my-valuation': typeof AuthenticatedMyValuationRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/peer-comparables': typeof AuthenticatedPeerComparablesRoute
@@ -784,6 +793,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/my-financials'
     | '/my-page'
+    | '/my-risk'
     | '/my-valuation'
     | '/notifications'
     | '/peer-comparables'
@@ -858,6 +868,7 @@ export interface FileRouteTypes {
     | '/intake-queue'
     | '/my-financials'
     | '/my-page'
+    | '/my-risk'
     | '/my-valuation'
     | '/notifications'
     | '/peer-comparables'
@@ -931,6 +942,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketplace'
     | '/_authenticated/my-financials'
     | '/_authenticated/my-page'
+    | '/_authenticated/my-risk'
     | '/_authenticated/my-valuation'
     | '/_authenticated/notifications'
     | '/_authenticated/peer-comparables'
@@ -1114,6 +1126,13 @@ declare module '@tanstack/react-router' {
       path: '/my-valuation'
       fullPath: '/my-valuation'
       preLoaderRoute: typeof AuthenticatedMyValuationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-risk': {
+      id: '/_authenticated/my-risk'
+      path: '/my-risk'
+      fullPath: '/my-risk'
+      preLoaderRoute: typeof AuthenticatedMyRiskRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/my-page': {
@@ -1779,6 +1798,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMarketplaceRoute: typeof AuthenticatedMarketplaceRouteWithChildren
   AuthenticatedMyFinancialsRoute: typeof AuthenticatedMyFinancialsRoute
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
+  AuthenticatedMyRiskRoute: typeof AuthenticatedMyRiskRoute
   AuthenticatedMyValuationRoute: typeof AuthenticatedMyValuationRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPeerComparablesRoute: typeof AuthenticatedPeerComparablesRoute
@@ -1816,6 +1836,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMarketplaceRoute: AuthenticatedMarketplaceRouteWithChildren,
   AuthenticatedMyFinancialsRoute: AuthenticatedMyFinancialsRoute,
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
+  AuthenticatedMyRiskRoute: AuthenticatedMyRiskRoute,
   AuthenticatedMyValuationRoute: AuthenticatedMyValuationRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPeerComparablesRoute: AuthenticatedPeerComparablesRoute,

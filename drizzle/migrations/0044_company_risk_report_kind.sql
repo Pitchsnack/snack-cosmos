@@ -1,0 +1,2 @@
+ALTER TABLE public.report_orders DROP CONSTRAINT IF EXISTS report_orders_kind_check;
+ALTER TABLE public.report_orders ADD CONSTRAINT report_orders_kind_check CHECK (kind = ANY (ARRAY['financials'::text, 'valuation'::text, 'bundle'::text, 'risk'::text]));
