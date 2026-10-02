@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuyerBrowseCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { BuyerBrowseCard, BuyerCover, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing } from "@/lib/buyer-profile.functions";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
