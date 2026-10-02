@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
-import { REVENUE_MIN_OPTIONS, bandValue, findRevenueBand, moneyTHB, parseRevenueBandValue } from "@/lib/investor-browse";
+import { AUM_BANDS, INDIVIDUAL_TYPE, REV_BANDS, TICKET_BANDS, ticketColumns, yearError } from "@/lib/investor-bands";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -88,7 +88,7 @@ function mapSwitchError(msg: string): string {
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminInvestorManager) ──
 const INVESTOR_CLASSIFICATIONS = [
-  "Angel", "Venture Capital", "Private Equity", "Corporate VC",
+  INDIVIDUAL_TYPE,   "Angel", "Venture Capital", "Private Equity", "Corporate VC",
   "Family Office", "Corporate Enterprise", "Sovereign Fund", "Incubator/Accelerator",
 ];
 const AUM_OPTIONS = [
@@ -172,6 +172,7 @@ export interface InvestorEditModel {
   max_ticket_size: string | null;
   revenue_min_m?: number | null;
   revenue_max_m?: number | null;
+  aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; aum_exact_usd?: number | null;
   bio: string | null;
   keywords: string[] | null;
   
@@ -324,11 +325,10 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [aum, setAum] = useState(investor?.aum ?? "");
   const [minTicket, setMinTicket] = useState(investor?.min_ticket_size ?? "");
   const [maxTicket, setMaxTicket] = useState(investor?.max_ticket_size ?? "");
-  const [revenueBand, setRevenueBand] = useState<string>(() => {
-    if (investor?.revenue_min_m == null) return "";
-    const b = findRevenueBand(investor.revenue_min_m, investor.revenue_max_m ?? null);
-    return b ? bandValue(b[0], b[1]) : String(investor.revenue_min_m);
-  });
+  const [revenueBand, setRevenueBand] = useState<string>(investor?.revenue_min_band ?? "");
+  const [aumBand, setAumBand] = useState<string>(investor?.aum_band ?? "");
+  const [ticketBand, setTicketBand] = useState<string>(investor?.ticket_band ?? "");
+  const [aumExact, setAumExact] = useState<string>(investor?.aum_exact_usd != null ? investor.aum_exact_usd.toLocaleString("en-US") : "");
   const [bio, setBio] = useState(investor?.bio ?? "");
   const [keywords, setKeywords] = useState<string[]>(investor?.keywords ?? []);
   const [keywordDraft, setKeywordDraft] = useState("");
@@ -509,17 +509,18 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   }
 
   function buildProfile() {
-    const revBand = parseRevenueBandValue(revenueBand);
+    const tc = ticketColumns(ticketBand);
+    const ex = Number(aumExact.replace(/[^\d]/g, ""));
     return {
+      aumBand: aumBand || null, ticketBand: ticketBand || null, revenueMinBand: revenueBand || null,
+      aumExactUsd: aumExact.trim() && Number.isFinite(ex) ? ex : null,
       firmName: firmName || null,
       email: email || null,
       businessAddress: businessAddress || null,
       yearFounded: yearFounded ? Number(yearFounded) : null,
       aum: aum || null,
-      minTicketSize: minTicket || null,
-      maxTicketSize: maxTicket || null,
-      revenueMinM: revBand?.lo ?? null,
-      revenueMaxM: revBand?.hi ?? null,
+      minTicketSize: ticketBand ? tc.min : minTicket || null,
+      maxTicketSize: ticketBand ? tc.max : maxTicket || null,
       ticketSize:
         minTicket && maxTicket ? `${minTicket} – ${maxTicket}` : minTicket || maxTicket || null,
       bio: bio || null,
@@ -1216,55 +1217,51 @@ export function InvestorForm({ investor, controlReturn }: Props) {
         </div>
       </div>
 
-      {/* Row 4: AUM | Min Ticket | Max Ticket */}
+      {/* Fund & ticket — US$ bands (same as Buyer › Edit profile) */}
+      {yearFounded && yearError(yearFounded) && <p className="text-[12.5px] text-[#B42318]">{yearError(yearFounded)}</p>}
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>Fund's AUM</Label>
-          <Select value={aum || "none"} onValueChange={(v) => setAum(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select Fund Size" /></SelectTrigger>
+          <Label>Fund's AUM band</Label>
+          <Select value={aumBand || "none"} onValueChange={(v) => setAumBand(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Select Fund Size —</SelectItem>
-              {AUM_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              <SelectItem value="none">Not set</SelectItem>
+              {AUM_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
             </SelectContent>
           </Select>
+          <p className="text-[12px] text-muted-foreground">Sellers see this band on the card.</p>
         </div>
         <div className="space-y-1.5">
-          <Label>Min Ticket Size</Label>
-          <Select value={minTicket || "none"} onValueChange={(v) => setMinTicket(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select Min" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select Min —</SelectItem>
-              {TICKET_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Label>Exact AUM (US$) <span className="font-normal text-[#9CA3AF]">optional</span></Label>
+          <Input inputMode="numeric" value={aumExact} placeholder="e.g. 120,000,000"
+            onChange={(e) => { const d = e.target.value.replace(/[^\d]/g, ""); setAumExact(d ? Number(d).toLocaleString("en-US") : ""); }} />
+          <p className="text-[12px] text-muted-foreground">Private. Only sellers who approve the NDA see it.</p>
         </div>
         <div className="space-y-1.5">
-          <Label>Max Ticket Size</Label>
-          <Select value={maxTicket || "none"} onValueChange={(v) => setMaxTicket(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select Max" /></SelectTrigger>
+          <Label>Average investment per deal</Label>
+          <Select value={ticketBand || "none"} onValueChange={(v) => setTicketBand(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Select Max —</SelectItem>
-              {TICKET_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              <SelectItem value="none">Not set</SelectItem>
+              {TICKET_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
             </SelectContent>
           </Select>
+          <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size.</p>
         </div>
       </div>
 
       {/* Buying Requirement */}
       <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
         <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
-        <Label>Revenue band</Label>
+        <Label>Revenue minimum</Label>
         <Select value={revenueBand || "none"} onValueChange={(v) => setRevenueBand(v === "none" ? "" : v)}>
-          <SelectTrigger className="max-w-[320px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+          <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Not set</SelectItem>
-            {REVENUE_MIN_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            {revenueBand && !REVENUE_MIN_OPTIONS.some((o) => o.value === revenueBand) && (
-              <SelectItem value={revenueBand}>{moneyTHB(Number(revenueBand) * 1e6)} minimum</SelectItem>
-            )}
+            {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
           </SelectContent>
         </Select>
-        <p className="text-[12px] text-muted-foreground">The company revenue range you'll buy. Sellers can filter by it.</p>
+        <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
       </div>
 
       {/* About */}

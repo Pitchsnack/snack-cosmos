@@ -20,7 +20,6 @@ import {
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "@tanstack/react-router";
 import { Flag } from "lucide-react";
 import { bandText, typeName } from "@/lib/investor-bands";
 import { wizardProgress, type BuyerRelation } from "@/lib/buyer-wizard";
