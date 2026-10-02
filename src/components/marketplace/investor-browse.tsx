@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Briefcase, Lock, Search, Star, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 
 import { Button } from "@/components/ui/button";
@@ -10,18 +11,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { usePersistentView } from "@/hooks/use-persistent-view";
-import { useSavedIds } from "@/hooks/use-saved-ids";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
-import { listBrowseInvestors } from "@/lib/investor-browse.functions";
+import { listBrowseInvestors, mySavedInvestorIds, toggleSavedInvestor } from "@/lib/investor-browse.functions";
 import {
   AUM_FILTER, REVENUE_FILTER, TICKET_FILTER, isCorporateBuyer, matchAum, matchRevenue, matchTicket, revenueCardText,
   type FilterOpt, type PublicInvestor,
 } from "@/lib/investor-browse";
 import { cn } from "@/lib/utils";
 
-function StarBtn({ saved, onClick }: { saved: boolean; onClick: () => void }) {
+/** Starred investors are stored per seller on the server (they feed seller Favourites). */
+export function useSavedInvestors() {
+  const list = useServerFn(mySavedInvestorIds);
+  const toggleFn = useServerFn(toggleSavedInvestor);
+  const qc = useQueryClient();
+  const { data = [] } = useQuery({ queryKey: ["saved-investors"], queryFn: () => list() });
+  const ids = new Set(data);
+  const toggle = async (id: string) => {
+    const saved = !ids.has(id);
+    qc.setQueryData<string[]>(["saved-investors"], (prev = []) => (saved ? [...prev, id] : prev.filter((x) => x !== id)));
+    try {
+      await toggleFn({ data: { id, saved } });
+      toast.success(saved ? "Added to Favourites." : "Removed from Favourites.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      qc.invalidateQueries({ queryKey: ["saved-investors"] });
+      qc.invalidateQueries({ queryKey: ["seller-favourites"] });
+    }
+  };
+  return { ids, toggle };
+}
+
+export function StarBtn({ saved, onClick }: { saved: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-label={saved ? "Remove from saved" : "Save"} title={saved ? "Remove from saved" : "Save"}
+    <button type="button" aria-label={saved ? "Remove from Favourites" : "Add to Favourites"} title={saved ? "Remove from Favourites" : "Add to Favourites"}
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] border border-border bg-background hover:bg-muted">
       <Star className={cn("h-4 w-4", saved ? "fill-amber-500 text-amber-500" : "text-muted-foreground")} />
@@ -99,7 +122,7 @@ function FilterMenu({ label, heading, hint, foot, options, value, onChange, coun
   );
 }
 
-function Detail({ i, saved, onSave }: { i: PublicInvestor; saved: boolean; onSave: () => void }) {
+export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved: boolean; onSave: () => void }) {
   const corp = isCorporateBuyer(i.type);
   const rows: Array<[string, string]> = [
     ["Investor type", i.type || "—"],
@@ -149,7 +172,7 @@ export function InvestorBrowse() {
   const all = useMemo(() => (data ?? []) as PublicInvestor[], [data]);
 
   const { view, persist } = usePersistentView("ps-investor-browse-view", undefined);
-  const { ids: savedIds, toggle: toggleSave } = useSavedIds("ps.savedInvestors");
+  const { ids: savedIds, toggle: toggleSave } = useSavedInvestors();
 
   const [q, setQ] = useState("");
   const [type, setType] = useState("all");
@@ -293,7 +316,7 @@ export function InvestorBrowse() {
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
               {current ? (
-                <Detail key={current.id} i={current} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} />
+                <InvestorDetail key={current.id} i={current} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} />
               ) : (
                 <p className="px-6 py-16 text-center text-sm text-muted-foreground">No investor selected. Widen or clear the filters to see investors.</p>
               )}
