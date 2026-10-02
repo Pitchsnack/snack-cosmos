@@ -1249,6 +1249,17 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           </Select>
           <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size.</p>
         </div>
+        <div className="space-y-1.5">
+          <Label>Average deal size</Label>
+          <Select value={dealBand || "none"} onValueChange={(v) => setDealBand(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {DEAL_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">The total value of a typical deal. Sellers see this range on the card.</p>
+        </div>
       </div>
 
       {/* Buying Requirement */}
