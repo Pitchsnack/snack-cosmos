@@ -62,7 +62,6 @@ const Patch = z.object({
   sectors: z.array(z.string().max(60)).max(20).optional(), stages: z.array(z.string().max(60)).max(12).optional(),
   deal_types: z.array(z.string().max(60)).max(12).optional(),
   people: z.array(Person).max(20).optional(), portfolio: z.array(Holding).max(50).optional(),
-  show_name: z.boolean().optional(),
 });
 
 export const saveMyBuyerProfile = createServerFn({ method: "POST" })
