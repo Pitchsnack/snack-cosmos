@@ -20,6 +20,10 @@ import {
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "@tanstack/react-router";
+import { Flag } from "lucide-react";
+import { bandText, typeName } from "@/lib/investor-bands";
+import { wizardProgress, type BuyerRelation } from "@/lib/buyer-wizard";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { BuyerPrivateCardBody, BuyerPrivatePanel, useBuyerInvestor } from "@/components/my-business/buyer-private-view";
 
@@ -29,7 +33,7 @@ const KEY = ["buyer-profile", "me"];
 
 function toPublicLocal(p: BuyerProfile, org: BuyerOrg): PublicBuyer {
   return {
-    id: p.user_id, refNo: p.ref_no, codeName: p.code_name, name: p.show_name ? org.name : null, type: org.type,
+    id: p.user_id, refNo: p.ref_no, codeName: typeName(org.type), name: p.show_name ? org.name : null, type: org.type,
     city: p.city, country: p.country, headline: p.headline, description: p.description,
     ticket: ticketRange(p.ticket_min, p.ticket_max), aum: aumRange(p.aum_value),
     sectors: p.sectors, stages: p.stages, dealTypes: p.deal_types, verified: org.verified,
@@ -282,10 +286,10 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
             <span className="absolute left-2.5 top-2.5"><StatusChip status={p.status === "live" ? "live" : "draft"} /></span>
           </BuyerCover>
           <div className="px-3 pb-3">
-            <div className="truncate pt-2.5 text-[14px] font-bold">{p.code_name}</div>
-            <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[p.ref_no, org.type, p.country].filter(Boolean).join(" · ")}</div>
+            <div className="truncate pt-2.5 text-[14px] font-bold">{p.show_name && org.name ? org.name : typeName(org.type)}</div>
+            <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{(p.show_name && org.name ? [p.ref_no, org.type, p.country] : [p.ref_no, p.country]).filter(Boolean).join(" · ")}</div>
             <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{p.description || p.headline || na}</p>
-            <RowLine label="Ticket size">{ticketRange(p.ticket_min, p.ticket_max) ?? na}</RowLine>
+            <RowLine label="Ticket size">{ticketRange(p.ticket_min, p.ticket_max) ? `US$${((p.ticket_min ?? 0) / 1e6)}M${p.ticket_max ? ` – ${p.ticket_max / 1e6}M` : "+"}` : na}</RowLine>
             <RowLine label="Browse investors">{STATUS_LABEL[p.status]}</RowLine>
             <RowLine label="Identity">{p.show_name ? "Name shown" : "Name hidden"}</RowLine>
           </div>
@@ -315,7 +319,7 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit }: {
 function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
   p: BuyerProfile; org: BuyerOrg; mode: ViewMode; selected: boolean; onClick: () => void;
 }) {
-  const name = org.name || p.code_name;
+  const name = org.name || typeName(org.type);
   const initials = name.split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("");
   const ticket = ticketRange(p.ticket_min, p.ticket_max);
   return <Button type="button" variant="outline" onClick={onClick}
@@ -398,19 +402,26 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const list = useServerFn(setBuyerListing);
   const listing = useMutation({
     mutationFn: (status: "live" | "paused") => list({ data: { status } }),
-    onSuccess: (_d, s) => { toast.success(s === "live" ? "Published to Browse investors" : "Listing paused"); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); },
+    onSuccess: (_d, s) => { toast.success(s === "live" ? "Your profile is live in Browse investors." : "Listing paused. Your profile is hidden from Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const tone = typeTone(org.type);
-  const pub = toPublicLocal(p, org);
   const inv = useBuyerInvestor();
-  const title = p.show_name && org.name ? org.name : p.code_name;
+  const iv = inv.data?.investor;
+  const pub = { ...toPublicLocal(p, org), ticket: bandText(iv?.ticket_band), aum: bandText(iv?.aum_band) };
+  const title = p.show_name && org.name ? org.name : typeName(org.type);
+  const navigate = useNavigate();
+  const rel = (inv.data?.buyer.relation ?? null) as BuyerRelation | null;
+  const prog = wizardProgress(rel, iv?.wizard?.answered);
+  const setupDone = !!iv?.setup_done_at;
+  const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const LOCKS = ["Name & logo", "Website & address", "Decision makers", "Emails & phones", "Exact AUM & ticket", "Portfolio", "Decision process"];
   return (
     <div>
-      <PanelHead kind="public" title={title} meta={[p.ref_no, org.type ?? "Investor", p.country].filter(Boolean).join(" · ")}
+      <PanelHead kind="public" title={title} meta={(p.show_name && org.name ? [p.ref_no, typeName(org.type), p.country] : [p.ref_no, p.country]).filter(Boolean).join(" · ")}
         thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
-        editLabel="Edit public view" onEdit={() => onEdit("public")} pill={pill} />
+        editLabel="Edit public view" onEdit={() => (iv ? openWizard("desc") : onEdit("public"))} pill={pill} />
+      {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
       <div className="[&>div]:bg-[#F3F4F6] dark:[&>div]:bg-muted">
         <Intro icon={<Info className="h-4 w-4 text-muted-foreground" />}><b className="font-semibold">This is your seller preview:</b> how your firm appears in Browse investors. Your name, logo, website and people stay hidden until a seller approves your NDA.</Intro>
       </div>
@@ -419,25 +430,25 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">How sellers see it in Browse investors</span>
           <StatusChip status={p.status === "live" ? "live" : "draft"} />
         </div>
-        <BuyerBrowseCard b={pub} revenueMinM={inv.data?.investor.revenue_min_m ?? null} revenueMaxM={inv.data?.investor.revenue_max_m ?? null} className="mx-auto max-w-[380px]" />
+        <BuyerBrowseCard b={pub} revLabel={bandText(iv?.revenue_min_band)} className="mx-auto max-w-[380px]" />
       </div>
       <div className="mt-4 flex items-center justify-between gap-4 rounded-[12px] border border-border p-3.5">
         <div className="min-w-0">
           <div className="text-[13.5px] font-semibold">Show my name to sellers</div>
           <p className="text-[12.5px] text-muted-foreground">
-            {p.show_name ? "Your real name replaces the code name on your card and in Browse investors. Contacts, people and exact figures stay private."
-              : `Sellers see the code name "${p.code_name}" until they approve your NDA.`}
+            {p.show_name ? "Your real name replaces the investor type on your card and in Browse investors. Contacts, people and exact figures stay private."
+              : `Sellers see "${typeName(org.type)}" until they approve your NDA.`}
           </p>
         </div>
         <Switch checked={p.show_name} disabled={save.isPending} onCheckedChange={(v) => save.mutate({ show_name: v })} aria-label="Show my name to sellers" />
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <Box title="Mandate" rows={[
-          ["Ticket size", ticketRange(p.ticket_min, p.ticket_max)], ["Deal types", p.deal_types.join(", ") || null],
+          ["Ticket size", bandText(iv?.ticket_band)], ["Revenue minimum", bandText(iv?.revenue_min_band) ?? "Not stated"], ["Deal types", p.deal_types.join(", ") || null],
           ["Stages", p.stages.join(", ") || null], ["Target size", p.target_size], ["Geography", p.geography],
         ]} />
         <Box title="Fund · shown as ranges" rows={[
-          ["Investor type", org.type], ["AUM", aumRange(p.aum_value)],
+          ["Investor type", org.type], ["AUM", bandText(iv?.aum_band)],
           ["Activity", `${org.ndas} NDA${org.ndas === 1 ? "" : "s"} · ${org.lois} LOI`],
           ["Verified by PitchSnack", org.verified ? "Yes" : "Pending"],
         ]} />
@@ -454,8 +465,31 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           : <span className="text-muted-foreground"><b className="font-semibold text-foreground">{p.status === "paused" ? "Paused" : "Draft"}</b> · not visible in Browse investors</span>}
         {p.status === "live"
           ? <Button variant="outline" size="sm" disabled={listing.isPending} onClick={() => listing.mutate("paused")}>Pause listing</Button>
-          : <Button size="sm" disabled={listing.isPending} onClick={() => listing.mutate("live")}>Publish to Browse investors</Button>}
+          : !setupDone && iv
+            ? <Button size="sm" onClick={() => openWizard()}>Finish setup to publish</Button>
+            : <Button size="sm" disabled={listing.isPending} onClick={() => listing.mutate("live")}>Publish to Browse investors</Button>}
       </div>
+    </div>
+  );
+}
+
+function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: () => void }) {
+  const all = n >= N;
+  return (
+    <div className="mb-4 flex flex-col gap-3 rounded-[14px] border border-[#CFD2FB] bg-[#EEF0FF] px-[18px] py-4 min-[860px]:flex-row min-[860px]:items-center dark:border-[#2E3570] dark:bg-[#1B2140]">
+      <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-card text-[#4338CA] min-[860px]:grid"><Flag className="h-5 w-5" /></div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[14.5px] font-bold">{n === 0 ? "Set up your investor profile" : "Finish setting up your investor profile"}</div>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
+          {all ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse investors.`
+            : `Sellers can't find your profile yet. Answer ${N} short questions. It takes about 3 minutes and saves as you go.`}
+        </p>
+        <div className="mt-2 flex items-center gap-2 text-[12px] text-muted-foreground">
+          <span>{n} of {N} answered</span>
+          <div className="h-1 w-32 overflow-hidden rounded-full bg-card"><div className="h-full bg-[#1E2A4A] dark:bg-[#818CF8]" style={{ width: `${(n / N) * 100}%` }} /></div>
+        </div>
+      </div>
+      <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={onOpen}>{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
     </div>
   );
 }
