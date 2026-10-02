@@ -124,23 +124,29 @@ function FilterMenu({ label, heading, hint, foot, options, value, onChange, coun
 
 export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved: boolean; onSave: () => void }) {
   const corp = isCorporateBuyer(i.type);
-  const rows: Array<[string, string]> = [
-    ["Investor type", i.type || "—"],
-    ["Ticket size", i.ticketLabel || "—"],
-    [corp ? "Group revenue" : "Assets under management", i.aumLabel || "Undisclosed"],
-    ["Revenue minimum", i.revLabel ?? "Not stated"],
-    ["Preferred stages", i.stages.join(", ") || "—"],
-    ["Deal types", i.dealTypes.join(", ") || "—"],
-    ["Geography", i.geography || "—"],
+  const indiv = (i.type ?? "") === INDIVIDUAL_TYPE || i.relation === "individual" || i.relation === "agent";
+  const money = (k: string | null | undefined): React.ReactNode => {
+    const b = bandOf(k);
+    return b ? <>{b.label} <span className="font-normal text-[#6B7280] dark:text-muted-foreground">({b.baht})</span></> : "Not stated";
+  };
+  const rows: Array<[string, React.ReactNode]> = [
+    ["Investor type", i.type || "Not stated"],
+    ["Ticket size", money(i.ticketBand)],
+    ["Avg deal size", money(i.dealBand)],
+    ["Min. target revenue", money(i.revBand)],
+    ...(indiv ? [] : [[corp ? "Group revenue" : "Assets under management", money(i.aumBand)] as [string, React.ReactNode]]),
+    ...(i.stages.length ? [["Preferred stages", i.stages.join(", ")] as [string, React.ReactNode]] : []),
+    ["Deal types", i.dealTypes.join(", ") || "Not stated"],
+    ["Geography", i.geography || "Not stated"],
   ];
   return (
     <>
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <span className="min-w-0 truncate text-sm font-semibold">{i.name || i.codeName} · {i.refNo}</span>
+        <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
         <StarBtn saved={saved} onClick={onSave} />
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
-        <PublicInvestorCard i={i} className="mx-auto max-w-[420px]" />
+        <PublicInvestorCard i={i} expanded />
         <div>
           <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mandate · shown as ranges</h4>
           {rows.map(([k, v]) => (
