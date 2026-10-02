@@ -14,9 +14,10 @@ import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enr
 import { BUYER_INVESTOR_KEY, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
-  TICKET_BANDS, WIZARD_TYPES, bandOf, bandText, descriptionError, descriptionLeaks, isCorporateBuyerType, regError, showsStages, typeName, yearError,
+  TICKET_BANDS, WIZARD_TYPES, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
   type Band,
 } from "@/lib/investor-bands";
+import { isCorporateBuyer } from "@/lib/investor-browse";
 import { stepsFor, wizardProgress, type BuyerRelation, type QId } from "@/lib/buyer-wizard";
 
 type A = {
@@ -126,6 +127,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
   const [phase, setPhase] = useState<"q" | "enrich" | "complete">("q");
   const [webOpened, setWebOpened] = useState(false);
+  const [enrichRes, setEnrichRes] = useState<EnrichInvestorResult | null>(null);
   const pending = useRef<Record<string, unknown>>({});
   const timer = useRef<number | null>(null);
   const advTimer = useRef<number | null>(null);
@@ -265,7 +267,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   };
 
   const tName = typeName(individual ? INDIVIDUAL_TYPE : a.type);
-  const corp = isCorporateBuyerType(a.type);
+  const corp = isCorporateBuyer(a.type);
 
   // ---------------- questions ----------------
   const Q: Record<QId, { t: React.ReactNode; h: React.ReactNode; body: React.ReactNode; req: boolean }> = {
@@ -504,7 +506,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       )}
       {phase === "enrich" && (
         <Enrich a={a} header={header} card={card} btnO={btnO} btnP={btnP} onBack={() => { setPhase("q"); goTo("review"); }} onExit={saveExit}
-          onDone={(r) => { setEnrich(r); void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY }).then(() => setPhase("complete")); }} />
+          onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY }).then(() => setPhase("complete")); }} />
       )}
       {phase === "complete" && (
         <Complete header={header} enrich={enrichRes} answered={a}
@@ -513,15 +515,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       )}
     </div>
   );
-
-  // eslint-disable-next-line no-unreachable
-  function setEnrich(r: EnrichInvestorResult | null) { setEnrichRes(r); }
 }
-
-// enrich result lives outside the main hook ordering via a tiny store
-let enrichStore: EnrichInvestorResult | null = null;
-function setEnrichRes(r: EnrichInvestorResult | null) { enrichStore = r; }
-const enrichRes = null as EnrichInvestorResult | null;
 
 function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit }: {
   a: A; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; onEdit: (id: QId) => void;
@@ -666,10 +660,9 @@ function Complete({ header, enrich, answered, onBack, onSaved }: {
       <div className="mt-[22px] sm:mt-[34px]">
         <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>Check your profile and save it</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">Your answers and what Auto Enrich found are filled in. Change anything you need.</p>
-        <BuyerInvestorForm data={data} setup={{ onBack, sources, onSaved, enrich: enrich ?? enrichStore }} />
+        <BuyerInvestorForm data={data} setup={{ onBack, sources, onSaved, enrich }} />
       </div>
     </div>
   );
 }
 
-export { bandOf };
