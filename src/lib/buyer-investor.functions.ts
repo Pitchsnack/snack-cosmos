@@ -256,9 +256,7 @@ export const submitMyBuyerForVerification = createServerFn({ method: "POST" })
     const { sb, investorId } = await ensureLinked(context.userId);
     const { data: inv } = await sb.from("investors").select("*").eq("id", investorId).single();
     const missing = [
-      !inv.min_ticket_size && !inv.max_ticket_size && "Ticket size",
-      !inv.short_description?.trim() && "About Company",
-      !inv.aum?.trim() && "Fund's AUM",
+      !inv.ticket_band && !inv.min_ticket_size && !inv.max_ticket_size && "Average investment",
     ].filter(Boolean);
     if (missing.length) throw new Error(`Add ${missing.join(", ")} first.`);
     const { data: existing } = await sb.from("buyer_verifications").select("id, status, work_email").eq("user_id", context.userId).maybeSingle();
@@ -267,7 +265,7 @@ export const submitMyBuyerForVerification = createServerFn({ method: "POST" })
     const domain = email.split("@")[1]?.toLowerCase();
     const site = (inv.website_url ?? "").replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0].toLowerCase();
     const row = {
-      user_id: context.userId, company_name: inv.investor_name, buyer_type: inv.investor_type, website: inv.website_url,
+      user_id: context.userId, company_name: inv.investor_name, buyer_type: inv.investor_type, website: inv.website_url, registration_no: inv.registration_no,
       linkedin: inv.linkedin_url, work_email: email, status: "pending", email_domain_match: !!domain && !!site && domain === site,
       submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(), decision_note: null,
     };
