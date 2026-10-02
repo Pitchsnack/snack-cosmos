@@ -1,3 +1,4 @@
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Briefcase, Lock, Search, Star, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -189,6 +190,8 @@ export function InvestorBrowse() {
   const [revenue, setRevenue] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [modalId, setModalId] = useState<string | null>(null);
+  const modal = all.find((x) => x.id === modalId) ?? null;
   const listRef = useRef<HTMLDivElement>(null);
 
   const types = useMemo(() => Array.from(new Set(all.map((i) => i.type).filter(Boolean) as string[])).sort(), [all]);
@@ -304,7 +307,7 @@ export function InvestorBrowse() {
       ) : view === "grid" ? (
         items.length === 0 ? empty : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((i) => <PublicInvestorCard key={i.id} i={i} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
+            {items.map((i) => <PublicInvestorCard key={i.id} i={i} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
           </div>
         )
       ) : view === "split" ? (
@@ -333,7 +336,7 @@ export function InvestorBrowse() {
       ) : items.length === 0 ? empty : (
         <div className="space-y-2">
           {items.map((i) => (
-            <div key={i.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
+            <div key={i.id} role="button" tabIndex={0} onClick={() => setModalId(i.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(i.id); }} className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card transition-colors hover:border-accent">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-muted"><TypeIcon type={i.type} className="h-5 w-5 text-muted-foreground" /></div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground">{i.name || i.codeName} <span className="font-normal text-muted-foreground">· {i.refNo}</span></div>
@@ -348,6 +351,11 @@ export function InvestorBrowse() {
           ))}
         </div>
       )}
+      <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto p-0 sm:max-w-[820px]">
+          {modal && <InvestorDetail key={modal.id} i={modal} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

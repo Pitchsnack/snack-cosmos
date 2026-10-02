@@ -137,7 +137,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" && e.target === e.currentTarget) onClick(); } : undefined}
-      className={cn("@container overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer", className)}
+      className={cn("@container overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-shadow hover:shadow-md", className)}
     >
       <BuyerCover type={i.type} className="h-[110px]">
         <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
@@ -179,13 +179,13 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
 }
 
 /** Buyer's own "How sellers see it" preview — same card. */
-export function BuyerBrowseCard({ b, className, revLabel = null, bands, relation = null, empty, status, expanded, cardFooter }: {
-  b: PublicBuyer; className?: string; revLabel?: string | null;
+export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands, relation = null, empty, status, expanded, cardFooter }: {
+  b: PublicBuyer; onClick?: () => void; className?: string; revLabel?: string | null;
   bands?: { aum?: string | null; ticket?: string | null; rev?: string | null; deal?: string | null };
   relation?: CardInvestor["relation"]; empty?: string; status?: ListingStatus; expanded?: boolean; cardFooter?: React.ReactNode;
 }) {
   return (
-    <PublicInvestorCard className={className} empty={empty} status={status} expanded={expanded} cardFooter={cardFooter} i={{
+    <PublicInvestorCard onClick={onClick} className={className} empty={empty} status={status} expanded={expanded} cardFooter={cardFooter} i={{
       refNo: b.refNo, codeName: b.codeName, name: null, type: b.type, city: b.city, country: b.country,
       description: b.description, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: (b as PublicBuyer & { geography?: string | null }).geography ?? null,
       verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revLabel,

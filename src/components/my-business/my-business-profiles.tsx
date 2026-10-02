@@ -281,7 +281,7 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
         <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open={selected} tone="green" onClick={() => pick("private")} />
       </div>
       {v === "public" ? (
-        <div className={cn("overflow-hidden rounded-b-[14px] rounded-t-none border bg-card [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
+        <div role="button" tabIndex={0} onClick={() => pick("public")} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) pick("public"); }} className={cn("cursor-pointer overflow-hidden rounded-b-[14px] rounded-t-none border bg-card transition-shadow hover:shadow-md [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
           <PublicCardBody s={s} row={row} />
         </div>
       ) : (
