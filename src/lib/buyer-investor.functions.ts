@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, descriptionLeaks, regError, ticketColumns, yearError,
+  AUM_KEYS, DEAL_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, descriptionLeaks, regError, ticketColumns, yearError,
 } from "@/lib/investor-bands";
 
 /**
@@ -328,6 +328,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
       bp.ticket_min = b ? b.lo * 1e6 : null; bp.ticket_max = b?.hi != null ? b.hi * 1e6 : null;
     }
     if (has("revenue_min_band")) inv.revenue_min_band = data.revenue_min_band;
+    if (has("deal_size_band")) inv.deal_size_band = data.deal_size_band;
     if (data.deal_types) bp.deal_types = data.deal_types;
     if (data.preferred_stages) { inv.preferred_stages = data.preferred_stages; bp.stages = data.preferred_stages; }
     if (data.geography) { inv.investment_focus = data.geography; bp.geography = data.geography.join(", ") || null; }
