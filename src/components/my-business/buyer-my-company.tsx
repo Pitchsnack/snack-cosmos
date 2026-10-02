@@ -72,7 +72,7 @@ const HELP: Record<BuyerItemKey, { cta: string; link: string; help: string; sect
   portfolio: { cta: "Add portfolio", link: "Add →", help: "Optional list of current holdings.", section: "portfolio", view: "private" },
 };
 
-function BuyerPill({ p, org, onItem }: { p: BuyerProfile; org: BuyerOrg; onItem: (k: BuyerItemKey) => void }) {
+function BuyerPill({ p, org, onItem, setup }: { p: BuyerProfile; org: BuyerOrg; onItem: (k: BuyerItemKey) => void; setup?: { label: string; onClick: () => void } | null }) {
   const { items, pct, missingRequired } = buyerCompleteness(p, org);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -119,6 +119,7 @@ function BuyerPill({ p, org, onItem }: { p: BuyerProfile; org: BuyerOrg; onItem:
               {done.map((i) => <div key={i.key} className="flex items-center gap-2 py-0.5 text-[12.5px] text-muted-foreground"><Check className="h-4 w-4 text-emerald-600" />{i.label}</div>)}
             </div>
           )}
+          {setup && <button type="button" onClick={() => { setOpen(false); setup.onClick(); }} className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#1E2A4A] text-[13px] font-semibold text-white hover:bg-[#101d43]">{setup.label}</button>}
           <p className="mt-3 border-t border-border pt-2 text-[11.5px] text-muted-foreground">Complete profiles get more NDA approvals.</p>
         </div>
       )}
@@ -163,7 +164,11 @@ export function BuyerMyCompany() {
     && (!hq.trim() || has(p.city, hq.trim().toLowerCase()) || has(p.country, hq.trim().toLowerCase()));
   const hasFilter = !!(q || type !== "all" || status !== "all" || sector || hq);
   const openProfile = () => setPanelOpen(true);
-  const pill = <BuyerPill p={p} org={org} onItem={onItem} />;
+  const iv = inv.data?.investor;
+  const prog = wizardProgress((inv.data?.buyer.relation ?? null) as BuyerRelation | null, iv?.wizard?.answered);
+  const openWizard = () => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: {} });
+  const setup = iv && !iv.setup_done_at ? { label: prog.n === 0 ? "Start setup" : "Continue setup", onClick: openWizard } : null;
+  const pill = <BuyerPill p={p} org={org} onItem={onItem} setup={setup} />;
   const profilePanel = (
     <BuyerProfilePanel p={p} org={org} view={view} setView={setView} onItem={onItem} onEdit={setEdit} />
   );
@@ -193,7 +198,7 @@ export function BuyerMyCompany() {
           </button>
           <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>Profiles</Button>
           <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={(l) => { setLayout(l); if (l === "split") setView("private"); }} />
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setNewOpen(true)}>
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => (setup ? openWizard() : setNewOpen(true))}>
             <Plus className="mr-2 h-4 w-4" /> Add Investor Profile
           </Button>
         </div>
@@ -311,7 +316,7 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit }: {
       <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => setView("private")}><Lock className="mr-2 h-4 w-4" /> Private view</Button>
     </div>
     {view === "public"
-      ? <PublicPanel p={p} org={org} pill={<BuyerPill p={p} org={org} onItem={onItem} />} onEdit={onEdit} />
+      ? <PublicPanel p={p} org={org} pill={pill} onEdit={onEdit} />
       : <SplitPrivate />}
   </div>;
 }
