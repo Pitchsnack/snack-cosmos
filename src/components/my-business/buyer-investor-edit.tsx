@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import {
@@ -111,7 +111,7 @@ export function BuyerInvestorEdit() {
 }
 
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
-export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void };
+export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void; enrich?: EnrichInvestorResult | null };
 
 /** Review & complete in the setup wizard: the same form, with source tags. */
 export function BuyerInvestorForm({ data, setup }: { data: Data; setup?: SetupMode }) {
@@ -203,6 +203,12 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
     if (industries.length === 0 && r.preferredIndustries?.length) setIndustries(r.preferredIndustries.slice(0, 5));
     if (focus.length === 0 && r.investmentFocus?.length) setFocus(r.investmentFocus.slice(0, 10));
   };
+
+  const enrichedOnce = useRef(false);
+  useEffect(() => {
+    if (setup?.enrich && !enrichedOnce.current) { enrichedOnce.current = true; applyEnrichment(setup.enrich); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setup?.enrich]);
 
   const addCustomIndustry = () => {
     const v = customIndustry.trim();
