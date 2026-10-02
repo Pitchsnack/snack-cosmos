@@ -13,15 +13,15 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuyerBrowseCard, BuyerCover, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { BuyerBrowseCard, BuyerCover, StatusPill, TypeIcon, type ListingStatus } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing } from "@/lib/buyer-profile.functions";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
-import { Flag } from "lucide-react";
-import { bandText, typeName } from "@/lib/investor-bands";
+import { AlertTriangle, CheckCircle2, Flag } from "lucide-react";
+import { bandText, descriptionLeaks, typeName } from "@/lib/investor-bands";
 import { wizardProgress, type BuyerRelation } from "@/lib/buyer-wizard";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { BuyerPrivateCardBody, BuyerPrivatePanel, useBuyerInvestor } from "@/components/my-business/buyer-private-view";
@@ -32,7 +32,7 @@ const KEY = ["buyer-profile", "me"];
 
 function toPublicLocal(p: BuyerProfile, org: BuyerOrg): PublicBuyer {
   return {
-    id: p.user_id, refNo: p.ref_no, codeName: typeName(org.type), name: p.show_name ? org.name : null, type: org.type,
+    id: p.user_id, refNo: p.ref_no, codeName: typeName(org.type), name: null, type: org.type,
     city: p.city, country: p.country, headline: p.headline, description: p.description,
     ticket: ticketRange(p.ticket_min, p.ticket_max), aum: aumRange(p.aum_value),
     sectors: p.sectors, stages: p.stages, dealTypes: p.deal_types, verified: org.verified,
@@ -272,12 +272,25 @@ export function BuyerMyCompany() {
   );
 }
 
+/** Card props for the buyer's own public card (same component sellers see). */
+function useOwnCard(p: BuyerProfile, org: BuyerOrg) {
+  const inv = useBuyerInvestor();
+  const iv = inv.data?.investor;
+  const pub = { ...toPublicLocal(p, org), geography: p.geography ?? (iv?.investment_focus_raw ?? []).join(", ") };
+  return {
+    iv, inv,
+    props: {
+      b: pub as PublicBuyer, empty: "Not added", status: p.status as ListingStatus,
+      relation: (inv.data?.buyer.relation ?? null) as BuyerRelation | null,
+      bands: { aum: iv?.aum_band, ticket: iv?.ticket_band, rev: iv?.revenue_min_band, deal: iv?.deal_size_band },
+    },
+  };
+}
+
 /** Seller-style folder-tab card (Public view / Private view) for the investor profile. */
 function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
-  const tone = typeTone(org.type);
-  const na = <span className="font-normal text-[#9CA3AF]">Not added</span>;
   const shell = "overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card";
-  const { pct, missingRequired } = buyerCompleteness(p, org);
+  const { props } = useOwnCard(p, org);
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
@@ -285,19 +298,7 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
         <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open tone="green" onClick={() => onView("private")} />
       </div>
       {view === "public" ? (
-        <div className={shell}>
-          <BuyerCover type={org.type} className="h-[120px] w-full">
-            <span className="absolute left-2.5 top-2.5"><StatusChip status={p.status === "live" ? "live" : "draft"} /></span>
-          </BuyerCover>
-          <div className="px-3 pb-3">
-            <div className="truncate pt-2.5 text-[14px] font-bold">{p.show_name && org.name ? org.name : typeName(org.type)}</div>
-            <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{(p.show_name && org.name ? [p.ref_no, org.type, p.country] : [p.ref_no, p.country]).filter(Boolean).join(" · ")}</div>
-            <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{p.description || p.headline || na}</p>
-            <RowLine label="Ticket size">{ticketRange(p.ticket_min, p.ticket_max) ? `US$${((p.ticket_min ?? 0) / 1e6)}M${p.ticket_max ? ` – ${p.ticket_max / 1e6}M` : "+"}` : na}</RowLine>
-            <RowLine label="Browse investors">{STATUS_LABEL[p.status]}</RowLine>
-            <RowLine label="Identity">{p.show_name ? "Name shown" : "Name hidden"}</RowLine>
-          </div>
-        </div>
+        <BuyerBrowseCard {...props} className="rounded-b-[14px] rounded-t-none border-accent" />
       ) : (
         <div className={shell}>{privateBody}</div>
       )}
@@ -371,11 +372,11 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />{editLabel}</Button>
-        {pill}
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end"><DropdownMenuItem onClick={onEdit}>{editLabel}</DropdownMenuItem></DropdownMenuContent>
         </DropdownMenu>
+        {pill}
       </div>
     </div>
   );
@@ -401,7 +402,6 @@ function Box({ title, rows }: { title: string; rows: [string, React.ReactNode][]
 }
 
 function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg; pill: React.ReactNode; onEdit: (s: Section) => void }) {
-  const save = useSave();
   const qc = useQueryClient();
   const list = useServerFn(setBuyerListing);
   const listing = useMutation({
@@ -410,68 +410,51 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
     onError: (e: Error) => toast.error(e.message),
   });
   const tone = typeTone(org.type);
-  const inv = useBuyerInvestor();
-  const iv = inv.data?.investor;
-  const pub = { ...toPublicLocal(p, org), ticket: bandText(iv?.ticket_band), aum: bandText(iv?.aum_band) };
-  const title = p.show_name && org.name ? org.name : typeName(org.type);
+  const { iv, inv, props } = useOwnCard(p, org);
+  const title = typeName(org.type);
   const navigate = useNavigate();
   const rel = (inv.data?.buyer.relation ?? null) as BuyerRelation | null;
   const prog = wizardProgress(rel, iv?.wizard?.answered);
   const setupDone = !!iv?.setup_done_at;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
-  const LOCKS = ["Name & logo", "Website & address", "Decision makers", "Emails & phones", "Exact AUM & ticket", "Portfolio", "Decision process"];
+  const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
+  const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
+  const pillText = p.status === "live" ? "Live · in Browse investors" : p.status === "paused" ? "Paused · hidden from Browse investors" : "Draft · not published";
   return (
-    <div>
-      <PanelHead kind="public" title={title} meta={(p.show_name && org.name ? [p.ref_no, typeName(org.type), p.country] : [p.ref_no, p.country]).filter(Boolean).join(" · ")}
-        thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
-        editLabel="Edit public view" onEdit={() => (iv ? openWizard("desc") : onEdit("public"))} pill={pill} />
-      {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
-      <div className="[&>div]:bg-[#F3F4F6] dark:[&>div]:bg-muted">
-        <Intro icon={<Info className="h-4 w-4 text-muted-foreground" />}><b className="font-semibold">This is your seller preview:</b> how your firm appears in Browse investors. Your name, logo, website and people stay hidden until a seller approves your NDA.</Intro>
-      </div>
-      <div className="rounded-[14px] bg-[#F3F4F6] p-4 dark:bg-muted">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">How sellers see it in Browse investors</span>
-          <StatusChip status={p.status === "live" ? "live" : "draft"} />
+    <div className="overflow-hidden rounded-[14px] border border-border">
+      <div className="px-5 pt-5">
+        <PanelHead kind="public" title={title} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
+          thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
+          editLabel="Edit public view" onEdit={() => (iv ? openWizard("desc") : onEdit("public"))} pill={pill} />
+        {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
+        <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
+          <div><StatusPill status={p.status as ListingStatus}>{pillText}</StatusPill></div>
+          <BuyerBrowseCard {...props} expanded cardFooter={
+            <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
+              <span className="truncate">{title} · {p.ref_no}</span><span className="shrink-0">{since}</span>
+            </div>
+          } />
         </div>
-        <BuyerBrowseCard b={pub} revLabel={bandText(iv?.revenue_min_band)} className="mx-auto max-w-[380px]" />
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-4 rounded-[12px] border border-border p-3.5">
-        <div className="min-w-0">
-          <div className="text-[13.5px] font-semibold">Show my name to sellers</div>
-          <p className="text-[12.5px] text-muted-foreground">
-            {p.show_name ? "Your real name replaces the investor type on your card and in Browse investors. Contacts, people and exact figures stay private."
-              : `Sellers see "${typeName(org.type)}" until they approve your NDA.`}
-          </p>
-        </div>
-        <Switch checked={p.show_name} disabled={save.isPending} onCheckedChange={(v) => save.mutate({ show_name: v })} aria-label="Show my name to sellers" />
-      </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <Box title="Mandate" rows={[
-          ["Ticket size", bandText(iv?.ticket_band)], ["Revenue minimum", bandText(iv?.revenue_min_band) ?? "Not stated"], ["Deal types", p.deal_types.join(", ") || null],
-          ["Stages", p.stages.join(", ") || null], ["Target size", p.target_size], ["Geography", p.geography],
-        ]} />
-        <Box title="Fund · shown as ranges" rows={[
-          ["Investor type", org.type], ["AUM", bandText(iv?.aum_band)],
-          ["Activity", `${org.ndas} NDA${org.ndas === 1 ? "" : "s"} · ${org.lois} LOI`],
-          ["Verified by PitchSnack", org.verified ? "Yes" : "Pending"],
-        ]} />
-      </div>
-      <div className="mt-4">
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">In private view · shown after a seller approves your NDA</div>
-        <div className="flex flex-wrap gap-1.5">
-          {LOCKS.map((l) => <span key={l} className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11.5px] font-medium text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400"><Lock className="h-3 w-3" />{l}</span>)}
+        <div className={cn("my-4 flex items-start gap-2 text-[13px]", leaks.length ? "text-[#B42318]" : "text-[#15803D] dark:text-green-400")}>
+          {leaks.length ? <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}
+          {leaks.length
+            ? <span><b className="font-semibold">Identity check:</b> {leaks.join(", ")} · remove them in Edit public view.</span>
+            : <span><b className="font-semibold">Identity check passed</b> · no firm name, website or contact details in the public text.</span>}
         </div>
       </div>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-[13px]">
-        {p.status === "live" && p.live_since
-          ? <span className="text-muted-foreground"><b className="font-semibold text-foreground">Live in Browse investors</b> since {fmtDate(p.live_since)} · {p.profile_views_month} seller{p.profile_views_month === 1 ? "" : "s"} viewed your profile this month</span>
-          : <span className="text-muted-foreground"><b className="font-semibold text-foreground">{p.status === "paused" ? "Paused" : "Draft"}</b> · not visible in Browse investors</span>}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
+        {p.status === "live"
+          ? <span>Live in Browse investors since {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas} NDA{org.ndas === 1 ? "" : "s"} · {org.lois} LOI{org.lois === 1 ? "" : "s"}</span>
+          : p.status === "paused"
+            ? <span>Hidden from Browse investors since {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
+            : !setupDone && iv
+              ? <span>Finish setting up your profile to publish it.</span>
+              : <span>Everything is ready. Publish your profile so sellers can find you in Browse investors.</span>}
         {p.status === "live"
           ? <Button variant="outline" size="sm" disabled={listing.isPending} onClick={() => listing.mutate("paused")}>Pause listing</Button>
-          : !setupDone && iv
-            ? <Button size="sm" onClick={() => openWizard()}>Finish setup to publish</Button>
-            : <Button size="sm" disabled={listing.isPending} onClick={() => listing.mutate("live")}>Publish to Browse investors</Button>}
+          : p.status === "draft" && !setupDone && iv
+            ? <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => openWizard()}>Finish setup to publish</Button>
+            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>{p.status === "paused" ? "Resume listing" : "Publish to Browse investors"}</Button>}
       </div>
     </div>
   );
@@ -548,7 +531,7 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
       </Sec>
       <Sec title="Mandate" onEdit={() => onEdit("mandate")}>
         <R label="Sectors" value={p.sectors.join(", ")} /><R label="Stages" value={p.stages.join(", ")} /><R label="Deal types" value={p.deal_types.join(", ")} />
-        <R label="Target size" value={p.target_size} /><R label="Geography" value={p.geography} />
+        <MandateBands /><R label="Geography" value={p.geography} />
       </Sec>
       <Sec title="Portfolio" action="Add" onEdit={() => onEdit("portfolio")}>
         <R label="Current holdings" value={p.portfolio.length ? p.portfolio.map((h) => h.note ? `${h.name} (${h.note})` : h.name).join(", ") : null} />
@@ -667,4 +650,14 @@ function EditDialog({ section, p, org, onClose }: { section: Section; p: BuyerPr
 function SplitPrivate() {
   const inv = useBuyerInvestor();
   return inv.data ? <BuyerPrivatePanel d={inv.data} /> : <Skeleton className="h-[520px]" />;
+}
+
+/** Avg deal size after Ticket size, and Min. target revenue (revenue minimum band). */
+function MandateBands() {
+  const iv = useBuyerInvestor().data?.investor;
+  return <>
+    <R label="Ticket size" value={bandText(iv?.ticket_band)} />
+    <R label="Avg deal size" value={bandText(iv?.deal_size_band)} />
+    <R label="Min. target revenue" value={bandText(iv?.revenue_min_band)} />
+  </>;
 }

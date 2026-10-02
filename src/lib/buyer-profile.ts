@@ -14,6 +14,7 @@ export type BuyerProfile = {
   target_size: string | null; geography: string | null;
   people: BuyerPerson[]; portfolio: BuyerHolding[];
   profile_views_month: number;
+  updated_at?: string | null;
 };
 
 export type BuyerOrg = {

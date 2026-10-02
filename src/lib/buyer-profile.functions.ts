@@ -62,7 +62,6 @@ const Patch = z.object({
   sectors: z.array(z.string().max(60)).max(20).optional(), stages: z.array(z.string().max(60)).max(12).optional(),
   deal_types: z.array(z.string().max(60)).max(12).optional(),
   people: z.array(Person).max(20).optional(), portfolio: z.array(Holding).max(50).optional(),
-  show_name: z.boolean().optional(),
 });
 
 export const saveMyBuyerProfile = createServerFn({ method: "POST" })
@@ -111,7 +110,7 @@ export function toPublic(p: BuyerProfile, bv: { company_name?: string | null; bu
     id: p.user_id,
     refNo: p.ref_no,
     codeName: bv?.buyer_type || "Investor",
-    name: p.show_name ? bv?.company_name ?? null : null,
+    name: null, // never before an approved NDA
     type: bv?.buyer_type ?? null,
     city: p.city, country: p.country,
     headline: p.headline, description: p.description,

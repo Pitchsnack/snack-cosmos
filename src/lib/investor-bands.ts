@@ -29,7 +29,16 @@ export const REV_BANDS: Band[] = [
   { key: "rev_30_plus", label: "+US$30M", baht: "฿1B and above", lo: 30, hi: null },
 ];
 
-const ALL = [...AUM_BANDS, ...TICKET_BANDS, ...REV_BANDS];
+/** Average deal size: total value of a typical deal (same edges as the average investment). */
+export const DEAL_BANDS: Band[] = [
+  { key: "deal_below_5", label: "Below US$5M", baht: "below ฿150M", lo: 0, hi: 5 },
+  { key: "deal_5_10", label: "US$5M – 10M", baht: "฿150M – 300M", lo: 5, hi: 10 },
+  { key: "deal_10_25", label: "US$10M – 25M", baht: "฿300M – 800M", lo: 10, hi: 25 },
+  { key: "deal_25_50", label: "US$25M – 50M", baht: "฿800M – 1.5B", lo: 25, hi: 50 },
+  { key: "deal_50_plus", label: "+US$50M", baht: "฿1.5B and above", lo: 50, hi: null },
+];
+
+const ALL = [...AUM_BANDS, ...TICKET_BANDS, ...REV_BANDS, ...DEAL_BANDS];
 export const bandOf = (key: string | null | undefined): Band | null => (key ? ALL.find((b) => b.key === key) ?? null : null);
 /** "{US$ label} ({baht})" — cards and selects. */
 export const bandText = (key: string | null | undefined): string | null => {
@@ -39,6 +48,7 @@ export const bandText = (key: string | null | undefined): string | null => {
 export const AUM_KEYS = AUM_BANDS.map((b) => b.key) as [string, ...string[]];
 export const TICKET_KEYS = TICKET_BANDS.map((b) => b.key) as [string, ...string[]];
 export const REV_KEYS = REV_BANDS.map((b) => b.key) as [string, ...string[]];
+export const DEAL_KEYS = DEAL_BANDS.map((b) => b.key) as [string, ...string[]];
 
 /** Min / Max Ticket Size columns filled from a ticket band (US$, plain numbers). */
 export function ticketColumns(key: string | null | undefined): { min: string | null; max: string | null } {

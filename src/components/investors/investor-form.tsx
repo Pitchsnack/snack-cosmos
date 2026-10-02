@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
-import { AUM_BANDS, INDIVIDUAL_TYPE, REV_BANDS, TICKET_BANDS, ticketColumns, yearError } from "@/lib/investor-bands";
+import { AUM_BANDS, DEAL_BANDS, INDIVIDUAL_TYPE, REV_BANDS, TICKET_BANDS, ticketColumns, yearError } from "@/lib/investor-bands";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -172,7 +172,7 @@ export interface InvestorEditModel {
   max_ticket_size: string | null;
   revenue_min_m?: number | null;
   revenue_max_m?: number | null;
-  aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; aum_exact_usd?: number | null;
+  aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; deal_size_band?: string | null; aum_exact_usd?: number | null;
   bio: string | null;
   keywords: string[] | null;
   
@@ -326,6 +326,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [minTicket, setMinTicket] = useState(investor?.min_ticket_size ?? "");
   const [maxTicket, setMaxTicket] = useState(investor?.max_ticket_size ?? "");
   const [revenueBand, setRevenueBand] = useState<string>(investor?.revenue_min_band ?? "");
+  const [dealBand, setDealBand] = useState<string>(investor?.deal_size_band ?? "");
   const [aumBand, setAumBand] = useState<string>(investor?.aum_band ?? "");
   const [ticketBand, setTicketBand] = useState<string>(investor?.ticket_band ?? "");
   const [aumExact, setAumExact] = useState<string>(investor?.aum_exact_usd != null ? investor.aum_exact_usd.toLocaleString("en-US") : "");
@@ -512,7 +513,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
     const tc = ticketColumns(ticketBand);
     const ex = Number(aumExact.replace(/[^\d]/g, ""));
     return {
-      aumBand: aumBand || null, ticketBand: ticketBand || null, revenueMinBand: revenueBand || null,
+      aumBand: aumBand || null, ticketBand: ticketBand || null, revenueMinBand: revenueBand || null, dealSizeBand: dealBand || null,
       aumExactUsd: aumExact.trim() && Number.isFinite(ex) ? ex : null,
       firmName: firmName || null,
       email: email || null,
@@ -1247,6 +1248,17 @@ export function InvestorForm({ investor, controlReturn }: Props) {
             </SelectContent>
           </Select>
           <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Average deal size</Label>
+          <Select value={dealBand || "none"} onValueChange={(v) => setDealBand(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {DEAL_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">The total value of a typical deal. Sellers see this range on the card.</p>
         </div>
       </div>
 
