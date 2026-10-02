@@ -3105,6 +3105,32 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_investors: {
+        Row: {
+          created_at: string
+          investor_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          investor_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          investor_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_investors_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_listings: {
         Row: {
           created_at: string
