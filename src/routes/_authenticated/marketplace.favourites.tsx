@@ -19,6 +19,8 @@ import {
 } from "@/components/marketplace/listing-panel";
 import { listFavourites, withdrawNdaRequest, type Favourite, type FavStatus } from "@/lib/favourites.functions";
 import { useTranslation } from "@/i18n/language";
+import { usePersona } from "@/hooks/use-marketplace";
+import { SellerFavourites } from "@/components/marketplace/seller-favourites";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
@@ -33,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: FavouritesPage,
+  component: FavouritesRoute,
 });
 
 type Filter = "all" | FavStatus;
@@ -85,6 +87,11 @@ function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, to
       topRight={f.status === "saved" ? <SaveButton square saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} /> : undefined}
     />
   );
+}
+
+function FavouritesRoute() {
+  const { persona } = usePersona();
+  return persona === "seller" ? <SellerFavourites /> : <FavouritesPage />;
 }
 
 function FavouritesPage() {
