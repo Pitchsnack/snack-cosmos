@@ -74,6 +74,7 @@ import { Route as AuthenticatedMyStartupsIdIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedMarketplaceMyCompanyIndexRouteImport } from './routes/_authenticated/marketplace.my-company.index'
 import { Route as AuthenticatedInvestorsIdIndexRouteImport } from './routes/_authenticated/investors.$id.index'
 import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
+import { Route as BuyerCompanyIdSetupRouteImport } from './routes/buyer.company.$id.setup'
 import { Route as AuthenticatedStartupsIdInvestorsRouteImport } from './routes/_authenticated/startups.$id.investors'
 import { Route as AuthenticatedStartupsIdFinancialsRouteImport } from './routes/_authenticated/startups.$id.financials'
 import { Route as AuthenticatedStartupsIdEditRouteImport } from './routes/_authenticated/startups.$id.edit'
@@ -455,6 +456,11 @@ const AuthenticatedDealsIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDealsIdRoute,
   } as any)
+const BuyerCompanyIdSetupRoute = BuyerCompanyIdSetupRouteImport.update({
+  id: '/buyer/company/$id/setup',
+  path: '/buyer/company/$id/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedStartupsIdInvestorsRoute =
   AuthenticatedStartupsIdInvestorsRouteImport.update({
     id: '/investors',
@@ -600,6 +606,7 @@ export interface FileRoutesByFullPath {
   '/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
+  '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
   '/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
   '/marketplace/my-company/': typeof AuthenticatedMarketplaceMyCompanyIndexRoute
@@ -667,6 +674,7 @@ export interface FileRoutesByTo {
   '/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
+  '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
   '/deals/$id': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdIndexRoute
   '/marketplace/my-company': typeof AuthenticatedMarketplaceMyCompanyIndexRoute
@@ -747,6 +755,7 @@ export interface FileRoutesById {
   '/_authenticated/startups/$id/edit': typeof AuthenticatedStartupsIdEditRoute
   '/_authenticated/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
   '/_authenticated/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
+  '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
   '/_authenticated/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/_authenticated/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
   '/_authenticated/marketplace/my-company/': typeof AuthenticatedMarketplaceMyCompanyIndexRoute
@@ -827,6 +836,7 @@ export interface FileRouteTypes {
     | '/startups/$id/edit'
     | '/startups/$id/financials'
     | '/startups/$id/investors'
+    | '/buyer/company/$id/setup'
     | '/deals/$id/'
     | '/investors/$id/'
     | '/marketplace/my-company/'
@@ -894,6 +904,7 @@ export interface FileRouteTypes {
     | '/startups/$id/edit'
     | '/startups/$id/financials'
     | '/startups/$id/investors'
+    | '/buyer/company/$id/setup'
     | '/deals/$id'
     | '/investors/$id'
     | '/marketplace/my-company'
@@ -973,6 +984,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups/$id/edit'
     | '/_authenticated/startups/$id/financials'
     | '/_authenticated/startups/$id/investors'
+    | '/buyer/company/$id/setup'
     | '/_authenticated/deals/$id/'
     | '/_authenticated/investors/$id/'
     | '/_authenticated/marketplace/my-company/'
@@ -987,6 +999,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
+  BuyerCompanyIdSetupRoute: typeof BuyerCompanyIdSetupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1446,6 +1459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDealsIdIndexRouteImport
       parentRoute: typeof AuthenticatedDealsIdRoute
     }
+    '/buyer/company/$id/setup': {
+      id: '/buyer/company/$id/setup'
+      path: '/buyer/company/$id/setup'
+      fullPath: '/buyer/company/$id/setup'
+      preLoaderRoute: typeof BuyerCompanyIdSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/startups/$id/investors': {
       id: '/_authenticated/startups/$id/investors'
       path: '/investors'
@@ -1831,6 +1851,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
+  BuyerCompanyIdSetupRoute: BuyerCompanyIdSetupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

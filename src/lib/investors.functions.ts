@@ -210,7 +210,7 @@ export const getInvestor = createServerFn({ method: "GET" })
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url, media,
         firm_name, email, business_address, year_founded,
-        min_ticket_size, max_ticket_size, bio, revenue_min_m, revenue_max_m,
+        min_ticket_size, max_ticket_size, bio, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, aum_exact_usd,
         keywords, preferred_stages, preferred_industries, investment_focus,
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
@@ -331,6 +331,10 @@ const ProfileFields = {
   ticketSize: z.string().max(255).nullable().optional(),
   minTicketSize: z.string().max(50).nullable().optional(),
   maxTicketSize: z.string().max(50).nullable().optional(),
+  aumBand: z.string().max(20).nullable().optional(),
+  ticketBand: z.string().max(20).nullable().optional(),
+  revenueMinBand: z.string().max(20).nullable().optional(),
+  aumExactUsd: z.number().min(0).max(1e13).nullable().optional(),
   revenueMinM: z.number().min(0).max(100000).nullable().optional(),
   revenueMaxM: z.number().min(0).max(100000).nullable().optional(),
   bio: z.string().max(2000).nullable().optional(),
@@ -423,6 +427,7 @@ export const createInvestor = createServerFn({ method: "POST" })
         ticket_size: data.ticketSize || null,
         min_ticket_size: data.minTicketSize || null,
         max_ticket_size: data.maxTicketSize || null,
+        aum_band: data.aumBand ?? null, ticket_band: data.ticketBand ?? null, revenue_min_band: data.revenueMinBand ?? null, aum_exact_usd: data.aumExactUsd ?? null,
         revenue_min_m: data.revenueMinM ?? null,
         revenue_max_m: data.revenueMaxM ?? null,
         short_description: data.shortDescription || null,
@@ -528,6 +533,10 @@ export const updateInvestor = createServerFn({ method: "POST" })
     if (data.minTicketSize !== undefined) patch.min_ticket_size = data.minTicketSize;
     if (data.maxTicketSize !== undefined) patch.max_ticket_size = data.maxTicketSize;
     if (data.revenueMinM !== undefined) patch.revenue_min_m = data.revenueMinM;
+    if (data.aumBand !== undefined) patch.aum_band = data.aumBand;
+    if (data.ticketBand !== undefined) patch.ticket_band = data.ticketBand;
+    if (data.revenueMinBand !== undefined) patch.revenue_min_band = data.revenueMinBand;
+    if (data.aumExactUsd !== undefined) patch.aum_exact_usd = data.aumExactUsd;
     if (data.revenueMaxM !== undefined) patch.revenue_max_m = data.revenueMaxM;
     if (data.bio !== undefined) patch.bio = data.bio;
     if (data.keywords !== undefined) patch.keywords = data.keywords;
