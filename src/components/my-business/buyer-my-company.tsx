@@ -298,7 +298,7 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
         <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open tone="green" onClick={() => onView("private")} />
       </div>
       {view === "public" ? (
-        <BuyerBrowseCard {...props} className="rounded-b-[14px] rounded-t-none border-accent" />
+        <BuyerBrowseCard {...props} onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
       ) : (
         <div className={shell}>{privateBody}</div>
       )}
