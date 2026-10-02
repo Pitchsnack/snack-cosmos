@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import {
-  AUM_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
+  AUM_BANDS, DEAL_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
   descriptionError, descriptionLeaks, regError, showsStages, yearError,
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
