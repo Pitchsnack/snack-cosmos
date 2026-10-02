@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { usePersistentView } from "@/hooks/use-persistent-view";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { INDIVIDUAL_TYPE, bandOf } from "@/lib/investor-bands";
 import { listBrowseInvestors, mySavedInvestorIds, toggleSavedInvestor } from "@/lib/investor-browse.functions";
 import {
   AUM_FILTER, REVENUE_FILTER, TICKET_FILTER, isCorporateBuyer, matchAum, matchRevenue, matchTicket,
