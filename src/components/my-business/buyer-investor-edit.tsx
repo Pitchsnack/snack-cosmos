@@ -45,7 +45,6 @@ const TICKET_OPTIONS = [
   { value: "1M-5M", label: "1M – 5M" },
   { value: "5M+", label: "5M+" },
 ];
-const STAGES = ["Ideation", "Early Stage", "Growth Stage", "Maturity Stage"];
 const INDUSTRIES = [
   "FinTech", "eCommerce & Marketplace", "MarTech", "HealthTech",
   "Sustainability", "Mobility & Logistics", "DeepTech", "Defense",
