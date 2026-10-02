@@ -22,6 +22,7 @@ import {
 import { StatementTable } from "@/components/financials/statement-table";
 import { RatiosTable } from "@/components/financials/ratios-table";
 import { ValuationTab } from "@/components/financials/valuation-tab";
+import { CompanyRiskReport } from "@/components/financials/company-risk-report";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
 import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { FinIcon } from "@/components/financials/fin-icon";
@@ -422,6 +423,7 @@ export function StartupFinancialsPage({
               ...(section === "financials"
                 ? []
                 : [{ value: "valuation", label: "Valuation", icon: "tag" as const, dividerBefore: true }]),
+              ...(section ? [] : [{ value: "risk", label: "Company Risk", icon: "shield" as const }]),
             ]}
           />}
 
@@ -535,6 +537,12 @@ export function StartupFinancialsPage({
                   Major Financial Ratios for the year {range}
                 </h2>
                 <RatiosTable years={years} ratios={data.ratios} />
+              </div>
+            )}
+
+            {tab === "risk" && (
+              <div className="pt-4">
+                <CompanyRiskReport startupId={id} />
               </div>
             )}
 
