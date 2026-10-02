@@ -14,7 +14,7 @@ import { usePersistentView } from "@/hooks/use-persistent-view";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { listBrowseInvestors, mySavedInvestorIds, toggleSavedInvestor } from "@/lib/investor-browse.functions";
 import {
-  AUM_FILTER, REVENUE_FILTER, TICKET_FILTER, isCorporateBuyer, matchAum, matchRevenue, matchTicket, revenueCardText,
+  AUM_FILTER, REVENUE_FILTER, TICKET_FILTER, isCorporateBuyer, matchAum, matchRevenue, matchTicket,
   type FilterOpt, type PublicInvestor,
 } from "@/lib/investor-browse";
 import { cn } from "@/lib/utils";
@@ -128,7 +128,7 @@ export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved:
     ["Investor type", i.type || "—"],
     ["Ticket size", i.ticketLabel || "—"],
     [corp ? "Group revenue" : "Assets under management", i.aumLabel || "Undisclosed"],
-    ["Revenue band", revenueCardText(i.revenueMinM, i.revenueMaxM) ?? "Not stated"],
+    ["Revenue minimum", i.revLabel ?? "Not stated"],
     ["Preferred stages", i.stages.join(", ") || "—"],
     ["Deal types", i.dealTypes.join(", ") || "—"],
     ["Geography", i.geography || "—"],
@@ -276,13 +276,13 @@ export function InvestorBrowse() {
           </SelectContent>
         </Select>
         <FilterMenu label="AUM size" heading="AUM size" options={AUM_FILTER} value={aum} onChange={setAum} countFor={count("aum")}
-          hint="Fund size or AUM (group revenue for corporate buyers), matched on the range each card shows."
+          hint="Fund size or AUM (group revenue for corporate buyers), matched on the band each card shows."
           foot="Exact AUM is shown only after the NDA is approved." />
         <FilterMenu label="Ticket size" heading="Ticket size" options={TICKET_FILTER} value={ticket} onChange={setTicket} countFor={count("ticket")}
-          hint="Pick the amount you're raising or selling for. Shows investors whose ticket range covers it."
+          hint="Pick the amount you're raising or selling for. Shows investors whose average investment is in that band."
           foot="Exact ticket sizes are shown only after the NDA is approved." />
-        <FilterMenu label="Revenue band" heading="Revenue band" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={count("revenue")}
-          hint="Pick the revenue range of the company you're selling. Shows investors who buy in that range." />
+        <FilterMenu label="Revenue minimum" heading="Revenue minimum" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={count("revenue")}
+          hint="Pick your company's revenue. Shows investors whose minimum is at or below it." />
       </div>
 
       <div className="flex shrink-0 items-start gap-2 rounded-[10px] bg-muted/60 px-3 py-2 text-[12.5px] text-muted-foreground">
@@ -331,8 +331,8 @@ export function InvestorBrowse() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground">{i.name || i.codeName} <span className="font-normal text-muted-foreground">· {i.refNo}</span></div>
                 <div className="truncate text-[12px] text-muted-foreground">
-                  {[i.type, i.country, i.ticketLabel && `Ticket ${i.ticketLabel}`, i.aumLabel && `AUM ${i.aumLabel}`,
-                    i.revenueMinM != null && revenueCardText(i.revenueMinM, i.revenueMaxM)].filter(Boolean).join(" · ")}
+                  {[i.country, i.ticketLabel && `Ticket ${i.ticketLabel}`, i.aumLabel && `${isCorporateBuyer(i.type) ? "Group revenue" : "AUM"} ${i.aumLabel}`,
+                    i.revLabel && `Revenue min. ${i.revLabel}`].filter(Boolean).join(" · ")}
                 </div>
               </div>
               {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}

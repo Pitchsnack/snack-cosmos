@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { revenueBandLabel } from "@/lib/investor-browse";
+import { bandText, usd } from "@/lib/investor-bands";
 import { Link } from "@tanstack/react-router";
 import { type InvestorDirectorySearch } from "@/routes/_authenticated/investors.index";
 import {
@@ -173,12 +173,13 @@ export function InvestorDetailPanel({
   if (i.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${i.year_founded}` });
   if (i.investor_type) metaItems.push({ icon: Building2, label: i.investor_type });
   if (i.country) metaItems.push({ icon: MapPin, label: i.country });
-  if (i.aum) metaItems.push({ icon: Coins, label: `AUM ${i.aum}` });
-  if (ticket) metaItems.push({ icon: Layers, label: `Ticket ${ticket}` });
-  if (i.revenue_min_m != null) {
-    const rl = revenueBandLabel(Number(i.revenue_min_m), i.revenue_max_m == null ? null : Number(i.revenue_max_m));
-    if (rl) metaItems.push({ icon: Coins, label: rl === "No minimum" ? "Revenue: no minimum" : `Revenue band ${rl}` });
-  }
+  const ib = i as typeof i & { aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; aum_exact_usd?: number | null };
+  const aumTxt = bandText(ib.aum_band) ?? i.aum;
+  if (aumTxt) metaItems.push({ icon: Coins, label: `AUM ${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` });
+  const tktTxt = bandText(ib.ticket_band) ?? ticket;
+  if (tktTxt) metaItems.push({ icon: Layers, label: `Ticket ${tktTxt}` });
+  const revTxt = bandText(ib.revenue_min_band);
+  if (revTxt) metaItems.push({ icon: Coins, label: `Revenue min. ${revTxt}` });
 
   return (
     <div className="space-y-[14px] text-foreground">

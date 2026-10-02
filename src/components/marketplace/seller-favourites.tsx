@@ -13,7 +13,6 @@ import { useHasSession } from "@/hooks/use-has-session";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { InvestorDetail, StarBtn, useSavedInvestors } from "@/components/marketplace/investor-browse";
 import { listSellerFavourites, type SellerFavourite, type SellerFavStatus } from "@/lib/investor-browse.functions";
-import { revenueCardText } from "@/lib/investor-browse";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 
@@ -173,8 +172,8 @@ export function SellerFavourites() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground">{f.name || f.codeName} <span className="font-normal text-muted-foreground">· {f.refNo}</span></div>
                 <div className="truncate text-[12px] text-muted-foreground">
-                  {[f.type, f.country, f.ticketLabel && `Ticket ${f.ticketLabel}`, f.aumLabel && `AUM ${f.aumLabel}`,
-                    f.revenueMinM != null && revenueCardText(f.revenueMinM, f.revenueMaxM)].filter(Boolean).join(" · ")}
+                  {[f.country, f.ticketLabel && `Ticket ${f.ticketLabel}`, f.aumLabel && `AUM ${f.aumLabel}`,
+                    f.revLabel && `Revenue min. ${f.revLabel}`].filter(Boolean).join(" · ")}
                 </div>
               </div>
               <StatusBadge s={f.status} />
