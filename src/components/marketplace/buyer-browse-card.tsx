@@ -3,6 +3,7 @@ import { BadgeCheck, Briefcase, Building2, ChevronDown, Eye, EyeOff, Landmark, L
 import { isCorporateBuyer, revenueBandLabel } from "@/lib/investor-browse";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
+import { useInvestorTypeImage } from "@/hooks/use-investor-type-image";
 
 export function TypeIcon({ type, className }: { type: string | null; className?: string }) {
   const t = (type ?? "").toLowerCase();
@@ -11,9 +12,18 @@ export function TypeIcon({ type, className }: { type: string | null; className?:
   return <I className={className} />;
 }
 
-/** Vector cover for an investor — never a logo or photo. */
+/** Investor cover: Admin's investor-type image, else a drawn cover — never a logo. */
 export function BuyerCover({ type, className, children }: { type: string | null; className?: string; children?: React.ReactNode }) {
   const tone = typeTone(type);
+  const img = useInvestorTypeImage(type);
+  if (img) {
+    return (
+      <div className={cn("relative overflow-hidden", tone.bg, className)}>
+        <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+        {children}
+      </div>
+    );
+  }
   return (
     <div className={cn("relative grid place-items-center overflow-hidden", tone.bg, className)}>
       <svg aria-hidden className={cn("absolute inset-0 h-full w-full opacity-30", tone.fg)} viewBox="0 0 320 120" preserveAspectRatio="none">
