@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuyerBrowseCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { BuyerBrowseCard, BuyerCover, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing } from "@/lib/buyer-profile.functions";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
@@ -278,10 +278,9 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
       </div>
       {view === "public" ? (
         <div className={shell}>
-          <div className={cn("relative grid h-[120px] w-full place-items-center", tone.bg, tone.fg)}>
+          <BuyerCover type={org.type} className="h-[120px] w-full">
             <span className="absolute left-2.5 top-2.5"><StatusChip status={p.status === "live" ? "live" : "draft"} /></span>
-            <TypeIcon type={org.type} className="h-10 w-10 opacity-80" />
-          </div>
+          </BuyerCover>
           <div className="px-3 pb-3">
             <div className="truncate pt-2.5 text-[14px] font-bold">{p.code_name}</div>
             <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[p.ref_no, org.type, p.country].filter(Boolean).join(" · ")}</div>
