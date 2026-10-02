@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { BadgeCheck, Briefcase, Building2, ChevronDown, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
+import { BadgeCheck, Briefcase, Building2, ChevronDown, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
 import { isCorporateBuyer } from "@/lib/investor-browse";
-import { INDIVIDUAL_TYPE, typeName } from "@/lib/investor-bands";
+import { INDIVIDUAL_TYPE, bandOf, typeName } from "@/lib/investor-bands";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 import { useInvestorTypeImage } from "@/hooks/use-investor-type-image";

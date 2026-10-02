@@ -9,7 +9,7 @@ export type PublicInvestor = {
   refNo: string;
   /** Seller-facing title before an NDA: the investor type ("Investor" when unset). */
   codeName: string;
-  /** Real name only when the investor turned on "Show my name to sellers". */
+  /** Always null before an approved NDA. */
   name: string | null;
   type: string | null;
   city: string | null;
@@ -24,6 +24,8 @@ export type PublicInvestor = {
   aumBand: string | null;
   ticketBand: string | null;
   revBand: string | null;
+  dealBand: string | null;
+  relation: "individual" | "corporate" | "agent" | null;
   aumLabel: string | null;
   ticketLabel: string | null;
   revLabel: string | null;

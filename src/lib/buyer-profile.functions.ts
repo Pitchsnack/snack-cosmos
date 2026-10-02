@@ -111,7 +111,7 @@ export function toPublic(p: BuyerProfile, bv: { company_name?: string | null; bu
     id: p.user_id,
     refNo: p.ref_no,
     codeName: bv?.buyer_type || "Investor",
-    name: p.show_name ? bv?.company_name ?? null : null,
+    name: null, // never before an approved NDA
     type: bv?.buyer_type ?? null,
     city: p.city, country: p.country,
     headline: p.headline, description: p.description,
