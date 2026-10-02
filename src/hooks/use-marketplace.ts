@@ -19,7 +19,8 @@ export function useIsMarketplace() {
     pathname.startsWith("/my-startups/") ||
     pathname === "/my-page" ||
     pathname === "/my-financials" ||
-    pathname === "/my-valuation"
+    pathname === "/my-valuation" ||
+    pathname === "/my-risk"
   );
 }
 

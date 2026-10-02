@@ -341,6 +341,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       ? [
           { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
           { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
+          { to: "/my-risk", label: "Company Risk", icon: ShieldAlert, lock: "risk" },
         ]
       : [];
   const account: MenuItem[] = [{ to: "/my-page", label: "My Profile", icon: UserCircle }];
