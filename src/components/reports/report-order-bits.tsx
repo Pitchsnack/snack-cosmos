@@ -4,7 +4,7 @@ import { getStartupReportOrders, listReportOrders } from "@/lib/report-orders.fu
 import { cn } from "@/lib/utils";
 
 export type ReportOrder = {
-  id: string; ref: string; startup_id: string; kind: "financials" | "valuation" | "bundle"; amount: number; currency: string;
+  id: string; ref: string; startup_id: string; kind: "financials" | "valuation" | "bundle" | "risk"; amount: number; currency: string;
   status: "paid" | "generated" | "delivered" | "cancelled" | "refunded"; paid_at: string; due_at: string | null;
   payment_ref: string | null; method: string | null; ordered_by: string | null; generated_at: string | null;
   analyst_id: string | null; ready_at?: string | null; delivered_by_name?: string | null; delivered_at: string | null; delivered_by: string | null; invoice_no: string | null;
@@ -22,7 +22,7 @@ export const overdueDays = (o: ReportOrder) => (o.due_at ? Math.max(1, Math.ceil
 export const dayMonth = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" }).replace("Sept", "Sep") : "—");
 export const dayMonthTime = (d?: string | null) =>
   d ? `${dayMonth(d)}, ${new Date(d).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : "—";
-export const kindLabel = (k: string) => (k === "valuation" ? "Estimated valuation" : k === "bundle" ? "Financials + valuation" : "Financial report");
+export const kindLabel = (k: string) => (k === "risk" ? "Company risk" : k === "valuation" ? "Estimated valuation" : k === "bundle" ? "Financials + valuation" : "Financial report");
 export const money = (o: ReportOrder) => `${o.currency === "THB" ? "฿" : o.currency + " "}${Number(o.amount).toLocaleString()}`;
 export function hpOf(o: ReportOrder) {
   const h = o.startups?.hidden_profiles;

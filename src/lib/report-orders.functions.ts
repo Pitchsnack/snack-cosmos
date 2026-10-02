@@ -9,7 +9,7 @@ import catalog from "@/config/report-catalog.json";
  */
 
 type Ctx = { supabase: any; userId: string };
-const Kind = z.enum(["financials", "valuation", "bundle"]);
+const Kind = z.enum(["financials", "valuation", "bundle", "risk"]);
 export const DUE_BUSINESS_DAYS = 2;
 
 async function admin() {
@@ -149,7 +149,7 @@ export const authoriseSeller = createServerFn({ method: "POST" })
     const { data: o, error } = await sb.from("report_orders").update({ status: "delivered", delivered_at: now, delivered_by: ctx.userId,
       generated_at: prev.generated_at ?? now, analyst_id: prev.analyst_id ?? ctx.userId }).eq("id", data.orderId).select("*").single();
     if (error) throw new Error(error.message);
-    if (o.kind !== "valuation") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
+    if (o.kind === "financials" || o.kind === "bundle") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
     return { prevStatus: prev.status as string };
   });
 
@@ -163,7 +163,7 @@ export const undoAuthorise = createServerFn({ method: "POST" })
     const { data: o, error } = await sb.from("report_orders").update({ status: data.prevStatus, delivered_at: null, delivered_by: null })
       .eq("id", data.orderId).select("*").single();
     if (error) throw new Error(error.message);
-    if (o.kind !== "valuation") await sb.from("financial_statements").update({ verified_status: "draft" }).eq("startup_id", o.startup_id);
+    if (o.kind === "financials" || o.kind === "bundle") await sb.from("financial_statements").update({ verified_status: "draft" }).eq("startup_id", o.startup_id);
     return { ok: true };
   });
 
@@ -218,7 +218,7 @@ export const publishReport = createServerFn({ method: "POST" })
     const { data: o, error } = await sb.from("report_orders").update({ status: "delivered", delivered_at: now, delivered_by: ctx.userId,
       invoice_no: undefined }).eq("id", data.orderId).select("*").single();
     if (error) throw new Error(error.message);
-    if (o.kind !== "valuation") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
+    if (o.kind === "financials" || o.kind === "bundle") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
     await sb.from("report_order_events").insert({ order_id: o.id, event: "published", actor_id: ctx.userId,
       note: o.kind === "valuation" ? "Valuation published · seller notified" : "verified_status = verified · badge added · seller notified" });
     if (o.ordered_by) await notifyReady(sb, o);
@@ -251,7 +251,8 @@ async function notifyReady(sb: any, o: any) {
   const { data: st } = await sb.from("startups").select("startup_name").eq("id", o.startup_id).maybeSingle();
   const company = st?.startup_name ?? "your company";
   const val = o.kind === "valuation";
+  const risk = o.kind === "risk";
   await sb.from("notifications").insert({ user_id: o.ordered_by, notification_type: "approval", title: "Your report is ready",
-    message: `Your ${val ? "estimated valuation" : "verified financial report"} for ${company} is ready. View it and share it with buyers whose NDA you approved.`,
-    link_url: `${val ? "/my-valuation" : "/my-financials"}?company=${o.startup_id}&from=notification` });
+    message: `Your ${risk ? "company risk report" : val ? "estimated valuation" : "verified financial report"} for ${company} is ready. View it and share it with buyers whose NDA you approved.`,
+    link_url: `${risk ? "/my-risk" : val ? "/my-valuation" : "/my-financials"}?company=${o.startup_id}&from=notification` });
 }

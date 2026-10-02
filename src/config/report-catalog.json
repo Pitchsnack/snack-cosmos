@@ -2,7 +2,8 @@
   "prices": {
     "financials": 10000,
     "valuation": 15000,
-    "bundle": 22000
+    "bundle": 22000,
+    "risk": 12000
   },
   "currency": "THB",
   "sample": {
@@ -189,6 +190,35 @@
         [
           "\"Independent valuation\" badge on your listing",
           ""
+        ],
+        [
+          "Delivered within {days} business days",
+          "after your verified financials"
+        ]
+      ]
+    },
+    "risk": {
+      "deliveryDays": 3,
+      "items": [
+        [
+          "Overall risk rating",
+          "5-step scale with three pillars: liquidity, short-term and long-term debt"
+        ],
+        [
+          "Liquidity",
+          "current and quick ratios, working capital, five-year trend"
+        ],
+        [
+          "Debt",
+          "short-term against long-term liabilities, liabilities to equity, interest cover"
+        ],
+        [
+          "Stress test",
+          "interest cover if profit falls or rates rise"
+        ],
+        [
+          "Questions buyers will ask",
+          "with a written summary"
         ],
         [
           "Delivered within {days} business days",

@@ -11,12 +11,13 @@ import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { reportPrice } from "@/components/my-business/report-offers";
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
+import { CompanyRiskReport } from "@/components/financials/company-risk-report";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import catalog from "@/config/report-catalog.json";
 import { ReportViewer } from "@/components/pipeline/pipeline-dialogs";
 import { makeSampleReport } from "@/lib/sample-report";
 
-type Kind = "financials" | "valuation";
+type Kind = "financials" | "valuation" | "risk";
 
 /** Report orders are not tracked server-side yet. */
 export const isReportOrdered = (_kind: Kind) => false;
@@ -37,6 +38,7 @@ export function PitchsnackTag() {
 const TITLES: Record<Kind, { page: string; card: string; tag: string }> = {
   financials: { page: "My Financials", card: "Unlock your verified financials", tag: "Verified financial report" },
   valuation: { page: "Company Valuation", card: "Unlock your estimated valuation", tag: "Estimated valuation" },
+  risk: { page: "Company Risk", card: "Unlock your company risk report", tag: "Company risk" },
 };
 
 function useMyBusinesses() {
@@ -63,10 +65,10 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
   const { hasData } = useHasFinancials(company?.id ?? "");
   const { data: ordersData } = useStartupReportOrders(company?.id);
   const orders = (ordersData?.orders ?? []) as ReportOrder[];
-  const orderFor = (k: Kind) => orders.find((o) => o.kind === k || o.kind === "bundle");
+  const orderFor = (k: Kind) => orders.find((o) => o.kind === k || (o.kind === "bundle" && k !== "risk"));
   const order = orderFor(kind);
   const delivered = order?.status === "delivered";
-  const needsFinancials = kind === "valuation" && orderFor("financials")?.status !== "delivered";
+  const needsFinancials = kind !== "financials" && orderFor("financials")?.status !== "delivered";
   const qc = useQueryClient();
   const payFn = useServerFn(createMyReportOrder);
   const pay = useMutation({
@@ -101,14 +103,14 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
           </div>
         </div>
         )}
-        <StartupFinancialsPage
+        {kind === "risk" ? <CompanyRiskReport startupId={company.id} /> : <StartupFinancialsPage
           id={company.id}
           workspace="my-startups"
           readOnly
           section={kind}
           embedded={embedded}
           {...(kind === "valuation" ? { initialTab: "valuation" } : {})}
-        />
+        />}
       </div>
     );
   }
@@ -120,7 +122,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">My Workspace</div>
           <h1 className="text-[26px] font-bold tracking-tight">{t.page}</h1>
-          <p className="text-[13.5px] text-muted-foreground">{name} · {kind === "financials" ? "verified report" : "valuation"} {order ? "in preparation" : "not ordered yet"}</p>
+          <p className="text-[13.5px] text-muted-foreground">{name} · {kind === "financials" ? "verified report" : kind === "risk" ? "risk report" : "valuation"} {order ? "in preparation" : "not ordered yet"}</p>
         </div>
         <div className="flex items-center gap-2">
           {picker}
@@ -143,6 +145,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
             <p className="my-3 text-[13.5px] leading-relaxed text-foreground/80">
               {kind === "financials"
                 ? "PitchSnack analysts prepare and verify your report straight from your DBD filings. Buyers see ranges on your listing; you release the full report to each NDA-approved buyer yourself. The report includes:"
+                : kind === "risk" ? "How safe your cash and debt look to a buyer: liquidity, short-term and long-term debt, built on your verified financials. You release it to each NDA-approved buyer yourself. The report includes:"
                 : "An independent valuation range for your business, built on your verified financials. You release it to each NDA-approved buyer yourself. The report includes:"}
             </p>
             <div className="mb-4 grid gap-1.5 text-[13px]">
@@ -167,7 +170,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
             </div>
             {needsFinancials && (
               <p className="mt-2.5 text-[12.5px] text-[#6B7280]">
-                {orderFor("financials") ? "You can order it once your verified financial report is ready." : "Order the verified financial report first. The valuation is built from it."}{" "}
+                {orderFor("financials") ? "You can order it once your verified financial report is ready." : `Order the verified financial report first. The ${kind === "risk" ? "risk report" : "valuation"} is built from it.`}{" "}
                 {onGoFinancials && <button type="button" onClick={onGoFinancials} className="text-[13px] font-semibold text-[#2563EB] hover:underline">Go to Financial report</button>}
               </p>
             )}
