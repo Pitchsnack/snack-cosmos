@@ -19,9 +19,16 @@ export type TabIconName =
   | "flow"
   | "target"
   | "lines"
-  | "sliders";
+  | "sliders"
+  | "shield";
 
 const PATHS: Record<TabIconName, React.ReactNode> = {
+  shield: (
+    <>
+      <path d="M8 2l5 2v4c0 3-2.2 5.2-5 6-2.8-.8-5-3-5-6V4z" />
+      <path d="M8 6v3M8 11h.01" />
+    </>
+  ),
   grid: (
     <>
       <rect x="2" y="2" width="5" height="5" rx="1" />
