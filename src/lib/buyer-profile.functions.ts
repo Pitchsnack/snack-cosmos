@@ -25,7 +25,7 @@ async function ensure(userId: string): Promise<BuyerProfile> {
   const sb = await admin();
   const { data } = await sb.from("buyer_profiles").select("*").eq("user_id", userId).maybeSingle();
   if (data) return data;
-  const { data: made, error } = await sb.from("buyer_profiles").insert({ user_id: userId, code_name: codeFor(userId) }).select("*").single();
+  const { data: made, error } = await sb.from("buyer_profiles").insert({ user_id: userId, code_name: "" }).select("*").single();
   if (error) throw new Error(error.message);
   return made;
 }
@@ -82,10 +82,18 @@ export const setBuyerListing = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const p = await ensure(context.userId);
     if (data.status === "live") {
+      const sb0 = await admin();
+      const { data: inv } = (p as any).investor_id
+        ? await sb0.from("investors").select("investor_name, investor_type, ticket_band, preferred_stages, preferred_industries, setup_done_at").eq("id", (p as any).investor_id).maybeSingle()
+        : { data: null };
+      const { showsStages } = await import("@/lib/investor-bands");
       const missing = [
-        p.ticket_min == null && p.ticket_max == null && "ticket size",
-        !p.sectors.length && "sectors", !p.stages.length && "stages", !p.deal_types.length && "deal types",
-        !p.headline?.trim() && "public headline",
+        !inv?.setup_done_at && "finish setup",
+        !inv?.investor_name?.trim() && "company name",
+        !inv?.ticket_band && "average investment",
+        !p.deal_types.length && "deal types",
+        showsStages(inv?.investor_type) && !(inv?.preferred_stages ?? []).length && "stages",
+        !(inv?.preferred_industries ?? []).length && "industries",
       ].filter(Boolean);
       if (missing.length) throw new Error(`Add ${missing.join(", ")} before publishing.`);
     }
@@ -102,7 +110,7 @@ export function toPublic(p: BuyerProfile, bv: { company_name?: string | null; bu
   return {
     id: p.user_id,
     refNo: p.ref_no,
-    codeName: p.code_name,
+    codeName: bv?.buyer_type || "Investor",
     name: p.show_name ? bv?.company_name ?? null : null,
     type: bv?.buyer_type ?? null,
     city: p.city, country: p.country,

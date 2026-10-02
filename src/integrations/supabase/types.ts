@@ -108,6 +108,7 @@ export type Database = {
           address: string | null
           aum_exact: string | null
           aum_value: number | null
+          buyer_relation: string | null
           city: string | null
           code_name: string
           country: string | null
@@ -144,6 +145,7 @@ export type Database = {
           address?: string | null
           aum_exact?: string | null
           aum_value?: number | null
+          buyer_relation?: string | null
           city?: string | null
           code_name: string
           country?: string | null
@@ -180,6 +182,7 @@ export type Database = {
           address?: string | null
           aum_exact?: string | null
           aum_value?: number | null
+          buyer_relation?: string | null
           city?: string | null
           code_name?: string
           country?: string | null
@@ -2253,6 +2256,8 @@ export type Database = {
       investors: {
         Row: {
           aum: string | null
+          aum_band: string | null
+          aum_exact_usd: number | null
           bio: string | null
           business_address: string | null
           country: string | null
@@ -2275,21 +2280,28 @@ export type Database = {
           min_ticket_size: string | null
           preferred_industries: string[] | null
           preferred_stages: string[] | null
+          registration_no: string | null
           revenue_max_m: number | null
+          revenue_min_band: string | null
           revenue_min_m: number | null
+          setup_done_at: string | null
           short_description: string | null
           source_global_id: string | null
           status: string
           tenant_id: string
+          ticket_band: string | null
           ticket_size: string | null
           updated_at: string
           updated_by: string | null
           visibility: string
           website_url: string | null
+          wizard: Json
           year_founded: number | null
         }
         Insert: {
           aum?: string | null
+          aum_band?: string | null
+          aum_exact_usd?: number | null
           bio?: string | null
           business_address?: string | null
           country?: string | null
@@ -2312,21 +2324,28 @@ export type Database = {
           min_ticket_size?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
+          registration_no?: string | null
           revenue_max_m?: number | null
+          revenue_min_band?: string | null
           revenue_min_m?: number | null
+          setup_done_at?: string | null
           short_description?: string | null
           source_global_id?: string | null
           status?: string
           tenant_id: string
+          ticket_band?: string | null
           ticket_size?: string | null
           updated_at?: string
           updated_by?: string | null
           visibility?: string
           website_url?: string | null
+          wizard?: Json
           year_founded?: number | null
         }
         Update: {
           aum?: string | null
+          aum_band?: string | null
+          aum_exact_usd?: number | null
           bio?: string | null
           business_address?: string | null
           country?: string | null
@@ -2349,17 +2368,22 @@ export type Database = {
           min_ticket_size?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
+          registration_no?: string | null
           revenue_max_m?: number | null
+          revenue_min_band?: string | null
           revenue_min_m?: number | null
+          setup_done_at?: string | null
           short_description?: string | null
           source_global_id?: string | null
           status?: string
           tenant_id?: string
+          ticket_band?: string | null
           ticket_size?: string | null
           updated_at?: string
           updated_by?: string | null
           visibility?: string
           website_url?: string | null
+          wizard?: Json
           year_founded?: number | null
         }
         Relationships: [
