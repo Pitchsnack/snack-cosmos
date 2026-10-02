@@ -58,6 +58,7 @@ export type BuyerTone = { bg: string; fg: string };
 /** Cover colour by investor type. */
 export function typeTone(type: string | null): BuyerTone {
   const t = (type ?? "").toLowerCase();
+  if (t.includes("individual")) return { bg: "bg-[#E3F4F1] dark:bg-[#10302C]", fg: "text-[#0F766E] dark:text-[#5EEAD4]" };
   if (t.includes("family")) return { bg: "bg-amber-100 dark:bg-amber-950/50", fg: "text-amber-700 dark:text-amber-300" };
   if (t.includes("private equity") || t === "pe" || t.includes("pe ")) return { bg: "bg-indigo-100 dark:bg-indigo-950/50", fg: "text-indigo-700 dark:text-indigo-300" };
   if (t.includes("corporate vc") || t.includes("cvc")) return { bg: "bg-blue-100 dark:bg-blue-950/50", fg: "text-blue-700 dark:text-blue-300" };
@@ -70,7 +71,7 @@ export type BuyerItemKey = "mandate" | "headline" | "people" | "company" | "port
 export function buyerCompleteness(p: BuyerProfile | null, org: BuyerOrg | null) {
   const items: { key: BuyerItemKey; label: string; weight: number; required: boolean; done: boolean }[] = [
     { key: "mandate", label: "Mandate", weight: 35, required: true, done: !!p && (p.ticket_min != null || p.ticket_max != null) && p.sectors.length > 0 && p.stages.length > 0 && p.deal_types.length > 0 },
-    { key: "headline", label: "Public headline", weight: 30, required: true, done: !!p?.headline?.trim() },
+    { key: "headline", label: "Public headline", weight: 30, required: false, done: !!p?.headline?.trim() },
     { key: "people", label: "Decision makers", weight: 15, required: false, done: (p?.people.length ?? 0) > 0 },
     { key: "company", label: "Company details", weight: 10, required: false, done: !!org?.name && !!p?.address && !!org?.website },
     { key: "portfolio", label: "Portfolio", weight: 10, required: false, done: (p?.portfolio.length ?? 0) > 0 },

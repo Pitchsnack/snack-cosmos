@@ -25,7 +25,7 @@ async function ensure(userId: string): Promise<BuyerProfile> {
   const sb = await admin();
   const { data } = await sb.from("buyer_profiles").select("*").eq("user_id", userId).maybeSingle();
   if (data) return data;
-  const { data: made, error } = await sb.from("buyer_profiles").insert({ user_id: userId, code_name: codeFor(userId) }).select("*").single();
+  const { data: made, error } = await sb.from("buyer_profiles").insert({ user_id: userId, code_name: "" }).select("*").single();
   if (error) throw new Error(error.message);
   return made;
 }
@@ -102,7 +102,7 @@ export function toPublic(p: BuyerProfile, bv: { company_name?: string | null; bu
   return {
     id: p.user_id,
     refNo: p.ref_no,
-    codeName: p.code_name,
+    codeName: bv?.buyer_type || "Investor",
     name: p.show_name ? bv?.company_name ?? null : null,
     type: bv?.buyer_type ?? null,
     city: p.city, country: p.country,

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { BadgeCheck, Briefcase, Building2, ChevronDown, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, Users } from "lucide-react";
-import { isCorporateBuyer, revenueBandLabel } from "@/lib/investor-browse";
+import { BadgeCheck, Briefcase, Building2, ChevronDown, Eye, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
+import { isCorporateBuyer } from "@/lib/investor-browse";
+import { INDIVIDUAL_TYPE, typeName } from "@/lib/investor-bands";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 import { useInvestorTypeImage } from "@/hooks/use-investor-type-image";
 
 export function TypeIcon({ type, className }: { type: string | null; className?: string }) {
   const t = (type ?? "").toLowerCase();
-  const I = t.includes("family") ? Users : t.includes("private equity") ? Landmark : t.includes("venture") || t.includes("vc") ? Rocket
+  const I = t.includes("individual") ? User : t.includes("family") ? Users : t.includes("private equity") ? Landmark : t.includes("venture") || t.includes("vc") ? Rocket
     : t.includes("incubat") || t.includes("accelerat") ? Sprout : t.includes("corporate") ? Building2 : Briefcase;
   return <I className={className} />;
 }
@@ -54,15 +55,12 @@ export type CardInvestor = {
   sectors: string[]; stages: string[]; dealTypes: string[]; geography: string | null;
   verified: boolean; proofOfFunds: boolean;
   ticketLabel: string | null; aumLabel: string | null;
-  revenueMinM: number | null; revenueMaxM: number | null;
+  revLabel: string | null;
 };
 
 function revLine(i: CardInvestor): React.ReactNode | null {
-  if (i.revenueMinM == null) return null;
-  const label = revenueBandLabel(i.revenueMinM, i.revenueMaxM);
-  if (!label) return null;
-  if (label === "No minimum") return <span key="r">No revenue minimum</span>;
-  return <span key="r">Revenue <b className="font-semibold text-[#434A5C] dark:text-foreground">{label}</b></span>;
+  if (!i.revLabel) return null;
+  return <span key="r">Revenue min. <b className="font-semibold text-[#434A5C] dark:text-foreground">{i.revLabel}</b></span>;
 }
 
 /** The one public investor card sellers see in Browse investors. Only public fields reach it. */
@@ -77,7 +75,10 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
   const corp = isCorporateBuyer(i.type);
   const rev = revLine(i);
   const sub: React.ReactNode[] = [];
-  sub.push(<span key="a">{corp ? "Group revenue" : "AUM"} {i.aumLabel ? <b className="font-semibold text-[#434A5C] dark:text-foreground">{i.aumLabel}</b> : "undisclosed"}</span>);
+  const individual = (i.type ?? "") === INDIVIDUAL_TYPE;
+  if (i.aumLabel) sub.push(<span key="a">{corp ? "Group revenue" : "AUM"} <b className="font-semibold text-[#434A5C] dark:text-foreground">{i.aumLabel}</b></span>);
+  else if (!individual) sub.push(<span key="a">{corp ? "Group revenue" : "AUM"} undisclosed</span>);
+  const title = typeName(i.type);
   if (rev) sub.push(rev);
   const facts = [[i.city, i.country].filter(Boolean).join(", "), i.stages.join(", "), i.dealTypes.join(", "), i.geography].filter(Boolean).join(" · ");
   return (
@@ -96,8 +97,8 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
       </BuyerCover>
       <div className="space-y-2.5 p-4">
         <div>
-          <div className="text-[15px] font-semibold leading-snug text-foreground">{i.name || i.codeName}</div>
-          <div className="truncate text-[12px] text-muted-foreground">{[i.refNo, i.type ?? "Investor", i.country].filter(Boolean).join(" · ")}</div>
+          <div className="text-[15px] font-semibold leading-snug text-foreground">{i.name || title}</div>
+          <div className="truncate text-[12px] text-muted-foreground">{(i.name ? [i.refNo, title, i.country] : [i.refNo, i.country]).filter(Boolean).join(" · ")}</div>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Verified investor</Pill>}
@@ -122,7 +123,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
         )}
         {open && facts && <div className="text-[12px] text-muted-foreground">{facts}</div>}
         <div className="flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-muted-foreground">
-          <span className="truncate">{i.codeName} · {i.refNo}</span>
+          <span className="truncate">{title} · {i.refNo}</span>
           <button type="button" onClick={(e) => { e.stopPropagation(); toggle(); }} className="inline-flex shrink-0 items-center gap-0.5 font-medium text-foreground hover:underline">
             {open ? "Show less" : "Show more"}<ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
           </button>
@@ -133,12 +134,12 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
 }
 
 /** Buyer's own "How sellers see it" preview — same card. */
-export function BuyerBrowseCard({ b, className, revenueMinM = null, revenueMaxM = null }: { b: PublicBuyer; className?: string; revenueMinM?: number | null; revenueMaxM?: number | null }) {
+export function BuyerBrowseCard({ b, className, revLabel = null }: { b: PublicBuyer; className?: string; revLabel?: string | null }) {
   return (
     <PublicInvestorCard className={className} i={{
       refNo: b.refNo, codeName: b.codeName, name: b.name, type: b.type, city: b.city, country: b.country,
-      description: b.description || b.headline, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: null,
-      verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revenueMinM, revenueMaxM,
+      description: b.description, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: null,
+      verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revLabel,
     }} />
   );
 }
