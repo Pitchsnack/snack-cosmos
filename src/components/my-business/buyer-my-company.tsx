@@ -170,7 +170,7 @@ export function BuyerMyCompany() {
   const setup = iv && !iv.setup_done_at ? { label: prog.n === 0 ? "Start setup" : "Continue setup", onClick: openWizard } : null;
   const pill = <BuyerPill p={p} org={org} onItem={onItem} setup={setup} />;
   const profilePanel = (
-    <BuyerProfilePanel p={p} org={org} view={view} setView={setView} onItem={onItem} onEdit={setEdit} />
+    <BuyerProfilePanel p={p} org={org} view={view} setView={setView} onItem={onItem} onEdit={setEdit} pill={pill} />
   );
   const rightPanel = (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm">
@@ -306,9 +306,9 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
   );
 }
 
-function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit }: {
+function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit, pill }: {
   p: BuyerProfile; org: BuyerOrg; view: View; setView: (v: View) => void;
-  onItem: (k: BuyerItemKey) => void; onEdit: (s: Section) => void;
+  onItem: (k: BuyerItemKey) => void; onEdit: (s: Section) => void; pill: React.ReactNode;
 }) {
   return <div className="space-y-5">
     <div role="tablist" aria-label="Profile visibility" className="flex gap-1 border-b border-border pb-2">
