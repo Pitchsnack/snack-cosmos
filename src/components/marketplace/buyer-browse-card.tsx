@@ -155,7 +155,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
           <Pill tone="amber"><Lock className="h-3 w-3" />Name after NDA</Pill>
         </div>
         <div className="mt-3"><KeyFigures i={i} empty={empty} /></div>
-        {desc && <p className={cn("mt-3 text-[12.5px] text-muted-foreground", !open && "line-clamp-2")}>{desc}</p>}
+        {desc && <p className={cn("mt-3 text-[14px] leading-snug text-foreground/85", !open && "line-clamp-2")}>{desc}</p>}
         {i.sectors.length > 0 && (
           <div className="mt-2.5 flex flex-wrap gap-1">
             {i.sectors.slice(0, open ? 20 : 5).map((s) => <span key={s} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{s}</span>)}
