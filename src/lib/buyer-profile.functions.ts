@@ -35,15 +35,18 @@ export const getMyBuyerProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = await admin();
     const profile = await ensure(context.userId);
-    const [{ data: bv }, { data: deals }] = await Promise.all([
+    const invId = (profile as any).investor_id as string | null;
+    const [{ data: bv }, { data: deals }, { data: inv }] = await Promise.all([
       sb.from("buyer_verifications").select("company_name, buyer_type, website, registration_no, status, work_email").eq("user_id", context.userId).maybeSingle(),
       sb.from("deal_pipelines").select("nda_approved_at, loi_sent_at").eq("buyer_user_id", context.userId),
+      invId ? sb.from("investors").select("investor_name, investor_type, website_url, registration_no").eq("id", invId).maybeSingle() : Promise.resolve({ data: null }),
     ]);
+    // Firm details come from the linked Investors Directory row (single source); verification is only a fallback before linking.
     const org: BuyerOrg = {
-      name: bv?.company_name ?? null,
-      type: bv?.buyer_type ?? null,
-      website: bv?.website ?? null,
-      registrationNo: bv?.registration_no ?? null,
+      name: inv?.investor_name ?? bv?.company_name ?? null,
+      type: inv ? inv.investor_type ?? null : bv?.buyer_type ?? null,
+      website: inv ? inv.website_url ?? null : bv?.website ?? null,
+      registrationNo: inv ? inv.registration_no ?? null : bv?.registration_no ?? null,
       verified: bv?.status === "approved",
       ndas: (deals ?? []).filter((d: any) => d.nda_approved_at).length,
       lois: (deals ?? []).filter((d: any) => d.loi_sent_at).length,
