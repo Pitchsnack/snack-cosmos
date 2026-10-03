@@ -13,6 +13,7 @@ import {
   Rocket,
   Briefcase,
   MessagesSquare,
+  Mail,
   FileText,
   BarChart3,
   Settings,
