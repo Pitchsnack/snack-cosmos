@@ -111,7 +111,7 @@ export function profileItems(rows: any[], names: Record<string, string>): Item[]
     return {
       key: `p:${r.user_id}`, id: r.user_id, kind: "prof", name, ref: `${r.ref_no ?? ""} · ${type}`, who: names[r.user_id] ?? "—",
       submittedAt: r.submitted_at, version: 1, initials: initials(name),
-      dirLabel: "Investors Directory", dirTo: r.investor_id ? "/investors/$id" : "/investors", dirParams: r.investor_id ? { id: r.investor_id } : {},
+      dirLabel: "Investors Directory", dirTo: r.investor_id ? "/investors/$id" : "/investors", dirParams: (r.investor_id ? { id: r.investor_id } : {}) as Record<string, string>,
       checks: [
         [!leaks.length, "Identity check", leaks.length ? leaks.join(", ") : "Passed · name hidden"],
         [verified, "Verified buyer", verified ? `Since ${day(r.verification?.decided_at)}` : "Not verified yet"],
