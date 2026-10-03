@@ -88,7 +88,7 @@ function ApprovalsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Approvals &amp; alerts</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Approvals</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} listings · {buyersWaiting} buyers · <b className="text-foreground">{reportsWaiting} paid reports</b> · {overdueOrders.length} overdue</p>
+          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} seller listings · {buyersWaiting + profilesWaiting} buyers · <b className="text-foreground">{reportsWaiting} paid reports</b> · {overdueOrders.length} overdue</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => toast.info("Alert settings are coming soon.")}>Alert settings</Button>
       </div>
