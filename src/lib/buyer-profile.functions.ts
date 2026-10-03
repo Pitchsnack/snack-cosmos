@@ -35,15 +35,18 @@ export const getMyBuyerProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = await admin();
     const profile = await ensure(context.userId);
-    const [{ data: bv }, { data: deals }] = await Promise.all([
+    const invId = (profile as any).investor_id as string | null;
+    const [{ data: bv }, { data: deals }, { data: inv }] = await Promise.all([
       sb.from("buyer_verifications").select("company_name, buyer_type, website, registration_no, status, work_email").eq("user_id", context.userId).maybeSingle(),
       sb.from("deal_pipelines").select("nda_approved_at, loi_sent_at").eq("buyer_user_id", context.userId),
+      invId ? sb.from("investors").select("investor_name, investor_type, website_url, registration_no").eq("id", invId).maybeSingle() : Promise.resolve({ data: null }),
     ]);
+    // Firm details come from the linked Investors Directory row (single source); verification is only a fallback before linking.
     const org: BuyerOrg = {
-      name: bv?.company_name ?? null,
-      type: bv?.buyer_type ?? null,
-      website: bv?.website ?? null,
-      registrationNo: bv?.registration_no ?? null,
+      name: inv?.investor_name ?? bv?.company_name ?? null,
+      type: inv ? inv.investor_type ?? null : bv?.buyer_type ?? null,
+      website: inv ? inv.website_url ?? null : bv?.website ?? null,
+      registrationNo: inv ? inv.registration_no ?? null : bv?.registration_no ?? null,
       verified: bv?.status === "approved",
       ndas: (deals ?? []).filter((d: any) => d.nda_approved_at).length,
       lois: (deals ?? []).filter((d: any) => d.loi_sent_at).length,
@@ -133,5 +136,14 @@ export const listPublicBuyers = createServerFn({ method: "GET" })
       ? await sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", ids)
       : { data: [] };
     const byId = new Map((bvs ?? []).map((b: any) => [b.user_id, b]));
-    return (rows ?? []).map((r: BuyerProfile) => toPublic(r, (byId.get(r.user_id) as any) ?? null));
+    const invIds = (rows ?? []).map((r: any) => r.investor_id).filter(Boolean);
+    const { data: invs } = invIds.length
+      ? await sb.from("investors").select("id, investor_type").in("id", invIds)
+      : { data: [] };
+    const typeById = new Map((invs ?? []).map((i: any) => [i.id, i.investor_type]));
+    return (rows ?? []).map((r: any) => {
+      const bv = (byId.get(r.user_id) as any) ?? null;
+      const t = r.investor_id ? typeById.get(r.investor_id) ?? null : bv?.buyer_type ?? null;
+      return toPublic(r, { ...(bv ?? {}), buyer_type: t });
+    });
   });
