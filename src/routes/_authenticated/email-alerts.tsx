@@ -3,7 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Mail, Send } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, FileText, Info, Lock, LockOpen, MessageSquare, PenLine, Pencil, Send, Target, X } from "lucide-react";
+import logoBlack from "@/assets/pitchsnack-black.png";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,34 @@ export const Route = createFileRoute("/_authenticated/email-alerts")({
 });
 
 const SAMPLE = { "listing code name": "Project Nimbus", "buyer code name": "Investor Heron", "buyer company": "Heron Capital", "seller company": "Nimbus Co., Ltd.", "report name": "verified financial report", sender: "Investor Heron", n: 4, date: "3 Oct 2026" };
+function tileOf(key: string, role: AlertRole) {
+  const G = { bg: "#ECFDF5", fg: "#047857" }, A = { bg: "#FFFBEB", fg: "#B45309" }, R = { bg: "#FEF2F2", fg: "#B91C1C" }, B = { bg: "#EFF6FF", fg: "#1D4ED8" };
+  switch (key) {
+    case "approved": return { ...G, Icon: Check };
+    case "nda_approved": return { ...G, Icon: LockOpen };
+    case "changes_requested": return { ...A, Icon: role === "buyer" ? Info : Pencil };
+    case "declined": case "nda_declined": return { ...R, Icon: X };
+    case "nda_request": return { ...B, Icon: Lock };
+    case "financial_report": return { ...(role === "seller" ? A : G), Icon: FileText };
+    case "loi": return { bg: "#F5F3FF", fg: "#6D28D9", Icon: PenLine };
+    case "criteria_match": return { bg: "#E0F5F2", fg: "#0F766E", Icon: Target };
+    default: return { ...B, Icon: MessageSquare };
+  }
+}
+function AlertTile({ k, role, size }: { k: string; role: AlertRole; size: number }) {
+  const t = tileOf(k, role);
+  return <div className="flex shrink-0 items-center justify-center rounded-[12px]" style={{ width: size, height: size, backgroundColor: t.bg, color: t.fg }}><t.Icon className="h-5 w-5" strokeWidth={2} /></div>;
+}
+function SubjectChips({ text }: { text: string }) {
+  return (
+    <div className="rounded-lg border border-[#E5E7EB] bg-white px-[11px] py-[9px] text-[13px] text-[#374151]">
+      {text.split(/(\{[^}]+\})/g).map((part, i) => /^\{.+\}$/.test(part)
+        ? <span key={i} className="rounded-[5px] bg-[#EEF0FF] px-[5px] text-[12px] font-medium text-[#4338CA]">{part}</span>
+        : <span key={i}>{part}</span>)}
+    </div>
+  );
+}
+
 const GROUPS = ["Approvals", "NDA", "Pipeline", "Matches", "Messages"] as const;
 
 function EmailAlertsPage() {
@@ -88,18 +117,28 @@ type AdminData = Awaited<ReturnType<typeof getEmailAlertsAdmin>>;
 
 function Templates({ data }: { data: AdminData }) {
   const [key, setKey] = useState(EMAIL_ALERTS[0].key);
+  const [closed, setClosed] = useState<Record<string, boolean>>({});
   const def = EMAIL_ALERTS.find((a) => a.key === key)!;
   return (
     <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
       <div className="rounded-xl border border-border bg-card p-2">
         {GROUPS.map((g) => (
           <div key={g} className="mb-2">
-            <div className="px-2 py-1.5 text-[11px] font-semibold tracking-[0.1em] text-muted-foreground">{g.toUpperCase()}</div>
-            {EMAIL_ALERTS.filter((a) => a.group === g).map((a) => {
+            <button type="button" onClick={() => setClosed((c) => ({ ...c, [g]: !c[g] }))} className="flex w-full items-center justify-between px-2 py-1.5 text-[11px] font-semibold tracking-[0.1em] text-muted-foreground hover:text-foreground">
+              <span className="flex items-center gap-1">{closed[g] ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}{g.toUpperCase()}</span>
+              <span className="tabular-nums">{EMAIL_ALERTS.filter((a) => a.group === g).length}</span>
+            </button>
+            {!closed[g] && EMAIL_ALERTS.filter((a) => a.group === g).map((a) => {
               const on = data.settings[a.key]?.enabled ?? true;
               return (
                 <button key={a.key} onClick={() => setKey(a.key)} className={cn("flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm", key === a.key ? "bg-muted font-semibold" : "hover:bg-muted/60")}>
-                  <span className={cn(!on && "text-muted-foreground line-through")}>{a.name}</span>
+                  <span>
+                    <span className={cn("block", !on && "text-muted-foreground line-through")}>{a.name}</span>
+                    <span className="mt-0.5 flex items-center gap-3 text-[11.5px] font-normal text-[#6B7280]">
+                      <span className="flex items-center gap-1"><span className="h-[7px] w-[7px] rounded-full bg-[#F6A823]" />Seller</span>
+                      <span className="flex items-center gap-1"><span className="h-[7px] w-[7px] rounded-full bg-[#4338CA]" />Buyer</span>
+                    </span>
+                  </span>
                   <span className="text-xs tabular-nums text-muted-foreground">{data.stats.perAlert[a.key] ?? 0}</span>
                 </button>
               );
@@ -139,7 +178,7 @@ function AlertDetail({ def, data }: { def: AlertDef; data: AdminData }) {
     <div className="rounded-xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg text-primary-foreground" style={{ backgroundColor: def.color }}><Mail className="h-5 w-5" /></div>
+          <AlertTile k={def.key} role={role} size={40} />
           <div>
             <div className="font-semibold">{def.name}</div>
             <div className="text-xs text-muted-foreground">{def.group} · {data.stats.perAlert[def.key] ?? 0} sent in 7 days{!def.wired && " · not sent automatically yet"}</div>
@@ -157,7 +196,14 @@ function AlertDetail({ def, data }: { def: AlertDef; data: AdminData }) {
       <div className="grid gap-4 p-4 xl:grid-cols-[1fr_260px]">
         <div className="space-y-3">
           <div className="flex gap-2">
-            <Seg value={role} onChange={(v) => setRole(v as AlertRole)} items={[["seller", "Seller version"], ["buyer", "Buyer version"]]} />
+            <div className="inline-flex rounded-lg bg-[#EEF0F4] p-[3px]">
+              {(["seller", "buyer"] as const).map((r) => (
+                <button key={r} type="button" onClick={() => setRole(r)}
+                  className={cn("h-[26px] rounded-md px-3 text-[12px] font-semibold", role === r ? (r === "seller" ? "bg-[#F6A823] text-[#0E162F]" : "bg-[#4338CA] text-white") : "text-[#5A6172]")}>
+                  {r === "seller" ? "Seller version" : "Buyer version"}
+                </button>
+              ))}
+            </div>
             <Seg value={lang} onChange={(v) => setLang(v as AlertLang)} items={[["en", "EN"], ["th", "TH"]]} />
           </div>
           {editing ? (
@@ -174,16 +220,16 @@ function AlertDetail({ def, data }: { def: AlertDef; data: AdminData }) {
             </div>
           ) : (
             <>
-              <div><div className="text-[11px] font-semibold text-muted-foreground">SUBJECT</div><div className="text-sm">{fill(t.subject, SAMPLE)}</div></div>
+              <div><div className="text-[11px] font-semibold text-muted-foreground">SUBJECT</div><div className="mt-1"><SubjectChips text={t.subject} /></div></div>
               <div className="text-[11px] font-semibold text-muted-foreground">PREVIEW</div>
               <div className="rounded-xl bg-muted/50 p-4">
                 <div className="mx-auto max-w-[560px] overflow-hidden rounded-[14px] border border-border bg-card">
                   <div className="flex items-center justify-between border-b border-border px-5 py-3">
-                    <span className="text-sm font-bold">PitchSnack</span>
+                    <img src={logoBlack} alt="PitchSnack" style={{ height: 18, width: "auto" }} />
                     <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wider", role === "seller" ? "bg-[#F6A823] text-[#0E162F]" : "bg-[#4338CA] text-primary-foreground")}>{role === "seller" ? "SELLER" : "BUYER"}</span>
                   </div>
                   <div className="space-y-3 p-5">
-                    <div className="h-11 w-11 rounded-xl" style={{ backgroundColor: def.color }} />
+                    <AlertTile k={def.key} role={role} size={44} />
                     <div className="text-xl font-semibold">{fill(t.title, SAMPLE)}</div>
                     <p className="text-sm leading-relaxed text-muted-foreground">{fill(t.body, SAMPLE)}</p>
                     <span className="inline-block rounded-[9px] bg-[#1E2A4A] px-5 py-3 text-sm font-semibold text-primary-foreground">{t.button}</span>
