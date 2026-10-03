@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuyerBrowseCard, BuyerCover, StatusPill, TypeIcon, type ListingStatus } from "@/components/marketplace/buyer-browse-card";
-import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing } from "@/lib/buyer-profile.functions";
+import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
@@ -406,9 +406,13 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const list = useServerFn(setBuyerListing);
   const listing = useMutation({
     mutationFn: (status: "live" | "paused") => list({ data: { status } }),
-    onSuccess: (_d, s) => { toast.success(s === "live" ? "Your profile is live in Browse investors." : "Listing paused. Your profile is hidden from Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); },
+    onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Your profile is live in Browse investors." : "Listing paused. Your profile is hidden from Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const wd = useServerFn(withdrawBuyerProfile);
+  const withdraw = useMutation({ mutationFn: () => wd(), onSuccess: () => { toast.success("Review withdrawn."); void qc.invalidateQueries({ queryKey: KEY }); }, onError: (e: Error) => toast.error(e.message) });
+  const appr = (p as any).approval_status as string | undefined;
+  const inReview = p.status !== "live" && appr === "in_review";
   const tone = typeTone(org.type);
   const { iv, inv, props } = useOwnCard(p, org);
   const title = typeName(org.type);
@@ -419,7 +423,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
-  const pillText = p.status === "live" ? "Live · in Browse investors" : p.status === "paused" ? "Paused · hidden from Browse investors" : "Draft · not published";
+  const pillText = p.status === "live" ? "Live · in Browse investors" : p.status === "paused" ? "Paused · hidden from Browse investors" : inReview ? "In review · waiting for Admin" : appr === "changes_requested" ? "Changes requested" : appr === "declined" ? "Not approved" : "Draft · not published";
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
@@ -445,16 +449,22 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
         {p.status === "live"
           ? <span>Live in Browse investors since {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas} NDA{org.ndas === 1 ? "" : "s"} · {org.lois} LOI{org.lois === 1 ? "" : "s"}</span>
+          : inReview
+            ? <span>Admin is reviewing your profile. It goes live in Browse investors once approved.</span>
+          : (appr === "changes_requested" || appr === "declined") && p.status === "draft"
+            ? <span><b className="font-semibold">Admin note:</b> {(p as any).decision_note || "—"}</span>
           : p.status === "paused"
             ? <span>Hidden from Browse investors since {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
             : !setupDone && iv
               ? <span>Finish setting up your profile to publish it.</span>
-              : <span>Everything is ready. Publish your profile so sellers can find you in Browse investors.</span>}
+              : <span>Everything is ready. Submit your profile for Admin review so sellers can find you in Browse investors.</span>}
         {p.status === "live"
           ? <Button variant="outline" size="sm" disabled={listing.isPending} onClick={() => listing.mutate("paused")}>Pause listing</Button>
+          : inReview
+            ? <Button variant="outline" size="sm" disabled={withdraw.isPending} onClick={() => withdraw.mutate()}>Withdraw</Button>
           : p.status === "draft" && !setupDone && iv
             ? <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => openWizard()}>Finish setup to publish</Button>
-            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>{p.status === "paused" ? "Resume listing" : "Publish to Browse investors"}</Button>}
+            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>{p.status === "paused" && appr === "approved" ? "Resume listing" : appr === "changes_requested" || appr === "declined" ? "Resubmit for approval" : "Submit for approval"}</Button>}
       </div>
     </div>
   );
