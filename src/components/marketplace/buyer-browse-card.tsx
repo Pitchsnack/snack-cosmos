@@ -77,16 +77,16 @@ export function StatusPill({ status, children }: { status: ListingStatus; childr
 
 const nbspDash = (s: string) => s.replace(/ – /g, "\u00A0– ");
 
-function Figure({ label, band, empty, shade, wideSpan }: { label: string; band: string | null | undefined; empty: string; shade?: boolean; wideSpan?: boolean }) {
+function Figure({ label, band, empty, shade, wideSpan, big }: { label: string; band: string | null | undefined; empty: string; shade?: boolean; wideSpan?: boolean; big?: boolean }) {
   const b = bandOf(band);
   const on = shade && !!b;
   return (
     <div className={cn("min-w-0 px-[11px] pb-[9px] pt-[10px]", on ? "bg-[#FFF4E0] dark:bg-amber-950/40" : "bg-[#FAFBFC] dark:bg-muted/40", wideSpan && "col-span-2 @[560px]:col-span-1")}>
-      <dt className={cn("truncate text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>{label}</dt>
+      <dt className={cn("truncate", big ? "text-[12px]" : "text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>{label}</dt>
       {b ? (
         <dd>
-          <div className="text-[13.5px] font-bold tabular-nums text-[#151A28] dark:text-foreground">{nbspDash(b.label)}</div>
-          <div className={cn("text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>({nbspDash(b.baht)})</div>
+          <div className={cn("tabular-nums text-[#151A28] dark:text-foreground", big ? "text-[15px] font-semibold" : "text-[13.5px] font-bold")}>{nbspDash(b.label)}</div>
+          <div className={cn(big ? "text-[12.5px]" : "text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>({nbspDash(b.baht)})</div>
         </dd>
       ) : (
         <dd className="text-[13.5px] font-medium text-[#9CA3AF]">{empty}</dd>
@@ -96,33 +96,86 @@ function Figure({ label, band, empty, shade, wideSpan }: { label: string; band: 
 }
 
 /** Ticket size · AUM · Min. target revenue · Geography. Wide (≥560px) puts the values in one row. */
-export function KeyFigures({ i, empty }: { i: CardInvestor; empty: string }) {
+export function KeyFigures({ i, empty, oneRow }: { i: CardInvestor; empty: string; oneRow?: boolean }) {
   const individual = (i.type ?? "") === INDIVIDUAL_TYPE || i.relation === "individual" || i.relation === "agent";
   const corp = isCorporateBuyer(i.type);
   const places = (i.geography ?? "").split(/\s*[,·]\s*/).filter(Boolean);
   return (
     <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
-      <div className={cn("grid grid-cols-2 gap-px bg-[#EEF0F3] dark:bg-border", individual ? "@[560px]:grid-cols-2" : "@[560px]:grid-cols-3")}>
-        <Figure label="Ticket size" band={i.ticketBand} empty={empty} />
-        {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} />}
-        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual} />
+      <div className={cn("grid gap-px bg-[#EEF0F3] dark:bg-border",
+        oneRow ? (individual ? "grid-cols-2" : "grid-cols-3") : cn("grid-cols-2", individual ? "@[560px]:grid-cols-2" : "@[560px]:grid-cols-3"))}>
+        <Figure label="Ticket size" band={i.ticketBand} empty={empty} big={oneRow} />
+        {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big={oneRow} />}
+        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big={oneRow} />
       </div>
-      <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
-        <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
-        <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.join(" · ") : empty}</dd>
-      </div>
+      {!oneRow && (
+        <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
+          <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
+          <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.join(" · ") : empty}</dd>
+        </div>
+      )}
     </dl>
   );
 }
 
+const shortPlace = (p: string) => p.replace(/\s+Sub-region$/i, "");
+const shortChip = (s: string) => s.replace(/\(above 51%\)/i, "(51%+)");
+
+export function NameAfterNdaPill() {
+  return (
+    <span className="inline-flex h-6 shrink-0 items-center gap-[5px] rounded-full border border-[#FCD9A0] bg-[#FFFBEB] px-2.5 text-[12.5px] font-medium text-[#B45309] dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+      <Lock className="h-[13px] w-[13px]" />Name after NDA
+    </span>
+  );
+}
+
+/** Panel version of the card: each fact once — used in the Split information panel. */
+function PanelCardBody({ i, empty, desc }: { i: CardInvestor; empty: string; desc: string | null }) {
+  const places = (i.geography ?? "").split(/\s*[,·]\s*/).filter(Boolean).map(shortPlace);
+  const chips = [...i.sectors, ...i.stages, ...i.dealTypes].map(shortChip);
+  const row = (label: string, value: React.ReactNode) => (
+    <div className="flex items-start gap-2 py-[5px] text-[13px]">
+      <span className="w-[88px] shrink-0 text-[#6B7280] dark:text-muted-foreground">{label}</span>
+      <div className="min-w-0 flex-1 text-[#374151] dark:text-foreground">{value}</div>
+    </div>
+  );
+  return (
+    <div className="p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="text-[18px] font-semibold leading-snug text-[#151A28] dark:text-foreground">{typeName(i.type)}</div>
+        <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}</div>
+      </div>
+      {(i.verified || i.proofOfFunds) && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Verified investor</Pill>}
+          {i.proofOfFunds && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Proof of funds</Pill>}
+        </div>
+      )}
+      {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}</p>}
+      <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow /></div>
+      <div className="mt-3">
+        {row("Invests in", places.length ? places.join(" · ") : <span className="text-[#9CA3AF]">{empty}</span>)}
+        {i.city && row("Based in", i.city)}
+        {chips.length > 0 && row("Focus", (
+          <div className="flex flex-wrap gap-1.5">
+            {chips.map((c, k) => <span key={c + k} className="rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-[9px] py-0.5 text-[12px] text-[#374151] dark:border-border dark:bg-muted dark:text-foreground">{c}</span>)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** The one public investor card sellers see in Browse investors. Only public fields reach it. */
-export function PublicInvestorCard({ i, className, onClick, selected, expanded, onToggleExpand, topRight, empty = "Not stated", status, footerRight, cardFooter }: {
+export function PublicInvestorCard({ i, className, onClick, selected, expanded, onToggleExpand, topRight, empty = "Not stated", status, footerRight, cardFooter, panel }: {
   i: CardInvestor; className?: string; onClick?: () => void; selected?: boolean;
   expanded?: boolean; onToggleExpand?: () => void; topRight?: React.ReactNode;
   /** "Not stated" for sellers, "Not added" on the buyer's own My Company. */
   empty?: string; status?: ListingStatus; footerRight?: React.ReactNode;
   /** Replace the default footer (e.g. the seller-style "Live since" footer). */
   cardFooter?: React.ReactNode;
+  /** Split information panel layout. */
+  panel?: boolean;
 }) {
   const [localOpen, setLocalOpen] = useState(false);
   const open = expanded ?? localOpen;
@@ -130,6 +183,18 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
   const title = typeName(i.type);
   const facts = [[i.city, i.country].filter(Boolean).join(", "), i.stages.join(", "), i.dealTypes.join(", ")].filter(Boolean).join(" · ");
   const desc = i.description || (empty === "Not added" ? "Not added" : null);
+  if (panel) {
+    return (
+      <div className={cn("overflow-hidden rounded-[14px] border border-border bg-card", className)}>
+        <BuyerCover type={i.type} className="h-[110px]">
+          <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
+            <EyeOff className="h-3 w-3" />Name hidden
+          </span>
+        </BuyerCover>
+        <PanelCardBody i={i} empty={empty} desc={desc} />
+      </div>
+    );
+  }
   return (
     <div
       role={onClick ? "button" : undefined}
