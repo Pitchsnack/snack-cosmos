@@ -12,7 +12,7 @@ import { SectorArt } from "@/components/hidden-profile/bits";
 import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
 import { useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
-import { BuyerProfileApprovals } from "@/components/reports/buyer-profile-approvals";
+import { ApprovalsSplit, listingItems, profileItems, verificationItems } from "@/components/reports/approvals-split";
 import { PaidReports, HistoryTab, Tile, isOverdue } from "@/components/reports/approvals-report-tabs";
 
 export const Route = createFileRoute("/_authenticated/approvals/")({
@@ -79,6 +79,7 @@ function ApprovalsPage() {
   const reportsWaiting = orders.filter((o) => o.status !== "delivered").length;
   const deliveredWeek = orders.filter((o) => o.delivered_at && Date.now() - +new Date(o.delivered_at) < 7 * 86_400_000).length;
   const listingsWaiting = (data?.listings ?? []).filter((x: any) => x.approval_status === "in_review").length;
+  const profilesWaiting = (((data as any)?.profiles ?? []) as any[]).filter((p: any) => p.approval_status === "in_review").length;
   const buyersWaiting = (data?.buyers ?? []).filter((b: any) => b.status === "pending").length;
 
   return (
