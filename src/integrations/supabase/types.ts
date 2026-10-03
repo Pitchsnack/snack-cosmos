@@ -106,6 +106,7 @@ export type Database = {
       buyer_profiles: {
         Row: {
           address: string | null
+          approval_status: string
           aum_exact: string | null
           aum_value: number | null
           buyer_relation: string | null
@@ -114,6 +115,9 @@ export type Database = {
           country: string | null
           created_at: string
           deal_types: string[]
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
           decision_process: string | null
           description: string | null
           geography: string | null
@@ -133,6 +137,7 @@ export type Database = {
           show_name: boolean
           stages: string[]
           status: string
+          submitted_at: string | null
           target_size: string | null
           ticket_exact: string | null
           ticket_max: number | null
@@ -143,6 +148,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          approval_status?: string
           aum_exact?: string | null
           aum_value?: number | null
           buyer_relation?: string | null
@@ -151,6 +157,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           deal_types?: string[]
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
           decision_process?: string | null
           description?: string | null
           geography?: string | null
@@ -170,6 +179,7 @@ export type Database = {
           show_name?: boolean
           stages?: string[]
           status?: string
+          submitted_at?: string | null
           target_size?: string | null
           ticket_exact?: string | null
           ticket_max?: number | null
@@ -180,6 +190,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          approval_status?: string
           aum_exact?: string | null
           aum_value?: number | null
           buyer_relation?: string | null
@@ -188,6 +199,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           deal_types?: string[]
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
           decision_process?: string | null
           description?: string | null
           geography?: string | null
@@ -207,6 +221,7 @@ export type Database = {
           show_name?: boolean
           stages?: string[]
           status?: string
+          submitted_at?: string | null
           target_size?: string | null
           ticket_exact?: string | null
           ticket_max?: number | null
