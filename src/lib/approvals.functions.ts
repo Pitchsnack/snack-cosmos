@@ -383,6 +383,36 @@ export const decideBuyer = createServerFn({ method: "POST" })
     return bv;
   });
 
+// ---------------------------------------------------------------- buyer investor profiles (publish to Browse investors)
+
+export const decideBuyerProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), action: z.enum(["approve", "request_changes", "decline"]), note: z.string().max(2000).optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    if (data.action !== "approve" && !data.note?.trim()) throw new Error("Add a note for the buyer");
+    const sb = await admin();
+    const { data: p } = await sb.from("buyer_profiles").select("id, user_id, approval_status, live_since").eq("id", data.id).maybeSingle();
+    if (!p) throw new Error("Profile not found");
+    if (p.approval_status !== "in_review") throw new Error("This profile is no longer waiting for review");
+    const now = new Date().toISOString();
+    const approval_status = { approve: "approved", request_changes: "changes_requested", decline: "declined" }[data.action];
+    const patch: Record<string, unknown> = { approval_status, decided_at: now, decided_by: context.userId, decision_note: data.note ?? null, updated_at: now };
+    if (data.action === "approve") { patch.status = "live"; if (!p.live_since) patch.live_since = now; }
+    const { error } = await sb.from("buyer_profiles").update(patch).eq("id", p.id);
+    if (error) throw new Error(error.message);
+    await logEvent({ item_type: "buyer_profile", item_id: p.id, subject_user_id: p.user_id, action: data.action === "approve" ? "approve" : data.action, actor_id: context.userId, note: data.note ?? null });
+    const msg = {
+      approve: ["Your investor profile is live", "Sellers can now find you in Browse investors."],
+      request_changes: ["Changes requested on your investor profile", data.note ?? ""],
+      decline: ["Investor profile not approved", data.note ?? ""],
+    }[data.action];
+    await notify(p.user_id, null, msg[0], msg[1]);
+    return { ok: true };
+  });
+
+
+
 
 // ---------------------------------------------------------------- admin edits & image library
 
