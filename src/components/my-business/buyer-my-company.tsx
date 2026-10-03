@@ -423,7 +423,6 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
-  const pillText = p.status === "live" ? "Live · in Browse investors" : p.status === "paused" ? "Paused · hidden from Browse investors" : inReview ? "In review · waiting for Admin" : appr === "changes_requested" ? "Changes requested" : appr === "declined" ? "Not approved" : "Draft · not published";
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
@@ -432,7 +431,6 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           editLabel="Edit public view" onEdit={() => (iv ? openWizard("desc") : onEdit("public"))} pill={pill} />
         {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
-          <div><StatusPill status={p.status as ListingStatus}>{pillText}</StatusPill></div>
           <BuyerBrowseCard {...props} expanded cardFooter={
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
               <span className="truncate">{title} · {p.ref_no}</span><span className="shrink-0">{since}</span>
