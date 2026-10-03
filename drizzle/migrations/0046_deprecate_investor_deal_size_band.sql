@@ -1,0 +1,1 @@
+COMMENT ON COLUMN public.investors.deal_size_band IS 'DEPRECATED: Average deal size removed; ticket_band is the average investment per deal.';

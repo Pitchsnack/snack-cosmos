@@ -282,7 +282,7 @@ function useOwnCard(p: BuyerProfile, org: BuyerOrg) {
     props: {
       b: pub as PublicBuyer, empty: "Not added", status: p.status as ListingStatus,
       relation: (inv.data?.buyer.relation ?? null) as BuyerRelation | null,
-      bands: { aum: iv?.aum_band, ticket: iv?.ticket_band, rev: iv?.revenue_min_band, deal: iv?.deal_size_band },
+      bands: { aum: iv?.aum_band, ticket: iv?.ticket_band, rev: iv?.revenue_min_band },
     },
   };
 }
@@ -652,12 +652,11 @@ function SplitPrivate() {
   return inv.data ? <BuyerPrivatePanel d={inv.data} /> : <Skeleton className="h-[520px]" />;
 }
 
-/** Avg deal size after Ticket size, and Min. target revenue (revenue minimum band). */
+/** Ticket size and Min. target revenue (revenue minimum band). */
 function MandateBands() {
   const iv = useBuyerInvestor().data?.investor;
   return <>
     <R label="Ticket size" value={bandText(iv?.ticket_band)} />
-    <R label="Avg deal size" value={bandText(iv?.deal_size_band)} />
     <R label="Min. target revenue" value={bandText(iv?.revenue_min_band)} />
   </>;
 }

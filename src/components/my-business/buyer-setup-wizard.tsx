@@ -14,7 +14,7 @@ import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enr
 import { BUYER_INVESTOR_KEY, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
-  DEAL_BANDS, TICKET_BANDS, WIZARD_TYPES, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
+  TICKET_BANDS, WIZARD_TYPES, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
   type Band,
 } from "@/lib/investor-bands";
 import { isCorporateBuyer } from "@/lib/investor-browse";
@@ -22,7 +22,7 @@ import { stepsFor, wizardProgress, type BuyerRelation, type QId } from "@/lib/bu
 
 type A = {
   role: BuyerRelation | null; type: string; country: string; city: string; name: string; year: string; reg: string; web: string;
-  aum: string; ticket: string; deal: string; rev: string; deals: string[]; stages: string[]; geo: string[]; sectors: string[]; desc: string;
+  aum: string; ticket: string; rev: string; deals: string[]; stages: string[]; geo: string[]; sectors: string[]; desc: string;
 };
 
 const ROLES: { value: BuyerRelation; label: string; hint: string }[] = [
@@ -43,7 +43,7 @@ function fromData(d: Data): A {
   return {
     role: d.buyer.relation, type: inv.investor_type ?? "", country: inv.country ?? "Thailand", city: inv.city ?? "",
     name: inv.investor_name ?? "", year: inv.year_founded?.toString() ?? "", reg: inv.registration_no ?? "", web: inv.website_url ?? "",
-    aum: inv.aum_band ?? "", ticket: inv.ticket_band ?? "", deal: inv.deal_size_band ?? "", rev: inv.revenue_min_band ?? "",
+    aum: inv.aum_band ?? "", ticket: inv.ticket_band ?? "", rev: inv.revenue_min_band ?? "",
     deals: d.buyer.deal_types, stages: inv.preferred_stages, geo: inv.investment_focus_raw, sectors: inv.preferred_industries, desc: d.buyer.description,
   };
 }
@@ -117,6 +117,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
   const steps = useMemo(() => stepsFor(a.role), [a.role]);
   const [cur, setCur] = useState<QId>(() => {
+    if (startAt === "deal") return "rev";
     if (startAt && steps.some((s) => s.id === startAt)) return startAt as QId;
     return wizardProgress(data.buyer.relation, data.investor.wizard?.answered).first as QId;
   });
@@ -167,7 +168,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     web: isValidUrl(a.web) ? null : "Enter a valid website address, e.g. www.yourfirm.com",
     aum: a.aum ? null : "Choose one to continue.",
     ticket: a.ticket ? null : "Choose one to continue.",
-    deal: a.deal ? null : "Choose one to continue.",
     rev: a.rev ? null : "Choose one, or click Skip.",
     deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : "Pick at least one deal type.",
     stages: !stagesShown || a.stages.length ? null : "Pick at least one stage.",
@@ -175,7 +175,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     desc: descErr || (leaks.length ? "leak" : null),
   };
   const fieldsOf: Record<QId, string[]> = {
-    role: ["role"], type: ["type"], loc: ["country", "city"], name: ["name", "year", "reg"], web: ["web"], aum: ["aum"], ticket: ["ticket"], deal: ["deal"],
+    role: ["role"], type: ["type"], loc: ["country", "city"], name: ["name", "year", "reg"], web: ["web"], aum: ["aum"], ticket: ["ticket"],
     rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], desc: ["desc"], review: [],
   };
   const qValid = (id: QId) => fieldsOf[id].every((k) => !errors[k]);
@@ -374,9 +374,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       body: <><Choice list={bandList(AUM_BANDS)} value={a.aum} onPick={(v) => autoPick("aum", { aum: v }, { aum_band: v })} /><Err m={forced.aum && errors.aum} /></> },
     ticket: { req: true, t: "What is your average investment per deal in $USD?", h: "Sellers see this range on your card and filter Browse investors by it.",
       body: <><Choice list={bandList(TICKET_BANDS)} value={a.ticket} onPick={(v) => autoPick("ticket", { ticket: v }, { ticket_band: v })} /><Err m={forced.ticket && errors.ticket} /></> },
-    deal: { req: true, t: "What is your average deal size in $USD?", h: "The total value of a typical deal you do, such as the price of the whole company, not just your share. Sellers see this range on your card.",
-      body: <><Choice list={bandList(DEAL_BANDS)} value={a.deal} onPick={(v) => autoPick("deal", { deal: v }, { deal_size_band: v })} /><Err m={forced.deal && errors.deal} />
-        {a.ticket && <p className="mt-3 flex gap-2 rounded-[12px] border border-[#E9EBF0] bg-[#F6F7F9] px-3.5 py-3 text-[13px] text-[#434A5C] dark:border-border dark:bg-muted/40 dark:text-foreground"><Info className="mt-0.5 h-4 w-4 flex-none" /><span>Your average investment per deal is <b>{bandText(a.ticket)}</b>. For a minority or majority stake, the whole deal is usually bigger.</span></p>}</> },
     rev: { req: false, t: <>Minimum target company <i>revenue</i> (USD)</>, h: "Enter the minimum annual revenue a company must generate for you to consider it as an acquisition target.",
       body: <><Choice list={bandList(REV_BANDS)} value={a.rev} onPick={(v) => autoPick("rev", { rev: v }, { revenue_min_band: v })} /><Err m={forced.rev && errors.rev} /></> },
     deals: { req: true, t: "What kind of deals do you do?", h: "Pick all that apply. Sellers see these on your card.",
@@ -444,7 +441,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               refNo: data.buyer.ref_no, codeName: tName, name: null, type: tName, city: a.city || null, country: a.country || null,
               description: a.desc.trim() || "Your description appears here.", sectors: a.sectors, stages: a.stages, dealTypes: a.deals,
               geography: a.geo.join(", ") || null, verified: false, proofOfFunds: false, ticketLabel: null, aumLabel: null, revLabel: null,
-              aumBand: a.aum || null, ticketBand: a.ticket || null, revBand: a.rev || null, dealBand: a.deal || null, relation: a.role,
+              aumBand: a.aum || null, ticketBand: a.ticket || null, revBand: a.rev || null, relation: a.role,
             }} />
           </div>
         </div>
@@ -537,7 +534,6 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
     ["Fund & ticket", [
       ...(shown.has("aum") ? [[corp ? "Group revenue" : "AUM", bandText(a.aum), "aum", "req", errors.aum, "Range"] as Row] : []),
       ["Average investment", bandText(a.ticket), "ticket", "req", errors.ticket, "Range"],
-      ["Average deal size", bandText(a.deal), "deal", "req", errors.deal, "Range"],
     ]],
     ["Buying Requirement", [
       ["Min. target revenue", bandText(a.rev), "rev", "opt", null],
@@ -650,7 +646,7 @@ function Complete({ header, enrich, answered, onBack, onSaved }: {
   if (!data) return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-[#6B7280]" /></div>;
   const ans: SourceTag = "Your answer";
   const sources: Record<string, SourceTag> = {
-    investor_name: ans, investor_type: ans, year_founded: ans, registration_no: ans, aum_band: ans, ticket_band: ans, deal_size_band: ans,
+    investor_name: ans, investor_type: ans, year_founded: ans, registration_no: ans, aum_band: ans, ticket_band: ans,
     revenue_min_band: ans, deal_types: ans, geography: ans, preferred_industries: ans, description: ans,
   };
   if (!answered.rev) delete sources.revenue_min_band;

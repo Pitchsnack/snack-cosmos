@@ -1,6 +1,6 @@
 /** Buyer investor-profile setup wizard: question order, visibility by role, progress. */
 export type BuyerRelation = "individual" | "corporate" | "agent";
-export type QId = "role" | "type" | "loc" | "name" | "web" | "aum" | "ticket" | "deal" | "rev" | "deals" | "sectors" | "desc" | "review";
+export type QId = "role" | "type" | "loc" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "desc" | "review";
 
 export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "role", sec: "About you" },
@@ -10,7 +10,6 @@ export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "web", sec: "About the firm" },
   { id: "aum", sec: "Fund & ticket" },
   { id: "ticket", sec: "Fund & ticket" },
-  { id: "deal", sec: "Fund & ticket" },
   { id: "rev", sec: "Buying Requirement" },
   { id: "deals", sec: "Buying Requirement" },
   { id: "sectors", sec: "Buying Requirement" },

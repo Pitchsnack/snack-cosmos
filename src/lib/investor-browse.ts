@@ -24,7 +24,6 @@ export type PublicInvestor = {
   aumBand: string | null;
   ticketBand: string | null;
   revBand: string | null;
-  dealBand: string | null;
   relation: "individual" | "corporate" | "agent" | null;
   aumLabel: string | null;
   ticketLabel: string | null;

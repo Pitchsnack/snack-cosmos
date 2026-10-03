@@ -173,13 +173,11 @@ export function InvestorDetailPanel({
   if (i.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${i.year_founded}` });
   if (i.investor_type) metaItems.push({ icon: Building2, label: i.investor_type });
   if (i.country) metaItems.push({ icon: MapPin, label: i.country });
-  const ib = i as typeof i & { aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; deal_size_band?: string | null; aum_exact_usd?: number | null };
+  const ib = i as typeof i & { aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; aum_exact_usd?: number | null };
   const aumTxt = bandText(ib.aum_band) ?? i.aum;
   if (aumTxt) metaItems.push({ icon: Coins, label: `AUM ${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` });
   const tktTxt = bandText(ib.ticket_band) ?? ticket;
   if (tktTxt) metaItems.push({ icon: Layers, label: `Ticket ${tktTxt}` });
-  const dealTxt = bandText(ib.deal_size_band);
-  if (dealTxt) metaItems.push({ icon: Layers, label: `Avg deal size ${dealTxt}` });
   const revTxt = bandText(ib.revenue_min_band);
   if (revTxt) metaItems.push({ icon: Coins, label: `Min. target revenue ${revTxt}` });
 
