@@ -106,7 +106,7 @@ export const setBuyerListing = createServerFn({ method: "POST" })
       if ((p as any).approval_status === "in_review") return { ok: true, submitted: true };
       const { error } = await sb.from("buyer_profiles").update({ approval_status: "in_review", submitted_at: now, decision_note: null, updated_at: now }).eq("user_id", context.userId);
       if (error) throw new Error(error.message);
-      await sb.from("approval_events").insert({ item_type: "buyer_profile", item_id: (p as any).id, subject_user_id: context.userId, action: (p as any).approval_status === "draft" ? "submit" : "resubmit", actor_id: context.userId });
+      await sb.from("approval_events").insert({ item_type: "buyer_profile", item_id: context.userId, subject_user_id: context.userId, action: (p as any).approval_status === "draft" ? "submit" : "resubmit", actor_id: context.userId });
       return { ok: true, submitted: true };
     }
     const patch: Record<string, unknown> = { status: data.status, updated_at: now };
@@ -120,10 +120,10 @@ export const withdrawBuyerProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = await admin();
-    const { data: p } = await sb.from("buyer_profiles").select("id, approval_status").eq("user_id", context.userId).maybeSingle();
+    const { data: p } = await sb.from("buyer_profiles").select("user_id, approval_status").eq("user_id", context.userId).maybeSingle();
     if (p?.approval_status !== "in_review") return { ok: true };
-    await sb.from("buyer_profiles").update({ approval_status: "draft", submitted_at: null }).eq("id", p.id);
-    await sb.from("approval_events").insert({ item_type: "buyer_profile", item_id: p.id, subject_user_id: context.userId, action: "withdraw", actor_id: context.userId });
+    await sb.from("buyer_profiles").update({ approval_status: "draft", submitted_at: null }).eq("user_id", p.user_id);
+    await sb.from("approval_events").insert({ item_type: "buyer_profile", item_id: p.user_id, subject_user_id: context.userId, action: "withdraw", actor_id: context.userId });
     return { ok: true };
   });
 
