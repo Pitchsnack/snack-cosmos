@@ -12,7 +12,7 @@ import { SectorArt } from "@/components/hidden-profile/bits";
 import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
 import { useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
-import { BuyerProfileApprovals } from "@/components/reports/buyer-profile-approvals";
+import { ApprovalsSplit, listingItems, profileItems, verificationItems } from "@/components/reports/approvals-split";
 import { PaidReports, HistoryTab, Tile, isOverdue } from "@/components/reports/approvals-report-tabs";
 
 export const Route = createFileRoute("/_authenticated/approvals/")({
@@ -79,6 +79,7 @@ function ApprovalsPage() {
   const reportsWaiting = orders.filter((o) => o.status !== "delivered").length;
   const deliveredWeek = orders.filter((o) => o.delivered_at && Date.now() - +new Date(o.delivered_at) < 7 * 86_400_000).length;
   const listingsWaiting = (data?.listings ?? []).filter((x: any) => x.approval_status === "in_review").length;
+  const profilesWaiting = (((data as any)?.profiles ?? []) as any[]).filter((p: any) => p.approval_status === "in_review").length;
   const buyersWaiting = (data?.buyers ?? []).filter((b: any) => b.status === "pending").length;
 
   return (
@@ -87,98 +88,42 @@ function ApprovalsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Approvals &amp; alerts</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Approvals</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} listings · {buyersWaiting} buyers · <b className="text-foreground">{reportsWaiting} paid reports</b> · {overdueOrders.length} overdue</p>
+          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} seller listings · {buyersWaiting + profilesWaiting} buyers · <b className="text-foreground">{reportsWaiting} paid reports</b> · {overdueOrders.length} overdue</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => toast.info("Alert settings are coming soon.")}>Alert settings</Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile label="Listings to review" value={listingsWaiting} sub={`oldest ${oldest} day${oldest === 1 ? "" : "s"}`} />
-        <Tile label="Buyer verifications" value={buyersWaiting} sub="pending" />
-        <Tile label="SELLERS TO AUTHORISE" value={reportsWaiting} sub={overdueOrders.length ? `${overdueOrders.length} overdue` : "asked, can't see their report yet"} amber />
-        <Tile label="AUTHORISED THIS WEEK" value={deliveredWeek} sub="sellers who can see their report" green />
-      </div>
-
-      <div className="flex gap-1 border-b border-border">
-        {([["listings", "Listings", data?.listings.length ?? 0], ["buyers", "Buyers", (data?.buyers.length ?? 0) + (((data as any)?.profiles ?? []) as any[]).filter((p: any) => p.approval_status === "in_review").length], ["reports", "Paid reports", reportsWaiting], ["history", "History", null]] as const).map(([k, label, n]) => (
-          <button key={k} type="button" onClick={() => navigate({ search: { tab: k } })}
-            className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold", tab === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
-            {label}{n !== null && <span className={cn("rounded-full px-1.5 text-[11px]", n > 0 ? "bg-[#FEE2E2] text-[#B91C1C]" : "bg-muted text-foreground")}>{n}</span>}
+        {([
+          ["listings", "#F6A823", "Seller listings", listingsWaiting, `oldest ${oldest} day${oldest === 1 ? "" : "s"}`],
+          ["buyers", "#4338CA", "Buyer profiles", profilesWaiting, "to publish"],
+          ["buyers", "#6D28D9", "Buyer verifications", buyersWaiting, "pending"],
+          ["reports", "#9CA3AF", "Paid reports", reportsWaiting, overdueOrders.length ? `${overdueOrders.length} overdue` : "seller asked"],
+        ] as const).map(([k, c, label, n, sub]) => (
+          <button key={label} type="button" onClick={() => navigate({ search: { tab: k } })}
+            className="rounded-xl border border-border bg-card px-3.5 py-3 text-left transition-colors hover:border-[#CBD2DC]">
+            <small className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground"><i className="inline-block h-2 w-2 rounded-full" style={{ background: c }} />{label}</small>
+            <b className="mt-0.5 block text-[22px] font-semibold">{n}</b>
+            <span className="text-[11.5px] text-muted-foreground">{sub}</span>
           </button>
         ))}
       </div>
 
-      {(tab === "listings" || tab === "buyers") && (
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-md bg-muted/60 px-3">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search code name, company, reference…" className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="waiting">In review</SelectItem>
-              {tab === "listings" && <SelectItem value="edits">Live · edits pending</SelectItem>}
-              {tab === "listings" && <SelectItem value="changes">Changes requested</SelectItem>}
-            </SelectContent>
-          </Select>
-          {tab === "listings" && (
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">All types</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="Startup">Startup</SelectItem></SelectContent>
-            </Select>
-          )}
-          <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="oldest">Oldest first</SelectItem><SelectItem value="newest">Newest first</SelectItem><SelectItem value="mine">Assigned to me</SelectItem></SelectContent>
-          </Select>
-        </div>
-      )}
+      <div className="flex gap-1 border-b border-border">
+        {([["listings", "Sellers", data?.listings.length ?? 0], ["buyers", "Buyers", (data?.buyers.length ?? 0) + profilesWaiting], ["reports", "Paid reports", reportsWaiting], ["history", "History", null]] as const).map(([k, label, n]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => navigate({ search: { tab: k } })}
+            className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold", tab === k ? "border-[#F6A823] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+            {label}{n !== null && <span className={cn("rounded-full px-[7px] py-px text-[10.5px] font-bold", tab === k ? "bg-[#FEF3DE] text-[#8A4B06]" : "bg-muted text-muted-foreground")}>{n}</span>}
+          </button>
+        ))}
+      </div>
 
       {error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : tab === "listings" ? (
-        <>
-          <Table head={["Listing", "Type", "Submitted", "Status", "Version", "Assigned", ""]}>
-            {listings.length === 0 && <EmptyRow cols={7} text="Nothing waiting." />}
-            {listings.map((l) => (
-              <tr key={l.id} className="border-t border-border">
-                <td className="p-3">
-                  <div className="flex items-center gap-2.5">
-                    <SectorArt art={l.cover_art ?? l.startups?.sector} sector={l.startups?.sector} imageId={l.public_image_id} className="h-9 w-12 shrink-0 rounded-md" />
-                    <div className="min-w-0"><div className="font-semibold">{l.startups?.startup_name ?? l.code_name}</div><div className="truncate text-xs text-muted-foreground">{l.ref_no} · {data?.emails?.[l.submitted_by] || names[l.submitted_by] || "—"}</div></div>
-                  </div>
-                </td>
-                <td className="p-3">{typeOf(l)}</td>
-                <td className="p-3"><div>{fmt(l.submitted_at)}</div><div className={cn("text-xs", days(l.submitted_at) >= 1 ? "text-amber-700" : "text-muted-foreground")}>{ago(l.submitted_at)}</div></td>
-                <td className="p-3"><QueueChip l={l} /></td>
-                <td className="p-3">v{l.version}</td>
-                <td className="p-3">{l.assignee_id ? names[l.assignee_id] ?? "—" : <Button size="sm" variant="ghost" onClick={() => assign.mutate({ kind: "listing", id: l.id })}>Assign to me</Button>}</td>
-                <td className="p-3 text-right"><Button size="sm" asChild><Link to="/approvals/listings/$id" params={{ id: l.id }}>Review</Link></Button></td>
-              </tr>
-            ))}
-          </Table>
-          <p className="text-sm text-muted-foreground">Waiting on sellers ({waitingOnSellers})</p>
-        </>
+        <ApprovalsSplit key="sellers" empty="No seller listings waiting."
+          groups={[["Waiting for review", listingItems(((data?.listings ?? []) as any[]).filter((x) => x.approval_status === "in_review"), names, (data?.emails ?? {}) as Record<string, string>)]]} />
       ) : tab === "buyers" ? (
-        <div className="space-y-6">
-        <BuyerProfileApprovals rows={((data as any)?.profiles ?? []) as any[]} names={names} />
-        <h2 className="text-sm font-semibold">Buyer verifications</h2>
-        <Table head={["Buyer", "Type", "Company registration", "Work email", "LinkedIn", "Submitted", "Status", ""]}>
-          {buyers.length === 0 && <EmptyRow cols={8} text="No buyers waiting." />}
-          {buyers.map((b) => (
-            <tr key={b.id} className="border-t border-border">
-              <td className="p-3"><div className="font-semibold">{names[b.user_id] ?? b.work_email}</div><div className="text-xs text-muted-foreground">{b.company_name}</div></td>
-              <td className="p-3">{b.buyer_type ?? "—"}</td>
-              <td className="p-3">{b.registration_no ?? "—"}</td>
-              <td className="p-3">{b.work_email}<div className={cn("text-xs", b.email_domain_match === false ? "text-amber-700" : "text-emerald-700")}>{b.email_domain_match == null ? "" : b.email_domain_match ? "Matches" : "Domain differs"}</div></td>
-              <td className="p-3">{b.linkedin ? "Provided" : "—"}</td>
-              <td className="p-3">{fmt(b.submitted_at)}<div className="text-xs text-muted-foreground">{ago(b.submitted_at)}</div></td>
-              <td className="p-3"><StatusPill s={b.status === "more_info" ? "More info needed" : "Pending"} /></td>
-              <td className="p-3 text-right"><Link to="/approvals/buyers/$id" params={{ id: b.id }} className="font-semibold text-primary hover:underline">Review →</Link></td>
-            </tr>
-          ))}
-        </Table>
-        </div>
+        <ApprovalsSplit key="buyers" empty="No buyers waiting."
+          groups={[["Profiles to publish", profileItems(((data as any)?.profiles ?? []) as any[], names)], ["Buyer verifications", verificationItems(((data?.buyers ?? []) as any[]).filter((b) => b.status === "pending"), names)]]} />
       ) : tab === "reports" ? (
         <PaidReports orders={orders} />
       ) : (

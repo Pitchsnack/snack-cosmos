@@ -164,20 +164,36 @@ export const listApprovals = createServerFn({ method: "GET" })
     // Investor profiles waiting to go live in Browse investors (firm data from the linked investors row).
     // buyer_profiles is keyed by user_id (no id column) — user_id is the profile identifier everywhere.
     const { data: profRows } = await sb.from("buyer_profiles")
-      .select("user_id, ref_no, investor_id, approval_status, submitted_at, description, buyer_relation")
+      .select("user_id, ref_no, investor_id, approval_status, submitted_at, description, buyer_relation, deal_types, pof_verified_at")
       .in("approval_status", ["in_review", "changes_requested"]);
     const invIds = (profRows ?? []).map((r: any) => r.investor_id).filter(Boolean);
-    const { data: invs } = invIds.length ? await sb.from("investors").select("id, investor_name, investor_type").in("id", invIds) : { data: [] };
+    const { data: invs } = invIds.length
+      ? await sb.from("investors").select("id, investor_name, investor_type, website_url, registration_no, aum_band, ticket_band, revenue_min_band, preferred_industries, preferred_stages, investment_focus").in("id", invIds)
+      : { data: [] };
     const invById = new Map((invs ?? []).map((i: any) => [i.id, i]));
-    Object.assign(names, await userNames(sb, (profRows ?? []).map((r: any) => r.user_id)));
+    const profUids = (profRows ?? []).map((r: any) => r.user_id);
+    Object.assign(names, await userNames(sb, profUids));
+    const { data: profBv } = profUids.length ? await sb.from("buyer_verifications").select("user_id, status, decided_at").in("user_id", profUids) : { data: [] };
+    const bvByUser = new Map((profBv ?? []).map((b: any) => [b.user_id, b]));
     const profiles = (profRows ?? []).map((r: any) => {
       const inv: any = invById.get(r.investor_id);
-      const row = { ...r, id: r.user_id, investor_name: inv?.investor_name ?? null, investor_type: inv?.investor_type ?? null };
+      const row = { ...r, id: r.user_id, investor_name: inv?.investor_name ?? null, investor_type: inv?.investor_type ?? null, investor: inv ?? null, verification: bvByUser.get(r.user_id) ?? null };
       buyerInfo[row.id] ??= { id: row.id, user_id: r.user_id, company_name: row.investor_name ? `${row.investor_name} · investor profile` : "Investor profile", buyer_type: row.investor_type };
       return row;
     });
+    // Latest submitted snapshot per listing powers the split-view review panel.
+    const hpIds = (listings ?? []).map((l: any) => l.id);
+    const snaps: Record<string, any> = {};
+    if (hpIds.length) {
+      const { data: subs } = await sb.from("listing_submissions").select("hidden_profile_id, version, snapshot").in("hidden_profile_id", hpIds).order("version", { ascending: false });
+      for (const s of subs ?? []) {
+        const cur = snaps[s.hidden_profile_id];
+        if (!cur) snaps[s.hidden_profile_id] = { ...s.snapshot, version: s.version };
+        else if (!cur.prev) cur.prev = s.snapshot;
+      }
+    }
     // "Live · edits pending" is derived from the approved snapshot, never the legacy status column.
-    const listingRows = (listings ?? []).map(({ live, ...l }: any) => ({ ...l, has_live: !!live }));
+    const listingRows = (listings ?? []).map(({ live, ...l }: any) => ({ ...l, has_live: !!live, snapshot: snaps[l.id] ?? null }));
     return { listings: listingRows, buyers: buyers ?? [], profiles, history: history ?? [], names, emails, me: context.userId, startupInfo, buyerInfo };
   });
 
