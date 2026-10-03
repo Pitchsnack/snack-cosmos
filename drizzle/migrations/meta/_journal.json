@@ -330,6 +330,13 @@
       "when": 1791015727544,
       "tag": "0046_deprecate_investor_deal_size_band",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791036044156,
+      "tag": "0047_buyer_profile_approval",
+      "breakpoints": true
     }
   ]
 }
