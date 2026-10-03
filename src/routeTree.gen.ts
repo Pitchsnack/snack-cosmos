@@ -33,6 +33,7 @@ import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
 import { Route as AuthenticatedIndustryMapRouteImport } from './routes/_authenticated/industry-map'
 import { Route as AuthenticatedEntityControlRouteImport } from './routes/_authenticated/entity-control'
+import { Route as AuthenticatedEmailAlertsRouteImport } from './routes/_authenticated/email-alerts'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
@@ -57,6 +58,7 @@ import { Route as AuthenticatedSettingsDefaultIntakeRouteImport } from './routes
 import { Route as AuthenticatedMyStartupsNewRouteImport } from './routes/_authenticated/my-startups.new'
 import { Route as AuthenticatedMyStartupsIdRouteImport } from './routes/_authenticated/my-startups.$id'
 import { Route as AuthenticatedMarketplacePipelineRouteImport } from './routes/_authenticated/marketplace.pipeline'
+import { Route as AuthenticatedMarketplaceNotificationsRouteImport } from './routes/_authenticated/marketplace.notifications'
 import { Route as AuthenticatedMarketplaceMyContactRouteImport } from './routes/_authenticated/marketplace.my-contact'
 import { Route as AuthenticatedMarketplaceMyCompanyRouteImport } from './routes/_authenticated/marketplace.my-company'
 import { Route as AuthenticatedMarketplaceMessagesRouteImport } from './routes/_authenticated/marketplace.messages'
@@ -75,6 +77,7 @@ import { Route as AuthenticatedMyStartupsIdIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedMarketplaceMyCompanyIndexRouteImport } from './routes/_authenticated/marketplace.my-company.index'
 import { Route as AuthenticatedInvestorsIdIndexRouteImport } from './routes/_authenticated/investors.$id.index'
 import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as BuyerCompanyIdSetupRouteImport } from './routes/buyer.company.$id.setup'
 import { Route as AuthenticatedStartupsIdInvestorsRouteImport } from './routes/_authenticated/startups.$id.investors'
 import { Route as AuthenticatedStartupsIdFinancialsRouteImport } from './routes/_authenticated/startups.$id.financials'
@@ -219,6 +222,12 @@ const AuthenticatedEntityControlRoute =
     path: '/entity-control',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedEmailAlertsRoute =
+  AuthenticatedEmailAlertsRouteImport.update({
+    id: '/email-alerts',
+    path: '/email-alerts',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
   id: '/deals',
   path: '/deals',
@@ -356,6 +365,12 @@ const AuthenticatedMarketplacePipelineRoute =
     path: '/pipeline',
     getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
+const AuthenticatedMarketplaceNotificationsRoute =
+  AuthenticatedMarketplaceNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
 const AuthenticatedMarketplaceMyContactRoute =
   AuthenticatedMarketplaceMyContactRouteImport.update({
     id: '/my-contact',
@@ -462,6 +477,12 @@ const AuthenticatedDealsIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDealsIdRoute,
   } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const BuyerCompanyIdSetupRoute = BuyerCompanyIdSetupRouteImport.update({
   id: '/buyer/company/$id/setup',
   path: '/buyer/company/$id/setup',
@@ -553,6 +574,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/email-alerts': typeof AuthenticatedEmailAlertsRoute
   '/entity-control': typeof AuthenticatedEntityControlRoute
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -584,6 +606,7 @@ export interface FileRoutesByFullPath {
   '/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
   '/marketplace/my-company': typeof AuthenticatedMarketplaceMyCompanyRouteWithChildren
   '/marketplace/my-contact': typeof AuthenticatedMarketplaceMyContactRoute
+  '/marketplace/notifications': typeof AuthenticatedMarketplaceNotificationsRoute
   '/marketplace/pipeline': typeof AuthenticatedMarketplacePipelineRoute
   '/my-startups/$id': typeof AuthenticatedMyStartupsIdRouteWithChildren
   '/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
@@ -614,6 +637,7 @@ export interface FileRoutesByFullPath {
   '/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
   '/marketplace/my-company/': typeof AuthenticatedMarketplaceMyCompanyIndexRoute
@@ -630,6 +654,7 @@ export interface FileRoutesByTo {
   '/audit': typeof AuthenticatedAuditRoute
   '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/email-alerts': typeof AuthenticatedEmailAlertsRoute
   '/entity-control': typeof AuthenticatedEntityControlRoute
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -655,6 +680,7 @@ export interface FileRoutesByTo {
   '/marketplace/favourites': typeof AuthenticatedMarketplaceFavouritesRoute
   '/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
   '/marketplace/my-contact': typeof AuthenticatedMarketplaceMyContactRoute
+  '/marketplace/notifications': typeof AuthenticatedMarketplaceNotificationsRoute
   '/marketplace/pipeline': typeof AuthenticatedMarketplacePipelineRoute
   '/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
   '/settings/default-intake': typeof AuthenticatedSettingsDefaultIntakeRoute
@@ -683,6 +709,7 @@ export interface FileRoutesByTo {
   '/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/deals/$id': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdIndexRoute
   '/marketplace/my-company': typeof AuthenticatedMarketplaceMyCompanyIndexRoute
@@ -703,6 +730,7 @@ export interface FileRoutesById {
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/_authenticated/email-alerts': typeof AuthenticatedEmailAlertsRoute
   '/_authenticated/entity-control': typeof AuthenticatedEntityControlRoute
   '/_authenticated/industry-map': typeof AuthenticatedIndustryMapRoute
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -735,6 +763,7 @@ export interface FileRoutesById {
   '/_authenticated/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
   '/_authenticated/marketplace/my-company': typeof AuthenticatedMarketplaceMyCompanyRouteWithChildren
   '/_authenticated/marketplace/my-contact': typeof AuthenticatedMarketplaceMyContactRoute
+  '/_authenticated/marketplace/notifications': typeof AuthenticatedMarketplaceNotificationsRoute
   '/_authenticated/marketplace/pipeline': typeof AuthenticatedMarketplacePipelineRoute
   '/_authenticated/my-startups/$id': typeof AuthenticatedMyStartupsIdRouteWithChildren
   '/_authenticated/my-startups/new': typeof AuthenticatedMyStartupsNewRoute
@@ -765,6 +794,7 @@ export interface FileRoutesById {
   '/_authenticated/startups/$id/financials': typeof AuthenticatedStartupsIdFinancialsRoute
   '/_authenticated/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/_authenticated/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
   '/_authenticated/marketplace/my-company/': typeof AuthenticatedMarketplaceMyCompanyIndexRoute
@@ -786,6 +816,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dashboard'
     | '/deals'
+    | '/email-alerts'
     | '/entity-control'
     | '/industry-map'
     | '/intake-queue'
@@ -817,6 +848,7 @@ export interface FileRouteTypes {
     | '/marketplace/messages'
     | '/marketplace/my-company'
     | '/marketplace/my-contact'
+    | '/marketplace/notifications'
     | '/marketplace/pipeline'
     | '/my-startups/$id'
     | '/my-startups/new'
@@ -847,6 +879,7 @@ export interface FileRouteTypes {
     | '/startups/$id/financials'
     | '/startups/$id/investors'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/transactional/preview'
     | '/deals/$id/'
     | '/investors/$id/'
     | '/marketplace/my-company/'
@@ -863,6 +896,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/connections'
     | '/dashboard'
+    | '/email-alerts'
     | '/entity-control'
     | '/industry-map'
     | '/intake-queue'
@@ -888,6 +922,7 @@ export interface FileRouteTypes {
     | '/marketplace/favourites'
     | '/marketplace/messages'
     | '/marketplace/my-contact'
+    | '/marketplace/notifications'
     | '/marketplace/pipeline'
     | '/my-startups/new'
     | '/settings/default-intake'
@@ -916,6 +951,7 @@ export interface FileRouteTypes {
     | '/startups/$id/financials'
     | '/startups/$id/investors'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/transactional/preview'
     | '/deals/$id'
     | '/investors/$id'
     | '/marketplace/my-company'
@@ -935,6 +971,7 @@ export interface FileRouteTypes {
     | '/_authenticated/contacts'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
+    | '/_authenticated/email-alerts'
     | '/_authenticated/entity-control'
     | '/_authenticated/industry-map'
     | '/_authenticated/intake-queue'
@@ -967,6 +1004,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketplace/messages'
     | '/_authenticated/marketplace/my-company'
     | '/_authenticated/marketplace/my-contact'
+    | '/_authenticated/marketplace/notifications'
     | '/_authenticated/marketplace/pipeline'
     | '/_authenticated/my-startups/$id'
     | '/_authenticated/my-startups/new'
@@ -997,6 +1035,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups/$id/financials'
     | '/_authenticated/startups/$id/investors'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/transactional/preview'
     | '/_authenticated/deals/$id/'
     | '/_authenticated/investors/$id/'
     | '/_authenticated/marketplace/my-company/'
@@ -1012,6 +1051,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
   BuyerCompanyIdSetupRoute: typeof BuyerCompanyIdSetupRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1184,6 +1224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntityControlRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/email-alerts': {
+      id: '/_authenticated/email-alerts'
+      path: '/email-alerts'
+      fullPath: '/email-alerts'
+      preLoaderRoute: typeof AuthenticatedEmailAlertsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/deals': {
       id: '/_authenticated/deals'
       path: '/deals'
@@ -1352,6 +1399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketplacePipelineRouteImport
       parentRoute: typeof AuthenticatedMarketplaceRoute
     }
+    '/_authenticated/marketplace/notifications': {
+      id: '/_authenticated/marketplace/notifications'
+      path: '/notifications'
+      fullPath: '/marketplace/notifications'
+      preLoaderRoute: typeof AuthenticatedMarketplaceNotificationsRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
     '/_authenticated/marketplace/my-contact': {
       id: '/_authenticated/marketplace/my-contact'
       path: '/my-contact'
@@ -1477,6 +1531,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/deals/$id/'
       preLoaderRoute: typeof AuthenticatedDealsIdIndexRouteImport
       parentRoute: typeof AuthenticatedDealsIdRoute
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/buyer/company/$id/setup': {
       id: '/buyer/company/$id/setup'
@@ -1677,6 +1738,7 @@ interface AuthenticatedMarketplaceRouteChildren {
   AuthenticatedMarketplaceMessagesRoute: typeof AuthenticatedMarketplaceMessagesRoute
   AuthenticatedMarketplaceMyCompanyRoute: typeof AuthenticatedMarketplaceMyCompanyRouteWithChildren
   AuthenticatedMarketplaceMyContactRoute: typeof AuthenticatedMarketplaceMyContactRoute
+  AuthenticatedMarketplaceNotificationsRoute: typeof AuthenticatedMarketplaceNotificationsRoute
   AuthenticatedMarketplacePipelineRoute: typeof AuthenticatedMarketplacePipelineRoute
   AuthenticatedMarketplaceIndexRoute: typeof AuthenticatedMarketplaceIndexRoute
 }
@@ -1692,6 +1754,8 @@ const AuthenticatedMarketplaceRouteChildren: AuthenticatedMarketplaceRouteChildr
       AuthenticatedMarketplaceMyCompanyRouteWithChildren,
     AuthenticatedMarketplaceMyContactRoute:
       AuthenticatedMarketplaceMyContactRoute,
+    AuthenticatedMarketplaceNotificationsRoute:
+      AuthenticatedMarketplaceNotificationsRoute,
     AuthenticatedMarketplacePipelineRoute:
       AuthenticatedMarketplacePipelineRoute,
     AuthenticatedMarketplaceIndexRoute: AuthenticatedMarketplaceIndexRoute,
@@ -1791,6 +1855,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
+  AuthenticatedEmailAlertsRoute: typeof AuthenticatedEmailAlertsRoute
   AuthenticatedEntityControlRoute: typeof AuthenticatedEntityControlRoute
   AuthenticatedIndustryMapRoute: typeof AuthenticatedIndustryMapRoute
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
@@ -1829,6 +1894,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
+  AuthenticatedEmailAlertsRoute: AuthenticatedEmailAlertsRoute,
   AuthenticatedEntityControlRoute: AuthenticatedEntityControlRoute,
   AuthenticatedIndustryMapRoute: AuthenticatedIndustryMapRoute,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
@@ -1873,6 +1939,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
   BuyerCompanyIdSetupRoute: BuyerCompanyIdSetupRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

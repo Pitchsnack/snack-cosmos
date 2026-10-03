@@ -1,3 +1,4 @@
+import { BellRing } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert } from "lucide-react";
@@ -344,7 +345,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
           { to: "/my-risk", label: "Company Risk", icon: ShieldAlert, lock: "risk" },
         ]
       : [];
-  const account: MenuItem[] = [{ to: "/my-page", label: "My Profile", icon: UserCircle }];
+  const account: MenuItem[] = [{ to: "/my-page", label: "My Profile", icon: UserCircle }, { to: "/marketplace/notifications", label: "Notifications", icon: BellRing }];
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {

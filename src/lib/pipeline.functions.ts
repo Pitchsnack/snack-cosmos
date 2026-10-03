@@ -30,6 +30,8 @@ async function assertSeller(ctx: Ctx, startupId: string) {
 async function log(pipelineId: string, event: string, actor: string, note?: string) {
   const sb = await admin();
   await sb.from("deal_pipeline_events").insert({ pipeline_id: pipelineId, event, actor_id: actor, note: note ?? null });
+  const { pipelineAlert } = await import("./email-alerts.server");
+  await pipelineAlert(pipelineId, event);
 }
 async function update(id: string, patch: Record<string, unknown>) {
   const sb = await admin();

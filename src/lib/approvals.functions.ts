@@ -329,6 +329,14 @@ export const decideListing = createServerFn({ method: "POST" })
       if (f.length) extra = ` Admin edited: ${f.join(", ")}.`;
     }
     await notify(hp.submitted_by, hp.tenant_id, msg[0], msg[1] + extra);
+    {
+      const { sendAlert, sellerTeam } = await import("./email-alerts.server");
+      const key = { approve: "approved", request_changes: "changes_requested", reject: "declined" }[data.action];
+      const det: [string, string][] = data.action === "approve"
+        ? [["Listing", hp.code_name], ["Approved", new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" })], ["Visible as", "Identity hidden until you approve an NDA"]]
+        : [...((data.fields ?? []).length ? [["Fields to fix", (data.fields ?? []).map((f: string) => FIELD_LABEL[f] ?? f).join(", ")] as [string, string]] : []), ...((data.reasons ?? []).length ? [["Reason", (data.reasons ?? []).join(", ")] as [string, string]] : [])];
+      await sendAlert({ alert: key, role: "seller", userIds: [hp.submitted_by, ...(await sellerTeam(hp.startup_id))], vars: { "listing code name": hp.code_name }, details: det, quote: data.action === "approve" ? null : data.note, refKey: `listing:${hp.id}:v${hp.version}:${data.action}` });
+    }
     return { ok: true };
   });
 
@@ -412,6 +420,10 @@ export const decideBuyer = createServerFn({ method: "POST" })
       decline: ["Verification declined", data.note ?? ""],
     }[data.action];
     await notify(bv.user_id, null, msg[0], msg[1]);
+    if (data.action !== "verify") {
+      const { sendAlert } = await import("./email-alerts.server");
+      await sendAlert({ alert: data.action === "more_info" ? "changes_requested" : "declined", role: "buyer", userIds: [bv.user_id], details: data.action === "more_info" ? [["Needed", data.note ?? ""]] : [["Reason", data.note ?? ""]], quote: data.action === "more_info" ? data.note : null, refKey: `buyer:${bv.id}:${data.action}:${bv.decided_at}` });
+    }
     return bv;
   });
 
@@ -441,6 +453,14 @@ export const decideBuyerProfile = createServerFn({ method: "POST" })
       decline: ["Investor profile not approved", data.note ?? ""],
     }[data.action];
     await notify(p.user_id, null, msg[0], msg[1]);
+    {
+      const { sendAlert } = await import("./email-alerts.server");
+      const key = { approve: "approved", request_changes: "changes_requested", decline: "declined" }[data.action];
+      const { data: bp } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", p.user_id).maybeSingle();
+      const { data: iv } = bp?.investor_id ? await sb.from("investors").select("investor_type").eq("id", bp.investor_id).maybeSingle() : { data: null };
+      const code = iv?.investor_type ? `a ${iv.investor_type} investor` : "a verified investor";
+      await sendAlert({ alert: key, role: "buyer", userIds: [p.user_id], vars: { "buyer code name": code }, details: data.action === "approve" ? [["Shown as", code], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })]] : [["Reason", data.note ?? ""]], quote: data.action === "approve" ? null : data.note, refKey: `buyer_profile:${p.user_id}:${data.action}:${now}` });
+    }
     return { ok: true };
   });
 

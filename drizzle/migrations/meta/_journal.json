@@ -337,6 +337,13 @@
       "when": 1791036044156,
       "tag": "0047_buyer_profile_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791053044832,
+      "tag": "0048_email_alerts",
+      "breakpoints": true
     }
   ]
 }

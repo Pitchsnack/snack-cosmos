@@ -1407,6 +1407,108 @@ export type Database = {
           },
         ]
       }
+      email_alert_log: {
+        Row: {
+          alert_key: string
+          created_at: string
+          email: string | null
+          id: string
+          reason: string | null
+          ref_key: string | null
+          role: string
+          status: string
+          subject: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_key: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          reason?: string | null
+          ref_key?: string | null
+          role: string
+          status: string
+          subject?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_key?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          reason?: string | null
+          ref_key?: string | null
+          role?: string
+          status?: string
+          subject?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_alert_rules: {
+        Row: {
+          daily_time: string
+          id: number
+          match_threshold: number
+          message_mode: string
+          quiet_enabled: boolean
+          quiet_end: string
+          quiet_start: string
+          updated_at: string
+          weekly_day: number
+          weekly_time: string
+        }
+        Insert: {
+          daily_time?: string
+          id?: number
+          match_threshold?: number
+          message_mode?: string
+          quiet_enabled?: boolean
+          quiet_end?: string
+          quiet_start?: string
+          updated_at?: string
+          weekly_day?: number
+          weekly_time?: string
+        }
+        Update: {
+          daily_time?: string
+          id?: number
+          match_threshold?: number
+          message_mode?: string
+          quiet_enabled?: boolean
+          quiet_end?: string
+          quiet_start?: string
+          updated_at?: string
+          weekly_day?: number
+          weekly_time?: string
+        }
+        Relationships: []
+      }
+      email_alert_settings: {
+        Row: {
+          alert_key: string
+          enabled: boolean
+          overrides: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alert_key: string
+          enabled?: boolean
+          overrides?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alert_key?: string
+          enabled?: boolean
+          overrides?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       financial_position_items: {
         Row: {
           amount: number | null
