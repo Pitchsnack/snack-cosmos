@@ -77,35 +77,39 @@ export function StatusPill({ status, children }: { status: ListingStatus; childr
 
 const nbspDash = (s: string) => s.replace(/ – /g, "\u00A0– ");
 
-function FigureRow({ label, band, empty }: { label: string; band: string | null | undefined; empty: string }) {
+function Figure({ label, band, empty, shade, wideSpan }: { label: string; band: string | null | undefined; empty: string; shade?: boolean; wideSpan?: boolean }) {
   const b = bandOf(band);
+  const on = shade && !!b;
   return (
-    <div className="grid grid-cols-[1fr_1fr] gap-6 border-b border-[#EEF0F3] px-[11px] py-2.5 last:border-0 dark:border-border">
-      <dt className="truncate text-[11.5px] text-[#6B7280] dark:text-muted-foreground">{label}</dt>
+    <div className={cn("min-w-0 px-[11px] pb-[9px] pt-[10px]", on ? "bg-[#FFF4E0] dark:bg-amber-950/40" : "bg-[#FAFBFC] dark:bg-muted/40", wideSpan && "col-span-2 @[560px]:col-span-1")}>
+      <dt className={cn("truncate text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>{label}</dt>
       {b ? (
-        <dd className="text-left text-[13px] font-semibold tabular-nums text-[#374151] dark:text-foreground">
-          {nbspDash(b.label)} <span className="font-normal text-[#6B7280] dark:text-muted-foreground">({nbspDash(b.baht)})</span>
+        <dd>
+          <div className="text-[13.5px] font-bold tabular-nums text-[#151A28] dark:text-foreground">{nbspDash(b.label)}</div>
+          <div className={cn("text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>({nbspDash(b.baht)})</div>
         </dd>
       ) : (
-        <dd className="text-left text-[13px] font-medium text-[#9CA3AF]">{empty}</dd>
+        <dd className="text-[13.5px] font-medium text-[#9CA3AF]">{empty}</dd>
       )}
     </div>
   );
 }
 
-/** Ticket size · AUM · Min. target revenue · Geography — labels left, values in one aligned column. */
+/** Ticket size · AUM · Min. target revenue · Geography. Wide (≥560px) puts the values in one row. */
 export function KeyFigures({ i, empty }: { i: CardInvestor; empty: string }) {
   const individual = (i.type ?? "") === INDIVIDUAL_TYPE || i.relation === "individual" || i.relation === "agent";
   const corp = isCorporateBuyer(i.type);
   const places = (i.geography ?? "").split(/\s*[,·]\s*/).filter(Boolean);
   return (
-    <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] bg-[#FAFBFC] dark:border-border dark:bg-muted/40">
-      <FigureRow label="Ticket size" band={i.ticketBand} empty={empty} />
-      {!individual && <FigureRow label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} />}
-      <FigureRow label="Min. target revenue" band={i.revBand} empty={empty} />
-      <div className="grid grid-cols-[1fr_1fr] gap-6 px-[11px] py-2.5">
-        <dt className="truncate text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
-        <dd className={cn("text-left text-[12.5px]", places.length ? "font-semibold text-[#374151] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.join(" · ") : empty}</dd>
+    <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
+      <div className={cn("grid grid-cols-2 gap-px bg-[#EEF0F3] dark:bg-border", individual ? "@[560px]:grid-cols-2" : "@[560px]:grid-cols-3")}>
+        <Figure label="Ticket size" band={i.ticketBand} empty={empty} />
+        {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} />}
+        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual} />
+      </div>
+      <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
+        <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
+        <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.join(" · ") : empty}</dd>
       </div>
     </dl>
   );
@@ -124,7 +128,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
   const open = expanded ?? localOpen;
   const toggle = onToggleExpand ?? (() => setLocalOpen((o) => !o));
   const title = typeName(i.type);
-  const facts = [i.city, i.stages.join(", "), i.dealTypes.join(", ")].filter(Boolean).join(" · ");
+  const facts = [[i.city, i.country].filter(Boolean).join(", "), i.stages.join(", "), i.dealTypes.join(", ")].filter(Boolean).join(" · ");
   const desc = i.description || (empty === "Not added" ? "Not added" : null);
   return (
     <div
