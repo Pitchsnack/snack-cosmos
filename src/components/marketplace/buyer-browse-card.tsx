@@ -129,8 +129,8 @@ export function NameAfterNdaPill() {
   );
 }
 
-/** Panel version of the card: each fact once — used in the Split information panel. */
-function PanelCardBody({ i, empty, desc }: { i: CardInvestor; empty: string; desc: string | null }) {
+/** Card body: each fact once. `oneRow` puts the three figures in one row (Split panel). */
+function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; desc: string | null; oneRow?: boolean }) {
   const places = (i.geography ?? "").split(/\s*[,·]\s*/).filter(Boolean).map(shortPlace);
   const chips = [...i.sectors, ...i.stages, ...i.dealTypes].map(shortChip);
   const row = (label: string, value: React.ReactNode) => (
@@ -140,9 +140,9 @@ function PanelCardBody({ i, empty, desc }: { i: CardInvestor; empty: string; des
     </div>
   );
   return (
-    <div className="p-4">
+    <>
       <div className="flex items-baseline justify-between gap-3">
-        <div className="text-[18px] font-semibold leading-snug text-[#151A28] dark:text-foreground">{typeName(i.type)}</div>
+        <div className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{typeName(i.type)}</div>
         <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}</div>
       </div>
       {(i.verified || i.proofOfFunds) && (
@@ -152,7 +152,7 @@ function PanelCardBody({ i, empty, desc }: { i: CardInvestor; empty: string; des
         </div>
       )}
       {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}</p>}
-      <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow /></div>
+      <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow={oneRow} /></div>
       <div className="mt-3">
         {row("Invests in", places.length ? places.join(" · ") : <span className="text-[#9CA3AF]">{empty}</span>)}
         {i.city && row("Based in", i.city)}
@@ -162,46 +162,31 @@ function PanelCardBody({ i, empty, desc }: { i: CardInvestor; empty: string; des
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
 }
 
-/** The one public investor card sellers see in Browse investors. Only public fields reach it. */
-export function PublicInvestorCard({ i, className, onClick, selected, expanded, onToggleExpand, topRight, empty = "Not stated", status, footerRight, cardFooter, panel }: {
+/** The one public investor card (Browse investors, Favourites, My Company). Only public fields reach it. */
+export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel }: {
   i: CardInvestor; className?: string; onClick?: () => void; selected?: boolean;
-  expanded?: boolean; onToggleExpand?: () => void; topRight?: React.ReactNode;
+  /** Legacy props, ignored: the card always shows in full. */
+  expanded?: boolean; onToggleExpand?: () => void; footerRight?: React.ReactNode;
+  topRight?: React.ReactNode;
   /** "Not stated" for sellers, "Not added" on the buyer's own My Company. */
-  empty?: string; status?: ListingStatus; footerRight?: React.ReactNode;
-  /** Replace the default footer (e.g. the seller-style "Live since" footer). */
+  empty?: string; status?: ListingStatus;
+  /** Optional extra footer (e.g. the seller-style "Live since" footer). */
   cardFooter?: React.ReactNode;
-  /** Split information panel layout. */
+  /** Split information panel: figures in one row of three. */
   panel?: boolean;
 }) {
-  const [localOpen, setLocalOpen] = useState(false);
-  const open = expanded ?? localOpen;
-  const toggle = onToggleExpand ?? (() => setLocalOpen((o) => !o));
-  const title = typeName(i.type);
-  const facts = [[i.city, i.country].filter(Boolean).join(", "), i.stages.join(", "), i.dealTypes.join(", ")].filter(Boolean).join(" · ");
   const desc = i.description || (empty === "Not added" ? "Not added" : null);
-  if (panel) {
-    return (
-      <div className={cn("overflow-hidden rounded-[14px] border border-border bg-card", className)}>
-        <BuyerCover type={i.type} className="h-[110px]">
-          <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
-            <EyeOff className="h-3 w-3" />Name hidden
-          </span>
-        </BuyerCover>
-        <PanelCardBody i={i} empty={empty} desc={desc} />
-      </div>
-    );
-  }
   return (
     <div
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" && e.target === e.currentTarget) onClick(); } : undefined}
-      className={cn("@container overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-shadow hover:shadow-md", className)}
+      className={cn("overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-shadow hover:shadow-md", className)}
     >
       <BuyerCover type={i.type} className="h-[110px]">
         <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
@@ -210,33 +195,8 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
         {(topRight || status) && <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5">{status && <StatusPill status={status} />}{topRight}</div>}
       </BuyerCover>
       <div className="p-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-          <div className="text-[16px] font-bold leading-snug text-[#151A28] dark:text-foreground">{title}</div>
-          <div className="whitespace-nowrap text-[12.5px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{[i.refNo, i.country].filter(Boolean).join(" · ")}</div>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Verified investor</Pill>}
-          {i.proofOfFunds && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Proof of funds</Pill>}
-          <Pill tone="amber"><Lock className="h-3 w-3" />Name after NDA</Pill>
-        </div>
-        <div className="mt-3"><KeyFigures i={i} empty={empty} /></div>
-        {desc && <p className={cn("mt-3 text-[14px] leading-snug text-foreground/85", !open && "line-clamp-2")}>{desc}</p>}
-        {i.sectors.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1">
-            {i.sectors.slice(0, open ? 20 : 5).map((s) => <span key={s} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{s}</span>)}
-          </div>
-        )}
-        {open && facts && <div className="mt-2.5 text-[12px] text-muted-foreground">{facts}</div>}
-        {cardFooter ?? (
-          <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-muted-foreground">
-            <span className="truncate">{title} · {i.refNo}</span>
-            {footerRight ?? (
-              <button type="button" onClick={(e) => { e.stopPropagation(); toggle(); }} className="inline-flex shrink-0 items-center gap-0.5 font-medium text-foreground hover:underline">
-                {open ? "Show less" : "Show more"}<ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
-              </button>
-            )}
-          </div>
-        )}
+        <CardBody i={i} empty={empty} desc={desc} oneRow={panel} />
+        {cardFooter}
       </div>
     </div>
   );
