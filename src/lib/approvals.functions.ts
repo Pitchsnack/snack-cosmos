@@ -456,7 +456,7 @@ export const decideBuyerProfile = createServerFn({ method: "POST" })
     {
       const { sendAlert } = await import("./email-alerts.server");
       const key = { approve: "approved", request_changes: "changes_requested", decline: "declined" }[data.action];
-      const { data: bp } = await sb.from("buyer_profiles").select("investor_id, ticket_band").eq("user_id", p.user_id).maybeSingle();
+      const { data: bp } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", p.user_id).maybeSingle();
       const { data: iv } = bp?.investor_id ? await sb.from("investors").select("investor_type").eq("id", bp.investor_id).maybeSingle() : { data: null };
       const code = iv?.investor_type ? `a ${iv.investor_type} investor` : "a verified investor";
       await sendAlert({ alert: key, role: "buyer", userIds: [p.user_id], vars: { "buyer code name": code }, details: data.action === "approve" ? [["Shown as", code], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })]] : [["Reason", data.note ?? ""]], quote: data.action === "approve" ? null : data.note, refKey: `buyer_profile:${p.user_id}:${data.action}:${now}` });
