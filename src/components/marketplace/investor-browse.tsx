@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { usePersistentView } from "@/hooks/use-persistent-view";
-import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { NameAfterNdaPill, PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { INDIVIDUAL_TYPE, bandOf } from "@/lib/investor-bands";
 import { listBrowseInvestors, mySavedInvestorIds, toggleSavedInvestor } from "@/lib/investor-browse.functions";
 import {
@@ -143,17 +143,20 @@ export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved:
   return (
     <>
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
+          {!i.name && <NameAfterNdaPill />}
+        </div>
         <StarBtn saved={saved} onClick={onSave} />
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
-        <PublicInvestorCard i={i} expanded />
+        <PublicInvestorCard i={i} panel />
         <div>
           <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mandate · shown as ranges</h4>
           {rows.map(([k, v]) => (
-            <div key={k} className="flex items-start justify-between gap-3 border-b border-border py-1.5 text-[13px] last:border-0">
-              <span className="text-muted-foreground">{k}</span>
-              <span className="text-right font-medium">{v}</span>
+            <div key={k} className="grid grid-cols-2 gap-6 border-b border-[#F0F1F4] py-2.5 text-[14px] last:border-0 dark:border-border">
+              <span className="text-[#6B7280] dark:text-muted-foreground">{k}</span>
+              <span className="text-left text-[#374151] dark:text-foreground">{v}</span>
             </div>
           ))}
         </div>
