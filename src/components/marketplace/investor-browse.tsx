@@ -143,7 +143,14 @@ export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved:
   return (
     <>
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
+          {!i.name && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-medium text-[#B45309]">
+              <Lock className="h-3 w-3" />Name after NDA
+            </span>
+          )}
+        </span>
         <StarBtn saved={saved} onClick={onSave} />
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
