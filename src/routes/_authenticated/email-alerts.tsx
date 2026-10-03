@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -301,7 +301,6 @@ function Log({ rows }: { rows: AdminData["log"] }) {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-muted-foreground">Delivery details per email are also in <Link to="/dashboard" className="underline">Cloud › Emails</Link>.</p>
     </div>
   );
 }

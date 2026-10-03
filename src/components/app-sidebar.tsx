@@ -126,7 +126,8 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Industry Map",
     ],
   },
-  { title: "Coming Soon", labels: ["Communications", "Documents", "Analytics"] },
+  { title: "Communications", labels: ["Email alerts"] },
+  { title: "Coming Soon", labels: ["Documents", "Analytics"] },
   {
     title: "Administration",
     labels: [
@@ -200,11 +201,11 @@ const NAV_ITEMS: NavItem[] = [
     perm: "default_intake.read",
   },
   {
-    label: "Communications",
-    icon: MessagesSquare,
-    path: "/dashboard",
+    label: "Email alerts",
+    icon: Mail,
+    path: "/email-alerts",
     exact: false,
-    disabled: true,
+    controlOnly: true,
   },
   { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
   {

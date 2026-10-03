@@ -33,6 +33,7 @@ import { Route as AuthenticatedInvestorsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedIntakeQueueRouteImport } from './routes/_authenticated/intake-queue'
 import { Route as AuthenticatedIndustryMapRouteImport } from './routes/_authenticated/industry-map'
 import { Route as AuthenticatedEntityControlRouteImport } from './routes/_authenticated/entity-control'
+import { Route as AuthenticatedEmailAlertsRouteImport } from './routes/_authenticated/email-alerts'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
@@ -218,6 +219,12 @@ const AuthenticatedEntityControlRoute =
   AuthenticatedEntityControlRouteImport.update({
     id: '/entity-control',
     path: '/entity-control',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEmailAlertsRoute =
+  AuthenticatedEmailAlertsRouteImport.update({
+    id: '/email-alerts',
+    path: '/email-alerts',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
@@ -560,6 +567,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/email-alerts': typeof AuthenticatedEmailAlertsRoute
   '/entity-control': typeof AuthenticatedEntityControlRoute
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -638,6 +646,7 @@ export interface FileRoutesByTo {
   '/audit': typeof AuthenticatedAuditRoute
   '/connections': typeof AuthenticatedConnectionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/email-alerts': typeof AuthenticatedEmailAlertsRoute
   '/entity-control': typeof AuthenticatedEntityControlRoute
   '/industry-map': typeof AuthenticatedIndustryMapRoute
   '/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -712,6 +721,7 @@ export interface FileRoutesById {
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
+  '/_authenticated/email-alerts': typeof AuthenticatedEmailAlertsRoute
   '/_authenticated/entity-control': typeof AuthenticatedEntityControlRoute
   '/_authenticated/industry-map': typeof AuthenticatedIndustryMapRoute
   '/_authenticated/intake-queue': typeof AuthenticatedIntakeQueueRoute
@@ -796,6 +806,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dashboard'
     | '/deals'
+    | '/email-alerts'
     | '/entity-control'
     | '/industry-map'
     | '/intake-queue'
@@ -874,6 +885,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/connections'
     | '/dashboard'
+    | '/email-alerts'
     | '/entity-control'
     | '/industry-map'
     | '/intake-queue'
@@ -947,6 +959,7 @@ export interface FileRouteTypes {
     | '/_authenticated/contacts'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
+    | '/_authenticated/email-alerts'
     | '/_authenticated/entity-control'
     | '/_authenticated/industry-map'
     | '/_authenticated/intake-queue'
@@ -1196,6 +1209,13 @@ declare module '@tanstack/react-router' {
       path: '/entity-control'
       fullPath: '/entity-control'
       preLoaderRoute: typeof AuthenticatedEntityControlRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/email-alerts': {
+      id: '/_authenticated/email-alerts'
+      path: '/email-alerts'
+      fullPath: '/email-alerts'
+      preLoaderRoute: typeof AuthenticatedEmailAlertsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/deals': {
@@ -1812,6 +1832,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
+  AuthenticatedEmailAlertsRoute: typeof AuthenticatedEmailAlertsRoute
   AuthenticatedEntityControlRoute: typeof AuthenticatedEntityControlRoute
   AuthenticatedIndustryMapRoute: typeof AuthenticatedIndustryMapRoute
   AuthenticatedIntakeQueueRoute: typeof AuthenticatedIntakeQueueRoute
@@ -1850,6 +1871,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
+  AuthenticatedEmailAlertsRoute: AuthenticatedEmailAlertsRoute,
   AuthenticatedEntityControlRoute: AuthenticatedEntityControlRoute,
   AuthenticatedIndustryMapRoute: AuthenticatedIndustryMapRoute,
   AuthenticatedIntakeQueueRoute: AuthenticatedIntakeQueueRoute,
