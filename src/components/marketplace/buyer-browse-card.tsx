@@ -102,7 +102,7 @@ export function KeyFigures({ i, empty, oneRow }: { i: CardInvestor; empty: strin
   return (
     <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
       <div className={cn("grid gap-px bg-[#EEF0F3] dark:bg-border",
-        oneRow ? (individual ? "grid-cols-2" : "grid-cols-3") "grid-cols-2")}>
+        oneRow ? (individual ? "grid-cols-2" : "grid-cols-3") : "grid-cols-2")}>
         <Figure label="Ticket size" band={i.ticketBand} empty={empty} big />
         {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big />}
         <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big />
