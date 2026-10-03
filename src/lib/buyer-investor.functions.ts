@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  AUM_KEYS, DEAL_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, descriptionLeaks, regError, ticketColumns, yearError,
+  AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, descriptionLeaks, regError, ticketColumns, yearError,
 } from "@/lib/investor-bands";
 
 /**
@@ -120,7 +120,6 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         aum_band: inv.aum_band as string | null,
         ticket_band: inv.ticket_band as string | null,
         revenue_min_band: inv.revenue_min_band as string | null,
-        deal_size_band: inv.deal_size_band as string | null,
         aum_exact_usd: inv.aum_exact_usd == null ? null : Number(inv.aum_exact_usd),
         registration_no: inv.registration_no as string | null,
         setup_done_at: inv.setup_done_at as string | null,
@@ -159,7 +158,6 @@ const Patch = z.object({
   aum_band: z.enum(AUM_KEYS).nullable().optional(),
   ticket_band: z.enum(TICKET_KEYS).nullable().optional(),
   revenue_min_band: z.enum(REV_KEYS).nullable().optional(),
-  deal_size_band: z.enum(DEAL_KEYS).nullable().optional(),
   aum_exact_usd: z.number().min(0).max(1e13).nullable().optional(),
   registration_no: txt(50),
   description: z.string().trim().max(140).optional(),
@@ -210,7 +208,6 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       inv.min_ticket_size = t.min; inv.max_ticket_size = t.max;
     }
     if (data.revenue_min_band !== undefined) inv.revenue_min_band = data.revenue_min_band;
-    if (data.deal_size_band !== undefined) inv.deal_size_band = data.deal_size_band;
     if (data.aum_exact_usd !== undefined) inv.aum_exact_usd = data.aum_exact_usd;
     if (data.registration_no !== undefined) inv.registration_no = relation === "individual" ? null : n(data.registration_no);
     if (data.investment_focus) inv.investment_focus = data.investment_focus;
@@ -290,7 +287,6 @@ const Wizard = z.object({
   aum_band: z.enum(AUM_KEYS).nullable().optional(),
   ticket_band: z.enum(TICKET_KEYS).nullable().optional(),
   revenue_min_band: z.enum(REV_KEYS).nullable().optional(),
-  deal_size_band: z.enum(DEAL_KEYS).nullable().optional(),
   deal_types: arr(12), preferred_stages: arr(12), geography: arr(12), preferred_industries: arr(20),
   description: z.string().trim().max(140).optional(),
   answered: z.array(z.string().max(20)).max(20).optional(),
@@ -328,7 +324,6 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
       bp.ticket_min = b ? b.lo * 1e6 : null; bp.ticket_max = b?.hi != null ? b.hi * 1e6 : null;
     }
     if (has("revenue_min_band")) inv.revenue_min_band = data.revenue_min_band;
-    if (has("deal_size_band")) inv.deal_size_band = data.deal_size_band;
     if (data.deal_types) bp.deal_types = data.deal_types;
     if (data.preferred_stages) { inv.preferred_stages = data.preferred_stages; bp.stages = data.preferred_stages; }
     if (data.geography) { inv.investment_focus = data.geography; bp.geography = data.geography.join(", ") || null; }

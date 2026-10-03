@@ -56,7 +56,7 @@ export type CardInvestor = {
   verified: boolean; proofOfFunds: boolean;
   ticketLabel: string | null; aumLabel: string | null;
   revLabel: string | null;
-  aumBand?: string | null; ticketBand?: string | null; revBand?: string | null; dealBand?: string | null;
+  aumBand?: string | null; ticketBand?: string | null; revBand?: string | null;
   relation?: "individual" | "corporate" | "agent" | null;
 };
 
@@ -95,18 +95,17 @@ function Figure({ label, band, empty, shade, wideSpan }: { label: string; band: 
   );
 }
 
-/** Ticket size · Avg deal size · Min. target revenue · AUM · Geography. Wide (≥560px) puts the values in one row. */
+/** Ticket size · AUM · Min. target revenue · Geography. Wide (≥560px) puts the values in one row. */
 export function KeyFigures({ i, empty }: { i: CardInvestor; empty: string }) {
   const individual = (i.type ?? "") === INDIVIDUAL_TYPE || i.relation === "individual" || i.relation === "agent";
   const corp = isCorporateBuyer(i.type);
   const places = (i.geography ?? "").split(/\s*[,·]\s*/).filter(Boolean);
   return (
     <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
-      <div className={cn("grid grid-cols-2 gap-px bg-[#EEF0F3] dark:bg-border", individual ? "@[560px]:grid-cols-3" : "@[560px]:grid-cols-4")}>
+      <div className={cn("grid grid-cols-2 gap-px bg-[#EEF0F3] dark:bg-border", individual ? "@[560px]:grid-cols-2" : "@[560px]:grid-cols-3")}>
         <Figure label="Ticket size" band={i.ticketBand} empty={empty} />
-        <Figure label="Avg deal size" band={i.dealBand} empty={empty} />
-        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={individual} />
         {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} />}
+        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual} />
       </div>
       <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
         <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
@@ -181,7 +180,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, expanded, 
 /** Buyer's own "How sellers see it" preview — same card. */
 export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands, relation = null, empty, status, expanded, cardFooter }: {
   b: PublicBuyer; onClick?: () => void; className?: string; revLabel?: string | null;
-  bands?: { aum?: string | null; ticket?: string | null; rev?: string | null; deal?: string | null };
+  bands?: { aum?: string | null; ticket?: string | null; rev?: string | null };
   relation?: CardInvestor["relation"]; empty?: string; status?: ListingStatus; expanded?: boolean; cardFooter?: React.ReactNode;
 }) {
   return (
@@ -189,7 +188,7 @@ export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands,
       refNo: b.refNo, codeName: b.codeName, name: null, type: b.type, city: b.city, country: b.country,
       description: b.description, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: (b as PublicBuyer & { geography?: string | null }).geography ?? null,
       verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revLabel,
-      aumBand: bands?.aum, ticketBand: bands?.ticket, revBand: bands?.rev, dealBand: bands?.deal, relation,
+      aumBand: bands?.aum, ticketBand: bands?.ticket, revBand: bands?.rev, relation,
     }} />
   );
 }

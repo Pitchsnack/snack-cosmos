@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import {
-  AUM_BANDS, DEAL_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
+  AUM_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
   descriptionError, descriptionLeaks, regError, showsStages, yearError,
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -155,7 +155,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
     firm_name: inv.firm_name ?? "", business_address: inv.business_address ?? "",
     aum: inv.aum ?? "", min_ticket_size: inv.min_ticket_size ?? "", max_ticket_size: inv.max_ticket_size ?? "",
     short_description: inv.short_description ?? "",
-    aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "", deal_band: inv.deal_size_band ?? "",
+    aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
   });
@@ -251,7 +251,6 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
         aum_band: individual || rel === "agent" ? null : (f.aum_band || null) as never,
         ticket_band: (f.ticket_band || null) as never,
         revenue_min_band: (f.rev_band || null) as never,
-        deal_size_band: (f.deal_band || null) as never,
         aum_exact_usd: f.aum_exact.trim() && Number.isFinite(exact) ? exact : null,
         registration_no: individual ? null : t(f.registration_no),
         description: f.description.trim(), deal_types: deals,
@@ -470,17 +469,6 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
             </SelectContent>
           </Select>
           <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size. Sellers see this range on your card and filter Browse investors by it.</p>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Average deal size<Tag s={src.deal_size_band} /></Label>
-          <Select value={f.deal_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, deal_band: v === "none" ? "" : v }))}>
-            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Not set</SelectItem>
-              {DEAL_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <p className="text-[12px] text-muted-foreground">The total value of a typical deal you do. Sellers see this range on your card.</p>
         </div>
         {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">

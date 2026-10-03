@@ -134,7 +134,6 @@ export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved:
   const rows: Array<[string, React.ReactNode]> = [
     ["Investor type", i.type || "Not stated"],
     ["Ticket size", money(i.ticketBand)],
-    ["Avg deal size", money(i.dealBand)],
     ["Min. target revenue", money(i.revBand)],
     ...(indiv ? [] : [[corp ? "Group revenue" : "Assets under management", money(i.aumBand)] as [string, React.ReactNode]]),
     ...(i.stages.length ? [["Preferred stages", i.stages.join(", ")] as [string, React.ReactNode]] : []),

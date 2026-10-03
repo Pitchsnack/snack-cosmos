@@ -35,7 +35,7 @@ async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<P
   if (!ids.length) return [];
 
   const { data: rows } = await sb.from("investors")
-    .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, deal_size_band, investment_focus, created_at")
+    .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, investment_focus, created_at")
     .in("id", ids).order("created_at", { ascending: false });
 
   return (rows ?? []).map((r: any) => {
@@ -71,7 +71,6 @@ async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<P
       aumBand: aum?.key ?? null,
       ticketBand: tkt?.key ?? null,
       revBand: rev?.key ?? null,
-      dealBand: bandOf(r.deal_size_band)?.key ?? null,
       relation: (bp?.buyer_relation ?? null) as PublicInvestor["relation"],
       aumLabel: bandText(r.aum_band),
       ticketLabel: bandText(r.ticket_band),
