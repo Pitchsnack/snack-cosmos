@@ -50,6 +50,7 @@ import { useTranslation } from "@/i18n/language";
 type NavPath =
   | "/"
   | "/dashboard"
+  | "/email-alerts"
   | "/startups"
   | "/my-startups"
   | "/investors"
