@@ -247,12 +247,19 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     advance(cur);
   };
   const back = () => { if (idx > 0) goTo(steps[idx - 1]!.id); };
+  const [exiting, setExiting] = useState(false);
   const saveExit = async () => {
-    await flush();
-    await qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
-    await qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
+    if (exiting) return;
+    setExiting(true);
+    // Never let a slow or failed save trap the user on this screen.
+    const cap = <T,>(p: Promise<T>) => Promise.race([p, new Promise<void>((r) => window.setTimeout(r, 2500))]);
+    try { await cap(flush()); } catch { /* flush already toasts */ }
+    void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
+    void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
     toast.success(live ? "Your changes are saved." : "Saved as a draft. Continue setup any time from My Company.");
-    void navigate({ to: "/marketplace/my-company" });
+    const fallback = window.setTimeout(() => { window.location.href = "/marketplace/my-company"; }, 1500);
+    try { await navigate({ to: "/marketplace/my-company" }); window.clearTimeout(fallback); }
+    catch { window.location.href = "/marketplace/my-company"; }
   };
 
   const requiredQs = steps.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
@@ -463,6 +470,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       <span className="ml-auto inline-flex items-center gap-1.5 text-[12.5px] text-[#6B7280]">
         {saving === "saving" ? <><span className="h-2 w-2 rounded-full bg-[#F6A823]" />Saving…</> : saving === "saved" ? <><Check className="h-3.5 w-3.5 text-[#15803D]" />Draft saved</> : null}
       </span>
+      <button type="button" onClick={saveExit} disabled={exiting} aria-label="Save and exit setup"
+        className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[13px] font-semibold text-[#434A5C] transition-colors hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 dark:border-border dark:bg-background dark:text-foreground">
+        {exiting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+        <span className="hidden sm:inline">{exiting ? "Exiting…" : "Save & exit"}</span>
+      </button>
     </div>
   );
   const header = (sec: string, right: string, pct: number) => (
@@ -472,8 +484,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     </>
   );
   const card = "mt-[22px] rounded-[14px] border border-[#E9EBF0] bg-white px-[18px] pb-5 pt-6 sm:mt-[34px] sm:rounded-[16px] sm:p-10 dark:border-border dark:bg-card";
-  const btnO = "h-[50px] rounded-[12px] border border-[#DCDFE5] bg-white px-5 text-[16px] font-semibold text-[#434A5C] disabled:opacity-40 dark:border-border dark:bg-background dark:text-foreground";
-  const btnP = "h-[50px] rounded-[12px] bg-[#1E2A4A] px-6 text-[16px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CACED8]";
+  const btnO = "cursor-pointer h-[50px] rounded-[12px] border border-[#DCDFE5] bg-white px-5 text-[16px] font-semibold text-[#434A5C] disabled:opacity-40 dark:border-border dark:bg-background dark:text-foreground";
+  const btnP = "cursor-pointer h-[50px] rounded-[12px] bg-[#1E2A4A] px-6 text-[16px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CACED8]";
 
   return (
     <div className="min-h-screen bg-[#F6F7F9] text-[#151A28] dark:bg-background dark:text-foreground" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }} onKeyDown={onKeyDown}>
@@ -493,7 +505,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               <button type="button" className={btnO} disabled={idx === 0} onClick={back}>Back</button>
               {optional && <button type="button" className="px-2 text-[15px] font-semibold text-[#6B7280]" onClick={skip}>Skip</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-                <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={saveExit}>Save &amp; exit</button>
+                <button type="button" className={`${btnO} flex-1 cursor-pointer hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait sm:flex-none`} disabled={exiting} onClick={saveExit}>{exiting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Saving…</span> : <>Save &amp; exit</>}</button>
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk} onClick={tryContinue}>{continueLabel}</button>
               </div>
             </div>
