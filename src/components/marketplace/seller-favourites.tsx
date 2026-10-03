@@ -92,7 +92,7 @@ export function SellerFavourites() {
           <Link to="/marketplace/pipeline" className="ml-auto text-[12.5px] font-semibold text-[#2563EB] hover:underline">{t("Review NDA request")}</Link>
         )}
       </div>
-      <InvestorDetail i={f} saved={savedIds.has(f.id) || f.status !== "saved"} onSave={() => f.status === "saved" && toggle(f.id)} />
+      <InvestorDetail i={f} ndaApproved={f.status === "approved"} saved={savedIds.has(f.id) || f.status !== "saved"} onSave={() => f.status === "saved" && toggle(f.id)} />
     </>
   );
 
