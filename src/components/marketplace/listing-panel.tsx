@@ -1,3 +1,4 @@
+import { ListingPill } from "@/components/hidden-profile/public-listing-card";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -79,13 +80,8 @@ export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; on
   );
 }
 
-export function NdaApprovedBadge() {
-  const { t } = useTranslation();
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[10.5px] font-bold text-[#15803D]">
-      <LockOpen className="h-3 w-3" />{t("NDA approved")}
-    </span>
-  );
+export function NdaApprovedBadge({ newDays, compact }: { newDays?: number | null; compact?: boolean } = {}) {
+  return <ListingPill kind="approved" newDays={newDays} compact={compact} />;
 }
 
 export function useNdaStatuses() {
@@ -197,13 +193,8 @@ export function ListingDetail({ t, requested, approved, onRequested }: { t: Teas
   );
 }
 
-export function NdaRequestedBadge() {
-  const { t } = useTranslation();
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2 py-0.5 text-[10.5px] font-bold text-[#B45309]">
-      <Clock className="h-3 w-3" />{t("NDA requested")}
-    </span>
-  );
+export function NdaRequestedBadge({ newDays, compact }: { newDays?: number | null; compact?: boolean } = {}) {
+  return <ListingPill kind="requested" newDays={newDays} compact={compact} />;
 }
 
 type NdaStatus = "none" | "requested" | "approved" | "exchanged";

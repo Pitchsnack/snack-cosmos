@@ -52,6 +52,8 @@ export interface PublicListing {
   publicImageId: string | null;
   live: boolean;
   publishedAt: string | null;
+  /** Days since going live while under 14 (NEW); null otherwise. */
+  newDays: number | null;
 }
 
 export const HEADLINE_MAX = 90;
@@ -436,6 +438,7 @@ export function buildPublicListing(
     publicImageId: p?.public_image_id ?? null,
     live: !!p?.live,
     publishedAt: p?.published_at ?? null,
+    newDays: newDaysOf(p?.live ? p?.published_at : null),
   };
 }
 
@@ -444,4 +447,12 @@ export function checkListing(l: Pick<PublicListing, "headline" | "description" |
   const words = new Set<string>();
   for (const t of [l.headline, l.description, ...l.productTags, ...l.marketTags]) for (const h of findTermsIn(t ?? "", terms)) words.add(h.term);
   return [...words];
+}
+
+/** A listing is NEW while now - publishedAt < 14 days. */
+export function newDaysOf(publishedAt: string | null | undefined): number | null {
+  if (!publishedAt) return null;
+  const ms = Date.now() - new Date(publishedAt).getTime();
+  if (!(ms >= 0) || ms >= 14 * 864e5) return null;
+  return Math.floor(ms / 864e5);
 }

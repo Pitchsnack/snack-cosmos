@@ -18,7 +18,7 @@ import { myNdaRequestDates } from "@/lib/pipeline.functions";
 import { ListingDetail, NdaApprovedBadge, NdaButton, NdaRequestedBadge, SaveButton, useNdaStatuses, useSavedListings, type Teaser } from "@/components/marketplace/listing-panel";
 import { InvestorBrowse } from "@/components/marketplace/investor-browse";
 import { usePersona } from "@/hooks/use-marketplace";
-import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
+import { ListingPill, PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
@@ -228,8 +228,10 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
                     {[l.verified && t("Verified company"), l.hasFinancials && t("Verified financials"), l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
                   </div>
                 </div>
-                {badgeOf(item.id)}
-                {star(item.id)}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {(() => { const n = ndaOf(item.id); return <ListingPill kind={n ?? "hidden"} newDays={l.newDays} />; })()}
+                  {star(item.id)}
+                </div>
               </div>
             );
           })}
