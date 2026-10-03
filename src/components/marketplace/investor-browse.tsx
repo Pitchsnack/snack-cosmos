@@ -124,7 +124,7 @@ function FilterMenu({ label, heading, hint, foot, options, value, onChange, coun
   );
 }
 
-export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved: boolean; onSave: () => void }) {
+export function InvestorDetail({ i, saved, onSave, ndaApproved }: { i: PublicInvestor; saved: boolean; onSave: () => void; ndaApproved?: boolean }) {
   const corp = isCorporateBuyer(i.type);
   const indiv = (i.type ?? "") === INDIVIDUAL_TYPE || i.relation === "individual" || i.relation === "agent";
   const money = (k: string | null | undefined): React.ReactNode => {
@@ -145,7 +145,7 @@ export function InvestorDetail({ i, saved, onSave }: { i: PublicInvestor; saved:
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
-          {!i.name && <NameAfterNdaPill />}
+          {!ndaApproved && !i.name && <NameAfterNdaPill />}
         </div>
         <StarBtn saved={saved} onClick={onSave} />
       </div>

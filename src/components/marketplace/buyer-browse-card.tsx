@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { BadgeCheck, Briefcase, Building2, ChevronDown, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
+import { BadgeCheck, Briefcase, Building2, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import { INDIVIDUAL_TYPE, bandOf, typeName } from "@/lib/investor-bands";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
@@ -81,7 +80,7 @@ function Figure({ label, band, empty, shade, wideSpan, big }: { label: string; b
   const b = bandOf(band);
   const on = shade && !!b;
   return (
-    <div className={cn("min-w-0 px-[11px] pb-[9px] pt-[10px]", on ? "bg-[#FFF4E0] dark:bg-amber-950/40" : "bg-[#FAFBFC] dark:bg-muted/40", wideSpan && "col-span-2 @[560px]:col-span-1")}>
+    <div className={cn("min-w-0 px-[11px] pb-[9px] pt-[10px]", on ? "bg-[#FFF4E0] dark:bg-amber-950/40" : "bg-[#FAFBFC] dark:bg-muted/40", wideSpan && "col-span-2")}>
       <dt className={cn("truncate", big ? "text-[12px]" : "text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>{label}</dt>
       {b ? (
         <dd>
@@ -103,10 +102,10 @@ export function KeyFigures({ i, empty, oneRow }: { i: CardInvestor; empty: strin
   return (
     <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
       <div className={cn("grid gap-px bg-[#EEF0F3] dark:bg-border",
-        oneRow ? (individual ? "grid-cols-2" : "grid-cols-3") : cn("grid-cols-2", individual ? "@[560px]:grid-cols-2" : "@[560px]:grid-cols-3"))}>
-        <Figure label="Ticket size" band={i.ticketBand} empty={empty} big={oneRow} />
-        {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big={oneRow} />}
-        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big={oneRow} />
+        oneRow ? (individual ? "grid-cols-2" : "grid-cols-3") "grid-cols-2")}>
+        <Figure label="Ticket size" band={i.ticketBand} empty={empty} big />
+        {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big />}
+        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big />
       </div>
       {!oneRow && (
         <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
