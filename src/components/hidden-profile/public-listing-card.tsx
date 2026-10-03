@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
+import { Clock, LockOpen, BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/language";
 import type { PublicListing } from "@/lib/public-listing";
@@ -130,9 +130,9 @@ export function PublicListingCard({
       style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
     >
       <SectorArt art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[112px] w-full shrink-0" tile={priv ? <PrivLogo name={priv.name} path={priv.logoPath} /> : undefined}>
-        {badge ? <span className="absolute left-2.5 top-2.5">{badge}</span> : <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+        {badge ? <span className="absolute left-2.5 top-2.5">{isValidElement(badge) ? cloneElement(badge as React.ReactElement<{ newDays?: number | null; compact?: boolean }>, { newDays: l.newDays, compact: !!topRight && expanded === false }) : badge}</span> : !seller ? <span className="absolute left-2.5 top-2.5"><ListingPill kind="hidden" newDays={l.newDays} /></span> : <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
           seller ? (l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]") : "bg-background/95 text-foreground")}>
-          {!seller && <Lock className="h-3 w-3" />}{badgeLabel}
+          {badgeLabel}
         </span>}
         {topRight && <div className="absolute right-2.5 top-2.5">{topRight}</div>}
       </SectorArt>
@@ -196,4 +196,26 @@ function PrivLogo({ name, path }: { name: string; path: string | null }) {
   return url
     ? <img src={url} alt="" className="h-full w-full object-contain" />
     : <span className="text-[15px] font-bold text-foreground">{ini}</span>;
+}
+
+const PILL = {
+  hidden: { cls: "border-[#E5E7EB] bg-white text-[#4B5563]", Icon: Lock, label: "Identity hidden" },
+  requested: { cls: "border-[#FDE68A] bg-[#FFFBEB] text-[#B45309]", Icon: Clock, label: "NDA requested" },
+  approved: { cls: "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]", Icon: LockOpen, label: "NDA approved" },
+} as const;
+
+/** Cover status pill; a listing live under 14 days gets an amber NEW end inside the pill. */
+export function ListingPill({ kind, newDays, compact }: { kind: keyof typeof PILL; newDays?: number | null; compact?: boolean }) {
+  const { t } = useTranslation();
+  const { cls, Icon, label } = PILL[kind];
+  const isNew = newDays != null;
+  const tip = isNew ? `${t(label)} · ${t("New, listed")} ${newDays} ${newDays === 1 ? t("day ago") : t("days ago")}` : undefined;
+  return (
+    <span title={tip} aria-label={tip} className={cn("inline-flex h-[22px] shrink-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-full border pl-2 text-[10.5px] font-bold", isNew ? "pr-0" : "pr-2", cls)}>
+      <Icon className="h-3 w-3" />{t(label)}
+      {isNew && (compact
+        ? <span aria-hidden className="ml-1.5 h-full w-[10px] bg-[#F6A823]" />
+        : <span aria-hidden className="ml-1.5 flex h-full items-center bg-[#F6A823] px-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#0E162F]">{t("NEW")}</span>)}
+    </span>
+  );
 }
