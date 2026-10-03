@@ -136,5 +136,14 @@ export const listPublicBuyers = createServerFn({ method: "GET" })
       ? await sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", ids)
       : { data: [] };
     const byId = new Map((bvs ?? []).map((b: any) => [b.user_id, b]));
-    return (rows ?? []).map((r: BuyerProfile) => toPublic(r, (byId.get(r.user_id) as any) ?? null));
+    const invIds = (rows ?? []).map((r: any) => r.investor_id).filter(Boolean);
+    const { data: invs } = invIds.length
+      ? await sb.from("investors").select("id, investor_type").in("id", invIds)
+      : { data: [] };
+    const typeById = new Map((invs ?? []).map((i: any) => [i.id, i.investor_type]));
+    return (rows ?? []).map((r: any) => {
+      const bv = (byId.get(r.user_id) as any) ?? null;
+      const t = r.investor_id ? typeById.get(r.investor_id) ?? null : bv?.buyer_type ?? null;
+      return toPublic(r, { ...(bv ?? {}), buyer_type: t });
+    });
   });
