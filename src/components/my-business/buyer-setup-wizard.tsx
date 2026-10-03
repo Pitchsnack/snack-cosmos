@@ -484,8 +484,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     </>
   );
   const card = "mt-[22px] rounded-[14px] border border-[#E9EBF0] bg-white px-[18px] pb-5 pt-6 sm:mt-[34px] sm:rounded-[16px] sm:p-10 dark:border-border dark:bg-card";
-  const btnO = "h-[50px] rounded-[12px] border border-[#DCDFE5] bg-white px-5 text-[16px] font-semibold text-[#434A5C] disabled:opacity-40 dark:border-border dark:bg-background dark:text-foreground";
-  const btnP = "h-[50px] rounded-[12px] bg-[#1E2A4A] px-6 text-[16px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CACED8]";
+  const btnO = "cursor-pointer h-[50px] rounded-[12px] border border-[#DCDFE5] bg-white px-5 text-[16px] font-semibold text-[#434A5C] disabled:opacity-40 dark:border-border dark:bg-background dark:text-foreground";
+  const btnP = "cursor-pointer h-[50px] rounded-[12px] bg-[#1E2A4A] px-6 text-[16px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CACED8]";
 
   return (
     <div className="min-h-screen bg-[#F6F7F9] text-[#151A28] dark:bg-background dark:text-foreground" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }} onKeyDown={onKeyDown}>
