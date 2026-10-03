@@ -280,7 +280,7 @@ function useOwnCard(p: BuyerProfile, org: BuyerOrg) {
   return {
     iv, inv,
     props: {
-      b: pub as PublicBuyer, empty: "Not added", status: p.status as ListingStatus,
+      b: pub as PublicBuyer, empty: "Not added", status: p.status as "live" | "draft" | "paused",
       relation: (inv.data?.buyer.relation ?? null) as BuyerRelation | null,
       bands: { aum: iv?.aum_band, ticket: iv?.ticket_band, rev: iv?.revenue_min_band },
     },
