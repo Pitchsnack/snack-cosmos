@@ -40,7 +40,6 @@ function EmailAlertsPage() {
   const s = data?.stats;
   return (
     <div className="space-y-6">
-      <nav className="text-xs text-muted-foreground">Control › Communications › Email alerts</nav>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground">COMMUNICATIONS</div>
