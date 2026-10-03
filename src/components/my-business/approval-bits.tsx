@@ -139,7 +139,7 @@ export function ApprovalFooter({
     action = submitBtn("Resubmit");
   } else if (st === "live") {
     text = <>Posted on {fmt(row?.published_at)}</>;
-    action = <Button size="sm" variant="outline" disabled={a.unpublish.isPending} onClick={() => a.unpublish.mutate({ startupId })}>Unpublish</Button>;
+    action = <Button size="sm" variant="outline" disabled={a.unpublish.isPending} onClick={() => a.unpublish.mutate({ startupId })}>Delist</Button>;
   } else if (st === "live_edits_pending") {
     text = <>Buyers see the approved version from {fmt(row?.published_at)} until you resubmit.</>;
     action = submitBtn("Resubmit");
