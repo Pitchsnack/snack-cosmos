@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { decideBuyerProfile } from "@/lib/approvals.functions";
-import { descriptionLeaks } from "@/lib/buyer-wizard-leaks";
+import { descriptionLeaks } from "@/lib/investor-bands";
 
 type Row = { id: string; user_id: string; ref_no: string | null; investor_id: string | null; approval_status: string; submitted_at: string | null; description: string | null; investor_name: string | null; investor_type: string | null };
 

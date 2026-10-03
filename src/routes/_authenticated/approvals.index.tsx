@@ -12,6 +12,7 @@ import { SectorArt } from "@/components/hidden-profile/bits";
 import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
 import { useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
+import { BuyerProfileApprovals } from "@/components/reports/buyer-profile-approvals";
 import { PaidReports, HistoryTab, Tile, isOverdue } from "@/components/reports/approvals-report-tabs";
 
 export const Route = createFileRoute("/_authenticated/approvals/")({
@@ -99,7 +100,7 @@ function ApprovalsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {([["listings", "Listings", data?.listings.length ?? 0], ["buyers", "Buyers", data?.buyers.length ?? 0], ["reports", "Paid reports", reportsWaiting], ["history", "History", null]] as const).map(([k, label, n]) => (
+        {([["listings", "Listings", data?.listings.length ?? 0], ["buyers", "Buyers", (data?.buyers.length ?? 0) + (((data as any)?.profiles ?? []) as any[]).filter((p: any) => p.approval_status === "in_review").length], ["reports", "Paid reports", reportsWaiting], ["history", "History", null]] as const).map(([k, label, n]) => (
           <button key={k} type="button" onClick={() => navigate({ search: { tab: k } })}
             className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold", tab === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
             {label}{n !== null && <span className={cn("rounded-full px-1.5 text-[11px]", n > 0 ? "bg-[#FEE2E2] text-[#B91C1C]" : "bg-muted text-foreground")}>{n}</span>}
@@ -159,6 +160,9 @@ function ApprovalsPage() {
           <p className="text-sm text-muted-foreground">Waiting on sellers ({waitingOnSellers})</p>
         </>
       ) : tab === "buyers" ? (
+        <div className="space-y-6">
+        <BuyerProfileApprovals rows={((data as any)?.profiles ?? []) as any[]} names={names} />
+        <h2 className="text-sm font-semibold">Buyer verifications</h2>
         <Table head={["Buyer", "Type", "Company registration", "Work email", "LinkedIn", "Submitted", "Status", ""]}>
           {buyers.length === 0 && <EmptyRow cols={8} text="No buyers waiting." />}
           {buyers.map((b) => (
@@ -174,6 +178,7 @@ function ApprovalsPage() {
             </tr>
           ))}
         </Table>
+        </div>
       ) : tab === "reports" ? (
         <PaidReports orders={orders} />
       ) : (
