@@ -32,7 +32,7 @@ export const getEmailAlertsAdmin = createServerFn({ method: "GET" })
     const sent = w.filter((r) => r.status === "sent");
     const perAlert: Record<string, number> = {};
     for (const r of sent) perAlert[r.alert_key] = (perAlert[r.alert_key] ?? 0) + 1;
-    const r = rules ?? {};
+    const r: any = rules ?? {};
     return {
       settings: Object.fromEntries(((settings ?? []) as any[]).map((s) => [s.alert_key, { enabled: s.enabled as boolean, overrides: s.overrides ?? {} }])) as Record<string, { enabled: boolean; overrides: any }>,
       rules: {
