@@ -161,9 +161,23 @@ export const listApprovals = createServerFn({ method: "GET" })
       for (const b of bv ?? []) buyerInfo[b.id] = b;
       Object.assign(names, await userNames(sb, (bv ?? []).map((b: any) => b.user_id)));
     }
+    // Investor profiles waiting to go live in Browse investors (firm data from the linked investors row).
+    const { data: profRows } = await sb.from("buyer_profiles")
+      .select("id, user_id, ref_no, investor_id, approval_status, submitted_at, description, buyer_relation")
+      .or(`approval_status.in.(in_review,changes_requested)${bids.length ? `,id.in.(${bids.join(",")})` : ""}`);
+    const invIds = (profRows ?? []).map((r: any) => r.investor_id).filter(Boolean);
+    const { data: invs } = invIds.length ? await sb.from("investors").select("id, investor_name, investor_type").in("id", invIds) : { data: [] };
+    const invById = new Map((invs ?? []).map((i: any) => [i.id, i]));
+    Object.assign(names, await userNames(sb, (profRows ?? []).map((r: any) => r.user_id)));
+    const profiles = (profRows ?? []).map((r: any) => {
+      const inv: any = invById.get(r.investor_id);
+      const row = { ...r, investor_name: inv?.investor_name ?? null, investor_type: inv?.investor_type ?? null };
+      buyerInfo[r.id] ??= { id: r.id, user_id: r.user_id, company_name: row.investor_name ? `${row.investor_name} · investor profile` : "Investor profile", buyer_type: row.investor_type };
+      return row;
+    }).filter((r: any) => r.approval_status === "in_review" || r.approval_status === "changes_requested");
     // "Live · edits pending" is derived from the approved snapshot, never the legacy status column.
     const listingRows = (listings ?? []).map(({ live, ...l }: any) => ({ ...l, has_live: !!live }));
-    return { listings: listingRows, buyers: buyers ?? [], history: history ?? [], names, emails, me: context.userId, startupInfo, buyerInfo };
+    return { listings: listingRows, buyers: buyers ?? [], profiles, history: history ?? [], names, emails, me: context.userId, startupInfo, buyerInfo };
   });
 
 async function userNames(sb: any, ids: string[]) {
@@ -191,7 +205,8 @@ export const pendingApprovalsCount = createServerFn({ method: "GET" })
     const { count: a } = await sb.from("hidden_profiles").select("id", { count: "exact", head: true }).eq("approval_status", "in_review");
     const { count: b } = await sb.from("buyer_verifications").select("id", { count: "exact", head: true }).eq("status", "pending");
     const { count: c } = await sb.from("report_orders").select("id", { count: "exact", head: true }).in("status", ["paid", "generated"]);
-    return (a ?? 0) + (b ?? 0) + (c ?? 0);
+    const { count: d } = await sb.from("buyer_profiles").select("id", { count: "exact", head: true }).eq("approval_status", "in_review");
+    return (a ?? 0) + (b ?? 0) + (c ?? 0) + (d ?? 0);
   });
 
 export const getListingReview = createServerFn({ method: "GET" })
