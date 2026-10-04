@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listUsers, inviteUser, updateUserStatus } from "@/lib/users.functions";
+import { listUsers, inviteUser, updateUserStatus, setAdvisorView } from "@/lib/users.functions";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { ROLE_LABELS, type AppRole } from "@/lib/permissions";
@@ -124,6 +124,34 @@ function StatusSelect({
   );
 }
 
+function AdvisorSelect({ userId, on, disabled, onChanged }: { userId: string; on: boolean; disabled?: boolean; onChanged: () => void }) {
+  const update = useServerFn(setAdvisorView);
+  const [busy, setBusy] = useState(false);
+  const change = async (v: string) => {
+    const next = v === "yes";
+    if (next === on) return;
+    setBusy(true);
+    try {
+      await update({ data: { targetUserId: userId, on: next } });
+      toast.success(next ? "Advisor view turned on" : "Advisor view turned off");
+      onChanged();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not update the Advisor view");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Select value={on ? "yes" : "no"} onValueChange={change} disabled={busy || disabled}>
+      <SelectTrigger className="h-8 w-[90px]" aria-label="Advisor view"><SelectValue /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="no">No</SelectItem>
+        <SelectItem value="yes">Yes</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
 function UsersPage() {
   return (
     <PermissionGuard permission="users.read" message="You don't have permission to view users.">
@@ -178,19 +206,20 @@ function UsersPageInner() {
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Advisor view</TableHead>
                   <TableHead>Last login</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
                       Loading…
                     </TableCell>
                   </TableRow>
                 ) : (data ?? []).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
                       No users yet.
                     </TableCell>
                   </TableRow>
@@ -216,6 +245,9 @@ function UsersPageInner() {
                         ) : (
                           <StatusBadge status={u.status} />
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <AdvisorSelect userId={u.id} on={!!u.advisor_view} disabled={!canEditStatus} onChanged={() => refetch()} />
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "Never"}
