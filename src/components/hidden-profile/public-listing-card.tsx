@@ -122,9 +122,9 @@ export function PublicListingCard({
       onClick={onSelect}
       onKeyDown={interactive ? (e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onSelect?.(); } } : undefined}
       className={cn(
-        "flex flex-col overflow-hidden rounded-[14px] border-[1.5px] bg-card text-left transition-shadow",
+        "group flex flex-col overflow-hidden rounded-[14px] border-[1.5px] bg-card text-left transition-all duration-200 ease-out",
         selected ? "border-[#F59E0B] shadow-[0_0_0_4px_rgba(245,158,11,.15)]" : "border-border",
-        interactive && "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        interactive && "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-accent hover:shadow-[var(--shadow-elevated)]",
         className,
       )}
       style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
@@ -137,8 +137,8 @@ export function PublicListingCard({
         {topRight && <div className="absolute right-2.5 top-2.5">{topRight}</div>}
       </SectorArt>
       <div className="flex flex-1 flex-col p-3.5">
-        {priv && <div className="truncate text-[16px] font-bold text-[#111827]" title={priv.name}>{priv.name}</div>}
-        <h3 className={priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]"}>{l.headline || <span className="text-muted-foreground">{t("Add a headline")}</span>}</h3>
+        {priv && <div className={cn("truncate text-[16px] font-bold text-[#111827] transition-colors", interactive && "group-hover:text-accent")} title={priv.name}>{priv.name}</div>}
+        <h3 className={cn(priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]", "transition-colors", interactive && !priv && "group-hover:text-accent")}>{l.headline || <span className="text-muted-foreground">{t("Add a headline")}</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1">
           {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>{t("Verified company")}</Badge>}
           {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>{t("Verified financials")}</Badge>

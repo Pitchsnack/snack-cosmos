@@ -143,7 +143,7 @@ function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; 
   return (
     <>
       <div className="flex items-baseline justify-between gap-3">
-        <div className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{typeName(i.type)}</div>
+        <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{typeName(i.type)}</div>
         <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}{i.country && <><span className="mx-1.5 text-[#D1D5DB]">·</span><span className="font-medium text-[#4B5563] dark:text-foreground/80">{i.country}</span></>}</div>
       </div>
       {(i.verified || i.proofOfFunds) && (
@@ -192,7 +192,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" && e.target === e.currentTarget) onClick(); } : undefined}
-      className={cn("overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-shadow hover:shadow-md", className)}
+      className={cn("group/card overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-all duration-200 ease-out hover:border-accent hover:shadow-[var(--shadow-elevated)] [&_[data-card-title]]:transition-colors hover:[&_[data-card-title]]:text-accent", className)}
     >
       <BuyerCover type={i.type} className="h-[110px]">
         <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
