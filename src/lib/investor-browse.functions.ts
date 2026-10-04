@@ -19,7 +19,7 @@ function hash(s: string) {
 }
 
 /** Verified, live buyers as public investor cards. `onlyIds` narrows to given investor ids. */
-async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<PublicInvestor & { userId: string }>> {
+export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<PublicInvestor & { userId: string; liveSince: string | null }>> {
   let bq = sb.from("buyer_profiles").select("*").eq("status", "live").not("investor_id", "is", null);
   if (onlyIds) { if (!onlyIds.length) return []; bq = bq.in("investor_id", onlyIds); }
   const { data: buyers } = await bq.limit(500);
@@ -54,6 +54,7 @@ async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<P
     return {
       id: r.id,
       userId: bp.user_id,
+      liveSince: (bp?.live_since ?? bp?.decided_at ?? bp?.created_at ?? null) as string | null,
       refNo: bp?.ref_no || `INV-${String(h % 10000).padStart(4, "0")}`,
       codeName,
       // Never the firm's name before an approved NDA.
@@ -88,7 +89,7 @@ export const listBrowseInvestors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const list = await loadPublicInvestors(await admin());
-    return list.map(({ userId: _u, ...i }) => i as PublicInvestor);
+    return list.map(({ userId: _u, liveSince: _l, ...i }) => i as PublicInvestor);
   });
 
 export type SellerFavStatus = "approved" | "requested" | "saved";

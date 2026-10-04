@@ -1,3 +1,4 @@
+import { AdvisorFavourites } from "@/components/marketplace/advisor-marketplace";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -91,6 +92,7 @@ function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, to
 
 function FavouritesRoute() {
   const { persona } = usePersona();
+  if (persona === "advisor") return <AdvisorFavourites />;
   return persona === "seller" ? <SellerFavourites /> : <FavouritesPage />;
 }
 

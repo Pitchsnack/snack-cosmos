@@ -220,7 +220,10 @@ export const discardHiddenChanges = createServerFn({ method: "POST" })
 export const listMarketplaceTeasers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d?: { excludeNda?: boolean }) => ({ excludeNda: !!d?.excludeNda }))
-  .handler(async ({ data: input, context }) => {
+  .handler(async ({ data: input, context }) => loadMarketplaceTeasers(input, context.userId));
+
+/** Live listings as buyer teasers (public listing only). Shared by Browse listings and Advisor Browse. */
+export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, userId: string) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { buildPublicListing } = await import("@/lib/public-listing");
     const { data, error } = await supabaseAdmin
@@ -240,7 +243,7 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
     let rowsIn = data ?? [];
     if (input.excludeNda) {
       const { activeNdaIds } = await import("@/lib/favourites.functions");
-      const nda = await activeNdaIds(context.userId);
+      const nda = await activeNdaIds(userId);
       rowsIn = rowsIn.filter((r) => !nda.has(r.id));
     }
     return rowsIn.map((r) => {
@@ -249,4 +252,4 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: (r as { public_image_id?: string | null }).public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, stakePct: live.stake_pct };
     });
-  });
+}

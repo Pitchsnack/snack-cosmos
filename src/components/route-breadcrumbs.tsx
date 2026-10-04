@@ -91,7 +91,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
   const items = useMemo(() => {
     if (isMarketplace) {
       const area = {
-        label: persona === "seller" ? "Seller" : "Buyer",
+        label: persona === "seller" ? "Seller" : persona === "advisor" ? "Advisor" : "Buyer",
         to: "/marketplace",
         params: {} as Record<string, string>,
       };
@@ -109,6 +109,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
           : path === "/marketplace/my-company" ? "My Company"
           : path === "/marketplace/my-company/edit" ? "Edit profile"
           : path === "/marketplace/messages" ? "Messages"
+          : path === "/marketplace/browse" && persona === "advisor" ? "Browse marketplace"
           : path === "/my-financials" ? "My Financials"
           : path === "/my-valuation" ? "Company Valuation"
           : path === "/my-risk" ? "Company Risk"

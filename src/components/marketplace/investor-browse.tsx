@@ -55,7 +55,7 @@ export function StarBtn({ saved, onClick }: { saved: boolean; onClick: () => voi
 }
 
 /** Single-choice dropdown filter with hint, live counts and lock footnote. */
-function FilterMenu({ label, heading, hint, foot, options, value, onChange, countFor }: {
+export function FilterMenu({ label, heading, hint, foot, options, value, onChange, countFor }: {
   label: string; heading: string; hint: string; foot?: string; options: FilterOpt[]; value: string;
   onChange: (v: string) => void; countFor: (v: string) => number;
 }) {
@@ -124,7 +124,13 @@ function FilterMenu({ label, heading, hint, foot, options, value, onChange, coun
   );
 }
 
-export function InvestorDetail({ i, saved, onSave, ndaApproved }: { i: PublicInvestor; saved: boolean; onSave: () => void; ndaApproved?: boolean }) {
+export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions }: {
+  i: PublicInvestor; saved: boolean; onSave: () => void; ndaApproved?: boolean;
+  /** Optional role pill before the title (Advisor view). */
+  pill?: React.ReactNode;
+  /** Replaces the star on the right of the header (Advisor view). */
+  actions?: React.ReactNode;
+}) {
   const corp = isCorporateBuyer(i.type);
   const indiv = (i.type ?? "") === INDIVIDUAL_TYPE || i.relation === "individual" || i.relation === "agent";
   const money = (k: string | null | undefined): React.ReactNode => {
@@ -144,10 +150,11 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved }: { i: PublicInv
     <>
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
+          {pill}
           <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
           {!ndaApproved && !i.name && <NameAfterNdaPill />}
         </div>
-        <StarBtn saved={saved} onClick={onSave} />
+        {actions ?? <StarBtn saved={saved} onClick={onSave} />}
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
         <PublicInvestorCard i={i} panel />

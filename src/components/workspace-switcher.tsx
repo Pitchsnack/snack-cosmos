@@ -132,7 +132,7 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   const isMarket = useIsMarketplace();
   const { persona } = usePersona();
   const roleLabel = isMarket
-    ? persona === "buyer" ? "Buyer" : "Seller"
+    ? persona === "buyer" ? "Buyer" : persona === "advisor" ? "Advisor" : "Seller"
     : roleCode ? ROLE_LABELS[roleCode] ?? roleCode : "No role";
 
 
