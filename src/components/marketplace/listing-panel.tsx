@@ -174,7 +174,7 @@ export function DealTerms({ t }: { t: Teaser }) {
 const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contact"];
 
 /** Right panel body for anonymous listings — public read model only. */
-export function ListingDetail({ t, requested, approved, onRequested }: { t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string) => void }) {
+export function ListingDetail({ t, requested, approved, onRequested, advisor }: { t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
   const { t: tr } = useTranslation();
   const l = t.listing;
   const [more, setMore] = useState(false);
@@ -188,7 +188,7 @@ export function ListingDetail({ t, requested, approved, onRequested }: { t: Teas
           <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? tr("Show less ▴") : tr("Show more ▾")}</button>
         </Section>
       )}
-      {approved ? <div className="grid gap-3 sm:grid-cols-2"><DealTerms t={t} /></div> : <LowerPanel t={t} requested={requested} onRequested={onRequested} />}
+      {approved ? <div className="grid gap-3 sm:grid-cols-2"><DealTerms t={t} /></div> : <LowerPanel t={t} requested={requested} onRequested={onRequested} advisor={advisor} />}
     </div>
   );
 }
@@ -199,13 +199,24 @@ export function NdaRequestedBadge({ newDays, compact }: { newDays?: number | nul
 
 type NdaStatus = "none" | "requested" | "approved" | "exchanged";
 
-function LowerPanel({ t, requested, onRequested }: { t: Teaser; requested?: boolean; onRequested?: (id: string) => void }) {
+/** Advisor view: requesting an NDA for a client is not built yet. */
+export function AdvisorNdaButton({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  return (
+    <button type="button" onClick={(e) => { e.stopPropagation(); toast(t("Requesting an NDA for a client is coming soon.")); }}
+      className={cn("h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90", className)}>
+      {t("Request NDA")}
+    </button>
+  );
+}
+
+function LowerPanel({ t, requested, onRequested, advisor }: { t: Teaser; requested?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
   const { t: tr, language } = useTranslation();
   const l = t.listing;
   const x = t as Teaser & { growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus };
   const { data: ndaMap } = useNdaStatuses();
   const raw = ndaMap?.[t.id];
-  const status: NdaStatus = requested ? "requested" : ((raw && raw !== "declined" ? raw : undefined) as NdaStatus | undefined) ?? x.ndaStatus ?? "none";
+  const status: NdaStatus = advisor ? "none" : requested ? "requested" : ((raw && raw !== "declined" ? raw : undefined) as NdaStatus | undefined) ?? x.ndaStatus ?? "none";
   const unlockList = ([
     "Company name & logo",
     "website & contacts",
@@ -217,7 +228,7 @@ function LowerPanel({ t, requested, onRequested }: { t: Teaser; requested?: bool
   // Thai has no letter case, so only English chips get the capital.
   const chipLabel = (u: string) => (language === "th" ? u : u.charAt(0).toUpperCase() + u.slice(1));
   const step = { none: 0, requested: 1, approved: 2, exchanged: 3 }[status];
-  const subs = [status === "none" ? tr("You are here") : "", status === "requested" ? tr("waiting for the seller") : tr("usually 2 days"), tr("identity, financials, data room"), tr("talk directly")];
+  const subs = [advisor ? tr("for your client") : status === "none" ? tr("You are here") : "", status === "requested" ? tr("waiting for the seller") : tr("usually 2 days"), tr("identity, financials, data room"), tr("talk directly")];
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -256,7 +267,7 @@ function LowerPanel({ t, requested, onRequested }: { t: Teaser; requested?: bool
             <div className="text-sm font-bold text-[#78350F]">{tr("Request the NDA to unlock")}</div>
             <p className="mt-0.5 text-[12.5px] text-[#92400E]">{unlockList.join(" · ")}</p>
           </div>
-          <NdaButton listingId={t.id} onRequested={onRequested} />
+          {advisor ? <AdvisorNdaButton /> : <NdaButton listingId={t.id} onRequested={onRequested} />}
         </div>
       )}
 
