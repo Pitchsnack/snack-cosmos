@@ -1,4 +1,5 @@
-import { BadgeCheck, Briefcase, Building2, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
+import { useState } from "react";
+import { BadgeCheck, ChevronDown, ChevronUp, Briefcase, Building2, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import { INDIVIDUAL_TYPE, bandOf, typeName } from "@/lib/investor-bands";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
