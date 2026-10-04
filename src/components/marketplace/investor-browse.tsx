@@ -55,7 +55,7 @@ export function StarBtn({ saved, onClick }: { saved: boolean; onClick: () => voi
 }
 
 /** Single-choice dropdown filter with hint, live counts and lock footnote. */
-function FilterMenu({ label, heading, hint, foot, options, value, onChange, countFor }: {
+export function FilterMenu({ label, heading, hint, foot, options, value, onChange, countFor }: {
   label: string; heading: string; hint: string; foot?: string; options: FilterOpt[]; value: string;
   onChange: (v: string) => void; countFor: (v: string) => number;
 }) {
