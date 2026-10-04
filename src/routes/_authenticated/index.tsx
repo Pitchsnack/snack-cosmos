@@ -43,16 +43,32 @@ import {
 import { logAudit } from "@/lib/tenant-utils";
 import { cn } from "@/lib/utils";
 
+const tenantsListQuery = {
+  queryKey: ["tenants", "list"] as const,
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("tenants")
+      .select("id, tenant_code, tenant_name, status, created_at, updated_at")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data as TenantRow[];
+  },
+};
+
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
-      { title: "Tenants — SnackPortal2" },
+      { title: "Tenants — PitchSnack" },
       {
         name: "description",
-        content: "Create, edit, and administer SnackPortal2 tenants.",
+        content: "Create, edit, and administer PitchSnack tenants.",
       },
     ],
   }),
+  // Start fetching as soon as navigation begins, in parallel with page code.
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(tenantsListQuery);
+  },
   component: TenantsPage,
 });
 
@@ -85,17 +101,7 @@ function TenantsPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ["tenants", "list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tenants")
-        .select("id, tenant_code, tenant_name, status, created_at, updated_at")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as TenantRow[];
-    },
-  });
+  const { data, isLoading, error, isFetching } = useQuery(tenantsListQuery);
 
   const filtered = useMemo(() => {
     if (!data) return [];
