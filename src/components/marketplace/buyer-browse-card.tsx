@@ -107,10 +107,10 @@ export function KeyFigures({ i, empty, oneRow }: { i: CardInvestor; empty: strin
         {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big />}
         <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big />
       </div>
-      {!oneRow && (
+      {(
         <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
           <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
-          <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.join(" · ") : empty}</dd>
+          <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.map(shortPlace).join(" · ") : empty}</dd>
         </div>
       )}
     </dl>
@@ -130,7 +130,8 @@ export function NameAfterNdaPill() {
 
 /** Card body: each fact once. `oneRow` puts the three figures in one row (Split panel). */
 function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; desc: string | null; oneRow?: boolean }) {
-  const places = (i.geography ?? "").split(/\s*[,·]\s*/).filter(Boolean).map(shortPlace);
+  const [open, setOpen] = useState(false);
+  const showMore = oneRow || open;
   const chips = [...i.sectors, ...i.stages, ...i.dealTypes].map(shortChip);
   const row = (label: string, value: React.ReactNode) => (
     <div className="flex items-start gap-2 py-[5px] text-[13px]">
@@ -142,7 +143,7 @@ function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; 
     <>
       <div className="flex items-baseline justify-between gap-3">
         <div className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{typeName(i.type)}</div>
-        <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}</div>
+        <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}{i.country && <><span className="mx-1.5 text-[#D1D5DB]">·</span><span className="font-medium text-[#4B5563] dark:text-foreground/80">{i.country}</span></>}</div>
       </div>
       {(i.verified || i.proofOfFunds) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -152,15 +153,20 @@ function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; 
       )}
       {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}</p>}
       <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow={oneRow} /></div>
-      <div className="mt-3">
-        {row("Invests in", places.length ? places.join(" · ") : <span className="text-[#9CA3AF]">{empty}</span>)}
+      {showMore && (i.city || chips.length > 0) && <div className="mt-3">
         {i.city && row("Based in", i.city)}
         {chips.length > 0 && row("Focus", (
           <div className="flex flex-wrap gap-1.5">
             {chips.map((c, k) => <span key={c + k} className="rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-[9px] py-0.5 text-[12px] text-[#374151] dark:border-border dark:bg-muted dark:text-foreground">{c}</span>)}
           </div>
         ))}
-      </div>
+      </div>}
+      {!oneRow && (
+        <button type="button" onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }} onKeyDown={(e) => e.stopPropagation()}
+          className="-mx-4 -mb-4 mt-3 flex h-11 w-[calc(100%+2rem)] items-center justify-center gap-1.5 border-t border-[#F0F1F4] text-[13px] font-semibold text-[#4B5563] hover:bg-muted/40 dark:border-border dark:text-muted-foreground">
+          {open ? "Show less" : "Show more"}{open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+      )}
     </>
   );
 }
