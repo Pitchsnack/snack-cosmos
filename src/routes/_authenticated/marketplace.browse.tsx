@@ -17,6 +17,7 @@ import { listMarketplaceTeasers } from "@/lib/hidden-profiles.functions";
 import { myNdaRequestDates } from "@/lib/pipeline.functions";
 import { ListingDetail, NdaApprovedBadge, NdaButton, NdaRequestedBadge, SaveButton, useNdaStatuses, useSavedListings, type Teaser } from "@/components/marketplace/listing-panel";
 import { InvestorBrowse } from "@/components/marketplace/investor-browse";
+import { AdvisorBrowse } from "@/components/marketplace/advisor-marketplace";
 import { usePersona } from "@/hooks/use-marketplace";
 import { ListingPill, PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { SectorArt } from "@/components/hidden-profile/bits";
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/browse")({
 function BrowseRoute() {
   const { persona } = usePersona();
   const { company } = Route.useSearch();
+  if (persona === "advisor") return <AdvisorBrowse />;
   if (persona === "seller" && !company) return <InvestorBrowse />;
   if (persona === "seller") return <BrowseListingsPage ownOnly={company ?? null} />;
   // A buyer's direct link only opens the listing when it is approved and live.
