@@ -29,6 +29,7 @@ export interface SessionContextDTO {
     experience: string | null;
     verified: boolean;
     plan: string | null;
+    advisorView: boolean;
   } | null;
   roles: AppRole[];
   tenants: Array<{
@@ -56,7 +57,7 @@ export const getSessionContext = createServerFn({ method: "GET" })
       await Promise.all([
         supabase
           .from("users")
-          .select("id,email,first_name,last_name,status,user_type,primary_tenant_id")
+          .select("id,email,first_name,last_name,status,user_type,primary_tenant_id,advisor_view")
           .eq("id", userId)
           .maybeSingle(),
         supabase
@@ -133,6 +134,7 @@ export const getSessionContext = createServerFn({ method: "GET" })
             experience: prof?.experience ?? null,
             verified: Boolean(ver),
             plan: plan && !/^free$/i.test(plan) ? plan : null,
+            advisorView: Boolean((userRow as { advisor_view?: boolean }).advisor_view),
           }
         : null,
       roles,

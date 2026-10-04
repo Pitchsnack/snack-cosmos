@@ -36,14 +36,14 @@ export const listUsers = createServerFn({ method: "GET" })
     if (data.tenantId) {
       const { data: rows, error } = await supabase
         .from("user_tenants")
-        .select("users!inner(id,email,first_name,last_name,status,user_type,last_login_at,created_at)")
+        .select("users!inner(id,email,first_name,last_name,status,user_type,last_login_at,created_at,advisor_view)")
         .eq("tenant_id", data.tenantId);
       if (error) throw new Error(error.message);
       return (rows ?? []).map((r) => r.users);
     }
     const { data: rows, error } = await supabase
       .from("users")
-      .select("id,email,first_name,last_name,status,user_type,last_login_at,created_at")
+      .select("id,email,first_name,last_name,status,user_type,last_login_at,created_at,advisor_view")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
@@ -191,5 +191,16 @@ export const assignRole = createServerFn({ method: "POST" })
       event_type: "ROLE_CHANGE",
       details: { targetUserId: data.targetUserId, addedRole: data.roleCode },
     });
+    return { ok: true };
+  });
+
+export const setAdvisorView = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ targetUserId: z.string().uuid(), on: z.boolean() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await requireControlOrTenantAdmin(supabase, userId, null);
+    const { error } = await supabase.from("users").update({ advisor_view: data.on }).eq("id", data.targetUserId);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
