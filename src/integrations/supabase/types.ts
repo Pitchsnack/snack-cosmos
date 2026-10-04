@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      advisor_favourites: {
+        Row: {
+          created_at: string
+          item_id: string
+          item_kind: string
+          user_id: string
+          view: string
+        }
+        Insert: {
+          created_at?: string
+          item_id: string
+          item_kind: string
+          user_id: string
+          view?: string
+        }
+        Update: {
+          created_at?: string
+          item_id?: string
+          item_kind?: string
+          user_id?: string
+          view?: string
+        }
+        Relationships: []
+      }
       approval_events: {
         Row: {
           action: string
@@ -4405,6 +4429,7 @@ export type Database = {
       }
       users: {
         Row: {
+          advisor_view: boolean
           ai_agent_id: string | null
           created_at: string
           created_by: string | null
@@ -4421,6 +4446,7 @@ export type Database = {
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
+          advisor_view?: boolean
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -4437,6 +4463,7 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Update: {
+          advisor_view?: boolean
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null

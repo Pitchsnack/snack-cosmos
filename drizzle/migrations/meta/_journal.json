@@ -344,6 +344,13 @@
       "when": 1791053044832,
       "tag": "0048_email_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1791113067853,
+      "tag": "0049_advisor_view",
+      "breakpoints": true
     }
   ]
 }
