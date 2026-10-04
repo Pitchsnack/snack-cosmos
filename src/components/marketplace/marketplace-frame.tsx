@@ -1,7 +1,7 @@
 import { BellRing } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert, Handshake } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { PipelineCountBadge, MessagesCountBadge } from "@/components/menu-count-badge";
 import { cn } from "@/lib/utils";
@@ -85,6 +85,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
   const { roleLabel } = useUserIdentity();
   const label = `Admin · ${roleLabel}`;
   const seller = persona === "seller";
+  const advisor = persona === "advisor";
   return (
     <div className="sticky top-0 z-40 flex h-[54px] w-full shrink-0 items-center gap-3 bg-[#151a28] px-3 md:px-4">
       {showMenu && (
@@ -113,13 +114,15 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
           <span
             className={cn(
               "hidden items-center gap-1.5 rounded-full border px-[11px] py-1 text-[12px] font-semibold min-[1180px]:inline-flex",
-              seller
+              advisor
+                ? "border-[rgba(45,212,191,.38)] bg-[rgba(45,212,191,.14)] text-[#5EEAD4]"
+                : seller
                 ? "border-[rgba(246,168,35,.35)] bg-[rgba(246,168,35,.14)] text-[#F6A823]"
                 : "border-[rgba(99,110,250,.40)] bg-[rgba(99,110,250,.16)] text-[#A5ADFF]",
             )}
           >
-            <span className={cn("h-[7px] w-[7px] rounded-full", seller ? "bg-[#F6A823]" : "bg-[#7C85FF]")} />
-            {t(seller ? "Seller view" : "Buyer view")}
+            <span className={cn("h-[7px] w-[7px] rounded-full", advisor ? "bg-[#2DD4BF]" : seller ? "bg-[#F6A823]" : "bg-[#7C85FF]")} />
+            {t(advisor ? "Advisor view" : seller ? "Seller view" : "Buyer view")}
           </span>
         ) : (
           <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
@@ -134,6 +137,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
 const BADGE: Record<Persona, string> = {
   buyer: "bg-[#dbeafe] text-[#1d4ed8]",
   seller: "bg-[#dcfce7] text-[#15803d]",
+  advisor: "bg-[#E0F5F2] text-[#0F766E]",
 };
 
 export function PersonaBadge({ persona }: { persona: Persona }) {
@@ -145,25 +149,28 @@ export function PersonaBadge({ persona }: { persona: Persona }) {
 }
 
 export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
-  const { persona, setPersona } = usePersona();
+  const { persona, setPersona, advisorAllowed } = usePersona();
   const { data } = useSessionContext();
   const { name, initials } = useUserIdentity();
+  const parts = (advisorAllowed ? ["seller", "buyer", "advisor"] : ["seller", "buyer"]) as Persona[];
+  const advisor = persona === "advisor";
+  const avatar = advisor ? "bg-gradient-to-br from-[#2BB3A3] to-[#0F766E]" : "bg-gradient-to-br from-[#fb923c] to-[#ea580c]";
   const { t } = useTranslation();
   const u = data?.user;
   const workspace = data?.activeWorkspace?.tenantName ?? data?.tenants?.[0]?.tenantName ?? null;
   const org = u?.organisation ?? workspace;
   const subtitle = [u?.title, org].filter(Boolean).join(" · ");
-  const neutral = persona === "seller" ? workspace : u?.buyerType ?? null;
+  const neutral = persona === "seller" ? workspace : advisor ? null : u?.buyerType ?? null;
   const location = [u?.city, u?.country].filter(Boolean).join(", ");
   if (collapsed) {
-    const tip = `${name} · ${persona === "seller" ? "Seller" : "Buyer"}`;
+    const tip = `${name} · ${persona === "seller" ? "Seller" : advisor ? "Advisor" : "Buyer"}`;
     return (
       <div className="flex flex-col items-center px-2 pt-3">
         <div
           tabIndex={0}
           title={tip}
           aria-label={tip}
-          className="relative grid h-9 w-9 place-items-center rounded-[10px] bg-gradient-to-br from-[#fb923c] to-[#ea580c] text-[13px] font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          className={cn("relative grid h-9 w-9 place-items-center rounded-[10px] text-[13px]", avatar, " font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring")}
         >
           {initials}
           {u?.verified && (
@@ -173,10 +180,10 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           )}
         </div>
         <div role="tablist" aria-label="Persona" className="mt-3 flex flex-col gap-1 rounded-[10px] bg-[var(--mkt-tray)] p-1">
-          {(["seller", "buyer"] as const).map((p) => {
-            const Icon = p === "seller" ? Building2 : Briefcase;
+          {parts.map((p) => {
+            const Icon = p === "seller" ? Building2 : p === "advisor" ? Handshake : Briefcase;
             const on = persona === p;
-            const label = t(p === "seller" ? "I'm Seller" : "I'm Buyer");
+            const label = t(p === "seller" ? "I'm Seller" : p === "advisor" ? "I'm Advisor" : "I'm Buyer");
             return (
               <button
                 key={p}
@@ -211,7 +218,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           <div
             className={cn(
               "relative grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[14px] text-[18px] font-bold text-white",
-              "bg-gradient-to-br from-[#fb923c] to-[#ea580c]",
+              avatar,
             )}
           >
             {initials}
@@ -236,7 +243,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
               )}
             </div>
             {subtitle && (
-              <div className={"mt-0.5 truncate text-[13px] leading-snug text-[var(--mkt-muted)]"}>{subtitle}</div>
+              <div className={cn("mt-0.5 text-[13px] leading-snug text-[var(--mkt-muted)]", advisor ? "break-words" : "truncate")}>{subtitle}</div>
             )}
           </div>
         </div>
@@ -270,26 +277,34 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
       <div
         role="tablist"
         aria-label="Persona"
-        className="grid grid-cols-2 gap-1 rounded-[12px] bg-[var(--mkt-tray)] p-1"
+        className={cn("grid gap-1 rounded-[12px] bg-[var(--mkt-tray)] p-1", parts.length === 3 ? "grid-cols-3" : "grid-cols-2")}
       >
-        {(["seller", "buyer"] as const).map((p) => {
+        {parts.map((p) => {
           const Icon = p === "seller" ? Building2 : Briefcase;
           const on = persona === p;
+          const three = parts.length === 3;
+          const aria = p === "seller" ? "I'm Seller" : p === "advisor" ? "I'm Advisor" : "I'm Buyer";
           return (
             <button
               key={p}
               role="tab"
               aria-selected={on}
+              aria-label={aria}
               onClick={() => setPersona(p)}
               className={cn(
-                "flex h-10 items-center justify-center gap-[7px] rounded-[9px] text-[14px] font-semibold transition-colors",
+                "flex h-10 items-center justify-center gap-[7px] rounded-[9px] font-semibold transition-colors",
+                three ? "text-[13px]" : "text-[14px]",
                 on
                   ? "bg-[var(--role-accent)] text-[var(--role-on)]"
                   : "text-[var(--mkt-muted)] hover:text-sidebar-foreground",
               )}
             >
-              <Icon className="h-[15px] w-[15px]" />
-              {p === "seller" ? "I'm Seller" : "I'm Buyer"}
+              {three ? (p === "seller" ? "Seller" : p === "buyer" ? "Buyer" : "Advisor") : (
+                <>
+                  <Icon className="h-[15px] w-[15px]" />
+                  {aria}
+                </>
+              )}
             </button>
           );
         })}
@@ -316,15 +331,21 @@ function RailDivider() {
 export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
   const { t } = useTranslation();
+  const advisor = persona === "advisor";
   const discover: MenuItem[] =
-    persona === "buyer"
+    advisor
+      ? [
+          { to: "/marketplace/browse", label: "Browse marketplace", icon: LayoutGrid },
+          { to: "/marketplace/favourites", label: "Favourites", icon: Star },
+        ]
+      : persona === "buyer"
       ? [
           { to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid },
           { to: "/marketplace/favourites", label: "Favourites", icon: Star },
         ]
       : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/favourites", label: "Favourites", icon: Star }];
   const workspace: MenuItem[] =
-    persona === "seller"
+    advisor ? [] : persona === "seller"
       ? [
           { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
@@ -345,7 +366,9 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
           { to: "/my-risk", label: "Company Risk", icon: ShieldAlert, lock: "risk" },
         ]
       : [];
-  const account: MenuItem[] = [{ to: "/my-page", label: "My Profile", icon: UserCircle }, { to: "/marketplace/notifications", label: "Notifications", icon: BellRing }];
+  const account: MenuItem[] = advisor
+    ? [{ to: "/my-page", label: "My Profile", icon: UserCircle }]
+    : [{ to: "/my-page", label: "My Profile", icon: UserCircle }, { to: "/marketplace/notifications", label: "Notifications", icon: BellRing }];
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
@@ -376,8 +399,12 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
     return (
       <div>
         <div className="space-y-1">{discover.map(railItem)}</div>
-        <RailDivider />
-        <div className="space-y-1">{workspace.map(railItem)}</div>
+        {workspace.length > 0 && (
+          <>
+            <RailDivider />
+            <div className="space-y-1">{workspace.map(railItem)}</div>
+          </>
+        )}
         {tools.length > 0 && (
           <>
             <RailDivider />
@@ -411,7 +438,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   return (
     <div className="space-y-4">
       <div className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
-      <div className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>
+      {workspace.length > 0 && <div className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>}
       {tools.length > 0 && <div className="space-y-1">{title("Tools")}{tools.map(fullItem)}</div>}
       <div className="space-y-1">{title("Account")}{account.map(fullItem)}</div>
     </div>

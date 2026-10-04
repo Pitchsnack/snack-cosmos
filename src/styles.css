@@ -261,8 +261,12 @@
 [data-mkt-view="buyer"] {
   --role-accent: #4338ca; --role-on: #ffffff; --role-pill-bg: #eef0ff; --role-pill-fg: #4338ca; --role-badge-fg: #4338ca;
 }
+[data-mkt-view="advisor"] {
+  --role-accent: #0f766e; --role-on: #ffffff; --role-pill-bg: #e0f5f2; --role-pill-fg: #0f766e; --role-badge-fg: #0f766e;
+}
 [data-mkt-view] { --mkt-tray: hsl(225 25% 18%); --mkt-muted: #9ca3af; --mkt-card-shadow: none; }
 .dark [data-mkt-view="seller"] { --role-pill-bg: rgba(246, 168, 35, 0.16); --role-pill-fg: #f6a823; }
+.dark [data-mkt-view="advisor"] { --role-pill-bg: rgba(94, 234, 212, 0.16); --role-pill-fg: #5eead4; }
 .dark [data-mkt-view="buyer"] { --role-pill-bg: rgba(165, 173, 255, 0.16); --role-pill-fg: #a5adff; }
 html:not(.dark) [data-mkt-view] {
   --sidebar-background: #ffffff;
