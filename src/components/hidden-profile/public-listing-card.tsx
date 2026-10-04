@@ -124,7 +124,7 @@ export function PublicListingCard({
       className={cn(
         "group flex flex-col overflow-hidden rounded-[14px] border-[1.5px] bg-card text-left transition-all duration-200 ease-out",
         selected ? "border-[#F59E0B] shadow-[0_0_0_4px_rgba(245,158,11,.15)]" : "border-border",
-        interactive && "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-accent hover:shadow-elevated",
+        interactive && "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-accent hover:shadow-[var(--shadow-elevated)]",
         className,
       )}
       style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}

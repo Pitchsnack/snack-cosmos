@@ -192,7 +192,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" && e.target === e.currentTarget) onClick(); } : undefined}
-      className={cn("group/card overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-all duration-200 ease-out hover:border-accent hover:shadow-elevated [&_[data-card-title]]:transition-colors hover:[&_[data-card-title]]:text-accent", className)}
+      className={cn("group/card overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-all duration-200 ease-out hover:border-accent hover:shadow-[var(--shadow-elevated)] [&_[data-card-title]]:transition-colors hover:[&_[data-card-title]]:text-accent", className)}
     >
       <BuyerCover type={i.type} className="h-[110px]">
         <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
