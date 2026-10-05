@@ -38,6 +38,298 @@ export type Database = {
         }
         Relationships: []
       }
+      advisor_firm_credentials: {
+        Row: {
+          checked_at: string | null
+          firm_id: string
+          id: string
+          name: string
+          note: string | null
+          sort_order: number
+          status: string
+        }
+        Insert: {
+          checked_at?: string | null
+          firm_id: string
+          id?: string
+          name: string
+          note?: string | null
+          sort_order?: number
+          status?: string
+        }
+        Update: {
+          checked_at?: string | null
+          firm_id?: string
+          id?: string
+          name?: string
+          note?: string | null
+          sort_order?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_firm_credentials_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_firm_documents: {
+        Row: {
+          checked_at: string | null
+          created_at: string
+          doc_type: string | null
+          file_path: string
+          firm_id: string
+          id: string
+          name: string
+          valid_until: string | null
+        }
+        Insert: {
+          checked_at?: string | null
+          created_at?: string
+          doc_type?: string | null
+          file_path: string
+          firm_id: string
+          id?: string
+          name: string
+          valid_until?: string | null
+        }
+        Update: {
+          checked_at?: string | null
+          created_at?: string
+          doc_type?: string | null
+          file_path?: string
+          firm_id?: string
+          id?: string
+          name?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_firm_documents_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_firm_fees: {
+        Row: {
+          fee: string
+          firm_id: string
+          service: string
+        }
+        Insert: {
+          fee: string
+          firm_id: string
+          service: string
+        }
+        Update: {
+          fee?: string
+          firm_id?: string
+          service?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_firm_fees_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_firm_reviews: {
+        Row: {
+          client_detail: string | null
+          client_role: string
+          client_user_id: string | null
+          comment: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          service: string | null
+          stars: number
+        }
+        Insert: {
+          client_detail?: string | null
+          client_role: string
+          client_user_id?: string | null
+          comment?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          service?: string | null
+          stars: number
+        }
+        Update: {
+          client_detail?: string | null
+          client_role?: string
+          client_user_id?: string | null
+          comment?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          service?: string | null
+          stars?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_firm_reviews_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_firm_team: {
+        Row: {
+          email: string | null
+          firm_id: string
+          id: string
+          name: string
+          role: string | null
+          sort_order: number
+        }
+        Insert: {
+          email?: string | null
+          firm_id: string
+          id?: string
+          name: string
+          role?: string | null
+          sort_order?: number
+        }
+        Update: {
+          email?: string | null
+          firm_id?: string
+          id?: string
+          name?: string
+          role?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_firm_team_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_firms: {
+        Row: {
+          addr_district: string | null
+          addr_postal: string | null
+          addr_province: string | null
+          addr_street: string | null
+          addr_subdistrict: string | null
+          addr_unit: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          deal_max_usd_m: number | null
+          deal_min_usd_m: number | null
+          description: string | null
+          email: string | null
+          firm_type: string
+          id: string
+          languages: string[]
+          legal_name: string | null
+          live_since: string | null
+          logo_path: string | null
+          name: string
+          owner_user_id: string
+          phone: string | null
+          ref_no: string
+          registration_no: string | null
+          sectors: string[]
+          services: string[]
+          status: string
+          team_size: number | null
+          thai_name: string | null
+          updated_at: string
+          verified_at: string | null
+          website: string | null
+          year_founded: number | null
+        }
+        Insert: {
+          addr_district?: string | null
+          addr_postal?: string | null
+          addr_province?: string | null
+          addr_street?: string | null
+          addr_subdistrict?: string | null
+          addr_unit?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          deal_max_usd_m?: number | null
+          deal_min_usd_m?: number | null
+          description?: string | null
+          email?: string | null
+          firm_type: string
+          id?: string
+          languages?: string[]
+          legal_name?: string | null
+          live_since?: string | null
+          logo_path?: string | null
+          name: string
+          owner_user_id: string
+          phone?: string | null
+          ref_no?: string
+          registration_no?: string | null
+          sectors?: string[]
+          services?: string[]
+          status?: string
+          team_size?: number | null
+          thai_name?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          website?: string | null
+          year_founded?: number | null
+        }
+        Update: {
+          addr_district?: string | null
+          addr_postal?: string | null
+          addr_province?: string | null
+          addr_street?: string | null
+          addr_subdistrict?: string | null
+          addr_unit?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          deal_max_usd_m?: number | null
+          deal_min_usd_m?: number | null
+          description?: string | null
+          email?: string | null
+          firm_type?: string
+          id?: string
+          languages?: string[]
+          legal_name?: string | null
+          live_since?: string | null
+          logo_path?: string | null
+          name?: string
+          owner_user_id?: string
+          phone?: string | null
+          ref_no?: string
+          registration_no?: string | null
+          sectors?: string[]
+          services?: string[]
+          status?: string
+          team_size?: number | null
+          thai_name?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          website?: string | null
+          year_founded?: number | null
+        }
+        Relationships: []
+      }
       approval_events: {
         Row: {
           action: string
@@ -4711,6 +5003,7 @@ export type Database = {
         Args: { _startup_id: string; _user_id: string }
         Returns: boolean
       }
+      can_manage_advisor_firm: { Args: { _firm: string }; Returns: boolean }
       can_manage_deal: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean

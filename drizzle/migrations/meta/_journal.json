@@ -351,6 +351,13 @@
       "when": 1791113067853,
       "tag": "0049_advisor_view",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791184863793,
+      "tag": "0050_advisor_firms",
+      "breakpoints": true
     }
   ]
 }
