@@ -112,7 +112,7 @@ function EditForm({ firm, section }: { firm: AdvisorFirm | null; section?: EditS
   const back = () => navigate({ to: "/marketplace/my-company" });
 
   useEffect(() => {
-    if (!section) return;
+    if (!section || section === "firm") return;
     const t = setTimeout(() => document.getElementById(`sec-${section}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     return () => clearTimeout(t);
   }, [section]);
