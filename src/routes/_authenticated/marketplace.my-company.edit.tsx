@@ -1,7 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
+import { AdvisorFirmEdit } from "@/components/advisor/advisor-firm-edit";
+import { usePersona } from "@/hooks/use-marketplace";
+import type { EditSection } from "@/lib/advisor-firm";
+
+const SECTIONS = ["firm", "services", "work", "company", "team", "credentials", "documents"];
+type Search = { firm?: string; new?: string; section?: EditSection };
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/edit")({
+  validateSearch: (s: Record<string, unknown>): Search => ({
+    ...(typeof s.firm === "string" ? { firm: s.firm } : {}),
+    ...(s.new ? { new: "1" } : {}),
+    ...(typeof s.section === "string" && SECTIONS.includes(s.section) ? { section: s.section as EditSection } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Edit investor profile — PitchSnack" },
@@ -12,5 +23,12 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/edi
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: BuyerInvestorEdit,
+  component: EditPage,
 });
+
+function EditPage() {
+  const { persona } = usePersona();
+  const search = Route.useSearch();
+  if (persona === "advisor") return <AdvisorFirmEdit firmId={search.firm ?? null} section={search.section} />;
+  return <BuyerInvestorEdit />;
+}

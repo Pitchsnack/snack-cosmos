@@ -345,7 +345,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
         ]
       : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/favourites", label: "Favourites", icon: Star }];
   const workspace: MenuItem[] =
-    advisor ? [] : persona === "seller"
+    advisor ? [{ to: "/marketplace/my-company", label: "My Company", icon: Building2, exact: false }] : persona === "seller"
       ? [
           { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },

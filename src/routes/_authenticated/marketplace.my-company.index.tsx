@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuyerMyCompany } from "@/components/my-business/buyer-my-company";
+import { AdvisorMyCompany } from "@/components/advisor/advisor-my-company";
+import { usePersona } from "@/hooks/use-marketplace";
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/")({
   head: () => ({
@@ -16,5 +18,6 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/")(
 });
 
 function Page() {
-  return <BuyerMyCompany />;
+  const { persona } = usePersona();
+  return persona === "advisor" ? <AdvisorMyCompany /> : <BuyerMyCompany />;
 }
