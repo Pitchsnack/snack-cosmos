@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
-import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useHasSession } from "@/hooks/use-has-session";
 import { Group, Ring, Row } from "@/components/my-business/my-business-profiles";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
@@ -49,7 +48,6 @@ function useOpenEdit() {
 export function AdvisorMyCompany() {
   const { data, isLoading, refetch, isFetching } = useMyAdvisorFirms();
   const openEdit = useOpenEdit();
-  const [view, setView] = usePersistentView("ps-advisor-mycompany-view", "split" as ViewMode) as unknown as [ViewMode | "profiles", (v: ViewMode | "profiles") => void];
   const [mode, setMode] = useState<"profiles" | ViewMode>("profiles");
   const [q, setQ] = useState("");
   const [svc, setSvc] = useState("all");
@@ -59,7 +57,6 @@ export function AdvisorMyCompany() {
   const [sort, setSort] = useState<"updated" | "name">("updated");
   const [savedOnly, setSavedOnly] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
-  void view; void setView;
 
   const firms = data ?? [];
   const sectors = useMemo(() => [...new Set(firms.flatMap((f) => f.sectors))].sort(), [firms]);

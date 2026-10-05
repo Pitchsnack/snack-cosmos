@@ -190,7 +190,7 @@ export const createAdvisorUploadUrl = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: s2, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUploadUrl(path);
     if (error) throw new Error(error.message);
-    return { path, token: s2.token as string };
+    return { path, url: s2.signedUrl as string };
   });
 
 /** Maps Embed key (browser-visible by design). Null when not configured: the map is left out. */
