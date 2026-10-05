@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert, Handshake } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
 import { PipelineCountBadge, MessagesCountBadge } from "@/components/menu-count-badge";
+import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -158,7 +159,8 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
   const { t } = useTranslation();
   const u = data?.user;
   const workspace = data?.activeWorkspace?.tenantName ?? data?.tenants?.[0]?.tenantName ?? null;
-  const org = u?.organisation ?? workspace;
+  const firms = useMyAdvisorFirms();
+  const org = advisor ? (firms.data?.[0]?.name ?? u?.organisation ?? null) : (u?.organisation ?? workspace);
   const subtitle = [u?.title, org].filter(Boolean).join(" · ");
   const neutral = persona === "seller" ? workspace : advisor ? null : u?.buyerType ?? null;
   const location = [u?.city, u?.country].filter(Boolean).join(", ");
