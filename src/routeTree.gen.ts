@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as BadgesRouteImport } from './routes/badges'
@@ -21,7 +22,6 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SellersRouteImport } from './routes/sellers'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
@@ -46,6 +46,7 @@ import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSharedDealsRouteImport } from './routes/_authenticated/shared-deals'
 import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_authenticated/startup-activity'
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
+import { Route as AuthenticatedTenantsRouteImport } from './routes/_authenticated/tenants'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedApprovalsIndexRouteImport } from './routes/_authenticated/approvals.index'
@@ -100,6 +101,11 @@ import { Route as AdvisorCompanyIdSetupRouteImport } from './routes/advisor.comp
 import { Route as BuyerCompanyIdSetupRouteImport } from './routes/buyer.company.$id.setup'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -158,11 +164,6 @@ const SellersRoute = SellersRouteImport.update({
   id: '/sellers',
   path: '/sellers',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAccessManagementRoute =
   AuthenticatedAccessManagementRouteImport.update({
@@ -296,6 +297,11 @@ const AuthenticatedStartupActivityRoute =
 const AuthenticatedStartupsRoute = AuthenticatedStartupsRouteImport.update({
   id: '/startups',
   path: '/startups',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTenantsRoute = AuthenticatedTenantsRouteImport.update({
+  id: '/tenants',
+  path: '/tenants',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
@@ -610,7 +616,7 @@ const LovableEmailTransactionalPreviewRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/badges': typeof BadgesRoute
   '/buyers': typeof BuyersRoute
@@ -646,6 +652,7 @@ export interface FileRoutesByFullPath {
   '/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
+  '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
@@ -701,6 +708,7 @@ export interface FileRoutesByFullPath {
   '/startups/$id/': typeof AuthenticatedStartupsIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/badges': typeof BadgesRoute
   '/buyers': typeof BuyersRoute
@@ -730,8 +738,8 @@ export interface FileRoutesByTo {
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
+  '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
-  '/': typeof AuthenticatedIndexRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
   '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
   '/deals/new': typeof AuthenticatedDealsNewRoute
@@ -782,6 +790,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/badges': typeof BadgesRoute
@@ -818,8 +827,8 @@ export interface FileRoutesById {
   '/_authenticated/shared-deals': typeof AuthenticatedSharedDealsRouteWithChildren
   '/_authenticated/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
+  '/_authenticated/tenants': typeof AuthenticatedTenantsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/_authenticated/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
   '/_authenticated/deals/$id': typeof AuthenticatedDealsIdRouteWithChildren
@@ -912,6 +921,7 @@ export interface FileRouteTypes {
     | '/shared-deals'
     | '/startup-activity'
     | '/startups'
+    | '/tenants'
     | '/users'
     | '/sp2-gateway/'
     | '/contacts/quick-add'
@@ -967,6 +977,7 @@ export interface FileRouteTypes {
     | '/startups/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/accept-invite'
     | '/badges'
     | '/buyers'
@@ -996,8 +1007,8 @@ export interface FileRouteTypes {
     | '/preferences'
     | '/security'
     | '/startup-activity'
+    | '/tenants'
     | '/users'
-    | '/'
     | '/sp2-gateway'
     | '/contacts/quick-add'
     | '/deals/new'
@@ -1047,6 +1058,7 @@ export interface FileRouteTypes {
     | '/startups/$id'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/accept-invite'
     | '/badges'
@@ -1083,8 +1095,8 @@ export interface FileRouteTypes {
     | '/_authenticated/shared-deals'
     | '/_authenticated/startup-activity'
     | '/_authenticated/startups'
+    | '/_authenticated/tenants'
     | '/_authenticated/users'
-    | '/_authenticated/'
     | '/sp2-gateway/'
     | '/_authenticated/contacts/quick-add'
     | '/_authenticated/deals/$id'
@@ -1140,6 +1152,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
   BadgesRoute: typeof BadgesRoute
@@ -1160,6 +1173,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -1243,13 +1263,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/sellers'
       preLoaderRoute: typeof SellersRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/access-management': {
       id: '/_authenticated/access-management'
@@ -1417,6 +1430,13 @@ declare module '@tanstack/react-router' {
       path: '/startups'
       fullPath: '/startups'
       preLoaderRoute: typeof AuthenticatedStartupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tenants': {
+      id: '/_authenticated/tenants'
+      path: '/tenants'
+      fullPath: '/tenants'
+      preLoaderRoute: typeof AuthenticatedTenantsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/users': {
@@ -2032,8 +2052,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSharedDealsRoute: typeof AuthenticatedSharedDealsRouteWithChildren
   AuthenticatedStartupActivityRoute: typeof AuthenticatedStartupActivityRoute
   AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
+  AuthenticatedTenantsRoute: typeof AuthenticatedTenantsRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedGlobalStartupsIdRoute: typeof AuthenticatedGlobalStartupsIdRoute
   AuthenticatedGlobalStartupsBrowseRoute: typeof AuthenticatedGlobalStartupsBrowseRoute
   AuthenticatedMyStartupsIdRoute: typeof AuthenticatedMyStartupsIdRouteWithChildren
@@ -2071,8 +2091,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSharedDealsRoute: AuthenticatedSharedDealsRouteWithChildren,
   AuthenticatedStartupActivityRoute: AuthenticatedStartupActivityRoute,
   AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
+  AuthenticatedTenantsRoute: AuthenticatedTenantsRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedGlobalStartupsIdRoute: AuthenticatedGlobalStartupsIdRoute,
   AuthenticatedGlobalStartupsBrowseRoute:
     AuthenticatedGlobalStartupsBrowseRoute,
@@ -2092,6 +2112,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
   BadgesRoute: BadgesRoute,
