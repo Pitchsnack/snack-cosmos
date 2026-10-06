@@ -252,7 +252,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
         </div>
       )}
 
-      <Section id="firm" active={!setup && section === "firm" && section !== "firm"} title="Firm" setup={!!setup}>
+      <Section id="firm" active={false} title="Firm" setup={!!setup}>
         <F label="Logo" opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
           <LogoRow logo={f.logo} busy={uploading} error={logoErr} onFile={onLogo} onRemove={() => set("logo", { path: null, url: null, name: null, sizeKb: null, source: null })} />
         </F>
@@ -287,7 +287,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
         </F>
       </Section>
 
-      <Section id="services" active={!setup && section === "services" && section !== "firm"} title="Services and fees" setup={!!setup}
+      <Section id="services" active={!setup && section === "services"} title="Services and fees" setup={!!setup}
         action={setup ? <button type="button" onClick={setup.onChangeServices} className="text-[13px] font-semibold text-[#1E2A4A] hover:underline dark:text-foreground">Change services</button> : undefined}>
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">Pick at least one service.</p>}
@@ -303,7 +303,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
         )}
       </Section>
 
-      <Section id="work" active={!setup && section === "work" && section !== "firm"} title="Work" setup={!!setup}>
+      <Section id="work" active={!setup && section === "work"} title="Work" setup={!!setup}>
         <div className="grid gap-4 sm:grid-cols-2">
           <F label="Typical deal size" opt tag={f.dealBand ? src.dealBand : undefined} hint={deal ? <>Your card shows <b>{deal.usd}</b> ({deal.thb}).</> : undefined}>
             <select className={sel} value={f.dealBand} onChange={(e) => set("dealBand", e.target.value)}>
@@ -331,7 +331,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
         {!setup && <F label="Sectors" opt><MultiPick options={SECTORS} value={f.sectors} onChange={(v) => set("sectors", v)} /></F>}
       </Section>
 
-      <Section id="company" active={!setup && section === "company" && section !== "firm"} title="Company" setup={!!setup}>
+      <Section id="company" active={!setup && section === "company"} title="Company" setup={!!setup}>
         <div className="grid gap-4 sm:grid-cols-2">
           <F label="Legal name" req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
@@ -354,7 +354,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
         </div>
       </Section>
 
-      <Section id="team" active={!setup && section === "team" && section !== "firm"} title="Team" setup={!!setup}>
+      <Section id="team" active={!setup && section === "team"} title="Team" setup={!!setup}>
         {f.team.map((t, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <F label="Name" req><Input className={inp} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
@@ -367,7 +367,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
         {setup && <p className="text-[12px] text-muted-foreground">You're added from your account. Add the people sellers and buyers will work with.</p>}
       </Section>
 
-      <Section id="credentials" active={!setup && section === "credentials" && section !== "firm"} title="Licences and credentials" setup={!!setup}>
+      <Section id="credentials" active={!setup && section === "credentials"} title="Licences and credentials" setup={!!setup}>
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.</p>}
         {f.credentials.map((c, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1.4fr_auto_auto]">
@@ -382,7 +382,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
         <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" /> Add licence or credential</Button>
       </Section>
 
-      <Section id="documents" active={!setup && section === "documents" && section !== "firm"} title="Documents" setup={!!setup}>
+      <Section id="documents" active={!setup && section === "documents"} title="Documents" setup={!!setup}>
         {f.documents.length === 0 && <p className="text-[13px] text-muted-foreground">No documents yet. Upload your company certificate and licences: PDF, DOCX or an image.</p>}
         {f.documents.map((d, i) => (
           <div key={d.id ?? d.path} className="grid items-end gap-3 sm:grid-cols-[1.4fr_auto_auto]">
