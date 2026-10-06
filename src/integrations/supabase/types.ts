@@ -119,18 +119,33 @@ export type Database = {
       }
       advisor_firm_fees: {
         Row: {
+          amount_thb: number | null
           fee: string
+          fee_type: string
           firm_id: string
+          own_words: string | null
+          pct_max: number | null
+          pct_min: number | null
           service: string
         }
         Insert: {
+          amount_thb?: number | null
           fee: string
+          fee_type?: string
           firm_id: string
+          own_words?: string | null
+          pct_max?: number | null
+          pct_min?: number | null
           service: string
         }
         Update: {
+          amount_thb?: number | null
           fee?: string
+          fee_type?: string
           firm_id?: string
+          own_words?: string | null
+          pct_max?: number | null
+          pct_min?: number | null
           service?: string
         }
         Relationships: [
@@ -235,6 +250,7 @@ export type Database = {
           created_at: string
           deal_max_usd_m: number | null
           deal_min_usd_m: number | null
+          deal_size_band: string | null
           description: string | null
           email: string | null
           firm_type: string
@@ -243,6 +259,7 @@ export type Database = {
           legal_name: string | null
           live_since: string | null
           logo_path: string | null
+          logo_source: string | null
           name: string
           owner_user_id: string
           phone: string | null
@@ -250,12 +267,15 @@ export type Database = {
           registration_no: string | null
           sectors: string[]
           services: string[]
+          setup_answered: string[]
+          setup_done_at: string | null
           status: string
           team_size: number | null
           thai_name: string | null
           updated_at: string
           verified_at: string | null
           website: string | null
+          wizard_state: Json
           year_founded: number | null
         }
         Insert: {
@@ -270,27 +290,32 @@ export type Database = {
           created_at?: string
           deal_max_usd_m?: number | null
           deal_min_usd_m?: number | null
+          deal_size_band?: string | null
           description?: string | null
           email?: string | null
-          firm_type: string
+          firm_type?: string
           id?: string
           languages?: string[]
           legal_name?: string | null
           live_since?: string | null
           logo_path?: string | null
-          name: string
+          logo_source?: string | null
+          name?: string
           owner_user_id: string
           phone?: string | null
           ref_no?: string
           registration_no?: string | null
           sectors?: string[]
           services?: string[]
+          setup_answered?: string[]
+          setup_done_at?: string | null
           status?: string
           team_size?: number | null
           thai_name?: string | null
           updated_at?: string
           verified_at?: string | null
           website?: string | null
+          wizard_state?: Json
           year_founded?: number | null
         }
         Update: {
@@ -305,6 +330,7 @@ export type Database = {
           created_at?: string
           deal_max_usd_m?: number | null
           deal_min_usd_m?: number | null
+          deal_size_band?: string | null
           description?: string | null
           email?: string | null
           firm_type?: string
@@ -313,6 +339,7 @@ export type Database = {
           legal_name?: string | null
           live_since?: string | null
           logo_path?: string | null
+          logo_source?: string | null
           name?: string
           owner_user_id?: string
           phone?: string | null
@@ -320,12 +347,15 @@ export type Database = {
           registration_no?: string | null
           sectors?: string[]
           services?: string[]
+          setup_answered?: string[]
+          setup_done_at?: string | null
           status?: string
           team_size?: number | null
           thai_name?: string | null
           updated_at?: string
           verified_at?: string | null
           website?: string | null
+          wizard_state?: Json
           year_founded?: number | null
         }
         Relationships: []
