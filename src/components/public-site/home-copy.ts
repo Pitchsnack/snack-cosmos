@@ -26,7 +26,7 @@ export const HERO = {
   iMin: c("Min. target revenue", "รายได้ขั้นต่ำของกิจการเป้าหมาย"),
   hintMouse: c("Hover a card to see the full listing", "วางเมาส์บนการ์ดเพื่อดูประกาศเต็ม"), hintTouch: c("Tap a card to see the full listing", "แตะการ์ดเพื่อดูประกาศเต็ม"),
   fine: c("Introducer under sections 845–849 of the Civil and Commercial Code · no custody of funds · no side taken · a 1.25–3.0% completion fee on the seller side, published in advance",
-    "ชี้ช่องตามประมวลกฎหมายแพ่งและพาณิชย์ มาตรา 845–849 · ไม่ถือเงิน · ไม่เข้าข้างฝ่ายใด · ค่าธรรมเนียมเมื่อปิดดีล 1.25–3.0% เรียกเก็บจากผู้ขาย และเปิดเผยล่วงหน้า"),
+    " ไม่ถือเงิน · ไม่เข้าข้างฝ่ายใด · ค่าธรรมเนียมเมื่อปิดดีล 1.25–3.0% เรียกเก็บจากผู้ขาย และเปิดเผยล่วงหน้า"),
 };
 
 export const CONNECT = {
