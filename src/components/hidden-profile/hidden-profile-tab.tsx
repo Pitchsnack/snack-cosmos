@@ -17,7 +17,7 @@ import {
   listingTerms,
   type ListingSource,
 } from "@/lib/public-listing";
-import { PublicListingCard } from "./public-listing-card";
+import { PublicListingCard, type ListingPart } from "./public-listing-card";
 import { PublicListingEditor } from "./public-listing-editor";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
 

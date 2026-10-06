@@ -328,6 +328,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
   const startup = isStartupEntry(s.company_type);
   const adminReview = useAdminReview();
   void startup;
+  const navigate = useNavigate();
 
   const create = async () => {
     if (!row) {
