@@ -353,7 +353,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
 
         {/* Row 2: Country | Region | City */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1.5" data-edit-sec="country">
+          <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
             {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
             <div className="flex h-6 items-center"><Label>Country</Label></div>
             <CountryCombobox
