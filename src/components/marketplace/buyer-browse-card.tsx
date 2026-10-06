@@ -75,14 +75,23 @@ export function StatusPill({ status, children }: { status: ListingStatus; childr
   );
 }
 
+export type CardPart = "description" | "ticket" | "aum" | "revenue" | "geography" | "based" | "focus";
+type OnPart = ((k: CardPart) => void) | undefined;
+/** Small Edit link on a card part (only when the card is `editable`). */
+function PartEdit({ k, onPart }: { k: CardPart; onPart: OnPart }) {
+  if (!onPart) return null;
+  return <button type="button" onClick={(e) => { e.stopPropagation(); onPart(k); }} onKeyDown={(e) => e.stopPropagation()}
+    className="ml-auto shrink-0 text-[12.5px] font-medium text-[#4338CA] hover:underline dark:text-[#A5ADFF]">Edit</button>;
+}
+
 const nbspDash = (s: string) => s.replace(/ – /g, "\u00A0– ");
 
-function Figure({ label, band, empty, shade, wideSpan, big }: { label: string; band: string | null | undefined; empty: string; shade?: boolean; wideSpan?: boolean; big?: boolean }) {
+function Figure({ label, band, empty, shade, wideSpan, big, part, onPart }: { part?: CardPart; onPart?: OnPart; label: string; band: string | null | undefined; empty: string; shade?: boolean; wideSpan?: boolean; big?: boolean }) {
   const b = bandOf(band);
   const on = shade && !!b;
   return (
     <div className={cn("min-w-0 px-[11px] pb-[9px] pt-[10px]", on ? "bg-[#FFF4E0] dark:bg-amber-950/40" : "bg-[#FAFBFC] dark:bg-muted/40", wideSpan && "col-span-2")}>
-      <dt className={cn("truncate", big ? "text-[12px]" : "text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}>{label}</dt>
+      <dt className={cn("flex items-center gap-2 truncate", big ? "text-[12px]" : "text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}><span className="truncate">{label}</span>{part && <PartEdit k={part} onPart={onPart} />}</dt>
       {b ? (
         <dd>
           <div className={cn("tabular-nums text-[#151A28] dark:text-foreground", big ? "text-[15px] font-semibold" : "text-[13.5px] font-bold")}>{nbspDash(b.label)}</div>
@@ -96,7 +105,7 @@ function Figure({ label, band, empty, shade, wideSpan, big }: { label: string; b
 }
 
 /** Ticket size · AUM · Min. target revenue · Geography. Wide (≥560px) puts the values in one row. */
-export function KeyFigures({ i, empty, oneRow }: { i: CardInvestor; empty: string; oneRow?: boolean }) {
+export function KeyFigures({ i, empty, oneRow, onPart }: { i: CardInvestor; empty: string; oneRow?: boolean; onPart?: OnPart }) {
   const individual = (i.type ?? "") === INDIVIDUAL_TYPE || i.relation === "individual" || i.relation === "agent";
   const corp = isCorporateBuyer(i.type);
   const places = (i.geography ?? "").split(/\s*[,·]\s*/).filter(Boolean);
@@ -104,14 +113,15 @@ export function KeyFigures({ i, empty, oneRow }: { i: CardInvestor; empty: strin
     <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
       <div className={cn("grid gap-px bg-[#EEF0F3] dark:bg-border",
         oneRow ? (individual ? "grid-cols-2" : "grid-cols-3") : "grid-cols-2")}>
-        <Figure label="Ticket size" band={i.ticketBand} empty={empty} big />
-        {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big />}
-        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big />
+        <Figure label="Ticket size" band={i.ticketBand} empty={empty} big part="ticket" onPart={onPart} />
+        {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big part="aum" onPart={onPart} />}
+        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big part="revenue" onPart={onPart} />
       </div>
       {(
         <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
           <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
           <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.map(shortPlace).join(" · ") : empty}</dd>
+          <PartEdit k="geography" onPart={onPart} />
         </div>
       )}
     </dl>
@@ -130,14 +140,15 @@ export function NameAfterNdaPill() {
 }
 
 /** Card body: each fact once. `oneRow` puts the three figures in one row (Split panel). */
-function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; desc: string | null; oneRow?: boolean }) {
+function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: string; desc: string | null; oneRow?: boolean; onPart?: OnPart }) {
   const [open, setOpen] = useState(false);
   const showMore = oneRow || open;
   const chips = [...i.sectors, ...i.stages, ...i.dealTypes].map(shortChip);
-  const row = (label: string, value: React.ReactNode) => (
+  const row = (label: string, value: React.ReactNode, part?: CardPart) => (
     <div className="flex items-start gap-2 py-[5px] text-[13px]">
       <span className="w-[88px] shrink-0 text-[#6B7280] dark:text-muted-foreground">{label}</span>
       <div className="min-w-0 flex-1 text-[#374151] dark:text-foreground">{value}</div>
+      {part && <PartEdit k={part} onPart={onPart} />}
     </div>
   );
   return (
@@ -152,15 +163,15 @@ function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; 
           {i.proofOfFunds && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Proof of funds</Pill>}
         </div>
       )}
-      {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}</p>}
-      <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow={oneRow} /></div>
+      {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}{onPart && <span className="ml-2 inline-flex align-baseline"><PartEdit k="description" onPart={onPart} /></span>}</p>}
+      <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow={oneRow} onPart={onPart} /></div>
       {showMore && (i.city || chips.length > 0) && <div className="mt-3">
-        {i.city && row("Based in", i.city)}
+        {i.city && row("Based in", i.city, "based")}
         {chips.length > 0 && row("Focus", (
           <div className="flex flex-wrap gap-1.5">
             {chips.map((c, k) => <span key={c + k} className="rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-[9px] py-0.5 text-[12px] text-[#374151] dark:border-border dark:bg-muted dark:text-foreground">{c}</span>)}
           </div>
-        ))}
+        ), "focus")}
       </div>}
       {!oneRow && (
         <button type="button" onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }} onKeyDown={(e) => e.stopPropagation()}
@@ -173,7 +184,7 @@ function CardBody({ i, empty, desc, oneRow }: { i: CardInvestor; empty: string; 
 }
 
 /** The one public investor card (Browse investors, Favourites, My Company). Only public fields reach it. */
-export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel }: {
+export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel, editable }: {
   i: CardInvestor; className?: string; onClick?: () => void; selected?: boolean;
   /** Legacy props, ignored: the card always shows in full. */
   expanded?: boolean; onToggleExpand?: () => void; footerRight?: React.ReactNode;
@@ -184,6 +195,8 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
   cardFooter?: React.ReactNode;
   /** Split information panel: figures in one row of three. */
   panel?: boolean;
+  /** Buyer's own Public view preview only: an Edit link on each card part. Off by default. */
+  editable?: (k: CardPart) => void;
 }) {
   const desc = i.description || (empty === "Not added" ? "Not added" : null);
   return (
@@ -201,7 +214,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
         {(topRight || status) && <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5">{status && <StatusPill status={status} />}{topRight}</div>}
       </BuyerCover>
       <div className="p-4">
-        <CardBody i={i} empty={empty} desc={desc} oneRow={panel} />
+        <CardBody i={i} empty={empty} desc={desc} oneRow={panel} onPart={editable} />
         {cardFooter}
       </div>
     </div>
@@ -209,13 +222,13 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
 }
 
 /** Buyer's own "How sellers see it" preview — same card. */
-export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands, relation = null, empty, status, expanded, cardFooter }: {
+export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands, relation = null, empty, status, expanded, cardFooter, editable }: {
   b: PublicBuyer; onClick?: () => void; className?: string; revLabel?: string | null;
   bands?: { aum?: string | null; ticket?: string | null; rev?: string | null };
-  relation?: CardInvestor["relation"]; empty?: string; status?: ListingStatus; expanded?: boolean; cardFooter?: React.ReactNode;
+  relation?: CardInvestor["relation"]; empty?: string; status?: ListingStatus; expanded?: boolean; cardFooter?: React.ReactNode; editable?: (k: CardPart) => void;
 }) {
   return (
-    <PublicInvestorCard onClick={onClick} className={className} empty={empty} status={status} expanded={expanded} cardFooter={cardFooter} i={{
+    <PublicInvestorCard onClick={onClick} className={className} empty={empty} status={status} expanded={expanded} cardFooter={cardFooter} editable={editable} i={{
       refNo: b.refNo, codeName: b.codeName, name: null, type: b.type, city: b.city, country: b.country,
       description: b.description, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: (b as PublicBuyer & { geography?: string | null }).geography ?? null,
       verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revLabel,

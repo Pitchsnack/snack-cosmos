@@ -89,9 +89,18 @@ export function dealLine(d?: ListingDeal, t: (s: string) => string = (s) => s) {
  * the Split list and the Split detail panel. The cover is ALWAYS sector vector
  * art — photos and logos only appear in the Private view after NDA.
  */
+export type ListingPart = "description" | "chips" | "revenue" | "employees" | "terms";
+function PartEdit({ k, on }: { k: ListingPart; on?: (k: ListingPart) => void }) {
+  if (!on) return null;
+  return <button type="button" onClick={(e) => { e.stopPropagation(); on(k); }}
+    className="ml-auto shrink-0 text-[12.5px] font-medium normal-case tracking-normal text-[#8A4B06] hover:underline dark:text-[#F6A823]">Edit</button>;
+}
+
 export function PublicListingCard({
-  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta,
+  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta, editable,
 }: {
+  /** Seller's own Public view preview only: an Edit link on each card part. Off by default. */
+  editable?: (k: ListingPart) => void;
   l: PublicListing;
   seller?: boolean;
   className?: string;
@@ -155,15 +164,19 @@ export function PublicListingCard({
             <span className="text-[13px] text-muted-foreground">{t("Revenue")} FY25</span>
             <span className="text-[14px] font-bold">{l.revenueBand}</span>
             <span className="rounded bg-[#EEF0FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#4338CA]">{t("Range")}</span>
+            <PartEdit k="revenue" on={editable} />
           </div>
         )}
-        {meta && <div className={cn("mt-1.5 text-[12.5px] text-muted-foreground", !wrapMeta && "truncate")}>{meta}</div>}
+        {meta && (editable
+          ? <div className="mt-1.5 flex items-center gap-2 text-[12.5px] text-muted-foreground"><span className="min-w-0 truncate">{meta}</span><PartEdit k="employees" on={editable} /></div>
+          : <div className={cn("mt-1.5 text-[12.5px] text-muted-foreground", !wrapMeta && "truncate")}>{meta}</div>)}
         {expanded && (
           <div className="mt-3 space-y-2.5 border-t border-border pt-3">
-            {l.description && <p className="text-[13px] text-foreground/80">{l.description}</p>}
+            {l.description ? <p className="text-[13px] text-foreground/80">{l.description}{editable && <span className="ml-2 inline-flex"><PartEdit k="description" on={editable} /></span>}</p>
+              : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("description"); }} className="text-[13px] text-muted-foreground hover:underline">Write a public description</button>}
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
               <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Products & services")}</span>
-              <TagChips tags={l.productTags} />
+              <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><TagChips tags={l.productTags} /></div><PartEdit k="chips" on={editable} /></div>
             </div>
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
               <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Markets")}</span>
@@ -172,7 +185,8 @@ export function PublicListingCard({
             {l.certifications.length > 0 && (
               <div className="flex items-center gap-2 text-[12.5px]"><ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />{l.certifications.join(" · ")}</div>
             )}
-            {dl && <div className="flex items-center gap-2 text-[12.5px] font-medium"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />{dl}</div>}
+            {dl ? <div className="flex items-center gap-2 text-[12.5px] font-medium"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />{dl}<PartEdit k="terms" on={editable} /></div>
+              : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("terms"); }} className="flex items-center gap-2 text-[12.5px] text-muted-foreground hover:underline"><Briefcase className="h-3.5 w-3.5" />Set deal terms</button>}
           </div>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-2 text-[12px] text-muted-foreground" style={{ marginTop: 12 }}>

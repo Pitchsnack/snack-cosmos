@@ -328,6 +328,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
   const startup = isStartupEntry(s.company_type);
   const adminReview = useAdminReview();
   void startup;
+  const navigate = useNavigate();
 
   const create = async () => {
     if (!row) {
@@ -399,6 +400,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
         showMarkers
         source={s as ListingSource}
         hasFinancials={hasFinancials}
+        onPart={(k) => void navigate({ to: "/my-startups/$id/edit", params: { id: s.id }, search: { section: k === "chips" ? "tags" : k === "employees" ? "size" : "revenue" } as never })}
         creating={actions.create.isPending}
         onCreate={create}
         onEdit={() => setEditing(true)}

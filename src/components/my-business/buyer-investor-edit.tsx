@@ -353,7 +353,8 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
 
         {/* Row 2: Country | Region | City */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1.5">
+          <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
+            {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
             <div className="flex h-6 items-center"><Label>Country</Label></div>
             <CountryCombobox
               value={f.country}
@@ -483,6 +484,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
           <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
+          <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
           <Label>Min. target revenue<Tag s={src.revenue_min_band} /></Label>
           <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
             <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
@@ -492,6 +494,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
             </SelectContent>
           </Select>
           <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
+          </S>
         </div>
         <S cur={setup ? undefined : sec} id="focus" className="space-y-1.5">
           <Label>Investment Focus<Tag s={src.deal_types} /></Label>
@@ -515,12 +518,12 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </S>
 
         {/* Geography */}
-        <div className="space-y-1.5">
+        <S cur={setup ? undefined : sec} id="geography" className="space-y-1.5">
           <Label>Geography<Tag s={src.geography} /></Label>
           <div className="flex flex-wrap gap-2">
             {allGeo.map((g) => <Pill key={g} active={focus.includes(g)} onClick={() => setFocus(toggle(focus, g, 10))}>{g}</Pill>)}
           </div>
-        </div>
+        </S>
 
         {/* Preferred Stages */}
         {showsStages(f.investor_type) && <S cur={setup ? undefined : sec} id="stages" className="space-y-1.5">
@@ -561,6 +564,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         {/* Public view */}
         <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public view · sellers see this before an NDA</h3>
+          <S cur={setup ? undefined : sec} id="description" className="space-y-1.5">
           <Label>Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span><Tag s={src.description} /></Label>
           <Textarea id="f-description" value={f.description} onChange={(e) => setF((o) => ({ ...o, description: e.target.value.slice(0, 140) }))} rows={3} maxLength={140}
             placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans" className={errs.description ? "border-[#B42318]" : ""} />
@@ -568,6 +572,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
             <span className="text-[#B42318]">{errs.description && errs.description !== "leak" ? errs.description : ""}</span>
             <span className="text-muted-foreground">{f.description.length} / 140</span>
           </div>
+          </S>
           {leaks.length > 0 && <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Your description mentions <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
         </div>
 
