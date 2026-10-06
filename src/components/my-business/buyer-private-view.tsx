@@ -14,6 +14,7 @@ import { getMyBuyerInvestor, submitMyBuyerForVerification } from "@/lib/buyer-in
 import { BUYER_INVESTOR_KEY } from "@/components/my-business/buyer-investor-edit";
 import { cn } from "@/lib/utils";
 import { SectionEditLink } from "@/components/common/edit-section";
+import { showsStages } from "@/lib/investor-bands";
 
 export type BuyerInvestorData = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
 
