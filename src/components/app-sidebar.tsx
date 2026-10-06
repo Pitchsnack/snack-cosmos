@@ -48,7 +48,7 @@ import { GlobalRouteLoading } from "@/components/ui/global-loading";
 import { useTranslation } from "@/i18n/language";
 
 type NavPath =
-  | "/"
+  | "/tenants"
   | "/dashboard"
   | "/email-alerts"
   | "/startups"
