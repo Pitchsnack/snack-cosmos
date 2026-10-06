@@ -72,9 +72,13 @@ function TopBar({ current }: { current: keyof typeof NAV | null }) {
               : <a key={k} href={to} aria-current={current === k ? "page" : undefined} className={current === k ? "is-cur" : undefined}>{t(NAV[k])}</a>
           ))}
         </nav>
-        <a href={onHome ? "#close" : "/#close"} className="ph-talk">{t(NAV.talk)}</a>
-        <LangMenu />
-        <Link to="/login" className="ph-outline ph-login"><LogIn className="ph-login-ic" size={15} />{t(NAV.login)}</Link>
+        <div className="ph-ctrls">
+          <a href={onHome ? "#close" : "/#close"} className="ph-talk">{t(NAV.talk)}</a>
+          <div className="ph-ctrls-r">
+            <LangMenu />
+            <Link to="/login" className="ph-login"><LogIn className="ph-login-ic" size={15} />{t(NAV.login)}</Link>
+          </div>
+        </div>
       </div>
     </header>
   );
@@ -103,7 +107,7 @@ function LangMenu() {
   };
   return (
     <div className="ph-lang">
-      <button ref={btn} type="button" className="ph-outline ph-lang-btn" aria-haspopup="menu" aria-expanded={open} title="ภาษา / Language"
+      <button ref={btn} type="button" className="ph-lang-btn" aria-haspopup="menu" aria-expanded={open} title="ภาษา / Language"
         aria-label={`${t(NAV.langShort)} · ภาษา / Language`} onClick={() => setOpen((v) => !v)}
         onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); } }}>
         <Globe size={15} /><span>{t(NAV.langShort)}</span><ChevronDown size={13} className={open ? "ph-rot" : undefined} />
