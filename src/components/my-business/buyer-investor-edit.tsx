@@ -1,3 +1,4 @@
+import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
@@ -102,12 +103,12 @@ function TagEditor({
 }
 
 /** Buyer › My Company › Edit profile — same fields, same order as Edit investor. */
-export function BuyerInvestorEdit() {
+export function BuyerInvestorEdit({ section, add }: { section?: string; add?: boolean } = {}) {
   const fetchMe = useServerFn(getMyBuyerInvestor);
   const { data, isLoading, error } = useQuery({ queryKey: BUYER_INVESTOR_KEY, queryFn: () => fetchMe(), meta: { pageLoading: true } });
   if (isLoading) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
-  return <Form data={data} />;
+  return <Form data={data} section={section} add={add} />;
 }
 
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
@@ -137,7 +138,7 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
+function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; section?: string; add?: boolean }) {
   const inv = data.investor;
   const src = setup?.sources ?? {};
   const rel = data.buyer.relation;
@@ -163,11 +164,19 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
   const [keywords, setKeywords] = useState(inv.keywords);
   const [focus, setFocus] = useState(inv.investment_focus);
   const [stages, setStages] = useState(inv.preferred_stages);
+  const showsFund = !individual && rel !== "agent";
+  // Fund falls back to Investor Classification when the form hides the band.
+  const sec = section === "fund" && !showsFund ? "classification" : section;
+  const S = ({ id, className, children }: { id: string; className?: string; children: React.ReactNode }) => (
+    <EditSec id={id} tone="buyer" active={!setup && sec === id} className={className}>{children}</EditSec>
+  );
+  useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "[data-row]:last-child input" } : sec === "industries" ? { focusSelector: "input[type=checkbox]" } : undefined);
   const [industries, setIndustries] = useState(inv.preferred_industries);
   const [customIndustry, setCustomIndustry] = useState("");
   const [portfolio, setPortfolio] = useState(inv.portfolio_extra);
   const [media, setMedia] = useState<EntityMediaState>(() => initialMedia(inv));
   const [people, setPeople] = useState(() => {
+    if (section === "people" && add) return [...data.people, { name: "", role: "", email: "", phone: "" }];
     if (data.people.length) return data.people;
     if (setup && rel !== "agent" && data.account.name) return [{ name: data.account.name, role: data.account.title, email: "", phone: "" }];
     return [];
@@ -292,7 +301,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
 
       <form onSubmit={submit} className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm">
         {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
-        <div className="flex items-start gap-4">
+        <S id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
             <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: f.website_url }} />
           </div>
@@ -310,7 +319,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
               </Tooltip>
             </TooltipProvider>
           </div>
-        </div>
+        </div></S>
 
         {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className="grid grid-cols-[100px_1fr_220px] gap-4">
@@ -327,7 +336,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
               className={errs.investor_name ? "border-[#B42318]" : ""} />
             <Err k="investor_name" />
           </div>
-          <div className="space-y-1.5">
+          <S id="classification" className="space-y-1.5">
             <Label>Investor Classification<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
@@ -338,7 +347,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </S>
         </div>
 
         {/* Row 2: Country | Region | City */}
@@ -438,8 +447,8 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
         </div>
 
         {/* Fund & ticket — US$ bands */}
-        {!individual && rel !== "agent" && (
-          <div className="grid grid-cols-2 gap-4">
+        {showsFund && (
+          <S id="fund"><div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>{corp ? "Group revenue band" : "Fund's AUM band"}<Tag s={src.aum_band} /></Label>
               <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
@@ -457,9 +466,9 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
                 onChange={(e) => { const d = e.target.value.replace(/[^\d]/g, ""); setF((o) => ({ ...o, aum_exact: d ? Number(d).toLocaleString("en-US") : "" })); }} />
               <p className="text-[12px] text-muted-foreground">Private. Only sellers who approve your NDA see it.</p>
             </div>
-          </div>
+          </div></S>
         )}
-        <div className="space-y-1.5">
+        <S id="mandate" className="space-y-1.5">
           <Label>Average investment per deal<Tag s={src.ticket_band} /></Label>
           <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
             <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
@@ -469,7 +478,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
             </SelectContent>
           </Select>
           <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size. Sellers see this range on your card and filter Browse investors by it.</p>
-        </div>
+        </S>
         {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
           <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
@@ -483,12 +492,12 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
           </Select>
           <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
         </div>
-        <div className="space-y-1.5">
+        <S id="focus" className="space-y-1.5">
           <Label>Investment Focus<Tag s={src.deal_types} /></Label>
           <div className="flex flex-wrap gap-2">
             {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{d}</Pill>)}
           </div>
-        </div>
+        </S>
 
         {/* About */}
         <div className="space-y-1.5">
@@ -498,11 +507,11 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
         </div>
 
         {/* Tags */}
-        <div className="space-y-1.5">
+        <S id="keywords" className="space-y-1.5">
           <Label>Product &amp; Service Tags (Up to 5)</Label>
           <TagEditor values={keywords} onChange={setKeywords} max={5} maxLength={50}
             placeholder="Example: Portfolio Management, Due Diligence" />
-        </div>
+        </S>
 
         {/* Geography */}
         <div className="space-y-1.5">
@@ -513,17 +522,17 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
         </div>
 
         {/* Preferred Stages */}
-        {showsStages(f.investor_type) && <div className="space-y-1.5">
+        {showsStages(f.investor_type) && <S id="stages" className="space-y-1.5">
           <Label>Preferred Stages</Label>
           <div className="flex flex-wrap gap-2">
             {allStages.map((s) => (
               <Pill key={s} active={stages.includes(s)} onClick={() => setStages(toggle(stages, s))}>{s}</Pill>
             ))}
           </div>
-        </div>}
+        </S>}
 
         {/* Preferred Industries */}
-        <div className="space-y-1.5">
+        <S id="industries" className="space-y-1.5">
           <Label>Preferred Industries<Tag s={src.preferred_industries} /></Label>
           <label className="flex items-center gap-2 text-[13px]">
             <input type="checkbox" checked={agnostic} onChange={() => setIndustries(agnostic ? industries.filter((x) => x !== SECTOR_AGNOSTIC) : [SECTOR_AGNOSTIC, ...industries])} />
@@ -546,7 +555,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
               onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); } }} />
             <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
           </div>
-        </div>
+        </S>
 
         {/* Public view */}
         <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
@@ -562,7 +571,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
         </div>
 
         {/* Portfolio Startups */}
-        <div className="space-y-1.5">
+        <S id="portfolio" className="space-y-1.5">
           <Label>Portfolio Startups</Label>
           {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).length > 0 && (
             <p className="text-xs text-muted-foreground">
@@ -570,7 +579,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
             </p>
           )}
           <TagEditor values={portfolio} onChange={setPortfolio} max={50} placeholder="Add a portfolio company" />
-        </div>
+        </S>
 
         {/* For verification */}
         <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
@@ -586,11 +595,11 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
               <Err k="registration_no" />
             </div>
           )}
-          <div className="space-y-1.5">
+          <S id="people" className="space-y-1.5">
             <Label>Decision makers</Label>
             <div className="space-y-2">
               {people.map((p, i) => (
-                <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+                <div key={i} data-row className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
                   {(["name", "role", "email", "phone"] as const).map((k) => (
                     <Input key={k} placeholder={k[0].toUpperCase() + k.slice(1)} value={p[k]}
                       onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)))} />
@@ -604,7 +613,7 @@ function Form({ data, setup }: { data: Data; setup?: SetupMode }) {
                 <Plus className="mr-1 h-4 w-4" />Add decision maker
               </Button>
             </div>
-          </div>
+          </S>
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
