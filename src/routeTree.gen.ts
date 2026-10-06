@@ -11,9 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
+import { Route as BadgesRouteImport } from './routes/badges'
+import { Route as BuyersRouteImport } from './routes/buyers'
+import { Route as DirectoryRouteImport } from './routes/directory'
+import { Route as DiscoveryRouteImport } from './routes/discovery'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as PlansRouteImport } from './routes/plans'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SellersRouteImport } from './routes/sellers'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
@@ -102,6 +109,26 @@ const AcceptInviteRoute = AcceptInviteRouteImport.update({
   path: '/accept-invite',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BadgesRoute = BadgesRouteImport.update({
+  id: '/badges',
+  path: '/badges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuyersRoute = BuyersRouteImport.update({
+  id: '/buyers',
+  path: '/buyers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DirectoryRoute = DirectoryRouteImport.update({
+  id: '/directory',
+  path: '/directory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscoveryRoute = DiscoveryRouteImport.update({
+  id: '/discovery',
+  path: '/discovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -112,9 +139,24 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellersRoute = SellersRouteImport.update({
+  id: '/sellers',
+  path: '/sellers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -570,9 +612,16 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/badges': typeof BadgesRoute
+  '/buyers': typeof BuyersRoute
+  '/directory': typeof DirectoryRoute
+  '/discovery': typeof DiscoveryRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/partners': typeof PartnersRoute
+  '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sellers': typeof SellersRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
@@ -653,9 +702,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/accept-invite': typeof AcceptInviteRoute
+  '/badges': typeof BadgesRoute
+  '/buyers': typeof BuyersRoute
+  '/directory': typeof DirectoryRoute
+  '/discovery': typeof DiscoveryRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/partners': typeof PartnersRoute
+  '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sellers': typeof SellersRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
@@ -728,9 +784,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
+  '/badges': typeof BadgesRoute
+  '/buyers': typeof BuyersRoute
+  '/directory': typeof DirectoryRoute
+  '/discovery': typeof DiscoveryRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/partners': typeof PartnersRoute
+  '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sellers': typeof SellersRoute
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
@@ -815,9 +878,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invite'
+    | '/badges'
+    | '/buyers'
+    | '/directory'
+    | '/discovery'
     | '/forgot-password'
     | '/login'
+    | '/partners'
+    | '/plans'
     | '/reset-password'
+    | '/sellers'
     | '/access-management'
     | '/ai-agents'
     | '/audit'
@@ -898,9 +968,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/accept-invite'
+    | '/badges'
+    | '/buyers'
+    | '/directory'
+    | '/discovery'
     | '/forgot-password'
     | '/login'
+    | '/partners'
+    | '/plans'
     | '/reset-password'
+    | '/sellers'
     | '/access-management'
     | '/ai-agents'
     | '/audit'
@@ -972,9 +1049,16 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/accept-invite'
+    | '/badges'
+    | '/buyers'
+    | '/directory'
+    | '/discovery'
     | '/forgot-password'
     | '/login'
+    | '/partners'
+    | '/plans'
     | '/reset-password'
+    | '/sellers'
     | '/_authenticated/access-management'
     | '/_authenticated/ai-agents'
     | '/_authenticated/audit'
@@ -1058,9 +1142,16 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
+  BadgesRoute: typeof BadgesRoute
+  BuyersRoute: typeof BuyersRoute
+  DirectoryRoute: typeof DirectoryRoute
+  DiscoveryRoute: typeof DiscoveryRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  PartnersRoute: typeof PartnersRoute
+  PlansRoute: typeof PlansRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SellersRoute: typeof SellersRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
   AdvisorCompanyIdSetupRoute: typeof AdvisorCompanyIdSetupRoute
   BuyerCompanyIdSetupRoute: typeof BuyerCompanyIdSetupRoute
@@ -1083,6 +1174,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcceptInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/badges': {
+      id: '/badges'
+      path: '/badges'
+      fullPath: '/badges'
+      preLoaderRoute: typeof BadgesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buyers': {
+      id: '/buyers'
+      path: '/buyers'
+      fullPath: '/buyers'
+      preLoaderRoute: typeof BuyersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/directory': {
+      id: '/directory'
+      path: '/directory'
+      fullPath: '/directory'
+      preLoaderRoute: typeof DirectoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discovery': {
+      id: '/discovery'
+      path: '/discovery'
+      fullPath: '/discovery'
+      preLoaderRoute: typeof DiscoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -1097,11 +1216,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sellers': {
+      id: '/sellers'
+      path: '/sellers'
+      fullPath: '/sellers'
+      preLoaderRoute: typeof SellersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -1954,9 +2094,16 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
+  BadgesRoute: BadgesRoute,
+  BuyersRoute: BuyersRoute,
+  DirectoryRoute: DirectoryRoute,
+  DiscoveryRoute: DiscoveryRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  PartnersRoute: PartnersRoute,
+  PlansRoute: PlansRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SellersRoute: SellersRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
   AdvisorCompanyIdSetupRoute: AdvisorCompanyIdSetupRoute,
   BuyerCompanyIdSetupRoute: BuyerCompanyIdSetupRoute,

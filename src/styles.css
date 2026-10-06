@@ -1,5 +1,6 @@
 
 @import "tailwindcss" source(none);
+@import "./styles/public-home.css";
 @source "../src";
 @import "tw-animate-css";
 

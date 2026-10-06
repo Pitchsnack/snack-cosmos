@@ -56,17 +56,25 @@ const tenantsListQuery = {
 };
 
 export const Route = createFileRoute("/_authenticated/")({
-  head: () => ({
-    meta: [
-      { title: "Tenants — PitchSnack" },
-      {
-        name: "description",
-        content: "Create, edit, and administer PitchSnack tenants.",
-      },
-    ],
-  }),
+  head: ({ match }) => {
+    if ((match.context as { guestHome?: boolean }).guestHome) {
+      const d = "PitchSnack is a neutral Thai marketplace where verified SME owners meet corporate and investor buyers, with privacy at every stage.";
+      return {
+        meta: [
+          { title: "PitchSnack" },
+          { name: "description", content: d },
+          { property: "og:title", content: "PitchSnack — the confidential marketplace for Thai businesses" },
+          { property: "og:description", content: d },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary_large_image" },
+        ],
+      };
+    }
+    return { meta: [{ title: "Tenants — PitchSnack" }, { name: "description", content: "Create, edit, and administer PitchSnack tenants." }] };
+  },
   // Start fetching as soon as navigation begins, in parallel with page code.
   loader: ({ context }) => {
+    if ((context as { guestHome?: boolean }).guestHome) return;
     void context.queryClient.prefetchQuery(tenantsListQuery);
   },
   component: TenantsPage,
