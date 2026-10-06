@@ -11,10 +11,10 @@ const SIGNUP = "/login";
 
 type Imgs = { seller: string | null; investor: string | null };
 
-export function BuyersPage() {
+export function BuyersPage({ initial }: { initial?: Imgs }) {
   const fetchImgs = useServerFn(getHomeHeroImages);
-  const [imgs, setImgs] = useState<Imgs>({ seller: null, investor: null });
-  useEffect(() => { fetchImgs().then(setImgs).catch(() => {}); }, [fetchImgs]);
+  const [imgs, setImgs] = useState<Imgs>(initial ?? { seller: null, investor: null });
+  useEffect(() => { if (!initial?.seller) fetchImgs().then(setImgs).catch(() => {}); }, [fetchImgs, initial]);
   return (
     <PublicShell current="buyers" talkHref="#start">
       <Hero img={imgs.seller} />
