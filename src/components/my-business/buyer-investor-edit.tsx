@@ -103,6 +103,10 @@ function TagEditor({
 }
 
 /** Buyer › My Company › Edit profile — same fields, same order as Edit investor. */
+function S({ id, cur, className, children }: { id: string; cur?: string; className?: string; children: React.ReactNode }) {
+  return <EditSec id={id} tone="buyer" active={cur === id} className={className}>{children}</EditSec>;
+}
+
 export function BuyerInvestorEdit({ section, add }: { section?: string; add?: boolean } = {}) {
   const fetchMe = useServerFn(getMyBuyerInvestor);
   const { data, isLoading, error } = useQuery({ queryKey: BUYER_INVESTOR_KEY, queryFn: () => fetchMe(), meta: { pageLoading: true } });
@@ -167,10 +171,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
   const showsFund = !individual && rel !== "agent";
   // Fund falls back to Investor Classification when the form hides the band.
   const sec = section === "fund" && !showsFund ? "classification" : section;
-  const S = ({ id, className, children }: { id: string; className?: string; children: React.ReactNode }) => (
-    <EditSec id={id} tone="buyer" active={!setup && sec === id} className={className}>{children}</EditSec>
-  );
-  useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "[data-row]:last-child input" } : sec === "industries" ? { focusSelector: "input[type=checkbox]" } : undefined);
+  useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "input[type=checkbox]" } : undefined);
   const [industries, setIndustries] = useState(inv.preferred_industries);
   const [customIndustry, setCustomIndustry] = useState("");
   const [portfolio, setPortfolio] = useState(inv.portfolio_extra);
@@ -301,7 +302,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
 
       <form onSubmit={submit} className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm">
         {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
-        <S id="media"><div className="flex items-start gap-4">
+        <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
             <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: f.website_url }} />
           </div>
@@ -336,7 +337,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
               className={errs.investor_name ? "border-[#B42318]" : ""} />
             <Err k="investor_name" />
           </div>
-          <S id="classification" className="space-y-1.5">
+          <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
             <Label>Investor Classification<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
@@ -448,7 +449,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
 
         {/* Fund & ticket — US$ bands */}
         {showsFund && (
-          <S id="fund"><div className="grid grid-cols-2 gap-4">
+          <S cur={setup ? undefined : sec} id="fund"><div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>{corp ? "Group revenue band" : "Fund's AUM band"}<Tag s={src.aum_band} /></Label>
               <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
@@ -468,7 +469,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
             </div>
           </div></S>
         )}
-        <S id="mandate" className="space-y-1.5">
+        <S cur={setup ? undefined : sec} id="mandate" className="space-y-1.5">
           <Label>Average investment per deal<Tag s={src.ticket_band} /></Label>
           <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
             <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
@@ -492,7 +493,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
           </Select>
           <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
         </div>
-        <S id="focus" className="space-y-1.5">
+        <S cur={setup ? undefined : sec} id="focus" className="space-y-1.5">
           <Label>Investment Focus<Tag s={src.deal_types} /></Label>
           <div className="flex flex-wrap gap-2">
             {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{d}</Pill>)}
@@ -507,7 +508,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </div>
 
         {/* Tags */}
-        <S id="keywords" className="space-y-1.5">
+        <S cur={setup ? undefined : sec} id="keywords" className="space-y-1.5">
           <Label>Product &amp; Service Tags (Up to 5)</Label>
           <TagEditor values={keywords} onChange={setKeywords} max={5} maxLength={50}
             placeholder="Example: Portfolio Management, Due Diligence" />
@@ -522,7 +523,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </div>
 
         {/* Preferred Stages */}
-        {showsStages(f.investor_type) && <S id="stages" className="space-y-1.5">
+        {showsStages(f.investor_type) && <S cur={setup ? undefined : sec} id="stages" className="space-y-1.5">
           <Label>Preferred Stages</Label>
           <div className="flex flex-wrap gap-2">
             {allStages.map((s) => (
@@ -532,7 +533,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </S>}
 
         {/* Preferred Industries */}
-        <S id="industries" className="space-y-1.5">
+        <S cur={setup ? undefined : sec} id="industries" className="space-y-1.5">
           <Label>Preferred Industries<Tag s={src.preferred_industries} /></Label>
           <label className="flex items-center gap-2 text-[13px]">
             <input type="checkbox" checked={agnostic} onChange={() => setIndustries(agnostic ? industries.filter((x) => x !== SECTOR_AGNOSTIC) : [SECTOR_AGNOSTIC, ...industries])} />
@@ -571,7 +572,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </div>
 
         {/* Portfolio Startups */}
-        <S id="portfolio" className="space-y-1.5">
+        <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
           <Label>Portfolio Startups</Label>
           {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).length > 0 && (
             <p className="text-xs text-muted-foreground">
@@ -595,7 +596,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
               <Err k="registration_no" />
             </div>
           )}
-          <S id="people" className="space-y-1.5">
+          <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
             <Label>Decision makers</Label>
             <div className="space-y-2">
               {people.map((p, i) => (
