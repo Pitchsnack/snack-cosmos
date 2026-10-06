@@ -412,7 +412,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
 /* --------------------------------- Layout --------------------------------- */
 
 /** Checklist item → Edit My Startup section (shared Edit-at-section helper). */
-const ITEM_SECTION: Partial<Record<string, string>> = { desc: "description", media: "media", people: "founders" };
+const ITEM_SECTION: Partial<Record<string, string>> = { desc: "description", logo: "media", people: "founders" };
 
 export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem[] }) {
   const isMobile = useIsMobile();
