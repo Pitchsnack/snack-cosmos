@@ -102,6 +102,8 @@ export function InvestorDetailPanel({
     mediaAdd?: React.ReactNode;
     afterPortfolio?: React.ReactNode;
     footer?: React.ReactNode;
+    /** Edit link for a section heading (Buyer › My Company only). */
+    sectionEdit?: (key: "focus" | "stages" | "industries" | "keywords" | "portfolio") => React.ReactNode;
   };
   showEdit?: boolean;
   compact?: boolean;
@@ -446,11 +448,13 @@ export function InvestorDetailPanel({
                     icon: Layers,
                     title: "Investment focus",
                     content: <ChipRow tags={focus} tone="primary" />,
+                    action: buyer?.sectionEdit?.("focus"),
                   }}
                   right={{
                     icon: Layers,
                     title: "Preferred stages",
                     content: <ChipRow tags={stages} tone="primary" />,
+                    action: buyer?.sectionEdit?.("stages"),
                   }}
                 />
               );
@@ -458,14 +462,14 @@ export function InvestorDetailPanel({
 
             if (hasFocus) {
               return (
-                <Section icon={Layers} title="Investment focus">
+                <Section icon={Layers} title="Investment focus" right={buyer?.sectionEdit?.("focus")}>
                   <ChipRow tags={focus} tone="primary" />
                 </Section>
               );
             }
 
             return (
-              <Section icon={Layers} title="Preferred stages">
+              <Section icon={Layers} title="Preferred stages" right={buyer?.sectionEdit?.("stages")}>
                 <ChipRow tags={stages} tone="primary" />
               </Section>
             );
@@ -486,11 +490,13 @@ export function InvestorDetailPanel({
                     icon: Building2,
                     title: "Preferred industries",
                     content: <ChipRow tags={industries} tone="muted" />,
+                    action: buyer?.sectionEdit?.("industries"),
                   }}
                   right={{
                     icon: Tag,
                     title: "Keywords",
                     content: <ChipRow tags={keywords} tone="muted" />,
+                    action: buyer?.sectionEdit?.("keywords"),
                   }}
                 />
               );
@@ -498,14 +504,14 @@ export function InvestorDetailPanel({
 
             if (hasIndustries) {
               return (
-                <Section icon={Building2} title="Preferred industries">
+                <Section icon={Building2} title="Preferred industries" right={buyer?.sectionEdit?.("industries")}>
                   <ChipRow tags={industries} tone="muted" />
                 </Section>
               );
             }
 
             return (
-              <Section icon={Tag} title="Keywords">
+              <Section icon={Tag} title="Keywords" right={buyer?.sectionEdit?.("keywords")}>
                 <ChipRow tags={keywords} tone="muted" />
               </Section>
             );
@@ -516,7 +522,7 @@ export function InvestorDetailPanel({
             icon={Building2}
             title={`Portfolio startups${linked.length > 0 ? ` (${linked.length})` : ""}`}
             right={
-              linked.length > 0 && !buyer ? (
+              buyer ? buyer.sectionEdit?.("portfolio") : linked.length > 0 ? (
                 <Link
                   to="/investors/$id/portfolio"
                   params={{ id: i.id }}
