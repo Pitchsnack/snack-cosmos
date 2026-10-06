@@ -4,7 +4,7 @@ import { Image as ImageIcon, Plus, Upload } from "lucide-react";
 import { createAdvisorUploadUrl, signAdvisorFile } from "@/lib/advisor-firm.functions";
 import { THAI_PROVINCES_77 } from "@/lib/investor-bands";
 import {
-  FEE_TYPES, feeError, feeNeedsAmount, feeNeedsPct, feeWords, fmtAmount, serviceOf, type FeeDetail, type FeeType,
+  FEE_TYPES, feeError, feeWords, fmtAmount, serviceOf, type FeeDetail, type FeeType,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
 
@@ -74,8 +74,6 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
       )}
       {words && <p className="text-[12.5px] text-[#6B7280]">On your profile: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}
       {err && <p className="text-[13px] text-[#B42318]">{err.msg}</p>}
-      {/* unused helpers kept close for clarity */}
-      {false && feeNeedsAmount(value.type) && feeNeedsPct(value.type)}
     </div>
   );
 }
