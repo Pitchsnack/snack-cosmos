@@ -85,7 +85,7 @@ function LangMenu() {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
   const box = useRef<HTMLDivElement>(null);
-  const opts: { v: Lang; name: string; sub: string }[] = [{ v: "th", name: "ไทย", sub: "Thai" }, { v: "en", name: "English", sub: "อังกฤษ" }];
+  const opts: { v: Lang; name: string; sub: string }[] = [{ v: "th", name: "ภาษาไทย\n", sub: "Thai" }, { v: "en", name: "English", sub: "อังกฤษ" }];
   useEffect(() => {
     if (!open) return;
     box.current?.querySelector<HTMLButtonElement>(`[data-v="${lang}"]`)?.focus();
