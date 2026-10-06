@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Briefcase, ChartNoAxesColumn, ChevronDown, EyeOff, FileText, Lock, MessageSquare, Route as RouteIcon, Scale, ShieldCheck, Star } from "lucide-react";
+import { ChartNoAxesColumn, ChevronDown, EyeOff, FileText, Lock, MessageSquare, Route as RouteIcon, Scale, ShieldCheck, Star } from "lucide-react";
 import { getHomeHeroImages } from "@/lib/home-hero.functions";
 import { PLANS } from "./home-copy";
 import { B_CARD, B_CLOSE, B_DEAL, B_FAQ, B_HERO, B_HOW, B_MANDATE, B_NUMBERS, B_PLANS, B_PROFILE, B_PROMISES } from "./buyers-copy";
 import { Head, PlanCard } from "./public-home";
 import { PublicShell, Rich, useHomeLang } from "./public-shell";
+import { BigFigureCards, IconCard, Ladder, ListingCard, PromiseCards, ReportCard, Ticks } from "./shared-parts";
 
 const SIGNUP = "/login";
 
@@ -52,71 +53,16 @@ function Hero({ img }: { img: string | null }) {
   );
 }
 
-function ListingCard({ img }: { img: string | null }) {
-  const { t } = useHomeLang();
-  const [open, setOpen] = useState(true);
-  return (
-    <div className="pb-lstack" aria-hidden>
-      <div className="pb-lzoom">
-        <i className="pb-ghost pb-ghost-far" /><i className="pb-ghost pb-ghost-near" />
-        <div className="pb-lcard">
-          <div className="pb-lphoto" style={img ? { backgroundImage: `url("${img}")` } : undefined}>
-            <span className="pb-lchip"><span><Lock size={14} />{t(B_CARD.chip)}</span><em>{t(B_CARD.tag)}</em></span>
-            <span className="pb-lstar"><Star size={17} /></span>
-          </div>
-          <div className="pb-lbody">
-            <div className="pb-ltitle">{t(B_CARD.title)}</div>
-            <span className="pb-lnda"><Lock size={14} />{t(B_CARD.nda)}</span>
-            <div className="pb-lrev"><small>{t(B_CARD.rev)}</small><b>฿50M – 100M</b><span>{t(B_CARD.range)}</span></div>
-            <p className="pb-ldet">{t(B_CARD.details)}</p>
-            {open && (
-              <div className="pb-lmore">
-                <p className="pb-ldesc">{t(B_CARD.desc)}</p>
-                <div className="pb-lrow"><small>{t(B_CARD.products)}</small><div>{B_CARD.productChips.map((x) => <span key={x} className="pb-chip-p">{x}</span>)}</div></div>
-                <div className="pb-lrow"><small>{t(B_CARD.markets)}</small><div>{B_CARD.marketChips.map((x) => <span key={x.en} className="pb-chip-m">{t(x)}</span>)}</div></div>
-                <div className="pb-ldeal"><Briefcase size={17} />{t(B_CARD.deal)}</div>
-              </div>
-            )}
-            <div className="pb-lfoot">
-              <span>{t(B_CARD.footer)} · PS-1005</span>
-              <button type="button" tabIndex={-1} onClick={() => setOpen((v) => !v)}>{t(open ? B_CARD.less : B_CARD.more)}<i className={open ? "is-up" : undefined} /></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const PROMISE_ICONS = [EyeOff, ShieldCheck, RouteIcon, ChartNoAxesColumn];
 
 function Promises() {
-  const { t } = useHomeLang();
   return (
     <section id="promises" className="ph-sec ph-white">
       <div className="ph-wrap">
-        <div className="pb-phead"><h2>{t(B_PROMISES.h2)}</h2><p>{t(B_PROMISES.intro)}</p></div>
-        <div className="pb-promises">
-          {B_PROMISES.cards.map((c, i) => {
-            const I = PROMISE_ICONS[i]!;
-            return (
-              <div key={i} className={`pb-promise is-${i + 1}`}>
-                <div className="pb-promise-pic" style={{ backgroundImage: `url("${c.img}")` }} aria-hidden />
-                <span className="pb-ptile"><I size={25} /></span>
-                <h3>{t(c.h)}</h3>
-                <p>{t(c.x)}</p>
-              </div>
-            );
-          })}
-        </div>
+        <PromiseCards h2={B_PROMISES.h2} intro={B_PROMISES.intro} cards={B_PROMISES.cards} icons={PROMISE_ICONS} />
       </div>
     </section>
   );
-}
-
-function Ticks({ items }: { items: { en: string; th: string }[] }) {
-  const { t } = useHomeLang();
-  return <ul className="pb-ticks">{items.map((x, i) => <li key={i}><span>✓</span>{t(x)}</li>)}</ul>;
 }
 
 function How() {
@@ -130,14 +76,7 @@ function How() {
           <p className="pb-intro">{t(B_HOW.intro)}</p>
           <Ticks items={B_HOW.ticks} />
         </div>
-        <ol className="pb-ladder">
-          {B_HOW.steps.map(([h, x], i) => (
-            <li key={i} className={i === 3 ? "is-last" : undefined}>
-              <span className="pb-circle">{i + 1}</span>
-              <div><b>{t(h)}</b><p>{t(x)}</p></div>
-            </li>
-          ))}
-        </ol>
+        <Ladder steps={B_HOW.steps} />
       </div>
     </section>
   );
@@ -149,9 +88,7 @@ function Mandate() {
     <section id="mandate" className="ph-sec ph-navy">
       <div className="ph-wrap">
         <Head h={t(B_MANDATE.h2)} intro={t(B_MANDATE.intro)} />
-        <div className="pb-mandate">
-          {B_MANDATE.cards.map(([n, h, x], i) => <div key={i} className="ph-role"><span className="pb-big">{t(n)}</span><b>{t(h)}</b><p>{t(x)}</p></div>)}
-        </div>
+        <BigFigureCards cards={B_MANDATE.cards} />
       </div>
     </section>
   );
@@ -163,16 +100,7 @@ function Numbers() {
     <section id="numbers" className="ph-sec ph-white">
       <div className="ph-wrap pb-two pb-numbers">
         <div className="pb-ncards">
-          {B_NUMBERS.cards.map((c) => (
-            <div key={c.kind} className={`pb-ncard is-${c.kind}`}>
-              <span className="pb-ntag">{t(c.tag)}</span>
-              <div className="pb-nfig">{c.fig}</div>
-              <div className="pb-ncap">{t(c.cap)}<span>{t(c.capTag)}</span></div>
-              <b>{t(c.h)}</b>
-              <p>{t(c.line)}</p>
-              <ul>{c.points.map((x, i) => <li key={i}>{t(x)}</li>)}</ul>
-            </div>
-          ))}
+          {B_NUMBERS.cards.map((c) => <ReportCard key={c.kind} kind={c.kind} tag={c.tag} fig={c.fig} cap={<>{t(c.cap)}<span>{t(c.capTag)}</span></>} h={c.h} line={c.line} points={c.points} />)}
         </div>
         <div className="pb-text">
           <div className="ph-eyebrow pb-muted">{t(B_NUMBERS.eyebrow)}</div>
@@ -202,10 +130,7 @@ function Deal() {
           ))}
         </ol>
         <div className="pb-tools">
-          {B_DEAL.tools.map(([h, x], i) => {
-            const I = TOOL_ICONS[i]!;
-            return <div key={i} className="pb-tool"><span><I size={21} /></span><div><b>{t(h)}</b><p>{t(x)}</p></div></div>;
-          })}
+          {B_DEAL.tools.map(([h, x], i) => <IconCard key={i} icon={TOOL_ICONS[i]!} h={h} x={x} />)}
         </div>
       </div>
     </section>
