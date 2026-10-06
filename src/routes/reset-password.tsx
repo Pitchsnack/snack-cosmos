@@ -127,7 +127,7 @@ function ResetPasswordPage() {
       return;
     }
     toast.success("Password updated");
-    navigate({ to: "/" });
+    navigate({ to: "/tenants" });
   }
 
   return (

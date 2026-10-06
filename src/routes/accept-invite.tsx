@@ -55,7 +55,7 @@ function AcceptInvitePage() {
     }
     setBusy(false);
     toast.success("Welcome to SnackPortal2");
-    navigate({ to: "/" });
+    navigate({ to: "/tenants" });
   }
 
   return (

@@ -149,7 +149,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
 // rendered as disabled placeholders so each role's framework is visible.
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
-  { label: "Tenants", icon: Building2, path: "/", exact: true, perm: "tenants.read" },
+  { label: "Tenants", icon: Building2, path: "/tenants", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
   { label: "Approvals", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
   { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
