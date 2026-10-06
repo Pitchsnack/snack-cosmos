@@ -33,7 +33,7 @@ export const Route = createFileRoute("/login")({
   beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: search.redirect || "/" });
+    if (data.user) throw redirect({ to: search.redirect || "/tenants" });
   },
   head: () => ({
     meta: [
@@ -125,7 +125,7 @@ function LoginPage() {
         /* best effort */
       }
       await qc.invalidateQueries();
-      navigate({ to: search.redirect || "/" });
+      navigate({ to: search.redirect || "/tenants" });
     } catch {
       setFormError("Unable to sign in right now. Please try again.");
       setBusy(false);
