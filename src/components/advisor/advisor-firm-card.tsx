@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { BadgeCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { BadgeCheck, Building2, ChevronDown, ChevronUp } from "lucide-react";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
-import { dealSizeLabels, initials, reviewStats, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
+import { dealBandLabels, initials, reviewStats, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
 
 /** Advisor firm card: the investor public card's layout with firm content. */
@@ -12,7 +12,8 @@ export function FirmLogo({ f, size = 52, radius = 13, ring = true }: { f: Pick<A
       className={cn("grid shrink-0 place-items-center overflow-hidden bg-[#0F766E] font-bold text-white", ring && "shadow-[0_0_0_3px_#fff,0_4px_12px_rgba(15,118,110,.25)]")}
       style={{ width: size, height: size, borderRadius: radius, fontSize: Math.round(size * 0.33) }}
     >
-      {f.logoUrl ? <img src={f.logoUrl} alt="" className="h-full w-full bg-white object-cover" /> : initials(f.name)}
+      {f.logoUrl ? <img src={f.logoUrl} alt="" className="h-full w-full border border-[#E3E6EB] bg-white object-contain" style={{ borderRadius: radius }} />
+        : f.name.trim() ? initials(f.name) : <Building2 style={{ width: size * 0.45, height: size * 0.45 }} />}
     </div>
   );
 }
@@ -60,6 +61,21 @@ export function ServiceChip({ name }: { name: string }) {
 }
 
 function Cover({ f, wide }: { f: AdvisorFirm; wide?: boolean }) {
+  const pills = (
+    <>
+      {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
+      <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>
+    </>
+  );
+  if (f.logoUrl) {
+    // White cover: the logo whole, as large as fits, centred above the bottom line.
+    return (
+      <div className="relative flex items-end justify-center border-b border-[#EEF0F3] bg-white px-5 pb-2.5" style={{ height: wide ? 136 : 126 }}>
+        <img src={f.logoUrl} alt="" className="max-w-[240px] object-contain" style={{ maxHeight: wide ? 80 : 72 }} />
+        {pills}
+      </div>
+    );
+  }
   return (
     <div className="relative grid place-items-center overflow-hidden bg-[#E0F5F2]" style={{ height: wide ? 126 : 116 }}>
       <svg aria-hidden className="absolute inset-0 h-full w-full text-[#0F766E] opacity-35" viewBox="0 0 320 120" preserveAspectRatio="none">
@@ -67,17 +83,16 @@ function Cover({ f, wide }: { f: AdvisorFirm; wide?: boolean }) {
         <circle cx="280" cy="10" r="70" fill="none" stroke="currentColor" strokeWidth="1" />
       </svg>
       <div className="relative"><FirmLogo f={f} /></div>
-      {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
-      <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>
+      {pills}
     </div>
   );
 }
 
 function Fig({ label, main, sub }: { label: string; main: string; sub: string | null }) {
   return (
-    <div className="min-w-0 px-3 py-2.5">
+    <div className="min-w-0 whitespace-nowrap px-3 py-2.5">
       <div className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">{label}</div>
-      <div className="mt-0.5 text-[15px] font-bold text-[#111827]">{main}</div>
+      <div className={cn("mt-0.5 text-[15px] font-bold", sub == null && main === "Not added" ? "font-medium text-[#9CA3AF]" : "text-[#111827] dark:text-foreground")}>{main}</div>
       {sub && <div className="text-[12px] text-[#6B7280]">{sub}</div>}
     </div>
   );
@@ -92,9 +107,9 @@ function MoreRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function FirmCard({ f, wide, selected, onClick, className }: { f: AdvisorFirm; wide?: boolean; selected?: boolean; onClick?: () => void; className?: string }) {
+export function FirmCard({ f, wide, preview, selected, onClick, className }: { f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string }) {
   const [open, setOpen] = useState(false);
-  const deal = dealSizeLabels(f);
+  const deal = dealBandLabels(f.dealBand);
   const { n, avg } = reviewStats(f.reviews);
   const showMore = wide || open;
   return (
@@ -111,7 +126,7 @@ export function FirmCard({ f, wide, selected, onClick, className }: { f: Advisor
       <div className="space-y-2.5 p-4">
         <div>
           <div className="flex items-start justify-between gap-3">
-            <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name}</h3>
+            <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name.trim() || "New firm profile"}</h3>
             <span className="shrink-0 whitespace-nowrap pt-0.5 text-[13px] text-[#6B7280]">
               {f.refNo}{f.city && <> · <span className="font-medium text-[#4B5563]">{f.city}</span></>}
             </span>
@@ -125,20 +140,24 @@ export function FirmCard({ f, wide, selected, onClick, className }: { f: Advisor
             </div>
           )}
         </div>
-        {f.description && <p className={cn("text-[13.5px] leading-[1.5] text-[#374151] dark:text-foreground/80", !showMore && "line-clamp-3")}>{f.description}</p>}
+        {f.description?.trim()
+          ? <p className={cn("text-[13.5px] leading-[1.5] text-[#374151] dark:text-foreground/80", (!showMore || preview) && "line-clamp-3")}>{f.description}</p>
+          : <p className="text-[13.5px] text-[#9CA3AF]">No description yet.</p>}
         {f.services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
-        <div className="grid grid-cols-2 divide-x divide-border rounded-[10px] border border-border bg-muted/30">
-          <Fig label="Typical deal size" main={deal?.usd ?? "Not set"} sub={deal ? `(${deal.thb})` : null} />
-          <Fig label="Team size" main={f.teamSize ? String(f.teamSize) : "Not set"} sub={f.teamSize ? "people" : null} />
+        <div className="@container">
+          <div className="grid grid-cols-1 divide-y divide-border rounded-[10px] border border-border bg-muted/30 @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
+            <Fig label="Typical deal size" main={deal?.usd ?? "Not added"} sub={deal ? `(${deal.thb})` : null} />
+            <Fig label="Team size" main={f.teamSize ? String(f.teamSize) : "Not added"} sub={f.teamSize ? "people" : null} />
+          </div>
         </div>
-        {showMore && (
+        {showMore && !preview && (
           <div className="space-y-1.5">
-            <MoreRow label="Languages" value={f.languages.join(" · ") || "Not set"} />
-            <MoreRow label="Sectors" value={f.sectors.join(" · ") || "Not set"} />
+            <MoreRow label="Languages" value={f.languages.join(" · ") || "Not added"} />
+            {f.sectors.length > 0 && <MoreRow label="Sectors" value={f.sectors.join(" · ")} />}
           </div>
         )}
       </div>
-      {!wide && (
+      {!wide && !preview && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
