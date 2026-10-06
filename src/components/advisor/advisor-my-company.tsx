@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Building2, Check, ChevronDown, ExternalLink, FileText, Info, LayoutList, MapPin, MoreVertical, Navigation, Pencil,
-  Plus, RefreshCw, Search, ShieldCheck, Star, X,
+  Flag, Loader2, Plus, RefreshCw, Search, ShieldCheck, Star, X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,9 @@ import { useHasSession } from "@/hooks/use-has-session";
 import { Group, Ring, Row } from "@/components/my-business/my-business-profiles";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/components/advisor/advisor-firm-card";
-import { getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
+import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import {
-  ADVISOR_SERVICES, SERVICE_COLS, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf,
+  ADVISOR_SERVICES, SERVICE_COLS, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, setupProgress,
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
@@ -45,9 +45,26 @@ function useOpenEdit() {
 
 /* ------------------------------- Page ------------------------------------ */
 
-export function AdvisorMyCompany() {
+function useAddFirm() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const create = useServerFn(createAdvisorDraft);
+  const [busy, setBusy] = useState(false);
+  const add = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { id } = await create();
+      await qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
+      await navigate({ to: "/advisor/company/$id/setup", params: { id } });
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  return { add, busy };
+}
+
+export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {}) {
   const { data, isLoading, refetch, isFetching } = useMyAdvisorFirms();
-  const openEdit = useOpenEdit();
+  const { add, busy: adding } = useAddFirm();
   const [mode, setMode] = useState<"profiles" | ViewMode>("profiles");
   const [q, setQ] = useState("");
   const [svc, setSvc] = useState("all");
@@ -56,7 +73,7 @@ export function AdvisorMyCompany() {
   const [hq, setHq] = useState("all");
   const [sort, setSort] = useState<"updated" | "name">("updated");
   const [savedOnly, setSavedOnly] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(initialOpen ?? null);
 
   const firms = data ?? [];
   const sectors = useMemo(() => [...new Set(firms.flatMap((f) => f.sectors))].sort(), [firms]);
@@ -70,7 +87,7 @@ export function AdvisorMyCompany() {
       .filter((f) => sector === "all" || f.sectors.includes(sector))
       .filter((f) => hq === "all" || f.city === hq)
       .filter(() => !savedOnly)
-      .sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : b.updatedAt.localeCompare(a.updatedAt)));
+      .sort((a, b) => (sort === "name" ? (a.name || "~").localeCompare(b.name || "~") : b.updatedAt.localeCompare(a.updatedAt)));
   }, [firms, q, svc, status, sector, hq, sort, savedOnly]);
   const open = list.find((f) => f.id === openId) ?? list[0] ?? null;
 
@@ -95,8 +112,8 @@ export function AdvisorMyCompany() {
             <LayoutList className="h-3.5 w-3.5" /> Profiles
           </button>
           <ViewToggle value={mode === "profiles" ? ("none" as ViewMode) : mode} onChange={(v) => setMode(v)} />
-          <Button onClick={() => openEdit(null, "firm")} className="h-9 bg-accent text-accent-foreground hover:bg-accent/90">
-            <Plus className="mr-1.5 h-4 w-4" /> Add Firm Profile
+          <Button onClick={add} disabled={adding} className="h-9 bg-accent text-accent-foreground hover:bg-accent/90">
+            {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />} Add Firm Profile
           </Button>
         </div>
       </div>
@@ -129,7 +146,7 @@ export function AdvisorMyCompany() {
           <Building2 className="mx-auto h-8 w-8 text-muted-foreground" />
           <div className="mt-3 text-[16px] font-semibold">No firm profile yet</div>
           <p className="mt-1 text-sm text-muted-foreground">Add your firm so sellers and buyers can see your services, fees and team.</p>
-          <Button onClick={() => openEdit(null, "firm")} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90"><Plus className="mr-1.5 h-4 w-4" /> Add Firm Profile</Button>
+          <Button onClick={add} disabled={adding} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90"><Plus className="mr-1.5 h-4 w-4" /> Add Firm Profile</Button>
         </div>
       ) : list.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No firm profiles match these filters.</p>
@@ -150,7 +167,7 @@ export function AdvisorMyCompany() {
             <button key={f.id} type="button" onClick={() => { setOpenId(f.id); setMode("profiles"); }} className="flex w-full items-center gap-4 px-4 py-3 text-left hover:bg-muted/40">
               <FirmLogo f={f} size={40} radius={10} ring={false} />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold">{f.name}</div>
+                <div className="font-semibold">{f.name || "New firm profile"}</div>
                 <div className="text-[13px] text-muted-foreground">{f.refNo} · {f.firmType}{f.city ? ` · ${f.city}` : ""}</div>
               </div>
               <div className="hidden flex-wrap gap-1.5 md:flex">{f.services.slice(0, 3).map((s) => <ServiceChip key={s} name={s} />)}</div>
@@ -277,13 +294,16 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
   const addr = fullAddress(f);
   const cols = SERVICE_COLS[f.services.length] ?? 2;
   const edit = (s: EditSection) => openEdit(f.id, s);
+  const navigate = useNavigate();
+  const inSetup = !f.setupDoneAt;
+  const openSetup = () => navigate({ to: "/advisor/company/$id/setup", params: { id: f.id } });
 
   async function changeStatus(status: "live" | "paused") {
     setBusy(true);
     try {
       await setStatusFn({ data: { id: f.id, status } });
       await qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
-      toast.success(status === "live" ? "Your profile is live." : "Listing paused.");
+      toast.success(status === "paused" ? "Listing paused. Your profile is hidden from Browse advisors." : f.status === "paused" ? "Your profile is live in Browse advisors again." : "Your profile is live in Browse advisors.");
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
@@ -299,10 +319,10 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
             <span className="inline-flex h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 text-[10.5px] font-bold uppercase tracking-[.06em] text-[#0F766E]">Open to sellers and buyers</span>
             {f.verifiedAt && <VerifiedAdvisorChip small />}
           </div>
-          <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name}</h2>
+          <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name || "New firm profile"}</h2>
           <div className="text-[13px] text-[#6A7181]">{[f.refNo, f.firmType, f.city].filter(Boolean).join(" · ")}</div>
         </div>
-        <div className="flex items-center gap-2">
+        {!inSetup && <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={() => edit("firm")}><Pencil className="h-4 w-4" /> Edit profile</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="h-9 w-9 p-0" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -313,8 +333,21 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
             </DropdownMenuContent>
           </DropdownMenu>
           <ChecklistPill f={f} onItem={edit} />
-        </div>
+        </div>}
       </div>
+
+      {inSetup ? (
+        <div className="space-y-5 p-5">
+          <SetupBanner f={f} onOpen={openSetup} />
+          <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted/50">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">Your card in Browse advisors</span>
+              <StatusPill status="draft">Draft · not published</StatusPill>
+            </div>
+            <FirmCard f={f} wide />
+          </div>
+        </div>
+      ) : <>
 
       <div className="space-y-5 p-5">
         <div className="flex gap-2.5 rounded-[12px] bg-[#F3F4F6] p-3.5 text-[13.5px] dark:bg-muted">
@@ -391,24 +424,24 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
             <Fact label="Phone">{f.phone}</Fact>
           </Box>
           <Box title={`Team · ${f.team.length}`} action="Edit" onAction={() => edit("team")}>
-            {f.team.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No team members yet.</p> : f.team.map((t, i) => (
+            {f.team.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No one added yet.</p> : f.team.map((t, i) => (
               <RowTile key={t.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E0F5F2] text-[12px] font-bold text-[#0F766E]">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>}
                 title={t.name} sub={[t.role, t.email].filter(Boolean).join(" · ")} />
             ))}
           </Box>
           <Box title="Licences and credentials" action="Edit" onAction={() => edit("credentials")}>
-            {f.credentials.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No licences or credentials yet.</p> : f.credentials.map((c, i) => (
+            {f.credentials.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No licences or credentials yet. Admin checks each one you add.</p> : f.credentials.map((c, i) => (
               <RowTile key={c.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[#F3F4F6] text-muted-foreground"><ShieldCheck className="h-4 w-4" /></span>}
-                title={c.name} sub={c.note}
+                title={c.name} sub={c.note || (c.status === "pending" ? "Waiting for a check by PitchSnack" : null)}
                 right={c.status === "verified"
                   ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Verified</span>
                   : <span className="shrink-0 rounded-full border border-[#F3D9A6] bg-[#FFF4E0] px-2 py-0.5 text-[11.5px] font-semibold text-[#8A5A06]">Pending check</span>} />
             ))}
           </Box>
           <Box title="Documents" action="Upload" onAction={() => edit("documents")}>
-            {f.documents.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No documents yet.</p> : f.documents.map((d, i) => (
+            {f.documents.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No documents yet. Upload your company certificate and licences.</p> : f.documents.map((d, i) => (
               <RowTile key={d.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[#F3F4F6] text-muted-foreground"><FileText className="h-4 w-4" /></span>}
                 title={d.name}
@@ -420,17 +453,23 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
 
         <ClientFeedback f={f} />
       </div>
+      </>}
 
       {/* Footer */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/30 px-5 py-3.5 text-[13.5px]">
-        {f.status === "live" ? (
+        {inSetup ? (
+          <>
+            <span>Draft · not visible in Browse advisors</span>
+            <Button size="sm" onClick={openSetup} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Finish setup to publish</Button>
+          </>
+        ) : f.status === "live" ? (
           <>
             <span>Live in Browse advisors since {fmtDate(f.liveSince)}</span>
             <Button variant="outline" size="sm" disabled={busy} onClick={() => changeStatus("paused")}>Pause listing</Button>
           </>
         ) : f.status === "draft" ? (
           <>
-            <span>Publish your profile so sellers and buyers can find you in Browse advisors.</span>
+            <span>Publish your profile so sellers and buyers can find you in Browse advisors.{!complete && <> <span className="text-muted-foreground">Finish the checklist first.</span></>}</span>
             <Button size="sm" disabled={busy || !complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => changeStatus("live")} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Publish</Button>
           </>
         ) : (
@@ -443,6 +482,26 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
 
       <ServicesDialog f={f} open={svcOpen} onOpenChange={(o) => { setSvcOpen(o); if (!o) setTimeout(() => svcBtn.current?.focus(), 0); }} />
       <AddressDialog f={f} open={addrOpen} onOpenChange={(o) => { setAddrOpen(o); if (!o) setTimeout(() => addrBtn.current?.focus(), 0); }} />
+    </div>
+  );
+}
+
+function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
+  const { n } = setupProgress(f.setupAnswered);
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#B9E6DF] bg-[#EFFAF8] px-[18px] py-4 dark:border-[#1F5A52] dark:bg-[#10302C]">
+      <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-[11px] bg-white text-[#0F766E] min-[860px]:grid dark:bg-background dark:text-[#5EEAD4]"><Flag className="h-5 w-5" /></span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[14.5px] font-bold text-[#151A28] dark:text-foreground">{n === 0 ? "Set up your firm profile" : "Finish setting up your firm profile"}</div>
+        <p className="mt-0.5 text-[13px] text-[#434A5C] dark:text-muted-foreground">
+          {n >= 10 ? "All 10 questions are answered. Check your profile and save it, then publish it to Browse advisors." : "Sellers and buyers can't find this firm yet. Answer 10 short questions. It takes about 4 minutes and saves as you go."}
+        </p>
+        <div className="mt-2 flex items-center gap-2.5">
+          <div className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#B9E6DF] bg-white dark:border-[#1F5A52] dark:bg-background"><div className="h-full bg-[#0F766E] dark:bg-[#5EEAD4]" style={{ width: `${n * 10}%` }} /></div>
+          <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{n} of 10 answered</span>
+        </div>
+      </div>
+      <Button onClick={onOpen} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90 max-[860px]:w-full">{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
     </div>
   );
 }
