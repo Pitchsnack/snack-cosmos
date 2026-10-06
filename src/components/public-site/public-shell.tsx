@@ -85,7 +85,7 @@ function LangMenu() {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
   const box = useRef<HTMLDivElement>(null);
-  const opts: { v: Lang; name: string; sub: string }[] = [{ v: "th", name: "ภาษาไทย\n", sub: "Thai" }, { v: "en", name: "English", sub: "อังกฤษ" }];
+  const opts: { v: Lang; name: string }[] = [{ v: "th", name: "ภาษาไทย" }, { v: "en", name: "English" }];
   useEffect(() => {
     if (!open) return;
     box.current?.querySelector<HTMLButtonElement>(`[data-v="${lang}"]`)?.focus();
@@ -113,7 +113,7 @@ function LangMenu() {
           {opts.map((o) => (
             <button key={o.v} data-v={o.v} type="button" role="menuitemradio" aria-checked={lang === o.v} className={lang === o.v ? "is-on" : undefined}
               onClick={() => { setLang(o.v); setOpen(false); btn.current?.focus(); }}>
-              <span><b>{o.name}</b><small>{o.sub}</small></span>
+              <span><b>{o.name}</b></span>
               {lang === o.v && <Check size={16} />}
             </button>
           ))}
