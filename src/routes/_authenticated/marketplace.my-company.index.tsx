@@ -4,6 +4,7 @@ import { AdvisorMyCompany } from "@/components/advisor/advisor-my-company";
 import { usePersona } from "@/hooks/use-marketplace";
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/")({
+  validateSearch: (s: Record<string, unknown>): { open?: string } => (typeof s.open === "string" ? { open: s.open } : {}),
   head: () => ({
     meta: [
       { title: "My Company (investor profile) — PitchSnack" },
@@ -19,5 +20,6 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/")(
 
 function Page() {
   const { persona } = usePersona();
-  return persona === "advisor" ? <AdvisorMyCompany /> : <BuyerMyCompany />;
+  const { open } = Route.useSearch();
+  return persona === "advisor" ? <AdvisorMyCompany initialOpen={open} /> : <BuyerMyCompany />;
 }

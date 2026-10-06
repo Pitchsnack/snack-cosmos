@@ -135,7 +135,7 @@ export type AdvisorFirm = {
   addrProvince: string | null; addrPostal: string | null;
   website: string | null; email: string | null; phone: string | null;
   status: FirmStatus; liveSince: string | null; verifiedAt: string | null; updatedAt: string;
-  setupAnswered: string[]; setupDoneAt: string | null; wizard: Record<string, unknown>;
+  setupAnswered: string[]; setupDoneAt: string | null; wizard: WizardState;
   team: FirmTeam[]; credentials: FirmCredential[]; documents: FirmDocument[]; reviews: FirmReview[];
 };
 
@@ -221,3 +221,8 @@ export function setupProgress(answered: string[]): { n: number; first: WizardQ }
   const first = WIZARD_QS.find((q) => !answered.includes(q)) ?? "review";
   return { n: done.length, first };
 }
+
+export type WizardState = {
+  feeVisited?: boolean; enrichSig?: string;
+  enrich?: { logo: boolean; legalName: string | null; thaiName: string | null; teamAdded: boolean; found: number };
+};
