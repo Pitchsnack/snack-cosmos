@@ -1298,7 +1298,7 @@ export function StartupForm({
 
       {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-1.5">
+        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="stage">{secOn("stage") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
           <Label className={miss(isStrEmpty(investmentStage)) ? MISSING_LABEL : undefined}>Investment Stage</Label>
           <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
             <SelectTrigger className={miss(isStrEmpty(investmentStage)) ? MISSING_INPUT : undefined}>
@@ -1319,7 +1319,7 @@ export function StartupForm({
           </Select>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="size">{secOn("size") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
           <Label>Company Size</Label>
           <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
@@ -1332,7 +1332,7 @@ export function StartupForm({
           </Select>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="revenue">{secOn("revenue") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
           <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
           <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>

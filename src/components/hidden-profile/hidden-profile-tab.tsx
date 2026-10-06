@@ -34,7 +34,10 @@ export function HiddenProfileTab({
   publishBlocked,
   source,
   hasFinancials,
+  onPart,
 }: {
+  /** Seller's own preview: Edit link per card part (absent for Admin review). */
+  onPart?: (k: ListingPart) => void;
   name: string;
   companyType?: string | null;
   row: HiddenProfileRow | null;
@@ -96,7 +99,7 @@ export function HiddenProfileTab({
           </span>
           {live && <Button size="sm" variant="outline" asChild><Link to="/marketplace/browse" search={{ company: row.id }}><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>}
         </div>
-        <PublicListingCard l={listing} seller />
+        <PublicListingCard l={listing} seller editable={adminReview ? undefined : onPart && ((k) => (k === "description" || k === "terms" ? setEditorOpen(true) : onPart(k)))} />
       </div>
       {flagged.length === 0 ? (
         <p className="flex items-center gap-1.5 text-[12.5px] text-emerald-700 dark:text-emerald-400"><Check className="h-4 w-4" />Identity check passed · no company, product or people names in the public text.</p>
