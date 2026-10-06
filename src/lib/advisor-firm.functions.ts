@@ -113,7 +113,7 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
       registration_no: nz(50), addr_street: nz(120), addr_unit: nz(120), addr_district: nz(80), addr_province: nz(80), addr_postal: nz(12),
       website: nz(200), services: z.array(z.string().max(60)).max(10), deal_size_band: z.enum(BAND_KEYS).nullable(), team_size: z.number().int().min(1).max(99999).nullable(),
       languages: z.array(z.string().max(40)).max(20), email: nz(120), phone: nz(30), logo_path: nz(300), logo_source: z.enum(["upload", "enrich"]).nullable(),
-      description: nz(300), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.record(z.string(), z.unknown()),
+      description: nz(300), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.object({ feeVisited: z.boolean().optional(), enrichSig: z.string().optional(), enrich: z.any().optional() }),
     }).partial(),
     fees: z.record(z.string().max(60), FeeIn).optional(),
   }).parse(d))
