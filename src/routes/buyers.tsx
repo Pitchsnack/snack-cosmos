@@ -1,19 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/public-site/public-home";
-import { SOON } from "@/components/public-site/home-copy";
+import { BuyersPage } from "@/components/public-site/buyers-page";
 
-const page = SOON["/buyers"]!;
+const DESC = "Find a business to buy in Thailand. Browse anonymous teasers from verified sellers and see the full listing after one standard NDA.";
 
 export const Route = createFileRoute("/buyers")({
   head: () => ({
     meta: [
-      { title: `${page.title.en} — PitchSnack` },
-      { name: "description", content: `${page.title.en} on PitchSnack, the confidential marketplace for Thai businesses changing hands. Coming soon.` },
-      { property: "og:title", content: `${page.title.en} — PitchSnack` },
-      { property: "og:description", content: `${page.title.en} on PitchSnack. This page is coming soon.` },
+      { title: "PitchSnack · For buyers" },
+      { name: "description", content: DESC },
+      { property: "og:title", content: "PitchSnack · For buyers" },
+      { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <ComingSoon title={page.title} nav={page.nav} />,
+  component: BuyersPage,
 });
