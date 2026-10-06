@@ -30,7 +30,7 @@ export function Rich({ s }: { s: string }) {
   );
 }
 
-export function PublicShell({ current, children }: { current: keyof typeof NAV | null; children: ReactNode }) {
+export function PublicShell({ current, children, talkHref }: { current: keyof typeof NAV | null; children: ReactNode; talkHref?: string }) {
   const [lang, setLangState] = useState<Lang>("th");
   useEffect(() => {
     const saved = localStorage.getItem(KEY);
@@ -49,7 +49,7 @@ export function PublicShell({ current, children }: { current: keyof typeof NAV |
     <LangCtx.Provider value={{ lang, setLang, t }}>
       <link rel="stylesheet" href={FONT_URL} precedence="default" />
       <div className="ph" data-lang={lang}>
-        <TopBar current={current} />
+        <TopBar current={current} talkHref={talkHref} />
         <main>{children}</main>
         <Footer />
       </div>
@@ -57,7 +57,7 @@ export function PublicShell({ current, children }: { current: keyof typeof NAV |
   );
 }
 
-function TopBar({ current }: { current: keyof typeof NAV | null }) {
+function TopBar({ current, talkHref }: { current: keyof typeof NAV | null; talkHref?: string }) {
   const { t } = useHomeLang();
   const links: [keyof typeof NAV, string][] = [["home", "/"], ["sellers", "/sellers"], ["buyers", "/buyers"], ["partners", "/partners"], ["plans", "/plans"], ["discovery", "/discovery"]];
   const onHome = current === "home";
@@ -73,7 +73,7 @@ function TopBar({ current }: { current: keyof typeof NAV | null }) {
           ))}
         </nav>
         <div className="ph-ctrls">
-          <a href={onHome ? "#close" : "/#close"} className="ph-talk">{t(NAV.talk)}</a>
+          <a href={talkHref ?? (onHome ? "#close" : "/#close")} className="ph-talk">{t(NAV.talk)}</a>
           <div className="ph-ctrls-r">
             <LangMenu />
             <Link to="/login" className="ph-login"><LogIn className="ph-login-ic" size={15} />{t(NAV.login)}</Link>

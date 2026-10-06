@@ -24,7 +24,7 @@ export function PublicHome() {
   );
 }
 
-function Head({ h, intro, center }: { h: string; intro?: string; center?: boolean }) {
+export function Head({ h, intro, center }: { h: string; intro?: string; center?: boolean }) {
   return (
     <div className={`ph-head${center ? " is-center" : ""}`}>
       <h2><Rich s={h} /></h2>
@@ -282,7 +282,7 @@ function Fit() {
   );
 }
 
-function PlanCard({ p, owner }: { p: Plan; owner: boolean }) {
+export function PlanCard({ p, owner }: { p: Plan; owner: boolean }) {
   const { t } = useHomeLang();
   const price = typeof p.price === "string" ? p.price : t(p.price);
   return (
