@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuyerBrowseCard, BuyerCover, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { BuyerBrowseCard, BuyerCover, TypeIcon, type CardPart } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
@@ -306,6 +306,9 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
   );
 }
 
+/** Public view card part → Edit profile section (shared Edit-at-section helper). */
+const PART_SEC: Record<CardPart, string> = { description: "description", ticket: "mandate", aum: "fund", revenue: "revenue", geography: "geography", based: "country", focus: "focus" };
+
 function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit, pill }: {
   p: BuyerProfile; org: BuyerOrg; view: View; setView: (v: View) => void;
   onItem: (k: BuyerItemKey) => void; onEdit: (s: Section) => void; pill: React.ReactNode;
@@ -431,7 +434,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           editLabel="Edit public view" onEdit={() => (iv ? openWizard("desc") : onEdit("public"))} pill={pill} />
         {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
-          <BuyerBrowseCard {...props} expanded cardFooter={
+          <BuyerBrowseCard {...props} expanded editable={(k) => void navigate({ to: "/marketplace/my-company/edit", search: { section: PART_SEC[k] } as never })} cardFooter={
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
               <span className="truncate">{title} · {p.ref_no}</span><span className="shrink-0">{since}</span>
             </div>
