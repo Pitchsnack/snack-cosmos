@@ -56,7 +56,6 @@ function Hero({ img }: { img: string | null }) {
 const PROMISE_ICONS = [EyeOff, ShieldCheck, RouteIcon, ChartNoAxesColumn];
 
 function Promises() {
-  const { t } = useHomeLang();
   return (
     <section id="promises" className="ph-sec ph-white">
       <div className="ph-wrap">
