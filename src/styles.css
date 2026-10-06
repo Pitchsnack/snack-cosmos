@@ -285,3 +285,10 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 @keyframes mkt-bump { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.4); } }
 .mkt-bump { animation: mkt-bump 0.6s ease-out; }
 @media (prefers-reduced-motion: reduce) { .mkt-bump { animation: none; } }
+
+/* Edit opens at section: coloured box drawn behind the opened section */
+.edit-sec-box { position: absolute; inset: -10px -12px; border-radius: 14px; border: 1px solid; pointer-events: none; }
+.edit-sec-box.is-buyer { background: #EFF6FF; border-color: #93C5FD; }
+.edit-sec-box.is-seller { background: #FFF4E5; border-color: #FDBA74; }
+.dark .edit-sec-box.is-buyer { background: #13243F; border-color: #3B6BB0; }
+.dark .edit-sec-box.is-seller { background: #3A2712; border-color: #B4691F; }

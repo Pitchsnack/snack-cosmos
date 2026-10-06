@@ -14,8 +14,8 @@ export function PairedSection({
   right,
   className,
 }: {
-  left: { icon: typeof Calendar; title: string; content: React.ReactNode };
-  right: { icon: typeof Calendar; title: string; content: React.ReactNode };
+  left: { icon: typeof Calendar; title: string; content: React.ReactNode; action?: React.ReactNode };
+  right: { icon: typeof Calendar; title: string; content: React.ReactNode; action?: React.ReactNode };
   className?: string;
 }) {
   return (
@@ -28,18 +28,24 @@ export function PairedSection({
       )}
     >
       <div className="min-w-0">
-        <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          <left.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
-          {left.title}
-        </h3>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <left.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+            {left.title}
+          </h3>
+          {left.action}
+        </div>
         <div className="min-w-0">{left.content}</div>
       </div>
       <div className="hidden w-px bg-[#EEEEEE] self-stretch min-[700px]:block" aria-hidden />
       <div className="min-w-0 max-[700px]:pt-[11.2px]">
-        <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          <right.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
-          {right.title}
-        </h3>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <right.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+            {right.title}
+          </h3>
+          {right.action}
+        </div>
         <div className="min-w-0">{right.content}</div>
       </div>
     </section>

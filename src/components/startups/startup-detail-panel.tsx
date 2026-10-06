@@ -340,6 +340,7 @@ export function StartupDetailPanel({
   onSelectInvestor,
   belowHeader,
   afterFounders,
+  sectionEdit,
   financialsHeaderAction,
   replaceBody,
   extraMenuItems,
@@ -349,6 +350,8 @@ export function StartupDetailPanel({
   belowHeader?: ReactNode;
   /** Seller-only reports, placed after the canonical founder section. */
   afterFounders?: ReactNode;
+  /** Seller › My Company only: Edit links on sections. */
+  sectionEdit?: (key: "photos" | "description" | "facts" | "product" | "tags" | "founders" | "founders-add") => ReactNode;
   /** Seller-only replacement for the financials shortcut. */
   financialsHeaderAction?: ReactNode;
   /** When set, replaces the live panel body (Hidden profile / Compare / editor). */
@@ -710,6 +713,7 @@ export function StartupDetailPanel({
       {replaceBody ? replaceBody : !isMyWorkspace && connectionState === "requested" ? null : (
         <>
       {/* Media */}
+      {sectionEdit && mediaSlots.length > 0 && <div className="-mb-1 flex justify-end">{sectionEdit("photos")}</div>}
       {mediaSlots.length > 0 && (
         <div
           className={cn(
@@ -756,7 +760,7 @@ export function StartupDetailPanel({
 
 
       {mediaSlots.length === 0 && (
-        <Section icon={FileText} title="Media">
+        <Section icon={FileText} title="Media" right={sectionEdit?.("photos")}>
           <span className="text-sm text-muted-foreground">Not available</span>
         </Section>
       )}
@@ -808,6 +812,7 @@ export function StartupDetailPanel({
           )
         }
         afterFounders={afterFounders}
+        sectionEdit={sectionEdit}
       />
 
 

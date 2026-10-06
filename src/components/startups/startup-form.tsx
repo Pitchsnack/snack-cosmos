@@ -1,3 +1,4 @@
+import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
 import { useNavigate } from "@tanstack/react-router";
@@ -185,6 +186,8 @@ interface Props {
   controlReturn?: { tab: "startups" | "investors" | "drafts" };
   /** When set, the form was opened from the Valuation tab; save/cancel return there. */
   valuationReturn?: boolean;
+  /** Seller › My Company: open the form at this section, in the light orange box. */
+  section?: string;
 }
 
 
@@ -223,7 +226,10 @@ export function StartupForm({
   directoryReturnSearch,
   controlReturn,
   valuationReturn,
+  section,
 }: Props) {
+  useOpenAtSection(section, true, section === "founders-add" ? { focusSelector: "button" } : undefined);
+  const secOn = (id: string) => section === id || (id === "founders" && section === "founders-add");
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
   const isMyStartupsCreate = !isEdit && redirectAfterCreate === "my-startups";
@@ -1194,7 +1200,7 @@ export function StartupForm({
       )}
 
       {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
-      <div className="flex items-start gap-4">
+      <EditSec id="media" tone="seller" active={secOn("media")}><div className="flex items-start gap-4">
         <div className="flex-1 min-w-0">
           <EntityMediaEditor
             value={media}
@@ -1225,18 +1231,18 @@ export function StartupForm({
             }}
           />
         </div>
-      </div>
+      </div></EditSec>
 
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
       <div className="@container">
       <div className="grid grid-cols-[100px_1fr_2fr_140px] gap-4">
-        <div className="space-y-1.5">
+        <EditSec id="facts" tone="seller" active={secOn("facts")} className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
             value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
             placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : "e.g. 2020"}
             className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
-        </div>
+        </EditSec>
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>Company Name <span className="text-destructive">*</span></Label>
           <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
@@ -1461,21 +1467,21 @@ export function StartupForm({
 
 
       {/* Descriptions */}
-      <div className="space-y-1.5">
+      <EditSec id="description" tone="seller" active={secOn("description")} className="space-y-1.5">
         <Label className={miss(isStrEmpty(shortDescription)) ? MISSING_LABEL : undefined}>Short Description</Label>
         <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)}
           placeholder={miss(isStrEmpty(shortDescription)) ? missingPh("Short Description") : undefined}
           className={miss(isStrEmpty(shortDescription)) ? MISSING_INPUT : undefined} />
-      </div>
-      <div className="space-y-1.5">
+      </EditSec>
+      <EditSec id="product" tone="seller" active={secOn("product")} className="space-y-1.5">
         <Label className={miss(isStrEmpty(longDescription)) ? MISSING_LABEL : undefined}>Long Description</Label>
         <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)}
           placeholder={miss(isStrEmpty(longDescription)) ? missingPh("Long Description") : undefined}
           className={miss(isStrEmpty(longDescription)) ? MISSING_INPUT : undefined} />
-      </div>
+      </EditSec>
 
       {/* Industry pills */}
-      <div className="space-y-1.5">
+      <EditSec id="tags" tone="seller" active={secOn("tags")} className="space-y-1.5">
         <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
         <p className="text-xs text-muted-foreground">how the market describes this company</p>
         {miss(industries.length === 0) && (
@@ -1500,7 +1506,7 @@ export function StartupForm({
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }}} />
           <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
         </div>
-      </div>
+      </EditSec>
 
       {/* Sector + business model — financial benchmarking pair */}
       <SectorBusinessModelFields
@@ -1567,7 +1573,9 @@ export function StartupForm({
       {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
         <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
       )}
-      <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} />
+      <EditSec id="founders" tone="seller" active={secOn("founders")}>
+        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} />
+      </EditSec>
 
 
       {/* Investor Relationships (V3) — replaces the legacy InvestorPicker */}

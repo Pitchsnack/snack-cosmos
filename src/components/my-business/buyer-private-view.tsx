@@ -13,6 +13,8 @@ import { Group, Intro, Ring, Row } from "@/components/my-business/my-business-pr
 import { getMyBuyerInvestor, submitMyBuyerForVerification } from "@/lib/buyer-investor.functions";
 import { BUYER_INVESTOR_KEY } from "@/components/my-business/buyer-investor-edit";
 import { cn } from "@/lib/utils";
+import { SectionEditLink } from "@/components/common/edit-section";
+import { showsStages } from "@/lib/investor-bands";
 
 export type BuyerInvestorData = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
 
@@ -76,7 +78,7 @@ export function privateChecklist(d: BuyerInvestorData): Item[] {
   ];
 }
 
-function Pill({ d, onEdit }: { d: BuyerInvestorData; onEdit: () => void }) {
+function Pill({ d, onEdit }: { d: BuyerInvestorData; onEdit: (key: string) => void }) {
   const items = privateChecklist(d);
   const pct = Math.round((items.filter((x) => x.done).length / items.length) * 100);
   const [open, setOpen] = useState(false);
@@ -104,8 +106,8 @@ function Pill({ d, onEdit }: { d: BuyerInvestorData; onEdit: () => void }) {
           <div className="flex items-center justify-between text-[14px] font-bold"><span>Profile setup</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
           {req.length > 0 && <p className="mt-1.5 text-[12px] text-muted-foreground">{req.length} required item{req.length === 1 ? "" : "s"} before you can submit for verification</p>}
-          {req.length > 0 && <Group title="Required">{req.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(); }} circle="solid" />)}</Group>}
-          {opt.length > 0 && <Group title="Optional">{opt.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(); }} circle="dashed" />)}</Group>}
+          {req.length > 0 && <Group title="Required">{req.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(x.key); }} circle="solid" />)}</Group>}
+          {opt.length > 0 && <Group title="Optional">{opt.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(x.key); }} circle="dashed" />)}</Group>}
           {done.length > 0 && <div className="mt-3 space-y-1">{done.map((x) => <div key={x.key} className="flex items-center gap-2 py-0.5 text-[12.5px] text-muted-foreground"><Check className="h-4 w-4 text-emerald-600" />{x.label}</div>)}</div>}
         </div>
       )}
@@ -128,6 +130,9 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
   const qc = useQueryClient();
   const submitFn = useServerFn(submitMyBuyerForVerification);
   const edit = () => navigate({ to: "/marketplace/my-company/edit" });
+  const editAt = (section: string, add?: boolean) => navigate({ to: "/marketplace/my-company/edit", search: { section, ...(add ? { add: "1" as const } : {}) } as never });
+  const ITEM_SEC: Record<string, string | undefined> = { ticket: "mandate", aum: "fund", logo: "media", focus: "industries", people: "people" };
+  const editItem = (k: string) => { const sec = ITEM_SEC[k]; if (!sec) return edit(); editAt(sec, k === "people" && d.people.length === 0); };
   const v = V_CHIP[d.verification.status];
   const req = privateChecklist(d).filter((x) => x.required && !x.done);
   const submit = useMutation({
@@ -148,7 +153,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
       )}
       <span className="flex-1" />
       <Button variant="outline" size="sm" className="h-9" onClick={edit}>Edit profile</Button>
-      <Pill d={d} onEdit={edit} />
+      <Pill d={d} onEdit={editItem} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -175,12 +180,12 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     </>
   );
   const mediaAdd = (
-    <button type="button" onClick={edit} className="grid aspect-video place-items-center rounded-lg border border-dashed border-border text-[12.5px] text-muted-foreground hover:bg-muted">
+    <button type="button" onClick={() => editAt("media")} className="grid aspect-video place-items-center rounded-lg border border-dashed border-border text-[12.5px] text-muted-foreground hover:bg-muted">
       <span className="inline-flex items-center gap-1.5"><ImagePlus className="h-4 w-4" />Add media</span>
     </button>
   );
   const afterPortfolio = (
-    <Section icon={Users} title="Decision makers">
+    <Section icon={Users} title="Decision makers" right={<SectionEditLink tone="buyer" onClick={() => editAt("people")} />}>
       {d.people.length ? <div className="space-y-2">{d.people.map((m, k) => (
         <div key={k} className="flex items-center gap-3 text-[13px]">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-[11.5px] font-semibold text-muted-foreground">{initials(m.name)}</span>
@@ -188,7 +193,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
           <div className="shrink-0 text-right text-[12px] text-muted-foreground"><div>{m.email}</div><div>{m.phone}</div></div>
         </div>
       ))}</div> : (
-        <button type="button" onClick={edit} className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border py-3 text-[13px] font-medium text-muted-foreground hover:bg-muted">
+        <button type="button" onClick={() => editAt("people", true)} className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border py-3 text-[13px] font-medium text-muted-foreground hover:bg-muted">
           <Users className="h-4 w-4" />Add decision maker<Plus className="h-4 w-4" />
         </button>
       )}
@@ -198,7 +203,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
       <span className="text-[12.5px] text-muted-foreground">
         {req.length
-          ? <>{req.length} required item{req.length === 1 ? "" : "s"} before you can submit for verification: {req.map((x, k) => <span key={x.key}>{k > 0 && " · "}<button type="button" onClick={edit} className="font-medium text-blue-600">{x.label}</button></span>)}</>
+          ? <>{req.length} required item{req.length === 1 ? "" : "s"} before you can submit for verification: {req.map((x, k) => <span key={x.key}>{k > 0 && " · "}<button type="button" onClick={() => editItem(x.key)} className="font-medium text-blue-600">{x.label}</button></span>)}</>
           : "Ready to submit. Admin usually reviews within 1 business day."}
       </span>
       <span className="flex-1" />
@@ -212,7 +217,8 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     <InvestorDetailPanel
       id={i.id}
       onSelectStartup={() => {}}
-      buyer={{ data: toDetail(d), topBar, chips, intro, mediaAdd, afterPortfolio, footer }}
+      buyer={{ data: toDetail(d), topBar, chips, intro, mediaAdd, afterPortfolio, footer,
+        sectionEdit: (k) => (k === "stages" && !showsStages(i.investor_type) ? null : <SectionEditLink tone="buyer" onClick={() => editAt(k)} />) }}
     />
   );
 }

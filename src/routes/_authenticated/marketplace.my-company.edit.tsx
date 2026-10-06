@@ -5,13 +5,14 @@ import { usePersona } from "@/hooks/use-marketplace";
 import type { EditSection } from "@/lib/advisor-firm";
 
 const SECTIONS = ["firm", "services", "work", "company", "team", "credentials", "documents"];
-type Search = { firm?: string; new?: string; section?: EditSection };
+type Search = { firm?: string; new?: string; section?: string; add?: "1" };
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/edit")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     ...(typeof s.firm === "string" ? { firm: s.firm } : {}),
     ...(s.new ? { new: "1" } : {}),
-    ...(typeof s.section === "string" && SECTIONS.includes(s.section) ? { section: s.section as EditSection } : {}),
+    ...(typeof s.section === "string" && /^[a-z-]{2,30}$/.test(s.section) ? { section: s.section } : {}),
+    ...(s.add ? { add: "1" as const } : {}),
   }),
   head: () => ({
     meta: [
@@ -29,6 +30,9 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/edi
 function EditPage() {
   const { persona } = usePersona();
   const search = Route.useSearch();
-  if (persona === "advisor") return <AdvisorFirmEdit firmId={search.firm ?? null} section={search.section} />;
-  return <BuyerInvestorEdit />;
+  if (persona === "advisor") {
+    const sec = search.section && SECTIONS.includes(search.section) ? (search.section as EditSection) : undefined;
+    return <AdvisorFirmEdit firmId={search.firm ?? null} section={sec} />;
+  }
+  return <BuyerInvestorEdit section={search.section} add={!!search.add} />;
 }

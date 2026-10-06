@@ -181,8 +181,11 @@ export function StartupInfoBody({
   data,
   renderFounderAvatar,
   afterFounders,
+  sectionEdit,
 }: {
   data: StartupInfoData;
+  /** Seller › My Company only: Edit link for a section. */
+  sectionEdit?: (key: "description" | "facts" | "product" | "tags" | "founders" | "founders-add") => React.ReactNode;
   /** Lets a surface mask founder pictures (Basic Information Restrictions). */
   renderFounderAvatar?: (founder: StartupInfoFounder) => React.ReactNode;
   afterFounders?: React.ReactNode;
@@ -265,13 +268,17 @@ export function StartupInfoBody({
   return (
     <>
       {/* Short description */}
-      <p className="text-[15px] leading-relaxed text-foreground/85">
-        {data.shortDescription || (
-          <span className="text-muted-foreground">No description available yet.</span>
-        )}
-      </p>
+      <div className="flex items-start gap-3">
+        <p className="min-w-0 flex-1 text-[15px] leading-relaxed text-foreground/85">
+          {data.shortDescription || (
+            <span className="text-muted-foreground">No description available yet.</span>
+          )}
+        </p>
+        {sectionEdit && <div className="shrink-0 pt-0.5">{sectionEdit("description")}</div>}
+      </div>
 
       {/* Compact meta row — matches the investor panel */}
+      {sectionEdit && <div className="-mb-2 flex justify-end">{sectionEdit("facts")}</div>}
       {metaItems.length > 0 && (
         <div className="grid grid-cols-2 gap-x-[18px] gap-y-[10px] border-y border-[#EFF1F4] py-[11px] text-[13.5px] sm:grid-cols-3 lg:grid-cols-4">
           {metaItems.map((item, i) => (
@@ -285,7 +292,7 @@ export function StartupInfoBody({
 
 
       {/* Long description */}
-      <StartupInfoSection icon={FileText} title="Product overview">
+      <StartupInfoSection icon={FileText} title="Product overview" right={sectionEdit?.("product")}>
         {data.longDescription ? (
           <>
             <p
@@ -313,17 +320,18 @@ export function StartupInfoBody({
       </StartupInfoSection>
 
       {/* Product & service tags, full width (values are long) */}
-      <StartupInfoSection icon={Layers} title="Product & service tags">
+      <StartupInfoSection icon={Layers} title="Product & service tags" right={sectionEdit?.("tags")}>
         <ChipRow tags={productTags} tone="primary" />
       </StartupInfoSection>
 
       {/* Band 1 — Industry | Market tags */}
       <PairedSection
-        left={{ icon: Layers, title: "Industry", content: <ChipRow tags={industry} tone="muted" /> }}
+        left={{ icon: Layers, title: "Industry", content: <ChipRow tags={industry} tone="muted" />, action: sectionEdit?.("tags") }}
         right={{
           icon: ShoppingCart,
           title: "Market tags",
           content: <ChipRow tags={marketTags} tone="muted" />,
+          action: sectionEdit?.("tags"),
         }}
       />
 
@@ -376,6 +384,7 @@ export function StartupInfoBody({
       <StartupInfoSection
         icon={UserCircle2}
         title={`Founder${founders.length > 1 ? `s (${founders.length})` : ""}`}
+        right={sectionEdit && <span className="flex items-center gap-3">{sectionEdit("founders-add")}{sectionEdit("founders")}</span>}
       >
         {founders.length === 0 ? (
           <span className="text-sm text-muted-foreground">Not available</span>
