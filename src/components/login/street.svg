@@ -1,0 +1,156 @@
+<svg viewBox="0 0 720 320" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="psLit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7D99A"/><stop offset="1" stop-color="#E7AE5A"/></linearGradient>
+    <linearGradient id="psCool" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4F0F5"/><stop offset="1" stop-color="#BFD6E2"/></linearGradient>
+    <pattern id="psStripe" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="7" height="14" fill="#FFFFFF" fill-opacity=".24"/></pattern>
+  </defs>
+  <!-- sky -->
+  <g fill="#FFFFFF" fill-opacity=".5"><circle cx="30" cy="18" r="1"/><circle cx="160" cy="12" r="1"/><circle cx="300" cy="22" r="1"/><circle cx="420" cy="10" r="1"/><circle cx="610" cy="16" r="1"/><circle cx="700" cy="26" r="1"/></g>
+  <circle cx="96" cy="28" r="12" fill="#EFE6CC"/><circle cx="101" cy="24" r="11" fill="#1E3E56"/>
+  <g fill="#24485F"><rect x="10" y="80" width="46" height="210"/><rect x="62" y="100" width="30" height="190"/><rect x="194" y="40" width="52" height="250"/><rect x="262" y="70" width="34" height="220"/><rect x="300" y="88" width="40" height="200"/><rect x="498" y="60" width="56" height="230"/><rect x="562" y="92" width="30" height="200"/><rect x="636" y="52" width="46" height="240"/></g>
+  <g fill="#2F5470"><rect x="20" y="90" width="3" height="4"/><rect x="40" y="100" width="3" height="4"/><rect x="20" y="110" width="3" height="4"/><rect x="216" y="52" width="3" height="4"/><rect x="228" y="64" width="3" height="4"/><rect x="204" y="76" width="3" height="4"/><rect x="270" y="80" width="3" height="4"/><rect x="282" y="92" width="3" height="4"/><rect x="508" y="70" width="3" height="4"/><rect x="536" y="82" width="3" height="4"/><rect x="508" y="94" width="3" height="4"/><rect x="646" y="62" width="3" height="4"/><rect x="670" y="74" width="3" height="4"/></g>
+  <g fill="#F3C77A" fill-opacity=".55"><rect x="30" y="90" width="3" height="4"/><rect x="204" y="52" width="3" height="4"/><rect x="520" y="70" width="3" height="4"/><rect x="660" y="62" width="3" height="4"/></g>
+
+  <!-- facades -->
+  <rect x="0" y="128" width="120" height="158" fill="#2B4D66"/>
+  <rect x="120" y="88" width="120" height="198" fill="#33586F"/>
+  <rect x="240" y="110" width="116" height="176" fill="#2A4A61"/>
+  <rect x="356" y="38" width="126" height="248" fill="#36607A"/>
+  <rect x="482" y="120" width="120" height="166" fill="#2E5068"/>
+  <rect x="602" y="88" width="118" height="198" fill="#31556C"/>
+  <g fill="#1D3446"><rect x="117" y="128" width="6" height="158"/><rect x="353" y="110" width="6" height="176"/><rect x="599" y="120" width="6" height="166"/></g>
+
+  <!-- 1 rice mill -->
+  <rect x="0" y="123" width="120" height="7" fill="#4A7089"/><rect x="0" y="130" width="120" height="3" fill="#20394C"/><rect x="0" y="183" width="120" height="4" fill="#3E6580"/>
+  <rect x="12" y="142" width="6" height="34" fill="#3E6B60"/><rect x="18" y="142" width="30" height="34" rx="2" fill="url(#psLit)"/><rect x="48" y="142" width="6" height="34" fill="#3E6B60"/>
+  <path d="M33 142v34M18 157h30" stroke="#B98A42" stroke-width="1.2"/>
+  <rect x="66" y="142" width="6" height="34" fill="#3E6B60"/><rect x="72" y="142" width="30" height="34" rx="2" fill="#1A3043"/><rect x="102" y="142" width="6" height="34" fill="#3E6B60"/>
+  <path d="M87 142v34M72 157h30" stroke="#2B4D66" stroke-width="1.2"/>
+  <rect x="10" y="192" width="100" height="18" rx="2" fill="#E9EEF3"/>
+  <text class="ps-sign" data-i18n-text="sign1" x="60" y="205" text-anchor="middle" fill="#1E3E56">โรงสีข้าว</text>
+  <polygon points="4,212 116,212 122,229 -2,229" fill="#356D5F"/><polygon points="4,212 116,212 122,229 -2,229" fill="url(#psStripe)"/>
+  <rect x="-2" y="228" width="124" height="3" fill="#244C42"/>
+  <rect x="10" y="231" width="100" height="55" fill="url(#psLit)"/>
+  <rect x="10" y="231" width="16" height="55" fill="#23405A"/><rect x="94" y="231" width="16" height="55" fill="#23405A"/>
+  <path d="M14 231v55M18 231v55M22 231v55M98 231v55M102 231v55M106 231v55" stroke="#2F5470" stroke-width="1"/>
+  <g fill="#EFE3C7" stroke="#C9B48A" stroke-width="1"><rect x="32" y="264" width="18" height="22" rx="6"/><rect x="51" y="264" width="18" height="22" rx="6"/><rect x="41" y="244" width="18" height="21" rx="6"/><rect x="72" y="266" width="18" height="20" rx="6"/></g>
+
+  <!-- 2 coffee shop -->
+  <polygon points="114,92 180,58 246,92" fill="#4A7089"/><polygon points="132,90 180,66 228,90" fill="#3E6580"/>
+  <circle cx="180" cy="80" r="5" fill="#1A3043"/>
+  <rect x="114" y="90" width="132" height="5" fill="#4A7089"/><rect x="120" y="95" width="120" height="3" fill="#24435A"/>
+  <path d="M134 132V112a11 11 0 0 1 22 0V132Z" fill="#1A3043"/><path d="M169 132V112a11 11 0 0 1 22 0V132Z" fill="url(#psLit)"/><path d="M204 132V112a11 11 0 0 1 22 0V132Z" fill="#1A3043"/>
+  <rect x="120" y="138" width="120" height="4" fill="#3E6580"/>
+  <rect x="134" y="148" width="22" height="30" fill="url(#psLit)"/><rect x="169" y="148" width="22" height="30" fill="#1A3043"/><rect x="204" y="148" width="22" height="30" fill="url(#psLit)"/>
+  <rect x="128" y="168" width="104" height="2" fill="#6F93AA"/>
+  <path d="M132 170v10M140 170v10M148 170v10M156 170v10M164 170v10M172 170v10M180 170v10M188 170v10M196 170v10M204 170v10M212 170v10M220 170v10M228 170v10" stroke="#6F93AA" stroke-width="1.2"/>
+  <rect x="128" y="180" width="104" height="2" fill="#6F93AA"/>
+  <circle cx="140" cy="165" r="4" fill="#4F8A6E"/><circle cx="146" cy="163" r="3.5" fill="#5E9C7E"/><circle cx="218" cy="165" r="4" fill="#4F8A6E"/>
+  <rect x="130" y="192" width="100" height="18" rx="2" fill="#1E3E56" stroke="#F0C46E" stroke-width="1"/>
+  <text class="ps-sign" data-i18n-text="sign2" x="180" y="205" text-anchor="middle" fill="#F3D9A0">ร้านกาแฟ</text>
+  <polygon points="124,212 236,212 242,229 118,229" fill="#A6323C"/><polygon points="124,212 236,212 242,229 118,229" fill="url(#psStripe)"/>
+  <rect x="118" y="228" width="124" height="3" fill="#7E2530"/>
+  <rect x="130" y="231" width="100" height="55" fill="url(#psLit)"/>
+  <path d="M150 231v8M180 231v8M210 231v8" stroke="#6B4A2B" stroke-width="1"/>
+  <path d="M145 244a5 5 0 0 1 10 0ZM175 244a5 5 0 0 1 10 0ZM205 244a5 5 0 0 1 10 0Z" fill="#6B4A2B"/>
+  <rect x="136" y="264" width="88" height="3" fill="#A87444"/><rect x="136" y="267" width="88" height="19" fill="#8B5A33"/>
+  <rect x="146" y="258" width="6" height="6" rx="1" fill="#F4F0E6"/><rect x="156" y="258" width="6" height="6" rx="1" fill="#F4F0E6"/>
+  <rect x="198" y="250" width="18" height="14" rx="2" fill="#5A6B78"/>
+
+  <!-- 3 clinic -->
+  <rect x="238" y="105" width="120" height="7" fill="#4A7089"/><rect x="240" y="112" width="116" height="3" fill="#20394C"/><rect x="240" y="183" width="116" height="4" fill="#3E6580"/>
+  <rect x="254" y="124" width="34" height="50" rx="2" fill="url(#psLit)"/><path d="M271 124v50" stroke="#B98A42" stroke-width="1.2"/>
+  <rect x="308" y="124" width="34" height="50" rx="2" fill="#1A3043"/><path d="M325 124v50" stroke="#2A4A61" stroke-width="1.2"/>
+  <rect x="246" y="160" width="104" height="2" fill="#6F93AA"/>
+  <path d="M250 162v12M258 162v12M266 162v12M274 162v12M282 162v12M290 162v12M298 162v12M306 162v12M314 162v12M322 162v12M330 162v12M338 162v12M346 162v12" stroke="#6F93AA" stroke-width="1.2"/>
+  <rect x="246" y="174" width="104" height="2" fill="#6F93AA"/>
+  <circle cx="262" cy="156" r="4.5" fill="#4F8A6E"/><circle cx="269" cy="155" r="3.5" fill="#5E9C7E"/><circle cx="330" cy="156" r="4.5" fill="#4F8A6E"/><circle cx="337" cy="157" r="3.5" fill="#5E9C7E"/>
+  <rect x="250" y="192" width="96" height="18" rx="2" fill="#F4F7F9"/>
+  <path d="M266 196v10M261 201h10" stroke="#356D5F" stroke-width="3" stroke-linecap="round"/>
+  <text class="ps-sign" data-i18n-text="sign3" x="306" y="205" text-anchor="middle" fill="#1E3E56">คลินิก</text>
+  <polygon points="244,212 352,212 358,229 238,229" fill="#25638D"/><polygon points="244,212 352,212 358,229 238,229" fill="url(#psStripe)"/>
+  <rect x="238" y="228" width="120" height="3" fill="#1B4A6A"/>
+  <rect x="250" y="231" width="96" height="55" fill="url(#psCool)"/>
+  <path d="M298 231v55M250 240h96" stroke="#7E9BAD" stroke-width="1.5"/>
+  <rect x="291" y="258" width="2" height="10" fill="#7E9BAD"/><rect x="303" y="258" width="2" height="10" fill="#7E9BAD"/>
+  <rect x="256" y="274" width="10" height="12" fill="#C98B5E"/><circle cx="261" cy="270" r="6" fill="#4F8A6E"/>
+
+  <!-- 4 hotel -->
+  <rect x="352" y="32" width="134" height="8" fill="#5B8199"/><rect x="356" y="40" width="126" height="3" fill="#24435A"/>
+  <g fill="#2C536B"><rect x="356" y="78" width="126" height="3"/><rect x="356" y="112" width="126" height="3"/><rect x="356" y="146" width="126" height="3"/><rect x="356" y="180" width="126" height="4"/></g>
+  <g fill="url(#psLit)"><rect x="392" y="50" width="20" height="24"/><rect x="456" y="50" width="20" height="24"/><rect x="424" y="84" width="20" height="24"/><rect x="392" y="118" width="20" height="24"/><rect x="424" y="118" width="20" height="24"/><rect x="424" y="152" width="20" height="24"/><rect x="456" y="152" width="20" height="24"/></g>
+  <g fill="#1A3043"><rect x="424" y="50" width="20" height="24"/><rect x="392" y="84" width="20" height="24"/><rect x="456" y="84" width="20" height="24"/><rect x="456" y="118" width="20" height="24"/><rect x="392" y="152" width="20" height="24"/></g>
+  <g fill="#9FB3C2"><rect x="395" y="109" width="14" height="9" rx="1"/><rect x="459" y="143" width="14" height="9" rx="1"/></g>
+  <path d="M380 66h6M380 150h6" stroke="#5B8199" stroke-width="2"/>
+  <rect x="362" y="58" width="18" height="100" rx="3" fill="#A6323C"/>
+  <g fill="#F8DC9A"><circle cx="371" cy="70" r="2.6"/><circle cx="371" cy="86" r="2.6"/><circle cx="371" cy="102" r="2.6"/><circle cx="371" cy="118" r="2.6"/><circle cx="371" cy="134" r="2.6"/><circle cx="371" cy="148" r="2.6"/></g>
+  <rect x="384" y="192" width="90" height="18" rx="2" fill="#A6323C"/>
+  <text class="ps-sign" data-i18n-text="sign4" x="429" y="205" text-anchor="middle" fill="#FFFFFF">โรงแรม</text>
+  <rect x="374" y="212" width="104" height="6" rx="1" fill="#1D3446"/>
+  <polygon points="384,218 468,218 476,244 376,244" fill="#F6D392" fill-opacity=".16"/>
+  <rect x="390" y="226" width="78" height="60" fill="url(#psLit)"/>
+  <path d="M429 226v60M390 226h78" stroke="#B98A42" stroke-width="1.5"/>
+  <rect x="424" y="252" width="2" height="12" fill="#8A6A3A"/><rect x="432" y="252" width="2" height="12" fill="#8A6A3A"/>
+  <rect x="374" y="274" width="10" height="12" fill="#C98B5E"/><circle cx="379" cy="268" r="7" fill="#4F8A6E"/>
+  <rect x="470" y="274" width="10" height="12" fill="#C98B5E"/><circle cx="475" cy="268" r="7" fill="#4F8A6E"/>
+
+  <!-- 5 auto parts -->
+  <rect x="480" y="115" width="124" height="7" fill="#4A7089"/><rect x="482" y="122" width="120" height="3" fill="#20394C"/><rect x="482" y="183" width="120" height="4" fill="#3E6580"/>
+  <rect x="494" y="134" width="42" height="36" rx="2" fill="url(#psLit)"/><path d="M515 134v36" stroke="#B98A42" stroke-width="1.2"/>
+  <rect x="548" y="134" width="42" height="36" rx="2" fill="#1A3043"/><path d="M548 134h21v36h-21z" fill="#3A5E75"/>
+  <rect x="556" y="171" width="24" height="11" rx="1" fill="#A9BAC7"/><path d="M560 174h16M560 177h16M560 180h16" stroke="#7E93A3" stroke-width="1"/>
+  <rect x="490" y="192" width="104" height="18" rx="2" fill="#F0C46E"/>
+  <text class="ps-sign" data-i18n-text="sign5" x="542" y="205" text-anchor="middle" fill="#3B2300">อะไหล่ยนต์</text>
+  <polygon points="486,212 598,212 604,222 480,222" fill="#5B8199"/><rect x="480" y="221" width="124" height="2" fill="#3E6580"/>
+  <rect x="490" y="223" width="104" height="12" fill="#8FA3B3"/><path d="M490 226h104M490 229h104M490 232h104" stroke="#7A8E9E" stroke-width="1"/>
+  <rect x="490" y="235" width="104" height="51" fill="url(#psLit)"/>
+  <g fill="#1F2A33"><rect x="498" y="276" width="26" height="9" rx="4.5"/><rect x="498" y="266" width="26" height="9" rx="4.5"/><rect x="498" y="256" width="26" height="9" rx="4.5"/><rect x="562" y="276" width="26" height="9" rx="4.5"/><rect x="562" y="266" width="26" height="9" rx="4.5"/></g>
+  <rect x="530" y="246" width="26" height="2" fill="#8B5A33"/>
+  <rect x="532" y="240" width="7" height="6" fill="#6B7A86"/><rect x="541" y="241" width="6" height="5" fill="#A6323C"/><rect x="549" y="240" width="6" height="6" fill="#25638D"/>
+  <rect x="530" y="262" width="26" height="2" fill="#8B5A33"/>
+  <rect x="533" y="256" width="8" height="6" fill="#356D5F"/><rect x="544" y="257" width="9" height="5" fill="#6B7A86"/>
+
+  <!-- 6 packaging -->
+  <rect x="600" y="83" width="120" height="7" fill="#4A7089"/><rect x="602" y="90" width="118" height="3" fill="#20394C"/>
+  <g fill="#3E6580"><rect x="610" y="96" width="5" height="5"/><rect x="622" y="96" width="5" height="5"/><rect x="634" y="96" width="5" height="5"/><rect x="646" y="96" width="5" height="5"/><rect x="658" y="96" width="5" height="5"/><rect x="670" y="96" width="5" height="5"/><rect x="682" y="96" width="5" height="5"/><rect x="694" y="96" width="5" height="5"/><rect x="706" y="96" width="5" height="5"/></g>
+  <rect x="602" y="140" width="118" height="4" fill="#3E6580"/><rect x="602" y="183" width="118" height="4" fill="#3E6580"/>
+  <g fill="#3E6B60"><rect x="612" y="106" width="5" height="30"/><rect x="645" y="106" width="5" height="30"/><rect x="666" y="106" width="5" height="30"/><rect x="699" y="106" width="5" height="30"/><rect x="612" y="148" width="5" height="30"/><rect x="645" y="148" width="5" height="30"/><rect x="666" y="148" width="5" height="30"/><rect x="699" y="148" width="5" height="30"/></g>
+  <rect x="617" y="106" width="28" height="30" fill="url(#psLit)"/><rect x="671" y="106" width="28" height="30" fill="#1A3043"/>
+  <rect x="617" y="148" width="28" height="30" fill="#1A3043"/><rect x="671" y="148" width="28" height="30" fill="url(#psLit)"/>
+  <rect x="612" y="192" width="98" height="18" rx="2" fill="#E9EEF3"/>
+  <text class="ps-sign" data-i18n-text="sign6" x="661" y="205" text-anchor="middle" fill="#1E3E56">บรรจุภัณฑ์</text>
+  <polygon points="606,212 716,212 722,229 600,229" fill="#F0C46E"/><polygon points="606,212 716,212 722,229 600,229" fill="url(#psStripe)"/>
+  <rect x="600" y="228" width="122" height="3" fill="#C99A4A"/>
+  <rect x="612" y="231" width="98" height="55" fill="url(#psLit)"/>
+  <g fill="#C1874A"><rect x="620" y="266" width="22" height="20"/><rect x="644" y="266" width="22" height="20"/><rect x="632" y="248" width="22" height="18"/><rect x="672" y="262" width="20" height="24"/></g>
+  <g fill="#E3BE7C"><rect x="629" y="266" width="4" height="20"/><rect x="653" y="266" width="4" height="20"/><rect x="641" y="248" width="4" height="18"/><rect x="680" y="262" width="4" height="24"/></g>
+  <circle cx="701" cy="277" r="9" fill="#DCE6EC"/><circle cx="701" cy="277" r="3" fill="#8FA3B3"/>
+
+  <!-- poles, wires and string lights -->
+  <g fill="#10283A"><rect x="236" y="30" width="6" height="264"/><rect x="222" y="40" width="34" height="4" rx="1"/><rect x="479" y="24" width="6" height="270"/><rect x="466" y="34" width="32" height="4" rx="1"/></g>
+  <rect x="243" y="60" width="10" height="16" rx="2" fill="#2A4256"/>
+  <g fill="none" stroke="#0E2132" stroke-width="1.3"><path d="M0 52Q120 82 238 42"/><path d="M0 62Q120 96 238 46"/><path d="M238 42Q360 74 482 36"/><path d="M238 46Q360 88 482 40"/><path d="M482 36Q600 66 720 46"/><path d="M482 40Q600 80 720 56"/></g>
+  <path d="M48 61v5M96 65v5M143 63v5M191 55v5M275 50v5M311 55v5M347 57v5M384 55v5M420 51v5M456 43v5M516 44v5M552 50v5M588 53v5M624 54v5M660 53v5M696 50v5" stroke="#0E2132" stroke-width="1"/>
+  <g class="ps-glows" fill="#F6D58E" fill-opacity=".22"><circle cx="48" cy="69" r="6"/><circle cx="96" cy="73" r="6"/><circle cx="143" cy="71" r="6"/><circle cx="191" cy="63" r="6"/><circle cx="275" cy="58" r="6"/><circle cx="311" cy="63" r="6"/><circle cx="347" cy="65" r="6"/><circle cx="384" cy="63" r="6"/><circle cx="420" cy="59" r="6"/><circle cx="456" cy="51" r="6"/><circle cx="516" cy="52" r="6"/><circle cx="552" cy="58" r="6"/><circle cx="588" cy="61" r="6"/><circle cx="624" cy="62" r="6"/><circle cx="660" cy="61" r="6"/><circle cx="696" cy="58" r="6"/></g>
+  <g fill="#F8DC9A"><circle cx="48" cy="69" r="2.3"/><circle cx="96" cy="73" r="2.3"/><circle cx="143" cy="71" r="2.3"/><circle cx="191" cy="63" r="2.3"/><circle cx="275" cy="58" r="2.3"/><circle cx="311" cy="63" r="2.3"/><circle cx="347" cy="65" r="2.3"/><circle cx="384" cy="63" r="2.3"/><circle cx="420" cy="59" r="2.3"/><circle cx="456" cy="51" r="2.3"/><circle cx="516" cy="52" r="2.3"/><circle cx="552" cy="58" r="2.3"/><circle cx="588" cy="61" r="2.3"/><circle cx="624" cy="62" r="2.3"/><circle cx="660" cy="61" r="2.3"/><circle cx="696" cy="58" r="2.3"/></g>
+
+  <!-- pavement and road -->
+  <rect x="0" y="286" width="720" height="9" fill="#4D7189"/>
+  <path d="M24 286v9M72 286v9M120 286v9M168 286v9M216 286v9M264 286v9M312 286v9M360 286v9M408 286v9M456 286v9M504 286v9M552 286v9M600 286v9M648 286v9M696 286v9" stroke="#44677F" stroke-width="1"/>
+  <rect x="0" y="295" width="720" height="3" fill="#6A8CA2"/>
+  <rect x="0" y="298" width="720" height="22" fill="#152C40"/>
+  <path d="M330 310h22M372 310h22M414 310h22M456 310h22M498 310h22M540 310h22M582 310h22M624 310h22M666 310h22M708 310h22" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="2"/>
+
+  <!-- street-food cart -->
+  <line x1="182" y1="236" x2="182" y2="262" stroke="#0E2132" stroke-width="2"/>
+  <path d="M156 240Q182 216 208 240Z" fill="#F0C46E"/><path d="M156 240Q182 216 208 240Z" fill="url(#psStripe)"/>
+  <path d="M172 256c-2-3 2-5 0-8M190 256c-2-3 2-5 0-8" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1.2" stroke-linecap="round"/>
+  <rect x="160" y="258" width="44" height="10" rx="1" fill="#CFE0EA" fill-opacity=".9"/>
+  <rect x="158" y="268" width="48" height="18" rx="2" fill="#E9EEF3"/><rect x="158" y="276" width="48" height="3" fill="#A6323C"/>
+  <path d="M206 272h8" stroke="#0E2132" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="168" cy="290" r="5" fill="#0E2132"/><circle cx="196" cy="290" r="5" fill="#0E2132"/>
+
+  <!-- scooter -->
+  <g fill="none" stroke="#0E2132" stroke-linecap="round" stroke-linejoin="round"><circle cx="516" cy="289" r="6" stroke-width="3"/><circle cx="548" cy="289" r="6" stroke-width="3"/><path d="M516 289L527 277H540L548 289" stroke-width="4"/><path d="M548 289L543 267M539 267h8" stroke-width="2.5"/></g>
+  <rect x="524" y="272" width="17" height="5" rx="2.5" fill="#0E2132"/>
+</svg>
