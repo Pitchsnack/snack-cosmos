@@ -21,6 +21,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { runIdentityCheck } from "@/lib/hidden-profile";
 import { ApprovalFooter, ApprovalNotice, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
+import { SectionEditLink } from "@/components/common/edit-section";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -410,6 +411,9 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
 
 /* --------------------------------- Layout --------------------------------- */
 
+/** Checklist item → Edit My Startup section (shared Edit-at-section helper). */
+const ITEM_SECTION: Partial<Record<string, string>> = { desc: "description", media: "media", people: "founders" };
+
 export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem[] }) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -432,7 +436,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
     if (!current) return;
     if (k === "fin" || k === "valuation") { setSel({ id: current.id, view: "private" }); setEditing(false); requestAnimationFrame(() => document.getElementById(`reports-${current.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })); }
     else if (k === "terms" || k === "hidden") { setSel({ id: current.id, view: "public" }); setEditing(true); }
-    else void navigate({ to: "/my-startups/$id/edit", params: { id: current.id } });
+    else void navigate({ to: "/my-startups/$id/edit", params: { id: current.id }, search: (ITEM_SECTION[k] ? { section: ITEM_SECTION[k] } : {}) as never });
   };
 
   const adminReview = useAdminReview();
@@ -457,6 +461,10 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
             showPublication
             workspace="my-startups"
              afterFounders={!adminReview && <ReportOffers id={current.id} />}
+             sectionEdit={adminReview ? undefined : (k) => (
+               <SectionEditLink tone="seller" label={k === "founders-add" ? "Add founder" : "Edit"}
+                 onClick={() => void navigate({ to: "/my-startups/$id/edit", params: { id: current.id }, search: { section: k === "photos" ? "media" : k } as never })} />
+             )}
              financialsHeaderAction={!adminReview ? <ReportHeaderAction id={current.id} /> : undefined}
             onClose={() => closeDeleted(current.id)}
             belowHeader={

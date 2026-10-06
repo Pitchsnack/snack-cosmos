@@ -28,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
     tab: z.enum(["edit", "basic-restrictions"]).optional(),
     focus: z.literal("sector").optional(),
     returnTo: z.literal("valuation").optional(),
+    section: z.string().regex(/^[a-z-]{2,30}$/).optional(),
   }),
   head: () => ({
     meta: [
@@ -96,6 +97,7 @@ function EditMyStartupPage() {
                       workspace="my-startups"
                       myStartupsReturnSearch={returnSearch}
                       valuationReturn={returnSearch.returnTo === "valuation"}
+                      section={returnSearch.section}
                     />
                   </div>
                 </TabsContent>
