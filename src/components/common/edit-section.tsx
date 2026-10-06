@@ -38,8 +38,16 @@ export function useOpenAtSection(section: string | undefined, ready = true, opts
       const el = document.querySelector<HTMLElement>(`[data-edit-sec="${section}"]`);
       if (!el) return;
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const top = el.getBoundingClientRect().top + window.scrollY - pinnedBottom() - 16 - 10;
-      window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
+      let sc: HTMLElement | null = el.parentElement;
+      while (sc && !(/(auto|scroll)/.test(getComputedStyle(sc).overflowY) && sc.scrollHeight > sc.clientHeight)) sc = sc.parentElement;
+      const behavior = reduce ? "auto" : "smooth";
+      const pin = pinnedBottom();
+      if (sc) {
+        const top = el.getBoundingClientRect().top - Math.max(sc.getBoundingClientRect().top, pin) + sc.scrollTop - 16 - 10;
+        sc.scrollTo({ top: Math.max(0, top), behavior });
+      } else {
+        window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - pin - 16 - 10), behavior });
+      }
       const target = el.querySelector<HTMLElement>(opts?.focusSelector ?? "[data-edit-focus]")
         ?? el.querySelector<HTMLElement>("input:not([type=hidden]):not([disabled]), textarea, select, [role=combobox], button:not([disabled])");
       target?.focus({ preventScroll: true });
