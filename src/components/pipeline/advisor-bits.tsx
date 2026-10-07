@@ -21,7 +21,7 @@ export function useAdvisorState(dealId: string, enabled: boolean) {
   return useQuery({ queryKey: ["pipeline", "advisor", dealId], queryFn: () => f({ data: { dealId } }), enabled, staleTime: 15_000 });
 }
 
-export function AdvisorContactRow({ dealId, loiDone, done, t }: { dealId: string; loiDone: boolean; done: boolean; t: (s: string) => string }) {
+export function useAdvisorContactRow(dealId: string, loiDone: boolean, done: boolean, t: (s: string) => string) {
   const q = useAdvisorState(dealId, loiDone);
   const qc = useQueryClient();
   const [dlg, setDlg] = useState<null | "invite" | { nda: Side } | { profile: Side }>(null);
