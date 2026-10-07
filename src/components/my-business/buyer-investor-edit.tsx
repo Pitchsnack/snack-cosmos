@@ -1,3 +1,4 @@
+import { ActsForField } from "@/components/investors/acts-for-field";
 import { CompanySizeField } from "@/components/investors/company-size-field";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -165,6 +166,9 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
   });
+  const agent = rel === "agent";
+  const [actsFor, setActsFor] = useState<string[]>(() => sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []));
+  const typeOf = agent ? actsFor[0] ?? "" : f.investor_type;
   const [deals, setDeals] = useState<string[]>(data.buyer.deal_types);
   const [keywords, setKeywords] = useState(inv.keywords);
   const [focus, setFocus] = useState(inv.investment_focus);
@@ -236,6 +240,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       ["website_url", /^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(f.website_url.trim()) ? null : "Enter a valid website address, e.g. www.yourfirm.com"],
       ["description", f.description.trim() ? descriptionError(f.description) || (leaks.length ? "leak" : null) : null],
       ["registration_no", individual ? null : regError(f.registration_no, f.country)],
+      ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
     ];
     const bad = checks.find(([, m]) => m);
     if (bad) {
@@ -255,7 +260,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       );
       const exact = Number(f.aum_exact.replace(/[^\d.]/g, ""));
       await save({ data: {
-        investor_name: f.investor_name.trim(), investor_type: t(f.investor_type), year_founded: yr && Number.isFinite(yr) ? yr : null,
+        investor_name: f.investor_name.trim(), investor_type: t(typeOf), ...(agent ? { acts_for_types: actsFor } : {}), year_founded: yr && Number.isFinite(yr) ? yr : null,
         company_size_band: individual ? null : ((f.company_size_band || null) as "1-10" | null),
         country: t(f.country), city: t(f.city), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
         firm_name: t(f.firm_name), business_address: t(f.business_address),
@@ -273,7 +278,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       await qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
       await qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
       const live = data.buyer.status === "live";
-      const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(f.investor_type) || stages.length > 0);
+      const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(typeOf, agent ? actsFor : null) || stages.length > 0);
       const msg = live ? "Profile saved. Sellers see the changes in Browse investors."
         : ready ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the required items to publish.";
       if (setup) setup.onSaved(msg);
@@ -282,7 +287,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
   };
   const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{errs[k]}</p> : null;
   const req = <span className="ml-[3px] text-[12px] font-semibold text-[#B42318] relative -top-0.5">*</span>;
-  const corp = isCorporateBuyer(f.investor_type);
+  const corp = isCorporateBuyer(typeOf);
   const allStages = Array.from(new Set([...STAGE_OPTIONS, ...stages]));
   const allGeo = Array.from(new Set([...GEOGRAPHY, ...focus]));
   const allDeals = Array.from(new Set([...DEAL_TYPES, ...deals]));
@@ -325,7 +330,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </div></S>
 
         {/* Row 1: Year Founded | Company Name | Investor Classification */}
-        <div className="grid grid-cols-[100px_1fr_220px] gap-4">
+        <div className={agent ? "grid grid-cols-[100px_1fr] gap-4" : "grid grid-cols-[100px_1fr_220px] gap-4"}>
           <div className="space-y-1.5">
             <Label>Year Founded{!individual && req}<Tag s={src.year_founded} /></Label>
             <Input id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
@@ -339,7 +344,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
               className={errs.investor_name ? "border-[#B42318]" : ""} />
             <Err k="investor_name" />
           </div>
-          <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
+          {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
             <Label>Investor Classification<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
@@ -350,8 +355,11 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
                 ))}
               </SelectContent>
             </Select>
-          </S>
+          </S>}
         </div>
+        {agent && <S cur={setup ? undefined : sec} id="classification">
+          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>Acts for<Tag s={src.investor_type} /></>} />
+        </S>}
 
         {!individual && (
           <div className="grid grid-cols-[220px_1fr] gap-4">
@@ -534,7 +542,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </S>
 
         {/* Preferred Stages */}
-        {showsStages(f.investor_type) && <S cur={setup ? undefined : sec} id="stages" className="space-y-1.5">
+        {showsStages(typeOf, agent ? actsFor : null) && <S cur={setup ? undefined : sec} id="stages" className="space-y-1.5">
           <Label>Preferred Stages</Label>
           <div className="flex flex-wrap gap-2">
             {allStages.map((s) => (
