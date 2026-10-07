@@ -20,13 +20,13 @@ import {
 } from "@/lib/advisor-firm";
 import { COUNTRIES, THAI_PROVINCES_77, yearError } from "@/lib/investor-bands";
 import { normalizeUrl } from "@/lib/seller-wizard";
-import { SECTORS } from "@/lib/sectors";
+import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { cn } from "@/lib/utils";
 
 export type FirmForm = {
   name: string; firmType: string; logo: LogoState; description: string; yearFounded: string;
   city: string; country: string; services: string[]; fees: Record<string, FeeDetail>;
-  dealBand: string; teamSize: string; languages: string[]; sectors: string[];
+  dealBand: string; teamSize: string; languages: string[]; sectors: string[]; sectorAgnostic: boolean;
   legalName: string; thaiName: string; registrationNo: string; addr: Addr;
   website: string; email: string; phone: string;
   team: { id?: string; name: string; role: string; email: string }[];
@@ -48,7 +48,7 @@ export const toFirmForm = (f: AdvisorFirm | null): FirmForm => ({
   description: f?.description ?? "", yearFounded: f?.yearFounded ? String(f.yearFounded) : "",
   city: f?.city ?? "", country: f?.country ?? "Thailand", services: f?.services ?? [],
   fees: Object.fromEntries((f?.services ?? []).map((s) => [s, f?.feeDetails[s] ?? newFee()])),
-  dealBand: f?.dealBand ?? "", teamSize: f?.teamSize ? String(f.teamSize) : "", languages: f?.languages ?? [], sectors: f?.sectors ?? [],
+  dealBand: f?.dealBand ?? "", teamSize: f?.teamSize ? String(f.teamSize) : "", languages: f?.languages ?? [], sectors: f?.sectors ?? [], sectorAgnostic: !!f?.sectorAgnostic,
   legalName: f?.legalName ?? "", thaiName: f?.thaiName ?? "", registrationNo: f?.registrationNo ?? "",
   addr: { street: f?.addrStreet ?? "", unit: f?.addrUnit ?? "", district: f?.country === "Thailand" ? f?.addrDistrict ?? "" : "", province: f?.addrProvince ?? "", postal: f?.addrPostal ?? "" },
   website: f?.website ?? "", email: f?.email ?? "", phone: f?.phone ?? "",
@@ -211,7 +211,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
           id: firm?.id ?? null, name: f.name.trim(), firmType: f.firmType || "Other", logoPath: f.logo.path, logoSource: f.logo.source,
           description: f.description.trim(), yearFounded: Number(f.yearFounded), city: f.city.trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
-          dealBand: f.dealBand || null, teamSize: Number(f.teamSize), languages: f.languages, sectors: f.sectors,
+          dealBand: f.dealBand || null, teamSize: Number(f.teamSize), languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
           legalName: f.legalName.trim(), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
           addrStreet: nul(f.addr.street), addrUnit: nul(f.addr.unit), addrDistrict: thai ? nul(f.addr.district) : nul(f.city),
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
@@ -328,7 +328,10 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
             })}
           </div>
         </F>
-        {!setup && <F label="Sectors" opt><MultiPick options={SECTORS} value={f.sectors} onChange={(v) => set("sectors", v)} /></F>}
+        <F label="Sectors" opt><SetSectorPicker mode="multi" value={f.sectors} onChange={(v) => set("sectors", v)}
+          limitMsg="Pick up to 5 sectors, or Sector agnostic."
+          agnostic={{ on: f.sectorAgnostic, onToggle: (on) => set("sectorAgnostic", on), line: "I work with companies in every industry",
+            summary: <>Sellers and buyers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} /></F>
       </Section>
 
       <Section id="company" active={!setup && section === "company"} title="Company" setup={!!setup}>
