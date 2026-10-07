@@ -90,6 +90,7 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         legal_name: inv.legal_name as string | null,
         firm_name: inv.firm_name as string | null,
         investor_type: inv.investor_type as string | null,
+        acts_for_types: (inv.acts_for_types ?? []) as string[],
         year_founded: inv.year_founded as number | null,
         company_size_band: (inv.company_size_band ?? null) as string | null,
         country: inv.country as string | null,
@@ -164,6 +165,7 @@ const Patch = z.object({
   registration_no: txt(50),
   description: z.string().trim().max(140).optional(),
   deal_types: arr(12),
+  acts_for_types: arr(7),
 });
 
 async function relationOf(sb: any, userId: string) {
@@ -214,6 +216,13 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     if (data.aum_exact_usd !== undefined) inv.aum_exact_usd = data.aum_exact_usd;
     if (data.registration_no !== undefined) inv.registration_no = relation === "individual" ? null : n(data.registration_no);
     if (data.investment_focus) inv.investment_focus = data.investment_focus;
+    if (relation === "agent") {
+      const acts = sortActsFor(data.acts_for_types ?? []);
+      if (data.acts_for_types !== undefined) {
+        if (!acts.length) throw new Error("Pick at least one investor type you act for.");
+        inv.acts_for_types = acts; inv.investor_type = acts[0];
+      }
+    } else inv.acts_for_types = [];
     inv.setup_done_at = new Date().toISOString();
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
     if (error) throw new Error(error.message);
@@ -294,6 +303,7 @@ const Wizard = z.object({
   description: z.string().trim().max(140).optional(),
   answered: z.array(z.string().max(20)).max(20).optional(),
   pe_ticked: z.boolean().optional(),
+  acts_for_types: arr(7),
 });
 
 export const saveBuyerWizard = createServerFn({ method: "POST" })
@@ -312,6 +322,13 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     const has = (k: keyof typeof data) => data[k] !== undefined;
     if (has("buyer_relation")) bp.buyer_relation = data.buyer_relation;
     if (has("investor_type")) inv.investor_type = data.investor_type || null;
+    // A representative's types: Investor Classification is the first. Everyone else has none.
+    if (has("acts_for_types")) {
+      const acts = sortActsFor(data.acts_for_types);
+      inv.acts_for_types = acts;
+      if (acts.length) inv.investor_type = acts[0];
+    }
+    if (has("buyer_relation") && data.buyer_relation !== "agent") inv.acts_for_types = [];
     if (has("country")) { inv.country = data.country || null; bp.country = data.country || null; }
     if (has("city")) bp.city = data.city || null;
     if (data.investor_name?.trim()) inv.investor_name = data.investor_name.trim();
