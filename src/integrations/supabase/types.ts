@@ -4319,6 +4319,8 @@ export type Database = {
           registered_type: string | null
           regulatory_licenses: Json
           sector: string | null
+          setup_done_at: string | null
+          setup_from_signup: string[]
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -4363,6 +4365,8 @@ export type Database = {
           registered_type?: string | null
           regulatory_licenses?: Json
           sector?: string | null
+          setup_done_at?: string | null
+          setup_from_signup?: string[]
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -4407,6 +4411,8 @@ export type Database = {
           registered_type?: string | null
           regulatory_licenses?: Json
           sector?: string | null
+          setup_done_at?: string | null
+          setup_from_signup?: string[]
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string
@@ -5128,6 +5134,10 @@ export type Database = {
       is_control: { Args: { _user_id: string }; Returns: boolean }
       is_master_agent_of: {
         Args: { _tenant: string; _user_id: string }
+        Returns: boolean
+      }
+      is_startup_member: {
+        Args: { _startup_id: string; _user_id: string }
         Returns: boolean
       }
       is_tenant_admin_of: {
