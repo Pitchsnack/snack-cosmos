@@ -588,7 +588,7 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
       ["Deal types", a.deals.join(", "), "deals", "req", errors.deals],
       ...(stagesShown ? [["Preferred stages", a.stages.join(", "), "deals", "req", errors.stages] as Row] : []),
       ["Geography", a.geo.join(", "), "deals", "opt", null],
-      ["Industries", a.sectors.join(", "), "sectors", "req", errors.sectors],
+      ["Industries", a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors],
     ]],
     ["Public profile", [["Description", a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]],
   ];
