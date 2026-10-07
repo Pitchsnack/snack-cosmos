@@ -8,7 +8,8 @@ import { ensureMySellerDraft, getSellerSetup } from "@/lib/seller-setup.function
 import { SELLER_STEPS, emptyDraft, sellerProgress, sellerShown, type SellerDraft } from "@/lib/seller-wizard";
 import { buyerSkips, shownSteps } from "@/lib/buyer-wizard";
 import { WIZARD_QS, advisorSkips } from "@/lib/advisor-firm";
-import { SELLER_OPTS, BUYER_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
+import { SELLER_OPTS, BUYER_OPTS, BUYER_REL_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
+import { typeLabel } from "@/lib/investor-bands";
 
 const ADVISOR_SEC: Record<string, string> = {
   type: "About the firm", loc: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
@@ -54,8 +55,13 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
   const sellerOpen = role === "seller" && !!setup && !setup.setupDoneAt;
   const showBoxes = role === "seller" ? sellerOpen : !setupDone;
   const opts = role === "seller" ? SELLER_OPTS : role === "buyer" ? BUYER_OPTS : ADVISOR_OPTS;
-  const ansLabel = opts.find((o) => o.v === mine.first_answer)?.t.en ?? mine.first_answer;
-  const individual = role === "buyer" && mine.first_answer === "Individual Investor";
+  // Buyers: step 2 is who they are; older sign-ups stored the investor type instead.
+  const bRel = role === "buyer" ? (mine.buyer_relation ?? (mine.first_answer === "Individual Investor" ? "individual" : null)) : null;
+  const bTypes = role === "buyer" ? (mine.buyer_relation ? mine.investor_types ?? [] : [mine.first_answer]) : [];
+  const ansLabel = role === "buyer" && mine.buyer_relation
+    ? BUYER_REL_OPTS.find((o) => o.v === mine.buyer_relation)?.t.en ?? mine.first_answer
+    : opts.find((o) => o.v === mine.first_answer)?.t.en ?? mine.first_answer;
+  const individual = role === "buyer" && bRel === "individual";
   const hasWeb = !!c?.website;
   const sizeLabel = c?.size ? (role === "advisor" ? `${c.size} people` : c.size === "500+" ? "More than 500" : c.size.replace("-", "–")) : null;
 
@@ -65,9 +71,9 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
     const d = draft ?? { ...emptyDraft(), role: mine.first_answer as SellerDraft["role"], name: c?.name ?? "", web: c?.website ?? "", year: c?.year ?? "", size: c?.size ?? null };
     sections = group(sellerShown(d, setup?.fromSignup ?? ["role", "name", "web", "year", "size"]).map((i) => SELLER_STEPS[i]!.sec));
   } else if (role === "buyer") {
-    const fs = individual ? ["role", "name", "web"] : ["type", "name", "web", "year", "size"];
-    const rel = individual ? "individual" as const : null;
-    const sk = buyerSkips(fs, { role: rel, type: mine.first_answer, web: c?.website ?? "", year: c?.year ?? "", name: c?.name ?? "" });
+    const fs = individual ? ["role", "name", "web"] : [...(bRel ? ["role"] : []), "type", "name", "web", "year", "size"];
+    const rel = bRel as "individual" | "corporate" | "agent" | null;
+    const sk = buyerSkips(fs, { role: rel, type: bTypes[0] ?? "", web: c?.website ?? "", year: c?.year ?? "", name: c?.name ?? "", actsFor: rel === "agent" ? bTypes : [] });
     sections = group(shownSteps(rel, sk).filter((s) => s.id !== "review").map((s) => s.sec));
   } else {
     const sk = advisorSkips(["type", "web"], { type: mine.first_answer, web: c?.website ?? "", year: "", team: "" });
@@ -119,7 +125,9 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
             <p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-[#6B7280]">Saved when you signed up</p>
             <ul className="space-y-2">
               {[
-                [role === "seller" ? "You are" : role === "buyer" ? "Investor type" : "Firm type", ansLabel],
+                [role === "seller" ? "You are" : role === "buyer" ? (mine.buyer_relation ? "You are" : "Investor type") : "Firm type", ansLabel],
+                ...(role === "buyer" && mine.buyer_relation === "corporate" && bTypes[0] ? [["Investor type", typeLabel(bTypes[0])]] : []),
+                ...(role === "buyer" && mine.buyer_relation === "agent" && bTypes.length ? [["Acts for", bTypes.map(typeLabel).join(", ")]] : []),
                 [role === "seller" ? "Company name" : "Firm name", c.name],
                 ...(individual ? [] : [["Year founded", c.year], ["Company size", sizeLabel]]),
               ].map(([l, v]) => (
@@ -148,7 +156,6 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
               ))}
             </ul>
             <p className="mt-3 border-t pt-3 text-sm font-semibold">{N} questions · about {mins} minutes</p>
-            {role === "buyer" && !individual && <p className="text-[12.5px] text-muted-foreground">One fewer if you act on behalf of the buyer.</p>}
           </div>
         </div>
       )}
