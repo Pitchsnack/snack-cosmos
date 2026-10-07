@@ -78,7 +78,7 @@ function InviteAdvisorDialog({ dealId, onClose, onDone }: { dealId: string; onCl
         <div className="mt-3 space-y-2">
           {!dq.trim() && <p className="text-[13px] text-[#6B7280]">Type a firm name to search.</p>}
           {dq.trim() && r.data?.length === 0 && <p className="text-[13px] text-[#6B7280]">No live firm matches “{dq}”.</p>}
-          {(r.data ?? []).map((f) => (
+          {(r.data ?? []).map((f: any) => (
             <div key={f.id} className="flex items-center gap-3 rounded-[12px] border border-[#E5E7EB] p-3">
               <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-[#E0F5F2] text-[13px] font-bold text-[#0F766E]">
                 {f.logoUrl ? <img src={f.logoUrl} alt="" className="h-full w-full object-cover" /> : f.name.slice(0, 2).toUpperCase()}
