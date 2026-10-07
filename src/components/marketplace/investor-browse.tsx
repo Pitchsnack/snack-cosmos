@@ -138,7 +138,7 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions }:
     return b ? <>{b.label} <span className="font-normal text-[#6B7280] dark:text-muted-foreground">({b.baht})</span></> : "Not stated";
   };
   const rows: Array<[string, React.ReactNode]> = [
-    ["Investor type", i.type || "Not stated"],
+    ["Investor type", i.actsFor?.length ? actsForText(i.actsFor) : i.type || "Not stated"],
     ["Ticket size", money(i.ticketBand)],
     ["Min. target revenue", money(i.revBand)],
     ...(indiv ? [] : [[corp ? "Group revenue" : "Assets under management", money(i.aumBand)] as [string, React.ReactNode]]),
@@ -203,11 +203,11 @@ export function InvestorBrowse() {
   const modal = all.find((x) => x.id === modalId) ?? null;
   const listRef = useRef<HTMLDivElement>(null);
 
-  const types = useMemo(() => Array.from(new Set(all.map((i) => i.type).filter(Boolean) as string[])).sort(), [all]);
+  const types = useMemo(() => Array.from(new Set(all.flatMap((i) => (i.actsFor?.length ? i.actsFor : [i.type])).filter(Boolean) as string[])).sort(), [all]);
   const countries = useMemo(() => Array.from(new Set(all.map((i) => i.country).filter(Boolean) as string[])).sort(), [all]);
 
   const base = (i: PublicInvestor) => {
-    if (type !== "all" && i.type !== type) return false;
+    if (type !== "all" && i.type !== type && !(i.actsFor ?? []).includes(type)) return false;
     if (country !== "all" && i.country !== country) return false;
     const needle = q.trim().toLowerCase();
     if (!needle) return true;

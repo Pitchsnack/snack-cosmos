@@ -150,7 +150,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
   };
   const invPasses = (i: AdvisorInvestor, o: Partial<{ aum: string; ticket: string; revenue: string }> = {}) => {
     const f = { aum, ticket, revenue, ...o };
-    if (type !== "all" && i.type !== type) return false;
+    if (type !== "all" && i.type !== type && !(i.actsFor ?? []).includes(type)) return false;
     if (country !== "all" && i.country !== country) return false;
     return matchAum(i, f.aum) && matchTicket(i, f.ticket) && matchRevenue(i, f.revenue);
   };
@@ -178,7 +178,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     return [...s].sort();
   }, [allListings, allInvestors, side]);
   const dealTypes = [...new Set(allListings.map((x) => x.t.dealType).filter(Boolean) as string[])].sort();
-  const types = [...new Set(allInvestors.map((x) => x.i.type).filter(Boolean) as string[])].sort();
+  const types = [...new Set(allInvestors.flatMap((x) => (x.i.actsFor?.length ? x.i.actsFor : [x.i.type])).filter(Boolean) as string[])].sort();
   const countries = [...new Set(allInvestors.map((x) => x.i.country).filter(Boolean) as string[])].sort();
   const invCount = (k: "aum" | "ticket" | "revenue") => (v: string) =>
     allInvestors.filter((x) => matchesSearch(x) && invPasses(x.i, { [k]: v })).length;
