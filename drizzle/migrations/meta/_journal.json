@@ -393,6 +393,13 @@
       "when": 1791380867787,
       "tag": "0055_advisor_sector_agnostic",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1791397089512,
+      "tag": "0056_advisor_pipeline",
+      "breakpoints": true
     }
   ]
 }

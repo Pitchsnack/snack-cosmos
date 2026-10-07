@@ -363,6 +363,126 @@ export type Database = {
         }
         Relationships: []
       }
+      advisor_invitations: {
+        Row: {
+          answered_at: string | null
+          answered_by: string | null
+          client_org_id: string | null
+          deal_id: string
+          firm_profile_id: string
+          id: string
+          invited_at: string
+          invited_by: string
+          side: string
+          status: string
+        }
+        Insert: {
+          answered_at?: string | null
+          answered_by?: string | null
+          client_org_id?: string | null
+          deal_id: string
+          firm_profile_id: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          side: string
+          status?: string
+        }
+        Update: {
+          answered_at?: string | null
+          answered_by?: string | null
+          client_org_id?: string | null
+          deal_id?: string
+          firm_profile_id?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          side?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_invitations_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisor_invitations_firm_profile_id_fkey"
+            columns: ["firm_profile_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_ndas: {
+        Row: {
+          buyer_org_id: string | null
+          client_side: string
+          consent_text: string
+          deal_id: string
+          expires_at: string
+          firm_profile_id: string
+          id: string
+          nda_text: string
+          pdf_path: string | null
+          seller_org_id: string | null
+          signed_at: string
+          signed_by: string
+          signer_name: string | null
+          signer_title: string | null
+        }
+        Insert: {
+          buyer_org_id?: string | null
+          client_side: string
+          consent_text: string
+          deal_id: string
+          expires_at: string
+          firm_profile_id: string
+          id?: string
+          nda_text: string
+          pdf_path?: string | null
+          seller_org_id?: string | null
+          signed_at?: string
+          signed_by: string
+          signer_name?: string | null
+          signer_title?: string | null
+        }
+        Update: {
+          buyer_org_id?: string | null
+          client_side?: string
+          consent_text?: string
+          deal_id?: string
+          expires_at?: string
+          firm_profile_id?: string
+          id?: string
+          nda_text?: string
+          pdf_path?: string | null
+          seller_org_id?: string | null
+          signed_at?: string
+          signed_by?: string
+          signer_name?: string | null
+          signer_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_ndas_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisor_ndas_firm_profile_id_fkey"
+            columns: ["firm_profile_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_events: {
         Row: {
           action: string
@@ -1066,6 +1186,68 @@ export type Database = {
           },
         ]
       }
+      deal_advisors: {
+        Row: {
+          advisor_nda_id: string | null
+          advisor_user_id: string
+          deal_id: string
+          firm_profile_id: string
+          id: string
+          invitation_id: string | null
+          joined_at: string
+          side: string
+        }
+        Insert: {
+          advisor_nda_id?: string | null
+          advisor_user_id: string
+          deal_id: string
+          firm_profile_id: string
+          id?: string
+          invitation_id?: string | null
+          joined_at?: string
+          side: string
+        }
+        Update: {
+          advisor_nda_id?: string | null
+          advisor_user_id?: string
+          deal_id?: string
+          firm_profile_id?: string
+          id?: string
+          invitation_id?: string | null
+          joined_at?: string
+          side?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_advisors_advisor_nda_id_fkey"
+            columns: ["advisor_nda_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_ndas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_advisors_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_advisors_firm_profile_id_fkey"
+            columns: ["firm_profile_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_advisors_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_ai_ownership: {
         Row: {
           assigned_at: string
@@ -1330,6 +1512,8 @@ export type Database = {
           startup_id: string
           status: string
           updated_at: string
+          wait_kind: string
+          wait_task: string | null
         }
         Insert: {
           buyer_message?: string | null
@@ -1367,6 +1551,8 @@ export type Database = {
           startup_id: string
           status?: string
           updated_at?: string
+          wait_kind?: string
+          wait_task?: string | null
         }
         Update: {
           buyer_message?: string | null
@@ -1404,6 +1590,8 @@ export type Database = {
           startup_id?: string
           status?: string
           updated_at?: string
+          wait_kind?: string
+          wait_task?: string | null
         }
         Relationships: [
           {
