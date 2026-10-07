@@ -1,19 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/public-site/public-home";
-import { SOON } from "@/components/public-site/home-copy";
+import { PartnersPage } from "@/components/public-site/partners-page";
 
-const page = SOON["/partners"]!;
+const DESC = "For advisers and professional firms in Thailand: one verified firm profile that sellers and buyers find, contact directly, and bring into their deals.";
 
 export const Route = createFileRoute("/partners")({
   head: () => ({
     meta: [
-      { title: `${page.title.en} — PitchSnack` },
-      { name: "description", content: `${page.title.en} on PitchSnack, the confidential marketplace for Thai businesses changing hands. Coming soon.` },
-      { property: "og:title", content: `${page.title.en} — PitchSnack` },
-      { property: "og:description", content: `${page.title.en} on PitchSnack. This page is coming soon.` },
+      { title: "PitchSnack · For partners" },
+      { name: "description", content: DESC },
+      { property: "og:title", content: "PitchSnack · For partners" },
+      { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://pitchsnack.com/partners" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://pitchsnack.com/partners" }],
   }),
-  component: () => <ComingSoon title={page.title} nav={page.nav} />,
+  component: PartnersPage,
 });
