@@ -125,5 +125,33 @@ export const listContacts = createServerFn({ method: "GET" })
       phone: mp.phone ?? null,
       linkedin: mp.linkedin ?? null,
     };
+    // Advisors on my deals (either side), only while their advisor NDA is active.
+    const dealIds = rows.map((r) => r.id);
+    if (dealIds.length) {
+      const { data: das } = await sb.from("deal_advisors").select("deal_id, side, firm_profile_id, advisor_user_id, joined_at, advisor_nda_id").in("deal_id", dealIds);
+      const ndaIds = (das ?? []).map((x: any) => x.advisor_nda_id).filter(Boolean);
+      const fIds = [...new Set((das ?? []).map((x: any) => x.firm_profile_id))];
+      const [{ data: ns }, { data: fs }] = await Promise.all([
+        ndaIds.length ? sb.from("advisor_ndas").select("id, expires_at").in("id", ndaIds) : { data: [] },
+        fIds.length ? sb.from("advisor_firms").select("id, name, firm_type, city, country, website, email, phone").in("id", fIds) : { data: [] },
+      ]);
+      const live = new Set((ns ?? []).filter((n: any) => new Date(n.expires_at) > new Date()).map((n: any) => n.id));
+      const fm = Object.fromEntries((fs ?? []).map((f: any) => [f.id, f]));
+      const advIds = (das ?? []).map((x: any) => x.advisor_user_id);
+      const ap = await people(sb, advIds);
+      const rowById = Object.fromEntries(rows.map((r) => [r.id, r]));
+      for (const a of das ?? []) {
+        if (!live.has(a.advisor_nda_id)) continue;
+        const f = fm[a.firm_profile_id] ?? {}, u = ap.users[a.advisor_user_id], p = ap.profs[a.advisor_user_id] ?? {};
+        const mine = a.side === data.as;
+        contacts.push({
+          id: a.deal_id, group: "advisor", name: fullName(u) ?? f.name ?? "Advisor",
+          role: `Advisor NDA · for ${mine ? "you" : a.side === "seller" ? "the seller" : "the buyer"}`,
+          company: f.name ?? null, email: f.email || u?.email || null, phone: f.phone || p.phone || null, linkedin: p.linkedin ?? null,
+          bestTime: null, companyType: f.firm_type ?? null, location: [f.city, f.country].filter(Boolean).join(", ") || null,
+          website: f.website ?? null, connectedAt: a.joined_at, pipelineStep: step(rowById[a.deal_id] ?? {}),
+        });
+      }
+    }
     return { my, contacts, visibleTo: contacts.length };
   });

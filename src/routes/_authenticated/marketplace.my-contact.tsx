@@ -200,7 +200,7 @@ function InfoBox({ c, onClose }: { c: ContactPerson; onClose: () => void }) {
         <div className="border-t px-5 py-3 pb-5">
           <Cap>Connection</Cap>
           {kv("Connected", fmt(c.connectedAt))}
-          {kv("How", advisor ? "Assigned by PitchSnack" : "NDA approved")}
+          {kv("How", advisor ? "Joined your deal under an advisor NDA" : "NDA approved")}
           {!advisor && kv("Pipeline", <Link to="/marketplace/pipeline" className="text-blue-600 hover:underline">{c.pipelineStep} →</Link>)}
         </div>
       </div>
