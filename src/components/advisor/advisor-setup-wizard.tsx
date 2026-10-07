@@ -13,6 +13,7 @@ import { enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "
 import {
   ADVISOR_SERVICES, DEAL_BANDS, FIRM_TYPE_OPTIONS, LANGUAGES, WIZARD_QS, cityError, dealBandLabels, descError, emailError, feeWords,
   fullAddress, nameError, newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type FeeDetail, type WizardQ,
+  advisorSkips, advisorHidden,
 } from "@/lib/advisor-firm";
 import { COUNTRIES, THAI_PROVINCES_77, yearError } from "@/lib/investor-bands";
 import { isValidUrl, normalizeUrl } from "@/lib/seller-wizard";
@@ -195,7 +196,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     markAnswered(from);
     if (from === "services") setFeeNote(null);
     if (fromProfile && from === "services") { setFromProfile(false); void flush().then(() => setPhase("complete")); return; }
-    if (fromReview) { setFromReview(false); goTo("review"); return; }
+    if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
     goTo(next(from));
   };
   const focusFirstBad = (id: WizardQ) => {
@@ -222,7 +223,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     if (cur === "deal") set({ deal: "" }, { deal_size_band: null });
     if (cur === "logo") set({ logo: { path: null, url: null, name: null, sizeKb: null, source: null } }, { logo_path: null, logo_source: null });
     markAnswered(cur);
-    if (fromReview) { setFromReview(false); goTo("review"); return; }
+    if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
     goTo(next(cur));
   };
   const pickType = (v: string) => {
@@ -383,7 +384,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               <label className={lbl} htmlFor="w-year">Year founded<Req /></label>
               <input id="w-year" data-f="year" aria-required inputMode="numeric" maxLength={4} placeholder="e.g. 2014" className={cn(inp, yearShown && errCls)} value={a.year} onBlur={blur("year")}
                 onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, { year_founded: /^\d{4}$/.test(v) && !yearError(v) ? Number(v) : null }); }} />
-            </div>
+            </div>}
           </div>
           <Err m={yearShown} />
           <div className="mt-4">
