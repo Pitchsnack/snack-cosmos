@@ -91,6 +91,7 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         firm_name: inv.firm_name as string | null,
         investor_type: inv.investor_type as string | null,
         year_founded: inv.year_founded as number | null,
+        company_size_band: (inv.company_size_band ?? null) as string | null,
         country: inv.country as string | null,
         city: p.city as string | null,
         email: inv.email as string | null,
@@ -147,6 +148,7 @@ const arr = (max: number) => z.array(z.string().trim().min(1).max(80)).max(max).
 const Patch = z.object({
   investor_name: z.string().trim().min(1).max(200),
   investor_type: txt(80), year_founded: z.number().int().min(1800).max(2100).nullable().optional(),
+  company_size_band: z.enum(["1-10", "11-50", "51-200", "201-500", "500+"]).nullable().optional(),
   country: txt(120), city: txt(120), email: txt(255), website_url: txt(500), linkedin_url: txt(500),
   firm_name: txt(200), business_address: txt(1000), aum: txt(120), min_ticket_size: txt(60), max_ticket_size: txt(60),
   short_description: txt(4000), keywords: arr(5), investment_focus: arr(10), preferred_stages: arr(12), preferred_industries: arr(20),
@@ -188,6 +190,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     const n = (v?: string | null) => (v === undefined ? undefined : v || null);
     const inv: Record<string, unknown> = {
       investor_name: data.investor_name, investor_type: n(data.investor_type), year_founded: data.year_founded ?? null,
+      ...(data.company_size_band !== undefined ? { company_size_band: data.company_size_band } : {}),
       country: n(data.country), email: n(data.email), website_url: n(data.website_url), linkedin_url: n(data.linkedin_url),
       firm_name: n(data.firm_name), business_address: n(data.business_address), aum: n(data.aum),
       min_ticket_size: n(data.min_ticket_size), max_ticket_size: n(data.max_ticket_size), short_description: n(data.short_description),
