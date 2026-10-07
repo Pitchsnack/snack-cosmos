@@ -2723,6 +2723,7 @@ export type Database = {
           aum_exact_usd: number | null
           bio: string | null
           business_address: string | null
+          company_size_band: string | null
           country: string | null
           created_at: string
           created_by: string | null
@@ -2768,6 +2769,7 @@ export type Database = {
           aum_exact_usd?: number | null
           bio?: string | null
           business_address?: string | null
+          company_size_band?: string | null
           country?: string | null
           created_at?: string
           created_by?: string | null
@@ -2813,6 +2815,7 @@ export type Database = {
           aum_exact_usd?: number | null
           bio?: string | null
           business_address?: string | null
+          company_size_band?: string | null
           country?: string | null
           created_at?: string
           created_by?: string | null
@@ -3765,6 +3768,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      signup_answers: {
+        Row: {
+          company: Json | null
+          created_at: string
+          done_at: string | null
+          first_answer: string
+          first_name: string | null
+          last_name: string | null
+          news_opt_in: boolean
+          profile_id: string | null
+          provider: string | null
+          role: string
+          terms_accepted_at: string | null
+          updated_at: string
+          user_id: string
+          welcome_seen_at: string | null
+        }
+        Insert: {
+          company?: Json | null
+          created_at?: string
+          done_at?: string | null
+          first_answer: string
+          first_name?: string | null
+          last_name?: string | null
+          news_opt_in?: boolean
+          profile_id?: string | null
+          provider?: string | null
+          role: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id: string
+          welcome_seen_at?: string | null
+        }
+        Update: {
+          company?: Json | null
+          created_at?: string
+          done_at?: string | null
+          first_answer?: string
+          first_name?: string | null
+          last_name?: string | null
+          news_opt_in?: boolean
+          profile_id?: string | null
+          provider?: string | null
+          role?: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          welcome_seen_at?: string | null
+        }
+        Relationships: []
       }
       startup_activity: {
         Row: {
