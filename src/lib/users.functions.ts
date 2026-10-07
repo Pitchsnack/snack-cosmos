@@ -218,17 +218,22 @@ export const permanentlyDeleteUser = createServerFn({ method: "POST" })
       .from("users").select("status").eq("id", data.targetUserId).maybeSingle();
     if (row?.status !== "Deleted") throw new Error("Set the status to Deleted first");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("signup_answers").delete().eq("user_id", data.targetUserId);
-    const { error: rowErr } = await supabaseAdmin.from("users").delete().eq("id", data.targetUserId);
+    const uid = data.targetUserId;
+    await supabaseAdmin.from("signup_answers").delete().eq("user_id", uid);
+    // Keep activity history but unlink it from the account.
+    for (const t of ["startup_activity", "investor_activity", "deal_activity", "deal_documents"] as const) {
+      await supabaseAdmin.from(t as never).update({ created_by: null } as never).eq("created_by", uid);
+    }
+    const { error: rowErr } = await supabaseAdmin.from("users").delete().eq("id", uid);
     if (rowErr) {
-      // Row is referenced elsewhere: keep it for history but release the email.
+      // Row is still referenced (e.g. owns records): keep it for history but release the email.
       await supabaseAdmin
         .from("users")
-        .update({ email: `deleted+${data.targetUserId}@invalid.local` } as never)
-        .eq("id", data.targetUserId);
+        .update({ email: `deleted+${uid}@invalid.local` } as never)
+        .eq("id", uid);
     }
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.targetUserId);
-    if (error) throw new Error(error.message);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(uid);
+    if (error && !/not found/i.test(error.message)) throw new Error(error.message);
     await supabase.from("security_events").insert({
       user_id: userId,
       event_type: "ROLE_CHANGE",
