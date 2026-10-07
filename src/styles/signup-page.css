@@ -128,3 +128,4 @@
   .su-choice.big { padding: 12px 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .su-step, .su-fade { animation: none; } }
+.su-card h1:focus-visible { outline: none; }

@@ -281,10 +281,10 @@ function SignupPage() {
     const Icon = ICONS[o.icon] ?? Circle;
     const checked = big ? role === o.v : answer === o.v;
     return (
-      <label className={`su-choice ${big ? "big" : "small"} ${checked ? "on" : ""}`}>
+      <label className={`su-choice ${big ? "big" : "small"} ${checked ? "on" : ""}`}
+        onClick={(e) => { if (!big && e.detail > 0) pick(o.v, true); }}>
         <input type="radio" name={name} value={o.v} checked={checked}
           onChange={() => (big ? (setRole(o.v as Role), setPickErr(false)) : pick(o.v, false))}
-          onClick={(e) => { if (!big && (e as unknown as MouseEvent).detail > 0) pick(o.v, true); }}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); big ? go(2) : (pick(o.v, false), go(3)); } }} />
         <span className={`su-tile t-${tone}`}><Icon size={big ? 22 : 19} /></span>
         <span className="su-ct"><b>{t(o.t)}</b><small>{t(o.l)}</small></span>
