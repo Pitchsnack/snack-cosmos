@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RequestLoiDialog, SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
 import { useServerFn } from "@tanstack/react-start";
+import { useAdvisorContactRow } from "@/components/pipeline/advisor-bits";
 import { Check, ChevronDown, ChevronRight, Columns3, Lock } from "lucide-react";
 
 // Open/closed Tracking cards persist across tab/role switches; reset on reload.
@@ -426,6 +427,7 @@ function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller
   const other = seller ? t("the buyer") : t("the seller");
 
   const reviewLoi = seller && !!p.loiSentAt && !p.loiAcceptedAt;
+  const adv = useAdvisorContactRow(p.id, !!p.contactAt, !!p.paymentAt, t);
   const rows: [string, string | null, React.ReactNode, React.ReactNode?][] = [
     ["NDA", p.ndaApprovedAt, `${t("Approved by")} ${seller ? t("you") : t("the seller")} · ${t("requested")} ${day(p.ndaRequestedAt)}`,
       <>
@@ -454,8 +456,7 @@ function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller
           }}>{t("Withdraw request")}</button>
         : p.ndaApprovedAt ? <Button size="sm" onClick={() => setReqOpen(true)}>{t("Request letter of intent")}</Button> : undefined],
     ["Contact M&A", p.contactAt,
-      p.contactAt ? (seller && !p.legalAt ? <><b>{t("Exchange contacts")}</b> · {t("introduce your M&A advisor")}</> : t("Contacts exchanged")) : t("After the letter of intent is accepted"),
-      seller && p.contactAt && !p.legalAt ? <Button size="sm" onClick={() => toast(t("Advisor introductions are coming soon."))}>{t("Introduce advisor")}</Button> : undefined],
+      adv.text, adv.action],
     ["Legal", p.legalAt, p.legalAt ? (seller ? t("Legal folder shared") : t("Legal folder received")) : t("Legal folder not shared yet"),
       seller && p.contactAt && !p.legalAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "legal" } }), t("Legal folder shared"))}>{t("Share documents")}</Button> : undefined],
     ["Offer & SPA", p.spaAt, p.spaAt ? (seller ? t("SPA draft shared") : t("SPA draft received")) : (seller ? t("SPA draft not shared yet") : t("SPA draft not received yet")),
@@ -517,6 +518,7 @@ function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller
           </div>
         </div>
       </div>
+      {adv.dialogs}
       {loiOpen && <SendLoiDialog id={p.id} request={lr} onClose={() => setLoiOpen(false)} onSent={refresh} />}
       {reqOpen && <RequestLoiDialog id={p.id} onClose={() => setReqOpen(false)} onSent={refresh} />}
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} t={t} />}

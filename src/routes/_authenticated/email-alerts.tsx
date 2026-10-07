@@ -3,14 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, ChevronDown, ChevronRight, FileText, Info, Lock, LockOpen, MessageSquare, PenLine, Pencil, Send, Target, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, FileText, Handshake, Info, Lock, LockOpen, MessageSquare, PenLine, Pencil, Send, Target, UserCheck, UserX, X } from "lucide-react";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { EMAIL_ALERTS, alertText, fill, type AlertDef, type AlertLang, type AlertRole } from "@/config/email-alerts";
+import { EMAIL_ALERTS, alertText, fill, rolesOf, type AlertDef, type AlertLang, type AlertRole } from "@/config/email-alerts";
 import { getEmailAlertsAdmin, saveEmailAlert, saveEmailAlertRules, sendTestAlerts, type AlertRules } from "@/lib/email-alerts.functions";
 
 export const Route = createFileRoute("/_authenticated/email-alerts")({
@@ -35,6 +35,9 @@ function tileOf(key: string, role: AlertRole) {
     case "financial_report": return { ...(role === "seller" ? A : G), Icon: FileText };
     case "loi": return { bg: "#F5F3FF", fg: "#6D28D9", Icon: PenLine };
     case "criteria_match": return { bg: "#E0F5F2", fg: "#0F766E", Icon: Target };
+    case "advisor_invitation": return { bg: "#E0F5F2", fg: "#0F766E", Icon: Handshake };
+    case "advisor_joined": case "advisor_joined_other": return { ...G, Icon: UserCheck };
+    case "advisor_declined": return { ...R, Icon: UserX };
     default: return { ...B, Icon: MessageSquare };
   }
 }
@@ -52,7 +55,9 @@ function SubjectChips({ text }: { text: string }) {
   );
 }
 
-const GROUPS = ["Approvals", "NDA", "Pipeline", "Matches", "Messages"] as const;
+const GROUPS = ["Approvals", "NDA", "Pipeline", "Matches", "Messages", "Advisors"] as const;
+const ROLE_DOT: Record<AlertRole, [string, string]> = { seller: ["#F6A823", "Seller"], buyer: ["#4338CA", "Buyer"], advisor: ["#0F766E", "Advisor"] };
+const roleChip = (r: AlertRole | string) => r === "seller" ? "bg-[#F6A823] text-[#0E162F]" : r === "advisor" ? "bg-[#E0F5F2] text-[#0F766E]" : "bg-[#4338CA] text-white";
 
 function EmailAlertsPage() {
   const fn = useServerFn(getEmailAlertsAdmin);
@@ -135,8 +140,7 @@ function Templates({ data }: { data: AdminData }) {
                   <span>
                     <span className={cn("block", !on && "text-muted-foreground line-through")}>{a.name}</span>
                     <span className="mt-0.5 flex items-center gap-3 text-[11.5px] font-normal text-[#6B7280]">
-                      <span className="flex items-center gap-1"><span className="h-[7px] w-[7px] rounded-full bg-[#F6A823]" />Seller</span>
-                      <span className="flex items-center gap-1"><span className="h-[7px] w-[7px] rounded-full bg-[#4338CA]" />Buyer</span>
+                      {rolesOf(a).map((r) => <span key={r} className="flex items-center gap-1"><span className="h-[7px] w-[7px] rounded-full" style={{ backgroundColor: ROLE_DOT[r][0] }} />{ROLE_DOT[r][1]}</span>)}
                     </span>
                   </span>
                   <span className="text-xs tabular-nums text-muted-foreground">{data.stats.perAlert[a.key] ?? 0}</span>
@@ -156,12 +160,12 @@ function AlertDetail({ def, data }: { def: AlertDef; data: AdminData }) {
   const save = useServerFn(saveEmailAlert);
   const test = useServerFn(sendTestAlerts);
   const st = data.settings[def.key];
-  const [role, setRole] = useState<AlertRole>("seller");
+  const [role, setRole] = useState<AlertRole>(rolesOf(def)[0]!);
   const [lang, setLang] = useState<AlertLang>("en");
   const [editing, setEditing] = useState(false);
   const [ov, setOv] = useState<any>(st?.overrides ?? {});
   const t = alertText(def, role, lang, ov);
-  const ver = def[role];
+  const ver = def[role] ?? def[rolesOf(def)[0]!]!;
   const mut = useMutation({
     mutationFn: (v: { enabled?: boolean; overrides?: any }) => save({ data: { key: def.key, ...v } }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["email-alerts-admin"] }); toast.success("Saved"); },
@@ -197,10 +201,10 @@ function AlertDetail({ def, data }: { def: AlertDef; data: AdminData }) {
         <div className="space-y-3">
           <div className="flex gap-2">
             <div className="inline-flex rounded-lg bg-[#EEF0F4] p-[3px]">
-              {(["seller", "buyer"] as const).map((r) => (
+              {rolesOf(def).map((r) => (
                 <button key={r} type="button" onClick={() => setRole(r)}
-                  className={cn("h-[26px] rounded-md px-3 text-[12px] font-semibold", role === r ? (r === "seller" ? "bg-[#F6A823] text-[#0E162F]" : "bg-[#4338CA] text-white") : "text-[#5A6172]")}>
-                  {r === "seller" ? "Seller version" : "Buyer version"}
+                  className={cn("h-[26px] rounded-md px-3 text-[12px] font-semibold", role === r ? (r === "advisor" ? "bg-[#0F766E] text-white" : roleChip(r)) : "text-[#5A6172]")}>
+                  {ROLE_DOT[r][1]} version
                 </button>
               ))}
             </div>
@@ -226,7 +230,7 @@ function AlertDetail({ def, data }: { def: AlertDef; data: AdminData }) {
                 <div className="mx-auto max-w-[560px] overflow-hidden rounded-[14px] border border-border bg-card">
                   <div className="flex items-center justify-between border-b border-border px-5 py-3">
                     <img src={logoBlack} alt="PitchSnack" style={{ height: 18, width: "auto" }} />
-                    <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wider", role === "seller" ? "bg-[#F6A823] text-[#0E162F]" : "bg-[#4338CA] text-primary-foreground")}>{role === "seller" ? "SELLER" : "BUYER"}</span>
+                    <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wider", roleChip(role))}>{role.toUpperCase()}</span>
                   </div>
                   <div className="space-y-3 p-5">
                     <AlertTile k={def.key} role={role} size={44} />
@@ -322,11 +326,19 @@ function Card({ title, note, children }: { title: string; note: string; children
 
 function Log({ rows }: { rows: AdminData["log"] }) {
   const [q, setQ] = useState("");
-  const list = useMemo(() => rows.filter((r) => !q || `${r.email} ${r.subject} ${r.alert_key}`.toLowerCase().includes(q.toLowerCase())), [rows, q]);
+  const [ver, setVer] = useState<"all" | AlertRole>("all");
+  const list = useMemo(() => rows.filter((r) => (ver === "all" || r.role === ver) && (!q || `${r.email} ${r.subject} ${r.alert_key}`.toLowerCase().includes(q.toLowerCase()))), [rows, q, ver]);
   const pill: Record<string, string> = { sent: "bg-[#DCFCE7] text-[#166534]", test: "bg-muted text-foreground", skipped: "bg-muted text-muted-foreground", suppressed: "bg-[#FEF3DE] text-[#8A4B06]", failed: "bg-destructive/10 text-destructive" };
   return (
     <div className="space-y-3">
-      <Input placeholder="Search email, subject or alert" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+      <div className="flex flex-wrap items-center gap-3">
+        <Input placeholder="Search email, subject or alert" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">Version
+          <select value={ver} onChange={(e) => setVer(e.target.value as typeof ver)} className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground">
+            <option value="all">All</option><option value="seller">Seller</option><option value="buyer">Buyer</option><option value="advisor">Advisor</option>
+          </select>
+        </label>
+      </div>
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="text-left text-xs text-muted-foreground"><tr className="border-b border-border">
@@ -338,7 +350,7 @@ function Log({ rows }: { rows: AdminData["log"] }) {
               <tr key={r.id} className="border-b border-border last:border-0">
                 <td className="whitespace-nowrap p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
                 <td className="p-3">{EMAIL_ALERTS.find((a) => a.key === r.alert_key)?.name ?? r.alert_key} · <span className="capitalize text-muted-foreground">{r.role}</span></td>
-                <td className="p-3">{r.email ?? "—"}</td>
+                <td className="p-3"><span className={cn("mr-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider", roleChip(r.role))}>{r.role}</span>{r.email ?? "—"}</td>
                 <td className="max-w-[320px] truncate p-3" title={r.subject ?? ""}>{r.subject}</td>
                 <td className="p-3"><span className={cn("rounded-full px-2 py-0.5 text-xs font-medium capitalize", pill[r.status])} title={r.reason ?? ""}>{r.status}</span>{r.reason && <div className="text-[11px] text-muted-foreground">{r.reason}</div>}</td>
               </tr>

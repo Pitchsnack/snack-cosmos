@@ -1,3 +1,4 @@
+import { rolesOf } from "@/config/email-alerts";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -57,7 +58,7 @@ export const saveEmailAlert = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({
     key: z.string().min(1).max(50),
     enabled: z.boolean().optional(),
-    overrides: z.record(z.enum(["seller", "buyer"]), z.record(z.enum(["en", "th"]), Text)).optional(),
+    overrides: z.record(z.enum(["seller", "buyer", "advisor"]), z.record(z.enum(["en", "th"]), Text)).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
@@ -109,7 +110,7 @@ export const sendTestAlerts = createServerFn({ method: "POST" })
     const sample = { "listing code name": "Project Nimbus", "buyer code name": "Investor Heron", "buyer company": "Heron Capital", "seller company": "Nimbus Co., Ltd.", "report name": "verified financial report", sender: "Investor Heron", n: 4, date: "3 Oct 2026", note: "Please add your registration number." };
     const list = EMAIL_ALERTS.filter((a) => !data.key || a.key === data.key);
     let sent = 0;
-    for (const a of list) for (const role of ["seller", "buyer"] as const) for (const lang of ["en", "th"] as const) {
+    for (const a of list) for (const role of rolesOf(a)) for (const lang of ["en", "th"] as const) {
       const d = buildAlert(a.key, role, lang, ov[a.key], sample, [["Example", "Sample data"]], a.key === "new_message" || a.key === "changes_requested" ? "This is a sample quote." : null);
       d.subject = `[Test] ${d.subject}`;
       try {

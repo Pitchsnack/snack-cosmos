@@ -55,6 +55,9 @@ async function context(pipelineId: string, userId: string, sbUser: any) {
   return { sb, p, direction: "seller_on_buyer" as const };
 }
 
+/** Profile facts of the other party (shared with the advisor profile view, which drops deal figures). */
+export async function buildNoteProfile(sb: any, p: any, direction: NoteDirection) { return build(sb, p, direction); }
+
 async function build(sb: any, p: any, direction: NoteDirection) {
   const { data: hp } = await sb.from("hidden_profiles").select("code_name, asking_price, stake_pct, deal_type, reason").eq("id", p.hidden_profile_id).maybeSingle();
   const deal = {

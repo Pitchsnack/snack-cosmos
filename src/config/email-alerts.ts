@@ -1,6 +1,6 @@
 // Default wording for the 10 email alerts. Admin overrides live in the database
 // (email_alert_settings.overrides) and are merged over these defaults.
-export type AlertRole = "seller" | "buyer";
+export type AlertRole = "seller" | "buyer" | "advisor";
 export type AlertLang = "en" | "th";
 export type AlertText = { subject: string; title: string; body: string; button: string };
 export type AlertVersion = {
@@ -13,16 +13,20 @@ export type AlertVersion = {
 export type AlertDef = {
   key: string;
   n: number;
-  group: "Approvals" | "NDA" | "Pipeline" | "Matches" | "Messages";
+  group: "Approvals" | "NDA" | "Pipeline" | "Matches" | "Messages" | "Advisors";
   name: string;
-  icon: "check" | "edit" | "x" | "lock" | "unlock" | "ban" | "file" | "pen" | "spark" | "mail";
+  icon: "check" | "edit" | "x" | "lock" | "unlock" | "ban" | "file" | "pen" | "spark" | "mail" | "handshake" | "user-check" | "user-x";
   color: string;
   instant?: boolean; // ignores quiet hours
   wired: boolean; // sent automatically today
   placeholders: string[];
-  seller: AlertVersion;
-  buyer: AlertVersion;
+  seller?: AlertVersion;
+  buyer?: AlertVersion;
+  advisor?: AlertVersion;
 };
+
+/** The versions an alert has, in display order. */
+export const rolesOf = (def: AlertDef): AlertRole[] => (["seller", "buyer", "advisor"] as const).filter((r) => !!def[r]);
 
 const v = (sentWhen: string, sentTo: string, place: string, path: string, en: AlertText, th: AlertText): AlertVersion => ({
   sentWhen, sentTo, place, path, text: { en, th },
@@ -131,14 +135,51 @@ export const EMAIL_ALERTS: AlertDef[] = [
       { subject: "New message from {sender}", title: "You have a new message", body: "{sender} wrote about {listing code name}:", button: "Reply" },
       { subject: "ข้อความใหม่จาก {sender}", title: "คุณมีข้อความใหม่", body: "{sender} เขียนถึงเรื่อง {listing code name}:", button: "ตอบกลับ" }),
   },
+  {
+    key: "advisor_invitation", n: 11, group: "Advisors", name: "Advisor invitation", icon: "handshake", color: "#0F766E", wired: true,
+    placeholders: ["{person}", "{client}", "{firm}", "{client side}", "{date}"],
+    advisor: v("A seller or buyer invites the firm to a deal", "The firm profile's owner", "Advisor › Pipeline › Invitations", "/advisor/pipeline",
+      { subject: "{client} invited you to a deal", title: "A client invited you to a deal", body: "{person} at {client} invited {firm} to work on one of its deals. Open the invitation to see the deal, then join or decline.", button: "Open the invitation" },
+      { subject: "{client} invited you to a deal", title: "A client invited you to a deal", body: "{person} at {client} invited {firm} to work on one of its deals. Open the invitation to see the deal, then join or decline.", button: "Open the invitation" }),
+  },
+  {
+    key: "advisor_joined", n: 12, group: "Advisors", name: "Your advisor joined", icon: "user-check", color: "#16A34A", wired: true,
+    placeholders: ["{firm}", "{other side}", "{date}"],
+    seller: v("The advisor signs the NDA", "The client", "Pipeline › Tracking", "/marketplace/pipeline",
+      { subject: "{firm} joined your deal with {other side}", title: "Your advisor joined the deal", body: "{firm} joined your deal with {other side}. They signed an NDA with you and {other side}.", button: "View the advisor NDA" },
+      { subject: "{firm} joined your deal with {other side}", title: "Your advisor joined the deal", body: "{firm} joined your deal with {other side}. They signed an NDA with you and {other side}.", button: "View the advisor NDA" }),
+    buyer: v("The advisor signs the NDA", "The client", "Pipeline › Tracking", "/marketplace/pipeline",
+      { subject: "{firm} joined your deal with {other side}", title: "Your advisor joined the deal", body: "{firm} joined your deal with {other side}. They signed an NDA with you and {other side}.", button: "View the advisor NDA" },
+      { subject: "{firm} joined your deal with {other side}", title: "Your advisor joined the deal", body: "{firm} joined your deal with {other side}. They signed an NDA with you and {other side}.", button: "View the advisor NDA" }),
+  },
+  {
+    key: "advisor_joined_other", n: 13, group: "Advisors", name: "An advisor joined your deal", icon: "user-check", color: "#16A34A", wired: true,
+    placeholders: ["{client}", "{firm}", "{date}"],
+    seller: v("The other side's advisor signs the NDA", "The other side", "Pipeline › Tracking", "/marketplace/pipeline",
+      { subject: "{client} brought in {firm} as its advisor", title: "An advisor joined your deal", body: "{client} brought in {firm} as its advisor on your deal. They signed an NDA with you and {client}.", button: "View the advisor NDA" },
+      { subject: "{client} brought in {firm} as its advisor", title: "An advisor joined your deal", body: "{client} brought in {firm} as its advisor on your deal. They signed an NDA with you and {client}.", button: "View the advisor NDA" }),
+    buyer: v("The other side's advisor signs the NDA", "The other side", "Pipeline › Tracking", "/marketplace/pipeline",
+      { subject: "{client} brought in {firm} as its advisor", title: "An advisor joined your deal", body: "{client} brought in {firm} as its advisor on your deal. They signed an NDA with you and {client}.", button: "View the advisor NDA" },
+      { subject: "{client} brought in {firm} as its advisor", title: "An advisor joined your deal", body: "{client} brought in {firm} as its advisor on your deal. They signed an NDA with you and {client}.", button: "View the advisor NDA" }),
+  },
+  {
+    key: "advisor_declined", n: 14, group: "Advisors", name: "Advisor declined", icon: "user-x", color: "#B91C1C", wired: true,
+    placeholders: ["{firm}", "{other side}"],
+    seller: v("The advisor declines, or joins the deal for the other side", "The client", "Pipeline › Tracking", "/marketplace/pipeline",
+      { subject: "{firm} declined your invitation", title: "Your advisor declined", body: "{firm} declined your invitation to the deal with {other side}. You can invite another advisor from Pipeline.", button: "Invite another advisor" },
+      { subject: "{firm} declined your invitation", title: "Your advisor declined", body: "{firm} declined your invitation to the deal with {other side}. You can invite another advisor from Pipeline.", button: "Invite another advisor" }),
+    buyer: v("The advisor declines, or joins the deal for the other side", "The client", "Pipeline › Tracking", "/marketplace/pipeline",
+      { subject: "{firm} declined your invitation", title: "Your advisor declined", body: "{firm} declined your invitation to the deal with {other side}. You can invite another advisor from Pipeline.", button: "Invite another advisor" },
+      { subject: "{firm} declined your invitation", title: "Your advisor declined", body: "{firm} declined your invitation to the deal with {other side}. You can invite another advisor from Pipeline.", button: "Invite another advisor" }),
+  },
 ];
-
 export const ALERT_BY_KEY = Object.fromEntries(EMAIL_ALERTS.map((a) => [a.key, a])) as Record<string, AlertDef>;
 
 export type AlertOverrides = Partial<Record<AlertRole, Partial<Record<AlertLang, Partial<AlertText>>>>>;
 
 export function alertText(def: AlertDef, role: AlertRole, lang: AlertLang, ov?: AlertOverrides): AlertText {
-  return { ...def[role].text[lang], ...(ov?.[role]?.[lang] ?? {}) } as AlertText;
+  const ver = def[role] ?? def[rolesOf(def)[0]!]!;
+  return { ...ver.text[lang], ...(ov?.[role]?.[lang] ?? {}) } as AlertText;
 }
 
 export function fill(s: string, vars: Record<string, string | number | undefined>) {

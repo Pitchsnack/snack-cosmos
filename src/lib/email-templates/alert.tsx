@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Te
 import type { TemplateEntry } from './registry'
 
 export interface AlertEmailProps {
-  role?: 'seller' | 'buyer'
+  role?: 'seller' | 'buyer' | 'advisor'
   lang?: 'en' | 'th'
   subject?: string
   title?: string
@@ -20,6 +20,7 @@ const SITE = 'https://pitchsnack.com'
 
 const AlertEmail = ({ role = 'seller', lang = 'en', title = 'PitchSnack update', body = '', quote, details, button = 'Open PitchSnack', url = SITE, place = 'PitchSnack', color = '#1E2A4A' }: AlertEmailProps) => {
   const seller = role === 'seller'
+  const advisor = role === 'advisor'
   return (
     <Html lang={lang} dir="ltr">
       <Head />
@@ -30,8 +31,8 @@ const AlertEmail = ({ role = 'seller', lang = 'en', title = 'PitchSnack update',
             <table width="100%" cellPadding={0} cellSpacing={0} role="presentation"><tbody><tr>
               <td><Img src={`${SITE}/email/pitchsnack-logo.png`} width="117" height="20" alt="PitchSnack" /></td>
               <td align="right">
-                <span style={{ ...chip, backgroundColor: seller ? '#F6A823' : '#4338CA', color: seller ? '#0E162F' : '#FFFFFF' }}>
-                  {lang === 'th' ? (seller ? 'ผู้ขาย' : 'ผู้ซื้อ') : seller ? 'SELLER' : 'BUYER'}
+                <span style={{ ...chip, backgroundColor: advisor ? '#E0F5F2' : seller ? '#F6A823' : '#4338CA', color: advisor ? '#0F766E' : seller ? '#0E162F' : '#FFFFFF' }}>
+                  {advisor ? (lang === 'th' ? 'ที่ปรึกษา' : 'ADVISOR') : lang === 'th' ? (seller ? 'ผู้ขาย' : 'ผู้ซื้อ') : seller ? 'SELLER' : 'BUYER'}
                 </span>
               </td>
             </tr></tbody></table>
@@ -53,6 +54,7 @@ const AlertEmail = ({ role = 'seller', lang = 'en', title = 'PitchSnack update',
             )}
             <Button href={url} style={btn}>{button}</Button>
             <Text style={small}>{lang === 'th' ? `เปิด ${place} ใน PitchSnack` : `Opens ${place} in PitchSnack.`}</Text>
+            {advisor && <Text style={small}>You get this email because you use PitchSnack as an advisor. Turn email alerts off in Account &amp; activity › Notifications, in the Seller or Buyer view. Questions? Write to support@pitchsnack.com.</Text>}
           </Section>
         </Container>
       </Body>

@@ -4,6 +4,7 @@ import { messagesBadgeCount } from "@/lib/messages.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { pendingApprovalsCount } from "@/lib/approvals.functions";
 import { pipelineBadgeCount } from "@/lib/pipeline.functions";
+import { advisorPipelineCount } from "@/lib/advisor-pipeline.functions";
 import { usePersona } from "@/hooks/use-marketplace";
 import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
@@ -51,6 +52,14 @@ export function PipelineCountBadge({ collapsed = false }: { collapsed?: boolean 
   const fn = useServerFn(pipelineBadgeCount);
   // Own light count query; cached 60s, refreshed on focus and whenever ["pipeline"] is invalidated.
   const { data: n } = useQuery({ queryKey: ["pipeline", "count", persona], queryFn: () => fn({ data: { as: persona } }), staleTime: 60_000, refetchOnWindowFocus: true });
+  if (!n) return null;
+  return <CountPill count={n} collapsed={collapsed} />;
+}
+
+/** Advisor › My Pipeline — invitations plus deals across every client. */
+export function AdvisorPipelineCountBadge({ collapsed = false }: { collapsed?: boolean }) {
+  const fn = useServerFn(advisorPipelineCount);
+  const { data: n } = useQuery({ queryKey: ["pipeline", "advisor-count"], queryFn: () => fn(), staleTime: 60_000, refetchOnWindowFocus: true });
   if (!n) return null;
   return <CountPill count={n} collapsed={collapsed} />;
 }

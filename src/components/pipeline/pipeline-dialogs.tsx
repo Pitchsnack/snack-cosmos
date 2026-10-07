@@ -18,7 +18,7 @@ import {
 } from "@/lib/pipeline.functions";
 
 /* ---------------- helpers ---------------- */
-const fmtDate = (s?: string | null) => (s ? new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
+export const fmtDate = (s?: string | null) => (s ? new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
 export const shortDate = (s?: string | null) => (s ? new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short" }).replace("Sept", "Sep") : "—");
 function mn(v: number | null | undefined) {
   if (v == null || Number.isNaN(v)) return "—";
@@ -54,7 +54,7 @@ function metrics(r: ReportData, y: number) {
 const margin = (a: number | null, b: number | null) => (a != null && b ? (a / b) * 100 : null);
 
 /* ---------------- shell ---------------- */
-function Shell({ width, onClose, children, label }: { width: number; onClose: () => void; children: React.ReactNode; label: string }) {
+export function Shell({ width, onClose, children, label }: { width: number; onClose: () => void; children: React.ReactNode; label: string }) {
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
@@ -79,10 +79,10 @@ function Tile30({ name }: { name: string }) {
   const i = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
   return <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-[#fb923c] to-[#ea580c] text-[14px] font-bold text-white">{i}</div>;
 }
-function Caption({ children }: { children: React.ReactNode }) {
+export function Caption({ children }: { children: React.ReactNode }) {
   return <div className="mb-2 mt-5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#9CA3AF]">{children}</div>;
 }
-function Rows({ rows }: { rows: [string, React.ReactNode][] }) {
+export function Rows({ rows }: { rows: [string, React.ReactNode][] }) {
   return (
     <div>
       {rows.map(([k, v]) => (
@@ -540,7 +540,7 @@ export function InvestorProfile({ p, onClose }: { p: PipelineRow; onClose: () =>
 }
 
 /* ---------------- NDA & LOI ---------------- */
-function DocHead({ title, sub, onClose }: { title: string; sub: string; onClose: () => void }) {
+export function DocHead({ title, sub, onClose }: { title: string; sub: string; onClose: () => void }) {
   return (
     <div className="flex items-start gap-3 border-b border-[#F0F1F4] px-6 pb-4 pt-5">
       <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] bg-[#F3F4F6] text-[#4B5563]"><FileText className="h-5 w-5" /></div>
@@ -553,7 +553,7 @@ function DocHead({ title, sub, onClose }: { title: string; sub: string; onClose:
     </div>
   );
 }
-function Reader({ label, text, onRead }: { label: string; text: string; onRead?: () => void }) {
+export function Reader({ label, text, onRead }: { label: string; text: string; onRead?: () => void }) {
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -575,10 +575,10 @@ function Reader({ label, text, onRead }: { label: string; text: string; onRead?:
     </div>
   );
 }
-function Foot({ children }: { children: React.ReactNode }) {
+export function Foot({ children }: { children: React.ReactNode }) {
   return <div className="flex items-center gap-2 border-t border-[#F0F1F4] bg-[#FAFAFB] px-6 py-3 text-[12.5px] text-[#6B7280]">{children}</div>;
 }
-function StatusPill({ tone, children }: { tone: "green" | "amber"; children: React.ReactNode }) {
+export function StatusPill({ tone, children }: { tone: "green" | "amber"; children: React.ReactNode }) {
   return <span className={cn("inline-flex h-6 items-center rounded-full px-2.5 text-[12px] font-semibold", tone === "green" ? "bg-[#ECFDF3] text-[#15803D]" : "bg-[#FFFBEB] text-[#B45309]")}>{children}</span>;
 }
 
