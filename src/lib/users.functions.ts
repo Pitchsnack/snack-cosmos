@@ -204,3 +204,35 @@ export const setAdvisorView = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// Permanently removes a soft-deleted account's sign-in so the email can register again.
+export const permanentlyDeleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ targetUserId: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: isCtl } = await supabase.rpc("is_control", { _user_id: userId });
+    if (!isCtl) throw new Error("Only Control admins can permanently delete accounts");
+    if (data.targetUserId === userId) throw new Error("You cannot delete your own account");
+    const { data: row } = await supabase
+      .from("users").select("status").eq("id", data.targetUserId).maybeSingle();
+    if (row?.status !== "Deleted") throw new Error("Set the status to Deleted first");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("signup_answers").delete().eq("user_id", data.targetUserId);
+    const { error: rowErr } = await supabaseAdmin.from("users").delete().eq("id", data.targetUserId);
+    if (rowErr) {
+      // Row is referenced elsewhere: keep it for history but release the email.
+      await supabaseAdmin
+        .from("users")
+        .update({ email: `deleted+${data.targetUserId}@invalid.local` } as never)
+        .eq("id", data.targetUserId);
+    }
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.targetUserId);
+    if (error) throw new Error(error.message);
+    await supabase.from("security_events").insert({
+      user_id: userId,
+      event_type: "ROLE_CHANGE",
+      details: { targetUserId: data.targetUserId, permanentlyDeleted: true },
+    });
+    return { ok: true };
+  });
