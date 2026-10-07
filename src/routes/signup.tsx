@@ -186,6 +186,17 @@ function SignupPage() {
       return;
     }
     if (data.user && (data.user.identities?.length ?? 0) === 0) { setTaken(true); emailRef.current?.focus(); return; }
+    if (data.session) {
+      // Auto-confirm is on: account is already verified and signed in, so skip the code step.
+      setBusy(true);
+      try {
+        await saveAnswers({ data: { role: pend.role, firstAnswer: pend.answer, firstName: pend.first, lastName: pend.last, terms: pend.terms, news: pend.news } });
+        writePending(null);
+      } catch { /* answers are retried from pending on next load */ }
+      setBusy(false);
+      go(5);
+      return;
+    }
     setCode(["", "", "", "", "", ""]); setCodeErr(null); setWait(30); go(4);
   }
 
