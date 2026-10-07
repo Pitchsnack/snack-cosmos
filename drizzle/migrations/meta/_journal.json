@@ -379,6 +379,13 @@
       "when": 1791341505306,
       "tag": "0053_seller_self_signup_rights",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1791377444882,
+      "tag": "0054_buyer_acts_for_types",
+      "breakpoints": true
     }
   ]
 }
