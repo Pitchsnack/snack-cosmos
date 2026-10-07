@@ -1,3 +1,4 @@
+import { typeLabel } from "@/lib/investor-bands";
 import { useState, type CSSProperties } from "react";
 import { MapPin, Building2, Coins, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -66,7 +67,7 @@ export function InvestorRow({
           <PreviewNeedsReassignmentBadge name={i.investor_name} domain="investor" size="xs" />
           {i.investor_type && (
             <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-              {i.investor_type}
+              {i.acts_for_types?.length ? i.acts_for_types.map(typeLabel).join(", ") : i.investor_type}
             </Badge>
           )}
           {i.status && i.status !== "Prospect" ? (

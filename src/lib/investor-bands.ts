@@ -60,12 +60,30 @@ export const WIZARD_TYPES: { value: string; label: string; hint: string }[] = [
   { value: "Corporate Enterprise", label: "Corporate buyer", hint: "A company buying businesses to grow" },
   { value: "Incubator/Accelerator", label: "Incubator / Accelerator", hint: "A programme that invests in early-stage founders" },
 ];
-export const showsStages = (type: string | null | undefined) => {
-  const t = (type ?? "").toLowerCase();
-  return t.includes("venture") || t.includes("corporate vc") || t.includes("private equity");
+/** All seven types, in list order (a representative may tick several). */
+export const ALL_TYPES: { value: string; label: string; hint: string }[] = [
+  ...WIZARD_TYPES,
+  { value: INDIVIDUAL_TYPE, label: "Individual investor", hint: "Invests their own money" },
+];
+export const typeLabel = (v: string) => ALL_TYPES.find((t) => t.value === v)?.label ?? v;
+/** Keeps known types only, in list order. Investor Classification = the first. */
+export const sortActsFor = (list: string[] | null | undefined) =>
+  ALL_TYPES.map((t) => t.value).filter((v) => (list ?? []).includes(v));
+/** "Family office · Private equity +1" */
+export const actsForText = (list: string[] | null | undefined) => {
+  const s = sortActsFor(list).map(typeLabel);
+  return s.length <= 2 ? s.join(" · ") : `${s.slice(0, 2).join(" · ")} +${s.length - 2}`;
 };
-/** Seller-facing name before an NDA. */
-export const typeName = (type: string | null | undefined) => (type && type.trim() ? type : "Investor");
+export const showsStages = (type: string | null | undefined, actsFor?: string[] | null) => {
+  const one = (x: string | null | undefined) => {
+    const t = (x ?? "").toLowerCase();
+    return t.includes("venture") || t.includes("corporate vc") || t.includes("private equity");
+  };
+  return actsFor && actsFor.length ? actsFor.some(one) : one(type);
+};
+/** Seller-facing name before an NDA (a representative shows the types they act for). */
+export const typeName = (type: string | null | undefined, actsFor?: string[] | null) =>
+  actsFor && actsFor.length ? actsForText(actsFor) : type && type.trim() ? type : "Investor";
 
 export const DEAL_TYPES = ["Full acquisition", "Majority stake (above 51%)", "Minority stake (below 49%)", "Growth capital", "Management buy-in"];
 export const STAGE_OPTIONS = ["Seed", "Early", "Growth", "Buyout", "Mature"];

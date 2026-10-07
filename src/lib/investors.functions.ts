@@ -61,6 +61,7 @@ export interface InvestorRow {
   linkedin_url: string | null;
   country: string | null;
   investor_type: string | null;
+  acts_for_types?: string[] | null;
   aum: string | null;
   ticket_size: string | null;
   short_description: string | null;
@@ -125,7 +126,7 @@ export const listInvestors = createServerFn({ method: "GET" })
     let q = supabase
       .from("investors")
       .select(`
-        id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
+        id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type, acts_for_types,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url,
         preferred_stages, preferred_industries, keywords, min_ticket_size, max_ticket_size,
@@ -211,7 +212,7 @@ export const getInvestor = createServerFn({ method: "GET" })
         created_at, updated_at, logo_url, media,
         firm_name, email, business_address, year_founded, company_size_band,
         min_ticket_size, max_ticket_size, bio, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, aum_exact_usd,
-        keywords, preferred_stages, preferred_industries, investment_focus,
+        keywords, preferred_stages, preferred_industries, investment_focus, acts_for_types,
         tenants!inner(tenant_name),
         investor_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         investor_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -274,8 +275,14 @@ export const getInvestor = createServerFn({ method: "GET" })
       image_signed_url: signed[m.image_path] ?? null,
     }));
 
+    // The linked buyer's relation (a representative edits "Acts for" instead of one classification).
+    // The caller could already read this investor row above.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: bpRow } = await (supabaseAdmin as any).from("buyer_profiles").select("buyer_relation").eq("investor_id", data.id).maybeSingle();
+
     return {
       ...row,
+      buyer_relation: (bpRow?.buyer_relation ?? null) as string | null,
       logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
       media,
       linked_startups,
@@ -484,6 +491,7 @@ export const createInvestor = createServerFn({ method: "POST" })
 
 const UpdateInput = z.object({
   id: z.string().uuid(),
+  actsForTypes: z.array(z.string().max(60)).max(7).optional(),
   investorName: z.string().min(1).max(255).optional(),
   legalName: z.string().max(255).nullable().optional(),
   websiteUrl: z.string().max(2048).nullable().optional(),
@@ -521,6 +529,12 @@ export const updateInvestor = createServerFn({ method: "POST" })
     if (data.linkedinUrl !== undefined) patch.linkedin_url = data.linkedinUrl;
     if (data.country !== undefined) patch.country = data.country;
     if (data.investorType !== undefined) patch.investor_type = data.investorType;
+    if (data.actsForTypes !== undefined) {
+      const { sortActsFor } = await import("@/lib/investor-bands");
+      const acts = sortActsFor(data.actsForTypes);
+      patch.acts_for_types = acts;
+      if (acts.length) patch.investor_type = acts[0];
+    }
     if (data.shortDescription !== undefined) patch.short_description = data.shortDescription;
     if (data.longDescription !== undefined) patch.long_description = data.longDescription;
     if (data.status !== undefined) patch.status = data.status;

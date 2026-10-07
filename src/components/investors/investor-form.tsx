@@ -1,3 +1,5 @@
+import { ActsForField } from "@/components/investors/acts-for-field";
+import { sortActsFor } from "@/lib/investor-bands";
 import { CompanySizeField } from "@/components/investors/company-size-field";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
@@ -168,6 +170,8 @@ export interface InvestorEditModel {
   linkedin_url: string | null;
   country: string | null;
   investor_type: string | null;
+  acts_for_types?: string[] | null;
+  buyer_relation?: string | null;
   aum: string | null;
   min_ticket_size: string | null;
   max_ticket_size: string | null;
@@ -315,6 +319,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [displayName, setDisplayName] = useState(investor?.investor_name ?? "");
   const [firmName, setFirmName] = useState(investor?.firm_name ?? "");
   const [title, setTitle] = useState(investor?.investor_type ?? "");
+  const agentRel = investor?.buyer_relation === "agent";
+  const [actsFor, setActsFor] = useState<string[]>(() => sortActsFor(investor?.acts_for_types?.length ? investor.acts_for_types : investor?.investor_type ? [investor.investor_type] : []));
   const [email, setEmail] = useState(investor?.email ?? "");
   const [headquarters, setHeadquarters] = useState(investor?.country ?? "");
   const [region, setRegion] = useState<string>(() => regionForCountry(investor?.country ?? "") || "");
@@ -593,7 +599,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           websiteUrl: companyUrl || null,
           linkedinUrl: linkedinUrl || null,
           country: headquarters || null,
-          investorType: title || null,
+          investorType: agentRel ? actsFor[0] ?? (title || null) : title || null,
+          ...(agentRel && actsFor.length ? { actsForTypes: actsFor } : {}),
           logoPath,
           media: resolvedMedia,
           startupIds: linkedStartupIds,
@@ -1077,7 +1084,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
             placeholder="e.g. Sequoia Capital" maxLength={100} required />
         </div>
-        <div className="space-y-1.5">
+        {!agentRel && <div className="space-y-1.5">
           <Label>Investor Classification</Label>
           <Select value={title || "none"} onValueChange={(v) => setTitle(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
@@ -1088,8 +1095,12 @@ export function InvestorForm({ investor, controlReturn }: Props) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </div>}
       </div>
+      {agentRel && (
+        <ActsForField value={actsFor} onChange={setActsFor} id="inv-acts-for"
+          error={actsFor.length ? null : "Pick at least one investor type this representative acts for."} />
+      )}
 
       {/* Row 2: Headquarters | Region | City */}
       <div className="grid grid-cols-3 gap-4">

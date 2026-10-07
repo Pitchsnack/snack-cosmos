@@ -2718,6 +2718,7 @@ export type Database = {
       }
       investors: {
         Row: {
+          acts_for_types: string[]
           aum: string | null
           aum_band: string | null
           aum_exact_usd: number | null
@@ -2764,6 +2765,7 @@ export type Database = {
           year_founded: number | null
         }
         Insert: {
+          acts_for_types?: string[]
           aum?: string | null
           aum_band?: string | null
           aum_exact_usd?: number | null
@@ -2810,6 +2812,7 @@ export type Database = {
           year_founded?: number | null
         }
         Update: {
+          acts_for_types?: string[]
           aum?: string | null
           aum_band?: string | null
           aum_exact_usd?: number | null
@@ -3771,11 +3774,13 @@ export type Database = {
       }
       signup_answers: {
         Row: {
+          buyer_relation: string | null
           company: Json | null
           created_at: string
           done_at: string | null
           first_answer: string
           first_name: string | null
+          investor_types: string[]
           last_name: string | null
           news_opt_in: boolean
           profile_id: string | null
@@ -3787,11 +3792,13 @@ export type Database = {
           welcome_seen_at: string | null
         }
         Insert: {
+          buyer_relation?: string | null
           company?: Json | null
           created_at?: string
           done_at?: string | null
           first_answer: string
           first_name?: string | null
+          investor_types?: string[]
           last_name?: string | null
           news_opt_in?: boolean
           profile_id?: string | null
@@ -3803,11 +3810,13 @@ export type Database = {
           welcome_seen_at?: string | null
         }
         Update: {
+          buyer_relation?: string | null
           company?: Json | null
           created_at?: string
           done_at?: string | null
           first_answer?: string
           first_name?: string | null
+          investor_types?: string[]
           last_name?: string | null
           news_opt_in?: boolean
           profile_id?: string | null

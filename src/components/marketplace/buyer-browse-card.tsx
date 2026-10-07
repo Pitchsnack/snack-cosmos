@@ -58,6 +58,7 @@ export type CardInvestor = {
   revLabel: string | null;
   aumBand?: string | null; ticketBand?: string | null; revBand?: string | null;
   relation?: "individual" | "corporate" | "agent" | null;
+  actsFor?: string[];
 };
 
 export type ListingStatus = "live" | "draft" | "paused";
@@ -154,7 +155,7 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
   return (
     <>
       <div className="flex items-baseline justify-between gap-3">
-        <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{typeName(i.type)}</div>
+        <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{typeName(i.type, i.actsFor)}</div>
         <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}{i.country && <><span className="mx-1.5 text-[#D1D5DB]">·</span><span className="font-medium text-[#4B5563] dark:text-foreground/80">{i.country}</span></>}</div>
       </div>
       {(i.verified || i.proofOfFunds) && (

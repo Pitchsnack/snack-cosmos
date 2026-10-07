@@ -1,3 +1,4 @@
+import { typeLabel } from "@/lib/investor-bands";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,7 +58,7 @@ export function InvestorTable({ rows, isLoading }: { rows: InvestorListItem[]; i
                   <div className="text-xs text-muted-foreground">{s.tenant_name}</div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.country || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{s.investor_type || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{(s.acts_for_types?.length ? s.acts_for_types.map(typeLabel).join(", ") : s.investor_type) || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.aum || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.ticket_size || "—"}</TableCell>
                 <TableCell><Badge variant="outline" className={statusTone(s.status)}>{s.status}</Badge></TableCell>
