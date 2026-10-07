@@ -104,29 +104,6 @@ function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
   );
 }
 
-function MultiPick({ options, value, onChange }: { options: string[]; value: string[]; onChange: (v: string[]) => void }) {
-  const [q, setQ] = useState("");
-  const shown = options.filter((o) => !value.includes(o) && o.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
-  return (
-    <div className="space-y-2">
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {value.map((v) => (
-            <span key={v} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-0.5 text-[12.5px]">
-              {v}<button type="button" aria-label={`Remove ${v}`} onClick={() => onChange(value.filter((x) => x !== v))}><X className="h-3 w-3" /></button>
-            </span>
-          ))}
-        </div>
-      )}
-      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Type to add…" className="h-9" />
-      {q && shown.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {shown.map((o) => <button key={o} type="button" onClick={() => { onChange([...value, o]); setQ(""); }} className="rounded-full border border-dashed border-border px-2.5 py-0.5 text-[12.5px] hover:bg-muted">+ {o}</button>)}
-        </div>
-      )}
-    </div>
-  );
-}
 
 const sel = "flex h-[42px] w-full rounded-md border border-input bg-background px-3 pr-8 text-[14px] outline-none focus:border-[#1E2A4A]";
 const errB = "border-[#B42318]";
