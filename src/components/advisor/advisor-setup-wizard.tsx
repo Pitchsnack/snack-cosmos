@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -21,12 +22,12 @@ import { cn } from "@/lib/utils";
 
 type A = {
   type: string; country: string; city: string; name: string; year: string; reg: string; addr: Addr; web: string;
-  services: string[]; fees: Record<string, FeeDetail>; deal: string; team: string; langs: string[]; email: string; phone: string;
+  services: string[]; fees: Record<string, FeeDetail>; deal: string; team: string; langs: string[]; sectors: string[]; agnostic: boolean; email: string; phone: string;
   logo: LogoState; desc: string;
 };
 const SECTION: Record<WizardQ, string> = {
   type: "About the firm", loc: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
-  deal: "Your work", team: "Your work", contact: "Contact", logo: "Your card", desc: "Your card", review: "Review",
+  deal: "Your work", team: "Your work", sectors: "Your work", contact: "Contact", logo: "Your card", desc: "Your card", review: "Review",
 };
 const STEPS: WizardQ[] = [...WIZARD_QS, "review"];
 
@@ -37,7 +38,7 @@ function fromFirm(f: AdvisorFirm): A {
     year: f.yearFounded ? String(f.yearFounded) : "", reg: f.registrationNo ?? "",
     addr: { street: f.addrStreet ?? "", unit: f.addrUnit ?? "", district: thai ? f.addrDistrict ?? "" : "", province: f.addrProvince ?? (thai ? f.city ?? "" : ""), postal: f.addrPostal ?? "" },
     web: f.website ?? "", services: f.services, fees: { ...f.feeDetails }, deal: f.dealBand ?? "",
-    team: f.teamSize ? String(f.teamSize) : "", langs: f.languages, email: f.email ?? "", phone: f.phone ?? "",
+    team: f.teamSize ? String(f.teamSize) : "", langs: f.languages, sectors: f.sectors, agnostic: !!f.sectorAgnostic, email: f.email ?? "", phone: f.phone ?? "",
     logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, desc: f.description ?? "",
   };
 }
@@ -91,6 +92,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     deal: a.deal ? null : "hint",
     team: teamSizeError(a.team),
     langs: a.langs.length ? null : "Pick at least one language.",
+    sectors: a.agnostic || a.sectors.length ? null : "Pick at least one sector, or Sector agnostic.",
     email: emailError(a.email),
     phone: phoneError(a.phone),
     logo: a.logo.path ? null : "hint",
@@ -98,7 +100,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const fieldsOf: Record<WizardQ, string[]> = {
     type: ["type"], loc: ["country", "city"], name: ["name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web"],
-    services: ["services"], deal: ["deal"], team: ["team", "langs"], contact: ["email", "phone"], logo: ["logo"], desc: ["desc"], review: [],
+    services: ["services"], deal: ["deal"], team: ["team", "langs"], sectors: ["sectors"], contact: ["email", "phone"], logo: ["logo"], desc: ["desc"], review: [],
   };
   const qValid = (id: WizardQ) => fieldsOf[id].every((k) => !errors[k]);
   const show = (k: string) => ((touched[k] || forced[k]) && errors[k] && errors[k] !== "fee" && errors[k] !== "hint" ? errors[k] : null);
@@ -290,7 +292,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const preview: AdvisorFirm = useMemo(() => ({
     ...firm, name: a.name, firmType: a.type, city: a.city || null, country: a.country, yearFounded: a.year ? Number(a.year) : null,
     description: a.desc, services: a.services, dealBand: a.deal || null, teamSize: a.team ? Number(a.team) : null, languages: a.langs,
-    logoUrl: a.logo.url, logoPath: a.logo.path, sectors: [], status: firm.status,
+    logoUrl: a.logo.url, logoPath: a.logo.path, sectors: a.sectors, sectorAgnostic: a.agnostic, status: firm.status,
   }), [firm, a]);
   const previewBox = (
     <div className="mt-[18px] rounded-[12px] border border-[#E9EBF0] bg-[#EEF0F4] p-4 dark:border-border dark:bg-muted/40">
@@ -473,6 +475,14 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {a.deal && <p className="mt-2 text-[13.5px] text-[#6B7280]">Your card shows <b className="text-[#151A28] dark:text-foreground">{dealBandLabels(a.deal)!.usd}</b> ({dealBandLabels(a.deal)!.thb}).</p>}
           {hint && <p className="mt-2 text-[13px] text-[#6B7280]">{hint}</p>}
         </div>
+      ) },
+    sectors: { req: true, t: "Which sectors do you know best?", h: "Pick up to 5, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card.",
+      body: (
+        <SetSectorPicker mode="multi" value={a.sectors} onChange={(v) => set({ sectors: v }, { sectors: v })}
+          limitMsg="Pick up to 5 sectors, or Sector agnostic."
+          agnostic={{ on: a.agnostic, onToggle: (on) => set({ agnostic: on }, { sector_agnostic: on }), line: "I work with companies in every industry",
+            summary: <>Sellers and buyers see <b className="text-[#151A28] dark:text-foreground">Sector agnostic</b> on your card.</> }}
+          error={forced.sectors ? errors.sectors : null} />
       ) },
     team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : "What is your company size?",
       h: hid("team", "team") ? "Sellers and buyers see them on your card." : "Sellers and buyers see your team size on your card, and the languages you work in.",
@@ -689,6 +699,7 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
       ["Typical deal size", deal ? deal.full : notSet, "deal"],
       ["Team size", errors.team ? miss : `${a.team} people`, "team"],
       ["Languages", a.langs.length ? a.langs.join(", ") : miss, "team"],
+      ["Sectors", a.agnostic ? "Sector agnostic" : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
     ]],
     ["Contact", [["Email", errors.email ? miss : a.email, "contact"], ["Phone", errors.phone ? miss : a.phone, "contact"]]],
     ["Your card", [

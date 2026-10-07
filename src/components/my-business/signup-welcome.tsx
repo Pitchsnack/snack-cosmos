@@ -13,7 +13,7 @@ import { typeLabel } from "@/lib/investor-bands";
 
 const ADVISOR_SEC: Record<string, string> = {
   type: "About the firm", loc: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
-  deal: "Your work", team: "Your work", contact: "Contact", logo: "Your card", desc: "Your card",
+  deal: "Your work", team: "Your work", sectors: "Your work", contact: "Contact", logo: "Your card", desc: "Your card",
 };
 const group = (secs: string[]): [string, number][] => {
   const out: [string, number][] = [];
