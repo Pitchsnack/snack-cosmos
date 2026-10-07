@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, descriptionLeaks, regError, ticketColumns, yearError,
+  AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, sortActsFor, descriptionLeaks, regError, ticketColumns, yearError,
 } from "@/lib/investor-bands";
 
 /**

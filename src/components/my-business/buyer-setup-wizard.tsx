@@ -14,7 +14,7 @@ import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enr
 import { BUYER_INVESTOR_KEY, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
-  TICKET_BANDS, WIZARD_TYPES, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
+  TICKET_BANDS, WIZARD_TYPES, ALL_TYPES, sortActsFor, typeLabel, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
   type Band,
 } from "@/lib/investor-bands";
 import { isCorporateBuyer } from "@/lib/investor-browse";
@@ -23,6 +23,8 @@ import { stepsFor, buyerSkips, buyerHiddenFields, buyerProgress, type BuyerRelat
 type A = {
   role: BuyerRelation | null; type: string; country: string; city: string; name: string; year: string; reg: string; web: string;
   aum: string; ticket: string; rev: string; deals: string[]; stages: string[]; geo: string[]; sectors: string[]; desc: string;
+  /** A representative's investor types (list order; the first is Investor Classification). */
+  acts: string[];
 };
 
 const ROLES: { value: BuyerRelation; label: string; hint: string }[] = [
@@ -45,6 +47,7 @@ function fromData(d: Data): A {
     name: inv.investor_name ?? "", year: inv.year_founded?.toString() ?? "", reg: inv.registration_no ?? "", web: inv.website_url ?? "",
     aum: inv.aum_band ?? "", ticket: inv.ticket_band ?? "", rev: inv.revenue_min_band ?? "",
     deals: d.buyer.deal_types, stages: inv.preferred_stages, geo: inv.investment_focus_raw, sectors: inv.preferred_industries, desc: d.buyer.description,
+    acts: d.buyer.relation === "agent" ? sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []) : [],
   };
 }
 
@@ -104,6 +107,27 @@ function Checks({ title, note, req, items, value, onChange }: { title: string; n
   );
 }
 
+/** Tick-box type cards (a representative's question 2): all seven types, two columns, nothing moves on by itself. */
+function TypeTicks({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  return (
+    <div role="group" aria-label="Investor types" className="grid gap-2.5 sm:grid-cols-2">
+      {ALL_TYPES.map((o) => {
+        const on = value.includes(o.value);
+        const tone = typeTone(o.value);
+        return (
+          <button key={o.value} type="button" role="checkbox" aria-checked={on}
+            onClick={() => onChange(sortActsFor(on ? value.filter((x) => x !== o.value) : [...value, o.value]))}
+            className={`flex min-h-[50px] items-center gap-3.5 rounded-[12px] border px-4 py-3 text-left transition-colors ${on ? "border-[#1E2A4A] bg-[#EEF1F7] dark:bg-[#1B2140]" : "border-[#DCDFE5] bg-white hover:border-[#C3C8D2] dark:border-border dark:bg-background"}`}>
+            <span className={`grid h-10 w-10 flex-none place-items-center rounded-[10px] ${tone.bg} ${tone.fg}`}><TypeIcon type={o.value} className="h-5 w-5" /></span>
+            <span className="flex-1"><b className="block text-[15px] font-semibold">{o.label}</b><small className="mt-0.5 block text-[13px] text-[#6B7280]">{o.hint}</small></span>
+            <span className={`grid h-5 w-5 flex-none place-items-center rounded-[6px] border-2 ${on ? "border-[#1E2A4A] bg-[#1E2A4A] text-white" : "border-[#C3C8D2]"}`}>{on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 const bandList = (bands: Band[]) => bands.map((b) => ({ value: b.key, label: b.label, extra: b.baht }));
 
 export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: string }) {
@@ -116,7 +140,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [answered, setAnswered] = useState<string[]>(data.investor.wizard?.answered ?? []);
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
   const fromSignup = data.investor.wizard?.from_signup;
-  const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name });
+  const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name, actsFor: x.acts });
   const skipSet = skipOf(a);
   // A question opened from Review shows all its fields under its full title.
   const [full, setFull] = useState<QId | null>(null);
@@ -169,10 +193,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const individual = a.role === "individual";
   const leaks = descriptionLeaks(a.desc, a.name, a.web);
   const descErr = a.desc.trim() ? descriptionError(a.desc) : null;
-  const stagesShown = showsStages(a.type);
+  const agent = a.role === "agent";
+  const stagesShown = showsStages(a.type, agent ? a.acts : null);
   const errors: Record<string, string | null> = {
     role: a.role ? null : "Choose one to continue.",
-    type: a.type && a.type !== INDIVIDUAL_TYPE ? null : "Choose one to continue.",
+    type: agent ? (a.acts.length ? null : "Choose at least one to continue.") : a.type && a.type !== INDIVIDUAL_TYPE ? null : "Choose one to continue.",
     country: a.country ? null : "Choose your country.",
     city: a.city.trim() ? null : thai ? "Choose your province." : "Add your city.",
     name: a.name.trim().length >= 2 ? null : "Add your firm's name.",
@@ -225,7 +250,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
     const nxt = nextAfter(a, from);
     // Private equity pre-ticks, the first time it reaches deals.
-    if (nxt === "deals" && !peTicked && a.type.toLowerCase().includes("private equity")) {
+    // A representative gets them only when Private equity is their only type.
+    if (nxt === "deals" && !peTicked && a.type.toLowerCase().includes("private equity") && (!agent || a.acts.length === 1)) {
       const patch: Partial<A> = {};
       if (!a.deals.length) patch.deals = ["Majority stake (above 51%)"];
       if (!a.stages.length) patch.stages = ["Buyout"];
@@ -283,7 +309,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     tryContinue();
   };
 
-  const tName = typeName(individual ? INDIVIDUAL_TYPE : a.type);
+  const tName = typeName(individual ? INDIVIDUAL_TYPE : a.type, agent ? a.acts : null);
   const corp = isCorporateBuyer(a.type);
 
   // ---------------- questions ----------------
@@ -293,12 +319,30 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         const r = v as BuyerRelation;
         const patch: Partial<A> = { role: r };
         const server: Record<string, unknown> = { buyer_relation: r };
+        patch.acts = [];
         if (r === "individual") { patch.type = INDIVIDUAL_TYPE; server.investor_type = INDIVIDUAL_TYPE; }
-        else if (r === "corporate" && a.type === INDIVIDUAL_TYPE) { patch.type = ""; server.investor_type = null; }
+        else if (r === "corporate" && !WIZARD_TYPES.some((t) => t.value === a.type)) { patch.type = ""; server.investor_type = null; }
+        else if (r === "agent") {
+          // Starts as [Investor Classification]; question 2 shows with it ticked so more can be added.
+          patch.acts = a.role === "agent" ? a.acts : a.type ? [a.type] : [];
+          server.acts_for_types = patch.acts;
+          if (a.role !== "agent") {
+            // Question 2 shows next, even if sign-up answered it.
+            setA((p) => ({ ...p, ...patch }));
+            queue(server);
+            if (advTimer.current) window.clearTimeout(advTimer.current);
+            advTimer.current = window.setTimeout(() => { markAnswered("role"); setFull("type"); goTo("type"); }, 250);
+            return;
+          }
+        }
+        if (r === "corporate" && a.role === "agent" && !patch.type && patch.type !== "") { setFull("type"); }
         autoPick("role", patch, server);
       }} /> },
-    type: { req: true, t: "What type of investor is your firm?", h: "Sellers see this, and it sets the artwork on your card.",
-      body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
+    type: agent
+      ? { req: true, t: "Which types of investor do you act for?", h: "Pick all that apply. Sellers see them on your card.",
+        body: <><TypeTicks value={a.acts} onChange={(v) => set({ acts: v, type: v[0] ?? "" }, { acts_for_types: v })} /><Err m={forced.type && errors.type} /></> }
+      : { req: true, t: "What type of investor is your firm?", h: "Sellers see this, and it sets the artwork on your card.",
+        body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
     loc: { req: true, t: "Where is your firm based?", h: "Sellers see your country and city.",
       body: (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -458,7 +502,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               refNo: data.buyer.ref_no, codeName: tName, name: null, type: tName, city: a.city || null, country: a.country || null,
               description: a.desc.trim() || "Your description appears here.", sectors: a.sectors, stages: a.stages, dealTypes: a.deals,
               geography: a.geo.join(", ") || null, verified: false, proofOfFunds: false, ticketLabel: null, aumLabel: null, revLabel: null,
-              aumBand: a.aum || null, ticketBand: a.ticket || null, revBand: a.rev || null, relation: a.role,
+              aumBand: a.aum || null, ticketBand: a.ticket || null, revBand: a.rev || null, relation: a.role, actsFor: agent ? a.acts : [],
             }} />
           </div>
         </div>
@@ -544,7 +588,9 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
   const groups: [string, Row[]][] = [
     ["About you", [["Your role", ROLES.find((r) => r.value === a.role)?.label, "role", "req", errors.role]]],
     ["About the firm", [
-      ...(shown.has("type") ? [["Investor type", WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
+      ...(shown.has("type") ? [a.role === "agent"
+        ? ["Acts for", a.acts.map(typeLabel).join(", "), "type", "req", errors.type] as Row
+        : ["Investor type", WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
       ["Based in", a.city ? `${a.city}, ${a.country}` : "", "loc", "req", errors.city],
       ["Firm name", a.name, "name", "req", errors.name, "🔒 After NDA"],
       ...(!individual ? [
