@@ -22,6 +22,7 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SellersRouteImport } from './routes/sellers'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
@@ -163,6 +164,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SellersRoute = SellersRouteImport.update({
   id: '/sellers',
   path: '/sellers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccessManagementRoute =
@@ -628,6 +634,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
+  '/signup': typeof SignupRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
@@ -720,6 +727,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
+  '/signup': typeof SignupRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
@@ -803,6 +811,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
+  '/signup': typeof SignupRoute
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
@@ -897,6 +906,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/reset-password'
     | '/sellers'
+    | '/signup'
     | '/access-management'
     | '/ai-agents'
     | '/audit'
@@ -989,6 +999,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/reset-password'
     | '/sellers'
+    | '/signup'
     | '/access-management'
     | '/ai-agents'
     | '/audit'
@@ -1071,6 +1082,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/reset-password'
     | '/sellers'
+    | '/signup'
     | '/_authenticated/access-management'
     | '/_authenticated/ai-agents'
     | '/_authenticated/audit'
@@ -1165,6 +1177,7 @@ export interface RootRouteChildren {
   PlansRoute: typeof PlansRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellersRoute: typeof SellersRoute
+  SignupRoute: typeof SignupRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
   AdvisorCompanyIdSetupRoute: typeof AdvisorCompanyIdSetupRoute
   BuyerCompanyIdSetupRoute: typeof BuyerCompanyIdSetupRoute
@@ -1262,6 +1275,13 @@ declare module '@tanstack/react-router' {
       path: '/sellers'
       fullPath: '/sellers'
       preLoaderRoute: typeof SellersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/access-management': {
@@ -2125,6 +2145,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlansRoute: PlansRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SellersRoute: SellersRoute,
+  SignupRoute: SignupRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
   AdvisorCompanyIdSetupRoute: AdvisorCompanyIdSetupRoute,
   BuyerCompanyIdSetupRoute: BuyerCompanyIdSetupRoute,
