@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { INDIVIDUAL_TYPE, sortActsFor } from "@/lib/investor-bands";
 
 /**
  * Self sign-up: the account's sign-up answers (signup_answers) and the
@@ -12,12 +13,14 @@ async function admin() {
   return supabaseAdmin as any;
 }
 
+const RELATIONS = ["individual", "corporate", "agent"] as const;
+
 export const ROLES = ["seller", "buyer", "advisor"] as const;
 export type SignupRole = (typeof ROLES)[number];
 export type SignupState = {
   email: string; confirmed: boolean; provider: string | null;
   answers: null | {
-    role: SignupRole; first_answer: string; first_name: string | null; last_name: string | null;
+    role: SignupRole; first_answer: string; investor_types?: string[] | null; buyer_relation?: string | null; first_name: string | null; last_name: string | null;
     company: { name: string; year: string | null; size: string | null; website: string | null } | null;
     profile_id: string | null; done_at: string | null; welcome_seen_at: string | null;
   };
@@ -45,6 +48,7 @@ export const saveSignupAnswers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({
     role: z.enum(ROLES), firstAnswer: z.string().min(1).max(60),
+    investorTypes: z.array(z.string().max(60)).max(7).optional(),
     firstName: z.string().trim().max(100).optional(), lastName: z.string().trim().max(100).optional(),
     terms: z.boolean(), news: z.boolean(), provider: z.string().max(20).optional(),
   }).parse(d))
@@ -58,6 +62,11 @@ export const saveSignupAnswers = createServerFn({ method: "POST" })
     const last = data.lastName || meta.family_name || (meta.full_name ?? meta.name ?? "").split(" ").slice(1).join(" ") || null;
     const { error } = await sb.from("signup_answers").upsert({
       user_id: context.userId, role: data.role, first_answer: data.firstAnswer,
+      // Buyers: step 2 is who they are (buyer_relation); the type or types come from the type step.
+      buyer_relation: data.role === "buyer" && RELATIONS.includes(data.firstAnswer as never) ? data.firstAnswer : null,
+      investor_types: data.role === "buyer"
+        ? (data.firstAnswer === "individual" ? [INDIVIDUAL_TYPE] : data.firstAnswer === "corporate" ? sortActsFor(data.investorTypes).filter((t) => t !== INDIVIDUAL_TYPE).slice(0, 1) : sortActsFor(data.investorTypes))
+        : [],
       first_name: first, last_name: last, provider: data.provider ?? null,
       terms_accepted_at: data.terms ? new Date().toISOString() : null, news_opt_in: data.news,
       updated_at: new Date().toISOString(),
@@ -105,18 +114,24 @@ export const finishSignup = createServerFn({ method: "POST" })
     } else if (a.role === "buyer") {
       const { ensureLinked } = await import("@/lib/buyer-investor.functions");
       const { investorId } = await ensureLinked(uid);
-      const individual = a.first_answer === "Individual Investor";
+      // New sign-ups store buyer_relation + types; older ones stored the investor type as the first answer.
+      const rel: string | null = a.buyer_relation ?? (a.first_answer === INDIVIDUAL_TYPE ? "individual" : null);
+      const types: string[] = a.buyer_relation ? (a.investor_types ?? []) : [a.first_answer];
+      const individual = rel === "individual";
+      const agent = rel === "agent";
+      const typeVal = individual ? INDIVIDUAL_TYPE : types[0] ?? null;
       const fromSignup = individual ? ["role", "name", ...(web ? ["web"] : [])]
-        : ["type", "name", ...(web ? ["web"] : []), ...(y ? ["year"] : []), ...(data.size ? ["size"] : [])];
+        : [...(rel ? ["role"] : []), ...(typeVal ? ["type"] : []), "name", ...(web ? ["web"] : []), ...(y ? ["year"] : []), ...(data.size ? ["size"] : [])];
+      const answered = individual ? ["role"] : [...(rel ? ["role"] : []), ...(typeVal ? ["type"] : [])];
       const { error } = await sb.from("investors").update({
-        investor_name: data.name, investor_type: a.first_answer, website_url: web,
+        investor_name: data.name, investor_type: typeVal, acts_for_types: agent ? types : [], website_url: web,
         year_founded: individual ? null : y,
         company_size_band: individual ? null : (data.size ? SIZE_TO_BUYER[data.size] ?? null : null),
-        wizard: { answered: [], from_signup: fromSignup },
+        wizard: { answered, from_signup: fromSignup },
         updated_by: uid, updated_at: new Date().toISOString(),
       }).eq("id", investorId);
       if (error) throw new Error(error.message);
-      if (individual) await sb.from("buyer_profiles").update({ buyer_relation: "individual" }).eq("user_id", uid);
+      if (rel) await sb.from("buyer_profiles").update({ buyer_relation: rel }).eq("user_id", uid);
       profileId = investorId;
     } else if (a.role === "seller") {
       const { ensureSellerDraftFromSignup } = await import("@/lib/seller-setup.server");
