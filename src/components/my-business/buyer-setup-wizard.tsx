@@ -117,7 +117,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
   const fromSignup = data.investor.wizard?.from_signup;
   const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name });
-  const skip = skipOf(a);
+  const skipSet = skipOf(a);
   // A question opened from Review shows all its fields under its full title.
   const [full, setFull] = useState<QId | null>(null);
   const stepsAll = useMemo(() => stepsFor(a.role), [a.role]);
@@ -126,7 +126,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     if (startAt && stepsAll.some((s) => s.id === startAt)) return startAt as QId;
     return buyerProgress(data.buyer.relation, data.investor.wizard?.answered, skipOf(fromData(data))).first as QId;
   });
-  const steps = stepsAll.filter((s) => !skip.has(s.id) || s.id === full || s.id === cur);
+  const steps = stepsAll.filter((s) => !skipSet.has(s.id) || s.id === full || s.id === cur);
   const hiddenF = full === "name" ? new Set<string>() : buyerHiddenFields(fromSignup, { role: a.role, type: a.type, web: a.web, year: a.year, name: a.name });
   const nameShort = !!fromSignup?.includes("name") && full !== "name";
   const nextAfter = (x: A, from: QId): QId => {

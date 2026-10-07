@@ -106,7 +106,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const requiredOk = WIZARD_QS.filter((q) => q !== "deal" && q !== "logo").every((q) => qValid(q));
 
   const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team });
-  const skip = skipOf(a);
+  const skipSet = skipOf(a);
   const [cur, setCur] = useState<WizardQ>(() => {
     const sk = skipOf(fromFirm(firm));
     return (WIZARD_QS.find((q) => !sk.has(q) && !firm.setupAnswered.includes(q)) ?? "review") as WizardQ;
@@ -114,13 +114,13 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const hiddenF = advisorHidden(fromSignup, { type: a.type, web: a.web, year: a.year, team: a.team });
   const hid = (k: string, q: WizardQ) => full !== q && hiddenF.has(k);
   const nameShort = !!fromSignup?.includes("name") && full !== "name";
-  const shown = STEPS.filter((q) => q === "review" || !skip.has(q) || q === full || q === cur);
+  const shown = STEPS.filter((q) => q === "review" || !skipSet.has(q) || q === full || q === cur);
   // After the first render, resume at the first question that's unanswered or no longer valid.
   const resumed = useRef(false);
   useEffect(() => {
     if (resumed.current) return;
     resumed.current = true;
-    const first = WIZARD_QS.find((q) => !skip.has(q) && !isAnswered(q));
+    const first = WIZARD_QS.find((q) => !skipSet.has(q) && !isAnswered(q));
     setCur((first ?? "review") as WizardQ);
   }, [isAnswered]);
 
@@ -191,7 +191,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     }
     setCur(id);
   };
-  const next = (from: WizardQ): WizardQ => STEPS.slice(STEPS.indexOf(from) + 1).find((q) => q === "review" || !skip.has(q)) ?? "review";
+  const next = (from: WizardQ): WizardQ => STEPS.slice(STEPS.indexOf(from) + 1).find((q) => q === "review" || !skipSet.has(q)) ?? "review";
   const advance = (from: WizardQ) => {
     markAnswered(from);
     if (from === "services") setFeeNote(null);
