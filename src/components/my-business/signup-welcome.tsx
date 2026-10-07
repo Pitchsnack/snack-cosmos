@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Flag, X } from "lucide-react";
 import { dismissWelcome, getSignupState } from "@/lib/signup.functions";
-import { answeredCount, emptyDraft, firstOpenStep, loadDraft, saveDraft, type SellerDraft } from "@/lib/seller-wizard";
+import { answeredFlags, emptyDraft, firstOpenStep, loadDraft, saveDraft, type SellerDraft } from "@/lib/seller-wizard";
 import { SELLER_OPTS, BUYER_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
 
 /**
@@ -59,8 +59,9 @@ export function SignupWelcome({ role, userId, setupDone }: { role: "seller" | "b
   const mins = role === "advisor" ? 4 : 3;
   const look = role === "seller" ? { to: "/marketplace/browse", label: "Look at investors first" }
     : role === "buyer" ? { to: "/marketplace/browse", label: "Look at listings first" } : { to: "/marketplace/browse", label: "Look at the marketplace first" };
-  const sellerN = 5;
-  const sellerDone = draft ? Math.max(0, answeredCount(draft) - 4) : 0;
+  const sellerQs = hasWeb ? [1, 4, 5, 7, 8] : [1, 2, 4, 5, 7, 8];
+  const sellerN = sellerQs.length;
+  const sellerDone = draft ? sellerQs.filter((i) => answeredFlags(draft)[i]).length : 0;
 
   return (
     <div className="mb-4 space-y-4">
