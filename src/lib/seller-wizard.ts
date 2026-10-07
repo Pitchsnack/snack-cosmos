@@ -76,10 +76,49 @@ export function answeredFlags(d: SellerDraft): boolean[] {
   ];
 }
 export const answeredCount = (d: SellerDraft) => answeredFlags(d).filter(Boolean).length;
-/** First unanswered required question (website + licences are optional); 9 = review. */
-export function firstOpenStep(d: SellerDraft): number {
+/** The wizard's questions in order (index = step number; 9 = review). */
+export const SELLER_STEPS = [
+  { id: "role", sec: "About you" },
+  { id: "name", sec: "About the company" },
+  { id: "web", sec: "About the company" },
+  { id: "year", sec: "About the company" },
+  { id: "loc", sec: "About the company" },
+  { id: "rev", sec: "Financial & business profile" },
+  { id: "size", sec: "Financial & business profile" },
+  { id: "sector", sec: "Financial & business profile" },
+  { id: "lic", sec: "Intangible assets" },
+] as const;
+
+/**
+ * Questions sign-up fully answered, so the wizard skips them. A field counts only
+ * while it still holds a value; clearing it later brings its question back.
+ * The company name never skips its question (it shares it with the registration number).
+ */
+export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<string> {
+  const f = new Set(fromSignup);
+  const s = new Set<string>();
+  if (f.has("role") && d.role) s.add("role");
+  if (f.has("web") && d.web.trim()) s.add("web");
+  if (f.has("year") && /^\d{4}$/.test(d.year)) s.add("year");
+  if (f.has("size") && d.size) s.add("size");
+  return s;
+}
+/** Indexes of the questions that show. */
+export function sellerShown(d: SellerDraft, fromSignup: string[] = []): number[] {
+  const skip = sellerSkips(d, fromSignup);
+  return SELLER_STEPS.map((q, i) => (skip.has(q.id) ? -1 : i)).filter((i) => i >= 0);
+}
+/** Banner progress over the questions that show. */
+export function sellerProgress(d: SellerDraft, fromSignup: string[] = []) {
+  const shown = sellerShown(d, fromSignup);
   const f = answeredFlags(d);
-  const required = [0, 1, 3, 4, 5, 6, 7];
+  return { n: shown.filter((i) => f[i]).length, N: shown.length };
+}
+/** First unanswered required question (website + licences are optional); 9 = review. */
+export function firstOpenStep(d: SellerDraft, fromSignup: string[] = []): number {
+  const f = answeredFlags(d);
+  const shown = new Set(sellerShown(d, fromSignup));
+  const required = [0, 1, 3, 4, 5, 6, 7].filter((n) => shown.has(n));
   const i = required.find((n) => !f[n]);
   return i ?? 9;
 }

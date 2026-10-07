@@ -124,7 +124,7 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         aum_exact_usd: inv.aum_exact_usd == null ? null : Number(inv.aum_exact_usd),
         registration_no: inv.registration_no as string | null,
         setup_done_at: inv.setup_done_at as string | null,
-        wizard: (inv.wizard ?? {}) as { answered?: string[]; pe_ticked?: boolean },
+        wizard: (inv.wizard ?? {}) as { answered?: string[]; pe_ticked?: boolean; from_signup?: string[] },
         investment_focus_raw: (inv.investment_focus ?? []) as string[],
       },
       buyer: {

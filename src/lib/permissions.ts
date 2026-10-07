@@ -89,7 +89,8 @@ const TENANT_AGENT: Permission[] = [
 ];
 
 
-const STARTUP_USER: Permission[] = ["workspace.switch","startups.read"];
+// Sellers create and edit only the businesses they belong to (enforced by the database).
+const STARTUP_USER: Permission[] = ["workspace.switch","startups.read","startups.write"];
 const INVESTOR_USER: Permission[] = ["workspace.switch","investors.read"];
 
 export const ROLE_PERMISSIONS: Record<AppRole, Permission[]> = {

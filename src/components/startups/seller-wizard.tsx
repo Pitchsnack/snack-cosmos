@@ -5,7 +5,7 @@ import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { SectorPicker } from "@/components/startups/sector-fields";
 import {
   SELLER_RELATIONS, THAI_PROVINCES, THB_REVENUE_BANDS, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
-  isValidUrl, saveDraft, answeredCount, normalizeUrl, type SellerDraft,
+  isValidUrl, saveDraft, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
 } from "@/lib/seller-wizard";
 
 const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review"];
@@ -64,19 +64,26 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish,
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = "Add my business",
 }: {
   userId: string;
   initial: SellerDraft;
   onExit: () => void;
   onCancel: () => void;
   onFinish: (d: SellerDraft) => void;
+  /** Fields sign-up answered (hidden while they hold a value). */
+  fromSignup?: string[];
+  /** Saves to an existing Draft business instead of this browser. */
+  persist?: (d: SellerDraft) => void;
+  title?: string;
 }) {
   const [d, setD] = useState<SellerDraft>(initial);
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
   const [justSaved, setJustSaved] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  // A question opened from Review shows all its fields, even ones sign-up answered.
+  const [full, setFull] = useState<number | null>(null);
   const [webState, setWebState] = useState<"idle" | "checking" | "unreachable">("idle");
   const checkWeb = useServerFn(checkWebsiteReachable);
   const timer = useRef<number | null>(null);
@@ -84,16 +91,25 @@ export function SellerWizard({
   const firstRun = useRef(true);
   const step = Math.min(d.step, STEPS.length - 1);
   const cur = STEPS[step]!;
+  const store = (x: SellerDraft) => (persist ? persist(x) : saveDraft(userId, x));
+  const shownOf = (x: SellerDraft, keep: number | null) => {
+    const s = new Set(sellerShown(x, fromSignup));
+    if (keep != null) s.add(keep);
+    return STEPS.map((_, i) => i).filter((i) => i === STEPS.length - 1 || s.has(i));
+  };
+  const shown = shownOf(d, full ?? step);
+  const pos = Math.max(0, shown.indexOf(step));
+  const nameFromSignup = fromSignup.includes("name") && full !== 1;
 
   // Autosave on every answer.
   useEffect(() => {
     if (firstRun.current) { firstRun.current = false; return; }
     // Nothing is stored until the user answers something (Cancel on step 1 leaves no draft).
-    saveDraft(userId, d);
+    store(d);
     setJustSaved(true);
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
     savedTimer.current = window.setTimeout(() => setJustSaved(false), 1500);
-  }, [d, userId]);
+  }, [d, userId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => {
     if (timer.current) window.clearTimeout(timer.current);
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
@@ -105,10 +121,26 @@ export function SellerWizard({
 
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
   const go = (n: number) => set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
+  /** Step after `from`: back to Review when opened from it, else the next question that shows. */
+  const nextOf = (x: SellerDraft, from: number) => {
+    if (full != null) return STEPS.length - 1;
+    const list = shownOf(x, null);
+    return list.find((i) => i > from) ?? STEPS.length - 1;
+  };
+  const advance = (patch: Partial<SellerDraft> = {}) => {
+    setD((p) => ({ ...p, ...patch, step: nextOf({ ...p, ...patch }, step) }));
+    setFull(null);
+  };
+  const back = () => {
+    if (full != null) { setFull(null); go(STEPS.length - 1); return; }
+    const list = shownOf(d, null);
+    const prev = [...list].reverse().find((i) => i < step);
+    if (prev == null) onCancel(); else go(prev);
+  };
   const pick = (patch: Partial<SellerDraft>) => {
     set(patch);
     if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setD((p) => ({ ...p, step: Math.min(STEPS.length - 1, p.step + 1) })), 250);
+    timer.current = window.setTimeout(() => advance(), 250);
   };
 
   const yearN = Number(d.year);
@@ -132,7 +164,10 @@ export function SellerWizard({
   const Q: Record<string, { t: string; h?: string; body: React.ReactNode }> = {
     role: { t: "Which best describes you?", h: "This determines who approves buyer requests for this listing.",
       body: <Radio list={SELLER_RELATIONS} value={d.role} onPick={(v) => pick({ role: v as SellerDraft["role"] })} /> },
-    name: { t: "What is the name of your company?", h: "Use the registered company name.",
+    name: nameFromSignup
+      ? { t: "What is your company's name and registration number?", h: "Check that the name matches your company registration.", body: null as unknown as React.ReactNode }
+      : { t: "What is the name of your company?", h: "Use the registered company name.", body: null as unknown as React.ReactNode },
+    nameBody: { t: "",
       body: (
         <div className="space-y-4">
           <div><label className={fieldLbl}>Company name</label>
@@ -176,7 +211,7 @@ export function SellerWizard({
                 <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#374151]"
                   onClick={() => { setWebState("idle"); (document.querySelector("input[placeholder='https://www.yourcompany.com']") as HTMLInputElement | null)?.focus(); }}>Edit address</button>
                 <button type="button" className="rounded-[9px] bg-[#1e2a4a] px-3.5 py-2 text-[13px] font-semibold text-white"
-                  onClick={() => set({ web: normalizeUrl(d.web), step: step + 1 })}>Continue anyway</button>
+                  onClick={() => advance({ web: normalizeUrl(d.web) })}>Continue anyway</button>
               </div>
             </div>
           )}
@@ -252,27 +287,27 @@ export function SellerWizard({
             <div key={k} className="flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0">
               <span className="w-[170px] flex-none text-[#6b7280]">{k}</span>
               <b className={`flex-1 font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || "Not provided"}</b>
-              <button type="button" className="text-[13px] font-semibold text-[#1e2a4a] underline underline-offset-2" onClick={() => go(n)}>Edit</button>
+              <button type="button" className="text-[13px] font-semibold text-[#1e2a4a] underline underline-offset-2" onClick={() => { setFull(n); go(n); }}>Edit</button>
             </div>
           ))}
         </div>
       ) },
   };
-  const q = Q[cur.id]!;
+  const q = cur.id === "name" ? { ...Q.name!, body: Q.nameBody!.body } : Q[cur.id]!;
 
   return (
     <div className="-m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
-        <span className="text-[14px] font-semibold">Add my business</span>
+        <span className="text-[14px] font-semibold">{title}</span>
         <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : "All changes saved"}</span>
       </div>
       <div className="mx-auto max-w-[680px] px-5 pb-16 pt-10">
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
           <b className="font-semibold text-[#111827]">{SECTIONS[cur.sec]}</b>
-          <span>Step {step + 1} of {STEPS.length}</span>
+          <span>Step {pos + 1} of {shown.length}</span>
         </div>
         <div className="mb-8 h-1 overflow-hidden rounded-full bg-[#e5e7eb]">
-          <i className="block h-full bg-[#1e2a4a] transition-[width] duration-300" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} />
+          <i className="block h-full bg-[#1e2a4a] transition-[width] duration-300" style={{ width: `${((pos + 1) / shown.length) * 100}%` }} />
         </div>
         <div className="rounded-[14px] border border-[#e5e7eb] bg-white px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
@@ -282,14 +317,14 @@ export function SellerWizard({
             {q.body}
           </div>
           <div className="mt-8 flex items-center gap-2.5">
-            <button type="button" onClick={() => (step === 0 ? onCancel() : go(step - 1))}
-              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{step === 0 ? "Cancel" : "Back"}</button>
+            <button type="button" onClick={back}
+              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : "Back"}</button>
             {canSkip && (
               <button type="button" className="text-sm font-semibold text-[#6b7280]"
-                onClick={() => { if (cur.id === "web") set({ web: "", step: step + 1 }); else go(step + 1); }}>Skip</button>
+                onClick={() => { if (cur.id === "web") advance({ web: "" }); else advance(); }}>Skip</button>
             )}
             <div className="ml-auto flex items-center gap-2.5">
-              {step > 0 && (
+              {pos > 0 && (
                 <button type="button" onClick={() => setConfirmExit(true)}
                   className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">Save &amp; exit</button>
               )}
@@ -303,13 +338,13 @@ export function SellerWizard({
                     try { ok = (await checkWeb({ data: { url } })).ok; } catch { ok = false; }
                     if (!ok) { setWebState("unreachable"); return; }
                     setWebState("idle");
-                    set({ web: url, step: step + 1 });
+                    advance({ web: url });
                     return;
                   }
-                  go(step + 1);
+                  advance();
                 }}
                 className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
-                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : "Continue"}
+                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? "Back to review" : "Continue"}
 
               </button>
             </div>
@@ -321,12 +356,12 @@ export function SellerWizard({
               <h3 className="text-lg font-bold">Save and finish later?</h3>
               <p className="mt-1 text-[14px] text-[#6b7280]">Your answers are saved. You can continue setup from My Business.</p>
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
-                <i className="block h-full bg-[#1e2a4a]" style={{ width: `${Math.round((answeredCount(d) / 9) * 100)}%` }} />
+                <i className="block h-full bg-[#1e2a4a]" style={{ width: `${Math.round((sellerProgress(d, fromSignup).n / sellerProgress(d, fromSignup).N) * 100)}%` }} />
               </div>
-              <p className="mt-2 text-[13px] text-[#6b7280]">{answeredCount(d)} of 9 questions answered</p>
+              <p className="mt-2 text-[13px] text-[#6b7280]">{sellerProgress(d, fromSignup).n} of {sellerProgress(d, fromSignup).N} questions answered</p>
               <div className="mt-5 flex justify-end gap-2">
                 <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151]">Keep going</button>
-                <button type="button" onClick={() => { saveDraft(userId, d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">Save &amp; exit</button>
+                <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">Save &amp; exit</button>
               </div>
             </div>
           </div>

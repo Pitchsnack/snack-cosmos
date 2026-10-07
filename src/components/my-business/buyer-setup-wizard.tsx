@@ -18,7 +18,7 @@ import {
   type Band,
 } from "@/lib/investor-bands";
 import { isCorporateBuyer } from "@/lib/investor-browse";
-import { stepsFor, wizardProgress, type BuyerRelation, type QId } from "@/lib/buyer-wizard";
+import { stepsFor, buyerSkips, buyerHiddenFields, buyerProgress, type BuyerRelation, type QId } from "@/lib/buyer-wizard";
 
 type A = {
   role: BuyerRelation | null; type: string; country: string; city: string; name: string; year: string; reg: string; web: string;
@@ -115,12 +115,25 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [a, setA] = useState<A>(() => fromData(data));
   const [answered, setAnswered] = useState<string[]>(data.investor.wizard?.answered ?? []);
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
-  const steps = useMemo(() => stepsFor(a.role), [a.role]);
+  const fromSignup = data.investor.wizard?.from_signup;
+  const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name });
+  const skipSet = skipOf(a);
+  // A question opened from Review shows all its fields under its full title.
+  const [full, setFull] = useState<QId | null>(null);
+  const stepsAll = useMemo(() => stepsFor(a.role), [a.role]);
   const [cur, setCur] = useState<QId>(() => {
     if (startAt === "deal") return "rev";
-    if (startAt && steps.some((s) => s.id === startAt)) return startAt as QId;
-    return wizardProgress(data.buyer.relation, data.investor.wizard?.answered).first as QId;
+    if (startAt && stepsAll.some((s) => s.id === startAt)) return startAt as QId;
+    return buyerProgress(data.buyer.relation, data.investor.wizard?.answered, skipOf(fromData(data))).first as QId;
   });
+  const steps = stepsAll.filter((s) => !skipSet.has(s.id) || s.id === full || s.id === cur);
+  const hiddenF = full === "name" ? new Set<string>() : buyerHiddenFields(fromSignup, { role: a.role, type: a.type, web: a.web, year: a.year, name: a.name });
+  const nameShort = !!fromSignup?.includes("name") && full !== "name";
+  const nextAfter = (x: A, from: QId): QId => {
+    const all = stepsFor(x.role); const sk = skipOf(x);
+    const i = all.findIndex((s) => s.id === from);
+    return all.slice(i + 1).find((s) => !sk.has(s.id))?.id ?? "review";
+  };
   const [fromReview, setFromReview] = useState(false);
   const [fromProfile] = useState(startAt === "desc" && setupDone);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -209,10 +222,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const advance = (from: QId) => {
     markAnswered(from);
     if (fromProfile && from === "desc") { void flush().then(() => setPhase("complete")); return; }
-    if (fromReview) { setFromReview(false); goTo("review"); return; }
-    const list = stepsFor(from === "role" ? a.role : a.role);
-    const i = list.findIndex((s) => s.id === from);
-    let nxt = list[i + 1]?.id ?? "review";
+    if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
+    const nxt = nextAfter(a, from);
     // Private equity pre-ticks, the first time it reaches deals.
     if (nxt === "deals" && !peTicked && a.type.toLowerCase().includes("private equity")) {
       const patch: Partial<A> = {};
@@ -235,10 +246,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     if (advTimer.current) window.clearTimeout(advTimer.current);
     advTimer.current = window.setTimeout(() => {
       markAnswered(id);
-      if (fromReview) { setFromReview(false); goTo("review"); return; }
-      const list = stepsFor(id === "role" ? (patch.role ?? a.role) : a.role);
-      const i = list.findIndex((s) => s.id === id);
-      goTo(list[i + 1]?.id ?? "review");
+      if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
+      goTo(nextAfter({ ...a, ...patch }, id));
     }, 250);
   };
   const skip = () => {
@@ -262,7 +271,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     catch { window.location.href = "/marketplace/my-company"; }
   };
 
-  const requiredQs = steps.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
+  const requiredQs = stepsAll.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
   const allValid = requiredQs.every((s) => qValid(s.id)) && !errors.desc;
 
   // Enter = Continue (not on buttons/links/textarea).
@@ -318,7 +327,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           </div>
         </div>
       ) },
-    name: { req: true, t: "What is the name of your firm?", h: `Sellers see "${tName}" instead of your name until they approve your NDA.`,
+    name: { req: true, t: nameShort && !individual ? "What is your firm's name and registration number?" : "What is the name of your firm?",
+      h: nameShort && !individual ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : `Sellers see "${tName}" instead of your name until they approve your NDA.`,
       body: (
         <div className="space-y-4">
           <div>
@@ -329,7 +339,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {})} />
               </div>
-              {!individual && (
+              {!individual && !hiddenF.has("year") && (
                 <div className="sm:w-[150px]">
                   <label className={lbl} htmlFor="w-year">Year founded<Req /></label>
                   <input id="w-year" aria-required inputMode="numeric" maxLength={4} className={`${inp} ${show("year") ? errCls : ""}`} value={a.year} placeholder="e.g. 2014"
@@ -454,8 +464,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         </div>
       ) },
     review: { req: false, t: "Review your answers", h: "Check them, then we'll fill in the rest of your profile.",
-      body: <Review a={a} steps={steps} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
-        onEdit={(id) => { setFromReview(true); goTo(id); }} /> },
+      body: <Review a={a} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
+        onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[step.id];
   const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "desc" ? "Back to your profile" : fromReview ? "Back to review" : "Continue";

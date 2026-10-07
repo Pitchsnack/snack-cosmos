@@ -23,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AlertTriangle, CheckCircle2, Flag } from "lucide-react";
 import { bandText, descriptionLeaks, typeName } from "@/lib/investor-bands";
-import { wizardProgress, type BuyerRelation } from "@/lib/buyer-wizard";
+import { buyerProgressFor, type BuyerRelation } from "@/lib/buyer-wizard";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { BuyerPrivateCardBody, BuyerPrivatePanel, useBuyerInvestor } from "@/components/my-business/buyer-private-view";
 
@@ -165,7 +165,7 @@ export function BuyerMyCompany() {
   const hasFilter = !!(q || type !== "all" || status !== "all" || sector || hq);
   const openProfile = () => setPanelOpen(true);
   const iv = inv.data?.investor;
-  const prog = wizardProgress((inv.data?.buyer.relation ?? null) as BuyerRelation | null, iv?.wizard?.answered);
+  const prog = buyerProgressFor((inv.data?.buyer.relation ?? null) as BuyerRelation | null, iv);
   const openWizard = () => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: {} });
   const setup = iv && !iv.setup_done_at ? { label: prog.n === 0 ? "Start setup" : "Continue setup", onClick: openWizard } : null;
   const pill = <BuyerPill p={p} org={org} onItem={onItem} setup={setup} />;
@@ -423,7 +423,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const title = typeName(org.type);
   const navigate = useNavigate();
   const rel = (inv.data?.buyer.relation ?? null) as BuyerRelation | null;
-  const prog = wizardProgress(rel, iv?.wizard?.answered);
+  const prog = buyerProgressFor(rel, iv);
   const setupDone = !!iv?.setup_done_at;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");

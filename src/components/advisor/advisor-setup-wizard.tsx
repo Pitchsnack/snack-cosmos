@@ -13,6 +13,7 @@ import { enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "
 import {
   ADVISOR_SERVICES, DEAL_BANDS, FIRM_TYPE_OPTIONS, LANGUAGES, WIZARD_QS, cityError, dealBandLabels, descError, emailError, feeWords,
   fullAddress, nameError, newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type FeeDetail, type WizardQ,
+  advisorSkips, advisorHidden,
 } from "@/lib/advisor-firm";
 import { COUNTRIES, THAI_PROVINCES_77, yearError } from "@/lib/investor-bands";
 import { isValidUrl, normalizeUrl } from "@/lib/seller-wizard";
@@ -59,6 +60,9 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const [phase, setPhase] = useState<"q" | "enrich" | "complete">("q");
   const [fromReview, setFromReview] = useState(false);
   const [fromProfile, setFromProfile] = useState(false);
+  // A question opened from Review shows all its fields under its full title.
+  const [full, setFull] = useState<WizardQ | null>(null);
+  const fromSignup = (firm.wizard as { fromSignup?: string[] } | null)?.fromSignup;
   const [webOpened, setWebOpened] = useState<string | null>(null);
   const [logoErr, setLogoErr] = useState<string | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
@@ -101,17 +105,22 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const isAnswered = useCallback((id: string) => answered.includes(id) && (id === "deal" || id === "logo" || qValid(id as WizardQ)), [answered, a]); // eslint-disable-line react-hooks/exhaustive-deps
   const requiredOk = WIZARD_QS.filter((q) => q !== "deal" && q !== "logo").every((q) => qValid(q));
 
+  const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team });
+  const skipSet = skipOf(a);
   const [cur, setCur] = useState<WizardQ>(() => {
-    const f0 = fromFirm(firm);
-    void f0;
-    return (WIZARD_QS.find((q) => !firm.setupAnswered.includes(q)) ?? "review") as WizardQ;
+    const sk = skipOf(fromFirm(firm));
+    return (WIZARD_QS.find((q) => !sk.has(q) && !firm.setupAnswered.includes(q)) ?? "review") as WizardQ;
   });
+  const hiddenF = advisorHidden(fromSignup, { type: a.type, web: a.web, year: a.year, team: a.team });
+  const hid = (k: string, q: WizardQ) => full !== q && hiddenF.has(k);
+  const nameShort = !!fromSignup?.includes("name") && full !== "name";
+  const shown = STEPS.filter((q) => q === "review" || !skipSet.has(q) || q === full || q === cur);
   // After the first render, resume at the first question that's unanswered or no longer valid.
   const resumed = useRef(false);
   useEffect(() => {
     if (resumed.current) return;
     resumed.current = true;
-    const first = WIZARD_QS.find((q) => !isAnswered(q));
+    const first = WIZARD_QS.find((q) => !skipSet.has(q) && !isAnswered(q));
     setCur((first ?? "review") as WizardQ);
   }, [isAnswered]);
 
@@ -182,12 +191,12 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     }
     setCur(id);
   };
-  const next = (from: WizardQ): WizardQ => STEPS[STEPS.indexOf(from) + 1] ?? "review";
+  const next = (from: WizardQ): WizardQ => STEPS.slice(STEPS.indexOf(from) + 1).find((q) => q === "review" || !skipSet.has(q)) ?? "review";
   const advance = (from: WizardQ) => {
     markAnswered(from);
     if (from === "services") setFeeNote(null);
     if (fromProfile && from === "services") { setFromProfile(false); void flush().then(() => setPhase("complete")); return; }
-    if (fromReview) { setFromReview(false); goTo("review"); return; }
+    if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
     goTo(next(from));
   };
   const focusFirstBad = (id: WizardQ) => {
@@ -214,7 +223,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     if (cur === "deal") set({ deal: "" }, { deal_size_band: null });
     if (cur === "logo") set({ logo: { path: null, url: null, name: null, sizeKb: null, source: null } }, { logo_path: null, logo_source: null });
     markAnswered(cur);
-    if (fromReview) { setFromReview(false); goTo("review"); return; }
+    if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
     goTo(next(cur));
   };
   const pickType = (v: string) => {
@@ -222,8 +231,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     if (advTimer.current) window.clearTimeout(advTimer.current);
     advTimer.current = window.setTimeout(() => advance("type"), 250);
   };
-  const idx = STEPS.indexOf(cur);
-  const back = () => { if (idx > 0) goTo(STEPS[idx - 1]!); };
+  const idx = Math.max(0, shown.indexOf(cur));
+  const back = () => { if (idx > 0) goTo(shown[idx - 1]!); };
 
   const [exiting, setExiting] = useState(false);
   const leave = async (withSave: boolean) => {
@@ -360,21 +369,22 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    name: { req: true, t: "What is the name of your firm?", h: "Sellers and buyers see this name on your card. Use the name your clients know.",
+    name: { req: true, t: nameShort ? "What is your firm's name, registration number and business address?" : "What is the name of your firm?",
+      h: nameShort ? "Check that the name matches your firm's registration. Sellers and buyers see the address on your profile." : "Sellers and buyers see this name on your card. Use the name your clients know.",
       body: (
         <div>
-          <div className="grid gap-4 sm:grid-cols-[1fr_150px]">
+          <div className={cn("grid gap-4", !hid("year", "name") && "sm:grid-cols-[1fr_150px]")}>
             <div>
               <label className={lbl} htmlFor="w-name">Firm name<Req /></label>
               <input id="w-name" data-f="name" aria-required maxLength={80} placeholder="e.g. Acme Advisory" className={cn(inp, show("name") && errCls)} value={a.name} onBlur={blur("name")}
                 onChange={(e) => set({ name: e.target.value }, { name: e.target.value })} />
               <Err m={show("name")} />
             </div>
-            <div>
+            {!hid("year", "name") && <div>
               <label className={lbl} htmlFor="w-year">Year founded<Req /></label>
               <input id="w-year" data-f="year" aria-required inputMode="numeric" maxLength={4} placeholder="e.g. 2014" className={cn(inp, yearShown && errCls)} value={a.year} onBlur={blur("year")}
                 onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, { year_founded: /^\d{4}$/.test(v) && !yearError(v) ? Number(v) : null }); }} />
-            </div>
+            </div>}
           </div>
           <Err m={yearShown} />
           <div className="mt-4">
@@ -464,9 +474,11 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {hint && <p className="mt-2 text-[13px] text-[#6B7280]">{hint}</p>}
         </div>
       ) },
-    team: { req: true, t: "What is your company size?", h: "Sellers and buyers see your team size on your card, and the languages you work in.",
+    team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : "What is your company size?",
+      h: hid("team", "team") ? "Sellers and buyers see them on your card." : "Sellers and buyers see your team size on your card, and the languages you work in.",
       body: (
         <div>
+          {!hid("team", "team") && <>
           <label className={lbl} htmlFor="w-team">Team size<Req /></label>
           <div className="flex items-center gap-2.5">
             <input id="w-team" aria-required inputMode="numeric" maxLength={5} placeholder="e.g. 8" className={cn(inp, "w-[150px]", show("team") && errCls)} value={a.team} onBlur={blur("team")}
@@ -474,7 +486,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             <span className="text-[15px] text-[#434A5C] dark:text-muted-foreground">people</span>
           </div>
           <Err m={show("team")} />
-          <div className="mt-5">
+          </>}
+          <div className={hid("team", "team") ? "" : "mt-5"}>
             <div className={lbl}>Languages you work in<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">pick at least one</span></div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {LANGUAGES.map((l) => {
@@ -532,7 +545,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         </div>
       ) },
     review: { req: false, t: "Review your answers", h: "Check them, then we'll fill in the rest of your profile.",
-      body: <Review a={a} errors={errors} onEdit={(id) => { setFromReview(true); goTo(id); }} /> },
+      body: <Review a={a} errors={errors} onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[cur];
   const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "services" ? "Back to your profile" : fromReview ? "Back to review" : "Continue";
@@ -582,7 +595,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       {topBar}
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-          {header(SECTION[cur], `Step ${idx + 1} of 11`, ((idx + 1) / 11) * 100)}
+          {header(SECTION[cur], `Step ${idx + 1} of ${shown.length}`, ((idx + 1) / shown.length) * 100)}
           <div className={card} ref={cardRef}>
             <div key={cur} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>

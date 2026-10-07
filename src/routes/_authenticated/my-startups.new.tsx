@@ -4,7 +4,10 @@ import { ArrowLeft } from "lucide-react";
 import { StartupForm } from "@/components/startups/startup-form";
 import { SellerWizard } from "@/components/startups/seller-wizard";
 import { PermissionGuard } from "@/components/permission-guard";
-import { useSessionContext } from "@/hooks/use-session-context";
+import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { createMyBusiness } from "@/lib/seller-setup.functions";
 import {
   clearDraft, draftToPrefill, emptyDraft, loadDraft, firstOpenStep, type SellerDraft, type SellerPrefill,
 } from "@/lib/seller-wizard";
@@ -25,6 +28,18 @@ function NewMyStartupPage() {
   const userId = data?.user?.id as string | undefined;
   const [initial, setInitial] = useState<SellerDraft | null>(null);
   const [prefill, setPrefill] = useState<SellerPrefill | null>(null);
+  const { roles, has } = usePermissions();
+  // Seller accounts own their businesses directly (no workspace owner pickers).
+  const sellerAccount = roles.includes("STARTUP_USER") && !has("users.read");
+  const createMine = useServerFn(createMyBusiness);
+  const finish = async (d: SellerDraft) => {
+    if (!sellerAccount) { setPrefill(draftToPrefill(d)); return; }
+    try {
+      const { id } = await createMine({ data: { role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size, sector: d.sector, licences: d.licences, iso: d.iso } });
+      if (userId) clearDraft(userId);
+      navigate({ to: "/my-startups/$id/edit", params: { id } });
+    } catch (e) { toast.error((e as Error).message); }
+  };
 
   useEffect(() => {
     if (userId && !initial) { const saved = loadDraft(userId); setInitial(saved ? { ...saved, step: firstOpenStep(saved) } : emptyDraft()); }
@@ -51,7 +66,7 @@ function NewMyStartupPage() {
           initial={initial}
           onExit={() => navigate({ to: "/my-startups" })}
           onCancel={() => { if (window.history.length > 1) window.history.back(); else navigate({ to: "/my-startups" }); }}
-          onFinish={(d) => setPrefill(draftToPrefill(d))}
+          onFinish={finish}
         />
       ) : null}
     </PermissionGuard>

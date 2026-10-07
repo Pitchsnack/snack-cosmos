@@ -1,67 +1,83 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Flag, X } from "lucide-react";
 import { dismissWelcome, getSignupState } from "@/lib/signup.functions";
-import { answeredFlags, emptyDraft, firstOpenStep, loadDraft, saveDraft, type SellerDraft } from "@/lib/seller-wizard";
+import { ensureMySellerDraft, getSellerSetup } from "@/lib/seller-setup.functions";
+import { SELLER_STEPS, emptyDraft, sellerProgress, sellerShown, type SellerDraft } from "@/lib/seller-wizard";
+import { buyerSkips, shownSteps } from "@/lib/buyer-wizard";
+import { WIZARD_QS, advisorSkips } from "@/lib/advisor-firm";
 import { SELLER_OPTS, BUYER_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
 
+const ADVISOR_SEC: Record<string, string> = {
+  type: "About the firm", loc: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
+  deal: "Your work", team: "Your work", contact: "Contact", logo: "Your card", desc: "Your card",
+};
+const group = (secs: string[]): [string, number][] => {
+  const out: [string, number][] = [];
+  for (const s of secs) { const last = out[out.length - 1]; if (last && last[0] === s) last[1]++; else out.push([s, 1]); }
+  return out;
+};
+
 /**
- * My Company after sign-up: welcome line, the seller's setup banner, the
- * "look first" link and the two boxes (what sign-up saved / what setup asks).
- * Renders nothing for accounts that didn't come through sign-up.
+ * My Company after sign-up: welcome line, the seller's setup banner and the
+ * two boxes (what sign-up saved / what setup asks). Counts come from the
+ * wizards' own skip rules. Renders nothing for accounts that didn't sign up.
  */
-export function SignupWelcome({ role, userId, setupDone }: { role: "seller" | "buyer" | "advisor"; userId?: string; setupDone?: boolean }) {
+export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | "advisor"; userId?: string; setupDone?: boolean }) {
   const fetchState = useServerFn(getSignupState);
   const dismiss = useServerFn(dismissWelcome);
+  const ensureDraft = useServerFn(ensureMySellerDraft);
+  const fetchSetup = useServerFn(getSellerSetup);
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["signup-state"], queryFn: () => fetchState(), staleTime: 60_000 });
-  const [draft, setDraft] = useState<SellerDraft | null>(null);
   const a = data?.answers;
   const mine = a && a.done_at && a.role === role ? a : null;
+  const sellerId = role === "seller" ? mine?.profile_id ?? null : null;
 
-  // Seller: the business Draft lives with the seller wizard; seed it once from sign-up.
+  // Sellers who signed up before Drafts were made at sign-up get theirs now.
+  const asked = useRef(false);
   useEffect(() => {
-    if (!mine || role !== "seller" || !userId || !mine.company) return;
-    const seedKey = `ps.sellerDraft.seeded.${userId}`;
-    let d = loadDraft(userId);
-    if (!d && !localStorage.getItem(seedKey)) {
-      const c = mine.company;
-      d = { ...emptyDraft(), role: mine.first_answer as SellerDraft["role"], name: c.name, web: c.website ?? "", year: c.year ?? "",
-        size: c.size === "500+" ? "More than 500" : c.size };
-      d.step = firstOpenStep(d);
-      saveDraft(userId, d);
-      localStorage.setItem(seedKey, "1");
-    }
-    setDraft(d);
-    const on = () => setDraft(loadDraft(userId));
-    window.addEventListener("ps-seller-draft", on);
-    return () => window.removeEventListener("ps-seller-draft", on);
-  }, [mine, role, userId]);
+    if (!mine || role !== "seller" || mine.profile_id || asked.current) return;
+    asked.current = true;
+    ensureDraft().then((r) => { if (r.id) { void qc.invalidateQueries({ queryKey: ["signup-state"] }); void qc.invalidateQueries(); } }).catch(() => {});
+  }, [mine, role, ensureDraft, qc]);
+  const { data: setup } = useQuery({
+    queryKey: ["seller-setup", sellerId], enabled: !!sellerId, queryFn: () => fetchSetup({ data: { id: sellerId! } }), retry: false,
+  });
 
   if (!mine) return null;
   const c = mine.company;
-  const showBoxes = role === "seller" ? !!draft : !setupDone;
+  const draft: SellerDraft | null = setup ? { ...emptyDraft(), role: setup.role, name: setup.name, reg: setup.reg, web: setup.web, year: setup.year, city: setup.city,
+    rev: setup.rev, size: setup.size, sector: setup.sector, licences: setup.licences as SellerDraft["licences"], iso: setup.iso } : null;
+  const sellerOpen = role === "seller" && !!setup && !setup.setupDoneAt;
+  const showBoxes = role === "seller" ? sellerOpen : !setupDone;
   const opts = role === "seller" ? SELLER_OPTS : role === "buyer" ? BUYER_OPTS : ADVISOR_OPTS;
   const ansLabel = opts.find((o) => o.v === mine.first_answer)?.t.en ?? mine.first_answer;
   const individual = role === "buyer" && mine.first_answer === "Individual Investor";
   const hasWeb = !!c?.website;
   const sizeLabel = c?.size ? (role === "advisor" ? `${c.size} people` : c.size === "500+" ? "More than 500" : c.size.replace("-", "–")) : null;
 
-  // What the wizard still asks (from the wizards' own question lists, minus sign-up answers).
-  const sections: [string, number][] =
-    role === "seller" ? [["About the company", hasWeb ? 2 : 3], ["Financial & business profile", 2], ["Licences and standards", 1]]
-    : role === "advisor" ? [["About the firm", hasWeb ? 2 : 3], ["Services and fees", 1], ["Your work", 2], ["Contact", 1], ["Your card", 2]]
-    : individual ? [["About the firm", hasWeb ? 1 : 2], ["Fund & ticket", 1], ["Buying requirement", 3], ["Public profile", 1]]
-    : [["About you", 1], ["About the firm", hasWeb ? 2 : 3], ["Fund & ticket", 2], ["Buying requirement", 3], ["Public profile", 1]];
+  // What the wizard still asks, from the wizards' own skip rules.
+  let sections: [string, number][];
+  if (role === "seller") {
+    const d = draft ?? { ...emptyDraft(), role: mine.first_answer as SellerDraft["role"], name: c?.name ?? "", web: c?.website ?? "", year: c?.year ?? "", size: c?.size ?? null };
+    sections = group(sellerShown(d, setup?.fromSignup ?? ["role", "name", "web", "year", "size"]).map((i) => SELLER_STEPS[i]!.sec));
+  } else if (role === "buyer") {
+    const fs = individual ? ["role", "name", "web"] : ["type", "name", "web", "year", "size"];
+    const rel = individual ? "individual" as const : null;
+    const sk = buyerSkips(fs, { role: rel, type: mine.first_answer, web: c?.website ?? "", year: c?.year ?? "", name: c?.name ?? "" });
+    sections = group(shownSteps(rel, sk).filter((s) => s.id !== "review").map((s) => s.sec));
+  } else {
+    const sk = advisorSkips(["type", "web"], { type: mine.first_answer, web: c?.website ?? "", year: "", team: "" });
+    sections = group(WIZARD_QS.filter((q) => !sk.has(q)).map((q) => ADVISOR_SEC[q]!));
+  }
   const N = sections.reduce((s, x) => s + x[1], 0);
   const mins = role === "advisor" ? 4 : 3;
-  const look = role === "seller" ? { to: "/marketplace/browse", label: "Look at investors first" }
-    : role === "buyer" ? { to: "/marketplace/browse", label: "Look at listings first" } : { to: "/marketplace/browse", label: "Look at the marketplace first" };
-  const sellerQs = hasWeb ? [1, 4, 5, 7, 8] : [1, 2, 4, 5, 7, 8];
-  const sellerN = sellerQs.length;
-  const sellerDone = draft ? sellerQs.filter((i) => answeredFlags(draft)[i]).length : 0;
+  const prog = draft && setup ? sellerProgress(draft, setup.fromSignup) : { n: 0, N };
+  const sellerN = prog.N;
+  const sellerDone = prog.n;
 
   return (
     <div className="mb-4 space-y-4">
@@ -76,7 +92,7 @@ export function SignupWelcome({ role, userId, setupDone }: { role: "seller" | "b
         </div>
       )}
 
-      {role === "seller" && draft && (
+      {sellerOpen && setup && (
         <div className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A]">
           <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
           <div className="min-w-[240px] flex-1">
@@ -90,15 +106,11 @@ export function SignupWelcome({ role, userId, setupDone }: { role: "seller" | "b
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
-            <Link to="/my-startups/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90">
+            <Link to="/my-startups/setup/$id" params={{ id: setup.id }} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90">
               {sellerDone ? "Continue setup" : "Start setup"} <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link to={look.to as never} className="text-[12.5px] font-semibold text-primary hover:underline">{look.label}</Link>
           </div>
         </div>
-      )}
-      {role !== "seller" && showBoxes && (
-        <div className="text-right"><Link to={look.to as never} className="text-[12.5px] font-semibold text-primary hover:underline">{look.label}</Link></div>
       )}
 
       {showBoxes && c && (
