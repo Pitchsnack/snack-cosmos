@@ -14,6 +14,7 @@ import logoWhite from "@/assets/pitchsnack-white.png";
 import streetSvg from "@/components/login/street.svg?raw";
 import { L } from "@/components/login/login-copy";
 import { ADVISOR_OPTS, BUYER_OPTS, S, SELLER_OPTS, type Role } from "@/components/login/signup-copy";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import "@/styles/login-page.css";
 import "@/styles/signup-page.css";
 
@@ -501,11 +502,14 @@ function SignupPage() {
                                   onChange={(e) => { setSize(e.target.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 5)); setErr5((x) => ({ ...x, size: false })); }} />
                                 <span className="su-unit">{t(S.people)}</span></div>
                             ) : (
-                              <div className={`lg-field su-f su-sel ${err5.size ? "bad" : ""} ${size ? "" : "ph"}`}><Users size={18} />
-                                <select id="su-size" value={size} onChange={(e) => { setSize(e.target.value); setErr5((x) => ({ ...x, size: false })); }}>
-                                  <option value="" disabled>{t(S.sizePick)}</option>
-                                  {SIZES.map((s) => <option key={s} value={s}>{s === "500+" ? t(S.sizeMore) : s.replace("-", "–")}</option>)}
-                                </select><ChevronDown size={16} /></div>
+                              <Select value={size || undefined} onValueChange={(v) => { setSize(v); setErr5((x) => ({ ...x, size: false })); }}>
+                                <SelectTrigger id="su-size" className={`lg-field su-f su-sel ${err5.size ? "bad" : ""} ${size ? "" : "ph"}`}>
+                                  <Users size={18} /><span className="su-sel-v"><SelectValue placeholder={t(S.sizePick)} /></span>
+                                </SelectTrigger>
+                                <SelectContent position="popper" sideOffset={4} className="su-sel-list">
+                                  {SIZES.map((s) => <SelectItem key={s} value={s}>{s === "500+" ? t(S.sizeMore) : s.replace("-", "–")}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
                             )}
                           </div>
                         </div>
