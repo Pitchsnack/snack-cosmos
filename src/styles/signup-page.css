@@ -129,3 +129,6 @@
 }
 @media (prefers-reduced-motion: reduce) { .su-step, .su-fade { animation: none; } }
 .su-card h1:focus-visible { outline: none; }
+.su-form > *, .su-row2 > *, .su-row23 > * { min-width: 0; }
+.su-form { grid-template-columns: minmax(0, 1fr); }
+.su-actions > * { min-width: 0; }
