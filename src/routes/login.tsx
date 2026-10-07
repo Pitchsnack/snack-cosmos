@@ -136,6 +136,14 @@ function LoginPage() {
     setPwErr(null);
     setBusy(true);
     try {
+      if (provider === "google") {
+        const { lovable } = await import("@/integrations/lovable/index");
+        const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+        if (r.error) { setPwErr("other"); setBusy(false); return; }
+        if (r.redirected) return;
+        navigate({ to: search.redirect || "/tenants" });
+        return;
+      }
       const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } });
       if (error) { setPwErr("other"); setBusy(false); }
     } catch { setPwErr("other"); setBusy(false); }

@@ -193,6 +193,14 @@ function SignupPage() {
     if (busy || !role || !answer) { setPickErr(true); return; }
     setBusy(true);
     writePending({ role, answer, terms: true, news, provider: p });
+    if (p === "google") {
+      const { lovable } = await import("@/integrations/lovable/index");
+      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/signup` });
+      if (r.error) { setBusy(false); setFail(true); return; }
+      if (r.redirected) return;
+      window.location.reload();
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({ provider: p, options: { redirectTo: `${window.location.origin}/signup` } });
     if (error) { setBusy(false); setFail(true); }
   }
