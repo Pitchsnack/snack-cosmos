@@ -135,3 +135,8 @@
 .su-form > *, .su-row2 > *, .su-row23 > * { min-width: 0; }
 .su-form { grid-template-columns: minmax(0, 1fr); }
 .su-actions > * { min-width: 0; }
+
+/* Buyer type step: tick boxes for a representative (one or more types). */
+.su-tick { flex: none; width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--field-edge); display: grid; place-items: center; color: var(--paper); }
+.su-choice.on .su-tick { background: var(--pick); border-color: var(--pick); }
+.su-step h1 { text-wrap: balance; }

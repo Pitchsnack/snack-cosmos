@@ -12,9 +12,10 @@ export const S = {
     buyer: [c("ผู้ขายทุกรายตรวจสอบกับทะเบียน DBD", "Every seller checked against the DBD register"), c("เห็นงบการเงินที่ยื่นจริงก่อนการแนะนำ", "Filed accounts before an introduction"), c("ผู้ซื้อจ่ายเพียงค่าสมาชิก ไม่มีค่าธรรมเนียมเมื่อปิดดีล", "Buyers pay a subscription only, never a completion fee")],
     advisor: [c("ตรา Verified advisor ที่ลูกค้าไว้วางใจ", "A Verified advisor badge clients trust"), c("แสดงค่าบริการในแบบของท่าน", "Show your fees your way"), c("ข้อมูลลูกค้าของท่านเป็นความลับ", "Your clients stay confidential")],
   },
-  progress: c("ขั้นตอน {n} จาก 5", "Step {n} of 5"),
+  progress: c("ขั้นตอน {n} จาก {N}", "Step {n} of {N}"),
   stepRole: c("บทบาท", "Role"),
-  step2: { seller: c("เกี่ยวกับท่าน", "About you"), buyer: c("ประเภทนักลงทุน", "Investor type"), advisor: c("ประเภทบริษัท", "Firm type") },
+  step2: { seller: c("เกี่ยวกับท่าน", "About you"), buyer: c("เกี่ยวกับท่าน", "About you"), advisor: c("ประเภทบริษัท", "Firm type") },
+  stepType: c("ประเภทนักลงทุน", "Investor type"),
   stepAcc: c("บัญชี", "Account"),
   stepCode: c("ยืนยันอีเมล", "Confirm email"),
   stepCo: c("บริษัท", "Company"),
@@ -23,6 +24,7 @@ export const S = {
   next: c("ต่อไป", "Continue"),
   back: c("ย้อนกลับ", "Back"),
   pickOne: c("กรุณาเลือกหนึ่งข้อเพื่อไปต่อ", "Choose one to continue"),
+  pickMany: c("กรุณาเลือกอย่างน้อยหนึ่งข้อเพื่อไปต่อ", "Choose at least one to continue"),
   // step 1
   s1Title: c("สร้างบัญชี PitchSnack", "Create your PitchSnack account"),
   s1Line: c("บอกเราก่อนว่าท่านมาที่ PitchSnack เพื่ออะไร", "Which best describes you?"),
@@ -34,10 +36,16 @@ export const S = {
   },
   // step 2
   s2: {
-    seller: [c("ข้อใดตรงกับท่านมากที่สุด", "Which best describes you?"), c("เราใช้ข้อนี้เพื่อรู้ว่าใครเป็นผู้อนุมัติคำขอ NDA จากผู้ซื้อ", "We use it to know who approves buyers’ NDA requests.")],
-    buyer: [c("บริษัทของท่านเป็นนักลงทุนประเภทใด", "What type of investor is your firm?"), c("ผู้ขายจะเห็นข้อนี้ และใช้กำหนดภาพบนการ์ดของท่าน", "Sellers see this, and it sets the artwork on your card.")],
+    seller: [c("ท่านกำลังขายกิจการของใคร", "Whose business are you selling?"), c("เราใช้ข้อนี้เพื่อรู้ว่าใครเป็นผู้อนุมัติคำขอ NDA จากผู้ซื้อ", "We use it to know who approves buyers’ NDA requests.")],
+    buyer: [c("ข้อใดตรงกับท่านมากที่สุด", "Which best describes you?"), c("เราใช้ข้อนี้เพื่อยืนยันตัวตนของท่าน และเพื่อรู้ว่าใครดำเนินการแทนผู้ซื้อได้", "We use it to verify you and to know who can act for the buyer.")],
     advisor: [c("ข้อใดตรงกับประเภทธุรกิจของท่านมากที่สุด", "Which type of firm best describes your business?"), c("ผู้ขายและผู้ซื้อจะเห็นข้อนี้บนการ์ดของท่าน ใต้ชื่อบริษัท", "Sellers and buyers see it on your card, under your firm’s name.")],
   },
+  // buyer type step (word joiner keeps นักลงทุน whole)
+  s3Corp: [c("บริษัทของท่านเป็นนัก\u2060ลงทุนประเภทใด", "What type of investor is your firm?"), c("ผู้ขายจะเห็นข้อนี้ และใช้กำหนดภาพบนการ์ดของท่าน", "Sellers see this, and it sets the artwork on your card.")],
+  s3Agent: [c("ท่านดำเนินการแทนนัก\u2060ลงทุนประเภทใดบ้าง", "Which types of investor do you act for?"), c("เลือกได้หลายข้อ ผู้ขายจะเห็นบนการ์ดของท่าน", "Pick all that apply. Sellers see them on your card.")],
+  chipRel: { individual: c("นักลงทุนบุคคล", "Individual Investor"), agent: c("ตัวแทนที่ได้รับมอบอำนาจ", "Authorised representative") },
+  nameHintAgent: c("กรอกชื่อบริษัทของท่านเอง ไม่ใช่ชื่อลูกค้า", "Enter your own firm’s name, not a client’s."),
+  privacyAgent: c("ผู้ขายจะเห็นชื่อและเว็บไซต์ของท่านหลังอนุมัติ NDA ของท่านแล้วเท่านั้น ก่อนหน้านั้นจะเห็นเพียงประเภทนักลงทุนที่ท่านดำเนินการแทน", "Sellers see your name and website only once they approve your NDA. Until then, they see the investor types you act for."),
   // step 3
   s3Title: c("ข้อมูลบัญชีของท่าน", "Your account details"),
   s3Line: c("ใช้อีเมลที่ทำงาน เราจะส่งรหัสยืนยันไปที่อีเมลนี้", "Use your work email. We’ll send a confirmation code to it."),
@@ -107,6 +115,13 @@ export const BUYER_OPTS = [
   { v: "Incubator/Accelerator", icon: "sprout", k: "inc", t: c("Incubator / Accelerator", "Incubator / Accelerator"), l: c("โครงการที่ลงทุนในผู้ก่อตั้งระยะเริ่มต้น", "A programme that invests in early-stage founders") },
   { v: "Individual Investor", icon: "user", k: "ind", t: c("Individual investor", "Individual investor"), l: c("ลงทุนด้วยเงินของตนเอง", "Invests their own money") },
 ];
+/** Buyer step 2: the buyer wizard's question 1 (sets buyer_relation). */
+export const BUYER_REL_OPTS = [
+  { v: "individual", icon: "user", k: "ind", t: c("นักลงทุนบุคคล", "Individual Investor"), l: c("ฉันเป็นนักลงทุนที่มีประสบการณ์ และลงทุนด้วยเงินของตัวเอง", "I am a sophisticated investor. I invest my own money.") },
+  { v: "corporate", icon: "building-2", k: "corp", t: c("บริษัท / นิติบุคคล", "Corporate Enterprise"), l: c("บริษัทของฉันลงทุนหรือซื้อกิจการ", "My company invests in or buys businesses.") },
+  { v: "agent", icon: "file-pen-line", k: "pe", t: c("ตัวแทนที่ได้รับมอบอำนาจ / ที่\u2060ปรึกษา", "Authorised representative / adviser"), l: c("ฉันดำเนินการแทนผู้ซื้อ", "I am acting on behalf of the buyer.") },
+];
+export const BUYER_RELATIONS = ["individual", "corporate", "agent"] as const;
 export const ADVISOR_OPTS = [
   { v: "Advisory firm", icon: "handshake", t: c("บริษัทที่ปรึกษา", "Advisory firm"), l: c("ที่ปรึกษาด้าน M&A การเงินองค์กร และการทำดีล", "M&A, corporate finance and deal advice") },
   { v: "Law firm", icon: "scale", t: c("สำนักงานกฎหมาย", "Law firm"), l: c("กฎหมายธุรกิจ M&A และกฎหมายพาณิชย์", "Corporate, M&A and commercial law") },
