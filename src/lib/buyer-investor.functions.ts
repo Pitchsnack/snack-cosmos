@@ -30,7 +30,7 @@ const num = (s: string | null | undefined) => {
   return Number.isFinite(n) ? n : null;
 };
 
-async function ensureLinked(userId: string) {
+export async function ensureLinked(userId: string) {
   const sb = await admin();
   let { data: p } = await sb.from("buyer_profiles").select("*").eq("user_id", userId).maybeSingle();
   if (!p) {
