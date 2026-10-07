@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Snackportal2"
+const SITE_NAME = "PitchSnack"
 const SENDER_DOMAIN = "notify.pitchsnack.com"
 const ROOT_DOMAIN = "pitchsnack.com"
 const FROM_DOMAIN = "notify.pitchsnack.com"
