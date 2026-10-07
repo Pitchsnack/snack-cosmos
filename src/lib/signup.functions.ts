@@ -91,13 +91,14 @@ export const finishSignup = createServerFn({ method: "POST" })
     const web = data.website ? data.website.replace(/^https?:\/\//i, "").replace(/\/+$/, "") : null;
     let profileId: string | null = null;
 
+    // `fromSignup` lists the fields sign-up answered; the setup wizards hide them while they still hold a value.
     if (a.role === "advisor") {
       const team = data.size && /^\d{1,5}$/.test(data.size) ? Number(data.size) : null;
-      const answered = ["type", "name", ...(web ? ["web"] : [])];
+      const fromSignup = ["type", "name", ...(web ? ["web"] : []), ...(y ? ["year"] : []), ...(team ? ["team"] : [])];
       await sb.from("users").update({ advisor_view: true }).eq("id", uid);
       const { data: f, error } = await sb.from("advisor_firms").insert({
         owner_user_id: uid, status: "draft", name: data.name, firm_type: a.first_answer, country: "Thailand",
-        website: web, year_founded: y, team_size: team, setup_answered: answered,
+        website: web, year_founded: y, team_size: team, setup_answered: [], wizard_state: { fromSignup },
       }).select("id").single();
       if (error) throw new Error(error.message);
       profileId = f.id;
@@ -105,19 +106,22 @@ export const finishSignup = createServerFn({ method: "POST" })
       const { ensureLinked } = await import("@/lib/buyer-investor.functions");
       const { investorId } = await ensureLinked(uid);
       const individual = a.first_answer === "Individual Investor";
-      const answered = [...(individual ? ["role"] : []), "type", "name", ...(web ? ["web"] : [])];
+      const fromSignup = individual ? ["role", "name", ...(web ? ["web"] : [])]
+        : ["type", "name", ...(web ? ["web"] : []), ...(y ? ["year"] : []), ...(data.size ? ["size"] : [])];
       const { error } = await sb.from("investors").update({
         investor_name: data.name, investor_type: a.first_answer, website_url: web,
         year_founded: individual ? null : y,
         company_size_band: individual ? null : (data.size ? SIZE_TO_BUYER[data.size] ?? null : null),
-        wizard: { answered, from_signup: answered },
+        wizard: { answered: [], from_signup: fromSignup },
         updated_by: uid, updated_at: new Date().toISOString(),
       }).eq("id", investorId);
       if (error) throw new Error(error.message);
       if (individual) await sb.from("buyer_profiles").update({ buyer_relation: "individual" }).eq("user_id", uid);
       profileId = investorId;
+    } else if (a.role === "seller") {
+      const { ensureSellerDraftFromSignup } = await import("@/lib/seller-setup.server");
+      profileId = await ensureSellerDraftFromSignup(sb, uid, { ...a, profile_id: null, company: { name: data.name, year: data.year, size: data.size, website: web } });
     }
-    // Seller: the business Draft lives with the seller wizard; it is seeded from `company` on My Company.
 
     const { error } = await sb.from("signup_answers").update({
       company: { name: data.name, year: data.year, size: data.size, website: web },
