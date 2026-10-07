@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listUsers, inviteUser, updateUserStatus, setAdvisorView } from "@/lib/users.functions";
+import { listUsers, inviteUser, updateUserStatus, setAdvisorView, permanentlyDeleteUser } from "@/lib/users.functions";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { ROLE_LABELS, type AppRole } from "@/lib/permissions";
@@ -108,7 +108,23 @@ function StatusSelect({
     }
   }
 
+  const purge = useServerFn(permanentlyDeleteUser);
+  async function hardDelete() {
+    if (!window.confirm("Permanently delete this account? This cannot be undone. The email can then be used to sign up again as a brand-new account.")) return;
+    setBusy(true);
+    try {
+      await purge({ data: { targetUserId: userId } });
+      toast.success("Account permanently deleted");
+      onChanged();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not delete account");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
+    <div className="flex items-center gap-2">
     <Select value={status} onValueChange={change} disabled={busy}>
       <SelectTrigger className="h-8 w-[140px] text-xs">
         <SelectValue />
@@ -121,6 +137,12 @@ function StatusSelect({
         ))}
       </SelectContent>
     </Select>
+    {status === "Deleted" && (
+      <Button size="sm" variant="destructive" className="h-8 text-xs" disabled={busy} onClick={hardDelete}>
+        Permanently delete
+      </Button>
+    )}
+    </div>
   );
 }
 
