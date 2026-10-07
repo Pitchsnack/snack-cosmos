@@ -1,0 +1,1 @@
+ALTER TABLE public.advisor_firms ADD COLUMN IF NOT EXISTS sector_agnostic boolean NOT NULL DEFAULT false;

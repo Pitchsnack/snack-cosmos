@@ -265,6 +265,7 @@ export type Database = {
           phone: string | null
           ref_no: string
           registration_no: string | null
+          sector_agnostic: boolean
           sectors: string[]
           services: string[]
           setup_answered: string[]
@@ -305,6 +306,7 @@ export type Database = {
           phone?: string | null
           ref_no?: string
           registration_no?: string | null
+          sector_agnostic?: boolean
           sectors?: string[]
           services?: string[]
           setup_answered?: string[]
@@ -345,6 +347,7 @@ export type Database = {
           phone?: string | null
           ref_no?: string
           registration_no?: string | null
+          sector_agnostic?: boolean
           sectors?: string[]
           services?: string[]
           setup_answered?: string[]
