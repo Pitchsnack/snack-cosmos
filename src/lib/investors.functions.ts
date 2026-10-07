@@ -61,6 +61,7 @@ export interface InvestorRow {
   linkedin_url: string | null;
   country: string | null;
   investor_type: string | null;
+  acts_for_types?: string[] | null;
   aum: string | null;
   ticket_size: string | null;
   short_description: string | null;
@@ -125,7 +126,7 @@ export const listInvestors = createServerFn({ method: "GET" })
     let q = supabase
       .from("investors")
       .select(`
-        id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
+        id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type, acts_for_types,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url,
         preferred_stages, preferred_industries, keywords, min_ticket_size, max_ticket_size,
