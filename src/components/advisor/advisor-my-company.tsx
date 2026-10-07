@@ -22,7 +22,7 @@ import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/components/advisor/advisor-firm-card";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import {
-  ADVISOR_SERVICES, SERVICE_COLS, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, setupProgress,
+  ADVISOR_SERVICES, SERVICE_COLS, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, setupProgress, advisorSkipsFor,
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
@@ -489,14 +489,14 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
 }
 
 function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
-  const { n } = setupProgress(f.setupAnswered);
+  const { n, N } = setupProgress(f.setupAnswered, advisorSkipsFor(f));
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#B9E6DF] bg-[#EFFAF8] px-[18px] py-4 dark:border-[#1F5A52] dark:bg-[#10302C]">
       <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-[11px] bg-white text-[#0F766E] min-[860px]:grid dark:bg-background dark:text-[#5EEAD4]"><Flag className="h-5 w-5" /></span>
       <div className="min-w-0 flex-1">
         <div className="text-[14.5px] font-bold text-[#151A28] dark:text-foreground">{n === 0 ? "Set up your firm profile" : "Finish setting up your firm profile"}</div>
         <p className="mt-0.5 text-[13px] text-[#434A5C] dark:text-muted-foreground">
-          {n >= 10 ? "All 10 questions are answered. Check your profile and save it, then publish it to Browse advisors." : "Sellers and buyers can't find this firm yet. Answer 10 short questions. It takes about 4 minutes and saves as you go."}
+          {n >= N ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse advisors.` : `Sellers and buyers can't find this firm yet. Answer ${N} short questions. It takes about 4 minutes and saves as you go.`}
         </p>
         <div className="mt-2 flex items-center gap-2.5">
           <div className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#B9E6DF] bg-white dark:border-[#1F5A52] dark:bg-background"><div className="h-full bg-[#0F766E] dark:bg-[#5EEAD4]" style={{ width: `${n * 10}%` }} /></div>
