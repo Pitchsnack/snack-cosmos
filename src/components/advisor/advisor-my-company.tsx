@@ -499,8 +499,8 @@ function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
           {n >= N ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse advisors.` : `Sellers and buyers can't find this firm yet. Answer ${N} short questions. It takes about 4 minutes and saves as you go.`}
         </p>
         <div className="mt-2 flex items-center gap-2.5">
-          <div className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#B9E6DF] bg-white dark:border-[#1F5A52] dark:bg-background"><div className="h-full bg-[#0F766E] dark:bg-[#5EEAD4]" style={{ width: `${n * 10}%` }} /></div>
-          <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{n} of 10 answered</span>
+          <div className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#B9E6DF] bg-white dark:border-[#1F5A52] dark:bg-background"><div className="h-full bg-[#0F766E] dark:bg-[#5EEAD4]" style={{ width: `${(n / Math.max(1, N)) * 100}%` }} /></div>
+          <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{n} of {N} answered</span>
         </div>
       </div>
       <Button onClick={onOpen} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90 max-[860px]:w-full">{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
