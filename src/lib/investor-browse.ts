@@ -25,6 +25,8 @@ export type PublicInvestor = {
   ticketBand: string | null;
   revBand: string | null;
   relation: "individual" | "corporate" | "agent" | null;
+  /** A representative's investor types (public, like the type). Empty for everyone else. */
+  actsFor?: string[];
   aumLabel: string | null;
   ticketLabel: string | null;
   revLabel: string | null;

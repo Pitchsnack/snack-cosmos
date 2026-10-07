@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type PublicInvestor } from "@/lib/investor-browse";
-import { bandOf, bandText, typeName } from "@/lib/investor-bands";
+import { bandOf, bandText, sortActsFor, typeName } from "@/lib/investor-bands";
 
 /**
  * Seller › Browse investors. Returns the PUBLIC investor record only:
@@ -35,7 +35,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
   if (!ids.length) return [];
 
   const { data: rows } = await sb.from("investors")
-    .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, investment_focus, created_at")
+    .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, investment_focus, acts_for_types, created_at")
     .in("id", ids).order("created_at", { ascending: false });
 
   return (rows ?? []).map((r: any) => {
@@ -44,7 +44,8 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
     const h = hash(r.id);
     const type = r.investor_type ?? bv?.buyer_type ?? null;
     // No code names: before an NDA sellers see the investor type.
-    const codeName = typeName(type);
+    const actsFor = bp?.buyer_relation === "agent" ? sortActsFor(r.acts_for_types) : [];
+    const codeName = typeName(type, actsFor);
     let description: string | null = bp ? bp.description ?? null : null;
     if (description && r.investor_name) {
       const esc = String(r.investor_name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -73,6 +74,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       ticketBand: tkt?.key ?? null,
       revBand: rev?.key ?? null,
       relation: (bp?.buyer_relation ?? null) as PublicInvestor["relation"],
+      actsFor,
       aumLabel: bandText(r.aum_band),
       ticketLabel: bandText(r.ticket_band),
       revLabel: bandText(r.revenue_min_band),
