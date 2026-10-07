@@ -326,11 +326,19 @@ function Card({ title, note, children }: { title: string; note: string; children
 
 function Log({ rows }: { rows: AdminData["log"] }) {
   const [q, setQ] = useState("");
-  const list = useMemo(() => rows.filter((r) => !q || `${r.email} ${r.subject} ${r.alert_key}`.toLowerCase().includes(q.toLowerCase())), [rows, q]);
+  const [ver, setVer] = useState<"all" | AlertRole>("all");
+  const list = useMemo(() => rows.filter((r) => (ver === "all" || r.role === ver) && (!q || `${r.email} ${r.subject} ${r.alert_key}`.toLowerCase().includes(q.toLowerCase()))), [rows, q, ver]);
   const pill: Record<string, string> = { sent: "bg-[#DCFCE7] text-[#166534]", test: "bg-muted text-foreground", skipped: "bg-muted text-muted-foreground", suppressed: "bg-[#FEF3DE] text-[#8A4B06]", failed: "bg-destructive/10 text-destructive" };
   return (
     <div className="space-y-3">
-      <Input placeholder="Search email, subject or alert" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+      <div className="flex flex-wrap items-center gap-3">
+        <Input placeholder="Search email, subject or alert" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">Version
+          <select value={ver} onChange={(e) => setVer(e.target.value as typeof ver)} className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground">
+            <option value="all">All</option><option value="seller">Seller</option><option value="buyer">Buyer</option><option value="advisor">Advisor</option>
+          </select>
+        </label>
+      </div>
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="text-left text-xs text-muted-foreground"><tr className="border-b border-border">
@@ -342,7 +350,7 @@ function Log({ rows }: { rows: AdminData["log"] }) {
               <tr key={r.id} className="border-b border-border last:border-0">
                 <td className="whitespace-nowrap p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
                 <td className="p-3">{EMAIL_ALERTS.find((a) => a.key === r.alert_key)?.name ?? r.alert_key} · <span className="capitalize text-muted-foreground">{r.role}</span></td>
-                <td className="p-3">{r.email ?? "—"}</td>
+                <td className="p-3"><span className={cn("mr-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider", roleChip(r.role))}>{r.role}</span>{r.email ?? "—"}</td>
                 <td className="max-w-[320px] truncate p-3" title={r.subject ?? ""}>{r.subject}</td>
                 <td className="p-3"><span className={cn("rounded-full px-2 py-0.5 text-xs font-medium capitalize", pill[r.status])} title={r.reason ?? ""}>{r.status}</span>{r.reason && <div className="text-[11px] text-muted-foreground">{r.reason}</div>}</td>
               </tr>
