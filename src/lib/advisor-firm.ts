@@ -216,13 +216,36 @@ export const teamSizeError = (v: string) => (Number(v) >= 1 ? null : "Add your t
 
 export const WIZARD_QS = ["type", "loc", "name", "web", "services", "deal", "team", "contact", "logo", "desc"] as const;
 export type WizardQ = (typeof WIZARD_QS)[number] | "review";
-export function setupProgress(answered: string[]): { n: number; first: WizardQ } {
-  const done = WIZARD_QS.filter((q) => answered.includes(q));
-  const first = WIZARD_QS.find((q) => !answered.includes(q)) ?? "review";
-  return { n: done.length, first };
+export function setupProgress(answered: string[], skip?: Set<string>): { n: number; N: number; first: WizardQ } {
+  const qs = WIZARD_QS.filter((q) => !skip?.has(q));
+  const done = qs.filter((q) => answered.includes(q));
+  const first = qs.find((q) => !answered.includes(q)) ?? "review";
+  return { n: done.length, N: qs.length, first };
+}
+
+export type AdvisorSkipVals = { type: string; web: string; year: string; team: string };
+/** Questions sign-up fully answered (only while the value is still there); the name stays in its question. */
+export function advisorSkips(fromSignup: string[] | undefined, v: AdvisorSkipVals): Set<string> {
+  const f = new Set(fromSignup ?? []);
+  const s = new Set<string>();
+  if (f.has("type") && v.type) s.add("type");
+  if (f.has("web") && v.web.trim()) s.add("web");
+  return s;
+}
+/** Sign-up fields hidden inside questions that still show. */
+export function advisorHidden(fromSignup: string[] | undefined, v: AdvisorSkipVals): Set<string> {
+  const f = new Set(fromSignup ?? []);
+  const h = new Set<string>();
+  if (f.has("year") && /^\d{4}$/.test(v.year)) h.add("year");
+  if (f.has("team") && Number(v.team) >= 1) h.add("team");
+  return h;
+}
+export function advisorSkipsFor(f: { firmType?: string | null; website?: string | null; yearFounded?: number | null; teamSize?: number | null; wizard?: unknown }) {
+  const fs = (f.wizard as { fromSignup?: string[] } | null)?.fromSignup;
+  return advisorSkips(fs, { type: f.firmType ?? "", web: f.website ?? "", year: f.yearFounded ? String(f.yearFounded) : "", team: f.teamSize ? String(f.teamSize) : "" });
 }
 
 export type WizardState = {
-  feeVisited?: boolean; enrichSig?: string;
+  feeVisited?: boolean; enrichSig?: string; fromSignup?: string[];
   enrich?: { logo: boolean; legalName: string | null; thaiName: string | null; teamAdded: boolean; found: number };
 };
