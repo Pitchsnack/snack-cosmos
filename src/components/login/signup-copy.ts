@@ -25,7 +25,7 @@ export const S = {
   pickOne: c("กรุณาเลือกหนึ่งข้อเพื่อไปต่อ", "Choose one to continue"),
   // step 1
   s1Title: c("สร้างบัญชี PitchSnack", "Create your PitchSnack account"),
-  s1Line: c("บอกเราก่อนว่าท่านมาที่ PitchSnack เพื่ออะไร", "First, tell us why you’re here."),
+  s1Line: c("บอกเราก่อนว่าท่านมาที่ PitchSnack เพื่ออะไร", "Which best describes you?"),
   s1Legend: c("ท่านคือใคร", "Who are you?"),
   roles: {
     seller: [c("ฉันเป็นเจ้าของกิจการ", "I’m a business owner"), c("และต้องการขายบริษัทของฉัน", "and looking to sell my company.")],
