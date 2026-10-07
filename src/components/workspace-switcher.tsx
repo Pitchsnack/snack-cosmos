@@ -68,7 +68,8 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   const hasSession = useHasSession();
   const fetchAssignableTenants = useServerFn(listAssignableTenants);
 
-  const sessionTenants = session?.tenants ?? [];
+  // The "control" tenant row duplicates Platform › Control; hide it so there is one Control choice.
+  const sessionTenants = (session?.tenants ?? []).filter((t) => t.tenantCode?.toLowerCase() !== "control");
   const isControl = (session?.roles ?? []).includes("CONTROL");
   const activeId = session?.activeWorkspace.tenantId ?? null;
 
