@@ -100,6 +100,8 @@ import { Route as AuthenticatedStartupsIdFinancialsRouteImport } from './routes/
 import { Route as AuthenticatedStartupsIdInvestorsRouteImport } from './routes/_authenticated/startups.$id.investors'
 import { Route as AdvisorCompanyIdSetupRouteImport } from './routes/advisor.company.$id.setup'
 import { Route as BuyerCompanyIdSetupRouteImport } from './routes/buyer.company.$id.setup'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -614,6 +616,16 @@ const BuyerCompanyIdSetupRoute = BuyerCompanyIdSetupRouteImport.update({
   path: '/buyer/company/$id/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -707,6 +719,8 @@ export interface FileRoutesByFullPath {
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/advisor/company/$id/setup': typeof AdvisorCompanyIdSetupRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
@@ -789,6 +803,8 @@ export interface FileRoutesByTo {
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/advisor/company/$id/setup': typeof AdvisorCompanyIdSetupRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/deals/$id': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdIndexRoute
@@ -884,6 +900,8 @@ export interface FileRoutesById {
   '/_authenticated/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/advisor/company/$id/setup': typeof AdvisorCompanyIdSetupRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/_authenticated/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
@@ -979,6 +997,8 @@ export interface FileRouteTypes {
     | '/startups/$id/investors'
     | '/advisor/company/$id/setup'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/deals/$id/'
     | '/investors/$id/'
@@ -1061,6 +1081,8 @@ export interface FileRouteTypes {
     | '/startups/$id/investors'
     | '/advisor/company/$id/setup'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/deals/$id'
     | '/investors/$id'
@@ -1155,6 +1177,8 @@ export interface FileRouteTypes {
     | '/_authenticated/startups/$id/investors'
     | '/advisor/company/$id/setup'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/_authenticated/deals/$id/'
     | '/_authenticated/investors/$id/'
@@ -1181,6 +1205,8 @@ export interface RootRouteChildren {
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
   AdvisorCompanyIdSetupRoute: typeof AdvisorCompanyIdSetupRoute
   BuyerCompanyIdSetupRoute: typeof BuyerCompanyIdSetupRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -1823,6 +1849,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyerCompanyIdSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -2149,6 +2189,8 @@ const rootRouteChildren: RootRouteChildren = {
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
   AdvisorCompanyIdSetupRoute: AdvisorCompanyIdSetupRoute,
   BuyerCompanyIdSetupRoute: BuyerCompanyIdSetupRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
