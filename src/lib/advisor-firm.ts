@@ -129,7 +129,7 @@ export type AdvisorFirm = {
   description: string | null; yearFounded: number | null; city: string | null; country: string | null;
   services: string[]; fees: Record<string, string>; feeDetails: Record<string, FeeDetail>;
   dealBand: string | null; teamSize: number | null;
-  languages: string[]; sectors: string[];
+  languages: string[]; sectors: string[]; sectorAgnostic?: boolean;
   legalName: string | null; thaiName: string | null; registrationNo: string | null;
   addrStreet: string | null; addrUnit: string | null; addrDistrict: string | null;
   addrProvince: string | null; addrPostal: string | null;
@@ -214,7 +214,7 @@ export const teamSizeError = (v: string) => (Number(v) >= 1 ? null : "Add your t
 
 /* ------------------------------ Setup wizard ------------------------------ */
 
-export const WIZARD_QS = ["type", "loc", "name", "web", "services", "deal", "team", "contact", "logo", "desc"] as const;
+export const WIZARD_QS = ["type", "loc", "name", "web", "services", "deal", "team", "sectors", "contact", "logo", "desc"] as const;
 export type WizardQ = (typeof WIZARD_QS)[number] | "review";
 export function setupProgress(answered: string[], skip?: Set<string>): { n: number; N: number; first: WizardQ } {
   const qs = WIZARD_QS.filter((q) => !skip?.has(q));
