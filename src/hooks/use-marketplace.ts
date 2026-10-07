@@ -20,7 +20,8 @@ export function useIsMarketplace() {
     pathname === "/my-page" ||
     pathname === "/my-financials" ||
     pathname === "/my-valuation" ||
-    pathname === "/my-risk"
+    pathname === "/my-risk" ||
+    pathname === "/advisor/pipeline"
   );
 }
 
