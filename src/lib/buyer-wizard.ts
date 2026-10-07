@@ -68,3 +68,14 @@ export function buyerProgress(rel: BuyerRelation | null, answered: string[] | un
   const first = qs.find((s) => !set.has(s.id))?.id ?? "review";
   return { n, N: qs.length, first };
 }
+
+/** Banner progress straight from the investor record. */
+export function buyerProgressFor(rel: BuyerRelation | null, iv: {
+  investor_type?: string | null; website_url?: string | null; year_founded?: number | null; investor_name?: string | null;
+  wizard?: { answered?: string[]; from_signup?: string[] } | null;
+} | null | undefined) {
+  const skip = buyerSkips(iv?.wizard?.from_signup, {
+    role: rel, type: iv?.investor_type ?? "", web: iv?.website_url ?? "", year: iv?.year_founded ? String(iv.year_founded) : "", name: iv?.investor_name ?? "",
+  });
+  return buyerProgress(rel, iv?.wizard?.answered, skip);
+}
