@@ -90,7 +90,10 @@ export const getSessionContext = createServerFn({ method: "GET" })
       };
     });
 
-    const activeTenantId = ctxRow?.active_tenant_id ?? null;
+    // The tenant coded "control" is the platform view, not a workspace: treat it as no tenant (all users).
+    const CONTROL_TENANT_ID = "9df87a29-e8ef-4dbc-9c63-28410d45b985";
+    const rawActive = ctxRow?.active_tenant_id ?? null;
+    const activeTenantId = rawActive === CONTROL_TENANT_ID ? null : rawActive;
     const activeTenantName =
       tenants.find((t) => t.tenantId === activeTenantId)?.tenantName ?? null;
     const activeRoleCode =
