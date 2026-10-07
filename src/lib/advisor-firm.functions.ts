@@ -85,6 +85,27 @@ export const listMyAdvisorFirms = createServerFn({ method: "GET" })
     return rows.map((r: any) => toFirm(r, kids, urls));
   });
 
+/** Firm cards by id with the service client (callers check access first). Private files and documents are left out. */
+export async function loadFirmCards(sb: any, ids: string[]): Promise<AdvisorFirm[]> {
+  if (!ids.length) return [];
+  const { data: rows } = await sb.from("advisor_firms").select("*").in("id", ids);
+  if (!rows?.length) return [];
+  const [fees, team, creds, reviews] = await Promise.all([
+    sb.from("advisor_firm_fees").select("*").in("firm_id", ids),
+    sb.from("advisor_firm_team").select("*").in("firm_id", ids),
+    sb.from("advisor_firm_credentials").select("*").in("firm_id", ids),
+    sb.from("advisor_firm_reviews").select("*").in("firm_id", ids),
+  ]);
+  const paths = rows.map((r: any) => r.logo_path).filter(Boolean) as string[];
+  const urls = new Map<string, string>();
+  if (paths.length) {
+    const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(paths, 3600);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: [], reviews: reviews.data ?? [] };
+  return rows.map((r: any) => toFirm(r, kids, urls));
+}
+
 /** + Add Firm Profile: a new Draft with the next ADV reference. */
 export const createAdvisorDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

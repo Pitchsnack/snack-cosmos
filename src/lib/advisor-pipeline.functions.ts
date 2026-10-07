@@ -239,8 +239,8 @@ export const advisorOtherProfile = createServerFn({ method: "GET" })
     const { buildNoteProfile } = await import("./private-notes.functions");
     // The other side buys → its investor profile; the other side sells → its seller profile.
     const r = await buildNoteProfile(sb, deal, da.side === "seller" ? "seller_on_buyer" : "buyer_on_seller");
-    const g = r.generated as Record<string, string | null>;
-    // Never the asking price or other deal figures from the seller side beyond the listing's public fields.
+    // Profile facts only: the deal figures (price, stake, deal type, reason) never reach the advisor.
+    const { askingPrice: _a, stake: _s, dealType: _d, reason: _r, ...g } = r.generated as Record<string, string | null>;
     return { otherIsBuyer: da.side === "seller", name: r.name, sub: r.sub, logoUrl: r.logoUrl, verified: r.verified, codeName: r.codeName, contact: r.contact, fields: g };
   });
 
