@@ -1,4 +1,5 @@
 import { ActsForField } from "@/components/investors/acts-for-field";
+import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { CompanySizeField } from "@/components/investors/company-size-field";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -176,7 +177,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
   const showsFund = !individual && rel !== "agent";
   // Fund falls back to Investor Classification when the form hides the band.
   const sec = section === "fund" && !showsFund ? "classification" : section;
-  useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "input[type=checkbox]" } : undefined);
+  useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "button[role=checkbox]" } : undefined);
   const [industries, setIndustries] = useState(inv.preferred_industries);
   const [customIndustry, setCustomIndustry] = useState("");
   const [portfolio, setPortfolio] = useState(inv.portfolio_extra);
@@ -554,27 +555,13 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         {/* Preferred Industries */}
         <S cur={setup ? undefined : sec} id="industries" className="space-y-1.5">
           <Label>Preferred Industries<Tag s={src.preferred_industries} /></Label>
-          <label className="flex items-center gap-2 text-[13px]">
-            <input type="checkbox" checked={agnostic} onChange={() => setIndustries(agnostic ? industries.filter((x) => x !== SECTOR_AGNOSTIC) : [SECTOR_AGNOSTIC, ...industries])} />
-            <b className="font-semibold">Sector agnostic</b> <span className="text-muted-foreground">I look at companies in every industry</span>
-          </label>
-          {agnostic && <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.</p>}
-          <div className={`mb-2 flex flex-wrap gap-2 ${agnostic ? "pointer-events-none opacity-50" : ""}`}>
-            {INVESTOR_INDUSTRIES.filter((x) => x !== SECTOR_AGNOSTIC).map((ind) => (
-              <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>{ind}</Pill>
-            ))}
-            {industries.filter((i) => !INVESTOR_INDUSTRIES.includes(i)).map((c) => (
-              <button key={c} type="button" onClick={() => setIndustries(industries.filter((x) => x !== c))}
-                className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
-                {c} <X className="h-3 w-3" />
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)} placeholder="Add custom industry..." maxLength={50}
-              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); } }} />
-            <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
-          </div>
+          <SetSectorPicker mode="multi" value={industries.filter((x) => x !== SECTOR_AGNOSTIC)}
+            onChange={(v) => setIndustries([...(agnostic ? [SECTOR_AGNOSTIC] : []), ...v])}
+            limitMsg="Pick up to 5 industries, or Sector agnostic."
+            agnostic={{ on: agnostic, onToggle: (on) => setIndustries(on ? [SECTOR_AGNOSTIC, ...industries.filter((x) => x !== SECTOR_AGNOSTIC)] : industries.filter((x) => x !== SECTOR_AGNOSTIC)),
+              line: "I look at companies in every industry",
+              note: "Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.",
+              summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
         </S>
 
         {/* Public view */}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Lock, AlertTriangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
-import { SectorPicker } from "@/components/startups/sector-fields";
+import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import {
   SELLER_RELATIONS, THAI_PROVINCES, THB_REVENUE_BANDS, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
   isValidUrl, saveDraft, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
@@ -238,7 +238,7 @@ export function SellerWizard({
     size: { t: "What is the size of your company?", h: "Number of employees.",
       body: <Radio grid list={WIZARD_SIZES} value={d.size} onPick={(v) => pick({ size: v })} /> },
     sector: { t: "What is your business sector?", h: "Based on the SET sector classification.",
-      body: <SectorPicker value={d.sector} onChange={(v) => set({ sector: v })} /> },
+      body: <SetSectorPicker mode="single" value={d.sector ? [d.sector] : []} onChange={(v) => set({ sector: v[0] ?? null })} /> },
     lic: { t: "Licences and certifications", h: "Select any that apply. This is optional.",
       body: (
         <div className="space-y-6">
