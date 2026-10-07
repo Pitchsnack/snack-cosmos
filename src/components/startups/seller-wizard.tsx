@@ -5,7 +5,7 @@ import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { SectorPicker } from "@/components/startups/sector-fields";
 import {
   SELLER_RELATIONS, THAI_PROVINCES, THB_REVENUE_BANDS, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
-  isValidUrl, saveDraft, answeredCount, normalizeUrl, type SellerDraft,
+  isValidUrl, saveDraft, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
 } from "@/lib/seller-wizard";
 
 const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review"];
@@ -64,19 +64,26 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish,
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = "Add my business",
 }: {
   userId: string;
   initial: SellerDraft;
   onExit: () => void;
   onCancel: () => void;
   onFinish: (d: SellerDraft) => void;
+  /** Fields sign-up answered (hidden while they hold a value). */
+  fromSignup?: string[];
+  /** Saves to an existing Draft business instead of this browser. */
+  persist?: (d: SellerDraft) => void;
+  title?: string;
 }) {
   const [d, setD] = useState<SellerDraft>(initial);
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
   const [justSaved, setJustSaved] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  // A question opened from Review shows all its fields, even ones sign-up answered.
+  const [full, setFull] = useState<number | null>(null);
   const [webState, setWebState] = useState<"idle" | "checking" | "unreachable">("idle");
   const checkWeb = useServerFn(checkWebsiteReachable);
   const timer = useRef<number | null>(null);
@@ -84,16 +91,25 @@ export function SellerWizard({
   const firstRun = useRef(true);
   const step = Math.min(d.step, STEPS.length - 1);
   const cur = STEPS[step]!;
+  const store = (x: SellerDraft) => (persist ? persist(x) : saveDraft(userId, x));
+  const shownOf = (x: SellerDraft, keep: number | null) => {
+    const s = new Set(sellerShown(x, fromSignup));
+    if (keep != null) s.add(keep);
+    return STEPS.map((_, i) => i).filter((i) => i === STEPS.length - 1 || s.has(i));
+  };
+  const shown = shownOf(d, full ?? step);
+  const pos = Math.max(0, shown.indexOf(step));
+  const nameFromSignup = fromSignup.includes("name") && full !== 1;
 
   // Autosave on every answer.
   useEffect(() => {
     if (firstRun.current) { firstRun.current = false; return; }
     // Nothing is stored until the user answers something (Cancel on step 1 leaves no draft).
-    saveDraft(userId, d);
+    store(d);
     setJustSaved(true);
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
     savedTimer.current = window.setTimeout(() => setJustSaved(false), 1500);
-  }, [d, userId]);
+  }, [d, userId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => {
     if (timer.current) window.clearTimeout(timer.current);
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
@@ -105,10 +121,26 @@ export function SellerWizard({
 
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
   const go = (n: number) => set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
+  /** Step after `from`: back to Review when opened from it, else the next question that shows. */
+  const nextOf = (x: SellerDraft, from: number) => {
+    if (full != null) return STEPS.length - 1;
+    const list = shownOf(x, null);
+    return list.find((i) => i > from) ?? STEPS.length - 1;
+  };
+  const advance = (patch: Partial<SellerDraft> = {}) => {
+    setD((p) => ({ ...p, ...patch, step: nextOf({ ...p, ...patch }, step) }));
+    setFull(null);
+  };
+  const back = () => {
+    if (full != null) { setFull(null); go(STEPS.length - 1); return; }
+    const list = shownOf(d, null);
+    const prev = [...list].reverse().find((i) => i < step);
+    if (prev == null) onCancel(); else go(prev);
+  };
   const pick = (patch: Partial<SellerDraft>) => {
     set(patch);
     if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setD((p) => ({ ...p, step: Math.min(STEPS.length - 1, p.step + 1) })), 250);
+    timer.current = window.setTimeout(() => advance(), 250);
   };
 
   const yearN = Number(d.year);
