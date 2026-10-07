@@ -85,7 +85,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       .filter((f) => !t || [f.name, f.city, f.country, f.firmType, ...f.services].some((x) => x?.toLowerCase().includes(t)))
       .filter((f) => svc === "all" || f.services.includes(svc))
       .filter((f) => status === "all" || f.status === status)
-      .filter((f) => sector === "all" || f.sectors.includes(sector))
+      .filter((f) => sector === "all" || !!f.sectorAgnostic || f.sectors.includes(sector))
       .filter((f) => hq === "all" || f.city === hq)
       .filter(() => !savedOnly)
       .sort((a, b) => (sort === "name" ? (a.name || "~").localeCompare(b.name || "~") : b.updatedAt.localeCompare(a.updatedAt)));

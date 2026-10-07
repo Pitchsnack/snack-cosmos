@@ -386,6 +386,13 @@
       "when": 1791377444882,
       "tag": "0054_buyer_acts_for_types",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1791380867787,
+      "tag": "0055_advisor_sector_agnostic",
+      "breakpoints": true
     }
   ]
 }

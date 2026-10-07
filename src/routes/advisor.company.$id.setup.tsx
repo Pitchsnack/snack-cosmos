@@ -14,7 +14,7 @@ export const Route = createFileRoute("/advisor/company/$id/setup")({
       { title: "Firm Profile Setup Wizard — PitchSnack" },
       { name: "description", content: "Set up your advisory firm's profile one question at a time." },
       { property: "og:title", content: "Firm Profile Setup Wizard — PitchSnack" },
-      { property: "og:description", content: "Answer 10 short questions to set up your firm profile for sellers and buyers." },
+      { property: "og:description", content: "Answer 11 short questions to set up your firm profile for sellers and buyers." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

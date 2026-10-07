@@ -1,4 +1,5 @@
 import { ActsForField } from "@/components/investors/acts-for-field";
+import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { sortActsFor } from "@/lib/investor-bands";
 import { CompanySizeField } from "@/components/investors/company-size-field";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
@@ -866,25 +867,12 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           <h2 className="text-sm font-semibold">
             Industry Focus <span className="ml-1 text-xs font-normal text-muted-foreground">(Select one or more)</span>
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {INVESTOR_INDUSTRIES.map((i) => (
-              <Pill key={i} active={preferredIndustries.includes(i)}
-                onClick={() => setPreferredIndustries(toggle(preferredIndustries, i))}>
-                {i}
-              </Pill>
-            ))}
-            {preferredIndustries.filter((i) => !INVESTOR_INDUSTRIES.includes(i)).map((i) => (
-              <Pill key={i} active onClick={() => setPreferredIndustries(preferredIndustries.filter((x) => x !== i))}>
-                {i} ✕
-              </Pill>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); } }}
-              placeholder="Add custom industry..." />
-            <Button type="button" variant="outline" onClick={addCustomIndustry}>Add</Button>
-          </div>
+          <SetSectorPicker mode="multi" value={preferredIndustries.filter((x) => x !== "Sector Agnostic")}
+            onChange={(v) => setPreferredIndustries([...(preferredIndustries.includes("Sector Agnostic") ? ["Sector Agnostic"] : []), ...v])}
+            limitMsg="Pick up to 5 industries, or Sector agnostic."
+            agnostic={{ on: preferredIndustries.includes("Sector Agnostic"), line: "Looks at companies in every industry",
+              onToggle: (on) => { const p = preferredIndustries.filter((x) => x !== "Sector Agnostic"); setPreferredIndustries(on ? ["Sector Agnostic", ...p] : p); },
+              summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on the card.</> }} />
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
@@ -1353,30 +1341,12 @@ export function InvestorForm({ investor, controlReturn }: Props) {
       {/* Preferred Industries */}
       <div className="space-y-1.5">
         <Label>Preferred Industries</Label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {INVESTOR_INDUSTRIES.map((ind) => (
-            <Pill key={ind} active={preferredIndustries.includes(ind)} onClick={() => setPreferredIndustries(toggle(preferredIndustries, ind))}>
-              {ind}
-            </Pill>
-          ))}
-          {preferredIndustries
-            .filter((i) => !INVESTOR_INDUSTRIES.includes(i))
-            .map((c) => (
-              <button key={c} type="button"
-                onClick={() => setPreferredIndustries(preferredIndustries.filter((x) => x !== c))}
-                className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
-                {c} <X className="h-3 w-3" />
-              </button>
-            ))}
-        </div>
-        <div className="flex gap-2">
-          <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
-            placeholder="Add custom industry..." maxLength={50}
-            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }
-            }} />
-          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
-        </div>
+        <SetSectorPicker mode="multi" value={preferredIndustries.filter((x) => x !== "Sector Agnostic")}
+            onChange={(v) => setPreferredIndustries([...(preferredIndustries.includes("Sector Agnostic") ? ["Sector Agnostic"] : []), ...v])}
+            limitMsg="Pick up to 5 industries, or Sector agnostic."
+            agnostic={{ on: preferredIndustries.includes("Sector Agnostic"), line: "Looks at companies in every industry",
+              onToggle: (on) => { const p = preferredIndustries.filter((x) => x !== "Sector Agnostic"); setPreferredIndustries(on ? ["Sector Agnostic", ...p] : p); },
+              summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on the card.</> }} />
       </div>
 
       {/* Portfolio Startups — startups this investor has invested in. */}

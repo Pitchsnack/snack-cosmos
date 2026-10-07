@@ -1,3 +1,4 @@
+import type React from "react";
 import { useState } from "react";
 import { BadgeCheck, Building2, ChevronDown, ChevronUp } from "lucide-react";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
@@ -98,7 +99,7 @@ function Fig({ label, main, sub }: { label: string; main: string; sub: string | 
   );
 }
 
-function MoreRow({ label, value }: { label: string; value: string }) {
+function MoreRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-3 text-[13px]">
       <span className="w-[84px] shrink-0 text-[#6B7280]">{label}</span>
@@ -153,7 +154,8 @@ export function FirmCard({ f, wide, preview, selected, onClick, className }: { f
         {showMore && !preview && (
           <div className="space-y-1.5">
             <MoreRow label="Languages" value={f.languages.join(" · ") || "Not added"} />
-            {f.sectors.length > 0 && <MoreRow label="Sectors" value={f.sectors.join(" · ")} />}
+            {(f.sectorAgnostic || f.sectors.length > 0) && <MoreRow label="Sectors" value={
+              <span className="flex flex-wrap gap-1">{(f.sectorAgnostic ? ["Sector agnostic"] : f.sectors).map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
           </div>
         )}
       </div>
