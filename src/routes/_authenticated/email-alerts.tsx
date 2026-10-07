@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, ChevronDown, ChevronRight, FileText, Info, Lock, LockOpen, MessageSquare, PenLine, Pencil, Send, Target, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, FileText, Handshake, Info, Lock, LockOpen, MessageSquare, PenLine, Pencil, Send, Target, UserCheck, UserX, X } from "lucide-react";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
