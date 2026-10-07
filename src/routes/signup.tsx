@@ -503,7 +503,7 @@ function SignupPage() {
                                 <span className="su-unit">{t(S.people)}</span></div>
                             ) : (
                               <Select value={size || undefined} onValueChange={(v) => { setSize(v); setErr5((x) => ({ ...x, size: false })); }}>
-                                <SelectTrigger id="su-size" className={`lg-field su-f su-sel ${err5.size ? "bad" : ""} ${size ? "" : "ph"}`}>
+                                <SelectTrigger id="su-size" className={`lg-field su-f su-sel ${err5.size ? "bad" : ""} ${size ? "" : "su-ph"}`}>
                                   <Users size={18} /><span className="su-sel-v"><SelectValue placeholder={t(S.sizePick)} /></span>
                                 </SelectTrigger>
                                 <SelectContent position="popper" sideOffset={4} className="su-sel-list">
