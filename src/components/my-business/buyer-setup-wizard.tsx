@@ -271,7 +271,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     catch { window.location.href = "/marketplace/my-company"; }
   };
 
-  const requiredQs = steps.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
+  const requiredQs = stepsAll.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
   const allValid = requiredQs.every((s) => qValid(s.id)) && !errors.desc;
 
   // Enter = Continue (not on buttons/links/textarea).

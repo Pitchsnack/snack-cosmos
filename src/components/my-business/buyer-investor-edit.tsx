@@ -115,7 +115,7 @@ export function BuyerInvestorEdit({ section, add }: { section?: string; add?: bo
   return <Form data={data} section={section} add={add} />;
 }
 
-export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
+export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry";
 export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void; enrich?: EnrichInvestorResult | null };
 
 /** Review & complete in the setup wizard: the same form, with source tags. */
