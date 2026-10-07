@@ -335,7 +335,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             return;
           }
         }
-        if (r === "corporate" && a.role === "agent" && !patch.type && patch.type !== "") { setFull("type"); }
         autoPick("role", patch, server);
       }} /> },
     type: agent
