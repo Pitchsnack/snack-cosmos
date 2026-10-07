@@ -8,7 +8,7 @@ import { Head, PlanCard } from "./public-home";
 import { PublicShell, Rich, useHomeLang } from "./public-shell";
 import { BigFigureCards, IconCard, Ladder, ListingCard, PromiseCards, ReportCard, Ticks } from "./shared-parts";
 
-const SIGNUP = "/login";
+const SIGNUP = "/signup?role=seller";
 type Imgs = { seller: string | null; investor: string | null };
 
 export function SellersPage({ initial }: { initial?: Imgs }) {

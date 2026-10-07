@@ -7,13 +7,14 @@ import { toast } from "sonner";
 import { ArrowLeft, Building2, CircleAlert, Eye, EyeOff, Globe, LoaderCircle, Lock, LogIn, Mail, Scale, ShieldCheck, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { recordLogin, logSecurityEvent } from "@/lib/auth.functions";
+import { getSignupState } from "@/lib/signup.functions";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhite from "@/assets/pitchsnack-hat-white-icon.png";
 import streetSvg from "@/components/login/street.svg?raw";
 import { L, type LoginLang } from "@/components/login/login-copy";
 import "@/styles/login-page.css";
 
-const searchSchema = z.object({ redirect: z.string().optional() });
+const searchSchema = z.object({ redirect: z.string().optional(), email: z.string().optional() });
 const REMEMBER_KEY = "sp2.login.email";
 const LANG_KEY = "ps-home-lang";
 const FONT_URL = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap";
@@ -50,6 +51,7 @@ function LoginPage() {
   const qc = useQueryClient();
   const onLogin = useServerFn(recordLogin);
   const onFailed = useServerFn(logSecurityEvent);
+  const getState = useServerFn(getSignupState);
 
   const [lang, setLangState] = useState<LoginLang>("th");
   const t = (x: { th: string; en: string }) => x[lang];
@@ -69,6 +71,7 @@ function LoginPage() {
       if (l === "en" || l === "th") setLangState(l);
       const saved = localStorage.getItem(REMEMBER_KEY);
       if (saved) { setEmail(saved); setRemember(true); }
+      if (search.email) setEmail(search.email);
     } catch { /* storage unavailable */ }
   }, []);
 
@@ -106,6 +109,7 @@ function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) {
         try { await onFailed({ data: { eventType: "FAILED_LOGIN", details: { email } } }); } catch { /* best effort */ }
+        if (/not confirmed/i.test(error.message ?? "")) { navigate({ to: "/signup", search: { email: email.trim() } }); return; }
         const invalid = error.status === 400 || /invalid/i.test(error.message ?? "");
         setPwErr(invalid ? "wrong" : "other");
         pwRef.current?.focus();
@@ -118,6 +122,8 @@ function LoginPage() {
       } catch { /* storage unavailable */ }
       try { await onLogin(); } catch { /* best effort */ }
       await qc.invalidateQueries();
+      // Sign-up not finished (no Draft profile yet): reopen step 5.
+      try { const st = await getState(); if (st.answers && !st.answers.done_at) { navigate({ to: "/signup" }); return; } } catch { /* normal landing */ }
       navigate({ to: search.redirect || "/tenants" });
     } catch {
       setPwErr("other");
@@ -229,7 +235,7 @@ function LoginPage() {
                 <button type="button" disabled={busy} onClick={() => toast.info(t(L.sso))}><Building2 size={16} />SSO</button>
               </div>
             </div>
-            <p className="lg-noacc">{t(L.noAcc)}<Link to="/sellers">{t(L.signUp)}</Link></p>
+            <p className="lg-noacc">{t(L.noAcc)}<Link to="/signup">{t(L.signUp)}</Link></p>
             <p className="lg-fine">{t(L.fineA)}<a href="#">{t(L.terms)}</a>{t(L.and)}<a href="#">{t(L.privacy)}</a>{t(L.fineB)}</p>
             <p className="lg-pw2">Powered by SnackPortal2</p>
           </div>

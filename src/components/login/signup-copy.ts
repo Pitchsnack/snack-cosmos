@@ -1,0 +1,117 @@
+type C = { th: string; en: string };
+const c = (th: string, en: string): C => ({ th, en });
+
+export type Role = "seller" | "buyer" | "advisor";
+
+export const S = {
+  title: c("PitchSnack · สมัครใช้งาน", "PitchSnack · Sign up"),
+  intro: c("สร้างบัญชีในไม่กี่นาที แล้วเริ่มตั้งค่าโปรไฟล์ของท่านได้ทันที", "Create your account in a few minutes, then set up your profile straight away."),
+  points: {
+    none: [c("ชื่อของท่านเป็นความลับ จนกว่าท่านจะเลือกเปิดเผย", "Your name stays private until you choose to share it"), c("ผู้ขายและผู้ซื้อทุกรายตรวจสอบกับทะเบียน DBD", "Every seller and buyer checked against the DBD register"), c("ไม่ถือเงิน และไม่เข้าข้างฝ่ายใด", "No funds held, no side taken")],
+    seller: [c("ผู้ซื้อเห็นเพียงโปรไฟล์ไม่ระบุชื่อ จนกว่าท่านจะอนุมัติ NDA", "Buyers see an anonymous profile until you approve their NDA"), c("ไม่มีสัญญาผูกขาด ถอนประกาศได้ทุกเมื่อ", "No exclusivity. Withdraw at any time"), c("เริ่มต้นได้ฟรีด้วยแผน Entry", "Start free on the Entry plan")],
+    buyer: [c("ผู้ขายทุกรายตรวจสอบกับทะเบียน DBD", "Every seller checked against the DBD register"), c("เห็นงบการเงินที่ยื่นจริงก่อนการแนะนำ", "Filed accounts before an introduction"), c("ผู้ซื้อจ่ายเพียงค่าสมาชิก ไม่มีค่าธรรมเนียมเมื่อปิดดีล", "Buyers pay a subscription only, never a completion fee")],
+    advisor: [c("ตรา Verified advisor ที่ลูกค้าไว้วางใจ", "A Verified advisor badge clients trust"), c("แสดงค่าบริการในแบบของท่าน", "Show your fees your way"), c("ข้อมูลลูกค้าของท่านเป็นความลับ", "Your clients stay confidential")],
+  },
+  progress: c("ขั้นตอน {n} จาก 5", "Step {n} of 5"),
+  stepRole: c("บทบาท", "Role"),
+  step2: { seller: c("เกี่ยวกับท่าน", "About you"), buyer: c("ประเภทนักลงทุน", "Investor type"), advisor: c("ประเภทบริษัท", "Firm type") },
+  stepAcc: c("บัญชี", "Account"),
+  stepCode: c("ยืนยันอีเมล", "Confirm email"),
+  stepCo: c("บริษัท", "Company"),
+  haveAcc: c("มีบัญชีอยู่แล้ว?", "Already have an account?"),
+  signIn: c("เข้าสู่ระบบ", "Sign in"),
+  next: c("ต่อไป", "Continue"),
+  back: c("ย้อนกลับ", "Back"),
+  pickOne: c("กรุณาเลือกหนึ่งข้อเพื่อไปต่อ", "Choose one to continue"),
+  // step 1
+  s1Title: c("สร้างบัญชี PitchSnack", "Create your PitchSnack account"),
+  s1Line: c("บอกเราก่อนว่าท่านมาที่ PitchSnack เพื่ออะไร", "First, tell us why you’re here."),
+  s1Legend: c("ท่านคือใคร", "Who are you?"),
+  roles: {
+    seller: [c("ฉันเป็นเจ้าของกิจการ", "I’m a business owner"), c("และต้องการขายบริษัทของฉัน", "and looking to sell my company.")],
+    buyer: [c("ฉันเป็นผู้ซื้อและนักลงทุน", "I’m a buyer and investor"), c("และต้องการซื้อกิจการ", "and looking to buy a company.")],
+    advisor: [c("ฉันเป็นที่ปรึกษาหรือพาร์ทเนอร์", "I’m an adviser or partner firm"), c("และต้องการทำงานในดีลของลูกค้า", "and want to work on my clients’ deals.")],
+  },
+  // step 2
+  s2: {
+    seller: [c("ข้อใดตรงกับท่านมากที่สุด", "Which best describes you?"), c("เราใช้ข้อนี้เพื่อรู้ว่าใครเป็นผู้อนุมัติคำขอ NDA จากผู้ซื้อ", "We use it to know who approves buyers’ NDA requests.")],
+    buyer: [c("บริษัทของท่านเป็นนักลงทุนประเภทใด", "What type of investor is your firm?"), c("ผู้ขายจะเห็นข้อนี้ และใช้กำหนดภาพบนการ์ดของท่าน", "Sellers see this, and it sets the artwork on your card.")],
+    advisor: [c("ข้อใดตรงกับประเภทธุรกิจของท่านมากที่สุด", "Which type of firm best describes your business?"), c("ผู้ขายและผู้ซื้อจะเห็นข้อนี้บนการ์ดของท่าน ใต้ชื่อบริษัท", "Sellers and buyers see it on your card, under your firm’s name.")],
+  },
+  // step 3
+  s3Title: c("ข้อมูลบัญชีของท่าน", "Your account details"),
+  s3Line: c("ใช้อีเมลที่ทำงาน เราจะส่งรหัสยืนยันไปที่อีเมลนี้", "Use your work email. We’ll send a confirmation code to it."),
+  chipFor: c("บัญชีสำหรับ:", "Account for:"),
+  chipRole: { seller: c("ขายกิจการ", "Selling a business"), buyer: c("ซื้อกิจการ", "Buying a business"), advisor: c("ที่ปรึกษา / พาร์ทเนอร์", "Adviser / partner") },
+  change: c("เปลี่ยน", "Change"),
+  first: c("ชื่อ", "First name"), last: c("นามสกุล", "Last name"), email: c("อีเมลที่ทำงาน", "Work email"), pw: c("รหัสผ่าน", "Password"),
+  emailPh: c("you@company.co.th", "you@company.com"), pwPh: c("ตั้งรหัสผ่าน", "Create a password"),
+  show: c("แสดงรหัสผ่าน", "Show password"), hide: c("ซ่อนรหัสผ่าน", "Hide password"),
+  rules: [c("อย่างน้อย 8 ตัวอักษร", "At least 8 characters"), c("มีตัวอักษร", "A letter"), c("มีตัวเลข", "A number")],
+  termsA: c("ฉันยอมรับ ", "I agree to the "), terms: c("ข้อกำหนดการใช้งาน", "Terms of Service"), and: c(" และ ", " and "), privacy: c("นโยบายความเป็นส่วนตัว", "Privacy Policy"),
+  news: c("ส่งข่าวสารและบทความจาก PitchSnack ให้ฉันทางอีเมล (ไม่บังคับ)", "Email me PitchSnack news and articles (optional)"),
+  create: c("สร้างบัญชี", "Create account"), creating: c("กำลังสร้างบัญชี…", "Creating your account…"),
+  divider: c("หรือสมัครด้วย", "or sign up with"),
+  eFirst: c("กรุณากรอกชื่อ", "Enter your first name"), eLast: c("กรุณากรอกนามสกุล", "Enter your last name"),
+  eEmail: c("กรุณากรอกอีเมลให้ถูกต้อง เช่น name@company.co.th", "Enter a valid email address, for example name@company.com"),
+  ePw: c("รหัสผ่านยังไม่ครบตามเงื่อนไขด้านล่าง", "Your password doesn’t meet the rules below yet"),
+  eTerms: c("กรุณายอมรับข้อกำหนดเพื่อสร้างบัญชี", "Please accept the terms to create your account"),
+  taken: c("อีเมลนี้มีบัญชีอยู่แล้ว", "This email already has an account."),
+  other: c("ไม่สามารถดำเนินการได้ในขณะนี้ กรุณาลองอีกครั้ง", "Something went wrong. Please try again."),
+  // step 4
+  s4Title: c("ยืนยันอีเมลของท่าน", "Confirm your email"),
+  s4A: c("เราส่งรหัส 6 หลักไปที่ ", "We sent a 6-digit code to "), s4B: c(" กรอกรหัสเพื่อยืนยันว่าเป็นอีเมลของท่าน", ". Enter it to confirm the address is yours."),
+  codeLegend: c("รหัสยืนยัน 6 หลัก", "6-digit confirmation code"),
+  confirm: c("ยืนยัน", "Confirm"), confirming: c("กำลังยืนยัน…", "Confirming…"),
+  eCode6: c("กรุณากรอกรหัสให้ครบ 6 หลัก", "Enter all 6 digits"), eCode: c("รหัสไม่ถูกต้อง กรุณาลองอีกครั้ง", "That code isn’t right. Please try again."),
+  wait: c("ไม่ได้รับรหัส? ส่งอีกครั้งได้ใน ", "Didn’t get it? You can resend in "),
+  resendA: c("ไม่ได้รับรหัส? ", "Didn’t get it? "), resend: c("ส่งรหัสอีกครั้ง", "Resend the code"),
+  sent: c("ส่งรหัสใหม่แล้ว", "A new code is on its way."),
+  hint: c("ไม่พบอีเมล? ตรวจสอบโฟลเดอร์จดหมายขยะด้วย · ", "Can’t find it? Check your spam folder too. · "), other_email: c("ใช้อีเมลอื่น", "Use a different email"),
+  // step 5
+  okEmail: c("ยืนยันอีเมลแล้ว บัญชีของท่านพร้อมใช้งาน", "Email confirmed. Your account is ready."),
+  okProv: c("สมัครด้วย {p} แล้ว บัญชีของท่านพร้อมใช้งาน", "Signed up with {p}. Your account is ready."),
+  s5Title: { seller: c("บริษัทของท่าน", "Your company"), buyer: c("บริษัทของท่าน", "Your firm"), advisor: c("บริษัทของท่าน", "Your firm") },
+  s5Line: { seller: c("ข้อมูลบริษัทเบื้องต้น แล้วไปที่หน้าบริษัทของฉัน", "A few details about your company, then we’ll take you to My Company."), buyer: c("ข้อมูลบริษัทเบื้องต้น แล้วไปที่หน้าบริษัทของฉัน", "A few details about your firm, then we’ll take you to My Company."), advisor: c("ข้อมูลบริษัทเบื้องต้น แล้วไปที่หน้าบริษัทของฉัน", "A few details about your firm, then we’ll take you to My Company.") },
+  nameL: { seller: c("ชื่อบริษัท", "Company name"), buyer: c("ชื่อบริษัทหรือกองทุน", "Company or fund name"), advisor: c("ชื่อบริษัทที่ปรึกษา", "Firm name") },
+  namePh: { seller: c("เช่น บริษัท ข้าวหอมบ้านนา จำกัด", "e.g. Baan Na Jasmine Rice Co., Ltd."), buyer: c("เช่น Acme Ventures", "e.g. Acme Ventures"), advisor: c("เช่น Acme Advisory", "e.g. Acme Advisory") },
+  nameHint: { seller: null, buyer: c("ลงทุนในนามบุคคล? กรอกชื่อของท่านได้เลย", "Investing on your own? Enter your own name."), advisor: c("ใช้ชื่อที่ลูกค้ารู้จัก", "Use the name your clients know.") },
+  nameErr: { seller: c("กรุณากรอกชื่อบริษัท", "Enter your company’s name"), buyer: c("กรุณากรอกชื่อบริษัทหรือกองทุน", "Enter your company or fund name"), advisor: c("กรุณากรอกชื่อบริษัทที่ปรึกษา", "Enter your firm’s name") },
+  year: c("ปีที่ก่อตั้ง (ค.ศ.)", "Year founded"), yearPh: c("เช่น 2014", "e.g. 2014"),
+  eYear: { seller: c("กรุณากรอกปีที่ก่อตั้ง", "Add the year your company was founded"), buyer: c("กรุณากรอกปีที่ก่อตั้ง", "Add the year your firm was founded"), advisor: c("กรุณากรอกปีที่ก่อตั้ง", "Add the year your firm was founded") },
+  eYear4: c("กรุณากรอกปี 4 หลัก เช่น 2014", "Enter the year with 4 digits, for example 2014"),
+  eYearBE: c("ดูเหมือนเป็นปี พ.ศ. กรุณากรอกเป็น ค.ศ.: {y}", "That looks like a Thai year (พ.ศ.). Enter it in ค.ศ.: {y}"),
+  eYearRange: c("กรุณากรอกปีระหว่าง 1800 ถึง {y}", "Enter a year between 1800 and {y}"),
+  size: c("ขนาดบริษัท (จำนวนพนักงาน)", "Company size (employees)"), sizePick: c("เลือกช่วง", "Choose a range"), sizeMore: c("มากกว่า 500", "More than 500"),
+  eSize: c("กรุณาเลือกขนาดบริษัท", "Choose your company size"),
+  sizeAdv: c("ขนาดบริษัท (จำนวนคน)", "Company size (people)"), sizeAdvPh: c("เช่น 8", "e.g. 8"), people: c("คน", "people"),
+  eSizeAdv: c("กรุณากรอกจำนวนคน เช่น 8", "Enter the number of people, for example 8"),
+  web: c("เว็บไซต์", "Website"), optional: c("ไม่บังคับ", "optional"),
+  webHint: { seller: c("เราใช้เว็บไซต์กรอกโปรไฟล์ให้ท่านโดยอัตโนมัติ ยังไม่มีเว็บไซต์? เว้นว่างไว้ได้", "We use it to fill in your profile for you. No website yet? Leave it empty."), buyer: c("เราใช้เว็บไซต์กรอกโปรไฟล์ให้ท่านโดยอัตโนมัติ", "We use it to fill in your profile for you."), advisor: c("เราใช้เว็บไซต์กรอกโปรไฟล์ให้ท่าน และผู้ขายกับผู้ซื้อเปิดดูได้จากโปรไฟล์ของท่าน", "We use it to fill in your profile, and sellers and buyers can open it from your profile.") },
+  eWeb: c("กรุณากรอกเว็บไซต์ให้ถูกต้อง เช่น www.yourcompany.com", "Enter a valid website, for example www.yourcompany.com"),
+  privacy5: { seller: c("ชื่อบริษัทและเว็บไซต์ของท่านเป็นความลับ ผู้ซื้อจะเห็นหลังท่านอนุมัติ NDA แล้วเท่านั้น", "Your company name and website stay confidential. Buyers see them only after you approve their NDA."), buyer: c("ผู้ขายจะเห็นชื่อและเว็บไซต์ของท่านหลังอนุมัติ NDA ของท่านแล้วเท่านั้น ก่อนหน้านั้นจะเห็นเพียงประเภทนักลงทุน", "Sellers see your name and website only once they approve your NDA. Until then, they see your investor type."), advisor: c("ผู้ขายและผู้ซื้อเห็นชื่อบริษัทของท่านบนการ์ดในหน้าค้นหาที่ปรึกษา", "Sellers and buyers see your firm’s name on your card in Browse advisors.") },
+  go: c("ไปที่บริษัทของฉัน", "Go to My Company"), going: c("กำลังเตรียมหน้าบริษัทของท่าน…", "Getting My Company ready…"),
+};
+
+export const SELLER_OPTS = [
+  { v: "owner", icon: "store", t: c("เจ้าของกิจการ", "Business owner"), l: c("ฉันต้องการขายบริษัทของฉันเอง", "I am selling my own company") },
+  { v: "family_owner", icon: "users", t: c("เจ้าของธุรกิจครอบครัว", "Family business owner"), l: c("ฉันกำลังขายหรือพิจารณาขายธุรกิจของครอบครัว", "I am selling or considering the sale of my family business") },
+  { v: "agent", icon: "file-pen-line", t: c("ตัวแทนที่ได้รับมอบอำนาจ", "Authorized representative / agent"), l: c("ฉันดำเนินการแทนเจ้าของกิจการ", "I am acting on behalf of the owner") },
+];
+export const BUYER_OPTS = [
+  { v: "Family Office", icon: "house", k: "fo", t: c("Family office", "Family office"), l: c("ลงทุนด้วยความมั่งคั่งของครอบครัว", "Invests a family’s own wealth") },
+  { v: "Private Equity", icon: "landmark", k: "pe", t: c("Private equity", "Private equity"), l: c("กองทุนที่ซื้อหุ้นในบริษัทที่มั่นคงแล้ว", "A fund that buys stakes in established companies") },
+  { v: "Venture Capital", icon: "rocket", k: "vc", t: c("Venture capital", "Venture capital"), l: c("กองทุนที่ลงทุนในสตาร์ทอัพและบริษัทเกิดใหม่", "A fund that backs startups and young companies") },
+  { v: "Corporate VC", icon: "building-2", k: "cvc", t: c("Corporate VC", "Corporate VC"), l: c("หน่วยงานลงทุนของบริษัท", "The investment arm of a company") },
+  { v: "Corporate Enterprise", icon: "factory", k: "corp", t: c("Corporate buyer", "Corporate buyer"), l: c("บริษัทที่ซื้อกิจการเพื่อการเติบโต", "A company buying businesses to grow") },
+  { v: "Incubator/Accelerator", icon: "sprout", k: "inc", t: c("Incubator / Accelerator", "Incubator / Accelerator"), l: c("โครงการที่ลงทุนในผู้ก่อตั้งระยะเริ่มต้น", "A programme that invests in early-stage founders") },
+  { v: "Individual Investor", icon: "user", k: "ind", t: c("Individual investor", "Individual investor"), l: c("ลงทุนด้วยเงินของตนเอง", "Invests their own money") },
+];
+export const ADVISOR_OPTS = [
+  { v: "Advisory firm", icon: "handshake", t: c("บริษัทที่ปรึกษา", "Advisory firm"), l: c("ที่ปรึกษาด้าน M&A การเงินองค์กร และการทำดีล", "M&A, corporate finance and deal advice") },
+  { v: "Law firm", icon: "scale", t: c("สำนักงานกฎหมาย", "Law firm"), l: c("กฎหมายธุรกิจ M&A และกฎหมายพาณิชย์", "Corporate, M&A and commercial law") },
+  { v: "Tax and accounting firm", icon: "calculator", t: c("สำนักงานบัญชีและภาษี", "Tax and accounting firm"), l: c("งานภาษี ตรวจสอบบัญชี และงานบัญชี", "Tax, audit and accounting work") },
+  { v: "Valuation firm", icon: "gauge", t: c("บริษัทประเมินมูลค่ากิจการ", "Valuation firm"), l: c("ประเมินมูลค่ากิจการและความเห็นความเป็นธรรม", "Business valuations and fairness opinions") },
+  { v: "Business broker", icon: "store", t: c("นายหน้าซื้อขายกิจการ", "Business broker"), l: c("ขายธุรกิจขนาดเล็กและหาผู้ซื้อให้", "Sells small businesses and finds their buyers") },
+  { v: "Other", icon: "briefcase", t: c("อื่น ๆ", "Other"), l: c("บริษัทวิชาชีพอื่น เช่น จัดหาเงินทุนหรือ ESG", "Another professional firm, such as financing or ESG") },
+];

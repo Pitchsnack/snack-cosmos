@@ -22,6 +22,7 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SellersRouteImport } from './routes/sellers'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
@@ -99,6 +100,8 @@ import { Route as AuthenticatedStartupsIdFinancialsRouteImport } from './routes/
 import { Route as AuthenticatedStartupsIdInvestorsRouteImport } from './routes/_authenticated/startups.$id.investors'
 import { Route as AdvisorCompanyIdSetupRouteImport } from './routes/advisor.company.$id.setup'
 import { Route as BuyerCompanyIdSetupRouteImport } from './routes/buyer.company.$id.setup'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -163,6 +166,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SellersRoute = SellersRouteImport.update({
   id: '/sellers',
   path: '/sellers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccessManagementRoute =
@@ -608,6 +616,16 @@ const BuyerCompanyIdSetupRoute = BuyerCompanyIdSetupRouteImport.update({
   path: '/buyer/company/$id/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -628,6 +646,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
+  '/signup': typeof SignupRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
@@ -700,6 +719,8 @@ export interface FileRoutesByFullPath {
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/advisor/company/$id/setup': typeof AdvisorCompanyIdSetupRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
@@ -720,6 +741,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
+  '/signup': typeof SignupRoute
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
@@ -781,6 +803,8 @@ export interface FileRoutesByTo {
   '/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/advisor/company/$id/setup': typeof AdvisorCompanyIdSetupRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/deals/$id': typeof AuthenticatedDealsIdIndexRoute
   '/investors/$id': typeof AuthenticatedInvestorsIdIndexRoute
@@ -803,6 +827,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
+  '/signup': typeof SignupRoute
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
@@ -875,6 +900,8 @@ export interface FileRoutesById {
   '/_authenticated/startups/$id/investors': typeof AuthenticatedStartupsIdInvestorsRoute
   '/advisor/company/$id/setup': typeof AdvisorCompanyIdSetupRoute
   '/buyer/company/$id/setup': typeof BuyerCompanyIdSetupRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/deals/$id/': typeof AuthenticatedDealsIdIndexRoute
   '/_authenticated/investors/$id/': typeof AuthenticatedInvestorsIdIndexRoute
@@ -897,6 +924,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/reset-password'
     | '/sellers'
+    | '/signup'
     | '/access-management'
     | '/ai-agents'
     | '/audit'
@@ -969,6 +997,8 @@ export interface FileRouteTypes {
     | '/startups/$id/investors'
     | '/advisor/company/$id/setup'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/deals/$id/'
     | '/investors/$id/'
@@ -989,6 +1019,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/reset-password'
     | '/sellers'
+    | '/signup'
     | '/access-management'
     | '/ai-agents'
     | '/audit'
@@ -1050,6 +1081,8 @@ export interface FileRouteTypes {
     | '/startups/$id/investors'
     | '/advisor/company/$id/setup'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/deals/$id'
     | '/investors/$id'
@@ -1071,6 +1104,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/reset-password'
     | '/sellers'
+    | '/signup'
     | '/_authenticated/access-management'
     | '/_authenticated/ai-agents'
     | '/_authenticated/audit'
@@ -1143,6 +1177,8 @@ export interface FileRouteTypes {
     | '/_authenticated/startups/$id/investors'
     | '/advisor/company/$id/setup'
     | '/buyer/company/$id/setup'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/_authenticated/deals/$id/'
     | '/_authenticated/investors/$id/'
@@ -1165,9 +1201,12 @@ export interface RootRouteChildren {
   PlansRoute: typeof PlansRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellersRoute: typeof SellersRoute
+  SignupRoute: typeof SignupRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
   AdvisorCompanyIdSetupRoute: typeof AdvisorCompanyIdSetupRoute
   BuyerCompanyIdSetupRoute: typeof BuyerCompanyIdSetupRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -1262,6 +1301,13 @@ declare module '@tanstack/react-router' {
       path: '/sellers'
       fullPath: '/sellers'
       preLoaderRoute: typeof SellersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/access-management': {
@@ -1803,6 +1849,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyerCompanyIdSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -2125,9 +2185,12 @@ const rootRouteChildren: RootRouteChildren = {
   PlansRoute: PlansRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SellersRoute: SellersRoute,
+  SignupRoute: SignupRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
   AdvisorCompanyIdSetupRoute: AdvisorCompanyIdSetupRoute,
   BuyerCompanyIdSetupRoute: BuyerCompanyIdSetupRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
@@ -181,6 +182,7 @@ export function BuyerMyCompany() {
 
   return (
     <div className="space-y-6">
+      <SignupWelcome role="buyer" setupDone={!!iv?.setup_done_at} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>

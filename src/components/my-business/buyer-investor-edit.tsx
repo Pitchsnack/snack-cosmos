@@ -154,7 +154,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
   const getUrl = useServerFn(createMyBuyerUploadUrl);
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
-    year_founded: inv.year_founded?.toString() ?? "", investor_name: inv.investor_name ?? "", investor_type: inv.investor_type ?? "",
+    year_founded: inv.year_founded?.toString() ?? "", company_size_band: inv.company_size_band ?? "", investor_name: inv.investor_name ?? "", investor_type: inv.investor_type ?? "",
     country: inv.country ?? "", region: regionForCountry(inv.country) || "", city: inv.city ?? "",
     email: inv.email ?? "", website_url: inv.website_url ?? "", linkedin_url: inv.linkedin_url ?? "",
     firm_name: inv.firm_name ?? "", business_address: inv.business_address ?? "",
@@ -255,6 +255,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       const exact = Number(f.aum_exact.replace(/[^\d.]/g, ""));
       await save({ data: {
         investor_name: f.investor_name.trim(), investor_type: t(f.investor_type), year_founded: yr && Number.isFinite(yr) ? yr : null,
+        company_size_band: individual ? null : ((f.company_size_band || null) as "1-10" | null),
         country: t(f.country), city: t(f.city), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
         firm_name: t(f.firm_name), business_address: t(f.business_address),
         short_description: t(f.short_description),
@@ -350,6 +351,19 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
             </Select>
           </S>
         </div>
+
+        {!individual && (
+          <div className="grid grid-cols-[220px_1fr] gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="f-company_size_band">Company size (employees)</Label>
+              <select id="f-company_size_band" value={f.company_size_band} onChange={(e) => setF((o) => ({ ...o, company_size_band: e.target.value }))}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm">
+                <option value="">Not set</option>
+                {["1-10", "11-50", "51-200", "201-500", "500+"].map((v) => <option key={v} value={v}>{v === "500+" ? "More than 500" : v.replace("-", "–")}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Row 2: Country | Region | City */}
         <div className="grid grid-cols-3 gap-4">
