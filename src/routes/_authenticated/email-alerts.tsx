@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { EMAIL_ALERTS, alertText, fill, type AlertDef, type AlertLang, type AlertRole } from "@/config/email-alerts";
+import { EMAIL_ALERTS, alertText, fill, rolesOf, type AlertDef, type AlertLang, type AlertRole } from "@/config/email-alerts";
 import { getEmailAlertsAdmin, saveEmailAlert, saveEmailAlertRules, sendTestAlerts, type AlertRules } from "@/lib/email-alerts.functions";
 
 export const Route = createFileRoute("/_authenticated/email-alerts")({
@@ -161,7 +161,7 @@ function AlertDetail({ def, data }: { def: AlertDef; data: AdminData }) {
   const [editing, setEditing] = useState(false);
   const [ov, setOv] = useState<any>(st?.overrides ?? {});
   const t = alertText(def, role, lang, ov);
-  const ver = def[role];
+  const ver = def[role] ?? def[rolesOf(def)[0]!]!;
   const mut = useMutation({
     mutationFn: (v: { enabled?: boolean; overrides?: any }) => save({ data: { key: def.key, ...v } }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["email-alerts-admin"] }); toast.success("Saved"); },

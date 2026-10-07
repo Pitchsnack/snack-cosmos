@@ -1,4 +1,4 @@
-import { ALERT_BY_KEY, alertText, fill, type AlertLang, type AlertOverrides, type AlertRole } from "@/config/email-alerts";
+import { ALERT_BY_KEY, alertText, fill, rolesOf, type AlertLang, type AlertOverrides, type AlertRole } from "@/config/email-alerts";
 
 const SITE = "https://pitchsnack.com";
 
@@ -21,7 +21,7 @@ export type SendAlertInput = {
 export function buildAlert(alert: string, role: AlertRole, lang: AlertLang, ov: AlertOverrides | undefined, vars: Record<string, any>, details?: [string, string][], quote?: string | null) {
   const def = ALERT_BY_KEY[alert];
   const t = alertText(def, role, lang, ov);
-  const ver = def[role];
+  const ver = def[role] ?? def[rolesOf(def)[0]!]!;
   return {
     role, lang,
     subject: fill(t.subject, vars), title: fill(t.title, vars), body: fill(t.body, vars),
