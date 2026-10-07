@@ -361,3 +361,43 @@ export const dealAdvisorProfile = createServerFn({ method: "GET" })
     const parties = (await S.dealParties(sb, [deal]))[deal.id]!;
     return { firm: firm!, client: parties[data.side as Side].name, signer: signer ?? null };
   });
+
+export type SideAdvisor = { firmId: string; firm: string; joinedAt: string; ndaExpiresAt: string | null } | null;
+export type DealAdvisorState = {
+  side: Side;
+  mine: SideAdvisor;
+  invitation: { id: string; firm: string; invitedAt: string } | null;
+  lastDeclined: { firm: string; at: string } | null;
+  other: SideAdvisor;
+};
+
+/** Seller/buyer: advisors on both sides of one deal and my open invitation. */
+export const dealAdvisorState = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ dealId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<DealAdvisorState> => {
+    const { sb, deal, side } = await partyDeal(context, data.dealId);
+    const [{ data: das }, { data: invs }] = await Promise.all([
+      sb.from("deal_advisors").select("side, firm_profile_id, joined_at, advisor_nda_id").eq("deal_id", deal.id),
+      sb.from("advisor_invitations").select("id, firm_profile_id, status, invited_at, answered_at").eq("deal_id", deal.id).eq("side", side).order("invited_at", { ascending: false }),
+    ]);
+    const fIds = [...new Set([...(das ?? []).map((x: any) => x.firm_profile_id), ...(invs ?? []).map((x: any) => x.firm_profile_id)])];
+    const ndaIds = (das ?? []).map((x: any) => x.advisor_nda_id).filter(Boolean);
+    const [{ data: fs }, { data: ns }] = await Promise.all([
+      fIds.length ? sb.from("advisor_firms").select("id, name").in("id", fIds) : { data: [] },
+      ndaIds.length ? sb.from("advisor_ndas").select("id, expires_at").in("id", ndaIds) : { data: [] },
+    ]);
+    const fn = Object.fromEntries((fs ?? []).map((f: any) => [f.id, f.name]));
+    const ne = Object.fromEntries((ns ?? []).map((n: any) => [n.id, n.expires_at]));
+    const pick = (s: Side): SideAdvisor => {
+      const a = (das ?? []).find((x: any) => x.side === s);
+      return a ? { firmId: a.firm_profile_id, firm: fn[a.firm_profile_id] ?? "Advisor", joinedAt: a.joined_at, ndaExpiresAt: ne[a.advisor_nda_id] ?? null } : null;
+    };
+    const w = (invs ?? []).find((i: any) => i.status === "waiting");
+    const dcl = (invs ?? [])[0]?.status === "declined" ? invs![0] : null;
+    return {
+      side, mine: pick(side), other: pick(side === "seller" ? "buyer" : "seller"),
+      invitation: w ? { id: w.id, firm: fn[w.firm_profile_id] ?? "Advisor", invitedAt: w.invited_at } : null,
+      lastDeclined: dcl ? { firm: fn[dcl.firm_profile_id] ?? "Advisor", at: dcl.answered_at } : null,
+    };
+  });
