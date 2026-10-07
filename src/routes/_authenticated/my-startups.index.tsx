@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SellerDraftCard } from "@/components/my-business/seller-draft-card";
 import { Plus, Search, Rocket, RefreshCw, X, Star, Building2 } from "lucide-react";
@@ -132,6 +133,7 @@ function MyStartupsPageInner() {
 
   return (
     <div className="space-y-6">
+      <SignupWelcome role="seller" userId={session?.user?.id as string | undefined} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
