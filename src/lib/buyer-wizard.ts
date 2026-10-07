@@ -29,3 +29,42 @@ export function wizardProgress(rel: BuyerRelation | null, answered: string[] | u
   const first = qs.find((s) => !set.has(s.id))?.id ?? "review";
   return { n, N: qs.length, first };
 }
+
+/** Values the skip rules look at. */
+export type BuyerSkipVals = { role: BuyerRelation | null; type: string; web: string; year: string; name: string };
+
+/**
+ * Questions sign-up fully answered (skipped by Continue, Back and the counts).
+ * A field counts only while it still holds a value. The firm name stays in its
+ * question with the registration number, except for an individual (no number).
+ */
+export function buyerSkips(fromSignup: string[] | undefined, v: BuyerSkipVals): Set<QId> {
+  const f = new Set(fromSignup ?? []);
+  const s = new Set<QId>();
+  if (f.has("role") && v.role) s.add("role");
+  if (f.has("type") && v.type && v.type !== "Individual Investor") s.add("type");
+  if (f.has("web") && v.web.trim()) s.add("web");
+  if (v.role === "individual" && f.has("name") && v.name.trim().length >= 2) s.add("name");
+  return s;
+}
+
+/** Sign-up fields hidden inside a question that still shows. */
+export function buyerHiddenFields(fromSignup: string[] | undefined, v: BuyerSkipVals): Set<string> {
+  const f = new Set(fromSignup ?? []);
+  const h = new Set<string>();
+  if (f.has("year") && /^\d{4}$/.test(v.year)) h.add("year");
+  return h;
+}
+
+export function shownSteps(rel: BuyerRelation | null, skip?: Set<QId>) {
+  return stepsFor(rel).filter((s) => !skip?.has(s.id));
+}
+
+/** Progress counting only the questions that show. */
+export function buyerProgress(rel: BuyerRelation | null, answered: string[] | undefined, skip?: Set<QId>) {
+  const qs = shownSteps(rel, skip).filter((s) => s.id !== "review");
+  const set = new Set(answered ?? []);
+  const n = qs.filter((s) => set.has(s.id)).length;
+  const first = qs.find((s) => !set.has(s.id))?.id ?? "review";
+  return { n, N: qs.length, first };
+}
