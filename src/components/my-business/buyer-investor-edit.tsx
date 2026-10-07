@@ -1,3 +1,4 @@
+import { CompanySizeField } from "@/components/investors/company-size-field";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -354,14 +355,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
 
         {!individual && (
           <div className="grid grid-cols-[220px_1fr] gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="f-company_size_band">Company size (employees)</Label>
-              <select id="f-company_size_band" value={f.company_size_band} onChange={(e) => setF((o) => ({ ...o, company_size_band: e.target.value }))}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm">
-                <option value="">Not set</option>
-                {["1-10", "11-50", "51-200", "201-500", "500+"].map((v) => <option key={v} value={v}>{v === "500+" ? "More than 500" : v.replace("-", "–")}</option>)}
-              </select>
-            </div>
+            <CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} />
           </div>
         )}
 

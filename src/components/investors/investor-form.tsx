@@ -1,3 +1,4 @@
+import { CompanySizeField } from "@/components/investors/company-size-field";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
 import { AUM_BANDS, INDIVIDUAL_TYPE, REV_BANDS, TICKET_BANDS, ticketColumns, yearError } from "@/lib/investor-bands";
@@ -322,6 +323,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [companyUrl, setCompanyUrl] = useState(investor?.website_url ?? "");
   const [linkedinUrl, setLinkedinUrl] = useState(investor?.linkedin_url ?? "");
   const [yearFounded, setYearFounded] = useState<string>(investor?.year_founded?.toString() ?? "");
+  const [companySize, setCompanySize] = useState<string>((investor as { company_size_band?: string | null } | undefined)?.company_size_band ?? "");
   const [aum, setAum] = useState(investor?.aum ?? "");
   const [minTicket, setMinTicket] = useState(investor?.min_ticket_size ?? "");
   const [maxTicket, setMaxTicket] = useState(investor?.max_ticket_size ?? "");
@@ -518,6 +520,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
       email: email || null,
       businessAddress: businessAddress || null,
       yearFounded: yearFounded ? Number(yearFounded) : null,
+      companySizeBand: companySize || null,
       aum: aum || null,
       minTicketSize: ticketBand ? tc.min : minTicket || null,
       maxTicketSize: ticketBand ? tc.max : maxTicket || null,
@@ -742,6 +745,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
               <Input type="number" min={1800} max={new Date().getFullYear()}
                 value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
             </div>
+            <CompanySizeField id="inv-company-size" value={companySize} onChange={setCompanySize} />
             <div className="space-y-1.5">
               <Label>Headquarter City</Label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Singapore" />
@@ -1067,6 +1071,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           <Input type="number" min={1900} max={2030} value={yearFounded}
             onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
         </div>
+        <CompanySizeField id="inv-company-size-2" value={companySize} onChange={setCompanySize} />
         <div className="space-y-1.5">
           <Label>Company Name <span className="text-destructive">*</span></Label>
           <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
