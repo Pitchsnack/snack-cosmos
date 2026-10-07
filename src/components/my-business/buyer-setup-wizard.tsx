@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, Info, Loader2, Lock, ShieldCheck, X, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import logoBlack from "@/assets/pitchsnack-black.png";
-import { SectorPicker } from "@/components/startups/sector-fields";
+import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { typeTone } from "@/lib/buyer-profile";
 import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
@@ -455,31 +455,12 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         const picks = a.sectors.filter((s) => s !== SECTOR_AGNOSTIC);
         const setS = (v: string[]) => set({ sectors: v }, { preferred_industries: v });
         return (
-          <div className="space-y-3">
-            <button type="button" role="checkbox" aria-checked={ag} onClick={() => setS(ag ? picks : [SECTOR_AGNOSTIC, ...picks])}
-              className={`flex w-full items-center gap-3 rounded-[12px] border px-4 py-3 text-left ${ag ? "border-[#1E2A4A] bg-[#EEF1F7] dark:bg-[#1B2140]" : "border-[#DCDFE5] bg-white dark:border-border dark:bg-background"}`}>
-              <span className={`grid h-4 w-4 flex-none place-items-center rounded border-[1.5px] text-white ${ag ? "border-[#1E2A4A] bg-[#1E2A4A]" : "border-[#C3C8D2]"}`}>{ag && <Check className="h-3 w-3" />}</span>
-              <span><b className="block text-[15px] font-semibold">Sector agnostic</b><small className="text-[13px] text-[#6B7280]">I look at companies in every industry</small></span>
-            </button>
-            {ag && <p className="flex items-start gap-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]"><AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.</p>}
-            <div className={ag ? "pointer-events-none opacity-50" : ""} aria-disabled={ag}>
-              <SectorPicker value={null} onChange={(v) => {
-                if (!v || picks.includes(v)) return;
-                if (picks.length >= 5) { toast.error("Pick up to 5 industries, or Sector agnostic."); return; }
-                setS([...(ag ? [SECTOR_AGNOSTIC] : []), ...picks, v]);
-              }} />
-            </div>
-            {picks.length > 0 && (
-              <div className={`flex flex-wrap gap-1.5 ${ag ? "opacity-50" : ""}`}>
-                {picks.map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1 rounded-full bg-[#EEF1F7] px-2.5 py-1 text-[12.5px] font-medium text-[#1E2A4A] dark:bg-[#1B2140] dark:text-foreground">
-                    {s}<button type="button" aria-label={`Remove ${s}`} onClick={() => setS(a.sectors.filter((x) => x !== s))}><X className="h-3 w-3" /></button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <Err m={forced.sectors && errors.sectors} />
-          </div>
+          <SetSectorPicker mode="multi" value={picks} onChange={(v) => setS([...(ag ? [SECTOR_AGNOSTIC] : []), ...v])}
+            limitMsg="Pick up to 5 industries, or Sector agnostic."
+            agnostic={{ on: ag, onToggle: (on) => setS(on ? [SECTOR_AGNOSTIC, ...picks] : picks), line: "I look at companies in every industry",
+              note: "Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.",
+              summary: <>Sellers see <b className="text-[#151A28] dark:text-foreground">Sector agnostic</b> on your card.</> }}
+            error={forced.sectors ? errors.sectors : null} />
         );
       })() },
     desc: { req: false, t: "How would you describe your firm to sellers?", h: "In one line. Sellers read it before any NDA, so leave out names, websites and contact details.",
