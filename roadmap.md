@@ -8,6 +8,6 @@
 ## Roles and plan limits
 - [x] Phase 1: roles, plans table (9 plans), subscriptions, sign-up sets role
 - [x] Phase 2: locked tabs, plan badge, Admin › Users role/plan (Advisor view removed)
-- [ ] Hide Marketplace | Admin switch — waiting on user reply about pages reachable only via Admin
-- [ ] Phase 3: plan strip, closed cards, request/report counters, ended plans
-- [ ] Phase 4: Registration verified + Certified badge
+- [x] Hide Marketplace | Admin switch; Settings open to all; server role checks
+- [x] Phase 3: plan strip, closed cards, request/report counters, ended plans
+- [x] Phase 4: Registration verified + Certified badge
