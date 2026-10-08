@@ -26,6 +26,8 @@ import {
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
+import { FirmNotice } from "@/components/advisor/advisor-verification";
+const DECLINED_TIP = "PitchSnack declined this firm. Write to support@pitchsnack.com.";
 
 export const ADVISOR_FIRMS_KEY = ["advisor-firms", "mine"] as const;
 
@@ -292,6 +294,7 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
   const [busy, setBusy] = useState(false);
   const checklist = firmChecklist(f);
   const complete = checklist.every((i) => i.done);
+  const declined = f.verification?.state === "declined";
   const pending = f.credentials.filter((c) => c.status === "pending");
   const addr = fullAddress(f);
   const cols = SERVICE_COLS[f.services.length] ?? 2;
@@ -441,6 +444,7 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
                 title={c.name} sub={c.note || (c.status === "pending" ? "Waiting for a check by PitchSnack" : null)}
                 right={c.status === "verified"
                   ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Verified</span>
+                  : c.status === "rejected" ? <span className="shrink-0 rounded-full border border-[#FECACA] bg-[#FEF2F2] px-2 py-0.5 text-[11.5px] font-semibold text-[#B91C1C]">Can't verify</span>
                   : <span className="shrink-0 rounded-full border border-[#F3D9A6] bg-[#FFF4E0] px-2 py-0.5 text-[11.5px] font-semibold text-[#8A5A06]">Pending check</span>} />
             ))}
           </Box>
