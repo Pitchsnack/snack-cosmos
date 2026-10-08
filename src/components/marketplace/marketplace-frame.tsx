@@ -166,6 +166,15 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
     }
     setPersona(p);
   };
+  // Another role's page opened by its address lands on the account's own Browse page.
+  const navTo = useNavigate();
+  const path = typeof window !== "undefined" ? window.location.pathname : "";
+  useEffect(() => {
+    if (!locked) return;
+    const sellerOnly = /^\/(my-startups|my-financials|my-valuation|my-risk)(\/|$)/.test(path);
+    const advisorOnly = /^\/advisor\//.test(path);
+    if ((sellerOnly && locked !== "seller") || (advisorOnly && locked !== "advisor")) navTo({ to: "/marketplace/browse", replace: true });
+  }, [locked, path]);
   const advisor = persona === "advisor";
   const avatar = advisor ? "bg-gradient-to-br from-[#2BB3A3] to-[#0F766E]" : "bg-gradient-to-br from-[#fb923c] to-[#ea580c]";
   const { t } = useTranslation();
