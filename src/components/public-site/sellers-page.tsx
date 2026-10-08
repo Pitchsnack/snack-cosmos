@@ -5,8 +5,12 @@ import { getHomeHeroImages } from "@/lib/home-hero.functions";
 import { PLANS } from "./home-copy";
 import { S_BUYERS, S_CLOSE, S_FAQ, S_HERO, S_LOCK, S_PLANS, S_PRIVACY, S_PROMISES, S_REPORTS } from "./sellers-copy";
 import { Head, PlanCard } from "./public-home";
+import { HeroSlides } from "./hero-slides";
+import { SELLER_HERO_PICS } from "./sellers-hero-pics";
+import peCover from "@/assets/sellers/hero-pe-cover.jpg.asset.json";
+import filmLine from "@/assets/sellers/sector-film-line.jpg.asset.json";
 import { PublicShell, Rich, useHomeLang } from "./public-shell";
-import { BigFigureCards, IconCard, Ladder, ListingCard, PromiseCards, ReportCard, Ticks } from "./shared-parts";
+import { BigFigureCards, IconCard, Ladder, PromiseCards, ReportCard, Ticks } from "./shared-parts";
 
 const SIGNUP = "/signup?role=seller";
 type Imgs = { seller: string | null; investor: string | null };
@@ -30,7 +34,19 @@ export function SellersPage({ initial }: { initial?: Imgs }) {
   );
 }
 
-function Hero({ img }: { img: string | null }) {
+const c = (en: string, th: string) => ({ en, th });
+const CAPS = [
+  c("Browse verified buyers and investors", "ดูรายชื่อผู้ซื้อและนักลงทุนที่ผ่านการตรวจสอบ"),
+  c("Buyers see an anonymous profile, never your name", "ผู้ซื้อเห็นเพียงโปรไฟล์ไม่ระบุชื่อ ไม่เห็นชื่อของท่าน"),
+  c("A verified buyer asks, and you approve before your name is shared", "ผู้ซื้อที่ผ่านการตรวจสอบขอข้อมูล และท่านอนุมัติก่อนเปิดเผยชื่อ"),
+  c("Verified financials and a valuation, for a one-time fee", "รายงานการเงินที่ตรวจแล้วและการประเมินมูลค่า ชำระครั้งเดียว"),
+  c("Talk to several buyers at once and follow each deal", "พูดคุยกับผู้ซื้อหลายรายพร้อมกัน และติดตามแต่ละดีล"),
+];
+const SLIDES = SELLER_HERO_PICS.map((h, i) => (
+  <div key={i} className="ps-shero" dangerouslySetInnerHTML={{ __html: h.replaceAll("{{IMG0}}", peCover.url).replaceAll("{{IMG1}}", filmLine.url) }} />
+));
+
+function Hero(_: { img: string | null }) {
   const { t } = useHomeLang();
   return (
     <section id="top" className="ph-hero ps-sellers-hero">
@@ -45,7 +61,7 @@ function Hero({ img }: { img: string | null }) {
             <a href="#plans" className="ph-outline ph-outline-lg">{t(S_HERO.outline)}</a>
           </div>
         </div>
-        <ListingCard img={img} />
+        <HeroSlides captions={CAPS} slides={SLIDES} />
       </div>
     </section>
   );
