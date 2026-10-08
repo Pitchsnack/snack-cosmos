@@ -15,6 +15,8 @@ const FEE_TYPES = ["fixed", "hourly", "retainer", "success", "retainer_success",
 const BAND_KEYS = DEAL_BANDS.map((b) => b.key) as [string, ...string[]];
 
 async function requireAdvisor(sb: any, userId: string) {
+  const { data: ctl } = await sb.rpc("is_control", { _user_id: userId });
+  if (ctl) return;
   const { data } = await sb.from("users").select("advisor_view").eq("id", userId).maybeSingle();
   if (!data?.advisor_view) throw new Error("The Advisor view is not turned on for your account.");
 }
@@ -102,7 +104,7 @@ export async function loadFirmCards(sb: any, ids: string[]): Promise<AdvisorFirm
     const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
   }
-  const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: [], reviews: reviews.data ?? [] };
+  const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: (creds.data ?? []).filter((c: any) => c.status !== "rejected"), docs: [], reviews: reviews.data ?? [] };
   return rows.map((r: any) => toFirm(r, kids, urls));
 }
 
@@ -202,6 +204,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       addr_postal: data.addrPostal, website: data.website, email: data.email, phone: data.phone,
       setup_done_at: new Date().toISOString(),
     };
+    if (data.id) { const { data: ctl0 } = await sb.rpc("is_control", { _user_id: context.userId }); if (ctl0) delete (row as Record<string, unknown>).setup_done_at; }
     let id = data.id;
     if (id) {
       const { error } = await sb.from("advisor_firms").update(row).eq("id", id);
@@ -241,6 +244,18 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
         if (!d.path.startsWith(own)) throw new Error("Invalid document file.");
         const { error } = await sb.from("advisor_firm_documents").insert({ firm_id: id, file_path: d.path, name: d.name, doc_type: d.type });
         if (error) throw new Error(error.message);
+      }
+    }
+    // Admin's Edit keeps the verified snapshot in step, so its own changes never show as the firm's.
+    const { data: ctl } = await sb.rpc("is_control", { _user_id: context.userId });
+    if (ctl) {
+      const { data: f } = await sb.from("advisor_firms").select("verified_snapshot, legal_name, registration_no").eq("id", id).single();
+      if (f?.verified_snapshot) {
+        const [{ data: c }, { data: d }] = await Promise.all([
+          sb.from("advisor_firm_credentials").select("id, name, note").eq("firm_id", id),
+          sb.from("advisor_firm_documents").select("id, name, file_path").eq("firm_id", id),
+        ]);
+        await sb.from("advisor_firms").update({ verified_snapshot: { legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] } }).eq("id", id);
       }
     }
     return { id };
