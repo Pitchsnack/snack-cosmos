@@ -31,7 +31,7 @@ export const listAdvisorMarketplace = createServerFn({ method: "GET" })
       loadPublicInvestors(supabaseAdmin),
     ]);
     return {
-      listings: teasers as unknown as AdvisorTeaser[],
+      listings: (teasers as any[]).filter((t) => !t.closed) as unknown as AdvisorTeaser[],
       investors: invs.map(({ userId: _u, ...i }) => i) as AdvisorInvestor[],
     };
   });
