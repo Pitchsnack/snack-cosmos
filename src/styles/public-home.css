@@ -425,3 +425,6 @@
   .ph-red:hover, .ph-outline-lg:hover, .ph-talk:hover, .ph-cbtn:hover, .ph-node:hover, .ph-node:focus-visible { transform: none !important; }
   .ph-card:hover, .ph-card.is-open { transform: none !important; }
 }
+
+/* For sellers: the Thai H1 keeps its three lines in the left column */
+.ph[data-lang="th"] .ps-sellers-hero h1 { font-size: clamp(2.05rem, 3.4vw, 2.45rem); }
