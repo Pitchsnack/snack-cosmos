@@ -89,7 +89,9 @@ async function admin() {
 
 export const listBrowseInvestors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
+    const { requireRole } = await import("./plan-access.server");
+    await requireRole(context.userId, ["seller"]);
     const list = await loadPublicInvestors(await admin());
     return list.map(({ userId: _u, liveSince: _l, ...i }) => i as PublicInvestor);
   });
@@ -101,6 +103,8 @@ export type SellerFavourite = PublicInvestor & { status: SellerFavStatus; saved:
 export const listSellerFavourites = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { requireRole } = await import("./plan-access.server");
+    await requireRole(context.userId, ["seller"]);
     const sb = await admin();
     const { ndaState } = await import("@/lib/favourites.functions");
     const [{ data: saves }, { data: own }, { data: su }] = await Promise.all([

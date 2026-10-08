@@ -222,8 +222,16 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
   .inputValidator((d?: { excludeNda?: boolean }) => ({ excludeNda: !!d?.excludeNda }))
   .handler(async ({ data: input, context }) => loadMarketplaceTeasers(input, context.userId));
 
+/** A listing above the caller's plan cap: only its id and the plan needed leave the server. */
+export type ClosedTeaser = { id: string; closed: true; needPlan: string };
+
 /** Live listings as buyer teasers (public listing only). Shared by Browse listings and Advisor Browse. */
-export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, userId: string) {
+export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, userId: string, roleChecked = false) {
+    const { roleOf, planAccess, valueCap } = await import("@/lib/plan-access.server");
+    const role = await roleOf(userId);
+    // Sellers only ever see their own listings here; buyers, advisors and admins see the marketplace.
+    if (!roleChecked && role !== "buyer" && role !== "admin" && role !== "seller") throw new Error("This page isn't available for your account");
+    const cap = role === "seller" ? null : valueCap(await planAccess(userId));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { buildPublicListing } = await import("@/lib/public-listing");
     const { data, error } = await supabaseAdmin
@@ -241,15 +249,31 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
     // Private fields are used here only to strip names; only the public listing leaves the server.
     // Buyer Browse: listings with an active NDA live in Favourites instead.
     let rowsIn = data ?? [];
+    if (role === "seller") {
+      const [{ data: su }, { data: own }] = await Promise.all([
+        supabaseAdmin.from("startup_users").select("startup_id").eq("user_id", userId),
+        supabaseAdmin.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", userId),
+      ]);
+      const mine = new Set([...(su ?? []), ...(own ?? [])].map((x: { startup_id: string }) => x.startup_id));
+      rowsIn = rowsIn.filter((r) => mine.has(r.startup_id));
+    }
     if (input.excludeNda) {
       const { activeNdaIds } = await import("@/lib/favourites.functions");
       const nda = await activeNdaIds(userId);
       rowsIn = rowsIn.filter((r) => !nda.has(r.id));
     }
+    const nda = cap === null ? new Set<string>() : await (await import("@/lib/favourites.functions")).activeNdaIds(userId);
     return rowsIn.map((r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
+      // Above the plan's price cap (and no NDA yet): the card stays closed and no details are sent.
+      if (cap !== null && live.asking_price != null && Number(live.asking_price) > cap && !nda.has(r.id)) {
+        return { id: r.id, closed: true as const, needPlan: cap < 50 ? "Basic" : cap < 200 ? "Investor" : "Institutional" } as unknown as ReturnType<typeof open>;
+      }
+      return open(r, live);
+    });
+    function open(r: (typeof rowsIn)[number], live: HiddenDraft) {
       const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: (r as { public_image_id?: string | null }).public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, stakePct: live.stake_pct };
-    });
+    }
 }
