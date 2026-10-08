@@ -6,6 +6,9 @@ import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-bus
 import { PipelineCountBadge, MessagesCountBadge, AdvisorPipelineCountBadge } from "@/components/menu-count-badge";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { PlanBadge } from "@/components/plan-badge";
+const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 import { useSessionContext } from "@/hooks/use-session-context";
 import { usePreferences } from "@/hooks/use-preferences";
 import { ROLE_LABELS } from "@/lib/permissions";
@@ -150,10 +153,28 @@ export function PersonaBadge({ persona }: { persona: Persona }) {
 }
 
 export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
-  const { persona, setPersona, advisorAllowed } = usePersona();
+  const { persona, setPersona, advisorAllowed, role, locked } = usePersona();
   const { data } = useSessionContext();
   const { name, initials } = useUserIdentity();
-  const parts = (advisorAllowed ? ["seller", "buyer", "advisor"] : ["seller", "buyer"]) as Persona[];
+  const parts = (advisorAllowed || role ? ["seller", "buyer", "advisor"] : ["seller", "buyer"]) as Persona[];
+  const lockedTab = (p: Persona) => !!locked && p !== locked;
+  const lockTip = (p: Persona) => `${cap(p)} view is for ${p} accounts. Your account is a${locked === "advisor" ? "n" : ""} ${locked} account.`;
+  const pick = (p: Persona) => {
+    if (lockedTab(p)) {
+      toast(`Your account is a${locked === "advisor" ? "n" : ""} ${locked} account, so the ${cap(p)} tab is greyed out. Ask PitchSnack if you need a${p === "advisor" ? "n" : ""} ${p} account.`);
+      return;
+    }
+    setPersona(p);
+  };
+  // Another role's page opened by its address lands on the account's own Browse page.
+  const navTo = useNavigate();
+  const path = typeof window !== "undefined" ? window.location.pathname : "";
+  useEffect(() => {
+    if (!locked) return;
+    const sellerOnly = /^\/(my-startups|my-financials|my-valuation|my-risk)(\/|$)/.test(path);
+    const advisorOnly = /^\/advisor\//.test(path);
+    if ((sellerOnly && locked !== "seller") || (advisorOnly && locked !== "advisor")) navTo({ to: "/marketplace/browse", replace: true });
+  }, [locked, path]);
   const advisor = persona === "advisor";
   const avatar = advisor ? "bg-gradient-to-br from-[#2BB3A3] to-[#0F766E]" : "bg-gradient-to-br from-[#fb923c] to-[#ea580c]";
   const { t } = useTranslation();
@@ -192,14 +213,15 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
                 role="tab"
                 aria-selected={on}
                 aria-label={label}
-                title={label}
-                onClick={() => setPersona(p)}
+                aria-disabled={lockedTab(p) || undefined}
+                title={lockedTab(p) ? lockTip(p) : label}
+                onClick={() => pick(p)}
                 className={cn(
-                  "grid h-[30px] w-[34px] place-items-center rounded-[7px] transition-colors",
-                  on ? "bg-[var(--role-accent)] text-[var(--role-on)]" : "text-[var(--mkt-muted)] hover:text-sidebar-foreground",
+                  "relative grid h-[30px] w-[34px] place-items-center rounded-[7px] transition-colors",
+                  on ? "bg-[var(--role-accent)] text-[var(--role-on)]" : lockedTab(p) ? "cursor-not-allowed text-[#A7AEBB]" : "text-[var(--mkt-muted)] hover:text-sidebar-foreground",
                 )}
               >
-                <Icon className="h-[15px] w-[15px]" />
+                {lockedTab(p) ? <Lock className="h-[13px] w-[13px]" /> : <Icon className="h-[15px] w-[15px]" />}
               </button>
             );
           })}
@@ -238,11 +260,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-1 text-[17px] font-bold leading-tight tracking-[-0.01em]">
               <span className="truncate">{name}</span>
-              {u?.plan && (
-                <span title={`${u.plan} plan`} className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-[#EDE4FF] text-[#6D28D9]">
-                  <Crown className="h-[9px] w-[9px]" />
-                </span>
-              )}
+
             </div>
             {subtitle && (
               <div className={cn("mt-0.5 text-[13px] leading-snug text-[var(--mkt-muted)]", advisor ? "break-words" : "truncate")}>{subtitle}</div>
@@ -258,6 +276,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
           >
             {persona}
           </span>
+          {u?.planInfo && role !== "admin" && <PlanBadge name={u.planInfo.name} style={u.planInfo.badgeStyle} ended={u.planInfo.ended} />}
           {neutral && (
             <span
               className={cn(
@@ -292,15 +311,23 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
               role="tab"
               aria-selected={on}
               aria-label={aria}
-              onClick={() => setPersona(p)}
+              aria-disabled={lockedTab(p) || undefined}
+              aria-describedby={lockedTab(p) ? `tip-${p}` : undefined}
+              onClick={() => pick(p)}
               className={cn(
-                "flex h-10 items-center justify-center gap-[7px] rounded-[9px] font-semibold transition-colors",
+                "group relative flex h-10 items-center justify-center gap-[7px] rounded-[9px] font-semibold transition-colors",
                 three ? "text-[13px]" : "text-[14px]",
                 on
                   ? "bg-[var(--role-accent)] text-[var(--role-on)]"
-                  : "text-[var(--mkt-muted)] hover:text-sidebar-foreground",
+                  : lockedTab(p) ? "cursor-not-allowed text-[#A7AEBB]" : "text-[var(--mkt-muted)] hover:text-sidebar-foreground",
               )}
             >
+              {lockedTab(p) && (
+                <>
+                  <Lock className="h-3 w-3" />
+                  <span id={`tip-${p}`} role="tooltip" className={cn("pointer-events-none absolute top-[calc(100%+6px)] z-50 hidden w-[200px] rounded-[9px] bg-[#151A28] px-2.5 py-2 text-left text-[12px] font-normal leading-snug text-white group-hover:block group-focus-visible:block", p === "seller" ? "left-0" : p === "advisor" ? "right-0" : "left-1/2 -translate-x-1/2")}>{lockTip(p)}</span>
+                </>
+              )}
               {three ? (p === "seller" ? "Seller" : p === "buyer" ? "Buyer" : "Advisor") : (
                 <>
                   <Icon className="h-[15px] w-[15px]" />

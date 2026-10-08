@@ -30,6 +30,8 @@ export interface SessionContextDTO {
     verified: boolean;
     plan: string | null;
     advisorView: boolean;
+    accountRole: "seller" | "buyer" | "advisor" | "admin" | null;
+    planInfo: { id: string; key: string; name: string; badgeStyle: string; ended: boolean; termEnd: string | null } | null;
   } | null;
   roles: AppRole[];
   tenants: Array<{
@@ -57,7 +59,7 @@ export const getSessionContext = createServerFn({ method: "GET" })
       await Promise.all([
         supabase
           .from("users")
-          .select("id,email,first_name,last_name,status,user_type,primary_tenant_id,advisor_view")
+          .select("id,email,first_name,last_name,status,user_type,primary_tenant_id,advisor_view,account_role")
           .eq("id", userId)
           .maybeSingle(),
         supabase
@@ -100,13 +102,16 @@ export const getSessionContext = createServerFn({ method: "GET" })
       (ctxRow?.roles as unknown as { role_code: AppRole } | null)?.role_code ?? null;
 
     const planTenant = activeTenantId ?? (userRow?.primary_tenant_id as string | null) ?? tenants[0]?.tenantId ?? null;
-    const [{ data: prof }, { data: ver }, { data: sub }] = await Promise.all([
+    const [{ data: prof }, { data: ver }, { data: sub }, { data: mySub }] = await Promise.all([
       supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("user_verifications").select("user_id").eq("user_id", userId).maybeSingle(),
       planTenant
         ? supabase.from("tenant_subscription").select("subscription_plan").eq("tenant_id", planTenant).maybeSingle()
         : Promise.resolve({ data: null }),
+      supabase.from("subscriptions").select("status, term_end, plans(id, key, name, badge_style)").eq("user_id", userId).maybeSingle(),
     ]);
+    const sp = (mySub as any)?.plans;
+    const planInfo = sp ? { id: sp.id, key: sp.key, name: sp.name, badgeStyle: sp.badge_style, ended: (mySub as any).status === "ended", termEnd: (mySub as any).term_end ?? null } : null;
     const plan = (sub as { subscription_plan?: string } | null)?.subscription_plan ?? null;
 
     const permissionSet = new Set<Permission>();
@@ -138,6 +143,8 @@ export const getSessionContext = createServerFn({ method: "GET" })
             verified: Boolean(ver),
             plan: plan && !/^free$/i.test(plan) ? plan : null,
             advisorView: Boolean((userRow as { advisor_view?: boolean }).advisor_view),
+            accountRole: ((userRow as { account_role?: string }).account_role ?? null) as any,
+            planInfo,
           }
         : null,
       roles,

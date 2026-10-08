@@ -36,18 +36,18 @@ export const listUsers = createServerFn({ method: "GET" })
     if (data.tenantId) {
       const { data: rows, error } = await supabase
         .from("user_tenants")
-        .select("users!inner(id,email,first_name,last_name,status,user_type,last_login_at,created_at,advisor_view)")
+        .select("users!inner(id,email,first_name,last_name,status,user_type,last_login_at,created_at,advisor_view,account_role)")
         .eq("tenant_id", data.tenantId);
       if (error) throw new Error(error.message);
-      return (rows ?? []).map((r) => r.users);
+      return withPlans(supabase, (rows ?? []).map((r) => r.users as any));
     }
     const { data: rows, error } = await supabase
       .from("users")
-      .select("id,email,first_name,last_name,status,user_type,last_login_at,created_at,advisor_view")
+      .select("id,email,first_name,last_name,status,user_type,last_login_at,created_at,advisor_view,account_role")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return withPlans(supabase, rows ?? []);
   });
 
 export const inviteUser = createServerFn({ method: "POST" })
@@ -239,5 +239,60 @@ export const permanentlyDeleteUser = createServerFn({ method: "POST" })
       event_type: "ROLE_CHANGE",
       details: { targetUserId: data.targetUserId, permanentlyDeleted: true },
     });
+    return { ok: true };
+  });
+
+async function withPlans(supabase: any, rows: any[]) {
+  const ids = rows.map((r) => r.id);
+  if (!ids.length) return rows;
+  const [{ data: subs }, { data: profs }] = await Promise.all([
+    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id").in("user_id", ids),
+    supabase.from("user_profiles").select("user_id, organisation").in("user_id", ids),
+  ]);
+  const sm = Object.fromEntries((subs ?? []).map((x: any) => [x.user_id, x]));
+  const om = Object.fromEntries((profs ?? []).map((x: any) => [x.user_id, x.organisation]));
+  return rows.map((r) => ({ ...r, subscription: sm[r.id] ?? null, organisation: om[r.id] ?? null }));
+}
+
+/** Every plan, for Admin › Users and the plan strip (values live in the plans table). */
+export const listPlans = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.from("plans").select("*").order("role").order("sort");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+/** Admin › Users: one role per account and its plan. Only Control admins. */
+export const setUserAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    targetUserId: z.string().uuid(),
+    role: z.enum(["seller", "buyer", "advisor", "admin"]),
+    planId: z.string().uuid().nullable(),
+    managerUserId: z.string().uuid().nullable().optional(),
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: isCtl } = await supabase.rpc("is_control", { _user_id: userId });
+    if (!isCtl) throw new Error("Only admins can change roles and plans");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { error } = await sb.from("users").update({ account_role: data.role }).eq("id", data.targetUserId);
+    if (error) throw new Error(error.message);
+    if (data.role === "admin" || !data.planId) {
+      await sb.from("subscriptions").delete().eq("user_id", data.targetUserId);
+    } else {
+      const { data: plan } = await sb.from("plans").select("id, role, term_months").eq("id", data.planId).single();
+      if (!plan || plan.role !== data.role) throw new Error("That plan is for another role");
+      const { data: cur } = await sb.from("subscriptions").select("plan_id, status").eq("user_id", data.targetUserId).maybeSingle();
+      const fresh = !cur || cur.plan_id !== plan.id || cur.status === "ended";
+      const end = new Date(); end.setMonth(end.getMonth() + plan.term_months);
+      await sb.from("subscriptions").upsert({
+        user_id: data.targetUserId, plan_id: plan.id, status: "active", manager_user_id: data.managerUserId ?? null,
+        ...(fresh ? { term_start: new Date().toISOString(), term_end: end.toISOString() } : {}), updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    }
+    await supabase.from("security_events").insert({ user_id: userId, event_type: "ROLE_CHANGE", details: { targetUserId: data.targetUserId, accountRole: data.role, planId: data.planId } });
     return { ok: true };
   });
