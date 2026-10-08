@@ -3571,6 +3571,158 @@ export type Database = {
           },
         ]
       }
+      plan_reports: {
+        Row: {
+          mode: string
+          per_term: number | null
+          plan_id: string
+          report_key: string
+        }
+        Insert: {
+          mode: string
+          per_term?: number | null
+          plan_id: string
+          report_key: string
+        }
+        Update: {
+          mode?: string
+          per_term?: number | null
+          plan_id?: string
+          report_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_reports_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_usage: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          ref: string | null
+          term_start: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          ref?: string | null
+          term_start: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          ref?: string | null
+          term_start?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          badge_style: string
+          clients_mode: string | null
+          clients_n: number | null
+          completion_fee_pct: number | null
+          has_data_room: boolean
+          has_manager: boolean
+          has_screening: boolean
+          has_shortlists: boolean
+          has_site_visit: boolean
+          has_valuation_video: boolean
+          id: string
+          key: string
+          mandates_mode: string | null
+          mandates_n: number | null
+          name: string
+          price_thb: number | null
+          price_type: string
+          requests_mode: string
+          requests_n: number | null
+          role: string
+          sort: number
+          status: string
+          term_months: number
+          updated_at: string
+          users_mode: string | null
+          users_n: number | null
+          value_cap_thb_m: number | null
+          verification_mode: string | null
+          verification_price_thb: number | null
+        }
+        Insert: {
+          badge_style: string
+          clients_mode?: string | null
+          clients_n?: number | null
+          completion_fee_pct?: number | null
+          has_data_room?: boolean
+          has_manager?: boolean
+          has_screening?: boolean
+          has_shortlists?: boolean
+          has_site_visit?: boolean
+          has_valuation_video?: boolean
+          id?: string
+          key: string
+          mandates_mode?: string | null
+          mandates_n?: number | null
+          name: string
+          price_thb?: number | null
+          price_type: string
+          requests_mode?: string
+          requests_n?: number | null
+          role: string
+          sort?: number
+          status?: string
+          term_months: number
+          updated_at?: string
+          users_mode?: string | null
+          users_n?: number | null
+          value_cap_thb_m?: number | null
+          verification_mode?: string | null
+          verification_price_thb?: number | null
+        }
+        Update: {
+          badge_style?: string
+          clients_mode?: string | null
+          clients_n?: number | null
+          completion_fee_pct?: number | null
+          has_data_room?: boolean
+          has_manager?: boolean
+          has_screening?: boolean
+          has_shortlists?: boolean
+          has_site_visit?: boolean
+          has_valuation_video?: boolean
+          id?: string
+          key?: string
+          mandates_mode?: string | null
+          mandates_n?: number | null
+          name?: string
+          price_thb?: number | null
+          price_type?: string
+          requests_mode?: string
+          requests_n?: number | null
+          role?: string
+          sort?: number
+          status?: string
+          term_months?: number
+          updated_at?: string
+          users_mode?: string | null
+          users_n?: number | null
+          value_cap_thb_m?: number | null
+          verification_mode?: string | null
+          verification_price_thb?: number | null
+        }
+        Relationships: []
+      }
       private_notes: {
         Row: {
           direction: string
@@ -4583,6 +4735,7 @@ export type Database = {
           registered_number: string | null
           registered_status: string | null
           registered_type: string | null
+          registration_verified_at: string | null
           regulatory_licenses: Json
           sector: string | null
           setup_done_at: string | null
@@ -4629,6 +4782,7 @@ export type Database = {
           registered_number?: string | null
           registered_status?: string | null
           registered_type?: string | null
+          registration_verified_at?: string | null
           regulatory_licenses?: Json
           sector?: string | null
           setup_done_at?: string | null
@@ -4675,6 +4829,7 @@ export type Database = {
           registered_number?: string | null
           registered_status?: string | null
           registered_type?: string | null
+          registration_verified_at?: string | null
           regulatory_licenses?: Json
           sector?: string | null
           setup_done_at?: string | null
@@ -4697,6 +4852,53 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          manager_user_id: string | null
+          nda_credits: number
+          plan_id: string
+          price_paid_thb: number | null
+          status: string
+          term_end: string | null
+          term_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          manager_user_id?: string | null
+          nda_credits?: number
+          plan_id: string
+          price_paid_thb?: number | null
+          status?: string
+          term_end?: string | null
+          term_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          manager_user_id?: string | null
+          nda_credits?: number
+          plan_id?: string
+          price_paid_thb?: number | null
+          status?: string
+          term_end?: string | null
+          term_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -5077,6 +5279,7 @@ export type Database = {
       }
       users: {
         Row: {
+          account_role: string | null
           advisor_view: boolean
           ai_agent_id: string | null
           created_at: string
@@ -5094,6 +5297,7 @@ export type Database = {
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
+          account_role?: string | null
           advisor_view?: boolean
           ai_agent_id?: string | null
           created_at?: string
@@ -5111,6 +5315,7 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Update: {
+          account_role?: string | null
           advisor_view?: boolean
           ai_agent_id?: string | null
           created_at?: string

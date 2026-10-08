@@ -421,6 +421,13 @@
       "when": 1791426251471,
       "tag": "0059_advisor_admin_favourites",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1791445934396,
+      "tag": "0060_roles_and_plans",
+      "breakpoints": true
     }
   ]
 }
