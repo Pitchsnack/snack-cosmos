@@ -14,10 +14,12 @@
 - [x] Plan strip chips/price line, closed cards, contact requests to investors, NDA credits, breadcrumb fix
 
 ## Admin Plans and verification
-- [ ] Numbered request counter layout for every role
-- [ ] Test contact request accept and decline; restore test accounts; screenshots
-- [ ] Ended buyer screenshot; restore end date
-- [ ] Admin Plans editor, review, validation, history and publishing
-- [ ] Scheduled Bangkok-midnight changes and subscriber price retention
-- [ ] Shared database-driven public plan cards and subscription prices
-- [ ] Verify Admin Plans and Review screenshots
+- [x] Numbered request counter layout for every role
+- [x] Test contact request accept and decline; restore test accounts; screenshots
+- [x] Ended buyer screenshot; restore end date
+- [x] Admin Plans editor, review, validation, history and publishing
+- [x] Scheduled Bangkok-midnight changes and subscriber price retention
+- [x] Shared database-driven public plan cards and subscription prices
+- [x] Verify Admin Plans and Review screenshots
+
+- Scheduled midnight execution and subscriber-price retention are implemented; future-date execution has not been observed live.
