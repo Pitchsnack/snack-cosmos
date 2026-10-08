@@ -1,6 +1,6 @@
 import { cloneElement, isValidElement, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, LockOpen, BadgeCheck, ShieldCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
+import { Clock, LockOpen, BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/language";
 import type { PublicListing } from "@/lib/public-listing";

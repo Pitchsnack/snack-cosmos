@@ -79,3 +79,28 @@ export const myContactRequests = createServerFn({ method: "GET" })
     const { data } = await (context.supabase as any).from("plan_usage").select("ref").eq("user_id", context.userId).eq("kind", "contact");
     return (data ?? []).map((r: any) => r.ref as string);
   });
+
+/** Admin: the company's registration verified switch (drives the Certified badge). */
+export const getRegistrationVerified = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ startupId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { requireAccountAdmin } = await import("./plan-access.server");
+    await requireAccountAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await (supabaseAdmin as any).from("startups").select("registration_verified_at").eq("id", data.startupId).maybeSingle();
+    return { at: (row?.registration_verified_at as string | null) ?? null };
+  });
+
+export const setRegistrationVerified = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ startupId: z.string().uuid(), on: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { requireAccountAdmin } = await import("./plan-access.server");
+    await requireAccountAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const at = data.on ? new Date().toISOString() : null;
+    const { error } = await (supabaseAdmin as any).from("startups").update({ registration_verified_at: at }).eq("id", data.startupId);
+    if (error) throw new Error(error.message);
+    return { at };
+  });
