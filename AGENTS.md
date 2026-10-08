@@ -25,3 +25,4 @@
 - Sector picking uses one SetSectorPicker (components/common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic — so every form behaves the same.
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts, so the rules hold even through the database API.
 - Roles/plans: account_role enforced in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
+- Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
