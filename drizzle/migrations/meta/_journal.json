@@ -449,6 +449,13 @@
       "when": 1791452014438,
       "tag": "0063_admin_plan_publishing",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1791454098394,
+      "tag": "0064_scheduled_plan_changes_isolate_failures",
+      "breakpoints": true
     }
   ]
 }
