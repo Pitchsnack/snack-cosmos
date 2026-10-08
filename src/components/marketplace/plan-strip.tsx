@@ -1,8 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Check, Lock } from "lucide-react";
-import { getMyPlanStrip, type PlanStrip as Strip } from "@/lib/plan.functions";
+import { getMyPlanStrip, myContactRequests, requestInvestorContact, type PlanStrip as Strip } from "@/lib/plan.functions";
 import { PlanBadge } from "@/components/plan-badge";
 import { useHasSession } from "@/hooks/use-has-session";
 
@@ -77,5 +79,36 @@ export function ClosedListingCard({ needPlan, star }: { needPlan: string; star?:
       <p className="max-w-[260px] text-[12.5px] text-muted-foreground">This business is listed above what your plan covers. Its details open on the {needPlan} plan.</p>
       <Link to="/preferences" hash="subscription" className="text-[13px] font-semibold text-accent hover:underline">See plans</Link>
     </div>
+  );
+}
+
+/** Seller: ask PitchSnack to introduce this investor. Locked when the plan has no contact requests left. */
+export function ContactRequestButton({ investorId }: { investorId: string }) {
+  const { data: strip } = usePlanStrip();
+  const qc = useQueryClient();
+  const send = useServerFn(requestInvestorContact);
+  const listFn = useServerFn(myContactRequests);
+  const { data: sent = [] } = useQuery({ queryKey: ["contact-requests"], queryFn: () => listFn() });
+  const [busy, setBusy] = useState(false);
+  const lock = requestLock(strip);
+  if (sent.includes(investorId)) return <span className="inline-flex h-[34px] items-center rounded-md border px-3 text-sm font-medium text-muted-foreground">Contact requested</span>;
+  return (
+    <button
+      type="button"
+      aria-disabled={!!lock || undefined}
+      title={lock ?? "Ask PitchSnack to introduce you"}
+      disabled={busy}
+      onClick={async (e) => {
+        e.stopPropagation();
+        if (lock) { toast(lock, { description: "Contact requests come with the Professional plans.", action: { label: "See plans", onClick: () => { window.location.href = "/preferences#subscription"; } } }); return; }
+        setBusy(true);
+        try { await send({ data: { investorId } }); toast.success("Contact request sent. PitchSnack will introduce you."); }
+        catch (err) { toast.error((err as Error).message); }
+        finally { setBusy(false); qc.invalidateQueries({ queryKey: ["plan-strip"] }); qc.invalidateQueries({ queryKey: ["contact-requests"] }); }
+      }}
+      className={`inline-flex h-[34px] items-center gap-1.5 rounded-md px-3 text-sm font-medium ${lock ? "cursor-not-allowed bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
+    >
+      {lock && <Lock className="h-3.5 w-3.5" />}Request contact
+    </button>
   );
 }
