@@ -107,8 +107,8 @@ export const listAdminAdvisorFirms = createServerFn({ method: "GET" })
     await assertAdmin(context as Ctx);
     const sb = await admin();
     const { firms } = await loadFirms(sb);
-    const { data: favs } = await sb.from("advisor_favourites").select("*").eq("user_id", context.userId).eq("view", "admin");
-    return { firms, me: context.userId, favourites: (favs ?? []).map((f: any) => f.firm_id ?? f.item_id).filter(Boolean) as string[] };
+    const { data: favs } = await sb.from("advisor_favourites").select("item_id").eq("user_id", context.userId).eq("view", "admin").eq("item_kind", "firm");
+    return { firms, me: context.userId, favourites: (favs ?? []).map((f: any) => f.item_id) as string[] };
   });
 
 export const advisorVerificationCount = createServerFn({ method: "GET" })
