@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { HERO_PICS } from "./home-hero-pics";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  ArrowRight, ChartNoAxesColumn, ChevronDown, CircleCheck, ClipboardList, Database, EyeOff, FileText, Loader, Lock, MapPin, Shield, Star, User, Users,
+  ArrowRight, ChartNoAxesColumn, CircleCheck, ClipboardList, Database, FileText, Loader, MapPin, Shield, User, Users,
 } from "lucide-react";
 import { getHomeHeroImages } from "@/lib/home-hero.functions";
 import { BADGES, CLOSE, CONNECT, FAQ, FIT, HERO, HOW, PLANS, ROLE, WHY, type Plan } from "./home-copy";
