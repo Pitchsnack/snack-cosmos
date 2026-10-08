@@ -9,8 +9,8 @@ export const PRIVACY_DOC: DocBlock[] = [
 },
 {
 "k": "p",
-"en": "Last updated 8 October 2026 · In effect from **[effective date]**",
-"th": "ปรับปรุงล่าสุด 8 ตุลาคม 2569 · มีผลใช้ **[วันที่มีผล]**"
+"en": "Last updated 8 October 2026 · In effect from {effective}",
+"th": "ปรับปรุงล่าสุด 8 ตุลาคม 2569 · มีผลใช้ {effective}"
 },
 {
 "k": "p",
@@ -166,8 +166,8 @@ export const PRIVACY_DOC: DocBlock[] = [
 },
 {
 "k": "p",
-"en": "Some of our service providers store data outside Thailand **[e.g. Singapore or the EU]**. We send data only to countries with adequate protection, or under contracts with the safeguards the PDPA requires.",
-"th": "ผู้ให้บริการบางรายของเราเก็บข้อมูลไว้นอกประเทศไทย **[เช่น สิงคโปร์ หรือสหภาพยุโรป]** เราส่งข้อมูลไปเฉพาะประเทศที่มีมาตรฐานคุ้มครองข้อมูลเพียงพอ หรือภายใต้สัญญาที่มีมาตรการคุ้มครองตามที่ PDPA กำหนด"
+"en": "Some of our service providers store data outside Thailand {transfer}. We send data only to countries with adequate protection, or under contracts with the safeguards the PDPA requires.",
+"th": "ผู้ให้บริการบางรายของเราเก็บข้อมูลไว้นอกประเทศไทย {transfer} เราส่งข้อมูลไปเฉพาะประเทศที่มีมาตรฐานคุ้มครองข้อมูลเพียงพอ หรือภายใต้สัญญาที่มีมาตรการคุ้มครองตามที่ PDPA กำหนด"
 },
 {
 "k": "h",
