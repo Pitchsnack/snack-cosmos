@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ChartNoAxesColumn, ChevronDown, EyeOff, FileText, Lock, MessageSquare, Route as RouteIcon, Scale, ShieldCheck, Star } from "lucide-react";
+import { ChevronDown, EyeOff, FileText, Lock, MessageSquare, Scale, ShieldCheck, Star } from "lucide-react";
 import { getHomeHeroImages } from "@/lib/home-hero.functions";
 import { PLANS } from "./home-copy";
 import { B_CARD, B_CLOSE, B_DEAL, B_FAQ, B_HERO, B_HOW, B_MANDATE, B_NUMBERS, B_PLANS, B_PROFILE, B_PROMISES } from "./buyers-copy";
 import { Head, PlanCard } from "./public-home";
 import { PublicShell, Rich, useHomeLang } from "./public-shell";
-import { BigFigureCards, IconCard, Ladder, ListingCard, PromiseCards, ReportCard, Ticks } from "./shared-parts";
+import { BigFigureCards, IconCard, Ladder, ReportCard, Ticks } from "./shared-parts";
+import { BuyersHeroSlides } from "./buyers-hero";
+import { BuyersWays } from "./buyers-ways";
 
 const SIGNUP = "/signup?role=buyer";
 
@@ -19,7 +21,7 @@ export function BuyersPage({ initial }: { initial?: Imgs }) {
   return (
     <PublicShell current="buyers" talkHref="#start">
       <Hero img={imgs.seller} />
-      <Promises />
+      <BuyersWays />
       <How />
       <Mandate />
       <Numbers />
@@ -47,19 +49,7 @@ function Hero({ img }: { img: string | null }) {
             <a href="#how" className="ph-outline ph-outline-lg">{t(B_HERO.outline)}</a>
           </div>
         </div>
-        <ListingCard img={img} />
-      </div>
-    </section>
-  );
-}
-
-const PROMISE_ICONS = [EyeOff, ShieldCheck, RouteIcon, ChartNoAxesColumn];
-
-function Promises() {
-  return (
-    <section id="promises" className="ph-sec ph-white">
-      <div className="ph-wrap">
-        <PromiseCards h2={B_PROMISES.h2} intro={B_PROMISES.intro} cards={B_PROMISES.cards} icons={PROMISE_ICONS} />
+        <BuyersHeroSlides img={img} />
       </div>
     </section>
   );
