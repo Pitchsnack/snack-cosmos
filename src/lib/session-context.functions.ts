@@ -111,7 +111,7 @@ export const getSessionContext = createServerFn({ method: "GET" })
       supabase.from("subscriptions").select("status, term_end, plans(id, key, name, badge_style)").eq("user_id", userId).maybeSingle(),
     ]);
     const sp = (mySub as any)?.plans;
-    const planInfo = sp ? { id: sp.id, key: sp.key, name: sp.name, badgeStyle: sp.badge_style, ended: (mySub as any).status === "ended", termEnd: (mySub as any).term_end ?? null } : null;
+    const planInfo = sp ? { id: sp.id, key: sp.key, name: sp.name, badgeStyle: sp.badge_style, ended: (mySub as any).status === "ended" || !!((mySub as any).term_end && new Date((mySub as any).term_end) < new Date()), termEnd: (mySub as any).term_end ?? null } : null;
     const plan = (sub as { subscription_plan?: string } | null)?.subscription_plan ?? null;
 
     const permissionSet = new Set<Permission>();
