@@ -149,6 +149,7 @@ export function PublicListingCard({
         {priv && <div className={cn("truncate text-[16px] font-bold text-[#111827] transition-colors", interactive && "group-hover:text-accent")} title={priv.name}>{priv.name}</div>}
         <h3 className={cn(priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]", "transition-colors", interactive && !priv && "group-hover:text-accent")}>{l.headline || <span className="text-muted-foreground">{t("Add a headline")}</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1">
+          {l.certified && <Badge tone="green" icon={<ShieldCheck className="h-3 w-3" />}>{t("Certified")}</Badge>}
           {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>{t("Verified company")}</Badge>}
           {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>{t("Verified financials")}</Badge>
             : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>{t("Verified financials · optional")}</Badge>}

@@ -14,9 +14,9 @@ export type AdvisorTeaser = { id: string; listing: PublicListing; dealType?: str
 export type AdvisorInvestor = PublicInvestor & { liveSince: string | null };
 export type AdvisorFav = { kind: "listing" | "investor"; id: string; at: string };
 
-async function requireAdvisor(sb: any, userId: string) {
-  const { data } = await sb.from("users").select("advisor_view").eq("id", userId).maybeSingle();
-  if (!data?.advisor_view) throw new Error("The Advisor view is not turned on for your account.");
+async function requireAdvisor(_sb: any, userId: string) {
+  const { requireRole } = await import("@/lib/plan-access.server");
+  await requireRole(userId, ["advisor"]);
 }
 
 export const listAdvisorMarketplace = createServerFn({ method: "GET" })
@@ -27,11 +27,11 @@ export const listAdvisorMarketplace = createServerFn({ method: "GET" })
     const { loadPublicInvestors } = await import("@/lib/investor-browse.functions");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [teasers, invs] = await Promise.all([
-      loadMarketplaceTeasers({ excludeNda: false }, context.userId),
+      loadMarketplaceTeasers({ excludeNda: false }, context.userId, true),
       loadPublicInvestors(supabaseAdmin),
     ]);
     return {
-      listings: teasers as unknown as AdvisorTeaser[],
+      listings: (teasers as any[]).filter((t) => !t.closed) as unknown as AdvisorTeaser[],
       investors: invs.map(({ userId: _u, ...i }) => i) as AdvisorInvestor[],
     };
   });

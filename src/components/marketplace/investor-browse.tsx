@@ -1,3 +1,4 @@
+import { ContactRequestButton, PlanStrip } from "@/components/marketplace/plan-strip";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Briefcase, Lock, Search, Star, X } from "lucide-react";
@@ -304,6 +305,8 @@ export function InvestorBrowse() {
           hint="Pick your company's revenue. Shows investors whose minimum is at or below it." />
       </div>
 
+      <div className="shrink-0"><PlanStrip /></div>
+
       <div className="flex shrink-0 items-start gap-2 rounded-[10px] bg-muted/60 px-3 py-2 text-[12.5px] text-muted-foreground">
         <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         Investors appear as hidden profiles. Names, contacts and exact figures show in your Pipeline and Contacts once an NDA is approved.
@@ -335,7 +338,7 @@ export function InvestorBrowse() {
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
               {current ? (
-                <InvestorDetail key={current.id} i={current} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} />
+                <InvestorDetail key={current.id} i={current} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} /><ContactRequestButton investorId={current.id} /></div>} />
               ) : (
                 <p className="px-6 py-16 text-center text-sm text-muted-foreground">No investor selected. Widen or clear the filters to see investors.</p>
               )}
@@ -362,7 +365,7 @@ export function InvestorBrowse() {
       )}
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent className="max-h-[88vh] overflow-y-auto p-0 sm:max-w-[820px]">
-          {modal && <InvestorDetail key={modal.id} i={modal} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} />}
+          {modal && <InvestorDetail key={modal.id} i={modal} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} /><ContactRequestButton investorId={modal.id} /></div>} />}
         </DialogContent>
       </Dialog>
     </div>

@@ -32,6 +32,7 @@ export const listUsers = createServerFn({ method: "GET" })
     z.object({ tenantId: z.string().uuid().nullable().optional() }).parse(input ?? {}),
   )
   .handler(async ({ context, data }) => {
+    await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
     const { supabase } = context;
     if (data.tenantId) {
       const { data: rows, error } = await supabase
@@ -70,6 +71,7 @@ export const inviteUser = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
+    await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
     const { supabase, userId } = context;
     await requireControlOrTenantAdmin(supabase, userId, data.tenantId ?? null);
 
@@ -140,6 +142,7 @@ export const updateUserStatus = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
+    await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
     const { supabase, userId } = context;
     await requireControlOrTenantAdmin(supabase, userId, null);
     const { error } = await supabase
@@ -172,6 +175,7 @@ export const assignRole = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
+    await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
     const { supabase, userId } = context;
     await requireControlOrTenantAdmin(supabase, userId, data.tenantId ?? null);
     const { data: role } = await supabase
@@ -198,6 +202,7 @@ export const setAdvisorView = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ targetUserId: z.string().uuid(), on: z.boolean() }).parse(input))
   .handler(async ({ context, data }) => {
+    await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
     const { supabase, userId } = context;
     await requireControlOrTenantAdmin(supabase, userId, null);
     const { error } = await supabase.from("users").update({ advisor_view: data.on }).eq("id", data.targetUserId);
@@ -210,6 +215,7 @@ export const permanentlyDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ targetUserId: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
+    await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
     const { supabase, userId } = context;
     const { data: isCtl } = await supabase.rpc("is_control", { _user_id: userId });
     if (!isCtl) throw new Error("Only Control admins can permanently delete accounts");
@@ -273,6 +279,7 @@ export const setUserAccess = createServerFn({ method: "POST" })
     managerUserId: z.string().uuid().nullable().optional(),
   }).parse(input))
   .handler(async ({ context, data }) => {
+    await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
     const { supabase, userId } = context;
     const { data: isCtl } = await supabase.rpc("is_control", { _user_id: userId });
     if (!isCtl) throw new Error("Only admins can change roles and plans");

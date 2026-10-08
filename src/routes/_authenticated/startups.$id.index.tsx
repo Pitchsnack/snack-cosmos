@@ -1,3 +1,4 @@
+import { RegistrationVerifiedSwitch } from "@/components/startups/registration-verified-switch";
 import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink, Mail, MapPin, Calendar, Pencil, Linkedin, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -106,6 +107,7 @@ function StartupDetailPage() {
               {s.industry && <Badge variant="outline">{s.industry}</Badge>}
               <Badge variant="outline">{s.status}</Badge>
               <Badge variant="outline">{s.visibility}</Badge>
+              <RegistrationVerifiedSwitch startupId={s.id} />
               <GlobalStartupLineageBadge
                 sourceGlobalId={s.source_global_id}
                 importedAt={s.imported_at}
