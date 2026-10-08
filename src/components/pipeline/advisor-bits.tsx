@@ -128,7 +128,7 @@ export function AdvisorNdaDialog({ dealId, side, onClose }: { dealId: string; si
   );
 }
 
-function AdvisorProfileDialog({ dealId, side, onClose }: { dealId: string; side: Side; onClose: () => void }) {
+export function AdvisorProfileDialog({ dealId, side, onClose }: { dealId: string; side: Side; onClose: () => void }) {
   const f = useServerFn(dealAdvisorProfile);
   const q = useQuery({ queryKey: ["advisor-profile", dealId, side], queryFn: () => f({ data: { dealId, side } }) });
   return (

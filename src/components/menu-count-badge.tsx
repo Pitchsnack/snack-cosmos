@@ -68,13 +68,13 @@ export function AdvisorPipelineCountBadge({ collapsed = false }: { collapsed?: b
 export function MessagesCountBadge({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
   const fn = useServerFn(messagesBadgeCount);
-  const active = useRouterState({ select: (s) => s.location.pathname === "/marketplace/messages" });
+  const active = useRouterState({ select: (s) => s.location.pathname === "/marketplace/messages" || s.location.pathname === "/advisor/messages" });
   const { data } = useQuery({ queryKey: ["messages", "count", persona], queryFn: () => fn({ data: { as: persona } }), staleTime: 60_000, refetchOnWindowFocus: true, refetchInterval: 2500, refetchIntervalInBackground: true });
   const n = data ?? 0;
   const bump = useBump(n);
   if (!n) return null;
   const label = n > 9 ? "9+" : String(n);
-  const tone = active ? cn("bg-white", persona === "seller" ? "text-[#0E162F]" : "text-[#4338CA]") : "bg-[#F6A823] text-[#0E162F]";
+  const tone = active ? cn("bg-white", persona === "seller" ? "text-[#0E162F]" : persona === "advisor" ? "text-[#0F766E]" : "text-[#4338CA]") : "bg-[#F6A823] text-[#0E162F]";
   if (collapsed) {
     return (
       <span key={bump} data-mkt-badge data-rail className={cn("absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full px-1 text-[9px] font-bold leading-none", bump && "mkt-bump", tone)}>
