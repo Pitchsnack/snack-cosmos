@@ -54,6 +54,7 @@ type NavPath =
   | "/startups"
   | "/my-startups"
   | "/investors"
+  | "/advisors"
   | "/deals"
   | "/shared-deals"
   | "/audit"
@@ -125,6 +126,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Startups Directory",
       "Approvals",
       "Investors Directory",
+      "Advisors Directory",
       "Industry Map",
     ],
   },
@@ -184,6 +186,7 @@ const NAV_ITEMS: NavItem[] = [
     perm: "global_startups.import",
   },
   { label: "Investors Directory", icon: Briefcase, path: "/investors", exact: false, perm: "investors.read" },
+  { label: "Advisors Directory", icon: Briefcase, path: "/advisors", exact: false, perm: "investors.read" },
   { label: "My Connections", icon: Network, path: "/connections", exact: false },
   { label: "Contacts", icon: ContactIcon, path: "/contacts", exact: false },
   { label: "Deals", icon: Sparkles, path: "/deals", exact: false, perm: "deals.read" },
