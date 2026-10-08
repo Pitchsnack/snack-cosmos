@@ -128,6 +128,12 @@ export const requestNda = createServerFn({ method: "POST" })
     const { data: bv } = await sb.from("buyer_verifications").select("status").eq("user_id", context.userId).maybeSingle();
     const { data: uv } = await sb.from("user_verifications").select("user_id").eq("user_id", context.userId).maybeSingle();
     if (!uv && bv?.status !== "verified") throw new Error("Verify your buyer profile first");
+    const { requireRole, planAccess, valueCap, spendRequest } = await import("./plan-access.server");
+    await requireRole(context.userId, ["buyer"]);
+    const cap = valueCap(await planAccess(context.userId));
+    const ask = (hp.live as { asking_price?: number | null } | null)?.asking_price;
+    if (cap !== null && ask != null && Number(ask) > cap) throw new Error("This listing is above your plan's price range");
+    await spendRequest(context.userId, "nda", hp.id);
     // A withdrawn or declined request can be made again: reopen the same row.
     const { data: prev } = await sb.from("deal_pipelines").select("id, status").eq("hidden_profile_id", hp.id).eq("buyer_user_id", context.userId).maybeSingle();
     if (prev && ["withdrawn", "declined"].includes(prev.status)) {
@@ -627,6 +633,9 @@ export const getPipelineReport = createServerFn({ method: "POST" })
     if (role === "buyer") {
       const { assertBuyerAccess } = await import("./report-shares.server");
       const { share } = await assertBuyerAccess(await admin(), p, "any");
+      // Each buyer report counts once per term against the plan (can_open_report / record_report_open).
+      const { data: okOpen } = await (await admin()).rpc("record_report_open", { _uid: context.userId, _report_key: "fs5", _ref: p.startup_id });
+      if (!okOpen) throw new Error("Your plan has no report opens left this term");
       await update(p.id, { report_viewed_at: new Date().toISOString() });
       await log(p.id, "report_viewed", context.userId);
       const r = await buildReport(p.startup_id);
@@ -647,6 +656,8 @@ export const compareReports = createServerFn({ method: "GET" })
     for (const r of rows ?? []) {
       const full = await load(r.id);
       try { await assertBuyerAccess(sb, full, "financials"); } catch { continue; }
+      const { data: okOpen } = await sb.rpc("can_open_report", { _uid: context.userId, _report_key: "fs5", _ref: r.startup_id });
+      if (!okOpen) continue;
       out[r.id] = await buildReport(r.startup_id);
     }
     return out;

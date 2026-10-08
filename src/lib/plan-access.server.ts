@@ -66,6 +66,10 @@ export function requestsLeft(a: PlanAccess, kind: UsageKind): number | "unlimite
 export async function spendRequest(userId: string, kind: UsageKind, ref: string) {
   const a = await planAccess(userId);
   if (a.role === "admin") return;
+  if (a.termStart) {
+    const { data: again } = await (await admin()).from("plan_usage").select("id").eq("user_id", userId).eq("kind", kind).eq("ref", ref).eq("term_start", a.termStart).maybeSingle();
+    if (again) return; // the same request again this term is free
+  }
   if (!a.plan) throw new Error("Choose a plan to send requests");
   if (a.ended) throw new Error("Renew to request");
   const left = requestsLeft(a, kind);
