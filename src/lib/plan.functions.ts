@@ -1,0 +1,81 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export type PlanStrip = {
+  role: "seller" | "buyer" | "advisor" | "admin" | null;
+  plan: null | {
+    key: string; name: string; badgeStyle: string; priceType: string; priceThb: number | null; termMonths: number;
+    completionFeePct: number | null; valueCapM: number | null; requestsMode: string;
+    features: { label: string; on: boolean }[];
+  };
+  ended: boolean;
+  termEnd: string | null;
+  left: number | "unlimited" | null;
+  total: number | null;
+  ndaCredits: number;
+};
+
+/** Plan strip on the Browse pages. Every value comes from the plans table. */
+export const getMyPlanStrip = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PlanStrip> => {
+    const { planAccess, requestsLeft } = await import("./plan-access.server");
+    const a = await planAccess(context.userId);
+    const p = a.plan;
+    const kind = a.role === "seller" ? "contact" : "nda";
+    const features = !p ? [] : a.role === "seller"
+      ? [
+          { label: "Contact requests", on: p.requests_mode !== "none" },
+          { label: "Data room", on: !!p.has_data_room },
+          { label: "Verification included", on: p.verification_mode === "included" },
+          { label: "Deal manager", on: !!p.has_manager },
+        ]
+      : a.role === "buyer"
+        ? [
+            { label: "NDA requests", on: p.requests_mode !== "none" },
+            { label: "Shortlists", on: !!p.has_shortlists },
+            { label: "Screening", on: !!p.has_screening },
+            { label: "Financial reports", on: p.key !== "basic" },
+          ]
+        : [
+            { label: "Requests", on: p.requests_mode !== "none" },
+            { label: `${p.clients_n ?? "Unlimited"} client${p.clients_n === 1 ? "" : "s"}`, on: true },
+            { label: `${p.users_n ?? "Unlimited"} user${p.users_n === 1 ? "" : "s"}`, on: true },
+          ];
+    return {
+      role: a.role,
+      plan: p && {
+        key: p.key, name: p.name, badgeStyle: p.badge_style, priceType: p.price_type, priceThb: p.price_thb, termMonths: p.term_months,
+        completionFeePct: p.completion_fee_pct == null ? null : Number(p.completion_fee_pct),
+        valueCapM: p.value_cap_thb_m == null ? null : Number(p.value_cap_thb_m), requestsMode: p.requests_mode, features,
+      },
+      ended: a.ended,
+      termEnd: a.sub?.term_end ?? null,
+      left: requestsLeft(a, kind),
+      total: p?.requests_mode === "number" ? p.requests_n : null,
+      ndaCredits: a.sub?.nda_credits ?? 0,
+    };
+  });
+
+/** Seller: ask PitchSnack to introduce an investor. Uses one contact request of the plan. */
+export const requestInvestorContact = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ investorId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { requireRole, spendRequest } = await import("./plan-access.server");
+    await requireRole(context.userId, ["seller"]);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: dup } = await sb.from("plan_usage").select("id").eq("user_id", context.userId).eq("kind", "contact").eq("ref", data.investorId).maybeSingle();
+    if (dup) throw new Error("You already requested this investor");
+    await spendRequest(context.userId, "contact", data.investorId);
+    return { ok: true };
+  });
+
+export const myContactRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await (context.supabase as any).from("plan_usage").select("ref").eq("user_id", context.userId).eq("kind", "contact");
+    return (data ?? []).map((r: any) => r.ref as string);
+  });
