@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarCheck, Check, ChevronDown, CircleAlert, Lock, Mail, MessageCircleMore, Send } from "lucide-react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { sendContactEnquiry } from "@/lib/contact.functions";
 import { Head } from "./public-home";
 import { PublicShell, Rich, useHomeLang } from "./public-shell";
@@ -78,7 +77,6 @@ function check(f: F, k: keyof typeof ERR): boolean {
 export function ContactPage() {
   return (
     <PublicShell current={null} talkHref="#enquiry" footCurrent="contact">
-      <Toaster />
       <Hero />
       <section id="enquiry" className="ph-sec ph-grey"><div className="ph-wrap"><EnquiryCard /></div></section>
       <Quick />
