@@ -63,7 +63,7 @@ export function requestsLeft(a: PlanAccess, kind: UsageKind): number | "unlimite
 }
 
 /** Throws the toast wording when a request can't be made; records one use otherwise. */
-export async function useRequest(userId: string, kind: UsageKind, ref: string) {
+export async function spendRequest(userId: string, kind: UsageKind, ref: string) {
   const a = await planAccess(userId);
   if (a.role === "admin") return;
   if (!a.plan) throw new Error("Choose a plan to send requests");
