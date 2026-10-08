@@ -3,6 +3,7 @@
 @import "./styles/public-home.css";
 @import "./styles/public-buyers.css";
 @import "./styles/public-buyers-hero.css";
+@import "./styles/public-sellers-hero.css";
 @source "../src";
 @import "tw-animate-css";
 
