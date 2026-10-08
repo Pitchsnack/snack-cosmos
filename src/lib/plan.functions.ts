@@ -23,7 +23,7 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
     const { planAccess, requestsLeft } = await import("./plan-access.server");
     const a = await planAccess(context.userId);
     const p = a.plan;
-    const kind = a.role === "seller" ? "contact" : "nda";
+    const kind = a.role === "buyer" ? "nda" : "contact";
     const capTxt = (verb: string) => p?.value_cap_thb_m == null ? `${verb} a business of any size` : `${verb} businesses selling for under THB ${Number(p.value_cap_thb_m)}m`;
     const f = (label: string, on: boolean, needs?: string) => ({ label, on, needs: on ? undefined : needs });
     const features = !p ? [] : a.role === "seller"

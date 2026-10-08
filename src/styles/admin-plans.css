@@ -1,0 +1,22 @@
+.request-counter { flex: 1 1 100%; max-width: 680px; margin-top: 8px; }
+.request-counter-seller { --request-fill: var(--plan-seller); }
+.request-counter-buyer { --request-fill: var(--plan-buyer); }
+.request-counter-advisor { --request-fill: var(--plan-advisor); }
+.request-counter progress { appearance: none; display: block; width: 100%; height: 8px; margin: 8px 0; overflow: hidden; border: 0; border-radius: 4px; background: var(--request-track); }
+.request-counter progress::-webkit-progress-bar { background: var(--request-track); }
+.request-counter progress::-webkit-progress-value { background: var(--request-fill); border-radius: 4px; }
+.request-counter progress::-moz-progress-bar { background: var(--request-fill); border-radius: 4px; }
+.request-counter p { color: var(--request-caption); font-size: 12.5px; line-height: 1.5; }
+.admin-plans { --plan-role: var(--plan-seller); }
+.admin-plans[data-role=buyer] { --plan-role: var(--plan-buyer); }
+.admin-plans[data-role=advisor] { --plan-role: var(--plan-advisor); }
+.plan-admin-grid { display: grid; grid-template-columns: 392px minmax(0, 1fr); gap: 18px; align-items: start; }
+.plan-row { border-left: 4px solid var(--plan-role); }
+.plan-section { padding: 16px 18px; border-top: 1px solid var(--border); }
+.plan-section h3 { color: var(--muted-foreground); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 14px; }
+.plan-field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, 300px); align-items: start; gap: 16px; margin: 14px 0; }
+.plan-field small { display: block; margin-top: 4px; color: var(--muted-foreground); font-size: 12.5px; line-height: 1.5; }
+.plan-preview { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 18px; }
+.plan-review-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; overflow-wrap: anywhere; }
+@media (max-width: 1099px) { .plan-admin-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .plan-field, .plan-preview, .plan-review-row { grid-template-columns: minmax(0, 1fr); } }
