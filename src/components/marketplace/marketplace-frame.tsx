@@ -7,6 +7,7 @@ import { PipelineCountBadge, MessagesCountBadge, AdvisorPipelineCountBadge } fro
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRouterState } from "@tanstack/react-router";
 import { PlanBadge } from "@/components/plan-badge";
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 import { useSessionContext } from "@/hooks/use-session-context";
@@ -56,6 +57,12 @@ export function MarketplaceAdminSwitch() {
   const isMarket = useIsMarketplace();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { locked } = usePersona();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  // Sellers, buyers and advisors stay in the Marketplace; only Settings is open outside it.
+  const outside = !!locked && !isMarket && !/^\/preferences(\/|$)/.test(path) && !/^\/(marketplace|advisor)(\/|$)/.test(path);
+  useEffect(() => { if (outside) navigate({ to: "/marketplace/browse", replace: true }); }, [outside, navigate]);
+  if (locked) return null;
   const base =
     "inline-flex h-8 items-center gap-1.5 rounded-[9px] px-3 text-[13px] font-semibold transition-colors";
   return (
