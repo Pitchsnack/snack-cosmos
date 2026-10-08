@@ -170,6 +170,7 @@ function AccessDialog({ u, plans, admins, onClose, onSaved }: { u: any; plans: a
   const [role, setRole] = useState<AccRole | null>(u.account_role ?? null);
   const [planId, setPlanId] = useState<string | null>(u.subscription?.plan_id ?? null);
   const [manager, setManager] = useState<string | null>(u.subscription?.manager_user_id ?? null);
+  const [credits, setCredits] = useState<number>(u.subscription?.nda_credits ?? 0);
   const [busy, setBusy] = useState(false);
   const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email;
   const choices = role && role !== "admin" ? plans.filter((p) => p.role === role && (p.status === "live" || p.id === u.subscription?.plan_id)) : [];
@@ -183,7 +184,7 @@ function AccessDialog({ u, plans, admins, onClose, onSaved }: { u: any; plans: a
     if (!role) return;
     setBusy(true);
     try {
-      await save({ data: { targetUserId: u.id, role, planId: role === "admin" ? null : planId, managerUserId: plan?.has_manager ? manager : null } });
+      await save({ data: { targetUserId: u.id, role, planId: role === "admin" ? null : planId, managerUserId: plan?.has_manager ? manager : null, ...(plan?.requests_mode === "bundles" ? { ndaCredits: credits } : {}) } });
       toast.success(`Saved. ${name} now opens the ${role === "admin" ? "Admin and all three" : cap(role)} tab${role === "admin" ? "s" : ""}${plan && role !== "admin" ? `, on the ${plan.name} plan` : ""}.`);
       onSaved();
       onClose();
@@ -225,6 +226,13 @@ function AccessDialog({ u, plans, admins, onClose, onSaved }: { u: any; plans: a
                 {role === "buyer" && <p className="text-xs text-muted-foreground">Every buyer is on a paid plan.</p>}
                 {u.subscription?.status === "ended" && planId === u.subscription.plan_id && (
                   <p className="text-xs text-muted-foreground"><b>Plan ended {u.subscription.term_end ? fmtDay(u.subscription.term_end) : ""}.</b> The user can look around but can't send requests until it's renewed.</p>
+                )}
+                {plan?.requests_mode === "bundles" && (
+                  <div className="space-y-1.5 pt-2">
+                    <Label className="text-xs uppercase tracking-wide">NDA credits</Label>
+                    <Input type="number" min={0} value={credits} onChange={(e) => setCredits(Math.max(0, Number(e.target.value) || 0))} />
+                    <p className="text-xs text-muted-foreground">Until online payment is on, add bundle credits here. Each NDA request uses one.</p>
+                  </div>
                 )}
                 {plan?.has_manager && (
                   <div className="space-y-1.5 pt-2">

@@ -24,6 +24,7 @@ import { SectorArt } from "@/components/hidden-profile/bits";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 import { ClosedListingCard, PlanStrip } from "@/components/marketplace/plan-strip";
+import type { ClosedTeaser } from "@/lib/hidden-profiles.functions";
 
 export const Route = createFileRoute("/_authenticated/marketplace/browse")({
   validateSearch: (search: Record<string, unknown>): { company?: string } =>
@@ -84,8 +85,8 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   };
   const star = (id: string) => <SaveButton square nda={!!ndaOf(id)} saved={savedIds.has(id)} onClick={() => toggleSave(id)} />;
   const badgeOf = (id: string) => { const n = ndaOf(id); return n === "approved" ? <NdaApprovedBadge /> : n === "requested" ? <NdaRequestedBadge /> : undefined; };
-  const raw = (data ?? []) as Array<Teaser | { id: string; closed: true; needPlan: string }>;
-  const closedItems = buyer ? (raw.filter((x) => "closed" in x) as Array<{ id: string; closed: true; needPlan: string }>) : [];
+  const raw = (data ?? []) as Array<Teaser | ClosedTeaser>;
+  const closedItems = buyer ? (raw.filter((x) => "closed" in x) as ClosedTeaser[]) : [];
   const all = raw.filter((x) => !("closed" in x)) as Teaser[];
   const focus = ownOnly ?? directId ?? null;
   const teasers = focus ? all.filter((t) => t.id === focus) : all;
@@ -142,6 +143,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           <p className="mt-1 text-sm text-muted-foreground">
             {ownOnly
               ? t("This is exactly how buyers see your company. Other companies are not shown here.")
+              : closedItems.length > 0 ? `${items.length + closedItems.length} ${t("businesses for sale")} · ${items.length} ${t("open on your plan")}`
               : items.length > 0 ? `${items.length} ${items.length === 1 ? t("live listing") : t("live listings")}` : t("Approved businesses appear here.")}
           </p>
         </div>
@@ -193,7 +195,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           {items.map((t) => (
             <PublicListingCard key={t.id} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} />
           ))}
-          {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} needPlan={c.needPlan} star={star(c.id)} />)}
+          {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
       ) : ownOnly || view === "split" ? (
         <div className={splitFixed ? "!shrink grid min-h-0 flex-1 grid-cols-[400px_minmax(0,1fr)] gap-[18px]" : "grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]"}>
@@ -211,7 +213,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
                 topRight={ownOnly ? undefined : star(t.id)}
               />
             ))}
-            {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} needPlan={c.needPlan} star={star(c.id)} />)}
+            {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
           </div>
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
@@ -244,7 +246,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
               </div>
             );
           })}
-          {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} needPlan={c.needPlan} star={star(c.id)} />)}
+          {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
       )}
 

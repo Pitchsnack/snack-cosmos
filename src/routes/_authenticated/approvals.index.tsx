@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
+import { adminContactRequests } from "@/lib/contact-requests.functions";
 import { useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
 import { ApprovalsSplit, listingItems, profileItems, verificationItems } from "@/components/reports/approvals-split";
 import { PaidReports, HistoryTab, Tile, isOverdue } from "@/components/reports/approvals-report-tabs";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/approvals/")({
       { name: "description", content: "Review seller listings and buyer verifications waiting for Admin approval." },
     ],
   }),
-  validateSearch: z.object({ tab: z.enum(["listings", "buyers", "advisors", "reports", "history"]).optional(), adv: z.string().optional() }),
+  validateSearch: z.object({ tab: z.enum(["listings", "buyers", "advisors", "reports", "contacts", "history"]).optional(), adv: z.string().optional() }),
   component: ApprovalsPage,
 });
 
@@ -116,7 +117,7 @@ function ApprovalsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {([["listings", "Sellers", data?.listings.length ?? 0], ["buyers", "Buyers", (data?.buyers.length ?? 0) + profilesWaiting], ["advisors", "Advisors", advPending], ["reports", "Paid reports", reportsWaiting], ["history", "History", null]] as const).map(([k, label, n]) => (
+        {([["listings", "Sellers", data?.listings.length ?? 0], ["buyers", "Buyers", (data?.buyers.length ?? 0) + profilesWaiting], ["advisors", "Advisors", advPending], ["reports", "Paid reports", reportsWaiting], ["contacts", "Contact requests", null], ["history", "History", null]] as const).map(([k, label, n]) => (
           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => navigate({ search: { tab: k } })}
             className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold", tab === k ? "border-[#F6A823] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
             {label}{n !== null && <span className={cn("rounded-full px-[7px] py-px text-[10.5px] font-bold", tab === k ? "bg-[#FEF3DE] text-[#8A4B06]" : "bg-muted text-muted-foreground")}>{n}</span>}
@@ -134,9 +135,39 @@ function ApprovalsPage() {
         <AdvisorApprovals openId={s.adv} onOpen={(id) => navigate({ search: { tab: "advisors", adv: id } })} />
       ) : tab === "reports" ? (
         <PaidReports orders={orders} />
+      ) : tab === "contacts" ? (
+        <ContactRequestsTab />
       ) : (
         <HistoryTab approvalEvents={(data?.history ?? []) as any[]} startupInfo={(data as any)?.startupInfo ?? {}} buyerInfo={(data as any)?.buyerInfo ?? {}} names={names} />
       )}
+    </div>
+  );
+}
+
+/** Read-only list of every seller → investor contact request. */
+function ContactRequestsTab() {
+  const fn = useServerFn(adminContactRequests);
+  const { data = [], isLoading } = useQuery({ queryKey: ["admin-contact-requests"], queryFn: () => fn() });
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!data.length) return <p className="text-sm text-muted-foreground">No contact requests yet.</p>;
+  const label = { waiting: "Waiting", accepted: "Accepted", declined: "Declined" } as Record<string, string>;
+  return (
+    <div className="overflow-hidden rounded-[12px] border border-border bg-card">
+      <table className="w-full text-[14px]">
+        <thead className="bg-muted/50 text-left text-[12px] uppercase tracking-wide text-muted-foreground">
+          <tr><th className="px-4 py-2.5">Date</th><th className="px-4 py-2.5">Seller listing</th><th className="px-4 py-2.5">Investor</th><th className="px-4 py-2.5">Status</th></tr>
+        </thead>
+        <tbody>
+          {data.map((r: any) => (
+            <tr key={r.id} className="border-t border-border">
+              <td className="px-4 py-2.5">{new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
+              <td className="px-4 py-2.5 font-medium">{r.listingRef}</td>
+              <td className="px-4 py-2.5">{r.investorRef}</td>
+              <td className="px-4 py-2.5">{label[r.status] ?? r.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -252,7 +252,7 @@ async function withPlans(supabase: any, rows: any[]) {
   const ids = rows.map((r) => r.id);
   if (!ids.length) return rows;
   const [{ data: subs }, { data: profs }] = await Promise.all([
-    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id").in("user_id", ids),
+    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id, nda_credits").in("user_id", ids),
     supabase.from("user_profiles").select("user_id, organisation").in("user_id", ids),
   ]);
   const sm = Object.fromEntries((subs ?? []).map((x: any) => [x.user_id, x]));
@@ -277,6 +277,7 @@ export const setUserAccess = createServerFn({ method: "POST" })
     role: z.enum(["seller", "buyer", "advisor", "admin"]),
     planId: z.string().uuid().nullable(),
     managerUserId: z.string().uuid().nullable().optional(),
+    ndaCredits: z.number().int().min(0).max(10000).optional(),
   }).parse(input))
   .handler(async ({ context, data }) => {
     await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
@@ -297,6 +298,7 @@ export const setUserAccess = createServerFn({ method: "POST" })
       const end = new Date(); end.setMonth(end.getMonth() + plan.term_months);
       await sb.from("subscriptions").upsert({
         user_id: data.targetUserId, plan_id: plan.id, status: "active", manager_user_id: data.managerUserId ?? null,
+        ...(data.ndaCredits != null ? { nda_credits: data.ndaCredits } : {}),
         ...(fresh ? { term_start: new Date().toISOString(), term_end: end.toISOString() } : {}), updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
     }

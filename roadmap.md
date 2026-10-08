@@ -11,3 +11,4 @@
 - [x] Hide Marketplace | Admin switch; Settings open to all; server role checks
 - [x] Phase 3: plan strip, closed cards, request/report counters, ended plans
 - [x] Phase 4: Registration verified + Certified badge
+- [x] Plan strip chips/price line, closed cards, contact requests to investors, NDA credits, breadcrumb fix

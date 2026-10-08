@@ -633,9 +633,8 @@ export const getPipelineReport = createServerFn({ method: "POST" })
     if (role === "buyer") {
       const { assertBuyerAccess } = await import("./report-shares.server");
       const { share } = await assertBuyerAccess(await admin(), p, "any");
-      // Each buyer report counts once per term against the plan (can_open_report / record_report_open).
-      const { data: okOpen } = await (await admin()).rpc("record_report_open", { _uid: context.userId, _report_key: "fs5", _ref: p.startup_id });
-      if (!okOpen) throw new Error("Your plan has no report opens left this term");
+      // Seller-shared reports are always free to the buyer; plan report allowances
+      // (can_open_report / record_report_open) are kept for buyer-ordered reports later.
       await update(p.id, { report_viewed_at: new Date().toISOString() });
       await log(p.id, "report_viewed", context.userId);
       const r = await buildReport(p.startup_id);
@@ -656,8 +655,6 @@ export const compareReports = createServerFn({ method: "GET" })
     for (const r of rows ?? []) {
       const full = await load(r.id);
       try { await assertBuyerAccess(sb, full, "financials"); } catch { continue; }
-      const { data: okOpen } = await sb.rpc("can_open_report", { _uid: context.userId, _report_key: "fs5", _ref: r.startup_id });
-      if (!okOpen) continue;
       out[r.id] = await buildReport(r.startup_id);
     }
     return out;

@@ -7,7 +7,7 @@ export type PlanStrip = {
   plan: null | {
     key: string; name: string; badgeStyle: string; priceType: string; priceThb: number | null; termMonths: number;
     completionFeePct: number | null; valueCapM: number | null; requestsMode: string;
-    features: { label: string; on: boolean }[];
+    features: { label: string; on: boolean; needs?: string }[];
   };
   ended: boolean;
   termEnd: string | null;
@@ -24,24 +24,34 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
     const a = await planAccess(context.userId);
     const p = a.plan;
     const kind = a.role === "seller" ? "contact" : "nda";
+    const capTxt = (verb: string) => p?.value_cap_thb_m == null ? `${verb} a business of any size` : `${verb} businesses selling for under THB ${Number(p.value_cap_thb_m)}m`;
+    const f = (label: string, on: boolean, needs?: string) => ({ label, on, needs: on ? undefined : needs });
     const features = !p ? [] : a.role === "seller"
       ? [
-          { label: "Contact requests", on: p.requests_mode !== "none" },
-          { label: "Data room", on: !!p.has_data_room },
-          { label: "Verification included", on: p.verification_mode === "included" },
-          { label: "Deal manager", on: !!p.has_manager },
+          f(p.value_cap_thb_m == null ? "List a business of any size" : `List a business selling for under THB ${Number(p.value_cap_thb_m)}m`, true),
+          f("Receive contact requests", true),
+          f("Send contact requests", p.requests_mode !== "none", "Professional"),
+          f("Teaser and data room", !!p.has_data_room, "Professional"),
+          p.verification_mode === "included"
+            ? f("Company and registration verification · Certified badge", true)
+            : { label: "Company and registration verification · pay per report", on: false },
+          f("Dedicated manager", !!p.has_manager, "Executive"),
+          f("Valuation and pitch video", !!p.has_valuation_video, "Executive"),
+          f("Site visit", !!p.has_site_visit, "Executive"),
         ]
       : a.role === "buyer"
         ? [
-            { label: "NDA requests", on: p.requests_mode !== "none" },
-            { label: "Shortlists", on: !!p.has_shortlists },
-            { label: "Screening", on: !!p.has_screening },
-            { label: "Financial reports", on: p.key !== "basic" },
+            f(capTxt("See"), true),
+            f("Verified search and receive", true),
+            f("NDA requests", p.requests_mode !== "none", "Investor"),
+            f("Matched shortlists", !!p.has_shortlists, "Investor"),
+            f("Screening reports", !!p.has_screening, "Investor"),
+            // "Financial reports" chip stays hidden until buyers can order reports themselves.
           ]
         : [
-            { label: "Requests", on: p.requests_mode !== "none" },
-            { label: `${p.clients_n ?? "Unlimited"} client${p.clients_n === 1 ? "" : "s"}`, on: true },
-            { label: `${p.users_n ?? "Unlimited"} user${p.users_n === 1 ? "" : "s"}`, on: true },
+            f("Requests", p.requests_mode !== "none", "Pro"),
+            f(`${p.clients_n ?? "Unlimited"} client${p.clients_n === 1 ? "" : "s"}`, true),
+            f(`${p.users_n ?? "Unlimited"} user${p.users_n === 1 ? "" : "s"}`, true),
           ];
     return {
       role: a.role,
@@ -56,28 +66,6 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
       total: p?.requests_mode === "number" ? p.requests_n : null,
       ndaCredits: a.sub?.nda_credits ?? 0,
     };
-  });
-
-/** Seller: ask PitchSnack to introduce an investor. Uses one contact request of the plan. */
-export const requestInvestorContact = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ investorId: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { requireRole, spendRequest } = await import("./plan-access.server");
-    await requireRole(context.userId, ["seller"]);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const sb = supabaseAdmin as any;
-    const { data: dup } = await sb.from("plan_usage").select("id").eq("user_id", context.userId).eq("kind", "contact").eq("ref", data.investorId).maybeSingle();
-    if (dup) throw new Error("You already requested this investor");
-    await spendRequest(context.userId, "contact", data.investorId);
-    return { ok: true };
-  });
-
-export const myContactRequests = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await (context.supabase as any).from("plan_usage").select("ref").eq("user_id", context.userId).eq("kind", "contact");
-    return (data ?? []).map((r: any) => r.ref as string);
   });
 
 /** Admin: the company's registration verified switch (drives the Certified badge). */
