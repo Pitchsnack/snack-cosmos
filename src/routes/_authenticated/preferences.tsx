@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserPreferences } from "@/components/user-preferences";
+import { SubscriptionSection } from "@/components/settings/subscription-section";
 
 export const Route = createFileRoute("/_authenticated/preferences")({
   head: () => ({
-    meta: [{ title: "Preferences — SnackPortal2" }],
+    meta: [
+      { title: "Settings — PitchSnack" },
+      { name: "description", content: "Your PitchSnack account settings and subscription." },
+      { property: "og:title", content: "Settings — PitchSnack" },
+      { property: "og:description", content: "Your PitchSnack account settings and subscription." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
   }),
   component: PreferencesPage,
 });
@@ -18,6 +26,7 @@ function PreferencesPage() {
         </p>
       </div>
       <UserPreferences />
+      <SubscriptionSection />
     </div>
   );
 }
