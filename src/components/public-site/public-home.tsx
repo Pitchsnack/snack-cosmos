@@ -6,6 +6,7 @@ import {
 import { getHomeHeroImages } from "@/lib/home-hero.functions";
 import { BADGES, CLOSE, CONNECT, FAQ, FIT, HERO, HOW, PLANS, ROLE, WHY, type Plan } from "./home-copy";
 import { PublicShell, Rich, useHomeLang } from "./public-shell";
+import { PublicPlanCards } from "@/components/plans/plan-card";
 
 export function PublicHome() {
   return (
@@ -313,9 +314,9 @@ function Plans() {
         </div>
         <div className="ph-principles">{PLANS.principles.map(([h, x], i) => <div key={i}><b>{t(h)}</b><p>{t(x)}</p></div>)}</div>
         <div className="ph-group"><h3>{t(PLANS.ownersH)}</h3><p>{t(PLANS.ownersLine)}</p></div>
-        <div className="ph-owners">{PLANS.owners.map((p) => <PlanCard key={p.id} p={p} owner />)}</div>
+        <div className="ph-owners"><PublicPlanCards role="seller" /></div>
         <div className="ph-group"><h3>{t(PLANS.buyersH)}</h3><p>{t(PLANS.buyersLine)}</p></div>
-        <div className="ph-buyers">{PLANS.buyers.map((p) => <PlanCard key={p.id} p={p} owner={false} />)}</div>
+        <div className="ph-buyers"><PublicPlanCards role="buyer" /></div>
         <div className="ph-navybox">
           <div><h3>{t(PLANS.boxH)}</h3><p>{t(PLANS.boxX)}</p></div>
           <div className="ph-navychip"><b>{t(PLANS.chipT)}</b><p>{t(PLANS.chipX)}</p></div>

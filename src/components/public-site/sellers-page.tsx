@@ -4,7 +4,8 @@ import { Bell, ChartNoAxesColumn, EyeOff, LogOut, Scale, ShieldCheck, Target, Us
 import { getHomeHeroImages } from "@/lib/home-hero.functions";
 import { PLANS } from "./home-copy";
 import { S_BUYERS, S_CLOSE, S_FAQ, S_HERO, S_LOCK, S_PLANS, S_PRIVACY, S_PROMISES, S_REPORTS } from "./sellers-copy";
-import { Head, PlanCard } from "./public-home";
+import { Head } from "./public-home";
+import { PublicPlanCards } from "@/components/plans/plan-card";
 import { HeroSlides } from "./hero-slides";
 import { SELLER_HERO_PICS } from "./sellers-hero-pics";
 import peCover from "@/assets/sellers/hero-pe-cover.jpg.asset.json";
@@ -154,7 +155,7 @@ function Plans() {
     <section id="plans" className="ph-sec ph-white">
       <div className="ph-wrap">
         <div className="ph-group pb-group0"><h3>{t(S_PLANS.h)}</h3><p>{t(PLANS.ownersLine)}</p></div>
-        <div className="ph-owners">{PLANS.owners.map((p) => <PlanCard key={p.id} p={p} owner />)}</div>
+        <div className="ph-owners"><PublicPlanCards role="seller" /></div>
         <div className="ph-pfine"><span>{t(PLANS.fine)}</span><a href="/plans">{t(PLANS.link)}</a></div>
       </div>
     </section>
