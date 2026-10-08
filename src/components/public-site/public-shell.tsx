@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Check, ChevronDown, Globe, LogIn } from "lucide-react";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import { FOOTER, NAV, type Lang } from "./home-copy";
+import { PrivacyLink } from "./privacy-notice";
 
 /** Shared chrome for the public pages: language, top bar, footer. */
 
@@ -30,7 +31,7 @@ export function Rich({ s }: { s: string }) {
   );
 }
 
-export function PublicShell({ current, children, talkHref }: { current: keyof typeof NAV | null; children: ReactNode; talkHref?: string }) {
+export function PublicShell({ current, children, talkHref, footCurrent }: { current: keyof typeof NAV | null; children: ReactNode; talkHref?: string; footCurrent?: "contact" }) {
   const [lang, setLangState] = useState<Lang>("th");
   useEffect(() => {
     const saved = localStorage.getItem(KEY);
@@ -51,7 +52,7 @@ export function PublicShell({ current, children, talkHref }: { current: keyof ty
       <div className="ph" data-lang={lang}>
         <TopBar current={current} talkHref={talkHref} />
         <main>{children}</main>
-        <Footer />
+        <Footer current={footCurrent} />
       </div>
     </LangCtx.Provider>
   );
@@ -127,7 +128,7 @@ function LangMenu() {
   );
 }
 
-function Footer() {
+function Footer({ current }: { current?: "contact" }) {
   const { t } = useHomeLang();
   return (
     <footer className="ph-foot">
@@ -135,6 +136,8 @@ function Footer() {
         <p className="ph-legal">{t(FOOTER.legal)}</p>
         <nav className="ph-foot-links" aria-label="Footer">
           {FOOTER.links.map(([to, l]) => <Link key={to} to={to} preload="intent">{t(l)}</Link>)}
+          <Link to="/contact" preload="intent" aria-current={current === "contact" ? "page" : undefined}>{t(FOOTER.contact)}</Link>
+          <PrivacyLink>{t(FOOTER.privacy)}</PrivacyLink>
         </nav>
       </div>
     </footer>

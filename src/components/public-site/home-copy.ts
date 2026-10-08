@@ -174,12 +174,13 @@ export const CLOSE = {
 };
 
 export const FOOTER = {
-  legal: c("PitchSnack acts as an introducer under sections 845–849 of the Civil and Commercial Code. We are not a party to any transaction, hold no funds and take no side. Where we describe something as verified, we mean only the check described for that badge, on the date shown. It is not an endorsement, not a solvency assessment, and not a substitute for your own due diligence. Screening reports are decision support, not legal, financial or investment advice.",
-    "PitchSnack ทำหน้าที่ชี้ช่องตามประมวลกฎหมายแพ่งและพาณิชย์ มาตรา 845–849 ไม่ใช่คู่สัญญาในธุรกรรมใด ไม่ถือเงินของฝ่ายใด และไม่เข้าข้างฝ่ายใด การที่เราระบุว่าข้อมูลใด “ผ่านการตรวจสอบ” หมายถึงการตรวจตามที่อธิบายไว้สำหรับตราสัญลักษณ์นั้นในวันที่ระบุเท่านั้น ไม่ใช่การรับรอง ไม่ใช่การประเมินฐานะทางการเงิน และไม่ใช่สิ่งทดแทนการตรวจสอบสถานะกิจการของท่านเอง รายงานคัดกรองเป็นข้อมูลสนับสนุนการตัดสินใจ ไม่ใช่คำแนะนำทางกฎหมาย การเงิน หรือการลงทุน"),
+  legal: c("PitchSnack acts as an introducer. We are not a party to any transaction, hold no funds and take no side. Where we describe something as verified, we mean only the check described for that badge, on the date shown. It is not an endorsement, not a solvency assessment, and not a substitute for your own due diligence. Screening reports are decision support, not legal, financial or investment advice.",
+    "PitchSnack ทำหน้าที่ชี้ช่อง ไม่ใช่คู่สัญญาในธุรกรรมใด ไม่ถือเงินของฝ่ายใด และไม่เข้าข้างฝ่ายใด การที่เราระบุว่าข้อมูลใด “ผ่านการตรวจสอบ” หมายถึงการตรวจตามที่อธิบายไว้สำหรับตราสัญลักษณ์นั้นในวันที่ระบุเท่านั้น ไม่ใช่การรับรอง ไม่ใช่การประเมินฐานะทางการเงิน และไม่ใช่สิ่งทดแทนการตรวจสอบสถานะกิจการของท่านเอง รายงานคัดกรองเป็นข้อมูลสนับสนุนการตัดสินใจ ไม่ใช่คำแนะนำทางกฎหมาย การเงิน หรือการลงทุน"),
   links: [
     ["/sellers", c("For sellers", "สำหรับผู้ขาย")], ["/buyers", c("For buyers", "สำหรับผู้ซื้อ")], ["/partners", c("For partners", "สำหรับพาร์ทเนอร์")],
     ["/plans", c("Plans", "ค่าบริการ")], ["/badges", c("Badge library", "คลังตราสัญลักษณ์")], ["/directory", c("Directory", "ทำเนียบธุรกิจ")],
   ] as [string, C][],
+  contact: c("Contact us", "ติดต่อเรา"), privacy: c("Privacy notice", "ประกาศความเป็นส่วนตัว"),
 };
 
 export const SOON: Record<string, { title: C; nav: keyof typeof NAV | null }> = {
