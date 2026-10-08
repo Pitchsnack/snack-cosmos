@@ -42,6 +42,8 @@ export interface PublicListing {
   sector: string | null;
   subSector: string | null;
   verified: boolean;
+  /** Admin checked the company registration (startups.registration_verified_at). */
+  certified?: boolean;
   hasFinancials: boolean;
   codeName: string;
   refNo: string;
