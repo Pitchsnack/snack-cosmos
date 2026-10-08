@@ -146,6 +146,7 @@ export const threadMessages = createServerFn({ method: "GET" })
     const otherRead = (reads ?? []).filter((r: any) => !members.length || otherIds.has(r.user_id)).map((r: any) => r.read_at as string).sort().pop() ?? null;
     return {
       closed,
+      meId: context.userId,
       members,
       myRole,
       events,
