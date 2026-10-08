@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { HERO_PICS } from "./home-hero-pics";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowRight, ChartNoAxesColumn, ChevronDown, CircleCheck, ClipboardList, Database, EyeOff, FileText, Loader, Lock, MapPin, Shield, Star, User, Users,
@@ -65,60 +66,24 @@ function Hero() {
 }
 
 function HeroArt() {
-  const { t } = useHomeLang();
+  const { lang } = useHomeLang();
   const fetchImgs = useServerFn(getHomeHeroImages);
   const [imgs, setImgs] = useState<{ seller: string | null; investor: string | null }>({ seller: null, investor: null });
-  const [open, setOpen] = useState<"s" | "i" | null>(null);
+  const [cur, setCur] = useState(0);
   useEffect(() => { fetchImgs().then(setImgs).catch(() => {}); }, [fetchImgs]);
-  const tap = (k: "s" | "i") => (e: React.MouseEvent) => {
-    if (!window.matchMedia("(hover: none)").matches) return;
-    e.preventDefault();
-    setOpen((v) => (v === k ? null : k));
-  };
-  const chev = <span className="ph-chev"><ChevronDown size={13} /></span>;
+  const pics = useMemo(() => {
+    const put = (html: string, key: "S" | "B", url: string | null) =>
+      url ? html.replace(`{{${key}}}`, url.replace(/&/g, "&amp;").replace(/"/g, "&quot;")) : html.replace(new RegExp(`<img[^>]*\\{\\{${key}\\}\\}[^>]*>`), "");
+    return HERO_PICS.map((h, i) => (i === 0 ? put(put(h, "S", imgs.seller), "B", imgs.investor) : h));
+  }, [imgs]);
+  const th = lang === "th";
   return (
-    <div className="ph-art" aria-hidden>
-      <svg className="ph-art-line" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M31 30 C31 43 50 37 50 50 C50 63 69 57 69 70" /></svg>
-      <div className="ph-orbit" /><div className="ph-pulse" />
-      <div className="ph-tile"><img src="/img/pitchsnack-hat.svg" alt="" /></div>
-      <div className="ph-report">
-        <b>{t(HERO.reportTitle)}</b>
-        <span className="ph-dots"><i /><i /><i /><i /><i /><i className="is-red" /></span>
-        <small>{t(HERO.reportLine)}</small>
+    <div className="ph-art">
+      <div className="h4-stage" aria-hidden="true" data-lang={lang}>
+        {pics.map((h, i) => <div key={i} className={i === cur ? "h4-pic on" : "h4-pic"} inert={i !== cur || undefined} dangerouslySetInnerHTML={{ __html: h }} />)}
       </div>
-      <div className="ph-pills"><span className="ph-pill1">{t(HERO.pill1)}</span><span className="ph-pill2">{t(HERO.pill2)}</span></div>
-      <p className="ph-hint"><span className="ph-hint-m">{t(HERO.hintMouse)}</span><span className="ph-hint-t">{t(HERO.hintTouch)}</span></p>
-
-      <div className={`ph-card ph-card-s${open === "s" ? " is-open" : ""}`} onClick={tap("s")}>
-        <div className="ph-photo" style={imgs.seller ? { backgroundImage: `url("${imgs.seller}")` } : undefined}>
-          <span className="ph-pchip"><Lock size={11} />{t(HERO.sChip)}<em>{t(HERO.sTag)}</em></span>
-          <span className="ph-star"><Star size={13} /></span>
-        </div>
-        <div className="ph-body">
-          <div className="ph-ctitle">{t(HERO.sTitle)}</div>
-          <div className="ph-rev"><small>{t(HERO.sRev)}</small><b>฿250M – 500M</b><span className="ph-rtag">{t(HERO.sRange)}</span>{chev}</div>
-          <div className="ph-more"><div>
-            <p className="ph-details">{t(HERO.sDetails)}</p>
-            <p className="ph-cfoot">{t(HERO.sFooter)} · PS-1005</p>
-          </div></div>
-        </div>
-      </div>
-
-      <div className={`ph-card ph-card-i${open === "i" ? " is-open" : ""}`} onClick={tap("i")}>
-        <div className="ph-photo" style={imgs.investor ? { backgroundImage: `url("${imgs.investor}")` } : undefined}>
-          <span className="ph-pchip"><EyeOff size={11} />{t(HERO.iChip)}</span>
-          <span className="ph-star"><Star size={13} /></span>
-        </div>
-        <div className="ph-body">
-          <div className="ph-itop"><b>{t(HERO.iType)}</b><small>INV-1001</small></div>
-          <div className="ph-more"><div>
-            <div className="ph-cells">
-              <div><small>{t(HERO.iTicket)}</small><b>US$10M – 25M</b><small>(฿300M – 800M)</small></div>
-              <div><small>AUM</small><b>US$250M – 500M</b><small>(฿8B – 15B)</small></div>
-            </div>
-          </div></div>
-          <div className="ph-minbox"><small>{t(HERO.iMin)}</small><div><b>US$8M – 15M</b><small>(฿250M – 500M)</small>{chev}</div></div>
-        </div>
+      <div className="h4-dots" role="group" aria-label={th ? "เลือกภาพ" : "Choose a picture"}>
+        {pics.map((_, i) => <button key={i} type="button" className="h4-dot" aria-pressed={i === cur} onClick={() => setCur(i)} aria-label={th ? `ภาพที่ ${i + 1} จาก 4` : `Picture ${i + 1} of 4`} />)}
       </div>
     </div>
   );
