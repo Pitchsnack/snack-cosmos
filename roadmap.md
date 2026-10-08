@@ -2,8 +2,8 @@
 
 ## Privacy, email identity and public wording
 - [x] Remove country placeholders, set today's notice date and update EN/TH fine print.
-- [ ] Enforce the shared email identity and verify Admin Sending rules.
-- [ ] Verify hosting regions; keep countries omitted until Dan confirms wording.
+- [x] Enforce the shared email identity and verify Admin Sending rules; EN/TH public checks and 3 email tests passed.
+- [ ] Confirm file-storage and managed-email regions with Lovable; database connection identifies Mumbai, India (ap-south-1), but official sources available here do not confirm the other services' exact regions. Countries remain omitted pending verification and Dan's approval.
 - [ ] Publish the notice with its actual go-live date — awaits an explicit publish request.
 
 - [x] Add a saved Business Address field after Company Type in both shared startup editors.
