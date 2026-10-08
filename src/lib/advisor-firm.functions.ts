@@ -108,6 +108,32 @@ export async function loadFirmCards(sb: any, ids: string[]): Promise<AdvisorFirm
   return rows.map((r: any) => toFirm(r, kids, urls));
 }
 
+/** Admin: one firm in the advisor's own shape, for Edit in Advisors Directory. */
+export const getAdvisorFirmForAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<AdvisorFirm> => {
+    const { data: ctl } = await (context.supabase as any).rpc("is_control", { _user_id: context.userId });
+    if (!ctl) throw new Error("Admin only");
+    const sb = context.supabase as any;
+    const { data: r } = await sb.from("advisor_firms").select("*").eq("id", data.id).single();
+    const [fees, team, creds, docs, reviews] = await Promise.all([
+      sb.from("advisor_firm_fees").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_team").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_credentials").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_documents").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_reviews").select("*").eq("firm_id", data.id),
+    ]);
+    const paths = [r.logo_path, ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
+    const urls = new Map<string, string>();
+    if (paths.length) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 3600);
+      for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+    }
+    return toFirm(r, { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: docs.data ?? [], reviews: reviews.data ?? [] }, urls);
+  });
+
 /** + Add Firm Profile: a new Draft with the next ADV reference. */
 export const createAdvisorDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

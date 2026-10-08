@@ -108,7 +108,7 @@ function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
 const sel = "flex h-[42px] w-full rounded-md border border-input bg-background px-3 pr-8 text-[14px] outline-none focus:border-[#1E2A4A]";
 const errB = "border-[#B42318]";
 
-export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null }) {
+export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveAdvisorFirm);
@@ -123,7 +123,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
   const [forced, setForced] = useState(false);
   const docInput = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FirmForm>(k: K, v: FirmForm[K]) => setF((p) => ({ ...p, [k]: v }));
-  const back = () => navigate({ to: "/marketplace/my-company", search: firm ? ({ open: firm.id } as never) : undefined });
+  const back = () => (onDone ? onDone() : navigate({ to: "/marketplace/my-company", search: firm ? ({ open: firm.id } as never) : undefined }));
   const thai = f.country === "Thailand";
   const src = setup?.sources ?? {};
 
@@ -223,7 +223,7 @@ export function FirmEditForm({ firm, section, setup, initial }: { firm: AdvisorF
     <div className={cn("mx-auto space-y-5", setup ? "max-w-[880px] pb-8" : "max-w-[920px] pb-24")}>
       {!setup && (
         <div>
-          <button type="button" onClick={back} className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> My Company</button>
+          <button type="button" onClick={back} className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> {onDone ? "Advisors Directory" : "My Company"}</button>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{firm ? "Edit profile" : "Add Firm Profile"}</h1>
           <p className="text-sm text-muted-foreground">{firm ? `${firm.refNo} · everything here is open to sellers and buyers.` : "A new profile starts as a Draft."}</p>
         </div>
