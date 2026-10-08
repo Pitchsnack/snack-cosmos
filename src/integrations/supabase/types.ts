@@ -5547,6 +5547,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      account_role_of: { Args: { _uid: string }; Returns: string }
       active_tenant_id: { Args: { _user_id: string }; Returns: string }
       advisor_child_move: {
         Args: { _fid: string; _field: string }
@@ -5585,10 +5586,15 @@ export type Database = {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
+      can_open_report: {
+        Args: { _ref: string; _report_key: string; _uid: string }
+        Returns: boolean
+      }
       can_read_message_thread: {
         Args: { _key: string; _uid: string }
         Returns: boolean
       }
+      current_term_start: { Args: { _uid: string }; Returns: string }
       fn_import_global_startup: {
         Args: {
           _global_id: string
@@ -5606,6 +5612,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_account_admin: { Args: { _uid: string }; Returns: boolean }
       is_control: { Args: { _user_id: string }; Returns: boolean }
       is_master_agent_of: {
         Args: { _tenant: string; _user_id: string }
@@ -5620,6 +5627,11 @@ export type Database = {
         Returns: boolean
       }
       normalize_url_key: { Args: { _url: string }; Returns: string }
+      record_report_open: {
+        Args: { _ref: string; _report_key: string; _uid: string }
+        Returns: boolean
+      }
+      role_is: { Args: { _role: string; _uid: string }; Returns: boolean }
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean

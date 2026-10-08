@@ -428,6 +428,13 @@
       "when": 1791445934396,
       "tag": "0060_roles_and_plans",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1791448707378,
+      "tag": "0061_role_server_checks_and_plan_counters",
+      "breakpoints": true
     }
   ]
 }
