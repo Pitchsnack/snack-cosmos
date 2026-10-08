@@ -1200,6 +1200,60 @@ export type Database = {
           },
         ]
       }
+      contact_enquiries: {
+        Row: {
+          company: string | null
+          consent_at: string
+          created_at: string
+          email: string
+          id: string
+          ip_hash: string | null
+          language: string
+          message: string
+          name: string
+          phone: string | null
+          reference: string
+          role: string
+          status: string
+          topic: string
+          user_id: string | null
+        }
+        Insert: {
+          company?: string | null
+          consent_at: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_hash?: string | null
+          language?: string
+          message: string
+          name: string
+          phone?: string | null
+          reference: string
+          role: string
+          status?: string
+          topic: string
+          user_id?: string | null
+        }
+        Update: {
+          company?: string | null
+          consent_at?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          language?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          reference?: string
+          role?: string
+          status?: string
+          topic?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_requests: {
         Row: {
           created_at: string

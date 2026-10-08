@@ -14,12 +14,14 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as BadgesRouteImport } from './routes/badges'
 import { Route as BuyersRouteImport } from './routes/buyers'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DirectoryRouteImport } from './routes/directory'
 import { Route as DiscoveryRouteImport } from './routes/discovery'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SellersRouteImport } from './routes/sellers'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -133,6 +135,11 @@ const BuyersRoute = BuyersRouteImport.update({
   path: '/buyers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DirectoryRoute = DirectoryRouteImport.update({
   id: '/directory',
   path: '/directory',
@@ -161,6 +168,11 @@ const PartnersRoute = PartnersRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -672,12 +684,14 @@ export interface FileRoutesByFullPath {
   '/accept-invite': typeof AcceptInviteRoute
   '/badges': typeof BadgesRoute
   '/buyers': typeof BuyersRoute
+  '/contact': typeof ContactRoute
   '/directory': typeof DirectoryRoute
   '/discovery': typeof DiscoveryRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/partners': typeof PartnersRoute
   '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
   '/signup': typeof SignupRoute
@@ -772,12 +786,14 @@ export interface FileRoutesByTo {
   '/accept-invite': typeof AcceptInviteRoute
   '/badges': typeof BadgesRoute
   '/buyers': typeof BuyersRoute
+  '/contact': typeof ContactRoute
   '/directory': typeof DirectoryRoute
   '/discovery': typeof DiscoveryRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/partners': typeof PartnersRoute
   '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
   '/signup': typeof SignupRoute
@@ -863,12 +879,14 @@ export interface FileRoutesById {
   '/accept-invite': typeof AcceptInviteRoute
   '/badges': typeof BadgesRoute
   '/buyers': typeof BuyersRoute
+  '/contact': typeof ContactRoute
   '/directory': typeof DirectoryRoute
   '/discovery': typeof DiscoveryRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/partners': typeof PartnersRoute
   '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sellers': typeof SellersRoute
   '/signup': typeof SignupRoute
@@ -965,12 +983,14 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/badges'
     | '/buyers'
+    | '/contact'
     | '/directory'
     | '/discovery'
     | '/forgot-password'
     | '/login'
     | '/partners'
     | '/plans'
+    | '/privacy'
     | '/reset-password'
     | '/sellers'
     | '/signup'
@@ -1065,12 +1085,14 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/badges'
     | '/buyers'
+    | '/contact'
     | '/directory'
     | '/discovery'
     | '/forgot-password'
     | '/login'
     | '/partners'
     | '/plans'
+    | '/privacy'
     | '/reset-password'
     | '/sellers'
     | '/signup'
@@ -1155,12 +1177,14 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/badges'
     | '/buyers'
+    | '/contact'
     | '/directory'
     | '/discovery'
     | '/forgot-password'
     | '/login'
     | '/partners'
     | '/plans'
+    | '/privacy'
     | '/reset-password'
     | '/sellers'
     | '/signup'
@@ -1257,12 +1281,14 @@ export interface RootRouteChildren {
   AcceptInviteRoute: typeof AcceptInviteRoute
   BadgesRoute: typeof BadgesRoute
   BuyersRoute: typeof BuyersRoute
+  ContactRoute: typeof ContactRoute
   DirectoryRoute: typeof DirectoryRoute
   DiscoveryRoute: typeof DiscoveryRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PartnersRoute: typeof PartnersRoute
   PlansRoute: typeof PlansRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellersRoute: typeof SellersRoute
   SignupRoute: typeof SignupRoute
@@ -1311,6 +1337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/directory': {
       id: '/directory'
       path: '/directory'
@@ -1351,6 +1384,13 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -2286,12 +2326,14 @@ const rootRouteChildren: RootRouteChildren = {
   AcceptInviteRoute: AcceptInviteRoute,
   BadgesRoute: BadgesRoute,
   BuyersRoute: BuyersRoute,
+  ContactRoute: ContactRoute,
   DirectoryRoute: DirectoryRoute,
   DiscoveryRoute: DiscoveryRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PartnersRoute: PartnersRoute,
   PlansRoute: PlansRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SellersRoute: SellersRoute,
   SignupRoute: SignupRoute,

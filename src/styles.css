@@ -5,6 +5,7 @@
 @import "./styles/public-buyers-hero.css";
 @import "./styles/public-sellers-hero.css";
 @import "./styles/admin-plans.css";
+@import "./styles/public-contact.css";
 @source "../src";
 @import "tw-animate-css";
 
