@@ -34,8 +34,12 @@ export function useIsMarketplace() {
 export function usePersona() {
   const { data } = useSessionContext();
   const userId = data?.user?.id as string | undefined;
-  const advisorAllowed = !!data?.user?.advisorView;
-  const [persona, setPersonaState] = useState<Persona>("buyer");
+  const role = data?.user?.accountRole ?? null;
+  // One role per account: sellers, buyers and advisors only open their own tab; admins open all three.
+  const locked: Persona | null = role && role !== "admin" ? role : null;
+  const advisorAllowed = role === "admin" || !!data?.user?.advisorView;
+  const [stored, setPersonaState] = useState<Persona>("buyer");
+  const persona: Persona = locked ?? stored;
 
   useEffect(() => {
     const read = () => {
@@ -54,6 +58,7 @@ export function usePersona() {
 
   const setPersona = useCallback(
     (p: Persona) => {
+      if (locked && p !== locked) return;
       try {
         localStorage.setItem(key(userId), p);
         if (p !== "advisor") localStorage.setItem(`${key(userId)}.base`, p);
@@ -63,10 +68,10 @@ export function usePersona() {
       setPersonaState(p);
       window.dispatchEvent(new Event(EVT));
     },
-    [userId],
+    [userId, locked],
   );
 
-  return { persona, setPersona, advisorAllowed };
+  return { persona, setPersona, advisorAllowed, role, locked };
 }
 
 export function rememberAdminPath(path: string) {
