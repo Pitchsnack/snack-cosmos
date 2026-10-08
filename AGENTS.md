@@ -25,3 +25,5 @@
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts, so the rules hold even through the database API.
 - Roles/plans: account_role enforced in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
+
+- Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
