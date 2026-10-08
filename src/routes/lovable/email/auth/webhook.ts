@@ -7,6 +7,7 @@ import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import { APP_EMAIL_IDENTITY } from '@/config/email-identity'
 
 // Configuration
 const SITE_NAME = "PitchSnack"
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         const handler = createAuthEmailHandler({
           apiKey: process.env['LOVABLE_API_KEY']!,
           from: { name: SITE_NAME, address: `noreply@${FROM_DOMAIN}` },
+          replyTo: APP_EMAIL_IDENTITY.replyTo,
           senderDomain: SENDER_DOMAIN,
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {

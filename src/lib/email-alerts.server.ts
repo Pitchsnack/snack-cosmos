@@ -58,7 +58,7 @@ export async function sendAlert(input: SendAlertInput) {
       if (off.has(u.id)) { await sb.from("email_alert_log").insert({ ...base, status: "skipped", reason: "User turned email alerts off" }); continue; }
       if (!u.email) { await sb.from("email_alert_log").insert({ ...base, status: "skipped", reason: "No email address" }); continue; }
       try {
-        const r = await sendTemplateEmail("alert", u.email, { templateData: data, idempotencyKey: ref, replyTo: "support@pitchsnack.com" });
+        const r = await sendTemplateEmail("alert", u.email, { templateData: data, idempotencyKey: ref });
         await sb.from("email_alert_log").insert({ ...base, status: r.sent ? "sent" : "suppressed", reason: r.sent ? null : "Address unsubscribed or bouncing" });
       } catch (e) {
         await sb.from("email_alert_log").insert({ ...base, status: "failed", reason: (e as Error).message.slice(0, 300) });
