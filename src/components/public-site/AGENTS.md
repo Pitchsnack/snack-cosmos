@@ -1,1 +1,2 @@
 - Public site: signed-out visitors at "/" get PublicHome from the _authenticated layout (guestHome context) so signed-in landing is unchanged; public pages live in src/components/public-site with copy in home-copy.ts and scoped styles in src/styles/public-home.css; hero pictures come only from getHomeHeroImages (two fixed anonymous images).
+- Privacy notice text lives in privacy-doc.ts (fill-ins in config/privacy.ts), rendered by PrivacyDoc for both the pop-up (PrivacyLink) and /privacy so they never drift.
