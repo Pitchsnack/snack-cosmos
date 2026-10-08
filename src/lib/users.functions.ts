@@ -252,7 +252,7 @@ async function withPlans(supabase: any, rows: any[]) {
   const ids = rows.map((r) => r.id);
   if (!ids.length) return rows;
   const [{ data: subs }, { data: profs }] = await Promise.all([
-    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id").in("user_id", ids),
+    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id, nda_credits").in("user_id", ids),
     supabase.from("user_profiles").select("user_id, organisation").in("user_id", ids),
   ]);
   const sm = Object.fromEntries((subs ?? []).map((x: any) => [x.user_id, x]));
