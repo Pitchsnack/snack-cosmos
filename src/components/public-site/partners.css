@@ -1010,7 +1010,7 @@
   .ch-seal{display:block; width:112px; height:112px; color:#FFFFFF}
   .ch-side h2{color:#FFFFFF; font-size:clamp(1.6rem,2.6vw,2.05rem); line-height:1.3; font-weight:600}
   .ch-plans{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:.92rem; color:#CCEFE9}
-  .ch-plans > span{margin-right:2px}
+  .ch-plans{column-gap:10px} .ch-plans .ch-pair{display:inline-flex; gap:8px}
   .ch-plans b{display:inline-flex; align-items:center; height:28px; padding:0 12px; border:1px solid rgba(255,255,255,.42); border-radius:999px;
     font-family:"DM Sans",sans-serif; font-size:13px; font-weight:600; color:#FFFFFF}
   .ch-list{display:grid; min-width:0}
@@ -1057,7 +1057,7 @@
   .pf-now b{font-weight:600; color:var(--teal)}
   /* wide screens (Rita, 7 Oct 2026: "lots of empty space at the side"): the charter breaks out of the 1120px column,
      centred, up to 1400px wide and always 32px clear of the window's edges; the proofs and the seal grow with it */
-  .ch, .chb, .ch-switch{--chw:min(1400px, calc(100vw - 64px)); width:max(100%, var(--chw)); margin-inline:calc((100% - max(100%, var(--chw))) / 2)}
+  /* the charter stays inside the page's content column */
 
   /* mockup only: switch between design A (badges in the rows) and design B (overlapping badges) */
   .ch-switch{display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; margin-bottom:16px;
@@ -1071,7 +1071,6 @@
   .ch-switch button:focus-visible{outline:2px solid rgba(255,255,255,.85); outline-offset:2px}
 
   /* ---- design B: the charter with the badges overlapping in a cascade on the right ---- */
-  .chb{padding-right:56px}
   .chb-card{position:relative; display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.45fr) 330px; background:var(--paper);
     border:1px solid rgba(94,234,212,.22); border-radius:20px;
     box-shadow:0 0 0 1px rgba(255,255,255,.04), 0 40px 90px -40px rgba(0,0,0,.9), 0 0 80px -20px rgba(15,118,110,.35)}
@@ -1086,24 +1085,19 @@
   .chb-pile{display:flex; flex-direction:column; width:100%}
   /* each card overlaps the one above by 30px; the upper card keeps 50px of empty space at its foot, so the overlap and the
      tab never cover its text */
-  .chb-b{position:relative; z-index:var(--z); width:300px; display:grid; gap:8px; margin-top:-30px; padding:18px 16px 50px;
+  .chb-b{position:relative; z-index:var(--z); width:270px; display:grid; gap:8px; margin-top:-30px; padding:18px 16px 50px;
     background:var(--paper); border:1px solid var(--tl-edge); border-radius:14px;
     font-family:"DM Sans","IBM Plex Sans Thai Looped",ui-sans-serif,system-ui,sans-serif; font-size:13px; line-height:1.4; color:var(--text-2);
     transform:rotate(var(--r)); box-shadow:0 22px 44px -20px rgba(2,20,24,.55), 0 2px 6px rgba(2,20,24,.14);
     transition:transform .25s ease, box-shadow .25s ease}
   .chb-b:first-child{margin-top:0}
   .chb-b:last-child{padding-bottom:18px}
-  .chb-b:nth-child(even){margin-left:64px}
+  .chb-b:nth-child(even){margin-left:44px}
   .chb-b.is-on{z-index:10; transform:rotate(0deg) scale(1.035); box-shadow:0 30px 60px -22px rgba(2,20,24,.7), 0 0 0 2px var(--teal)}
   .chb-tab{position:absolute; top:-13px; right:16px; width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
     background:var(--teal); color:var(--on-teal); box-shadow:0 6px 14px -6px rgba(2,20,24,.6)}
   .chb-tab svg{width:16px; height:16px}
   @media (prefers-reduced-motion:reduce){ .chb-b, .chb-row{transition:none} }
-  @media (min-width:1300px){
-    .chb-card{grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) 350px}
-    .chb-row{padding:26px 36px}
-    .chb-b:nth-child(even){margin-left:84px}
-  }
   @media (max-width:1100px){
     .chb{padding-right:0}
     .chb-card{grid-template-columns:minmax(0,1fr)}
@@ -1121,15 +1115,6 @@
     .chb .ch-top{flex-direction:column; align-items:flex-start; gap:14px}
     .chb .ch-seal{width:72px; height:72px}
     .chb-stack{padding:8px 18px 22px}
-  }
-  @media (min-width:1300px){
-    .ch-side{padding:42px 40px 38px}
-    .ch-seal{width:128px; height:128px}
-    .ch-side h2{font-size:2.3rem}
-    .ch-row{grid-template-columns:minmax(0,1fr) 288px; gap:16px 40px; padding:26px 40px}
-    .ch-t{font-size:1.14rem}
-    .ch-x{font-size:.97rem}
-    .ch-proof{min-height:108px; padding:14px 16px}
   }
   @media (max-width:1000px){
     .ch{grid-template-columns:minmax(0,1fr)}
