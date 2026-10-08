@@ -1,5 +1,5 @@
-/** Values the Privacy notice fills in. Replace the placeholders with the real ones before launch. */
+/** Notice publication date; update if publication occurs after this date. Countries await confirmation. */
 export const privacyConfig = {
-  effective: { en: "[effective date]", th: "[วันที่มีผล]" },
-  transfer: { en: "[e.g. Singapore or the EU]", th: "[เช่น สิงคโปร์ หรือสหภาพยุโรป]" },
+  effective: { en: "8 October 2026", th: "8 ตุลาคม 2569" },
+  transfer: { en: "", th: "" },
 };

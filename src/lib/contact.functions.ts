@@ -69,9 +69,9 @@ export const sendContactEnquiry = createServerFn({ method: "POST" })
     const topicText = (th ? TOPIC_TH : TOPIC_EN)[data.topic]!;
     const first = data.name.split(/\s+/)[0]!;
     await log(email, th ? `เราได้รับคำถามของท่านแล้ว · ${reference}` : `We have your enquiry · ${reference}`, "sender", () =>
-      sendTemplateEmail("contact-confirm", email, { templateData: { lang: data.language, name: first, reference, topic: topicText, message: data.message }, idempotencyKey: `contact-confirm-${reference}`, replyTo: "support@pitchsnack.com" }));
+      sendTemplateEmail("contact-confirm", email, { templateData: { lang: data.language, name: first, reference, topic: topicText, message: data.message }, idempotencyKey: `contact-confirm-${reference}` }));
     const rows: [string, string][] = [["Reference", reference], ["I am", data.role], ["Topic", TOPIC_EN[data.topic]!], ["Name", data.name], ["Company", data.company || "—"], ["Email", email], ["Phone", phone ?? "—"], ["Language", data.language], ["Signed in", userId ? "Yes" : "No"]];
     await log("support@pitchsnack.com", `New enquiry · ${data.role} · ${TOPIC_EN[data.topic]} · ${reference}`, "team", () =>
-      sendTemplateEmail("contact-team", "support@pitchsnack.com", { templateData: { reference, role: data.role, topic: TOPIC_EN[data.topic], rows, message: data.message }, idempotencyKey: `contact-team-${reference}`, replyTo: email }));
+      sendTemplateEmail("contact-team", "support@pitchsnack.com", { templateData: { reference, role: data.role, topic: TOPIC_EN[data.topic], rows, message: data.message }, idempotencyKey: `contact-team-${reference}` }));
     return { reference, first, email };
   });

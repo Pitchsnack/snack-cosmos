@@ -26,4 +26,4 @@
 - Roles/plans: account_role enforced in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
-- Contact enquiries: contact_enquiries is written only by sendContactEnquiry (contact.functions.ts, rate-limited, Admin-read RLS); both emails log to email_alert_log as 'Contact enquiry'.
+- Contact enquiries use sendContactEnquiry (rate-limited, Admin-read) and email_alert_log. Shared email-identity.ts drives replies and Admin Sending rules to prevent drift.

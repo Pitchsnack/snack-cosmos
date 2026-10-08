@@ -2,6 +2,7 @@ import * as React from 'react'
 import { render } from '@react-email/render'
 import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
 import { TEMPLATES } from './registry'
+import { APP_EMAIL_IDENTITY } from '@/config/email-identity'
 
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
 
@@ -22,7 +23,6 @@ export interface SendTemplateEmailOptions {
   templateData?: Record<string, any>
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string
-  replyTo?: string
 }
 
 /**
@@ -77,7 +77,7 @@ export async function sendTemplateEmail(
         purpose: 'transactional',
         label: templateName,
         idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        reply_to: options.replyTo,
+        reply_to: APP_EMAIL_IDENTITY.replyTo,
       },
       { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
     )

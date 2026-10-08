@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { APP_EMAIL_IDENTITY } from "@/config/email-identity";
 import { EMAIL_ALERTS, alertText, fill, rolesOf, type AlertDef, type AlertLang, type AlertRole } from "@/config/email-alerts";
 import { getEmailAlertsAdmin, saveEmailAlert, saveEmailAlertRules, sendTestAlerts, type AlertRules } from "@/lib/email-alerts.functions";
 
@@ -18,6 +19,10 @@ export const Route = createFileRoute("/_authenticated/email-alerts")({
     meta: [
       { title: "Email alerts — Pitchsnack Admin" },
       { name: "description", content: "Turn email alerts on or off, edit their wording, set sending rules and see every email sent." },
+      { property: "og:title", content: "PitchSnack Admin · Communications" },
+      { property: "og:description", content: "Manage PitchSnack email alerts, sending rules and email logs." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: EmailAlertsPage,
@@ -284,6 +289,12 @@ function Rules({ rules }: { rules: AlertRules }) {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   return (
     <div className="max-w-2xl space-y-4">
+      <Card title="Sender and replies" note="Used for every automatic app email, including contact confirmations, team enquiries and deal alerts.">
+        <dl className="space-y-2 text-sm">
+          <Meta k="From" v={`PitchSnack <${APP_EMAIL_IDENTITY.sender}>`} />
+          <Meta k="Reply-to" v={APP_EMAIL_IDENTITY.replyTo} />
+        </dl>
+      </Card>
       <Card title="Quiet hours (Asia/Bangkok)" note="Approval emails are always sent at once.">
         <div className="flex items-center gap-3">
           <Switch checked={r.quietEnabled} onCheckedChange={(v) => set("quietEnabled", v)} />
