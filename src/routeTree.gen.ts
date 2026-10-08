@@ -50,6 +50,7 @@ import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedTenantsRouteImport } from './routes/_authenticated/tenants'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
+import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin/plans'
 import { Route as AuthenticatedAdvisorMessagesRouteImport } from './routes/_authenticated/advisor.messages'
 import { Route as AuthenticatedAdvisorPipelineRouteImport } from './routes/_authenticated/advisor.pipeline'
 import { Route as AuthenticatedAdvisorsIndexRouteImport } from './routes/_authenticated/advisors.index'
@@ -325,6 +326,11 @@ const Sp2GatewayIndexRoute = Sp2GatewayIndexRouteImport.update({
   id: '/sp2-gateway/',
   path: '/sp2-gateway/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
+  id: '/admin/plans',
+  path: '/admin/plans',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAdvisorMessagesRoute =
   AuthenticatedAdvisorMessagesRouteImport.update({
@@ -702,6 +708,7 @@ export interface FileRoutesByFullPath {
   '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
   '/advisor/pipeline': typeof AuthenticatedAdvisorPipelineRoute
   '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
@@ -795,6 +802,7 @@ export interface FileRoutesByTo {
   '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
   '/advisor/pipeline': typeof AuthenticatedAdvisorPipelineRoute
   '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
@@ -891,6 +899,7 @@ export interface FileRoutesById {
   '/_authenticated/tenants': typeof AuthenticatedTenantsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
+  '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
   '/_authenticated/advisor/pipeline': typeof AuthenticatedAdvisorPipelineRoute
   '/_authenticated/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
@@ -992,6 +1001,7 @@ export interface FileRouteTypes {
     | '/tenants'
     | '/users'
     | '/sp2-gateway/'
+    | '/admin/plans'
     | '/advisor/messages'
     | '/advisor/pipeline'
     | '/contacts/quick-add'
@@ -1085,6 +1095,7 @@ export interface FileRouteTypes {
     | '/tenants'
     | '/users'
     | '/sp2-gateway'
+    | '/admin/plans'
     | '/advisor/messages'
     | '/advisor/pipeline'
     | '/contacts/quick-add'
@@ -1180,6 +1191,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tenants'
     | '/_authenticated/users'
     | '/sp2-gateway/'
+    | '/_authenticated/admin/plans'
     | '/_authenticated/advisor/messages'
     | '/_authenticated/advisor/pipeline'
     | '/_authenticated/contacts/quick-add'
@@ -1550,6 +1562,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sp2-gateway/'
       preLoaderRoute: typeof Sp2GatewayIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/plans': {
+      id: '/_authenticated/admin/plans'
+      path: '/admin/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/advisor/messages': {
       id: '/_authenticated/advisor/messages'
@@ -2194,6 +2213,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
   AuthenticatedTenantsRoute: typeof AuthenticatedTenantsRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
+  AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdvisorMessagesRoute: typeof AuthenticatedAdvisorMessagesRoute
   AuthenticatedAdvisorPipelineRoute: typeof AuthenticatedAdvisorPipelineRoute
   AuthenticatedGlobalStartupsIdRoute: typeof AuthenticatedGlobalStartupsIdRoute
@@ -2237,6 +2257,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
   AuthenticatedTenantsRoute: AuthenticatedTenantsRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
+  AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdvisorMessagesRoute: AuthenticatedAdvisorMessagesRoute,
   AuthenticatedAdvisorPipelineRoute: AuthenticatedAdvisorPipelineRoute,
   AuthenticatedGlobalStartupsIdRoute: AuthenticatedGlobalStartupsIdRoute,
