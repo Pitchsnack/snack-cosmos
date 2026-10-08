@@ -53,6 +53,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     addrProvince: r.addr_province, addrPostal: r.addr_postal,
     website: r.website, email: r.email, phone: r.phone,
     status: r.status, liveSince: r.live_since, verifiedAt: r.verified_at, updatedAt: r.updated_at,
+    verification: { state: r.advisor_verification ?? "unverified", note: r.more_info_note ?? null, fields: r.more_info_fields ?? [], reason: r.decline_reason ?? null, declineNote: r.decline_note ?? null },
     setupAnswered: r.setup_answered ?? [], setupDoneAt: r.setup_done_at ?? null, wizard: r.wizard_state ?? {},
     team: mine(kids.team).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ id: t.id, name: t.name, role: t.role, email: t.email })),
     credentials: mine(kids.creds).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, name: c.name, note: c.note, status: c.status, checkedAt: c.checked_at })),
