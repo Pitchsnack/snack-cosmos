@@ -223,7 +223,7 @@ export const listMarketplaceTeasers = createServerFn({ method: "GET" })
   .handler(async ({ data: input, context }) => loadMarketplaceTeasers(input, context.userId));
 
 /** A listing above the caller's plan cap: only its id and the plan needed leave the server. */
-export type ClosedTeaser = { id: string; closed: true; needPlan: string };
+export type ClosedTeaser = { id: string; closed: true; needPlan: string; sector: string | null; region: string | null; refNo: string | null; priceBand: string; capM: number };
 
 /** Live listings as buyer teasers (public listing only). Shared by Browse listings and Advisor Browse. */
 export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, userId: string, roleChecked = false) {
@@ -267,7 +267,11 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       const live = (r.live ?? {}) as unknown as HiddenDraft;
       // Above the plan's price cap (and no NDA yet): the card stays closed and no details are sent.
       if (cap !== null && live.asking_price != null && Number(live.asking_price) > cap && !nda.has(r.id)) {
-        return { id: r.id, closed: true as const, needPlan: cap < 50 ? "Basic" : cap < 200 ? "Investor" : "Institutional" } as unknown as ReturnType<typeof open>;
+        // Only four safe fields: sector, region, ref and the price band.
+        const o = open(r, live);
+        const ask = Number(live.asking_price);
+        const priceBand = ask < 50 ? "Asking under ฿50M" : ask <= 200 ? "Asking ฿50M – 200M" : "Asking over ฿200M";
+        return { id: r.id, closed: true as const, needPlan: cap < 200 ? "Investor" : "Institutional", sector: o.listing.sector, region: o.listing.location || null, refNo: o.listing.refNo || null, priceBand, capM: cap } as unknown as ReturnType<typeof open>;
       }
       return open(r, live);
     });
