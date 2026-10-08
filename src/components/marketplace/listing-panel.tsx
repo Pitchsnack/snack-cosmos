@@ -1,3 +1,4 @@
+import { usePlanStrip, requestLock } from "@/components/marketplace/plan-strip";
 import { ListingPill } from "@/components/hidden-profile/public-listing-card";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -96,7 +97,10 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
   const req = useServerFn(requestNda);
   const invalidate = useInvalidateListings();
   const [busy, setBusy] = useState(false);
+  const qc = useQueryClient();
   const st = statuses?.[listingId];
+  const { data: strip } = usePlanStrip();
+  const planLock = requestLock(strip);
   const locked = !data?.verified;
   if (st && st !== "declined") {
     return (
@@ -112,17 +116,18 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
       disabled={locked || busy}
       onClick={async (e) => {
         e.stopPropagation();
+        if (planLock) { toast(t(planLock), { action: { label: t("See plans"), onClick: () => { window.location.href = "/preferences#subscription"; } } }); return; }
         setBusy(true);
         try {
           await req({ data: { listingId } });
           if (onRequested) onRequested(listingId);
           else toast.success("NDA request sent to the seller.");
           invalidate();
-        } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
+        } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); qc.invalidateQueries({ queryKey: ["plan-strip"] }); }
       }}
-      className={cn("h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
+      className={cn(planLock && "opacity-70", "h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
     >
-      {locked ? t("Available after verification") : t("Request NDA")}
+      {locked ? t("Available after verification") : planLock ? <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />{t("Request NDA")}</span> : t("Request NDA")}
     </button>
   );
 }
