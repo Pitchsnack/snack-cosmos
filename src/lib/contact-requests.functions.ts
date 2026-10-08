@@ -158,7 +158,7 @@ export const adminContactRequests = createServerFn({ method: "GET" })
     if (!rows?.length) return [];
     const { data: hps } = await sb.from("hidden_profiles").select("id, ref_no").in("id", rows.map((r: any) => r.hidden_profile_id));
     const refBy = new Map((hps ?? []).map((h: any) => [h.id, h.ref_no]));
-    const labels = await investorLabels([...new Set(rows.map((r: any) => r.investor_id as string))]);
+    const labels = await investorLabels([...new Set((rows as any[]).map((r) => String(r.investor_id)))]);
     return rows.map((r: any) => ({
       id: r.id as string, createdAt: r.created_at as string, status: r.status as string,
       listingRef: (refBy.get(r.hidden_profile_id) as string | undefined) ?? "—",

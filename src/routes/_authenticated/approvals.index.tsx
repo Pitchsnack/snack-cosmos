@@ -158,7 +158,7 @@ function ContactRequestsTab() {
           <tr><th className="px-4 py-2.5">Date</th><th className="px-4 py-2.5">Seller listing</th><th className="px-4 py-2.5">Investor</th><th className="px-4 py-2.5">Status</th></tr>
         </thead>
         <tbody>
-          {data.map((r) => (
+          {data.map((r: any) => (
             <tr key={r.id} className="border-t border-border">
               <td className="px-4 py-2.5">{new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
               <td className="px-4 py-2.5 font-medium">{r.listingRef}</td>
