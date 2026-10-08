@@ -27,6 +27,7 @@ import {
   Database,
   Layers,
   Bot,
+  Tag,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -59,6 +60,7 @@ type NavPath =
   | "/shared-deals"
   | "/audit"
   | "/users"
+  | "/admin/plans"
   | "/access-management"
   | "/peer-comparables"
   | "/security"
@@ -138,6 +140,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Default Intake Queue",
       "Tenants",
       "Users",
+      "Plans",
       "Access Management",
       "Peer Comparables",
       "Audit Logs",
@@ -222,6 +225,7 @@ const NAV_ITEMS: NavItem[] = [
     disabled: true,
   },
   { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
+  { label: "Plans", icon: Tag, path: "/admin/plans", exact: false, controlOnly: true, perm: "users.assign_role" },
   {
     label: "Access Management",
     icon: ShieldCheck,

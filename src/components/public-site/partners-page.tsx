@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { PublicPlanCards } from "@/components/plans/plan-card";
 import { useNavigate } from "@tanstack/react-router";
 import { PublicShell, useHomeLang } from "./public-shell";
 import bodyHtml from "./partners-body.html?raw";
@@ -19,6 +21,7 @@ export function PartnersPage() {
 
 function PartnersBody() {
   const host = useRef<HTMLDivElement>(null);
+  const [plansHost, setPlansHost] = useState<Element | null>(null);
   const { lang } = useHomeLang();
   const navigate = useNavigate();
 
@@ -27,6 +30,14 @@ function PartnersBody() {
     if (!el || el.shadowRoot) return;
     const root = el.attachShadow({ mode: "open" });
     root.innerHTML = `<style>${pageCss}</style>${bodyHtml}`;
+    const grid = root.querySelector("#plans .pb-grid");
+    if (grid) {
+      grid.querySelectorAll("article.pb-plan").forEach(p => p.remove());
+      const mount = document.createElement("div");
+      mount.style.display = "contents";
+      grid.prepend(mount);
+      setPlansHost(mount);
+    }
 
     // Links: in-page anchors scroll inside the page, site links use the router.
     root.addEventListener("click", (e) => {
@@ -39,7 +50,7 @@ function PartnersBody() {
       } else if (href.startsWith("/") && !(e as MouseEvent).metaKey && !(e as MouseEvent).ctrlKey) {
         e.preventDefault();
         const [path, search] = href.split("?");
-        navigate({ to: path!, search: search ? Object.fromEntries(new URLSearchParams(search)) : undefined } as never);
+        navigate({ to: path ?? "/", search: search ? Object.fromEntries(new URLSearchParams(search)) : undefined } as never);
       }
     });
 
@@ -65,7 +76,7 @@ function PartnersBody() {
     }
     // Sample firm card: Show more / Show less.
     const card = root.getElementById("adc"), tog = card?.querySelector(".adc-tog");
-    tog?.addEventListener("click", () => { const on = card!.classList.toggle("open"); tog.setAttribute("aria-expanded", on ? "true" : "false"); });
+    tog?.addEventListener("click", () => { const on = card?.classList.toggle("open"); tog.setAttribute("aria-expanded", on ? "true" : "false"); });
 
     // Top bar "Start a conversation" (#start) lives outside the shadow root.
     const onDocClick = (e: MouseEvent) => {
@@ -81,10 +92,10 @@ function PartnersBody() {
   useEffect(() => {
     const root = host.current?.shadowRoot;
     if (!root) return;
-    host.current!.setAttribute("lang", lang);
+    host.current?.setAttribute("lang", lang);
     root.querySelectorAll("[data-lang]").forEach((n) => n.classList.toggle("on", n.getAttribute("data-lang") === lang));
     root.querySelectorAll("[data-label-th]").forEach((n) => n.setAttribute("aria-label", n.getAttribute(`data-label-${lang}`) ?? ""));
   }, [lang]);
 
-  return <div ref={host} id="partners-page" />;
+  return <div ref={host} id="partners-page">{plansHost && createPortal(<PublicPlanCards role="advisor" />, plansHost)}</div>;
 }

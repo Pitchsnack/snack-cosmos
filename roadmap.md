@@ -12,3 +12,12 @@
 - [x] Phase 3: plan strip, closed cards, request/report counters, ended plans
 - [x] Phase 4: Registration verified + Certified badge
 - [x] Plan strip chips/price line, closed cards, contact requests to investors, NDA credits, breadcrumb fix
+
+## Admin Plans and verification
+- [ ] Numbered request counter layout for every role
+- [ ] Test contact request accept and decline; restore test accounts; screenshots
+- [ ] Ended buyer screenshot; restore end date
+- [ ] Admin Plans editor, review, validation, history and publishing
+- [ ] Scheduled Bangkok-midnight changes and subscriber price retention
+- [ ] Shared database-driven public plan cards and subscription prices
+- [ ] Verify Admin Plans and Review screenshots

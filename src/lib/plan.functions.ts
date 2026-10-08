@@ -23,7 +23,7 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
     const { planAccess, requestsLeft } = await import("./plan-access.server");
     const a = await planAccess(context.userId);
     const p = a.plan;
-    const kind = a.role === "seller" ? "contact" : "nda";
+    const kind = a.role === "buyer" ? "nda" : "contact";
     const capTxt = (verb: string) => p?.value_cap_thb_m == null ? `${verb} a business of any size` : `${verb} businesses selling for under THB ${Number(p.value_cap_thb_m)}m`;
     const f = (label: string, on: boolean, needs?: string) => ({ label, on, needs: on ? undefined : needs });
     const features = !p ? [] : a.role === "seller"
@@ -56,7 +56,7 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
     return {
       role: a.role,
       plan: p && {
-        key: p.key, name: p.name, badgeStyle: p.badge_style, priceType: p.price_type, priceThb: p.price_thb, termMonths: p.term_months,
+        key: p.key, name: p.name, badgeStyle: p.badge_style, priceType: p.price_type, priceThb: a.sub?.price_locked_thb ?? (a.sub?.term_end && new Date(a.sub.term_end) > new Date() ? a.sub.price_paid_thb : null) ?? p.price_thb, termMonths: p.term_months,
         completionFeePct: p.completion_fee_pct == null ? null : Number(p.completion_fee_pct),
         valueCapM: p.value_cap_thb_m == null ? null : Number(p.value_cap_thb_m), requestsMode: p.requests_mode, features,
       },

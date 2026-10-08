@@ -4,7 +4,8 @@ import { ChevronDown, EyeOff, FileText, Lock, MessageSquare, Scale, ShieldCheck,
 import { getHomeHeroImages } from "@/lib/home-hero.functions";
 import { PLANS } from "./home-copy";
 import { B_CARD, B_CLOSE, B_DEAL, B_FAQ, B_HERO, B_HOW, B_MANDATE, B_NUMBERS, B_PLANS, B_PROFILE, B_PROMISES } from "./buyers-copy";
-import { Head, PlanCard } from "./public-home";
+import { Head } from "./public-home";
+import { PublicPlanCards } from "@/components/plans/plan-card";
 import { PublicShell, Rich, useHomeLang } from "./public-shell";
 import { BigFigureCards, IconCard, Ladder, ReportCard, Ticks } from "./shared-parts";
 import { BuyersHeroSlides } from "./buyers-hero";
@@ -189,7 +190,7 @@ function Plans() {
     <section id="plans" className="ph-sec ph-grey">
       <div className="ph-wrap">
         <div className="ph-group pb-group0"><h3>{t(PLANS.buyersH)}</h3><p>{t(PLANS.buyersLine)}</p></div>
-        <div className="ph-buyers">{PLANS.buyers.map((p) => <PlanCard key={p.id} p={p} owner={false} />)}</div>
+        <div className="ph-buyers"><PublicPlanCards role="buyer" /></div>
         <div className="ph-pfine"><span>{t(B_PLANS.fine)}</span><a href="/plans">{t(B_PLANS.link)}</a></div>
       </div>
     </section>

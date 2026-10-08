@@ -21,7 +21,7 @@ export function PlanBadge({ name, style, ended }: { name: string; style: string;
       style={{ background: s.bg, borderColor: s.bd, color: s.fg }}
     >
       {!s.noCrown && <Crown className="h-[11px] w-[11px]" strokeWidth={2.4} style={{ color: s.crown ?? s.fg }} />}
-      {ended ? `${name} · ended` : name}
+      {ended ? `${name} · Paused` : name}
     </span>
   );
 }

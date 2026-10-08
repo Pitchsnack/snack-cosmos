@@ -110,7 +110,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
     );
   }
   return (
-    <button
+    <Button
       type="button"
       title={locked ? t("Submit for verification on My Profile first") : undefined}
       disabled={locked || busy}
@@ -127,8 +127,8 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
       }}
       className={cn(planLock && "opacity-70", "h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
     >
-      {locked ? t("Available after verification") : planLock ? <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />{t("Request NDA")}</span> : t("Request NDA")}
-    </button>
+      {locked ? t("Available after verification") : planLock ? <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />{t(planLock === "Renew to request" ? "Renew to request" : "Request NDA")}</span> : t("Request NDA")}
+    </Button>
   );
 }
 

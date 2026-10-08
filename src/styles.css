@@ -4,6 +4,7 @@
 @import "./styles/public-buyers.css";
 @import "./styles/public-buyers-hero.css";
 @import "./styles/public-sellers-hero.css";
+@import "./styles/admin-plans.css";
 @source "../src";
 @import "tw-animate-css";
 
@@ -62,6 +63,11 @@
 }
 
 :root {
+  --request-track: #EEF0F4;
+  --request-caption: #6A7181;
+  --plan-seller: #F6A823;
+  --plan-buyer: #4338CA;
+  --plan-advisor: #0F766E;
   --radius: 0.625rem;
 
   --background: hsl(220 20% 97%);

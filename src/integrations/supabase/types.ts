@@ -3610,6 +3610,82 @@ export type Database = {
           },
         ]
       }
+      plan_changes: {
+        Row: {
+          created_at: string
+          created_by: string
+          effective_at: string
+          id: string
+          keep_price: string
+          new_values: Json
+          plan_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          effective_at: string
+          id?: string
+          keep_price?: string
+          new_values: Json
+          plan_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          effective_at?: string
+          id?: string
+          keep_price?: string
+          new_values?: Json
+          plan_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_changes_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_history: {
+        Row: {
+          at: string
+          by_user: string | null
+          changes: Json
+          id: string
+          plan_id: string
+          summary: string
+        }
+        Insert: {
+          at?: string
+          by_user?: string | null
+          changes?: Json
+          id?: string
+          plan_id: string
+          summary: string
+        }
+        Update: {
+          at?: string
+          by_user?: string | null
+          changes?: Json
+          id?: string
+          plan_id?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_history_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_reports: {
         Row: {
           mode: string
@@ -3669,6 +3745,8 @@ export type Database = {
       plans: {
         Row: {
           badge_style: string
+          card_style: string
+          card_text: Json
           clients_mode: string | null
           clients_n: number | null
           completion_fee_pct: number | null
@@ -3700,6 +3778,8 @@ export type Database = {
         }
         Insert: {
           badge_style: string
+          card_style?: string
+          card_text?: Json
           clients_mode?: string | null
           clients_n?: number | null
           completion_fee_pct?: number | null
@@ -3731,6 +3811,8 @@ export type Database = {
         }
         Update: {
           badge_style?: string
+          card_style?: string
+          card_text?: Json
           clients_mode?: string | null
           clients_n?: number | null
           completion_fee_pct?: number | null
@@ -4901,6 +4983,7 @@ export type Database = {
           manager_user_id: string | null
           nda_credits: number
           plan_id: string
+          price_locked_thb: number | null
           price_paid_thb: number | null
           status: string
           term_end: string | null
@@ -4913,6 +4996,7 @@ export type Database = {
           manager_user_id?: string | null
           nda_credits?: number
           plan_id: string
+          price_locked_thb?: number | null
           price_paid_thb?: number | null
           status?: string
           term_end?: string | null
@@ -4925,6 +5009,7 @@ export type Database = {
           manager_user_id?: string | null
           nda_credits?: number
           plan_id?: string
+          price_locked_thb?: number | null
           price_paid_thb?: number | null
           status?: string
           term_end?: string | null
@@ -5592,6 +5677,11 @@ export type Database = {
         Args: { _fid: string; _field: string }
         Returns: undefined
       }
+      apply_plan_edit: {
+        Args: { _by: string; _keep?: string; _plan: string; _values: Json }
+        Returns: undefined
+      }
+      apply_scheduled_plan_changes: { Args: never; Returns: number }
       can_access_deal: {
         Args: { _deal_id: string; _user_id: string }
         Returns: boolean

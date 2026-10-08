@@ -8,6 +8,7 @@ import { getMyPlanStrip, type PlanStrip as Strip } from "@/lib/plan.functions";
 import { myContactState, sendContactRequest } from "@/lib/contact-requests.functions";
 import type { ClosedTeaser } from "@/lib/hidden-profiles.functions";
 import { PlanBadge } from "@/components/plan-badge";
+import { Button } from "@/components/ui/button";
 import { useHasSession } from "@/hooks/use-has-session";
 
 export function usePlanStrip() {
@@ -65,7 +66,16 @@ export function PlanStrip() {
         {sellerNoSend ? (
           <span className="ml-auto max-w-[420px] text-[13px] text-muted-foreground">Buyers can still find you and ask for an NDA. Sending your own contact requests needs Professional.</span>
         ) : (
-          <span className="ml-auto text-[13px] font-semibold">{left}</span>
+          p?.requestsMode === "number" && data.total != null ? (
+            <div className={`request-counter request-counter-${data.role}`} data-testid="request-counter">
+              <div className="flex items-center justify-between gap-4 text-[13px]">
+                <span>{data.role === "buyer" ? "NDA requests" : "Contact requests"} {yr}</span>
+                <strong className="shrink-0 tabular-nums">{typeof data.left === "number" ? data.left : 0} of {data.total} left</strong>
+              </div>
+              <progress aria-label={`${what} remaining`} max={Math.max(1, data.total)} value={typeof data.left === "number" ? data.left : 0} />
+              <p>{data.role === "seller" ? "Each request you send to an investor uses one. Requests buyers send you are free." : data.role === "buyer" ? "Each NDA request you send uses one." : "Each request you send to a seller or buyer uses one. Enquiries sent to you are free."}</p>
+            </div>
+          ) : <span className="ml-auto text-[13px] font-semibold">{left}</span>
         )}
         <Link to="/preferences" hash="subscription" className={sellerNoSend ? "inline-flex h-[32px] items-center rounded-md border border-border px-3 text-[13px] font-semibold hover:bg-muted" : "text-[13px] font-semibold text-accent hover:underline"}>{p?.requestsMode === "bundles" ? "Buy a bundle" : "Compare plans"}</Link>
       </div>
@@ -117,7 +127,7 @@ export function ContactRequestButton({ investorId }: { investorId: string }) {
   const goPlans = { label: "See plans", onClick: () => { window.location.href = "/preferences#subscription"; } };
   if (st?.sent.includes(investorId)) return <span className="inline-flex h-[34px] items-center rounded-md border px-3 text-sm font-medium text-muted-foreground">Contact requested</span>;
   return (
-    <button
+    <Button
       type="button"
       aria-disabled={!!lock || undefined}
       title={lock ?? "Send a contact request"}
@@ -141,7 +151,7 @@ export function ContactRequestButton({ investorId }: { investorId: string }) {
       }}
       className={`inline-flex h-[34px] items-center gap-1.5 rounded-md px-3 text-sm font-medium ${lock ? `cursor-pointer border border-dashed ${LOCK_STYLE}` : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
     >
-      {lock && <Lock className="h-3.5 w-3.5" />}{lock === "Professional plan" ? "Professional plan" : lock === "Add your business first" ? "Add your business first" : "Request contact"}
-    </button>
+      {lock && <Lock className="h-3.5 w-3.5" />}{lock === "Professional plan" ? "Professional plan" : lock === "Renew to request" ? "Renew to request" : lock === "Add your business first" ? "Add your business first" : "Request contact"}
+    </Button>
   );
 }
