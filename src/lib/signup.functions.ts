@@ -93,6 +93,18 @@ export const finishSignup = createServerFn({ method: "POST" })
     const { data: u } = await sb.auth.admin.getUserById(uid);
     if (!u?.user?.email_confirmed_at) throw new Error("Confirm your email first.");
     const { data: a } = await sb.from("signup_answers").select("*").eq("user_id", uid).maybeSingle();
+    // One role per account, from the role step; new sellers start on the Entry plan (from the plans table).
+    if (a && ["seller", "buyer", "advisor"].includes(a.role)) {
+      const { data: cur } = await sb.from("users").select("account_role").eq("id", uid).maybeSingle();
+      if (!cur?.account_role) await sb.from("users").update({ account_role: a.role }).eq("id", uid);
+      if (a.role === "seller") {
+        const { data: entry } = await sb.from("plans").select("id, term_months").eq("role", "seller").eq("status", "live").order("sort").limit(1).maybeSingle();
+        if (entry) {
+          const end = new Date(); end.setMonth(end.getMonth() + entry.term_months);
+          await sb.from("subscriptions").upsert({ user_id: uid, plan_id: entry.id, term_end: end.toISOString() }, { onConflict: "user_id", ignoreDuplicates: true });
+        }
+      }
+    }
     if (!a) throw new Error("Sign-up answers not found.");
     if (a.done_at) return { role: a.role as SignupRole, profileId: a.profile_id as string | null };
     const y = data.year ? Number(data.year) : null;
