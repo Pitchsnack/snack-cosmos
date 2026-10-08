@@ -1,5 +1,6 @@
 import { BuyerVerificationCard } from "@/components/marketplace/buyer-verification";
 import { useState } from "react";
+import { PlanBadge } from "@/components/plan-badge";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -93,15 +94,8 @@ function MyPage() {
               <div className="min-w-0">
                 <div className="text-[22px] font-bold tracking-[-0.01em]">
                   {name}
-                  {u?.plan && (
-                    <Link
-                      to="/preferences"
-                      title="Manage plan in Settings"
-                      className="ml-1.5 inline-flex items-center gap-[3px] rounded-full border border-[#DDD0FB] bg-gradient-to-br from-[#F5F0FF] to-[#EDE4FF] px-1.5 py-0.5 align-[4px] text-[9.5px] font-bold uppercase tracking-[0.06em] text-[#6D28D9]"
-                    >
-                      <Crown className="h-2.5 w-2.5" />
-                      {u.plan}
-                    </Link>
+                  {u?.planInfo && u.accountRole !== "admin" && (
+                    <span className="ml-1.5 inline-flex align-[3px]"><PlanBadge name={u.planInfo.name} style={u.planInfo.badgeStyle} ended={u.planInfo.ended} /></span>
                   )}
                 </div>
                 {(titleLine.length > 0 || u?.verified) && (
