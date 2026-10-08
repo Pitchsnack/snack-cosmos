@@ -1200,6 +1200,45 @@ export type Database = {
           },
         ]
       }
+      contact_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          hidden_profile_id: string
+          id: string
+          investor_id: string
+          investor_user_id: string | null
+          pipeline_id: string | null
+          seller_user_id: string
+          startup_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          hidden_profile_id: string
+          id?: string
+          investor_id: string
+          investor_user_id?: string | null
+          pipeline_id?: string | null
+          seller_user_id: string
+          startup_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          hidden_profile_id?: string
+          id?: string
+          investor_id?: string
+          investor_user_id?: string | null
+          pipeline_id?: string | null
+          seller_user_id?: string
+          startup_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       deal_activity: {
         Row: {
           activity_details: Json
