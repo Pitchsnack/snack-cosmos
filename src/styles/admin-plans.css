@@ -41,3 +41,4 @@
 .plan-preview {grid-template-columns:minmax(0,300px) minmax(110px,1fr);}
 @media(max-width:1300px){.plan-preview{grid-template-columns:minmax(0,1fr)} .plan-preview>.plan-card-preview {max-width:300px;} .plan-field{grid-template-columns:minmax(0,1fr) minmax(150px,230px);gap:10px;}}
 @media(max-width:640px){.plan-field {grid-template-columns:minmax(0,1fr)}}
+.admin-plans .plan-row:hover,.admin-plans .plan-row:focus-visible {background:var(--muted);color:var(--foreground);}
