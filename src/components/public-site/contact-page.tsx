@@ -74,9 +74,26 @@ function check(f: F, k: keyof typeof ERR): boolean {
   }
 }
 
+function goEnquiry() {
+  const sec = document.getElementById("enquiry");
+  if (!sec) return;
+  const card = (sec.querySelector(".ph-wrap > *") as HTMLElement) ?? sec;
+  const top = document.querySelector(".ph-top, header") as HTMLElement | null;
+  const offset = (top?.getBoundingClientRect().height ?? 64) + 12;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: card.getBoundingClientRect().top + window.scrollY - offset, behavior: reduce ? "auto" : "smooth" });
+  (sec.querySelector('input[name="role"]') as HTMLInputElement | null)?.focus({ preventScroll: true });
+}
+
 export function ContactPage() {
+  useEffect(() => {
+    if (window.location.hash === "#enquiry") requestAnimationFrame(() => setTimeout(goEnquiry, 50));
+    const h = () => setTimeout(goEnquiry, 30);
+    window.addEventListener("ps-enquiry", h);
+    return () => window.removeEventListener("ps-enquiry", h);
+  }, []);
   return (
-    <PublicShell current={null} talkHref="#enquiry" footCurrent="contact">
+    <PublicShell current={null} footCurrent="contact">
       <Hero />
       <section id="enquiry" className="ph-sec ph-grey"><div className="ph-wrap"><EnquiryCard /></div></section>
       <Quick />
