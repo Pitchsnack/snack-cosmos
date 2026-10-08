@@ -59,6 +59,19 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
     const { data: existing } = await sb.from("hidden_profiles").select(COLS).eq("startup_id", data.startupId).maybeSingle();
     if (existing) return existing as unknown as HiddenProfileRow;
     const facts = await loadFacts(sb, data.startupId);
+    // Save the suggested headline so the listing can be submitted without a manual save.
+    let headline = "";
+    try {
+      const { suggestHeadline } = await import("@/lib/public-listing");
+      const { data: src } = await sb
+        .from("startups")
+        .select("startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards")
+        .eq("id", data.startupId)
+        .maybeSingle();
+      if (src) headline = suggestHeadline(src as any).slice(0, 120);
+    } catch {
+      headline = "";
+    }
     for (let i = 0; i < 6; i++) {
       const { data: row, error } = await sb
         .from("hidden_profiles")
@@ -67,6 +80,7 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
           tenant_id: facts.tenant_id,
           code_name: suggestCodeName(),
           region: suggestRegion(facts),
+          headline,
           deal_type: "Full acquisition",
           stake_pct: 100,
           open_to: ["Private equity", "Family office", "Corporate"],
