@@ -33,7 +33,7 @@ export function SellersPage({ initial }: { initial?: Imgs }) {
 function Hero({ img }: { img: string | null }) {
   const { t } = useHomeLang();
   return (
-    <section id="top" className="ph-hero">
+    <section id="top" className="ph-hero ps-sellers-hero">
       <div className="ph-hero-bg" aria-hidden />
       <div className="ph-wrap ph-hero-grid">
         <p className="ph-chip"><Rich s={t(S_HERO.chip)} /></p>
