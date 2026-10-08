@@ -371,7 +371,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
               onClick={() => setPeople(!people)}
               className={cn("inline-flex h-[30px] items-center gap-1.5 rounded-lg px-[9px] text-[13px] font-medium", people ? "bg-[#F2F3F6] text-[#111827]" : "text-[#6B7280] hover:bg-[#F7F8FA] hover:text-[#111827]")}
             >
-              <Users className="h-[15px] w-[15px]" /> {members.length}<span className="max-[759px]:hidden"> people</span>
+              <Users className="h-[15px] w-[15px]" /> {members.length}<span className="max-[759px]:hidden"> {members.length === 1 ? "person" : "people"}</span>
             </button>
           )}
           {hasPanel && (
