@@ -1,3 +1,4 @@
+import { PlanStrip } from "@/components/marketplace/plan-strip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -314,6 +315,8 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
         </div>
         <ViewToggle value={view} onChange={persist} />
       </div>
+
+      {!fav && <PlanStrip />}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         {tray}
