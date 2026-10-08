@@ -88,7 +88,7 @@ export function ClosedListingCard({ c, star }: { c: ClosedTeaser; star?: React.R
   return (
     <div className="relative flex flex-col overflow-hidden rounded-[14px] border border-dashed border-border bg-card">
       {star && <div className="absolute right-3 top-3 z-10">{star}</div>}
-      <div className="flex h-[120px] flex-col items-center justify-center gap-1.5 text-muted-foreground" style={{ backgroundImage: "repeating-linear-gradient(135deg, hsl(var(--muted)) 0 10px, hsl(var(--background)) 10px 20px)" }}>
+      <div className="flex h-[120px] flex-col items-center justify-center gap-1.5 text-muted-foreground" style={{ backgroundImage: "repeating-linear-gradient(135deg, var(--muted) 0 10px, var(--background) 10px 20px)" }}>
         <Lock className="h-5 w-5" />
         <span className="text-[12.5px] font-semibold">{c.sector ?? "Business"}</span>
       </div>
