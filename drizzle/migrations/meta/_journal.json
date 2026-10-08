@@ -400,6 +400,20 @@
       "when": 1791397089512,
       "tag": "0056_advisor_pipeline",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1791425994871,
+      "tag": "0057_advisor_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1791426050813,
+      "tag": "0058_advisor_verification_child_move",
+      "breakpoints": true
     }
   ]
 }

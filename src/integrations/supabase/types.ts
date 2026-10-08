@@ -41,6 +41,7 @@ export type Database = {
       advisor_firm_credentials: {
         Row: {
           checked_at: string | null
+          checked_by: string | null
           firm_id: string
           id: string
           name: string
@@ -50,6 +51,7 @@ export type Database = {
         }
         Insert: {
           checked_at?: string | null
+          checked_by?: string | null
           firm_id: string
           id?: string
           name: string
@@ -59,6 +61,7 @@ export type Database = {
         }
         Update: {
           checked_at?: string | null
+          checked_by?: string | null
           firm_id?: string
           id?: string
           name?: string
@@ -79,6 +82,7 @@ export type Database = {
       advisor_firm_documents: {
         Row: {
           checked_at: string | null
+          checked_by: string | null
           created_at: string
           doc_type: string | null
           file_path: string
@@ -89,6 +93,7 @@ export type Database = {
         }
         Insert: {
           checked_at?: string | null
+          checked_by?: string | null
           created_at?: string
           doc_type?: string | null
           file_path: string
@@ -99,6 +104,7 @@ export type Database = {
         }
         Update: {
           checked_at?: string | null
+          checked_by?: string | null
           created_at?: string
           doc_type?: string | null
           file_path?: string
@@ -245,12 +251,23 @@ export type Database = {
           addr_street: string | null
           addr_subdistrict: string | null
           addr_unit: string | null
+          advisor_verification: string
+          assigned_admin_id: string | null
           city: string | null
           country: string | null
           created_at: string
+          dbd_capital: number | null
+          dbd_checked_at: string | null
+          dbd_name: string | null
+          dbd_registered_on: string | null
+          dbd_status: string | null
           deal_max_usd_m: number | null
           deal_min_usd_m: number | null
           deal_size_band: string | null
+          decline_note: string | null
+          decline_reason: string | null
+          declined_at: string | null
+          declined_by: string | null
           description: string | null
           email: string | null
           firm_type: string
@@ -260,11 +277,16 @@ export type Database = {
           live_since: string | null
           logo_path: string | null
           logo_source: string | null
+          more_info_at: string | null
+          more_info_by: string | null
+          more_info_fields: string[]
+          more_info_note: string | null
           name: string
           owner_user_id: string
           phone: string | null
           ref_no: string
           registration_no: string | null
+          review_checklist: string[]
           sector_agnostic: boolean
           sectors: string[]
           services: string[]
@@ -274,7 +296,11 @@ export type Database = {
           team_size: number | null
           thai_name: string | null
           updated_at: string
+          verification_reason: string | null
+          verification_requested_at: string | null
           verified_at: string | null
+          verified_by: string | null
+          verified_snapshot: Json | null
           website: string | null
           wizard_state: Json
           year_founded: number | null
@@ -286,12 +312,23 @@ export type Database = {
           addr_street?: string | null
           addr_subdistrict?: string | null
           addr_unit?: string | null
+          advisor_verification?: string
+          assigned_admin_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
+          dbd_capital?: number | null
+          dbd_checked_at?: string | null
+          dbd_name?: string | null
+          dbd_registered_on?: string | null
+          dbd_status?: string | null
           deal_max_usd_m?: number | null
           deal_min_usd_m?: number | null
           deal_size_band?: string | null
+          decline_note?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
+          declined_by?: string | null
           description?: string | null
           email?: string | null
           firm_type?: string
@@ -301,11 +338,16 @@ export type Database = {
           live_since?: string | null
           logo_path?: string | null
           logo_source?: string | null
+          more_info_at?: string | null
+          more_info_by?: string | null
+          more_info_fields?: string[]
+          more_info_note?: string | null
           name?: string
           owner_user_id: string
           phone?: string | null
           ref_no?: string
           registration_no?: string | null
+          review_checklist?: string[]
           sector_agnostic?: boolean
           sectors?: string[]
           services?: string[]
@@ -315,7 +357,11 @@ export type Database = {
           team_size?: number | null
           thai_name?: string | null
           updated_at?: string
+          verification_reason?: string | null
+          verification_requested_at?: string | null
           verified_at?: string | null
+          verified_by?: string | null
+          verified_snapshot?: Json | null
           website?: string | null
           wizard_state?: Json
           year_founded?: number | null
@@ -327,12 +373,23 @@ export type Database = {
           addr_street?: string | null
           addr_subdistrict?: string | null
           addr_unit?: string | null
+          advisor_verification?: string
+          assigned_admin_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
+          dbd_capital?: number | null
+          dbd_checked_at?: string | null
+          dbd_name?: string | null
+          dbd_registered_on?: string | null
+          dbd_status?: string | null
           deal_max_usd_m?: number | null
           deal_min_usd_m?: number | null
           deal_size_band?: string | null
+          decline_note?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
+          declined_by?: string | null
           description?: string | null
           email?: string | null
           firm_type?: string
@@ -342,11 +399,16 @@ export type Database = {
           live_since?: string | null
           logo_path?: string | null
           logo_source?: string | null
+          more_info_at?: string | null
+          more_info_by?: string | null
+          more_info_fields?: string[]
+          more_info_note?: string | null
           name?: string
           owner_user_id?: string
           phone?: string | null
           ref_no?: string
           registration_no?: string | null
+          review_checklist?: string[]
           sector_agnostic?: boolean
           sectors?: string[]
           services?: string[]
@@ -356,7 +418,11 @@ export type Database = {
           team_size?: number | null
           thai_name?: string | null
           updated_at?: string
+          verification_reason?: string | null
+          verification_requested_at?: string | null
           verified_at?: string | null
+          verified_by?: string | null
+          verified_snapshot?: Json | null
           website?: string | null
           wizard_state?: Json
           year_founded?: number | null
@@ -5277,6 +5343,10 @@ export type Database = {
     }
     Functions: {
       active_tenant_id: { Args: { _user_id: string }; Returns: string }
+      advisor_child_move: {
+        Args: { _fid: string; _field: string }
+        Returns: undefined
+      }
       can_access_deal: {
         Args: { _deal_id: string; _user_id: string }
         Returns: boolean
