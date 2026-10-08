@@ -120,7 +120,7 @@ export function feeError(service: string, f: FeeDetail): { msg: string; amount?:
 
 export type FirmStatus = "draft" | "live" | "paused";
 export type FirmTeam = { id?: string; name: string; role: string | null; email: string | null };
-export type FirmCredential = { id?: string; name: string; note: string | null; status: "pending" | "verified"; checkedAt: string | null };
+export type FirmCredential = { id?: string; name: string; note: string | null; status: "pending" | "verified" | "rejected"; checkedAt: string | null };
 export type FirmDocument = { id?: string; path: string; name: string; type: string | null; checkedAt: string | null; validUntil: string | null; url?: string | null };
 export type FirmReview = { id: string; role: "seller" | "buyer"; detail: string | null; service: string | null; stars: number; comment: string | null; at: string };
 
