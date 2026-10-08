@@ -33,16 +33,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listUsers, inviteUser, updateUserStatus, setAdvisorView, permanentlyDeleteUser } from "@/lib/users.functions";
+import { listUsers, inviteUser, updateUserStatus, permanentlyDeleteUser, listPlans, setUserAccess } from "@/lib/users.functions";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
 import { ROLE_LABELS, type AppRole } from "@/lib/permissions";
 import { AgentImpactPanel } from "@/components/users/agent-impact-panel";
 import { DefaultIntakeForm } from "@/components/settings/default-intake-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlanBadge } from "@/components/plan-badge";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/users")({
-  head: () => ({ meta: [{ title: "Users — SnackPortal2" }] }),
+  head: () => ({ meta: [{ title: "Users — PitchSnack" }] }),
   component: UsersPage,
 });
 
@@ -146,31 +148,103 @@ function StatusSelect({
   );
 }
 
-function AdvisorSelect({ userId, on, disabled, onChanged }: { userId: string; on: boolean; disabled?: boolean; onChanged: () => void }) {
-  const update = useServerFn(setAdvisorView);
+type AccRole = "seller" | "buyer" | "advisor" | "admin";
+const ROLE_PILL: Record<AccRole, string> = { seller: "bg-[#FEF3DE] text-[#8A4B06]", buyer: "bg-[#EEF0FF] text-[#4338CA]", advisor: "bg-[#E0F5F2] text-[#0F766E]", admin: "bg-[#E8EBF2] text-[#192957]" };
+const OPENS: Record<AccRole, string> = { seller: "Seller tab only", buyer: "Buyer tab only", advisor: "Advisor tab only", admin: "Admin and all three tabs" };
+const ROLE_LINE: Record<AccRole, string> = { seller: "Opens the Seller tab only", buyer: "Opens the Buyer tab only", advisor: "Opens the Advisor tab only", admin: "Opens Admin and all three tabs, with no plan limits" };
+const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+function priceText(p: any) {
+  if (p.price_type === "free") return "free";
+  if (p.price_type === "on_request") return "on request";
+  return `${Number(p.price_thb).toLocaleString("en-US")} THB / ${p.term_months === 12 ? "yr" : `${p.term_months} mo`}`;
+}
+const fmtDay = (s: string) => new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+function RolePill({ role }: { role: AccRole | null }) {
+  if (!role) return <span className="text-xs text-muted-foreground">Role to set</span>;
+  return <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[.06em]", ROLE_PILL[role])}>{role}</span>;
+}
+
+function AccessDialog({ u, plans, admins, onClose, onSaved }: { u: any; plans: any[]; admins: any[]; onClose: () => void; onSaved: () => void }) {
+  const save = useServerFn(setUserAccess);
+  const [role, setRole] = useState<AccRole | null>(u.account_role ?? null);
+  const [planId, setPlanId] = useState<string | null>(u.subscription?.plan_id ?? null);
+  const [manager, setManager] = useState<string | null>(u.subscription?.manager_user_id ?? null);
   const [busy, setBusy] = useState(false);
-  const change = async (v: string) => {
-    const next = v === "yes";
-    if (next === on) return;
+  const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email;
+  const choices = role && role !== "admin" ? plans.filter((p) => p.role === role && (p.status === "live" || p.id === u.subscription?.plan_id)) : [];
+  const plan = plans.find((p) => p.id === planId);
+  const pickRole = (r: AccRole) => {
+    setRole(r);
+    if (r !== u.account_role) setPlanId(r === "admin" ? null : plans.find((p) => p.role === r && p.status === "live")?.id ?? null);
+    else setPlanId(u.subscription?.plan_id ?? null);
+  };
+  const submit = async () => {
+    if (!role) return;
     setBusy(true);
     try {
-      await update({ data: { targetUserId: userId, on: next } });
-      toast.success(next ? "Advisor view turned on" : "Advisor view turned off");
-      onChanged();
-    } catch (err: any) {
-      toast.error(err?.message ?? "Could not update the Advisor view");
+      await save({ data: { targetUserId: u.id, role, planId: role === "admin" ? null : planId, managerUserId: plan?.has_manager ? manager : null } });
+      toast.success(`Saved. ${name} now opens the ${role === "admin" ? "Admin and all three" : cap(role)} tab${role === "admin" ? "s" : ""}${plan && role !== "admin" ? `, on the ${plan.name} plan` : ""}.`);
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save");
     } finally {
       setBusy(false);
     }
   };
   return (
-    <Select value={on ? "yes" : "no"} onValueChange={change} disabled={busy || disabled}>
-      <SelectTrigger className="h-8 w-[90px]" aria-label="Advisor view"><SelectValue /></SelectTrigger>
-      <SelectContent>
-        <SelectItem value="no">No</SelectItem>
-        <SelectItem value="yes">Yes</SelectItem>
-      </SelectContent>
-    </Select>
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{name}</DialogTitle>
+          <DialogDescription>{u.email}</DialogDescription>
+        </DialogHeader>
+        <div className="text-[10.5px] font-bold uppercase tracking-[.07em] text-muted-foreground">Role · one per account</div>
+        <div className="grid gap-2">
+          {(["seller", "buyer", "advisor", "admin"] as AccRole[]).map((r) => (
+            <button key={r} type="button" onClick={() => pickRole(r)} className={cn("rounded-lg border px-3 py-2 text-left", role === r ? "border-[#192957] ring-1 ring-inset ring-[#192957]" : "border-border hover:bg-muted/50")}>
+              <div className="text-sm font-semibold">{cap(r)}</div>
+              <div className="text-xs text-muted-foreground">{ROLE_LINE[r]}</div>
+            </button>
+          ))}
+        </div>
+        {role && (
+          <div className="space-y-1.5">
+            <Label className="text-xs uppercase tracking-wide">Plan</Label>
+            {role === "admin" ? (
+              <p className="text-sm text-muted-foreground">Admins have no plan and no limits.</p>
+            ) : (
+              <>
+                <Select value={planId ?? ""} onValueChange={(v) => setPlanId(v)}>
+                  <SelectTrigger><SelectValue placeholder="Choose a plan" /></SelectTrigger>
+                  <SelectContent>
+                    {choices.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · {priceText(p)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {role === "buyer" && <p className="text-xs text-muted-foreground">Every buyer is on a paid plan.</p>}
+                {u.subscription?.status === "ended" && planId === u.subscription.plan_id && (
+                  <p className="text-xs text-muted-foreground"><b>Plan ended {u.subscription.term_end ? fmtDay(u.subscription.term_end) : ""}.</b> The user can look around but can't send requests until it's renewed.</p>
+                )}
+                {plan?.has_manager && (
+                  <div className="space-y-1.5 pt-2">
+                    <Label className="text-xs uppercase tracking-wide">Manager</Label>
+                    <Select value={manager ?? ""} onValueChange={(v) => setManager(v)}>
+                      <SelectTrigger><SelectValue placeholder="Choose a manager" /></SelectTrigger>
+                      <SelectContent>{admins.map((a) => <SelectItem key={a.id} value={a.id}>{[a.first_name, a.last_name].filter(Boolean).join(" ") || a.email}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button disabled={busy || !role} onClick={submit}>{busy ? "Saving…" : "Save access"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -192,6 +266,26 @@ function UsersPageInner() {
     queryKey: ["users", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId } }),
   });
+  const plansFn = useServerFn(listPlans);
+  const { data: plans = [] } = useQuery({ queryKey: ["plans"], queryFn: () => plansFn() });
+  const planById = Object.fromEntries(plans.map((p: any) => [p.id, p]));
+  const [filter, setFilter] = useState("all");
+  const [editing, setEditing] = useState<any | null>(null);
+  const all = (data ?? []) as any[];
+  const live = all.filter((u) => u.status !== "Deleted");
+  const needsPlan = (u: any) => (u.account_role === "buyer" || u.account_role === "advisor") && !u.subscription;
+  const counts: Record<string, number> = {
+    all: all.length,
+    seller: live.filter((u) => u.account_role === "seller").length,
+    buyer: live.filter((u) => u.account_role === "buyer").length,
+    advisor: live.filter((u) => u.account_role === "advisor").length,
+    admin: live.filter((u) => u.account_role === "admin").length,
+    role: live.filter((u) => !u.account_role).length,
+    plan: live.filter(needsPlan).length,
+  };
+  const rows = all.filter((u) => filter === "all" ? true : filter === "role" ? u.status !== "Deleted" && !u.account_role : filter === "plan" ? u.status !== "Deleted" && needsPlan(u) : u.account_role === filter);
+  const admins = live.filter((u) => u.account_role === "admin");
+  const chips: [string, string][] = [["all", "All"], ["seller", "Sellers"], ["buyer", "Buyers"], ["advisor", "Advisors"], ["admin", "Admins"], ["role", "Role to set"], ["plan", "Plan to set"]];
 
   return (
     <div className="space-y-6">
@@ -220,6 +314,14 @@ function UsersPageInner() {
         </TabsList>
 
         <TabsContent value="users" className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {chips.filter(([k]) => !(k === "role" || k === "plan") || counts[k] > 0).map(([k, l]) => (
+              <button key={k} onClick={() => setFilter(k)} className={cn("rounded-full border px-3 py-1 text-xs font-medium", filter === k ? "border-[#192957] bg-[#192957] text-white" : "border-border bg-card hover:bg-muted")}>
+                {l} {counts[k]}
+              </button>
+            ))}
+          </div>
+          {editing && <AccessDialog u={editing} plans={plans} admins={admins} onClose={() => setEditing(null)} onSaved={() => refetch()} />}
           <div className="rounded-lg border border-border bg-card shadow-card">
             <Table>
               <TableHeader>
@@ -228,25 +330,27 @@ function UsersPageInner() {
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Advisor view</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Opens</TableHead>
                   <TableHead>Last login</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
                       Loading…
                     </TableCell>
                   </TableRow>
-                ) : (data ?? []).length === 0 ? (
+                ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
                       No users yet.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  (data ?? []).map((u: any) => (
+                  rows.map((u: any) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.email}</TableCell>
                       <TableCell className="text-muted-foreground">
@@ -269,7 +373,19 @@ function UsersPageInner() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <AdvisorSelect userId={u.id} on={!!u.advisor_view} disabled={!canEditStatus} onChanged={() => refetch()} />
+                        <RolePill role={u.account_role ?? null} />
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const p = u.subscription ? planById[u.subscription.plan_id] : null;
+                          return p && u.account_role !== "admin" ? <PlanBadge name={p.name} style={p.badge_style} ended={u.subscription.status === "ended"} /> : <span className="text-xs text-muted-foreground">{needsPlan(u) ? "Plan to set" : "—"}</span>;
+                        })()}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <span>{u.account_role ? OPENS[u.account_role as AccRole] : "—"}</span>
+                          {isControl && <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEditing(u)}>Edit access</Button>}
+                        </div>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "Never"}
