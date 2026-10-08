@@ -27,3 +27,4 @@
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
 
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
+- Contact enquiries: contact_enquiries is written only by sendContactEnquiry (contact.functions.ts, rate-limited, Admin-read RLS); both emails log to email_alert_log as 'Contact enquiry'. Privacy notice text lives in privacy-doc.ts with fill-in values in config/privacy.ts, rendered by PrivacyDoc for both the pop-up (PrivacyLink) and /privacy, so they never drift.
