@@ -225,7 +225,7 @@ const NAV_ITEMS: NavItem[] = [
     disabled: true,
   },
   { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
-  { label: "Plans", icon: Tag, path: "/admin/plans", exact: false, controlOnly: true, perm: "users.read" },
+  { label: "Plans", icon: Tag, path: "/admin/plans", exact: false, controlOnly: true, perm: "users.assign_role" },
   {
     label: "Access Management",
     icon: ShieldCheck,

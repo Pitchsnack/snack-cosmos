@@ -56,7 +56,7 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
     return {
       role: a.role,
       plan: p && {
-        key: p.key, name: p.name, badgeStyle: p.badge_style, priceType: p.price_type, priceThb: p.price_thb, termMonths: p.term_months,
+        key: p.key, name: p.name, badgeStyle: p.badge_style, priceType: p.price_type, priceThb: a.sub?.price_locked_thb ?? (a.sub?.term_end && new Date(a.sub.term_end) > new Date() ? a.sub.price_paid_thb : null) ?? p.price_thb, termMonths: p.term_months,
         completionFeePct: p.completion_fee_pct == null ? null : Number(p.completion_fee_pct),
         valueCapM: p.value_cap_thb_m == null ? null : Number(p.value_cap_thb_m), requestsMode: p.requests_mode, features,
       },

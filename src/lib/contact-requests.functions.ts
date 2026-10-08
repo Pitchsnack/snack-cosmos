@@ -43,6 +43,7 @@ export type ContactButtonState = { hasListing: boolean; sent: string[] };
 export const myContactState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ContactButtonState> => {
+    await (await import("./plan-access.server")).requireRole(context.userId, ["seller"]);
     const sb = await admin();
     const [hp, { data }] = await Promise.all([
       myLiveListing(context.userId),
@@ -87,6 +88,7 @@ export const listContactRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ as: z.enum(["seller", "buyer"]) }).parse(d))
   .handler(async ({ data, context }): Promise<ContactRequestRow[]> => {
+    await (await import("./plan-access.server")).requireRole(context.userId, [data.as]);
     const sb = await admin();
     const col = data.as === "seller" ? "seller_user_id" : "investor_user_id";
     const { data: rows } = await sb.from("contact_requests").select("*").eq(col, context.userId).order("created_at", { ascending: false });
@@ -118,6 +120,7 @@ export const decideContactRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid(), accept: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
+    await (await import("./plan-access.server")).requireRole(context.userId, ["buyer"]);
     const sb = await admin();
     const { data: r } = await sb.from("contact_requests").select("*").eq("id", data.id).maybeSingle();
     if (!r || r.investor_user_id !== context.userId) throw new Error("Request not found");
