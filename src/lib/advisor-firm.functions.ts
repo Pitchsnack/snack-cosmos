@@ -15,6 +15,8 @@ const FEE_TYPES = ["fixed", "hourly", "retainer", "success", "retainer_success",
 const BAND_KEYS = DEAL_BANDS.map((b) => b.key) as [string, ...string[]];
 
 async function requireAdvisor(sb: any, userId: string) {
+  const { data: ctl } = await sb.rpc("is_control", { _user_id: userId });
+  if (ctl) return;
   const { data } = await sb.from("users").select("advisor_view").eq("id", userId).maybeSingle();
   if (!data?.advisor_view) throw new Error("The Advisor view is not turned on for your account.");
 }
@@ -51,6 +53,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     addrProvince: r.addr_province, addrPostal: r.addr_postal,
     website: r.website, email: r.email, phone: r.phone,
     status: r.status, liveSince: r.live_since, verifiedAt: r.verified_at, updatedAt: r.updated_at,
+    verification: { state: r.advisor_verification ?? "unverified", note: r.more_info_note ?? null, fields: r.more_info_fields ?? [], reason: r.decline_reason ?? null, declineNote: r.decline_note ?? null },
     setupAnswered: r.setup_answered ?? [], setupDoneAt: r.setup_done_at ?? null, wizard: r.wizard_state ?? {},
     team: mine(kids.team).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ id: t.id, name: t.name, role: t.role, email: t.email })),
     credentials: mine(kids.creds).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, name: c.name, note: c.note, status: c.status, checkedAt: c.checked_at })),
@@ -102,9 +105,35 @@ export async function loadFirmCards(sb: any, ids: string[]): Promise<AdvisorFirm
     const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
   }
-  const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: [], reviews: reviews.data ?? [] };
+  const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: (creds.data ?? []).filter((c: any) => c.status !== "rejected"), docs: [], reviews: reviews.data ?? [] };
   return rows.map((r: any) => toFirm(r, kids, urls));
 }
+
+/** Admin: one firm in the advisor's own shape, for Edit in Advisors Directory. */
+export const getAdvisorFirmForAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<AdvisorFirm> => {
+    const { data: ctl } = await (context.supabase as any).rpc("is_control", { _user_id: context.userId });
+    if (!ctl) throw new Error("Admin only");
+    const sb = context.supabase as any;
+    const { data: r } = await sb.from("advisor_firms").select("*").eq("id", data.id).single();
+    const [fees, team, creds, docs, reviews] = await Promise.all([
+      sb.from("advisor_firm_fees").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_team").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_credentials").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_documents").select("*").eq("firm_id", data.id),
+      sb.from("advisor_firm_reviews").select("*").eq("firm_id", data.id),
+    ]);
+    const paths = [r.logo_path, ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
+    const urls = new Map<string, string>();
+    if (paths.length) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 3600);
+      for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+    }
+    return toFirm(r, { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: docs.data ?? [], reviews: reviews.data ?? [] }, urls);
+  });
 
 /** + Add Firm Profile: a new Draft with the next ADV reference. */
 export const createAdvisorDraft = createServerFn({ method: "POST" })
@@ -202,6 +231,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       addr_postal: data.addrPostal, website: data.website, email: data.email, phone: data.phone,
       setup_done_at: new Date().toISOString(),
     };
+    if (data.id) { const { data: ctl0 } = await sb.rpc("is_control", { _user_id: context.userId }); if (ctl0) delete (row as Record<string, unknown>).setup_done_at; }
     let id = data.id;
     if (id) {
       const { error } = await sb.from("advisor_firms").update(row).eq("id", id);
@@ -241,6 +271,18 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
         if (!d.path.startsWith(own)) throw new Error("Invalid document file.");
         const { error } = await sb.from("advisor_firm_documents").insert({ firm_id: id, file_path: d.path, name: d.name, doc_type: d.type });
         if (error) throw new Error(error.message);
+      }
+    }
+    // Admin's Edit keeps the verified snapshot in step, so its own changes never show as the firm's.
+    const { data: ctl } = await sb.rpc("is_control", { _user_id: context.userId });
+    if (ctl) {
+      const { data: f } = await sb.from("advisor_firms").select("verified_snapshot, legal_name, registration_no").eq("id", id).single();
+      if (f?.verified_snapshot) {
+        const [{ data: c }, { data: d }] = await Promise.all([
+          sb.from("advisor_firm_credentials").select("id, name, note").eq("firm_id", id),
+          sb.from("advisor_firm_documents").select("id, name, file_path").eq("firm_id", id),
+        ]);
+        await sb.from("advisor_firms").update({ verified_snapshot: { legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] } }).eq("id", id);
       }
     }
     return { id };

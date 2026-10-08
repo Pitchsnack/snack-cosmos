@@ -331,7 +331,7 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
             <DropdownMenuContent align="end">
               {f.status === "live"
                 ? <DropdownMenuItem onClick={() => changeStatus("paused")}>Pause listing</DropdownMenuItem>
-                : <DropdownMenuItem disabled={!complete} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>}
+                : <DropdownMenuItem disabled={!complete || declined} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>}
             </DropdownMenuContent>
           </DropdownMenu>
           <ChecklistPill f={f} onItem={edit} />
@@ -352,6 +352,8 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
       ) : <>
 
       <div className="space-y-5 p-5">
+        {f.verification?.state === "more_info" && <FirmNotice state="more_info" note={f.verification.note} fields={f.verification.fields} />}
+        {f.verification?.state === "declined" && <FirmNotice state="declined" note={f.verification.declineNote} fields={[]} reason={f.verification.reason} />}
         <div className="flex gap-2.5 rounded-[12px] bg-[#F3F4F6] p-3.5 text-[13.5px] dark:bg-muted">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
           <p>Everything on your profile is <strong>open to sellers and buyers</strong> in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.</p>
@@ -370,7 +372,7 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
             <>
               <strong className="text-[#15803D]">✓ Verified by PitchSnack on {fmtDate(f.verifiedAt)}.</strong>{" "}
               {pending.length > 0 && <>{pending.map((c) => c.name).join(", ")} {pending.length > 1 ? "are" : "is"} still waiting for a check. </>}
-              A change to your licences or legal name goes back to Admin for a check.
+              A change to your legal name, registration number, licences or documents goes back to PitchSnack for a check.
             </>
           ) : "PitchSnack hasn't verified your firm yet. Admin checks your licences and documents."}
         </p>
@@ -472,12 +474,12 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
         ) : f.status === "draft" ? (
           <>
             <span>Publish your profile so sellers and buyers can find you in Browse advisors.{!complete && <> <span className="text-muted-foreground">Finish the checklist first.</span></>}</span>
-            <Button size="sm" disabled={busy || !complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => changeStatus("live")} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Publish</Button>
+            <Button size="sm" disabled={busy || !complete || declined} title={declined ? DECLINED_TIP : complete ? undefined : "Complete the checklist first"} onClick={() => changeStatus("live")} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Publish</Button>
           </>
         ) : (
           <>
             <span>Paused. Sellers and buyers can't see your profile.</span>
-            <Button variant="outline" size="sm" disabled={busy || !complete} onClick={() => changeStatus("live")}>Make live again</Button>
+            <Button variant="outline" size="sm" disabled={busy || !complete || declined} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Make live again</Button>
           </>
         )}
       </div>

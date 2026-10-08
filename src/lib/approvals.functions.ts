@@ -223,7 +223,8 @@ export const pendingApprovalsCount = createServerFn({ method: "GET" })
     const { count: b } = await sb.from("buyer_verifications").select("id", { count: "exact", head: true }).eq("status", "pending");
     const { count: c } = await sb.from("report_orders").select("id", { count: "exact", head: true }).in("status", ["paid", "generated"]);
     const { count: d } = await sb.from("buyer_profiles").select("user_id", { count: "exact", head: true }).eq("approval_status", "in_review");
-    return (a ?? 0) + (b ?? 0) + (c ?? 0) + (d ?? 0);
+    const { count: e } = await sb.from("advisor_firms").select("id", { count: "exact", head: true }).eq("advisor_verification", "pending");
+    return (a ?? 0) + (b ?? 0) + (c ?? 0) + (d ?? 0) + (e ?? 0);
   });
 
 export const getListingReview = createServerFn({ method: "GET" })

@@ -1,0 +1,2 @@
+ALTER TABLE public.advisor_favourites DROP CONSTRAINT advisor_favourites_item_kind_check;
+ALTER TABLE public.advisor_favourites ADD CONSTRAINT advisor_favourites_item_kind_check CHECK (item_kind IN ('listing','investor','firm'));

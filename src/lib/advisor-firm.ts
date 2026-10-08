@@ -135,6 +135,7 @@ export type AdvisorFirm = {
   addrProvince: string | null; addrPostal: string | null;
   website: string | null; email: string | null; phone: string | null;
   status: FirmStatus; liveSince: string | null; verifiedAt: string | null; updatedAt: string;
+  verification?: { state: string; note: string | null; fields: string[]; reason: string | null; declineNote: string | null };
   setupAnswered: string[]; setupDoneAt: string | null; wizard: WizardState;
   team: FirmTeam[]; credentials: FirmCredential[]; documents: FirmDocument[]; reviews: FirmReview[];
 };
