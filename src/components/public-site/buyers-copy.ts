@@ -30,11 +30,11 @@ export const B_CARD = {
 };
 
 export const B_PROMISES = {
-  h2: c("Four promises to every buyer", "สี่คำมั่นต่อผู้ซื้อทุกราย"),
+  h2: c("Four ways PitchSnack helps buyers", "สี่วิธีที่ PitchSnack ช่วยผู้ซื้อ"),
   intro: c("On every listing and every NDA.", "ในทุกประกาศและทุก NDA"),
   cards: [
     { img: "/images/promises/promise-eye-padlock.webp", h: c("Your search stays private", "การค้นหาของท่านเป็นความลับ"), x: c("Sellers see your investor type, such as Private equity, not your firm’s name, until they approve your NDA.", "ผู้ขายเห็นเพียงประเภทนักลงทุนของท่าน เช่น Private equity ไม่เห็นชื่อบริษัท จนกว่าจะอนุมัติ NDA") },
-    { img: "/images/promises/promise-nda-shield.webp", h: c("One standard NDA", "NDA มาตรฐานฉบับเดียว"), x: c("PitchSnack’s standard mutual NDA on every listing: 2 years, Thai law, used only to evaluate that deal.", "NDA มาตรฐานแบบสองฝ่ายของ PitchSnack ใช้กับทุกประกาศ อายุ 2 ปี ตามกฎหมายไทย และใช้ข้อมูลเพื่อพิจารณาดีลนั้นเท่านั้น") },
+    { img: "/images/promises/promise-nda-shield.webp", h: c("One standard NDA", "NDA มาตรฐานฉบับเดียว"), x: c("PitchSnack’s standard mutual NDA on every listing: 2 years, used only to evaluate that deal.", "NDA มาตรฐานแบบสองฝ่ายของ PitchSnack ใช้กับทุกประกาศ อายุ 2 ปี และใช้ข้อมูลเพื่อพิจารณาดีลนั้นเท่านั้น") },
     { img: "/images/promises/promise-road.webp", h: c("A clear path to the deal", "เส้นทางสู่ดีลที่ชัดเจน"), x: c("Track every deal in your Pipeline, from the NDA and letter of intent to legal, offer & SPA and payment.", "ติดตามทุกดีลใน Pipeline ตั้งแต่ NDA และหนังสือแสดงเจตจำนง ไปจนถึงกฎหมาย ข้อเสนอและสัญญาซื้อขาย และการชำระเงิน") },
     { img: "/images/promises/promise-charts.webp", h: c("Verified numbers", "ตัวเลขที่ตรวจสอบแล้ว"), x: c("Every listing is approved by PitchSnack before you see it, and its badges show what was checked, such as DBD financials FY21–25.", "ทุกประกาศผ่านการอนุมัติจาก PitchSnack ก่อนถึงมือท่าน และตราสัญลักษณ์บอกว่าตรวจอะไรแล้ว เช่น งบการเงิน DBD ปี 2021–2025") },
   ],
@@ -143,7 +143,7 @@ export const B_FAQ = {
   h2: c("Questions buyers ask", "คำถามจากผู้ซื้อ"),
   items: [
     [c("Why can’t I see the company’s name?", "ทำไมฉันจึงไม่เห็นชื่อกิจการ"), c("Sellers stay anonymous until they approve your NDA, so their staff, customers and competitors don’t find out. Before that, you see the code name, sector, region and figures as ranges.", "ผู้ขายไม่เปิดเผยชื่อจนกว่าจะอนุมัติ NDA ของท่าน เพื่อไม่ให้พนักงาน ลูกค้า และคู่แข่งรู้ ก่อนหน้านั้นท่านเห็นชื่อโครงการ อุตสาหกรรม ภูมิภาค และตัวเลขเป็นช่วง")],
-    [c("What does NDA mean?", "NDA คืออะไร"), c("NDA stands for Non-Disclosure Agreement. It is a contract in which you agree to keep the seller’s information confidential and to use it only to consider the purchase. PitchSnack’s standard mutual NDA runs for 2 years under Thai law.", "NDA ย่อมาจาก Non-Disclosure Agreement หรือสัญญาไม่เปิดเผยข้อมูล เป็นสัญญาที่ท่านตกลงว่าจะเก็บข้อมูลของผู้ขายเป็นความลับ และใช้เพื่อพิจารณาการซื้อเท่านั้น NDA มาตรฐานแบบสองฝ่ายของ PitchSnack มีอายุ 2 ปี ตามกฎหมายไทย")],
+    [c("What does NDA mean?", "NDA คืออะไร"), c("NDA stands for Non-Disclosure Agreement. It is a contract in which you agree to keep the seller’s information confidential and to use it only to consider the purchase. PitchSnack’s standard mutual NDA runs for 2 years.", "NDA ย่อมาจาก Non-Disclosure Agreement หรือสัญญาไม่เปิดเผยข้อมูล เป็นสัญญาที่ท่านตกลงว่าจะเก็บข้อมูลของผู้ขายเป็นความลับ และใช้เพื่อพิจารณาการซื้อเท่านั้น NDA มาตรฐานแบบสองฝ่ายของ PitchSnack มีอายุ 2 ปี")],
     [c("How long does a seller take to reply?", "ผู้ขายใช้เวลาตอบนานเท่าไร"), c("Usually 2–3 business days. You get an email when the seller approves or declines your NDA.", "โดยปกติ 2–3 วันทำการ ท่านจะได้รับอีเมลเมื่อผู้ขายอนุมัติหรือปฏิเสธ NDA")],
     [c("Will sellers see my firm’s name?", "ผู้ขายจะเห็นชื่อบริษัทของฉันหรือไม่"), c("Not until they approve your NDA. Before that, they see your investor type, ref no., country and figures as ranges, such as your ticket size.", "ไม่เห็นจนกว่าจะอนุมัติ NDA ก่อนหน้านั้นผู้ขายเห็นประเภทนักลงทุน เลขอ้างอิง ประเทศ และตัวเลขเป็นช่วง เช่น ขนาดเงินลงทุน")],
     [c("Is a letter of intent binding?", "หนังสือแสดงเจตจำนงมีผลผูกพันหรือไม่"), c("No. It is non-binding, except exclusivity and confidentiality. If the seller accepts, exclusivity runs for the number of days you set, 60 by default.", "ไม่มีผลผูกพัน ยกเว้นการเจรจาแต่เพียงผู้เดียวและการรักษาความลับ หากผู้ขายตอบรับ ระยะเวลาเจรจาแต่เพียงผู้เดียวจะนับตามจำนวนวันที่ท่านกำหนด ค่าเริ่มต้นคือ 60 วัน")],
