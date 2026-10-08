@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { planPrice, type PlanRecord } from "@/lib/plan-editor";
 import { listPlans } from "@/lib/users.functions";
 import { PlanBadge } from "@/components/plan-badge";
 import { usePlanStrip } from "@/components/marketplace/plan-strip";
@@ -17,7 +18,7 @@ export function SubscriptionSection() {
   }, []);
   const role = strip?.role;
   const mine = (plans as any[]).filter((p) => p.status === "live" && (role === "admin" || p.role === role));
-  const price = (p: any) => (p.price_type === "free" ? "Free" : p.price_type === "on_request" ? "Price on request" : `฿${Number(p.price_thb).toLocaleString()}`);
+  const price = (p: any) => planPrice(p as PlanRecord);
   const req = (p: any) => (p.requests_mode === "none" ? null : p.requests_mode === "number" ? `${p.requests_n} requests per term` : p.requests_mode === "bundles" ? "Requests by bundle" : "Unlimited requests");
   return (
     <Card id="subscription" className="scroll-mt-24 space-y-4 p-6">

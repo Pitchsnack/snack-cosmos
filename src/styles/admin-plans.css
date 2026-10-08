@@ -20,3 +20,24 @@
 .plan-review-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; overflow-wrap: anywhere; }
 @media (max-width: 1099px) { .plan-admin-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .plan-field, .plan-preview, .plan-review-row { grid-template-columns: minmax(0, 1fr); } }
+.admin-plans { --plan-draft-bg: #EEF0FF; --plan-draft-line: #D9DDFB; --plan-draft-fg: #2E3591; --plan-live-bg: #E7F6EC; --plan-live-fg: #15803D; --plan-hidden-bg: #EEF0F3; --plan-hidden-fg: #6B7280; --plan-scheduled-bg: #FFF4E0; --plan-scheduled-fg: #8A5A06; }
+.plan-role-label {color:var(--plan-role); font-size:11px; font-weight:700;}
+.plan-unsaved-bar,.plan-draft-pill {background:var(--plan-draft-bg); color:var(--plan-draft-fg); border-bottom:1px solid var(--plan-draft-line);}
+.plan-draft-pill {border-radius:999px; padding:2px 6px; font-size:10.5px; font-weight:700;}
+.plan-scheduled-bar {background:var(--plan-scheduled-bg); color:var(--plan-scheduled-fg);}
+.plan-status {display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:3px 6px;font-size:10.5px;font-weight:700;text-transform:uppercase;line-height:14px;}
+.plan-status-live {background:var(--plan-live-bg);color:var(--plan-live-fg);}
+.plan-status-hidden {background:var(--plan-hidden-bg);color:var(--plan-hidden-fg);}
+.plan-status-scheduled {background:var(--plan-scheduled-bg);color:var(--plan-scheduled-fg);}
+.plan-card-preview.ph {min-height:0;background:transparent;overflow:visible;}
+.plan-card-preview .ph-plan {transform:none;min-width:0;}
+.plan-card-preview .ph-pprice {font-size:24px;letter-spacing:0;}
+.plan-card-preview .ph-plimit {margin-top:16px;}
+.plan-card-preview .ph-ppoints li {font-size:12.5px;}
+.plan-card-preview .ph-pintent {font-size:13px;}
+.plan-card-preview .ph-plan {padding:18px 16px;}
+.plan-card-preview .ph-pbadge {letter-spacing:0;}
+.plan-card-preview[lang=th], .admin-plans input[lang=th], .admin-plans textarea[lang=th] {font-family:'IBM Plex Sans Thai Looped',var(--font-body);}
+.plan-preview {grid-template-columns:minmax(0,300px) minmax(110px,1fr);}
+@media(max-width:1300px){.plan-preview{grid-template-columns:minmax(0,1fr)} .plan-preview>.plan-card-preview {max-width:300px;} .plan-field{grid-template-columns:minmax(0,1fr) minmax(150px,230px);gap:10px;}}
+@media(max-width:640px){.plan-field {grid-template-columns:minmax(0,1fr)}}

@@ -2,6 +2,7 @@ import {createFileRoute,useBlocker} from '@tanstack/react-router';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useServerFn} from '@tanstack/react-start';
 import {useState} from 'react';
+import {createPortal} from 'react-dom';
 import {Tag,Plus,Info,Clock,Check,ArrowRight,AlertTriangle} from 'lucide-react';
 import {toast} from 'sonner';
 import {Button} from '@/components/ui/button';
@@ -22,9 +23,7 @@ const members={seller:'sellers',buyer:'buyers',advisor:'firms'};
 const dateText=(v:string)=>new Date(v).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Bangkok'});
 function Pick({value,items,onChange,label}:{value:string;items:[string,string][];onChange:(v:string)=>void;label:string}) {return <Select value={value} onValueChange={onChange}><SelectTrigger aria-label={label} className="w-full"><SelectValue/></SelectTrigger><SelectContent>{items.map(([v,l])=><SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent></Select>;}
 function LangSwitch({lang,set}:{lang:CardLang;set:(v:CardLang)=>void}){return <div className="inline-flex rounded-md border border-border">{(['th','en'] as CardLang[]).map(l=><Button key={l} size="sm" variant={lang===l?'default':'ghost'} onClick={()=>set(l)}>{l==='th'?'ไทย':'English'}</Button>)}</div>;}
-function PlanPreview({p,lang}:{p:PlanRecord;lang:CardLang}) {return <div className={`plan-card-preview public-home ${p.status==='hidden'?'opacity-55':''}`} lang={lang}>{p.role==='advisor'?<div ref={el=>{if(!el)return;const root=el.shadowRoot??el.attachShadow({mode:'open'});if(!root.querySelector('style')){const style=document.createElement('style');style.textContent=partnerCss;root.append(style);}const host=root.querySelector('div')??document.createElement('div');host.className='pb-grid pp'; if(!host.parentNode)root.append(host);}}><PartnerPreview p={p} lang={lang}/></div>:<PublishedPlanCard p={p} lang={lang}/>}</div>;}
-// Partner card retains its own public-page typography without leaking styles.
-function PartnerPreview({p,lang}:{p:PlanRecord;lang:CardLang}){return <PublishedPlanCard p={p} lang={lang}/>;}
+function PlanPreview({p,lang}:{p:PlanRecord;lang:CardLang}) {const [target,setTarget]=useState<HTMLElement|null>(null);return <div className={`plan-card-preview ph ${p.status==='hidden'?'opacity-55':''}`} data-lang={lang} lang={lang}>{p.role==='advisor'?<div ref={el=>{if(!el||el.shadowRoot)return;const root=el.attachShadow({mode:'open'});const style=document.createElement('style');style.textContent=partnerCss+' .pb-grid.pp {display:block} .pb-plan {margin:0}';root.append(style);const host=document.createElement('div');host.className='pb-grid pp';root.append(host);setTarget(host);}}>{target&&createPortal(<PublishedPlanCard p={p} lang={lang}/>,target)}</div>:<PublishedPlanCard p={p} lang={lang}/>}</div>;}
 function Section({title,children,right}:{title:string;children:React.ReactNode;right?:React.ReactNode}){return <section className="plan-section"><div className="mb-3 flex items-center justify-between gap-2"><h3 className="mb-0">{title}</h3>{right}</div>{children}</section>;}
 function Field({label,note,children,error}:{label:string;note?:string;children:React.ReactNode;error?:string}){return <div className="plan-field"><div className="text-[13.5px] font-semibold">{label}{note&&<small className="font-normal">{note}</small>}</div><div>{children}{error&&<p role="alert" className="mt-1 text-xs text-destructive">{error}</p>}</div></div>;}
 function shows(p:PlanRecord){return p.role==='advisor'?['For partners page','Plan strip in the app','Settings › Subscription','Admin › Users']:['Homepage › Plans',`For ${p.role==='seller'?'sellers':'buyers'} page`,'Plan strip in the app','Settings › Subscription','Admin › Users'];}
