@@ -1,5 +1,11 @@
 # Current work
 
+## Privacy, email identity and public wording
+- [x] Remove country placeholders, set today's notice date and update EN/TH fine print.
+- [ ] Enforce the shared email identity and verify Admin Sending rules.
+- [ ] Verify hosting regions; keep countries omitted until Dan confirms wording.
+- [ ] Publish the notice with its actual go-live date — awaits an explicit publish request.
+
 - [x] Add a saved Business Address field after Company Type in both shared startup editors.
 - [x] Show optional report offers and anonymised samples in My Business, with payment actions unavailable pending authorization.
 - [x] Remove financial statements from listing submission requirements.

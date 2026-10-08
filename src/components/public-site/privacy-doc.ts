@@ -166,8 +166,8 @@ export const PRIVACY_DOC: DocBlock[] = [
 },
 {
 "k": "p",
-"en": "Some of our service providers store data outside Thailand {transfer}. We send data only to countries with adequate protection, or under contracts with the safeguards the PDPA requires.",
-"th": "ผู้ให้บริการบางรายของเราเก็บข้อมูลไว้นอกประเทศไทย {transfer} เราส่งข้อมูลไปเฉพาะประเทศที่มีมาตรฐานคุ้มครองข้อมูลเพียงพอ หรือภายใต้สัญญาที่มีมาตรการคุ้มครองตามที่ PDPA กำหนด"
+"en": "Some of our service providers store data outside Thailand{transfer}. We send data only to countries with adequate protection, or under contracts with the safeguards the PDPA requires.",
+"th": "ผู้ให้บริการบางรายของเราเก็บข้อมูลไว้นอกประเทศไทย{transfer} เราส่งข้อมูลไปเฉพาะประเทศที่มีมาตรฐานคุ้มครองข้อมูลเพียงพอ หรือภายใต้สัญญาที่มีมาตรการคุ้มครองตามที่ PDPA กำหนด"
 },
 {
 "k": "h",

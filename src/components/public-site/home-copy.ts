@@ -15,8 +15,8 @@ export const HERO = {
   intro: c("PitchSnack is a neutral Thai marketplace where verified SME owners meet corporate and investor buyers. We make the introduction and score every target against the documented failure predictors before an offer; licensed advisers run the deal, and PitchSnack never holds funds or takes a side.",
     "PitchSnack คือตลาดกลางที่เป็นกลาง ซึ่งเจ้าของกิจการ SME ไทยที่ผ่านการตรวจสอบ ได้พบกับผู้ซื้อระดับองค์กรและนักลงทุน เราทำหน้าที่ชี้ช่องแนะนำ และประเมินกิจการเป้าหมายทุกรายตามปัจจัยที่งานวิจัยระบุว่าทำให้ดีลล้มเหลว ก่อนมีการยื่นข้อเสนอ ธุรกรรมดำเนินการโดยที่ปรึกษาที่มีใบอนุญาต และ PitchSnack ไม่ถือเงินและไม่เข้าข้างฝ่ายใด"),
   own: c("I own a business", "ฉันเป็นเจ้าของกิจการ"), acquire: c("I am looking to acquire", "ฉันต้องการซื้อกิจการ"),
-  fine: c("Introducer under sections 845–849 of the Civil and Commercial Code · no custody of funds · no side taken · a 1.25–3.0% completion fee on the seller side, published in advance",
-    " ไม่ถือเงิน · ไม่เข้าข้างฝ่ายใด · ค่าธรรมเนียมเมื่อปิดดีล 1.25–3.0% เรียกเก็บจากผู้ขาย และเปิดเผยล่วงหน้า"),
+  fine: c("Introducer · no custody of funds · no side taken · a 1.25–3.0% completion fee on the seller side, published in advance",
+    "ชี้ช่อง · ไม่ถือเงิน · ไม่เข้าข้างฝ่ายใด · ค่าธรรมเนียมเมื่อปิดดีล 1.25–3.0% เรียกเก็บจากผู้ขาย และเปิดเผยล่วงหน้า"),
 };
 
 export const CONNECT = {
