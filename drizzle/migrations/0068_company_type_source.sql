@@ -1,0 +1,2 @@
+ALTER TABLE public.startups ADD COLUMN IF NOT EXISTS company_type_source text NOT NULL DEFAULT 'account';
+COMMENT ON COLUMN public.startups.company_type_source IS 'account = set by the account-type rule; admin = corrected by Admin';

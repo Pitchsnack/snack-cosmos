@@ -4887,6 +4887,7 @@ export type Database = {
           city: string | null
           company_size: string | null
           company_type: string | null
+          company_type_source: string
           created_at: string
           created_by: string | null
           email: string | null
@@ -4934,6 +4935,7 @@ export type Database = {
           city?: string | null
           company_size?: string | null
           company_type?: string | null
+          company_type_source?: string
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -4981,6 +4983,7 @@ export type Database = {
           city?: string | null
           company_size?: string | null
           company_type?: string | null
+          company_type_source?: string
           created_at?: string
           created_by?: string | null
           email?: string | null
