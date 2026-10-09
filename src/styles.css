@@ -307,3 +307,14 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .need-fill:not(:focus):not([aria-invalid="true"]) { border-color: #93C5FD !important; }
 .dark .need-fill { background-color: #13243F !important; }
 .dark .need-fill:not(:focus):not([aria-invalid="true"]) { border-color: #3B6BB0 !important; }
+
+/* Edit information pop-up: shade fades 150ms; pop-up fades and rises 8px (24px on phones) over 180ms. */
+@keyframes edit-info-shade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes edit-info-pop-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes edit-info-sheet-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.edit-info-shade[data-state="open"] { animation: edit-info-shade-in 150ms ease-out; }
+.edit-info-pop[data-state="open"] { animation: edit-info-pop-in 180ms ease-out; }
+@media (max-width: 639px) { .edit-info-pop[data-state="open"] { animation-name: edit-info-sheet-in; } }
+@media (prefers-reduced-motion: reduce) {
+  .edit-info-pop[data-state="open"] { animation: edit-info-shade-in 150ms ease-out; }
+}
