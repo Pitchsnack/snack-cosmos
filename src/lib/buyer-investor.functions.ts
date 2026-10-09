@@ -44,13 +44,14 @@ export async function ensureLinked(userId: string) {
     sb.from("buyer_verifications").select("company_name, buyer_type, website, linkedin, work_email").eq("user_id", userId).maybeSingle(),
     sb.from("tenants").select("id").eq("tenant_code", "control").maybeSingle(),
   ]);
+  const { data: me } = await sb.from("users").select("email").eq("id", userId).maybeSingle();
   if (!tenant) throw new Error("Control workspace not found.");
   const { data: inv, error } = await sb.from("investors").insert({
     tenant_id: tenant.id,
     investor_name: bv?.company_name || p.legal_name || p.code_name,
     legal_name: p.legal_name, firm_name: p.legal_name,
     investor_type: bv?.buyer_type ?? null, website_url: bv?.website ?? null, linkedin_url: bv?.linkedin ?? null,
-    email: bv?.work_email ?? null, country: p.country, business_address: p.address,
+    email: bv?.work_email || me?.email || null, country: p.country, business_address: p.address,
     aum: p.aum_exact, min_ticket_size: p.ticket_min?.toString() ?? null, max_ticket_size: p.ticket_max?.toString() ?? null,
     short_description: p.private_description || p.description, logo_url: null,
     preferred_stages: p.stages ?? [], preferred_industries: p.sectors ?? [],

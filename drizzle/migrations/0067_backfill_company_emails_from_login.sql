@@ -1,0 +1,3 @@
+UPDATE public.startups s SET email = u.email FROM public.startup_users su JOIN public.users u ON u.id = su.user_id WHERE su.startup_id = s.id AND (s.email IS NULL OR s.email = '') AND u.email IS NOT NULL;
+UPDATE public.investors i SET email = u.email FROM public.buyer_profiles bp JOIN public.users u ON u.id = bp.user_id WHERE bp.investor_id = i.id AND (i.email IS NULL OR i.email = '') AND u.email IS NOT NULL;
+UPDATE public.advisor_firms f SET email = u.email FROM public.users u WHERE u.id = f.owner_user_id AND (f.email IS NULL OR f.email = '') AND u.email IS NOT NULL;
