@@ -101,7 +101,7 @@ function mapSwitchError(msg: string): string {
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
 // "Startup" is hidden until the startup part opens (see STARTUPS_ENABLED).
 const COMPANY_TYPES = ["SME", "Corporate Enterprise", "Individual"];
-const STARTUPS_ENABLED = false;
+export const STARTUPS_ENABLED = false;
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
 const REVENUE_RANGES = [
   "Pre-revenue",
