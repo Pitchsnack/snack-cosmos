@@ -76,6 +76,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const timer = useRef<number | null>(null);
   const advTimer = useRef<number | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const qRef = useRef<HTMLDivElement>(null);
 
   // ---- validation ----
   const thai = a.country === "Thailand";
@@ -593,6 +594,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const btnO = "cursor-pointer h-[50px] rounded-[12px] border border-[#DCDFE5] bg-white px-5 text-[16px] font-semibold text-[#434A5C] disabled:opacity-40 dark:border-border dark:bg-background dark:text-foreground";
   const btnP = "cursor-pointer h-[50px] rounded-[12px] bg-[#1E2A4A] px-6 text-[16px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CACED8]";
 
+  useFocusNeeded(qRef, `${phase}:${cur}`);
   const sources: Partial<Record<keyof FirmForm | "addr", SourceTag>> = {
     name: "Your answer", firmType: "Your answer", country: "Your answer", city: "Your answer", yearFounded: "Your answer", description: "Your answer",
     fees: "Your answer", dealBand: "Your answer", teamSize: "Your answer", languages: "Your answer", registrationNo: "Your answer",
