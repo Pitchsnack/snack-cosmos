@@ -2,6 +2,7 @@ import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { CompanySizeField } from "@/components/investors/company-size-field";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
+import { EditInfoFooter, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
@@ -189,7 +190,8 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
     return [];
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
-  const back = () => (setup ? setup.onBack() : navigate({ to: "/marketplace/my-company" }));
+  const pop = useEditInfo();
+  const back = () => (setup ? setup.onBack() : pop ? pop.requestClose() : navigate({ to: "/marketplace/my-company" }));
 
   /** Auto Enrich merge — back-fills ONLY empty fields, same as Edit investor. */
   const applyEnrichment = (r: EnrichInvestorResult) => {
@@ -283,7 +285,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       const msg = live ? "Profile saved. Sellers see the changes in Browse investors."
         : ready ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the required items to publish.";
       if (setup) setup.onSaved(msg);
-      else { toast.success(msg); back(); }
+      else { toast.success(msg); if (pop) { pop.setDirty(false); pop.done(); } else back(); }
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
   const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{errs[k]}</p> : null;
@@ -295,8 +297,8 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
   const agnostic = industries.includes(SECTOR_AGNOSTIC);
 
   return (
-    <div className={setup ? "space-y-6" : "mx-auto max-w-3xl space-y-6"}>
-      {!setup && (
+    <div className={setup || pop ? "space-y-6" : "mx-auto max-w-3xl space-y-6"}>
+      {!setup && !pop && (
         <>
           <Link to="/marketplace/my-company" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to My Company
@@ -308,7 +310,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         </>
       )}
 
-      <form onSubmit={submit} className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm">
+      <form id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -625,6 +627,12 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
           </S>
         </div>
 
+        {pop ? (
+          <EditInfoFooter>
+            <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
+            <Button type="submit" form="buyer-edit-form" disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+          </EditInfoFooter>
+        ) : (
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
           <p className="text-xs text-muted-foreground">
             Required fields are marked with <span className="text-destructive">*</span>
@@ -634,6 +642,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
             <Button type="submit" disabled={busy}>{busy ? "Saving…" : setup ? "Save profile" : "Save changes"}</Button>
           </div>
         </div>
+        )}
       </form>
     </div>
   );
