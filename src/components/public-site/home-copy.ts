@@ -66,7 +66,7 @@ export const BADGES = {
     [c("Registry Verified", "ยืนยันทะเบียนนิติบุคคลแล้ว"), c("Name, number, directors and capital match the tax filling", "ชื่อ เลขทะเบียน กรรมการ และทุนจดทะเบียน ตรงกับข้อมูลที่ยื่นต่อกรมพัฒนาธุรกิจการค้า (DBD)")],
     [c("Accounts Filed", "งบการเงินที่ยื่นแล้ว"), c("Three or five years as lodged, read by us", "งบย้อนหลัง 3 หรือ 5 ปีตามที่ยื่นไว้ โดยเราอ่านด้วยตนเอง")],
     [c("Ownership Confirmed", "ยืนยันผู้ถือหุ้นแล้ว"), c("The shareholder list and the authority to sell", "บัญชีรายชื่อผู้ถือหุ้น และอำนาจในการขายกิจการ")],
-    [c("Licences Current", "ใบอนุญาตยังไม่หมดอายุ"), c("Factory licence, GMP, HACCP, ISO, sighted and in date", "ใบอนุญาตประกอบกิจการโรงงาน GMP HACCP ISO เราเห็นเอกสารจริงและยังไม่หมดอายุ")],
+    [c("Licences Current", "ใบอนุญาตยังไม่หมดอายุ"), c("Factory license, GMP, HACCP, and ISO", "ใบอนุญาตประกอบกิจการโรงงาน GMP HACCP ISO เราเห็นเอกสารจริงและยังไม่หมดอายุ")],
     [c("Site Visited", "เข้าเยี่ยมชมสถานที่แล้ว"), c("A named person stood in the place, on a recorded date", "เจ้าหน้าที่ที่ระบุชื่อได้ไปตรวจสถานที่จริง และบันทึกวันที่ไว้")],
   ] },
   buyer: { label: c("Buyer verification", "การยืนยันผู้ซื้อ"), h: c("What we check on a buyer", "สิ่งที่เราตรวจฝั่งผู้ซื้อ"), rows: [
