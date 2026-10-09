@@ -1,6 +1,6 @@
 # Project decisions
 
-- Reuse `StartupCard` for My Business private card and Directory grid card so they stay identical.
+- Reuse `StartupCard` for My Business private card and Directory grid card.
 - Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Sellers pick their listing's sector picture (public_image_id via setMyListingImage, member + same-sector checks); covers count a pick only while it matches the sector.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx so Admin sees the seller screen.
 - Report offers/prices live in report-catalog.json; paid orders in report_orders(+_events); My Financials unlocks only on delivered orders.
