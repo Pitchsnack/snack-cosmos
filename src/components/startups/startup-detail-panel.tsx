@@ -344,8 +344,14 @@ export function StartupDetailPanel({
   financialsHeaderAction,
   replaceBody,
   extraMenuItems,
+  headerPill,
+  companyMenuEdit,
 }: {
   id: string;
+  /** My Company only: completeness pill, placed before the ⋮ menu. */
+  headerPill?: ReactNode;
+  /** My Company only: turns ⋮ into the company menu with Edit information first. */
+  companyMenuEdit?: () => void;
   /** Rendered right under the header (profile tabs). */
   belowHeader?: ReactNode;
   /** Seller-only reports, placed after the canonical founder section. */
@@ -537,8 +543,15 @@ export function StartupDetailPanel({
               <FavoriteToggle id={id} size="md" className="ml-2 h-8 w-8" />
 
 
-              <DropdownMenu>
+              {headerPill && <span className="ml-2">{headerPill}</span>}
+              <DropdownMenu modal={companyMenuEdit ? false : undefined}>
                 <DropdownMenuTrigger asChild>
+                  {companyMenuEdit ? (
+                    <button type="button" aria-label={`${s.startup_name || "Company"} menu`} aria-haspopup="menu"
+                      className="ml-2 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[#DCDFE5] bg-card text-[#434A5C] hover:bg-[#F2F4F7] hover:text-[#151A28] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-[#F2F4F7] data-[state=open]:text-[#151A28] dark:border-border dark:text-muted-foreground dark:hover:bg-muted dark:data-[state=open]:bg-muted">
+                      <MoreVertical className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                    </button>
+                  ) : (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -547,8 +560,16 @@ export function StartupDetailPanel({
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
+                  )}
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuContent align="end" sideOffset={companyMenuEdit ? 6 : undefined} aria-label={companyMenuEdit ? s.startup_name || "Company" : undefined}
+                  className={companyMenuEdit ? "min-w-[220px] rounded-[12px] border-[#E5E7EB] p-1.5 shadow-[0_12px_32px_rgba(16,24,40,.14),0_2px_6px_rgba(16,24,40,.06)] dark:border-border [&_[role=menuitem]]:h-10 [&_[role=menuitem]]:rounded-[8px] [&_[role=menuitem]]:px-3 [&_[role=menuitem]]:text-[14px] [&_[role=menuitem]]:font-medium" : "w-52"}>
+                  {companyMenuEdit && (
+                    <>
+                      <DropdownMenuItem onSelect={companyMenuEdit}><Pencil className="mr-2.5 h-4 w-4 text-[#5B6576]" /> Edit information</DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-[#EEF0F3] dark:bg-border" />
+                    </>
+                  )}
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
@@ -568,7 +589,7 @@ export function StartupDetailPanel({
 
 
 
-                  {canManage ? (
+                  {companyMenuEdit ? null : canManage ? (
                     <DropdownMenuItem asChild>
                       {isMyWorkspace ? (
                         <Link to="/my-startups/$id/edit" params={{ id }} search={myStartupsReturnSearch}>

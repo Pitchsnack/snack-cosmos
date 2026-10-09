@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SellerDraftCard } from "@/components/my-business/seller-draft-card";
-import { Plus, Search, Rocket, RefreshCw, X, Star, Building2 } from "lucide-react";
+import { Plus, Search, Rocket, RefreshCw, X, Star } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,9 @@ function MyStartupsPageInner() {
   const s = Route.useSearch();
   const page = s.page ?? 1;
   const sort = s.sort ?? "updated_desc";
-  const view = s.view ?? "profiles";
+  const accountRole = session?.user?.accountRole ?? null;
+  const oneCompany = accountRole === "seller" || accountRole === "buyer" || accountRole === "advisor";
+  const view = oneCompany ? "profiles" : s.view ?? "profiles";
   const selected = s.selected;
   const favOnly = !!s.fav;
   const { ids: favIds } = useFavoriteStartups();
@@ -131,15 +133,29 @@ function MyStartupsPageInner() {
 
   const hasFilter = !!(s.q || s.stage || s.industry || s.hq || s.ct || s.ptag || s.mtag);
 
+  if (oneCompany) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
+        {isLoading && items.length === 0 ? (
+          <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[320px]" /><Skeleton className="h-[420px]" /></div>
+        ) : items.length === 0 ? (
+          <Button onClick={() => navigate({ to: "/my-startups/new" })} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Plus className="mr-2 h-4 w-4" /> Add My Business
+          </Button>
+        ) : (
+          <MyBusinessProfiles items={items} />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <SignupWelcome role="seller" userId={session?.user?.id as string | undefined} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5" /> MY WORKSPACE{favOnly ? " · Favorites" : ""}
-          </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">My Company</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {total > 0
               ? `${total} business${total === 1 ? "" : "es"} you own or manage`

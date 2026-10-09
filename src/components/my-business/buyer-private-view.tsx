@@ -2,17 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronDown, Eye, ImagePlus, Lock, MoreVertical, Plus, Users } from "lucide-react";
+import { Check, ChevronDown, Eye, ImagePlus, Lock, Plus, Users } from "lucide-react";
 import { InvestorListItem } from "@/components/investors/investor-list-item";
 import { InvestorDetailPanel, Section, type InvestorDetail } from "@/components/investors/investor-detail-panel";
 import type { InvestorListItem as InvestorListItemDTO } from "@/lib/investors.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Group, Intro, Ring, Row } from "@/components/my-business/my-business-profiles";
 import { getMyBuyerInvestor, submitMyBuyerForVerification } from "@/lib/buyer-investor.functions";
 import { BUYER_INVESTOR_KEY } from "@/components/my-business/buyer-investor-edit";
 import { cn } from "@/lib/utils";
+import { CompanyMenu } from "@/components/common/company-menu";
 import { SectionEditLink } from "@/components/common/edit-section";
 import { showsStages } from "@/lib/investor-bands";
 
@@ -152,15 +153,10 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
         </div>
       )}
       <span className="flex-1" />
-      <Button variant="outline" size="sm" className="h-9" onClick={edit}>Edit profile</Button>
       <Pill d={d} onEdit={editItem} />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={edit}>Edit profile</DropdownMenuItem>
-          {web && <DropdownMenuItem onClick={() => window.open(web, "_blank", "noopener")}>Open website</DropdownMenuItem>}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <CompanyMenu name={i.investor_name || "Investor profile"} onEdit={edit}>
+        {web && <DropdownMenuItem onClick={() => window.open(web, "_blank", "noopener")}>Open website</DropdownMenuItem>}
+      </CompanyMenu>
     </div>
   );
   const chips = (

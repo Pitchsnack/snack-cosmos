@@ -8,6 +8,8 @@ import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { createMyBusiness } from "@/lib/seller-setup.functions";
+import { useStartups } from "@/hooks/use-startups";
+import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import {
   clearDraft, draftToPrefill, emptyDraft, loadDraft, firstOpenStep, type SellerDraft, type SellerPrefill,
 } from "@/lib/seller-wizard";
@@ -32,6 +34,16 @@ function NewMyStartupPage() {
   // Seller accounts own their businesses directly (no workspace owner pickers).
   const sellerAccount = roles.includes("STARTUP_USER") && !has("users.read");
   const createMine = useServerFn(createMyBusiness);
+  const accountRole = data?.user?.accountRole ?? null;
+  const oneCompany = accountRole === "seller" || accountRole === "buyer" || accountRole === "advisor";
+  const { data: list } = useStartups({ page: 1, pageSize: 100, sort: "updated_desc" } as never);
+  const mine = selectMyStartups(list && "items" in list ? list.items : [], userId ?? null, roles.includes("STARTUP_USER"));
+  useEffect(() => {
+    if (oneCompany && mine.length > 0) {
+      toast("Your account has one company. Ask PitchSnack if you need another.");
+      void navigate({ to: "/my-startups", replace: true });
+    }
+  }, [oneCompany, mine.length, navigate]);
   const finish = async (d: SellerDraft) => {
     if (!sellerAccount) { setPrefill(draftToPrefill(d)); return; }
     try {

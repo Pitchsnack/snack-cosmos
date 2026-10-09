@@ -1,4 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { useSessionContext } from "@/hooks/use-session-context";
+import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
 import { AdvisorFirmEdit } from "@/components/advisor/advisor-firm-edit";
 import { usePersona } from "@/hooks/use-marketplace";
@@ -30,6 +34,16 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/edi
 function EditPage() {
   const { persona } = usePersona();
   const search = Route.useSearch();
+  const navigate = useNavigate();
+  const { data: session } = useSessionContext();
+  const role = session?.user?.accountRole ?? null;
+  const oneCompany = role === "seller" || role === "buyer" || role === "advisor";
+  const firms = useMyAdvisorFirms();
+  const blockNew = persona === "advisor" && !!search.new && oneCompany && (firms.data?.length ?? 0) > 0;
+  useEffect(() => {
+    if (blockNew) { toast("Your account has one company. Ask PitchSnack if you need another."); void navigate({ to: "/marketplace/my-company", replace: true }); }
+  }, [blockNew, navigate]);
+  if (blockNew) return null;
   if (persona === "advisor") {
     const sec = search.section && SECTIONS.includes(search.section) ? (search.section as EditSection) : undefined;
     return <AdvisorFirmEdit firmId={search.firm ?? null} section={sec} />;

@@ -81,9 +81,6 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
   }
   const N = sections.reduce((s, x) => s + x[1], 0);
   const mins = role === "advisor" ? 4 : 3;
-  const prog = draft && setup ? sellerProgress(draft, setup.fromSignup) : { n: 0, N };
-  const sellerN = prog.N;
-  const sellerDone = prog.n;
 
   return (
     <div className="mb-4 space-y-4">
@@ -95,27 +92,6 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
             onClick={async () => { qc.setQueryData(["signup-state"], { ...data, answers: { ...mine, welcome_seen_at: new Date().toISOString() } }); await dismiss(); }}>
             <X className="h-4 w-4" />
           </button>
-        </div>
-      )}
-
-      {sellerOpen && setup && (
-        <div className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A]">
-          <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
-          <div className="min-w-[240px] flex-1">
-            <p className="text-[14.5px] font-bold">{sellerDone ? "Finish setting up your business profile" : "Set up your business profile"}</p>
-            <p className="text-[13px] text-muted-foreground">
-              {sellerDone >= sellerN ? `All ${sellerN} questions are answered. Check your profile and save it.` : `Buyers can't find your business yet. Answer ${sellerN} short questions. It takes about 3 minutes and saves as you go.`}
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#D6E7FC] bg-white"><span className="block h-full bg-[#60A5FA]" style={{ width: `${(sellerDone / sellerN) * 100}%` }} /></span>
-              <span className="text-xs font-semibold text-[#2563EB] dark:text-[#8CBFF0]">{sellerDone} of {sellerN} answered</span>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <Link to="/my-startups/setup/$id" params={{ id: setup.id }} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90">
-              {sellerDone ? "Continue setup" : "Start setup"} <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
         </div>
       )}
 
@@ -159,6 +135,39 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Seller setup banner, shown inside the My Company panel while the business setup isn't done. */
+export function useSellerSetup(id: string | null | undefined) {
+  const fetchSetup = useServerFn(getSellerSetup);
+  return useQuery({ queryKey: ["seller-setup", id], enabled: !!id, queryFn: () => fetchSetup({ data: { id: id! } }), retry: false, staleTime: 30_000 });
+}
+
+export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof getSellerSetup>> }) {
+  const draft: SellerDraft = { ...emptyDraft(), role: setup.role, name: setup.name, reg: setup.reg, web: setup.web, year: setup.year, city: setup.city,
+    rev: setup.rev, size: setup.size, sector: setup.sector, licences: setup.licences as SellerDraft["licences"], iso: setup.iso };
+  const prog = sellerProgress(draft, setup.fromSignup);
+  const sellerN = prog.N, sellerDone = prog.n;
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A]">
+      <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
+      <div className="min-w-[240px] flex-1">
+        <p className="text-[14.5px] font-bold">{sellerDone ? "Finish setting up your business profile" : "Set up your business profile"}</p>
+        <p className="text-[13px] text-muted-foreground">
+          {sellerDone >= sellerN ? `All ${sellerN} questions are answered. Check your profile and save it.` : `Buyers can't find your business yet. Answer ${sellerN} short questions. It takes about 3 minutes and saves as you go.`}
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#D6E7FC] bg-white"><span className="block h-full bg-[#60A5FA]" style={{ width: `${(sellerDone / sellerN) * 100}%` }} /></span>
+          <span className="text-xs font-semibold text-[#2563EB] dark:text-[#8CBFF0]">{sellerDone} of {sellerN} answered</span>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1.5">
+        <Link to="/my-startups/setup/$id" params={{ id: setup.id }} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90">
+          {sellerDone ? "Continue setup" : "Start setup"} <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
     </div>
   );
 }

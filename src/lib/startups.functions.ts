@@ -645,6 +645,8 @@ export const createStartup = createServerFn({ method: "POST" })
   .inputValidator((input) => CreateInput.parse(input))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
+    const { assertCanAddCompany } = await import("./plan-access.server");
+    await assertCanAddCompany(userId, "seller");
     const { data: ins, error } = await supabase
       .from("startups")
       .insert({

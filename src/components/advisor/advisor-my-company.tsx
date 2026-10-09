@@ -26,6 +26,8 @@ import {
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
+import { CompanyMenu } from "@/components/common/company-menu";
+import { useSessionContext } from "@/hooks/use-session-context";
 import { FirmNotice } from "@/components/advisor/advisor-verification";
 const DECLINED_TIP = "PitchSnack declined this firm. Write to support@pitchsnack.com.";
 
@@ -93,6 +95,30 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       .sort((a, b) => (sort === "name" ? (a.name || "~").localeCompare(b.name || "~") : b.updatedAt.localeCompare(a.updatedAt)));
   }, [firms, q, svc, status, sector, hq, sort, savedOnly]);
   const open = list.find((f) => f.id === openId) ?? list[0] ?? null;
+  const { data: session } = useSessionContext();
+  const role = session?.user?.accountRole ?? null;
+  const oneCompany = role === "seller" || role === "buyer" || role === "advisor";
+
+  if (oneCompany) {
+    const sel = firms.find((f) => f.id === openId) ?? firms[0] ?? null;
+    return (
+      <div className="space-y-5">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">My Company</h1>
+        {isLoading ? (
+          <div className="grid gap-5 lg:grid-cols-[320px_1fr]"><Skeleton className="h-[420px]" /><Skeleton className="h-[620px]" /></div>
+        ) : firms.length === 0 ? (
+          <Button onClick={add} disabled={adding} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />} Add Firm Profile
+          </Button>
+        ) : (
+          <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
+            <div className="space-y-4">{firms.map((f) => <FirmCard key={f.id} f={f} selected={sel?.id === f.id} onClick={() => setOpenId(f.id)} />)}</div>
+            {sel && <FirmPanel f={sel} />}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -327,18 +353,14 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
           <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name || "New firm profile"}</h2>
           <div className="text-[13px] text-[#6A7181]">{[f.refNo, f.firmType, f.city].filter(Boolean).join(" · ")}</div>
         </div>
-        {!inSetup && <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={() => edit("firm")}><Pencil className="h-4 w-4" /> Edit profile</Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="h-9 w-9 p-0" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {f.status === "live"
-                ? <DropdownMenuItem onClick={() => changeStatus("paused")}>Pause listing</DropdownMenuItem>
-                : <DropdownMenuItem disabled={!complete || declined} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <ChecklistPill f={f} onItem={edit} />
-        </div>}
+        <div className="flex items-center">
+          {!inSetup && <ChecklistPill f={f} onItem={edit} />}
+          <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}>
+            {!inSetup && (f.status === "live"
+              ? <DropdownMenuItem onClick={() => changeStatus("paused")}>Pause listing</DropdownMenuItem>
+              : <DropdownMenuItem disabled={!complete || declined || busy} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>)}
+          </CompanyMenu>
+        </div>
       </div>
 
       {inSetup ? (

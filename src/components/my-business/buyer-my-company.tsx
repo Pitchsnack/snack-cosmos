@@ -21,6 +21,8 @@ import {
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
+import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { useSessionContext } from "@/hooks/use-session-context";
 import { AlertTriangle, CheckCircle2, Flag } from "lucide-react";
 import { bandText, descriptionLeaks, typeName } from "@/lib/investor-bands";
 import { buyerProgressFor, type BuyerRelation } from "@/lib/buyer-wizard";
@@ -149,6 +151,9 @@ export function BuyerMyCompany() {
   const [layout, setLayout] = useState<Layout>("profiles");
   const inv = useBuyerInvestor();
   const navigate = useNavigate();
+  const { data: session } = useSessionContext();
+  const role = session?.user?.accountRole ?? null;
+  const oneCompany = role === "seller" || role === "buyer" || role === "advisor";
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your investor profile. Please refresh.</p>;
@@ -179,6 +184,37 @@ export function BuyerMyCompany() {
         : inv.data ? <BuyerPrivatePanel d={inv.data} view={view} onView={setView} /> : <Skeleton className="h-[520px]" />}
     </div>
   );
+
+  if (iv && !iv.setup_done_at) {
+    const tone = typeTone(org.type);
+    const individual = inv.data?.buyer.relation === "individual";
+    const nm = org.name || iv.investor_name || typeName(org.type);
+    return (
+      <div className="space-y-6">
+        {!oneCompany && <SignupWelcome role="buyer" setupDone={false} />}
+        <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
+        <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+          <DraftCompanyCard role="buyer" name={nm} typeLine={org.type ? typeName(org.type) : null} typeClass={tone.fg}
+            founded={individual ? null : (iv as any).year_founded} size={individual ? null : (iv as any).company_size_band} website={iv.website_url} />
+          <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
+            onEdit={() => void navigate({ to: "/marketplace/my-company/edit" })} onFinish={() => openWizard()} />
+        </div>
+      </div>
+    );
+  }
+
+  if (oneCompany) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
+        <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+          <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div>
+          <div className="min-w-0 lg:self-start">{rightPanel}</div>
+        </div>
+        {edit && <EditDialog section={edit} p={p} org={org} onClose={() => setEdit(null)} />}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -376,12 +412,8 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind
         <div className="truncate text-[13px] text-muted-foreground">{meta}</div>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
-        <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />{editLabel}</Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-          <DropdownMenuContent align="end"><DropdownMenuItem onClick={onEdit}>{editLabel}</DropdownMenuItem></DropdownMenuContent>
-        </DropdownMenu>
         {pill}
+        <CompanyMenu name={title} onEdit={onEdit} />
       </div>
     </div>
   );
@@ -433,7 +465,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       <div className="px-5 pt-5">
         <PanelHead kind="public" title={title} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
           thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
-          editLabel="Edit public view" onEdit={() => (iv ? openWizard("desc") : onEdit("public"))} pill={pill} />
+          editLabel="Edit information" onEdit={() => void navigate({ to: "/marketplace/my-company/edit", search: { section: "description" } as never })} pill={pill} />
         {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
           <BuyerBrowseCard {...props} expanded editable={(k) => void navigate({ to: "/marketplace/my-company/edit", search: { section: PART_SEC[k] } as never })} cardFooter={

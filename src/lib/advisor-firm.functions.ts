@@ -141,6 +141,8 @@ export const createAdvisorDraft = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const sb = context.supabase as any;
     await requireAdvisor(sb, context.userId);
+    const { assertCanAddCompany } = await import("./plan-access.server");
+    await assertCanAddCompany(context.userId, "advisor");
     const { data, error } = await sb.from("advisor_firms")
       .insert({ owner_user_id: context.userId, status: "draft", name: "", firm_type: "", country: "Thailand" })
       .select("id").single();
