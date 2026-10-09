@@ -43,7 +43,11 @@ const searchSchema = z.object({
   ptag: z.string().optional(),
   mtag: z.string().optional(),
   sort: z.enum(SORT).optional(),
-  view: z.enum(VIEW).optional(),
+  // Layout (profiles/grid/split/list), or the Edit information pop-up's view (public/private).
+  view: z.enum([...VIEW, "public", "private"]).optional().catch(undefined),
+  edit: z.literal("startup").optional().catch(undefined),
+  tab: z.string().max(20).optional(),
+  section: z.string().regex(/^[a-z-]{2,30}$/).optional().catch(undefined),
   selected: z.string().optional(),
   panel: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
@@ -80,7 +84,8 @@ function MyStartupsPageInner() {
   const sort = s.sort ?? "updated_desc";
   const accountRole = session?.user?.accountRole ?? null;
   const oneCompany = accountRole === "seller" || accountRole === "buyer" || accountRole === "advisor";
-  const view = oneCompany ? "profiles" : s.view ?? "profiles";
+  const layoutView = s.view === "public" || s.view === "private" ? undefined : s.view;
+  const view = oneCompany ? "profiles" : layoutView ?? "profiles";
   const selected = s.selected;
   const favOnly = !!s.fav;
   const { ids: favIds } = useFavoriteStartups();

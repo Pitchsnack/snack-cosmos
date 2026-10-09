@@ -12,7 +12,7 @@ export function useSectorImages() {
 
 /**
  * The one cover rule for every listing:
- * 1. the image picked in Set public image, while it still exists;
+ * 1. the image picked in Set public image, while it still exists and belongs to the listing's sector;
  * 2. else the sector's oldest image;
  * 3. else null → the sector's default (drawn) cover.
  */
@@ -20,7 +20,7 @@ export function resolveCover(images: SectorImage[] | undefined, sector: string |
   if (!images?.length) return null;
   if (publicImageId) {
     const picked = images.find((i) => i.id === publicImageId);
-    if (picked) return picked;
+    if (picked && (!sector || picked.sector_key === sector)) return picked;
   }
   if (!sector) return null;
   return images.find((i) => i.sector_key === sector) ?? null;

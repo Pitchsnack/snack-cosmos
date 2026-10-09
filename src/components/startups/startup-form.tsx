@@ -64,6 +64,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
+import { AttachmentCard, attachmentMissing } from "./attachment-card";
+import { LicenceLists } from "./licence-lists";
+import { EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
+import { PublicViewTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
+import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
+import { setMyListingImage } from "@/lib/sector-images.functions";
+import type { EntryFacts, HiddenProfileRow } from "@/lib/hidden-profile";
+import type { ListingSource } from "@/lib/public-listing";
+import { Eye } from "lucide-react";
 import { StartupStepper } from "./startup-stepper";
 import { THB_REVENUE_BANDS, type SellerPrefill } from "@/lib/seller-wizard";
 import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
@@ -192,7 +201,21 @@ interface Props {
   valuationReturn?: boolean;
   /** Seller › My Company: open the form at this section, in the light orange box. */
   section?: string;
+  /** My Company › Edit information pop-up: Public view + Private view tabs, one Save. */
+  popup?: StartupPopup;
 }
+
+export type PrivateTab = "images" | "about" | "market" | "licenses" | "restrictions";
+export const PUBLIC_TABS: PublicTab[] = ["identity", "description", "deal"];
+export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "market", "licenses", "restrictions"];
+export type StartupPopup = {
+  view: "public" | "private";
+  tab: string;
+  onNav: (view: "public" | "private", tab: string) => void;
+  row: HiddenProfileRow | null;
+  facts: EntryFacts | undefined;
+  restrictions?: React.ReactNode;
+};
 
 
 
@@ -231,7 +254,14 @@ export function StartupForm({
   controlReturn,
   valuationReturn,
   section,
+  popup,
 }: Props) {
+  const tr = useTr();
+  const editCtx = useEditInfo();
+  const [localTab, setLocalTab] = useState<PrivateTab>("images");
+  const pView = popup?.view ?? "private";
+  const pTab = (popup ? popup.tab : localTab) as string;
+  const navTab = (view: "public" | "private", tab: string) => (popup ? popup.onNav(view, tab) : setLocalTab(tab as PrivateTab));
   useOpenAtSection(section, true, section === "founders-add" ? { focusSelector: "button" } : undefined);
   const secOn = (id: string) => section === id || (id === "founders" && section === "founders-add");
   const isEdit = !!startup;
@@ -256,6 +286,10 @@ export function StartupForm({
   const [companyTypeReset, setCompanyTypeReset] = useState(false);
   const [companyTypeSource, setCompanyTypeSource] = useState<string>((startup as any)?.company_type_source ?? "account");
   const create = useServerFn(createStartup);
+  const saveHidden = useServerFn(saveHiddenProfile);
+  const setListingImage = useServerFn(setMyListingImage);
+  /** Sector image picked in Listing Identity (undefined = unchanged). */
+  const [imagePick, setImagePick] = useState<string | null | undefined>(undefined);
   const update = useServerFn(updateStartup);
   const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
@@ -438,6 +472,14 @@ export function StartupForm({
 
   // Logo + Media — hydrated from persisted paths in edit mode.
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMediaState(startup));
+
+  // Edit information › Public view: the listing draft, saved by the same Save.
+  const listingSource = useMemo<ListingSource | undefined>(
+    () => (popup && startup ? ({ ...(startup as unknown as ListingSource), sector, city, headquarters, product_tags: productTags, market_tags: marketTags, people: popup.facts?.people ?? [] } as ListingSource) : undefined),
+    [popup?.facts, startup, sector, city, headquarters, productTags, marketTags], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const pd = usePublicDraft(popup?.row ?? null, popup?.facts, listingSource);
+  const [nameErr, setNameErr] = useState(false);
 
   // Ownership (create only — required by current API)
   // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
@@ -627,7 +669,7 @@ export function StartupForm({
   const updateM = useMutation({
     mutationFn: async () => {
       const { logoPath, media: resolvedMedia } = await uploadAllForStartup(startup!.id);
-      return update({
+      const res = await update({
         data: {
           id: startup!.id,
           startupName,
@@ -642,8 +684,28 @@ export function StartupForm({
           ...buildProfileBase(),
         },
       });
+      if (popup?.row) {
+        if (pd.changedFromRow) await saveHidden({ data: { startupId: startup!.id, draft: pd.payload } });
+        const sectorChanged = (sector ?? null) !== (startup!.sector ?? null);
+        if (imagePick !== undefined || sectorChanged) {
+          await setListingImage({ data: { startupId: startup!.id, imageId: imagePick ?? null } });
+        }
+      }
+      return res;
     },
     onSuccess: async () => {
+      if (popup) {
+        toast.success(tr("Changes saved.", "บันทึกการเปลี่ยนแปลงแล้ว"));
+        await Promise.all([
+          qc.invalidateQueries({ queryKey: ["startup", startup!.id] }),
+          qc.invalidateQueries({ queryKey: ["startups"] }),
+          qc.invalidateQueries({ queryKey: ["hidden-profiles"] }),
+          qc.invalidateQueries({ queryKey: ["hidden-profile-facts", startup!.id] }),
+        ]);
+        guard.markSaved();
+        editCtx?.done();
+        return;
+      }
       // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
       void investorStartupLinksAdapter.saveStartupInvestorRelationships(startup!.id, investorLinks);
       toast.success("Saved");
@@ -700,6 +762,9 @@ export function StartupForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startup?.id]);
   const isDirty = initialSnapshot !== "" && currentSnapshot !== initialSnapshot;
+  const popupDirty = isDirty || pd.dirty || imagePick !== undefined
+    || JSON.stringify([regulatoryLicenses, isoStandards, sector, businessModel]) !== JSON.stringify([startup?.regulatory_licenses ?? [], startup?.iso_standards ?? [], startup?.sector ?? null, startup?.business_model ?? null]);
+  useEffect(() => { editCtx?.setDirty(!!popup && popupDirty); }, [popupDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const performSave = () => {
     if (isEdit) updateM.mutate();
@@ -719,7 +784,7 @@ export function StartupForm({
   };
 
   const guard = useUnsavedChangesGuard({
-    isDirty,
+    isDirty: popup ? false : isDirty,
     isSaving: submitting,
     onSave: submitForm,
     canSave: canSubmit,
@@ -1152,79 +1217,26 @@ export function StartupForm({
   }
 
 
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (isEdit) {
-          updateM.mutate();
-        } else {
-          createM.mutate({ selectedTenantId: tenantId, activeTenantId });
-        }
-      }}
-      onKeyDown={handleFormKeyDown}
-      className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
-    >
-      {!isEdit && (
-        <div className="pb-2">
-          <StartupStepper current={3} />
-        </div>
-      )}
-      {/* Tenant (create only) */}
-      {!isEdit && (
-        <div className="space-y-1.5">
-          <Label>Tenant <span className="text-destructive">*</span></Label>
-          <Select value={tenantId} onValueChange={setTenantId}>
-            <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
-            <SelectContent>
-              {tenants.map((t) => {
-                const fx = isFixtureTenant(t.id);
-                return (
-                  <SelectItem key={t.id} value={t.id}>
-                    <span className="flex items-center gap-2">
-                      <span>{t.tenantName}</span>
-                      {fx && (
-                        <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
-                          PREVIEW FIXTURE
-                        </span>
-                      )}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          {WORKSPACE_ENFORCEMENT_ENABLED && tenantId && !tenantMatchesActive && (
-            <WorkspaceConflictNotice
-              recordWorkspaceName={selectedTenantName}
-              activeWorkspaceName={activeTenantName}
-              switching={switchPending}
-              switchDisabled={isFixtureTenant(tenantId)}
-              switchDisabledReason={
-                isFixtureTenant(tenantId)
-                  ? "Preview fixture — activation disabled (no backend call)."
-                  : undefined
-              }
-              error={switchError}
-              onSwitch={async () => {
-                setSwitchError(null);
-                setSwitchPending(true);
-                try {
-                  await doSwitch({ data: { tenantId, workspaceType: "TENANT" } });
-                  await qc.invalidateQueries({ queryKey: ["session-context"] });
-                  await qc.invalidateQueries({ queryKey: ["assignable-tenants", principalRef] });
-                } catch (e) {
-                  setSwitchError(mapSwitchError((e as Error).message ?? ""));
-                } finally {
-                  setSwitchPending(false);
-                }
-              }}
-            />
-          )}
-
-        </div>
-      )}
-
+  // ── Field groups: stacked on create, one per tab on edit ──
+  const onEnriched = (r: EnrichStartupResult) => {
+    const { applied, skippedBecauseFilled } = applyEnrichment(r);
+    const fieldsReturned = Object.entries(r).filter(([k, v]) => {
+      if (k === "_debug" || v == null) return false;
+      if (Array.isArray(v)) return v.length > 0;
+      if (typeof v === "string") return v.trim().length > 0;
+      return true;
+    }).length;
+    if (fieldsReturned > 0 && applied.length === 0) {
+      const preview = skippedBecauseFilled.slice(0, 5).join(", ");
+      toast.info(
+        `Auto Enrich returned data but all target fields were already filled` +
+          (preview ? ` (skipped: ${preview}${skippedBecauseFilled.length > 5 ? "…" : ""})` : "") +
+          `. Clear a field and try again to overwrite.`,
+      );
+    }
+  };
+  const enrichBtn = <AutoEnrichButton websiteUrl={websiteUrl} disabled={submitting} onEnriched={onEnriched} />;
+  const mediaJsx = (<>
       {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
       <EditSec id="media" tone="seller" active={secOn("media")}><div className="flex items-start gap-4">
         <div className="flex-1 min-w-0">
@@ -1259,6 +1271,8 @@ export function StartupForm({
         </div>
       </div></EditSec>
 
+  </>);
+  const aboutJsx = (<>
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
       <div className="@container">
       <div className="grid grid-cols-[100px_1fr_2fr_140px] gap-4">
@@ -1274,7 +1288,8 @@ export function StartupForm({
           <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
             placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
             className={miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
-            required maxLength={255} />
+            id="sf-company-name" required={!popup} maxLength={255} />
+          {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr("Add the Company Name before you save.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Registered Name</Label>
@@ -1501,6 +1516,8 @@ export function StartupForm({
           className={miss(isStrEmpty(longDescription)) ? MISSING_INPUT : undefined} />
       </EditSec>
 
+  </>);
+  const marketJsx = (<>
       {/* Industry pills */}
       <EditSec id="tags" tone="seller" active={secOn("tags")} className="space-y-1.5">
         <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
@@ -1530,16 +1547,16 @@ export function StartupForm({
       </EditSec>
 
       {/* Sector + business model — financial benchmarking pair */}
-      <SectorBusinessModelFields
+      <EditSec id="sector" tone="seller" active={secOn("sector")}><SectorBusinessModelFields
         sector={sector}
         onSectorChange={setSector}
         businessModel={businessModel}
         onBusinessModelChange={setBusinessModel}
-      />
+      /></EditSec>
 
 
       {/* Product tags */}
-      <div className="space-y-1.5">
+      <EditSec id="product-tags" tone="seller" active={secOn("product-tags")} className="space-y-1.5">
         <Label className={miss(productTags.length === 0) ? MISSING_LABEL : undefined}>Product & Service Tags ({productTags.length}/5)</Label>
         {miss(productTags.length === 0) && (
           <p className="text-xs text-destructive">⚠ Missing: add at least one product tag</p>
@@ -1558,30 +1575,30 @@ export function StartupForm({
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addProductTag(); }}} />
           <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>Add</Button>
         </div>
-      </div>
+      </EditSec>
 
-      {/* Market tags */}
-      <div className="space-y-1.5">
-        <Label className={miss(marketTags.length === 0) ? MISSING_LABEL : undefined}>Market Tags ({marketTags.length}/5)</Label>
-        {miss(marketTags.length === 0) && (
-          <p className="text-xs text-destructive">⚠ Missing: add at least one market tag</p>
-        )}
+      {/* Market tags — optional: who the company sells to and where (MARKETS on the public card) */}
+      <EditSec id="market-tags" tone="seller" active={secOn("market-tags")} className="space-y-1.5">
+        <Label>{tr(`Market Tags (${marketTags.length}/5)`, `แท็กตลาด (${marketTags.length}/5)`)}</Label>
+        <p className="!mt-[2px] mb-2 text-[12px] text-[#6A7181] dark:text-muted-foreground">{tr("Who you sell to and where. They show under MARKETS on your public card.", "ลูกค้าของท่านคือใครและอยู่ที่ใด แท็กเหล่านี้จะแสดงในหัวข้อตลาดบนการ์ดสาธารณะของท่าน")}</p>
         <div className="flex flex-wrap gap-2">
           {marketTags.map((t) => (
             <button key={t} type="button" onClick={() => setMarketTags(marketTags.filter((x) => x !== t))}
-              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
+              className="inline-flex items-center gap-1 rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-3 py-1 text-xs text-[#065F46]">
               {t} <X className="h-3 w-3" />
             </button>
           ))}
         </div>
         <div className="flex gap-2">
           <Input value={marketTagDraft} onChange={(e) => setMarketTagDraft(e.target.value)} maxLength={50}
+            placeholder={tr("e.g. Hotels and restaurants in Bangkok", "เช่น โรงแรมและร้านอาหารในกรุงเทพฯ")}
             disabled={marketTags.length >= 5}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addMarketTag(); }}} />
           <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>Add</Button>
         </div>
-      </div>
-
+      </EditSec>
+  </>);
+  const complianceJsx = (<>
       {/* Compliance — regulatory licences and ISO standards */}
       <ComplianceFields
         licences={regulatoryLicenses}
@@ -1590,6 +1607,8 @@ export function StartupForm({
         onIsoChange={setIsoStandards}
       />
 
+  </>);
+  const peopleJsx = (<>
       {/* Founders */}
       {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
         <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
@@ -1631,6 +1650,176 @@ export function StartupForm({
         }}
         promoteLabel="Create investor"
       />
+
+  </>);
+
+  // ── Tabs (edit) ──
+  const has = (x: string | null | undefined) => !!x && !!x.trim();
+  const privateCounts: Record<PrivateTab, number> = {
+    images: attachmentMissing(media),
+    about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(linkedinUrl), has(shortDescription), has(longDescription), founders.some((f) => f.full_name.trim())].filter((x) => !x).length,
+    market: (industries.length ? 0 : 1) + (productTags.length ? 0 : 1),
+    licenses: 0,
+    restrictions: 0,
+  };
+  const privTotal = privateCounts.images + privateCounts.about + privateCounts.market;
+  const pubTotal = pd.counts.identity + pd.counts.description + pd.counts.deal;
+  const privTabs = [
+    { key: "images" as const, label: tr("Images & Logo", "รูปภาพและโลโก้"), count: privateCounts.images },
+    { key: "about" as const, label: tr("About Company", "เกี่ยวกับบริษัท"), count: privateCounts.about },
+    { key: "market" as const, label: tr("Industry & Market", "อุตสาหกรรมและตลาด"), count: privateCounts.market },
+    { key: "licenses" as const, label: tr("Licenses", "ใบอนุญาต") },
+    ...(popup?.restrictions ? [{ key: "restrictions" as const, label: "Basic Information Restrictions", icon: <Lock className="h-3.5 w-3.5" /> }] : []),
+  ];
+  const pubTabs = [
+    { key: "identity" as const, label: tr("Listing Identity", "ตัวตนของประกาศ"), count: pd.counts.identity },
+    { key: "description" as const, label: tr("Public Description", "คำอธิบายสาธารณะ"), count: pd.counts.description },
+    { key: "deal" as const, label: tr("Deal Terms", "เงื่อนไขดีล"), count: pd.counts.deal },
+  ];
+  const showPublic = !!popup?.row && pView === "public";
+  const curPriv = (PRIVATE_TABS.includes(pTab as PrivateTab) ? pTab : "images") as PrivateTab;
+  const curPub = (PUBLIC_TABS.includes(pTab as PublicTab) ? pTab : "identity") as PublicTab;
+  const sectorLine = [sector, [city, headquarters].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
+  const tabbedJsx = (
+    <div role="tabpanel" id="sf-main-panel" aria-labelledby={`sf-main-${showPublic ? "public" : "private"}`}>
+      {popup?.row && (
+        <EditInfoTabsSlot>
+          <MainTabs idBase="sf" tone="seller" value={showPublic ? "public" : "private"} onChange={(v) => navTab(v, "")}
+            tabs={[
+              { key: "public", label: tr("Public view", "มุมมองสาธารณะ"), icon: <Eye />, count: pubTotal },
+              { key: "private", label: tr("Private view", "มุมมองส่วนตัว"), icon: <Lock />, count: privTotal },
+            ]} />
+        </EditInfoTabsSlot>
+      )}
+      {showPublic ? (
+        <>
+          <TabRow idBase="sfp" label={tr("Public view sections", "ส่วนของมุมมองสาธารณะ")} tabs={pubTabs} value={curPub} onChange={(k) => navTab("public", k)} />
+          <div role="tabpanel" id="sfp-panel" aria-labelledby={`sfp-tab-${curPub}`}>
+            <PublicViewTab tab={curPub} pd={pd} sector={sector} onSector={setSector} section={section}
+              pickedImage={imagePick !== undefined ? imagePick : ((popup?.row as { public_image_id?: string | null } | null)?.public_image_id ?? null)}
+              onPickImage={setImagePick} />
+          </div>
+        </>
+      ) : (
+        <>
+          <TabRow idBase="sfv" label={tr("Private view sections", "ส่วนของมุมมองส่วนตัว")} tabs={privTabs} value={curPriv} onChange={(k) => navTab("private", k)} />
+          <div role="tabpanel" id="sfv-panel" aria-labelledby={`sfv-tab-${curPriv}`} className="space-y-4">
+            {curPriv === "images" && (
+              <EditSec id="media" tone="seller" active={secOn("media") || secOn("photos") || secOn("logo")}>
+                <TabHead title={tr("Attachment", "ไฟล์แนบ")}>{enrichBtn}</TabHead>
+                <AttachmentCard value={media} onChange={setMedia} name={startupName} sectorLine={sectorLine} />
+              </EditSec>
+            )}
+            {curPriv === "about" && (<><TabHead title={tr("Company Info", "ข้อมูลบริษัท")}>{enrichBtn}</TabHead>{aboutJsx}{peopleJsx}</>)}
+            {curPriv === "market" && (<><TabHead title={tr("Market Target", "ตลาดเป้าหมาย")}>{enrichBtn}</TabHead>{marketJsx}</>)}
+            {curPriv === "licenses" && (
+              <EditSec id="licenses" tone="seller" active={secOn("licenses")}>
+                <TabHead title={tr("License and intellectual properties", "ใบอนุญาตและทรัพย์สินทางปัญญา")}
+                  line={<p className="mt-[2px] text-[13.5px] text-[#6A7181] dark:text-muted-foreground">{tr("Pick the licenses and standards the business holds.", "เลือกใบอนุญาตและมาตรฐานที่กิจการของท่านได้รับ")}</p>}>{enrichBtn}</TabHead>
+                <div className="mt-4"><LicenceLists licences={regulatoryLicenses} onLicences={setRegulatoryLicenses} iso={isoStandards} onIso={setIsoStandards} /></div>
+              </EditSec>
+            )}
+            {curPriv === "restrictions" && popup?.restrictions}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  /** Save: only today's checks stop it; the first error opens its tab. */
+  const popupSubmit = () => {
+    if (!startupName.trim()) {
+      setNameErr(true);
+      navTab("private", "about");
+      setTimeout(() => document.getElementById("sf-company-name")?.focus(), 80);
+      return;
+    }
+    if (popup?.row && !pd.d.code_name.trim()) {
+      toast.error(tr("Add a code name before you save.", "กรุณากรอกชื่อรหัสก่อนบันทึก"));
+      navTab("public", "identity");
+      setTimeout(() => document.getElementById("hp-code_name")?.focus(), 80);
+      return;
+    }
+    submitForm();
+  };
+
+  return (
+    <form
+      id="startup-edit-form"
+      noValidate={!!popup}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (popup) return popupSubmit();
+        if (isEdit) {
+          updateM.mutate();
+        } else {
+          createM.mutate({ selectedTenantId: tenantId, activeTenantId });
+        }
+      }}
+      onKeyDown={handleFormKeyDown}
+      className={popup ? "text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}
+    >
+      {!isEdit && (
+        <div className="pb-2">
+          <StartupStepper current={3} />
+        </div>
+      )}
+      {/* Tenant (create only) */}
+      {!isEdit && (
+        <div className="space-y-1.5">
+          <Label>Tenant <span className="text-destructive">*</span></Label>
+          <Select value={tenantId} onValueChange={setTenantId}>
+            <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
+            <SelectContent>
+              {tenants.map((t) => {
+                const fx = isFixtureTenant(t.id);
+                return (
+                  <SelectItem key={t.id} value={t.id}>
+                    <span className="flex items-center gap-2">
+                      <span>{t.tenantName}</span>
+                      {fx && (
+                        <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+                          PREVIEW FIXTURE
+                        </span>
+                      )}
+                    </span>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          {WORKSPACE_ENFORCEMENT_ENABLED && tenantId && !tenantMatchesActive && (
+            <WorkspaceConflictNotice
+              recordWorkspaceName={selectedTenantName}
+              activeWorkspaceName={activeTenantName}
+              switching={switchPending}
+              switchDisabled={isFixtureTenant(tenantId)}
+              switchDisabledReason={
+                isFixtureTenant(tenantId)
+                  ? "Preview fixture — activation disabled (no backend call)."
+                  : undefined
+              }
+              error={switchError}
+              onSwitch={async () => {
+                setSwitchError(null);
+                setSwitchPending(true);
+                try {
+                  await doSwitch({ data: { tenantId, workspaceType: "TENANT" } });
+                  await qc.invalidateQueries({ queryKey: ["session-context"] });
+                  await qc.invalidateQueries({ queryKey: ["assignable-tenants", principalRef] });
+                } catch (e) {
+                  setSwitchError(mapSwitchError((e as Error).message ?? ""));
+                } finally {
+                  setSwitchPending(false);
+                }
+              }}
+            />
+          )}
+
+        </div>
+      )}
+
+      {isEdit ? tabbedJsx : (<>{mediaJsx}{aboutJsx}{marketJsx}{complianceJsx}{peopleJsx}</>)}
 
       {tenantId && (
         <CreateInvestorDialog
@@ -1773,6 +1962,14 @@ export function StartupForm({
         </div>
       )}
 
+      {popup ? (
+        <EditInfoFooter>
+          <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>Cancel</Button>
+          <Button type="submit" form="startup-edit-form" disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            {submitting ? "Saving…" : "Save"}
+          </Button>
+        </EditInfoFooter>
+      ) : (
       <div className="flex justify-end gap-2">
         <Button
           type="button"
@@ -1806,6 +2003,7 @@ export function StartupForm({
           {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
         </Button>
       </div>
+      )}
       <DuplicateWarningDialog
         open={websiteDup.open}
         typedName={websiteDup.typedValue}

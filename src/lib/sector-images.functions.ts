@@ -129,3 +129,27 @@ export const setListingPublicImage = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/**
+ * Edit information › Listing Identity: the seller picks one of their sector's
+ * images for the listing cover (the same public_image_id Admin's Set public
+ * image sets). Members of the business and approvers only; the image must
+ * belong to the business's current sector. null clears the pick.
+ */
+export const setMyListingImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ startupId: z.string().uuid(), imageId: z.string().uuid().nullable() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const { data: member } = await ctx.supabase.rpc("is_startup_member", { _startup_id: data.startupId, _user_id: ctx.userId });
+    if (!member && !(await isApprover(ctx))) throw new Error("You can't change this listing");
+    const sb = await admin();
+    const { data: st } = await sb.from("startups").select("sector").eq("id", data.startupId).maybeSingle();
+    if (data.imageId) {
+      const { data: img } = await sb.from("sector_images").select("sector_key").eq("id", data.imageId).maybeSingle();
+      if (!img || img.sector_key !== st?.sector) throw new Error("Pick an image from your business's sector");
+    }
+    const { error } = await sb.from("hidden_profiles").update({ public_image_id: data.imageId }).eq("startup_id", data.startupId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

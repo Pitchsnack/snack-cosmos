@@ -9,13 +9,13 @@ import type { StartupListItem } from "@/lib/startups.functions";
 import { StartupDetailPanel } from "@/components/startups/startup-detail-panel";
 import { StartupCard } from "@/components/startups/startup-card";
 import { HiddenProfileTab } from "@/components/hidden-profile/hidden-profile-tab";
-import { HiddenProfileEditor } from "@/components/hidden-profile/hidden-profile-editor";
+import { SellerEditPopup, useOpenSellerEdit } from "@/components/my-business/seller-edit-popup";
 import { useEntryFacts, useHiddenProfile, useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import {
   hiddenStatusOf, isStartupEntry, type HiddenDraft, type HiddenProfileRow,
 } from "@/lib/hidden-profile";
-import { buildPublicListing, type ListingSource } from "@/lib/public-listing";
+import { buildPublicListing, provinceOnly, type ListingSource } from "@/lib/public-listing";
 import { TagChips } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { runIdentityCheck } from "@/lib/hidden-profile";
@@ -257,7 +257,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
         <div className="pt-2.5">
           <div className="truncate text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>
         </div>
-        <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, d?.region].filter(Boolean).join(" · ")}</div>
+        <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
         <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>No description yet</em>}</p>
         <RowLine label="Revenue">
           {listing.revenueBand ? <>{listing.revenueBand} <span className="ml-1 rounded bg-[#EEF0FF] px-1 py-0.5 text-[9.5px] font-semibold text-[#4338CA]">Range</span></> : "—"}
@@ -319,38 +319,20 @@ function KindLabel({ kind }: { kind: View }) {
   );
 }
 
-function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; editing: boolean; setEditing: (v: boolean) => void; pill: React.ReactNode }) {
+function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode }) {
   const { row } = useHiddenProfile(s.id);
   const { data: facts } = useEntryFacts(s.id);
   const { missingRequired } = useCompleteness(s);
   const { hasData: hasFinancials } = useHasFinancials(s.id);
   const actions = useHiddenProfileActions();
-  const [publishOnOpen, setPublishOnOpen] = useState(false);
   const industry = s.sector || s.industry?.[0] || "—";
-  const startup = isStartupEntry(s.company_type);
   const adminReview = useAdminReview();
-  void startup;
   const navigate = useNavigate();
+  const openEdit = useOpenSellerEdit();
+  void navigate;
 
-  const create = async () => {
-    if (!row) {
-      try { await actions.create.mutateAsync({ startupId: s.id }); } catch { return; }
-    }
-    setEditing(true);
-  };
-
-  if (editing && row) {
-    return (
-      <HiddenProfileEditor
-        row={row}
-        facts={facts}
-        source={{ ...(s as unknown as ListingSource), people: facts?.people ?? [] }}
-        directoryDescription={s.short_description}
-        autoPublish={publishOnOpen}
-        onBack={() => { setEditing(false); setPublishOnOpen(false); }}
-      />
-    );
-  }
+  // Create public view and Edit public view open Edit my startup › Public view › Listing Identity.
+  const create = async () => { openEdit(s.id, "public", "identity"); };
 
   return (
     <div>
@@ -359,7 +341,7 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
         <div className="min-w-0 flex-1">
           <KindPill kind="public" row={row} />
           <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || "Public view"}</h2>
-          <div className="truncate text-[13px] text-muted-foreground">{row ? `${row.ref_no} · ${industry} · ${row.region || "Region not set"}` : industry}</div>
+          <div className="truncate text-[13px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {adminReview ? (
@@ -405,11 +387,17 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
         showMarkers
         source={s as ListingSource}
         hasFinancials={hasFinancials}
-        onPart={(k) => void navigate({ to: "/my-startups/$id/edit", params: { id: s.id }, search: { section: k === "chips" ? "tags" : k === "employees" ? "size" : "revenue" } as never })}
+        onPart={(k) => {
+          if (k === "description") openEdit(s.id, "public", "description", "description");
+          else if (k === "terms") openEdit(s.id, "public", "deal", "deal");
+          else if (k === "chips") openEdit(s.id, "private", "market", "product-tags");
+          else if (k === "markets") openEdit(s.id, "private", "market", "market-tags");
+          else openEdit(s.id, "private", "about", k === "employees" ? "size" : "revenue");
+        }}
         creating={actions.create.isPending}
         onCreate={create}
-        onEdit={() => setEditing(true)}
-        onPublish={() => { setPublishOnOpen(true); setEditing(true); }}
+        onEdit={() => openEdit(s.id, "public", "identity")}
+        onPublish={() => openEdit(s.id, "public", "identity")}
         publishBlocked={missingRequired > 0 ? `Finish ${missingRequired} required item${missingRequired === 1 ? "" : "s"} first` : null}
       />
     </div>
@@ -418,8 +406,13 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
 
 /* --------------------------------- Layout --------------------------------- */
 
-/** Checklist item → Edit My Startup section (shared Edit-at-section helper). */
-const ITEM_SECTION: Partial<Record<string, string>> = { desc: "description", logo: "media", people: "founders" };
+/** Panel section key → Edit information main tab and tab. */
+function sectionTab(k: string): ["public" | "private", string] {
+  if (k === "photos" || k === "media" || k === "logo") return ["private", "images"];
+  if (k === "tags" || k === "product-tags" || k === "market-tags" || k === "sector") return ["private", "market"];
+  if (k === "licenses") return ["private", "licenses"];
+  return ["private", "about"];
+}
 
 export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem[] }) {
   const isMobile = useIsMobile();
@@ -427,8 +420,8 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
   const [gone, setGone] = useState<string[]>([]);
   const items = allItems.filter((i) => !gone.includes(i.id));
   const [sel, setSel] = useState<{ id: string; view: View } | null>(null);
-  const [editing, setEditing] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const openEdit = useOpenSellerEdit();
 
   useEffect(() => {
     if (!items.length) { if (sel) setSel(null); return; }
@@ -436,14 +429,17 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
   }, [items, sel]);
 
   const current = items.find((i) => i.id === sel?.id) ?? null;
-  const pick = (id: string, view: View) => { setSel({ id, view }); setEditing(false); setMobileOpen(true); };
-  const closeDeleted = (id: string) => { setGone((g) => [...g, id]); setSel(null); setEditing(false); setMobileOpen(false); };
+  const pick = (id: string, view: View) => { setSel({ id, view }); setMobileOpen(true); };
+  const closeDeleted = (id: string) => { setGone((g) => [...g, id]); setSel(null); setMobileOpen(false); };
 
   const onItem = (k: ItemKey) => {
     if (!current) return;
-    if (k === "fin" || k === "valuation") { setSel({ id: current.id, view: "private" }); setEditing(false); requestAnimationFrame(() => document.getElementById(`reports-${current.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })); }
-    else if (k === "terms" || k === "hidden") { setSel({ id: current.id, view: "public" }); setEditing(true); }
-    else void navigate({ to: "/my-startups/$id/edit", params: { id: current.id }, search: (ITEM_SECTION[k] ? { section: ITEM_SECTION[k] } : {}) as never });
+    if (k === "fin" || k === "valuation") { setSel({ id: current.id, view: "private" }); requestAnimationFrame(() => document.getElementById(`reports-${current.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })); }
+    else if (k === "terms") openEdit(current.id, "public", "deal", "deal");
+    else if (k === "hidden") openEdit(current.id, "public", "description", "headline");
+    else if (k === "logo") openEdit(current.id, "private", "images", "media");
+    else if (k === "people") openEdit(current.id, "private", "about", "founders");
+    else openEdit(current.id, "private", "about", "description");
   };
 
   const adminReview = useAdminReview();
@@ -454,15 +450,15 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
 
   const right = current && draftSetup ? (
     <DraftCompanyPanel role="seller" name={current.startup_name} banner={<SellerSetupBanner setup={draftSetup} />}
-      onEdit={() => void navigate({ to: "/my-startups/$id/edit", params: { id: current.id } })}
+      onEdit={() => openEdit(current.id, "private", "images")}
       onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })} />
   ) : current && sel ? (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm" style={{ overflow: "visible" }}>
-      {!adminReview && !(editing && sel.view === "public") && (
-        <PanelNotice s={current} onEditPublic={() => { setSel({ id: current.id, view: "public" }); setEditing(true); }} />
+      {!adminReview && (
+        <PanelNotice s={current} onEditPublic={() => openEdit(current.id, "public", "identity")} />
       )}
       {sel.view === "public" ? (
-        <PublicPanel key={current.id} s={current} editing={editing} setEditing={setEditing} pill={pill} />
+        <PublicPanel key={current.id} s={current} pill={pill} />
       ) : (
         <>
           <div className="mb-2 flex items-center justify-between gap-3">
@@ -475,11 +471,11 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
             showPublication
             workspace="my-startups"
             headerPill={adminReview ? undefined : pill}
-            companyMenuEdit={adminReview ? undefined : () => void navigate({ to: "/my-startups/$id/edit", params: { id: current.id } })}
+            companyMenuEdit={adminReview ? undefined : () => openEdit(current.id, "private", "images")}
              afterFounders={!adminReview && <ReportOffers id={current.id} />}
              sectionEdit={adminReview ? undefined : (k) => (
                <SectionEditLink tone="seller" label={k === "founders-add" ? "Add founder" : "Edit"}
-                 onClick={() => void navigate({ to: "/my-startups/$id/edit", params: { id: current.id }, search: { section: k === "photos" ? "media" : k } as never })} />
+                 onClick={() => { const [v, t] = sectionTab(k); openEdit(current.id, v, t, k === "photos" ? "media" : k); }} />
              )}
              financialsHeaderAction={!adminReview ? <ReportHeaderAction id={current.id} /> : undefined}
             onClose={() => closeDeleted(current.id)}
@@ -491,15 +487,18 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
           />
         </>
       )}
-      {!adminReview && !(editing && sel.view === "public") && (
-        <PanelFooter s={current} onItem={(k) => (k === "private" ? navigate({ to: "/my-startups/$id/edit", params: { id: current.id } }) : onItem(k as ItemKey))} />
+      {!adminReview && (
+        <PanelFooter s={current} onItem={(k) => (k === "private" ? openEdit(current.id, "private", "images") : onItem(k as ItemKey))} />
       )}
     </div>
   ) : null;
 
+  const popup = adminReview ? null : <SellerEditPopup fallbackView={sel?.view ?? "public"} />;
+
   if (isMobile && mobileOpen && right) {
     return (
       <div className="space-y-3">
+        {popup}
         <Button variant="ghost" size="sm" onClick={() => setMobileOpen(false)} className="gap-1.5"><ArrowLeft className="h-4 w-4" />Back to My Business</Button>
         {right}
       </div>
@@ -508,6 +507,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
 
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+      {popup}
       <div className="space-y-5">
         {items.map((s) => (
           <SellerCardSlot key={s.id} s={s} skipDraft={!!adminReview} view={sel?.id === s.id ? sel.view : null} onView={(v) => pick(s.id, v)} />
@@ -524,6 +524,7 @@ function PanelNotice({ s, onEditPublic }: { s: StartupListItem; onEditPublic: ()
 }
 
 function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) => void }) {
+  const openEdit = useOpenSellerEdit();
   const { row } = useHiddenProfile(s.id);
   const { data: facts } = useEntryFacts(s.id);
   const { items } = useCompleteness(s);
@@ -537,7 +538,7 @@ function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) =>
       missing={missing}
       flagged={flagged}
       onItem={onItem}
-      onCreate={() => actions.create.mutate({ startupId: s.id })}
+      onCreate={() => openEdit(s.id, "public", "identity")}
     />
   );
 }

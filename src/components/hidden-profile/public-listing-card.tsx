@@ -58,7 +58,7 @@ export function TagChips({ tags, green }: { tags: string[]; green?: boolean }) {
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map((t) => (
-        <span key={t} className={cn("rounded-full px-2 py-0.5 text-[11.5px] font-semibold", green ? "bg-[#ECFDF5] text-[#065F46]" : "bg-muted text-foreground/80")}>{t}</span>
+        <span key={t} className={cn("rounded-full px-2 py-0.5 text-[11.5px] font-semibold", green ? "border border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]" : "bg-muted text-foreground/80")}>{t}</span>
       ))}
     </div>
   );
@@ -89,7 +89,7 @@ export function dealLine(d?: ListingDeal, t: (s: string) => string = (s) => s) {
  * the Split list and the Split detail panel. The cover is ALWAYS sector vector
  * art — photos and logos only appear in the Private view after NDA.
  */
-export type ListingPart = "description" | "chips" | "revenue" | "employees" | "terms";
+export type ListingPart = "description" | "chips" | "markets" | "revenue" | "employees" | "terms";
 function PartEdit({ k, on }: { k: ListingPart; on?: (k: ListingPart) => void }) {
   if (!on) return null;
   return <button type="button" onClick={(e) => { e.stopPropagation(); on(k); }}
@@ -181,7 +181,7 @@ export function PublicListingCard({
             </div>
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
               <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Markets")}</span>
-              <TagChips tags={l.marketTags} green />
+              <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><TagChips tags={l.marketTags} green /></div><PartEdit k="markets" on={editable} /></div>
             </div>
             {l.certifications.length > 0 && (
               <div className="flex items-center gap-2 text-[12.5px]"><ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />{l.certifications.join(" · ")}</div>

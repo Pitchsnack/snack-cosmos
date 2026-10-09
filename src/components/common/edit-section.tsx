@@ -42,7 +42,12 @@ export function useOpenAtSection(section: string | undefined, ready = true, opts
       while (sc && !(/(auto|scroll)/.test(getComputedStyle(sc).overflowY) && sc.scrollHeight > sc.clientHeight)) sc = sc.parentElement;
       const behavior = reduce ? "auto" : "smooth";
       const pin = pinnedBottom();
-      if (sc) {
+      if (sc?.hasAttribute("data-edit-info-body")) {
+        // Edit information pop-up: 16px under its header, or under the sticky tab row.
+        const tabs = sc.querySelector<HTMLElement>("[data-sticky-tabs]");
+        const top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - (tabs?.offsetHeight ?? 0) - 16 - 10;
+        sc.scrollTo({ top: Math.max(0, top), behavior });
+      } else if (sc) {
         const top = el.getBoundingClientRect().top - Math.max(sc.getBoundingClientRect().top, pin) + sc.scrollTop - 16 - 10;
         sc.scrollTo({ top: Math.max(0, top), behavior });
       } else {
