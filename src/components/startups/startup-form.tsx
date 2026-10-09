@@ -1320,7 +1320,7 @@ export function StartupForm({
         </div>
         <div className="col-span-4 space-y-1.5 @[760px]:col-span-3">
           <Label htmlFor="ad-1">Business Address</Label>
-          <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null}
+          <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
             note={ctAdmin ? "Buyers see only the province until the seller approves their NDA." : "Buyers see only the province until you approve their NDA."} />

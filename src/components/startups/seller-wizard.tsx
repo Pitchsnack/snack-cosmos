@@ -178,7 +178,7 @@ export function SellerWizard({
               onChange={(e) => set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) })} placeholder="13 digits" />
             <p className="mt-1.5 text-[13px] text-[#6b7280]">Used to verify your company.{d.reg && d.reg.length !== 13 ? ` ${d.reg.length}/13 digits.` : ""}</p></div>
           <div className="pt-2">
-            <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need
+            <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}
               show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : "The postal code has 5 digits.", unit: null } as Record<string, string | null>)[k] ?? null : null)}
               onBlur={(k) => setTouched((t) => ({ ...t, [k]: true }))}
               note="Buyers see only the province until you approve their NDA." />
