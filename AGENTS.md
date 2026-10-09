@@ -10,7 +10,7 @@
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
 - Loading overlay opt-in (meta.pageLoading); badges use light count fns.
-- LOI request default note lives in config/loi-request.json.
+- LOI default note: config/loi-request.json.
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only via Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
