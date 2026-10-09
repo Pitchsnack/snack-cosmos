@@ -90,15 +90,15 @@ export type Addr = { street: string; unit: string; district: string; province: s
 export function addrErrors(a: Addr, thai: boolean, city: string) {
   return thai
     ? {
-        street: a.street.trim() ? null : "Add the number and street.",
-        district: a.district.trim() ? null : "Add the city or district.",
-        province: a.province ? null : "Choose the province or state.",
-        postal: !a.postal ? "Add the postal code." : /^\d{5}$/.test(a.postal) ? null : "The postal code has 5 digits.",
+        street: a.street.trim() ? null : tr("Add the number and street."),
+        district: a.district.trim() ? null : tr("Add the city or district."),
+        province: a.province ? null : tr("Choose the province or state."),
+        postal: !a.postal ? "Add the postal code." : /^\d{5}$/.test(a.postal) ? null : tr("The postal code has 5 digits."),
       }
-    : { street: a.street.trim() ? null : "Add the street and number.", district: city.trim() ? null : "Add the city or district.", province: null, postal: null };
+    : { street: a.street.trim() ? null : "Add the street and number.", district: city.trim() ? null : tr("Add the city or district."), province: null, postal: null };
 }
 
-export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, compact, note, need, title = "Business address", stars = true }: {
+export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, compact, note, need, title = tr("Business address"), stars = true }: {
   a: Addr; thai: boolean; city: string; onCity?: (v: string) => void; onChange: (p: Partial<Addr>) => void;
   show: (k: keyof Addr) => string | null; onBlur: (k: keyof Addr) => void; compact?: boolean; note: string;
   /** Setup wizards: mark fields still needed light blue (see common/need-fill). */
@@ -262,7 +262,7 @@ export function LogoRow({ logo, onFile, onRemove, error, busy }: { logo: LogoSta
         </button>
         <div className="min-w-0 text-[13px]">
           <div className="text-[#434A5C] dark:text-muted-foreground">
-            {has ? (logo.source === "enrich" ? "Found on your website. Sellers and buyers see it on your card." : `${logo.name ?? "Your logo"}. Sellers and buyers see it on your card.`)
+            {has ? (logo.source === "enrich" ? "Found on your website. Sellers and buyers see it on your card." : `${logo.name ?? tr("Your logo")}. Sellers and buyers see it on your card.`)
               : "Sellers and buyers see it on your card. PNG, JPG or SVG, up to 2 MB."}
           </div>
           <div className="mt-0.5 flex gap-2">

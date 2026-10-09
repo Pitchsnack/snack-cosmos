@@ -65,7 +65,7 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = "Add my business",
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = tr("Add my business"),
 }: {
   userId: string;
   initial: SellerDraft;

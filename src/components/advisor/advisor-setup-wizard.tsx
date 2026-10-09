@@ -82,19 +82,19 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const thai = a.country === "Thailand";
   const addrErr = addrErrors(a.addr, thai, a.city);
   const errors: Record<string, string | null> = {
-    type: a.type ? null : "Choose one to continue.",
-    country: a.country ? null : "Choose your country.",
+    type: a.type ? null : tr("Choose one to continue."),
+    country: a.country ? null : tr("Choose your country."),
     city: cityError(a.city, a.country),
     name: nameError(a.name),
     year: yearError(a.year),
     reg: thai && !/^\d{13}$/.test(a.reg) ? "The registration number has 13 digits." : null,
     "a-street": addrErr.street, "a-district": addrErr.district, "a-province": addrErr.province, "a-postal": addrErr.postal,
     web: webError(a.web),
-    services: a.services.length ? (a.services.every((s) => feeWords(a.fees[s] ?? newFee())) ? null : "fee") : "Pick at least one service.",
+    services: a.services.length ? (a.services.every((s) => feeWords(a.fees[s] ?? newFee())) ? null : "fee") : tr("Pick at least one service."),
     deal: a.deal ? null : "hint",
     team: teamSizeError(a.team),
-    langs: a.langs.length ? null : "Pick at least one language.",
-    sectors: a.agnostic || a.sectors.length ? null : "Pick at least one sector, or Sector agnostic.",
+    langs: a.langs.length ? null : tr("Pick at least one language."),
+    sectors: a.agnostic || a.sectors.length ? null : tr("Pick at least one sector, or Sector agnostic."),
     email: emailError(a.email),
     phone: phoneError(a.phone),
     logo: a.logo.path ? null : "hint",
@@ -213,8 +213,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const tryContinue = () => {
     if (cur === "review") { if (requiredOk) void flush().then(() => setPhase("enrich")); return; }
-    if (cur === "deal" && !a.deal) { setHint("Choose a range to continue, or Skip this question."); return; }
-    if (cur === "logo" && !a.logo.path) { setHint("Choose a file to continue, or Skip this question."); return; }
+    if (cur === "deal" && !a.deal) { setHint(tr("Choose a range to continue, or Skip this question.")); return; }
+    if (cur === "logo" && !a.logo.path) { setHint(tr("Choose a file to continue, or Skip this question.")); return; }
     if (!qValid(cur)) {
       setForced(Object.fromEntries(fieldsOf[cur].map((k) => [k, true])));
       if (cur === "services") setTouched((t) => ({ ...t, ...Object.fromEntries(a.services.map((s) => [`fee-${s}`, true])) }));
@@ -246,8 +246,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     if (withSave) {
       const cap = <T,>(p: Promise<T>) => Promise.race([p, new Promise<"slow">((r) => window.setTimeout(() => r("slow"), 1500))]);
       try { const r = await cap(flush()); ok = r !== false; } catch { ok = false; }
-      if (ok) toast.success(setupDone ? "Your changes are saved." : "Saved as a draft. Continue setup any time from My Company.");
-      else toast.error("Your last answer wasn't saved. Open the setup again to check it.");
+      if (ok) toast.success(setupDone ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
+      else toast.error(tr("Your last answer wasn't saved. Open the setup again to check it."));
     }
     void qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
     const to = `/marketplace/my-company?open=${firm.id}`;
@@ -261,7 +261,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter" || phase !== "q") return;
+    if (e.key !== tr("Enter") || phase !== "q") return;
     const t = e.target as HTMLElement;
     if (t.closest("button, a")) return;
     if (t.tagName === "TEXTAREA") { if (e.shiftKey) return; }
@@ -354,7 +354,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             </select>
           </div>
           <div>
-            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : "City"}<Req /></label>
+            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : tr("City")}<Req /></label>
             {thai ? (
               <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={cn(inp, "pr-8", errors.city && "need-fill", show("city") && errCls)} value={a.city} onBlur={blur("city")}
                 onChange={(e) => {
@@ -373,8 +373,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    name: { req: true, t: nameShort ? "What is your firm's name, registration number and business address?" : "What is the name of your firm?",
-      h: nameShort ? "Check that the name matches your firm's registration. Sellers and buyers see the address on your profile." : "Sellers and buyers see this name on your card. Use the name your clients know.",
+    name: { req: true, t: nameShort ? "What is your firm's name, registration number and business address?" : tr("What is the name of your firm?"),
+      h: nameShort ? "Check that the name matches your firm's registration. Sellers and buyers see the address on your profile." : tr("Sellers and buyers see this name on your card. Use the name your clients know."),
       body: (
         <div>
           <div className={cn("grid gap-4", !hid("year", "name") && "sm:grid-cols-[1fr_150px]")}>
@@ -481,13 +481,13 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     sectors: { req: true, t: tr("Which sectors do you know best?"), h: tr("Pick up to 5, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card."),
       body: (
         <SetSectorPicker mode="multi" value={a.sectors} onChange={(v) => set({ sectors: v }, { sectors: v })}
-          limitMsg="Pick up to 5 sectors, or Sector agnostic."
-          agnostic={{ on: a.agnostic, onToggle: (on) => set({ agnostic: on }, { sector_agnostic: on }), line: "I work with companies in every industry",
+          limitMsg=tr("Pick up to 5 sectors, or Sector agnostic.")
+          agnostic={{ on: a.agnostic, onToggle: (on) => set({ agnostic: on }, { sector_agnostic: on }), line: tr("I work with companies in every industry"),
             summary: <>{tr("Sellers and buyers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
           error={forced.sectors ? errors.sectors : null} />
       ) },
-    team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : "What is your company size?",
-      h: hid("team", "team") ? "Sellers and buyers see them on your card." : "Sellers and buyers see your team size on your card, and the languages you work in.",
+    team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : tr("What is your company size?"),
+      h: hid("team", "team") ? "Sellers and buyers see them on your card." : tr("Sellers and buyers see your team size on your card, and the languages you work in."),
       body: (
         <div>
           {!hid("team", "team") && <>
@@ -560,7 +560,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       body: <Review a={a} errors={errors} onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[cur];
-  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "services" ? "Back to your profile" : fromReview ? "Back to review" : "Continue";
+  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "services" ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
   const continueOk = cur === "review" ? requiredOk : qValid(cur);
   const optional = cur === "deal" || cur === "logo";
 
@@ -596,10 +596,10 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
 
   useFocusNeeded(qRef, `${phase}:${cur}`);
   const sources: Partial<Record<keyof FirmForm | "addr", SourceTag>> = {
-    name: "Your answer", firmType: "Your answer", country: "Your answer", city: "Your answer", yearFounded: "Your answer", description: "Your answer",
-    fees: "Your answer", dealBand: "Your answer", teamSize: "Your answer", languages: "Your answer", registrationNo: "Your answer",
-    website: "Your answer", email: "Your answer", phone: "Your answer", addr: "Your answer", logo: "Your answer",
-    ...(enrich?.legalName ? { legalName: "Company registry" as SourceTag } : {}), ...(enrich?.thaiName ? { thaiName: "Company registry" as SourceTag } : {}),
+    name: tr("Your answer"), firmType: tr("Your answer"), country: tr("Your answer"), city: tr("Your answer"), yearFounded: tr("Your answer"), description: tr("Your answer"),
+    fees: tr("Your answer"), dealBand: tr("Your answer"), teamSize: tr("Your answer"), languages: tr("Your answer"), registrationNo: tr("Your answer"),
+    website: tr("Your answer"), email: tr("Your answer"), phone: tr("Your answer"), addr: tr("Your answer"), logo: tr("Your answer"),
+    ...(enrich?.legalName ? { legalName: tr("Company registry") as SourceTag } : {}), ...(enrich?.thaiName ? { thaiName: tr("Company registry") as SourceTag } : {}),
   };
   const liveFirm = qc.getQueryData<AdvisorFirm[]>(ADVISOR_FIRMS_KEY)?.find((x) => x.id === firm.id) ?? firm;
 
@@ -636,7 +636,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       )}
       {phase === "complete" && (
         <div className="mx-auto max-w-[880px] px-4 pb-16 pt-8 sm:pt-10">
-          {header("Review & complete", "Last step", 100)}
+          {header(tr("Review & complete"), tr("Last step"), 100)}
           <div className="mt-[22px] sm:mt-[34px]">
             <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{tr("Check your profile and save it")}</h1>
             <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr("Your answers and what Auto Enrich found are filled in. Change anything you need, and add your team, licences and documents.")}</p>
@@ -685,29 +685,29 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
   const deal = dealBandLabels(a.deal);
   type Row = [string, React.ReactNode, WizardQ];
   const groups: [string, Row[]][] = [
-    ["About the firm", [
-      ["Firm type", a.type || miss, "type"],
-      ["Based in", a.city ? `${a.city}, ${a.country}` : miss, "loc"],
-      ["Firm name", errors.name ? miss : a.name, "name"],
-      ["Year founded", errors.year ? miss : a.year, "name"],
-      ["Registration number", a.reg || (thai ? miss : notSet), "name"],
-      ["Business address", addrOk && addrLine ? addrLine : miss, "name"],
-      ["Website", errors.web ? miss : a.web, "web"],
+    [tr("About the firm"), [
+      [tr("Firm type"), a.type || miss, "type"],
+      [tr("Based in"), a.city ? `${a.city}, ${a.country}` : miss, "loc"],
+      [tr("Firm name"), errors.name ? miss : a.name, "name"],
+      [tr("Year founded"), errors.year ? miss : a.year, "name"],
+      [tr("Registration number"), a.reg || (thai ? miss : notSet), "name"],
+      [tr("Business address"), addrOk && addrLine ? addrLine : miss, "name"],
+      [tr("Website"), errors.web ? miss : a.web, "web"],
     ]],
-    ["Services and fees", [
-      ["Services", a.services.length ? a.services.join(", ") : miss, "services"],
+    [tr("Services and fees"), [
+      [tr("Services"), a.services.length ? a.services.join(", ") : miss, "services"],
       ...a.services.map((s): Row => [s, feeWords(a.fees[s] ?? newFee()) ? <span>{nowrapPct(feeWords(a.fees[s]!)!)}</span> : miss, "services"]),
     ]],
-    ["Your work", [
-      ["Typical deal size", deal ? deal.full : notSet, "deal"],
-      ["Team size", errors.team ? miss : `${a.team} people`, "team"],
-      ["Languages", a.langs.length ? a.langs.join(", ") : miss, "team"],
-      ["Sectors", a.agnostic ? "Sector agnostic" : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
+    [tr("Your work"), [
+      [tr("Typical deal size"), deal ? deal.full : notSet, "deal"],
+      [tr("Team size"), errors.team ? miss : `${a.team} people`, "team"],
+      [tr("Languages"), a.langs.length ? a.langs.join(", ") : miss, "team"],
+      [tr("Sectors"), a.agnostic ? "Sector agnostic" : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
     ]],
-    ["Contact", [["Email", errors.email ? miss : a.email, "contact"], ["Phone", errors.phone ? miss : a.phone, "contact"]]],
-    ["Your card", [
-      ["Logo", a.logo.url ? <span className="inline-flex items-center gap-2"><img src={a.logo.url} alt="" className="h-7 w-7 rounded border border-[#E3E6EB] bg-white object-contain" />{a.logo.source === "enrich" ? "Found on your website" : a.logo.name ?? "Your logo"}</span> : notSet, "logo"],
-      ["Description", !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{tr(a.desc)}</span>, "desc"],
+    [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
+    [tr("Your card"), [
+      [tr("Logo"), a.logo.url ? <span className="inline-flex items-center gap-2"><img src={a.logo.url} alt="" className="h-7 w-7 rounded border border-[#E3E6EB] bg-white object-contain" />{a.logo.source === "enrich" ? "Found on your website" : a.logo.name ?? tr("Your logo")}</span> : notSet, "logo"],
+      [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{tr(a.desc)}</span>, "desc"],
     ]],
   ];
   return (

@@ -197,20 +197,20 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const agent = a.role === "agent";
   const stagesShown = showsStages(a.type, agent ? a.acts : null);
   const errors: Record<string, string | null> = {
-    role: a.role ? null : "Choose one to continue.",
-    type: agent ? (a.acts.length ? null : "Choose at least one to continue.") : a.type && a.type !== INDIVIDUAL_TYPE ? null : "Choose one to continue.",
-    country: a.country ? null : "Choose your country.",
-    city: a.city.trim() ? null : thai ? "Choose your province." : "Add your city.",
-    name: a.name.trim().length >= 2 ? null : "Add your firm's name.",
+    role: a.role ? null : tr("Choose one to continue."),
+    type: agent ? (a.acts.length ? null : tr("Choose at least one to continue.")) : a.type && a.type !== INDIVIDUAL_TYPE ? null : tr("Choose one to continue."),
+    country: a.country ? null : tr("Choose your country."),
+    city: a.city.trim() ? null : thai ? "Choose your province." : tr("Add your city."),
+    name: a.name.trim().length >= 2 ? null : tr("Add your firm's name."),
     year: individual ? null : yearError(a.year),
     reg: individual ? null : regError(a.reg, a.country),
-    web: isValidUrl(a.web) ? null : "Enter a valid website address, e.g. www.yourfirm.com",
-    aum: a.aum ? null : "Choose one to continue.",
-    ticket: a.ticket ? null : "Choose one to continue.",
-    rev: a.rev ? null : "Choose one, or click Skip.",
-    deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : "Pick at least one deal type.",
-    stages: !stagesShown || a.stages.length ? null : "Pick at least one stage.",
-    sectors: a.sectors.length ? null : "Pick at least one industry, or Sector agnostic.",
+    web: isValidUrl(a.web) ? null : tr("Enter a valid website address, e.g. www.yourfirm.com"),
+    aum: a.aum ? null : tr("Choose one to continue."),
+    ticket: a.ticket ? null : tr("Choose one to continue."),
+    rev: a.rev ? null : tr("Choose one, or click Skip."),
+    deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : tr("Pick at least one deal type."),
+    stages: !stagesShown || a.stages.length ? null : tr("Pick at least one stage."),
+    sectors: a.sectors.length ? null : tr("Pick at least one industry, or Sector agnostic."),
     desc: descErr || (leaks.length ? "leak" : null),
   };  const qRef = useRef<HTMLDivElement>(null);
   useFocusNeeded(qRef, `${phase}:${cur}`);
@@ -294,7 +294,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     try { await cap(flush()); } catch { /* flush already toasts */ }
     void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
     void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
-    toast.success(live ? "Your changes are saved." : "Saved as a draft. Continue setup any time from My Company.");
+    toast.success(live ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
     const fallback = window.setTimeout(() => { window.location.href = "/marketplace/my-company"; }, 1500);
     try { await navigate({ to: "/marketplace/my-company" }); window.clearTimeout(fallback); }
     catch { window.location.href = "/marketplace/my-company"; }
@@ -305,7 +305,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
 
   // Enter = Continue (not on buttons/links/textarea).
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter" || phase !== "q") return;
+    if (e.key !== tr("Enter") || phase !== "q") return;
     const t = e.target as HTMLElement;
     if (t.closest("button, a, textarea, [role=combobox], [role=listbox]")) return;
     e.preventDefault();
@@ -356,7 +356,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             </select>
           </div>
           <div>
-            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : "City"}<Req /></label>
+            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : tr("City")}<Req /></label>
             {thai ? (
               <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={`${inp} ${errors.city ? "need-fill" : ""} ${show("city") ? errCls : ""}`} value={a.city}
                 onBlur={() => setTouched((t) => ({ ...t, city: true }))}
@@ -373,7 +373,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           </div>
         </div>
       ) },
-    name: { req: true, t: nameShort && !individual ? "What is your firm's name and registration number?" : "What is the name of your firm?",
+    name: { req: true, t: nameShort && !individual ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
       h: nameShort && !individual ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : `Sellers see "${tName}" instead of your name until they approve your NDA.`,
       body: (
         <div className="space-y-4">
@@ -433,7 +433,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
         </div>
       ) },
-    aum: { req: true, t: corp ? "What is your group's annual revenue in $USD?" : "How much does your firm manage (AUM) in $USD?", h: tr("Sellers see this band, never an exact figure."),
+    aum: { req: true, t: corp ? "What is your group's annual revenue in $USD?" : tr("How much does your firm manage (AUM) in $USD?"), h: tr("Sellers see this band, never an exact figure."),
       body: <><Choice list={bandList(AUM_BANDS)} value={a.aum} onPick={(v) => autoPick("aum", { aum: v }, { aum_band: v })} /><Err m={forced.aum && errors.aum} /></> },
     ticket: { req: true, t: tr("What is your average investment per deal in $USD?"), h: tr("Sellers see this range on your card and filter Browse investors by it."),
       body: <><Choice list={bandList(TICKET_BANDS)} value={a.ticket} onPick={(v) => autoPick("ticket", { ticket: v }, { ticket_band: v })} /><Err m={forced.ticket && errors.ticket} /></> },
@@ -459,9 +459,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         const setS = (v: string[]) => set({ sectors: v }, { preferred_industries: v });
         return (
           <SetSectorPicker mode="multi" value={picks} onChange={(v) => setS([...(ag ? [SECTOR_AGNOSTIC] : []), ...v])}
-            limitMsg="Pick up to 5 industries, or Sector agnostic."
-            agnostic={{ on: ag, onToggle: (on) => setS(on ? [SECTOR_AGNOSTIC, ...picks] : picks), line: "I look at companies in every industry",
-              note: "Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.",
+            limitMsg=tr("Pick up to 5 industries, or Sector agnostic.")
+            agnostic={{ on: ag, onToggle: (on) => setS(on ? [SECTOR_AGNOSTIC, ...picks] : picks), line: tr("I look at companies in every industry"),
+              note: tr("Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you."),
               summary: <>{tr("Sellers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
             error={forced.sectors ? errors.sectors : null} />
         );
@@ -481,9 +481,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
           <div className="mt-5 rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">
             <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{tr("How sellers see you")}</div>
-            <PublicInvestorCard empty="Not added" i={{
+            <PublicInvestorCard empty=tr("Not added") i={{
               refNo: data.buyer.ref_no, codeName: tName, name: null, type: tName, city: a.city || null, country: a.country || null,
-              description: a.desc.trim() || "Your description appears here.", sectors: a.sectors, stages: a.stages, dealTypes: a.deals,
+              description: a.desc.trim() || tr("Your description appears here."), sectors: a.sectors, stages: a.stages, dealTypes: a.deals,
               geography: a.geo.join(", ") || null, verified: false, proofOfFunds: false, ticketLabel: null, aumLabel: null, revLabel: null,
               aumBand: a.aum || null, ticketBand: a.ticket || null, revBand: a.rev || null, relation: a.role, actsFor: agent ? a.acts : [],
             }} />
@@ -495,7 +495,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[step.id];
-  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "desc" ? "Back to your profile" : fromReview ? "Back to review" : "Continue";
+  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "desc" ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
   const continueOk = cur === "review" ? allValid : qValid(cur);
 
   // ---------------- layout ----------------
@@ -510,7 +510,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       <button type="button" onClick={saveExit} disabled={exiting} aria-label={tr("Save and exit setup")}
         className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[13px] font-semibold text-[#434A5C] transition-colors hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 dark:border-border dark:bg-background dark:text-foreground">
         {exiting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-        <span className="hidden sm:inline">{exiting ? "Exiting…" : "Save & exit"}</span>
+        <span className="hidden sm:inline">{exiting ? "Exiting…" : tr("Save & exit")}</span>
       </button>
     </div>
   );
