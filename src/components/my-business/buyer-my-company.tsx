@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, Check, ChevronDown, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Star, X } from "lucide-react";
 import { toast } from "sonner";
@@ -197,7 +198,7 @@ export function BuyerMyCompany() {
           <DraftCompanyCard role="buyer" name={nm} typeLine={org.type ? typeName(org.type) : null} typeClass={tone.fg}
             founded={individual ? null : (iv as any).year_founded} size={individual ? null : (iv as any).company_size_band} website={iv.website_url} />
           <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
-            onEdit={() => void navigate({ to: "/marketplace/my-company/edit" })} onFinish={() => openWizard()} />
+            onEdit={() => openProfileEdit({ from: "public" })} onFinish={() => openWizard()} />
         </div>
       </div>
     );
@@ -301,7 +302,7 @@ export function BuyerMyCompany() {
           <p className="text-sm text-muted-foreground">Your buyer account already has an investor profile. You can update it here; another profile cannot be added to this account.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewOpen(false)}>Cancel</Button>
-            <Button onClick={() => { setNewOpen(false); void navigate({ to: "/marketplace/my-company/edit" }); }}>Edit my profile</Button>
+            <Button onClick={() => { setNewOpen(false); openProfileEdit({ from: "public" }); }}>Edit my profile</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -465,10 +466,10 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       <div className="px-5 pt-5">
         <PanelHead kind="public" title={title} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
           thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
-          editLabel="Edit information" onEdit={() => void navigate({ to: "/marketplace/my-company/edit", search: { section: "description" } as never })} pill={pill} />
+          editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill} />
         {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
-          <BuyerBrowseCard {...props} expanded editable={(k) => void navigate({ to: "/marketplace/my-company/edit", search: { section: PART_SEC[k] } as never })} cardFooter={
+          <BuyerBrowseCard {...props} expanded editable={(k) => openProfileEdit({ section: PART_SEC[k], from: "public" })} cardFooter={
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
               <span className="truncate">{title} · {p.ref_no}</span><span className="shrink-0">{since}</span>
             </div>

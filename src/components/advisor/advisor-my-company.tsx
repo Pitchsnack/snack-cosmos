@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
+import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -44,8 +45,10 @@ const fmtMonth = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString
 
 function useOpenEdit() {
   const navigate = useNavigate();
+  const openPopup = useOpenProfileEdit();
   return (firm: string | null, section?: EditSection) =>
-    navigate({ to: "/marketplace/my-company/edit", search: { ...(firm ? { firm } : { new: "1" }), ...(section ? { section } : {}) } as never });
+    firm ? openPopup({ firm, ...(section && section !== "firm" ? { section } : {}) })
+      : navigate({ to: "/marketplace/my-company/edit", search: { new: "1" } as never });
 }
 
 /* ------------------------------- Page ------------------------------------ */

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -130,8 +131,9 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
   const navigate = useNavigate();
   const qc = useQueryClient();
   const submitFn = useServerFn(submitMyBuyerForVerification);
-  const edit = () => navigate({ to: "/marketplace/my-company/edit" });
-  const editAt = (section: string, add?: boolean) => navigate({ to: "/marketplace/my-company/edit", search: { section, ...(add ? { add: "1" as const } : {}) } as never });
+  const openEdit = useOpenProfileEdit();
+  const edit = () => openEdit({ from: "private" });
+  const editAt = (section: string, add?: boolean) => openEdit({ section, add, from: "private" });
   const ITEM_SEC: Record<string, string | undefined> = { ticket: "mandate", aum: "fund", logo: "media", focus: "industries", people: "people" };
   const editItem = (k: string) => { const sec = ITEM_SEC[k]; if (!sec) return edit(); editAt(sec, k === "people" && d.people.length === 0); };
   const v = V_CHIP[d.verification.status];

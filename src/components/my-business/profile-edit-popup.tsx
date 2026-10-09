@@ -1,10 +1,9 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { EditInfoPopup, leaveEditUrl, markEditPushed, useTr } from "@/components/common/edit-info-popup";
-import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
+import { BuyerInvestorEdit, BUYER_INVESTOR_KEY } from "@/components/my-business/buyer-investor-edit";
 import { AdvisorFirmEdit } from "@/components/advisor/advisor-firm-edit";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { useQuery } from "@tanstack/react-query";
-import { BUYER_INVESTOR_KEY } from "@/lib/buyer-investor-keys";
 import type { EditSection } from "@/lib/advisor-firm";
 
 type S = { edit?: "profile"; section?: string; firm?: string; from?: "public" | "private"; add?: "1" };
