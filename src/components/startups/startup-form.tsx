@@ -1745,8 +1745,11 @@ export function StartupForm({
 
   return (
     <form
+      id="startup-edit-form"
+      noValidate={!!popup}
       onSubmit={(e) => {
         e.preventDefault();
+        if (popup) return popupSubmit();
         if (isEdit) {
           updateM.mutate();
         } else {
@@ -1754,7 +1757,7 @@ export function StartupForm({
         }
       }}
       onKeyDown={handleFormKeyDown}
-      className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"
+      className={popup ? "text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}
     >
       {!isEdit && (
         <div className="pb-2">
@@ -1959,6 +1962,14 @@ export function StartupForm({
         </div>
       )}
 
+      {popup ? (
+        <EditInfoFooter>
+          <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>Cancel</Button>
+          <Button type="submit" form="startup-edit-form" disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            {submitting ? "Saving…" : "Save"}
+          </Button>
+        </EditInfoFooter>
+      ) : (
       <div className="flex justify-end gap-2">
         <Button
           type="button"
@@ -1992,6 +2003,7 @@ export function StartupForm({
           {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
         </Button>
       </div>
+      )}
       <DuplicateWarningDialog
         open={websiteDup.open}
         typedName={websiteDup.typedValue}
