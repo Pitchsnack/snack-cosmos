@@ -144,7 +144,7 @@ export const createAdvisorDraft = createServerFn({ method: "POST" })
     const { assertCanAddCompany } = await import("./plan-access.server");
     await assertCanAddCompany(context.userId, "advisor");
     const { data, error } = await sb.from("advisor_firms")
-      .insert({ owner_user_id: context.userId, status: "draft", name: "", firm_type: "", country: "Thailand" })
+      .insert({ owner_user_id: context.userId, status: "draft", name: "", firm_type: "", country: "Thailand", email: ((context.claims as any)?.email as string | undefined) || null })
       .select("id").single();
     if (error) throw new Error(error.message);
     return { id: data.id as string };
@@ -239,7 +239,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       const { error } = await sb.from("advisor_firms").update(row).eq("id", id);
       if (error) throw new Error(error.message);
     } else {
-      const { data: ins, error } = await sb.from("advisor_firms").insert({ ...row, owner_user_id: context.userId, status: "draft" }).select("id").single();
+      const { data: ins, error } = await sb.from("advisor_firms").insert({ ...row, email: row.email || ((context.claims as any)?.email as string | undefined) || null, owner_user_id: context.userId, status: "draft" }).select("id").single();
       if (error) throw new Error(error.message);
       id = ins.id as string;
     }

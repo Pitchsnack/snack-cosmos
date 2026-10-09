@@ -45,9 +45,10 @@ export async function createSellerBusiness(sb: SB, userId: string, s: SellerSeed
   const cfg = await intake(sb, tenantFromRole).catch(() => intake(sb));
   await ensureSellerRole(sb, userId, cfg.tenant_id);
   const now = new Date().toISOString();
+  const { data: me } = await sb.from("users").select("email").eq("id", userId).maybeSingle();
   const { data: st, error } = await sb.from("startups").insert({
     tenant_id: cfg.tenant_id, startup_name: s.name, status: "Draft", visibility: "Tenant",
-    website_url: s.website || null, year_founded: s.year ?? null, company_size: s.size || null,
+    email: me?.email || null, website_url: s.website || null, year_founded: s.year ?? null, company_size: s.size || null,
     registered_number: s.regNo || null, city: s.city || null, headquarters: "Thailand", last_year_revenue: s.revenue || null,
     sector: s.sector || null, regulatory_licenses: s.licences ?? [], iso_standards: s.iso ?? [],
     setup_from_signup: s.fromSignup ?? [], setup_done_at: s.setupDone ? now : null,
