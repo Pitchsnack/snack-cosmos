@@ -1,17 +1,16 @@
 # Project decisions
 
-- Reuse `StartupCard` for My Business private card and Directory grid card so they stay identical.
-- Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Listing image is Admin-only (pending_cover → cover_image_url).
+- Reuse `StartupCard` for My Business private card and Directory grid card.
+- Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Sellers pick their listing's sector picture (public_image_id via setMyListingImage, member + same-sector checks); covers count a pick only while it matches the sector.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx so Admin sees the seller screen.
 - Report offers/prices live in report-catalog.json; paid orders in report_orders(+_events); My Financials unlocks only on delivered orders.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages: one page (messages-page.tsx) for all tabs; keys 'p:'/'a:'/'c:<deal_advisor>:<side>'; 'c:' threads, members and events are derived in message-threads.server.ts (no copies) with membership checked every call.
-- Private notes (private_notes) are server-only so the other party never sees them.
-- Business Address stays on startups via shared StartupForm.
+- private_notes are server-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
-- Page loading overlay is opt-in (meta.pageLoading); badges use light count functions.
-- Seller LOI request's starting note lives in config/loi-request.json so its editable default can change without changing dialog behavior.
+- Loading overlay opt-in (meta.pageLoading); badges use light count fns.
+- LOI default note: config/loi-request.json.
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only via Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
@@ -27,3 +26,5 @@
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
 - Contact enquiries use sendContactEnquiry (rate-limited, Admin-read) and email_alert_log. Shared email-identity.ts drives replies and Admin Sending rules to prevent drift.
+
+- Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.

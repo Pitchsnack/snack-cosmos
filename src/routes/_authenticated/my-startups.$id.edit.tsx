@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowLeft, Building2, Lock } from "lucide-react";
 import { z } from "zod";
 
@@ -30,6 +30,12 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
     returnTo: z.literal("valuation").optional(),
     section: z.string().regex(/^[a-z-]{2,30}$/).optional(),
   }),
+  // Edit my startup now opens as the Edit information pop-up over My Company
+  // (the Valuation tab keeps this page so it can return there).
+  beforeLoad: ({ params, search }) => {
+    if (search.returnTo === "valuation") return;
+    throw redirect({ to: "/my-startups", search: { panel: params.id, edit: "startup", view: "private", tab: "images", ...(search.section ? { section: search.section } : {}) } as never, replace: true });
+  },
   head: () => ({
     meta: [
       { title: "Edit My Startup — SnackPortal2" },

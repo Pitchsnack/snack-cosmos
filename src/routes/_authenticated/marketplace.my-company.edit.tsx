@@ -43,7 +43,12 @@ function EditPage() {
   useEffect(() => {
     if (blockNew) { toast("Your account has one company. Ask PitchSnack if you need another."); void navigate({ to: "/marketplace/my-company", replace: true }); }
   }, [blockNew, navigate]);
-  if (blockNew) return null;
+  // Edit profile now opens as a pop-up over My Company.
+  const toPopup = !search.new && !blockNew && (persona !== "advisor" || !!search.firm || (firms.data?.length ?? 0) > 0);
+  useEffect(() => {
+    if (toPopup) void navigate({ to: "/marketplace/my-company", search: { edit: "profile", ...(search.section ? { section: search.section } : {}), ...(search.firm ? { firm: search.firm } : {}), ...(search.add ? { add: "1" } : {}) } as never, replace: true });
+  }, [toPopup]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (blockNew || toPopup) return null;
   if (persona === "advisor") {
     const sec = search.section && SECTIONS.includes(search.section) ? (search.section as EditSection) : undefined;
     return <AdvisorFirmEdit firmId={search.firm ?? null} section={sec} />;

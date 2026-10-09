@@ -1,4 +1,5 @@
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
+import { EditInfoFooter, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -123,10 +124,12 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
   const [forced, setForced] = useState(false);
   const docInput = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FirmForm>(k: K, v: FirmForm[K]) => setF((p) => ({ ...p, [k]: v }));
-  const back = () => (onDone ? onDone() : navigate({ to: "/marketplace/my-company", search: firm ? ({ open: firm.id } as never) : undefined }));
+  const pop = useEditInfo();
+  const back = () => (pop ? pop.requestClose() : onDone ? onDone() : navigate({ to: "/marketplace/my-company", search: firm ? ({ open: firm.id } as never) : undefined }));
   const thai = f.country === "Thailand";
   const src = setup?.sources ?? {};
 
+  useEffect(() => { pop?.setDirty(JSON.stringify(f) !== JSON.stringify(base.current)); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setup?.onDirty(JSON.stringify(f) === JSON.stringify(base.current) ? null : f); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useOpenAtSection(section && section !== "firm" ? section : undefined);
@@ -205,7 +208,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       base.current = f;
       if (setup) { setup.onDirty(null); setup.onSaved(msg); return; }
       toast.success(firm?.setupDoneAt || firm?.status !== "draft" ? "Profile saved." : msg);
-      back();
+      if (pop) { pop.setDirty(false); pop.done(); } else back();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
@@ -220,8 +223,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
   const inp = "h-[42px] text-[14px]";
 
   return (
-    <div className={cn("mx-auto space-y-5", setup ? "max-w-[880px] pb-8" : "max-w-[920px] pb-24")}>
-      {!setup && (
+    <div className={cn("mx-auto space-y-5", pop ? "pt-5" : setup ? "max-w-[880px] pb-8" : "max-w-[920px] pb-24")}>
+      {!setup && !pop && (
         <div>
           <button type="button" onClick={back} className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> {onDone ? "Advisors Directory" : "My Company"}</button>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{firm ? "Edit profile" : "Add Firm Profile"}</h1>
@@ -375,6 +378,12 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
         <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => docInput.current?.click()}><Upload className="mr-1.5 h-4 w-4" /> Upload a document</Button>
       </Section>
 
+      {pop ? (
+        <EditInfoFooter>
+          <Button variant="outline" onClick={back}>Cancel</Button>
+          <Button disabled={busy || uploading} onClick={submit} className="bg-accent text-accent-foreground hover:bg-accent/90">Save</Button>
+        </EditInfoFooter>
+      ) : (
       <div className="sticky bottom-0 z-10 -mx-1 flex items-center justify-between gap-3 rounded-[12px] border border-border bg-card/95 px-4 py-3 shadow-lg backdrop-blur">
         {setup ? (
           <>
@@ -391,6 +400,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
           </>
         )}
       </div>
+      )}
     </div>
   );
 }
