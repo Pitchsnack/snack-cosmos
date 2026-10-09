@@ -430,7 +430,7 @@ function MyStartupPanelModalBody({
             showPublication
             workspace="my-startups"
             onClose={onClose}
-            myStartupsReturnSearch={{ ...returnSearch, view: returnSearch.view === "profiles" ? undefined : returnSearch.view }}
+            myStartupsReturnSearch={{ ...returnSearch, view: returnSearch.view === "grid" || returnSearch.view === "split" || returnSearch.view === "list" ? returnSearch.view : undefined }}
           />
         )}
       </div>
