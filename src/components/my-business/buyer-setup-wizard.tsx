@@ -461,7 +461,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         const setS = (v: string[]) => set({ sectors: v }, { preferred_industries: v });
         return (
           <SetSectorPicker mode="multi" value={picks} onChange={(v) => setS([...(ag ? [SECTOR_AGNOSTIC] : []), ...v])}
-            limitMsg=tr("Pick up to 5 industries, or Sector agnostic.")
+            limitMsg={tr("Pick up to 5 industries, or Sector agnostic.")}
             agnostic={{ on: ag, onToggle: (on) => setS(on ? [SECTOR_AGNOSTIC, ...picks] : picks), line: tr("I look at companies in every industry"),
               note: tr("Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you."),
               summary: <>{tr("Sellers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
@@ -483,7 +483,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
           <div className="mt-5 rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">
             <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{tr("How sellers see you")}</div>
-            <PublicInvestorCard empty=tr("Not added") i={{
+            <PublicInvestorCard empty={tr("Not added")} i={{
               refNo: data.buyer.ref_no, codeName: tName, name: null, type: tName, city: a.city || null, country: a.country || null,
               description: a.desc.trim() || tr("Your description appears here."), sectors: a.sectors, stages: a.stages, dealTypes: a.deals,
               geography: a.geo.join(", ") || null, verified: false, proofOfFunds: false, ticketLabel: null, aumLabel: null, revLabel: null,

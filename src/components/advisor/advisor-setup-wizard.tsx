@@ -483,7 +483,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     sectors: { req: true, t: tr("Which sectors do you know best?"), h: tr("Pick up to 5, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card."),
       body: (
         <SetSectorPicker mode="multi" value={a.sectors} onChange={(v) => set({ sectors: v }, { sectors: v })}
-          limitMsg=tr("Pick up to 5 sectors, or Sector agnostic.")
+          limitMsg={tr("Pick up to 5 sectors, or Sector agnostic.")}
           agnostic={{ on: a.agnostic, onToggle: (on) => set({ agnostic: on }, { sector_agnostic: on }), line: tr("I work with companies in every industry"),
             summary: <>{tr("Sellers and buyers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
           error={forced.sectors ? errors.sectors : null} />

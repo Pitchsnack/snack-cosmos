@@ -221,7 +221,7 @@ export function LogoDrop({ logo, onFile, onRemove, error, busy }: {
       >
         {pick}
         <div className={cn("grid h-[88px] w-[88px] shrink-0 place-items-center overflow-hidden rounded-[18px]", has ? "border border-[#E3E6EB] bg-white" : "bg-[#EEF0F4] dark:bg-muted")}>
-          {has ? <img src={logo.url!} alt=tr("Your logo") className="h-full w-full object-contain" /> : <ImageIcon className="h-7 w-7 text-[#9CA3AF]" />}
+          {has ? <img src={logo.url!} alt={tr("Your logo")} className="h-full w-full object-contain" /> : <ImageIcon className="h-7 w-7 text-[#9CA3AF]" />}
         </div>
         <div className="min-w-0 flex-1">
           {has ? (
