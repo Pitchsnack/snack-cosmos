@@ -2,7 +2,7 @@ import { TH_WIZARDS } from "./th-wizards";
 
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
-export const TH: Record<string, string> = {
+const TH_BASE: Record<string, string> = {
   // Top bar / areas
   Marketplace: "ตลาดซื้อขาย",
   Admin: "ผู้ดูแลระบบ",
@@ -372,3 +372,6 @@ export const TH: Record<string, string> = {
   "Payment completed": "ชำระเงินเสร็จสมบูรณ์",
 };
 
+
+// Existing app wording wins where both define a line.
+export const TH: Record<string, string> = { ...TH_WIZARDS, ...TH_BASE };
