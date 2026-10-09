@@ -63,7 +63,7 @@ export const BADGES = {
     { name: "Featured", x: c("Paid placement,\nnot a check", "บริการแบบเสียเงิน\nไม่ใช่การตรวจสอบ") },
   ],
   seller: { label: c("Due diligence", "การตรวจสอบสถานะกิจการ"), h: c("What we check on a seller", "สิ่งที่เราตรวจฝั่งผู้ขาย"), rows: [
-    [c("Registry Verified", "ยืนยันทะเบียนนิติบุคคลแล้ว"), c("Name, number, directors and capital match the DBD filing", "ชื่อ เลขทะเบียน กรรมการ และทุนจดทะเบียน ตรงกับข้อมูลที่ยื่นต่อกรมพัฒนาธุรกิจการค้า (DBD)")],
+    [c("Registry Verified", "ยืนยันทะเบียนนิติบุคคลแล้ว"), c("Name, number, directors and capital match the tax filling", "ชื่อ เลขทะเบียน กรรมการ และทุนจดทะเบียน ตรงกับข้อมูลที่ยื่นต่อกรมพัฒนาธุรกิจการค้า (DBD)")],
     [c("Accounts Filed", "งบการเงินที่ยื่นแล้ว"), c("Three or five years as lodged, read by us", "งบย้อนหลัง 3 หรือ 5 ปีตามที่ยื่นไว้ โดยเราอ่านด้วยตนเอง")],
     [c("Ownership Confirmed", "ยืนยันผู้ถือหุ้นแล้ว"), c("The shareholder list and the authority to sell", "บัญชีรายชื่อผู้ถือหุ้น และอำนาจในการขายกิจการ")],
     [c("Licences Current", "ใบอนุญาตยังไม่หมดอายุ"), c("Factory licence, GMP, HACCP, ISO, sighted and in date", "ใบอนุญาตประกอบกิจการโรงงาน GMP HACCP ISO เราเห็นเอกสารจริงและยังไม่หมดอายุ")],
