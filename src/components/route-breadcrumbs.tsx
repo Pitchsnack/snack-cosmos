@@ -59,7 +59,6 @@ const PATH_LABELS: Record<string, string> = {
   "/startup-activity": "Startup Activity",
   "/ai-agents": "AI Agents",
   "/entity-control": "Control Data Intelligence",
-  "/my-startups/setup": "Set up your business",
   "/my-startups/setup/$id": "Set up your business",
   "/buyer/company/$id/setup": "Set up your investor profile",
   "/advisor/company/$id/setup": "Set up your firm profile",
