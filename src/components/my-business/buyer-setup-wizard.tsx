@@ -535,9 +535,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           <div className={card}>
             <div key={step.id} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
-                {tr(q.t)}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
+                {q.t}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
               </h1>
-              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr(q.h)}</p>
+              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{q.h}</p>
               {q.body}
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">

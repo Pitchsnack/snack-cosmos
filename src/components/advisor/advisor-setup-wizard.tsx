@@ -598,9 +598,9 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
 
   useFocusNeeded(qRef, `${phase}:${cur}`);
   const sources: Partial<Record<keyof FirmForm | "addr", SourceTag>> = {
-    name: tr("Your answer"), firmType: tr("Your answer"), country: tr("Your answer"), city: tr("Your answer"), yearFounded: tr("Your answer"), description: tr("Your answer"),
-    fees: tr("Your answer"), dealBand: tr("Your answer"), teamSize: tr("Your answer"), languages: tr("Your answer"), registrationNo: tr("Your answer"),
-    website: tr("Your answer"), email: tr("Your answer"), phone: tr("Your answer"), addr: tr("Your answer"), logo: tr("Your answer"),
+    name: "Your answer", firmType: "Your answer", country: "Your answer", city: "Your answer", yearFounded: "Your answer", description: "Your answer",
+    fees: "Your answer", dealBand: "Your answer", teamSize: "Your answer", languages: "Your answer", registrationNo: "Your answer",
+    website: "Your answer", email: "Your answer", phone: "Your answer", addr: "Your answer", logo: "Your answer",
     ...(enrich?.legalName ? { legalName: tr("Company registry") as SourceTag } : {}), ...(enrich?.thaiName ? { thaiName: tr("Company registry") as SourceTag } : {}),
   };
   const liveFirm = qc.getQueryData<AdvisorFirm[]>(ADVISOR_FIRMS_KEY)?.find((x) => x.id === firm.id) ?? firm;
