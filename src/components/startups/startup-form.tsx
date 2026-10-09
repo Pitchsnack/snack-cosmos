@@ -64,6 +64,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
+import { AttachmentCard, attachmentMissing } from "./attachment-card";
+import { LicenceLists } from "./licence-lists";
+import { EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
+import { PublicViewTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
+import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
+import { setMyListingImage } from "@/lib/sector-images.functions";
+import type { EntryFacts, HiddenProfileRow } from "@/lib/hidden-profile";
+import type { ListingSource } from "@/lib/public-listing";
+import { Eye } from "lucide-react";
 import { StartupStepper } from "./startup-stepper";
 import { THB_REVENUE_BANDS, type SellerPrefill } from "@/lib/seller-wizard";
 import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
@@ -192,7 +201,21 @@ interface Props {
   valuationReturn?: boolean;
   /** Seller › My Company: open the form at this section, in the light orange box. */
   section?: string;
+  /** My Company › Edit information pop-up: Public view + Private view tabs, one Save. */
+  popup?: StartupPopup;
 }
+
+export type PrivateTab = "images" | "about" | "market" | "licenses" | "restrictions";
+export const PUBLIC_TABS: PublicTab[] = ["identity", "description", "deal"];
+export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "market", "licenses", "restrictions"];
+export type StartupPopup = {
+  view: "public" | "private";
+  tab: string;
+  onNav: (view: "public" | "private", tab: string) => void;
+  row: HiddenProfileRow | null;
+  facts: EntryFacts | undefined;
+  restrictions?: React.ReactNode;
+};
 
 
 
@@ -231,7 +254,14 @@ export function StartupForm({
   controlReturn,
   valuationReturn,
   section,
+  popup,
 }: Props) {
+  const tr = useTr();
+  const editCtx = useEditInfo();
+  const [localTab, setLocalTab] = useState<PrivateTab>("images");
+  const pView = popup?.view ?? "private";
+  const pTab = (popup ? popup.tab : localTab) as string;
+  const navTab = (view: "public" | "private", tab: string) => (popup ? popup.onNav(view, tab) : setLocalTab(tab as PrivateTab));
   useOpenAtSection(section, true, section === "founders-add" ? { focusSelector: "button" } : undefined);
   const secOn = (id: string) => section === id || (id === "founders" && section === "founders-add");
   const isEdit = !!startup;
@@ -719,7 +749,7 @@ export function StartupForm({
   };
 
   const guard = useUnsavedChangesGuard({
-    isDirty,
+    isDirty: popup ? false : isDirty,
     isSaving: submitting,
     onSave: submitForm,
     canSave: canSubmit,
