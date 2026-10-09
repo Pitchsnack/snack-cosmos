@@ -10,8 +10,8 @@
 - Business Address stays on startups via shared StartupForm.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
-- Page loading overlay is opt-in (meta.pageLoading); badges use light count functions.
-- Seller LOI request's starting note lives in config/loi-request.json so its editable default can change without changing dialog behavior.
+- Loading overlay opt-in (meta.pageLoading); badges use light count fns.
+- LOI request default note lives in config/loi-request.json.
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only via Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
@@ -28,5 +28,4 @@
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
 - Contact enquiries use sendContactEnquiry (rate-limited, Admin-read) and email_alert_log. Shared email-identity.ts drives replies and Admin Sending rules to prevent drift.
 
-- My Company Edit information opens one pop-up (edit-info-popup.tsx) driven by ?edit= (startup on /my-startups, profile on /marketplace/my-company); forms portal Cancel/Save into its footer, so seller, buyer and advisor share one close/confirm/Back behaviour.
-- Edit my startup holds Edit public view as its Public view tabs (public-view-fields.tsx) so one Save stores the business and its listing draft.
+- Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
