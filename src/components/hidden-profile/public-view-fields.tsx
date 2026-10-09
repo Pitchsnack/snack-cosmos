@@ -29,7 +29,9 @@ export type PublicTab = "identity" | "description" | "deal";
 export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts | undefined, source: ListingSource | undefined) {
   const base = useMemo(() => pickDraft(row ?? {}), [row?.id, row?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
   const [d, setD] = useState<HiddenDraft>(base);
-  useEffect(() => setD(base), [base]);
+  // What "unchanged" means: the saved row, plus the first-open prefill below.
+  const [baseline, setBaseline] = useState(() => JSON.stringify(base));
+  useEffect(() => { setD(base); setBaseline(JSON.stringify(base)); }, [base]);
   // Generated text never names the company; the City (province) stands in for the old Region.
   const opts = useMemo(() => ({ guard: facts ? identityTerms(facts) : [] }), [facts]);
   const codeIdeas = useMemo(() => (source ? suggestCodeNames(source, opts) : []), [source, opts]);
@@ -44,14 +46,18 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
     if (!row || prefilled.current === row.id || !source) return;
     if (!headlineIdea && !descIdea && !highlightIdeas.length && !codeIdeas.length) return;
     prefilled.current = row.id;
-    setD((p) => ({
-      ...p,
-      code_name: p.code_name.trim() ? p.code_name : (codeIdeas[0] ?? p.code_name),
-      headline: p.headline.trim() ? p.headline : headlineIdea,
-      description: p.description.trim() ? p.description : descIdea,
-      highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
-      customers_summary: p.customers_summary.trim() ? p.customers_summary : customersIdea,
-    }));
+    setD((p) => {
+      const next = {
+        ...p,
+        code_name: p.code_name.trim() ? p.code_name : (codeIdeas[0] ?? p.code_name),
+        headline: p.headline.trim() ? p.headline : headlineIdea,
+        description: p.description.trim() ? p.description : descIdea,
+        highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
+        customers_summary: p.customers_summary.trim() ? p.customers_summary : customersIdea,
+      };
+      setBaseline(JSON.stringify(next));
+      return next;
+    });
   }, [row, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, customersIdea]);
 
   const fillAll = () => setD((p) => ({
@@ -69,10 +75,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
     description: (d.headline.trim() ? 0 : 1) + (d.description.trim() ? 0 : 1) + (d.highlights.slice(0, 3).every((h) => h.trim()) ? 0 : 1),
     deal: d.stake_pct != null && !!d.deal_type ? 0 : 1,
   };
-  // Pristine until the seller changes something (the first-open prefill counts as a change only once saved).
-  const [baseline, setBaseline] = useState("");
-  useEffect(() => { if (!baseline || prefilled.current) setBaseline(JSON.stringify(d)); }, [base, prefilled.current]); // eslint-disable-line react-hooks/exhaustive-deps
-  const dirty = !!row && !!baseline && JSON.stringify(d) !== baseline;
+  const dirty = !!row && JSON.stringify(d) !== baseline;
   const changedFromRow = !!row && JSON.stringify(pickDraft(row)) !== JSON.stringify(d);
   const payload = { ...d, highlights: d.highlights.map((h) => h.trim()) };
   return { d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea }, fillAll, findings, counts, dirty, changedFromRow, payload };
