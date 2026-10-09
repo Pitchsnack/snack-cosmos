@@ -1,3 +1,4 @@
+import { tr, useTranslation } from "@/i18n/language";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { useNavigate } from "@tanstack/react-router";
@@ -46,6 +47,7 @@ function fromFirm(f: AdvisorFirm): A {
 const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a");
 
 export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
+  useTranslation(); // re-render on language change
   const navigate = useNavigate();
   const qc = useQueryClient();
   const saveFn = useServerFn(saveAdvisorWizard);
@@ -82,19 +84,19 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const thai = a.country === "Thailand";
   const addrErr = addrErrors(a.addr, thai, a.city);
   const errors: Record<string, string | null> = {
-    type: a.type ? null : "Choose one to continue.",
-    country: a.country ? null : "Choose your country.",
+    type: a.type ? null : tr("Choose one to continue."),
+    country: a.country ? null : tr("Choose your country."),
     city: cityError(a.city, a.country),
     name: nameError(a.name),
     year: yearError(a.year),
     reg: thai && !/^\d{13}$/.test(a.reg) ? "The registration number has 13 digits." : null,
     "a-street": addrErr.street, "a-district": addrErr.district, "a-province": addrErr.province, "a-postal": addrErr.postal,
     web: webError(a.web),
-    services: a.services.length ? (a.services.every((s) => feeWords(a.fees[s] ?? newFee())) ? null : "fee") : "Pick at least one service.",
+    services: a.services.length ? (a.services.every((s) => feeWords(a.fees[s] ?? newFee())) ? null : "fee") : tr("Pick at least one service."),
     deal: a.deal ? null : "hint",
     team: teamSizeError(a.team),
-    langs: a.langs.length ? null : "Pick at least one language.",
-    sectors: a.agnostic || a.sectors.length ? null : "Pick at least one sector, or Sector agnostic.",
+    langs: a.langs.length ? null : tr("Pick at least one language."),
+    sectors: a.agnostic || a.sectors.length ? null : tr("Pick at least one sector, or Sector agnostic."),
     email: emailError(a.email),
     phone: phoneError(a.phone),
     logo: a.logo.path ? null : "hint",
@@ -213,8 +215,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const tryContinue = () => {
     if (cur === "review") { if (requiredOk) void flush().then(() => setPhase("enrich")); return; }
-    if (cur === "deal" && !a.deal) { setHint("Choose a range to continue, or Skip this question."); return; }
-    if (cur === "logo" && !a.logo.path) { setHint("Choose a file to continue, or Skip this question."); return; }
+    if (cur === "deal" && !a.deal) { setHint(tr("Choose a range to continue, or Skip this question.")); return; }
+    if (cur === "logo" && !a.logo.path) { setHint(tr("Choose a file to continue, or Skip this question.")); return; }
     if (!qValid(cur)) {
       setForced(Object.fromEntries(fieldsOf[cur].map((k) => [k, true])));
       if (cur === "services") setTouched((t) => ({ ...t, ...Object.fromEntries(a.services.map((s) => [`fee-${s}`, true])) }));
@@ -246,8 +248,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     if (withSave) {
       const cap = <T,>(p: Promise<T>) => Promise.race([p, new Promise<"slow">((r) => window.setTimeout(() => r("slow"), 1500))]);
       try { const r = await cap(flush()); ok = r !== false; } catch { ok = false; }
-      if (ok) toast.success(setupDone ? "Your changes are saved." : "Saved as a draft. Continue setup any time from My Company.");
-      else toast.error("Your last answer wasn't saved. Open the setup again to check it.");
+      if (ok) toast.success(setupDone ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
+      else toast.error(tr("Your last answer wasn't saved. Open the setup again to check it."));
     }
     void qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
     const to = `/marketplace/my-company?open=${firm.id}`;
@@ -261,7 +263,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter" || phase !== "q") return;
+    if (e.key !== tr("Enter") || phase !== "q") return;
     const t = e.target as HTMLElement;
     if (t.closest("button, a")) return;
     if (t.tagName === "TEXTAREA") { if (e.shiftKey) return; }
@@ -298,7 +300,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   }), [firm, a]);
   const previewBox = (
     <div className="mt-[18px] rounded-[12px] border border-[#E9EBF0] bg-[#EEF0F4] p-4 dark:border-border dark:bg-muted/40">
-      <div className="mb-2.5 text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Your card in Browse advisors</div>
+      <div className="mb-2.5 text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">{tr("Your card in Browse advisors")}</div>
       <div className="mx-auto max-w-[340px]"><FirmCard f={preview} preview /></div>
     </div>
   );
@@ -318,9 +320,9 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
 
   // ---------------- questions ----------------
   const Q: Record<WizardQ, { t: string; h: string; body: React.ReactNode; req: boolean }> = {
-    type: { req: true, t: "Which type of firm best describes your business?", h: "Sellers and buyers see it on your card, under your firm's name.",
+    type: { req: true, t: tr("Which type of firm best describes your business?"), h: tr("Sellers and buyers see it on your card, under your firm's name."),
       body: (
-        <div role="radiogroup" aria-label="Firm type" className="grid gap-2.5 sm:grid-cols-2"
+        <div role="radiogroup" aria-label={tr("Firm type")} className="grid gap-2.5 sm:grid-cols-2"
           onKeyDown={(e) => {
             const i = FIRM_TYPE_OPTIONS.findIndex((t) => t.value === (document.activeElement as HTMLElement)?.dataset.v);
             if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].includes(e.key)) {
@@ -344,17 +346,17 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {forced.type && errors.type && <p className="text-[13px] text-[#B42318] sm:col-span-2">{errors.type}</p>}
         </div>
       ) },
-    loc: { req: true, t: "Where is your firm based?", h: "Sellers and buyers see your city on your card.",
+    loc: { req: true, t: tr("Where is your firm based?"), h: tr("Sellers and buyers see your city on your card."),
       body: (
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={lbl} htmlFor="w-country">Country<Req /></label>
+            <label className={lbl} htmlFor="w-country">{tr("Country")}<Req /></label>
             <select id="w-country" aria-required className={cn(inp, "pr-8")} value={COUNTRIES.includes(a.country) ? a.country : "Other"} onChange={(e) => changeCountry(e.target.value)}>
               {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : "City"}<Req /></label>
+            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : tr("City")}<Req /></label>
             {thai ? (
               <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={cn(inp, "pr-8", errors.city && "need-fill", show("city") && errCls)} value={a.city} onBlur={blur("city")}
                 onChange={(e) => {
@@ -362,7 +364,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
                   const prov = !a.addr.province || a.addr.province === a.city ? v : a.addr.province;
                   set({ city: v, addr: { ...a.addr, province: prov } }, { city: v, addr_province: prov || null });
                 }}>
-                <option value="">Choose a province</option>
+                <option value="">{tr("Choose a province")}</option>
                 {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             ) : (
@@ -373,26 +375,26 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    name: { req: true, t: nameShort ? "What is your firm's name, registration number and business address?" : "What is the name of your firm?",
-      h: nameShort ? "Check that the name matches your firm's registration. Sellers and buyers see the address on your profile." : "Sellers and buyers see this name on your card. Use the name your clients know.",
+    name: { req: true, t: nameShort ? "What is your firm's name, registration number and business address?" : tr("What is the name of your firm?"),
+      h: nameShort ? "Check that the name matches your firm's registration. Sellers and buyers see the address on your profile." : tr("Sellers and buyers see this name on your card. Use the name your clients know."),
       body: (
         <div>
           <div className={cn("grid gap-4", !hid("year", "name") && "sm:grid-cols-[1fr_150px]")}>
             <div>
-              <label className={lbl} htmlFor="w-name">Firm name<Req /></label>
+              <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
               <input id="w-name" data-f="name" aria-required maxLength={80} placeholder="e.g. Acme Advisory" className={cn(inp, errors.name && "need-fill", show("name") && errCls)} {...(errors.name ? { "data-need": "1" } : {})} value={a.name} onBlur={blur("name")}
                 onChange={(e) => set({ name: e.target.value }, { name: e.target.value })} />
               <Err m={show("name")} />
             </div>
             {!hid("year", "name") && <div>
-              <label className={lbl} htmlFor="w-year">Year founded<Req /></label>
+              <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /></label>
               <input id="w-year" data-f="year" aria-required inputMode="numeric" maxLength={4} placeholder="e.g. 2014" className={cn(inp, yearShown && errCls)} value={a.year} onBlur={blur("year")}
                 onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, { year_founded: /^\d{4}$/.test(v) && !yearError(v) ? Number(v) : null }); }} />
             </div>}
           </div>
           <Err m={yearShown} />
           <div className="mt-4">
-            <label className={lbl} htmlFor="w-reg">{thai ? <>Company Registration Number (เลขทะเบียนนิติบุคคล)<Req /></> : <>Company registration number<Opt /></>}</label>
+            <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
             <input id="w-reg" data-f="reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : undefined}
               className={cn(inp, errors.reg && "need-fill", show("reg") && errCls)} {...(errors.reg ? { "data-need": "1" } : {})}
               value={a.reg} onBlur={blur("reg")}
@@ -400,21 +402,21 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             <Err m={show("reg")} />
             <p className="mt-2 flex gap-1.5 text-[13px] text-[#B42318]">
               <ShieldCheck className="mt-[1px] h-[15px] w-[15px] shrink-0" />
-              <span><b className="font-semibold">Sellers and buyers look for advisers they can trust.</b>{" "}
+              <span><b className="font-semibold">{tr("Sellers and buyers look for advisers they can trust.")}</b>{" "}
                 {thai ? "We verify your firm with this number, then show a Verified advisor badge on your card." : `Adding your registration number in ${a.country === "Other" ? "your country" : a.country} helps us verify your firm.`}</span>
             </p>
           </div>
           <div className="mt-6">
-            <AddressBox need a={a.addr} thai={thai} city={a.city} note="Sellers and buyers see it on your profile as a link that opens a map."
+            <AddressBox need a={a.addr} thai={thai} city={a.city} note={tr("Sellers and buyers see it on your profile as a link that opens a map.")}
               onCity={(v) => set({ city: v }, { city: v || null, addr_district: v || null })} onChange={setAddr}
               show={(k) => show(`a-${k}`)} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           </div>
         </div>
       ) },
-    web: { req: true, t: "What is your firm's website?", h: "We use it to fill in your profile. Sellers and buyers can open it from your profile.",
+    web: { req: true, t: tr("What is your firm's website?"), h: tr("We use it to fill in your profile. Sellers and buyers can open it from your profile."),
       body: (
         <div>
-          <label className={lbl} htmlFor="w-web">Website URL<Req /></label>
+          <label className={lbl} htmlFor="w-web">{tr("Website URL")}<Req /></label>
           <div className="flex flex-col gap-2.5 sm:flex-row">
             <input id="w-web" aria-required maxLength={200} placeholder="https://www.yourfirm.com" className={cn(inp, "flex-1", (touched.webTyped || forced.web) && errors.web && errCls)} value={a.web}
               onChange={(e) => { setTouched((t) => ({ ...t, webTyped: true })); setWebOpened(null); set({ web: e.target.value }, { website: e.target.value || null }); }} />
@@ -425,10 +427,10 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
           {(touched.webTyped && a.web.trim() || forced.web) && errors.web ? <p className="mt-1.5 text-[13px] text-[#B42318]">{errors.web}</p>
             : webOpened ? <p className="mt-1.5 flex items-center gap-1 text-[13px] text-[#15803D]"><Check className="h-3.5 w-3.5" />Opened {webOpened} in a new tab. Make sure it is your firm.</p>
-            : <p className="mt-1.5 text-[13px] text-[#6B7280]">Click Check website to open it in a new tab and make sure it is your firm.</p>}
+            : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
         </div>
       ) },
-    services: { req: true, t: "Which professional services does your firm provide?", h: "Pick all that apply, and say how you charge for each. Sellers and buyers filter Browse advisors by these, and see every fee on your profile.",
+    services: { req: true, t: tr("Which professional services does your firm provide?"), h: tr("Pick all that apply, and say how you charge for each. Sellers and buyers filter Browse advisors by these, and see every fee on your profile."),
       body: (
         <div>
           {feeNote && feeNote.length > 0 && (
@@ -466,32 +468,32 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </p>
         </div>
       ) },
-    deal: { req: false, t: "What deal values do you typically advise on, in $USD?", h: "The value of the companies you usually help sell, buy or value. Sellers and buyers see this range on your card.",
+    deal: { req: false, t: tr("What deal values do you typically advise on, in $USD?"), h: tr("The value of the companies you usually help sell, buy or value. Sellers and buyers see this range on your card."),
       body: (
         <div className="sm:w-1/2">
-          <label className={lbl} htmlFor="w-deal">Typical deal size<Opt /></label>
+          <label className={lbl} htmlFor="w-deal">{tr("Typical deal size")}<Opt /></label>
           <select id="w-deal" className={cn(inp, "pr-8")} value={a.deal} onChange={(e) => { setHint(null); set({ deal: e.target.value }, { deal_size_band: e.target.value || null }); }}>
-            <option value="">Choose a range</option>
+            <option value="">{tr("Choose a range")}</option>
             {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)!.full}</option>)}
           </select>
-          {a.deal && <p className="mt-2 text-[13.5px] text-[#6B7280]">Your card shows <b className="text-[#151A28] dark:text-foreground">{dealBandLabels(a.deal)!.usd}</b> ({dealBandLabels(a.deal)!.thb}).</p>}
+          {a.deal && <p className="mt-2 text-[13.5px] text-[#6B7280]">{tr("Your card shows")} <b className="text-[#151A28] dark:text-foreground">{dealBandLabels(a.deal)!.usd}</b> ({dealBandLabels(a.deal)!.thb}).</p>}
           {hint && <p className="mt-2 text-[13px] text-[#6B7280]">{hint}</p>}
         </div>
       ) },
-    sectors: { req: true, t: "Which sectors do you know best?", h: "Pick up to 5, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card.",
+    sectors: { req: true, t: tr("Which sectors do you know best?"), h: tr("Pick up to 5, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card."),
       body: (
         <SetSectorPicker mode="multi" value={a.sectors} onChange={(v) => set({ sectors: v }, { sectors: v })}
-          limitMsg="Pick up to 5 sectors, or Sector agnostic."
-          agnostic={{ on: a.agnostic, onToggle: (on) => set({ agnostic: on }, { sector_agnostic: on }), line: "I work with companies in every industry",
-            summary: <>Sellers and buyers see <b className="text-[#151A28] dark:text-foreground">Sector agnostic</b> on your card.</> }}
+          limitMsg={tr("Pick up to 5 sectors, or Sector agnostic.")}
+          agnostic={{ on: a.agnostic, onToggle: (on) => set({ agnostic: on }, { sector_agnostic: on }), line: tr("I work with companies in every industry"),
+            summary: <>{tr("Sellers and buyers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
           error={forced.sectors ? errors.sectors : null} />
       ) },
-    team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : "What is your company size?",
-      h: hid("team", "team") ? "Sellers and buyers see them on your card." : "Sellers and buyers see your team size on your card, and the languages you work in.",
+    team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : tr("What is your company size?"),
+      h: hid("team", "team") ? "Sellers and buyers see them on your card." : tr("Sellers and buyers see your team size on your card, and the languages you work in."),
       body: (
         <div>
           {!hid("team", "team") && <>
-          <label className={lbl} htmlFor="w-team">Team size<Req /></label>
+          <label className={lbl} htmlFor="w-team">{tr("Team size")}<Req /></label>
           <div className="flex items-center gap-2.5">
             <input id="w-team" aria-required inputMode="numeric" maxLength={5} placeholder="e.g. 8" className={cn(inp, "w-[150px]", show("team") && errCls)} value={a.team} onBlur={blur("team")}
               onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 5); set({ team: v }, { team_size: Number(v) >= 1 ? Number(v) : null }); }} />
@@ -500,7 +502,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           <Err m={show("team")} />
           </>}
           <div className={hid("team", "team") ? "" : "mt-5"}>
-            <div className={lbl}>Languages you work in<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">pick at least one</span></div>
+            <div className={lbl}>{tr("Languages you work in")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">pick at least one</span></div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {LANGUAGES.map((l) => {
                 const on = a.langs.includes(l);
@@ -516,24 +518,24 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    contact: { req: true, t: "How can sellers and buyers reach you?", h: "Your email and phone show on your profile, so sellers and buyers can contact you directly.",
+    contact: { req: true, t: tr("How can sellers and buyers reach you?"), h: tr("Your email and phone show on your profile, so sellers and buyers can contact you directly."),
       body: (
         <div className="space-y-4">
           <div>
-            <label className={lbl} htmlFor="w-email">Email<Req /></label>
+            <label className={lbl} htmlFor="w-email">{tr("Email")}<Req /></label>
             <input id="w-email" aria-required type="email" maxLength={120} placeholder="hello@yourfirm.com" className={cn(inp, show("email") && errCls)} value={a.email} onBlur={blur("email")}
               onChange={(e) => set({ email: e.target.value }, { email: e.target.value || null })} />
-            {show("email") ? <Err m={show("email")} /> : <p className="mt-1.5 text-[13px] text-[#6B7280]">Use a shared inbox, such as hello@ or deals@, so every enquiry reaches your team.</p>}
+            {show("email") ? <Err m={show("email")} /> : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Use a shared inbox, such as hello@ or deals@, so every enquiry reaches your team.")}</p>}
           </div>
           <div>
-            <label className={lbl} htmlFor="w-phone">Phone<Req /></label>
+            <label className={lbl} htmlFor="w-phone">{tr("Phone")}<Req /></label>
             <input id="w-phone" aria-required maxLength={30} placeholder="+66 2 123 4567" className={cn(inp, show("phone") && errCls)} value={a.phone} onBlur={blur("phone")}
               onChange={(e) => set({ phone: e.target.value }, { phone: e.target.value || null })} />
             <Err m={show("phone")} />
           </div>
         </div>
       ) },
-    logo: { req: false, t: "Attach your company's logo", h: "Sellers and buyers see it on your card. A square PNG, JPG or SVG works best, up to 2 MB.",
+    logo: { req: false, t: tr("Attach your company's logo"), h: tr("Sellers and buyers see it on your card. A square PNG, JPG or SVG works best, up to 2 MB."),
       body: (
         <div>
           <LogoDrop logo={a.logo} busy={logoBusy} error={logoErr} onFile={onLogo}
@@ -542,12 +544,12 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {previewBox}
         </div>
       ) },
-    desc: { req: true, t: "How would you describe your firm?", h: "Sellers and buyers read it on your card, which shows the first 3 lines.",
+    desc: { req: true, t: tr("How would you describe your firm?"), h: tr("Sellers and buyers read it on your card, which shows the first 3 lines."),
       body: (
         <div>
-          <label className={lbl} htmlFor="w-desc">Description<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">30 to 300 characters</span></label>
+          <label className={lbl} htmlFor="w-desc">{tr("Description")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">30 to 300 characters</span></label>
           <textarea id="w-desc" aria-required rows={4} maxLength={300} placeholder="e.g. Corporate law firm helping Thai founders sell their companies, from due diligence to signing."
-            className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={a.desc}
+            className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={tr(a.desc)}
             onChange={(e) => set({ desc: e.target.value }, { description: e.target.value || null })} />
           <div className="mt-1 flex justify-between text-[12.5px]">
             <span className="text-[#B42318]">{(forced.desc || (touched.desc && a.desc.trim())) && errors.desc}</span>
@@ -556,27 +558,27 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {previewBox}
         </div>
       ) },
-    review: { req: false, t: "Review your answers", h: "Check them, then we'll fill in the rest of your profile.",
+    review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
       body: <Review a={a} errors={errors} onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[cur];
-  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "services" ? "Back to your profile" : fromReview ? "Back to review" : "Continue";
+  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "services" ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
   const continueOk = cur === "review" ? requiredOk : qValid(cur);
   const optional = cur === "deal" || cur === "logo";
 
   // ---------------- layout ----------------
   const topBar = (
     <div className="sticky top-0 z-20 flex h-[60px] items-center gap-3 border-b border-[#E9EBF0] bg-white px-5 dark:border-border dark:bg-card">
-      <button type="button" onClick={exit} aria-label="Save & exit" className="cursor-pointer"><img src={logoBlack} alt="PitchSnack" className="h-6 w-auto dark:invert" /></button>
+      <button type="button" onClick={exit} aria-label={tr("Save & exit")} className="cursor-pointer"><img src={logoBlack} alt="PitchSnack" className="h-6 w-auto dark:invert" /></button>
       <span className="h-5 w-px bg-[#E9EBF0] dark:bg-border" />
-      <span className="text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground"><span className="hidden sm:inline">Firm Profile </span>Setup Wizard</span>
+      <span className="text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground"><span className="hidden sm:inline">{tr("Firm Profile")} </span>{tr("Setup Wizard")}</span>
       <span className="ml-auto inline-flex items-center gap-1.5 text-[12.5px] text-[#6B7280]">
-        {saving === "saving" ? <><span className="h-2 w-2 rounded-full bg-[#F6A823]" />Saving…</>
-          : saving === "saved" ? <><Check className="h-3.5 w-3.5 text-[#15803D]" />Draft saved</>
-          : saving === "failed" ? <><span className="text-[#B42318]">Not saved</span><button type="button" className="font-semibold text-[#1E2A4A] underline dark:text-foreground" onClick={() => void flush()}>Retry</button></> : null}
+        {saving === "saving" ? <><span className="h-2 w-2 rounded-full bg-[#F6A823]" />{tr("Saving…")}</>
+          : saving === "saved" ? <><Check className="h-3.5 w-3.5 text-[#15803D]" />{tr("Draft saved")}</>
+          : saving === "failed" ? <><span className="text-[#B42318]">{tr("Not saved")}</span><button type="button" className="font-semibold text-[#1E2A4A] underline dark:text-foreground" onClick={() => void flush()}>{tr("Retry")}</button></> : null}
       </span>
       <div className="relative">
-        <button type="button" onClick={exit} disabled={exiting} aria-label="Save & exit" title="Save & exit"
+        <button type="button" onClick={exit} disabled={exiting} aria-label={tr("Save & exit")} title={tr("Save & exit")}
           className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-[10px] border border-[#DCDFE5] bg-white text-[#434A5C] hover:bg-[#F6F7F9] disabled:cursor-wait disabled:opacity-60 dark:border-border dark:bg-background dark:text-foreground">
           {exiting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
         </button>
@@ -599,7 +601,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     name: "Your answer", firmType: "Your answer", country: "Your answer", city: "Your answer", yearFounded: "Your answer", description: "Your answer",
     fees: "Your answer", dealBand: "Your answer", teamSize: "Your answer", languages: "Your answer", registrationNo: "Your answer",
     website: "Your answer", email: "Your answer", phone: "Your answer", addr: "Your answer", logo: "Your answer",
-    ...(enrich?.legalName ? { legalName: "Company registry" as SourceTag } : {}), ...(enrich?.thaiName ? { thaiName: "Company registry" as SourceTag } : {}),
+    ...(enrich?.legalName ? { legalName: tr("Company registry") as SourceTag } : {}), ...(enrich?.thaiName ? { thaiName: tr("Company registry") as SourceTag } : {}),
   };
   const liveFirm = qc.getQueryData<AdvisorFirm[]>(ADVISOR_FIRMS_KEY)?.find((x) => x.id === firm.id) ?? firm;
 
@@ -608,25 +610,25 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       {topBar}
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-          {header(SECTION[cur], `Step ${idx + 1} of ${shown.length}`, ((idx + 1) / shown.length) * 100)}
+          {header(tr(SECTION[cur]), `Step ${idx + 1} of ${shown.length}`, ((idx + 1) / shown.length) * 100)}
           <div className={card} ref={cardRef}>
             <div key={cur} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
-                {q.t}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
+                {tr(q.t)}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
               </h1>
-              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{q.h}</p>
+              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr(q.h)}</p>
               {q.body}
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">
-              <button type="button" className={btnO} disabled={idx === 0} onClick={back}>Back</button>
-              {optional && <button type="button" className="px-2 text-[15px] font-medium text-[#434A5C] hover:underline dark:text-muted-foreground" onClick={skip}>Skip</button>}
+              <button type="button" className={btnO} disabled={idx === 0} onClick={back}>{tr("Back")}</button>
+              {optional && <button type="button" className="px-2 text-[15px] font-medium text-[#434A5C] hover:underline dark:text-muted-foreground" onClick={skip}>{tr("Skip")}</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-                <button type="button" className={`${btnO} flex-1 hover:bg-[#F6F7F9] sm:flex-none`} disabled={exiting} onClick={() => void leave(true)}>Save &amp; exit</button>
+                <button type="button" className={`${btnO} flex-1 hover:bg-[#F6F7F9] sm:flex-none`} disabled={exiting} onClick={() => void leave(true)}>{tr("Save &amp; exit")}</button>
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk && !optional} onClick={tryContinue}>{continueLabel}</button>
               </div>
             </div>
           </div>
-          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">Everything you add here is open to sellers and buyers on PitchSnack, so they can compare firms and choose one.</p>
+          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{tr("Everything you add here is open to sellers and buyers on PitchSnack, so they can compare firms and choose one.")}</p>
         </div>
       )}
       {phase === "enrich" && (
@@ -636,10 +638,10 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       )}
       {phase === "complete" && (
         <div className="mx-auto max-w-[880px] px-4 pb-16 pt-8 sm:pt-10">
-          {header("Review & complete", "Last step", 100)}
+          {header(tr("Review & complete"), tr("Last step"), 100)}
           <div className="mt-[22px] sm:mt-[34px]">
-            <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>Check your profile and save it</h1>
-            <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">Your answers and what Auto Enrich found are filled in. Change anything you need, and add your team, licences and documents.</p>
+            <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{tr("Check your profile and save it")}</h1>
+            <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr("Your answers and what Auto Enrich found are filled in. Change anything you need, and add your team, licences and documents.")}</p>
             <FirmEditForm firm={liveFirm} initial={dirtyForm ? { ...dirtyForm, services: a.services, fees: Object.fromEntries(a.services.map((s) => [s, a.fees[s] ?? newFee()])) } : null}
               setup={{
                 sources,
@@ -665,12 +667,12 @@ function LeavePopover({ onKeep, onLeave }: { onKeep: () => void; onLeave: () => 
     return () => { window.removeEventListener("keydown", k); window.removeEventListener("mousedown", c); window.clearTimeout(t); };
   }, [onKeep]);
   return (
-    <div ref={ref} role="dialog" aria-label="Leave without saving this page?" className="absolute right-0 top-11 z-30 w-[300px] rounded-[14px] border border-[#E9EBF0] bg-white p-4 shadow-xl dark:border-border dark:bg-card">
-      <div className="text-[15px] font-semibold">Leave without saving this page?</div>
-      <p className="mt-1 text-[13px] text-[#6B7280]">Your answers are saved. Changes on this page aren't.</p>
+    <div ref={ref} role="dialog" aria-label={tr("Leave without saving this page?")} className="absolute right-0 top-11 z-30 w-[300px] rounded-[14px] border border-[#E9EBF0] bg-white p-4 shadow-xl dark:border-border dark:bg-card">
+      <div className="text-[15px] font-semibold">{tr("Leave without saving this page?")}</div>
+      <p className="mt-1 text-[13px] text-[#6B7280]">{tr("Your answers are saved. Changes on this page aren't.")}</p>
       <div className="mt-3.5 flex justify-end gap-2">
-        <button type="button" autoFocus onClick={onKeep} className="h-9 rounded-[10px] border border-[#DCDFE5] bg-white px-3.5 text-[13.5px] font-semibold text-[#434A5C] dark:border-border dark:bg-background dark:text-foreground">Keep editing</button>
-        <button type="button" onClick={onLeave} className="h-9 rounded-[10px] bg-[#1E2A4A] px-3.5 text-[13.5px] font-semibold text-white">Leave</button>
+        <button type="button" autoFocus onClick={onKeep} className="h-9 rounded-[10px] border border-[#DCDFE5] bg-white px-3.5 text-[13.5px] font-semibold text-[#434A5C] dark:border-border dark:bg-background dark:text-foreground">{tr("Keep editing")}</button>
+        <button type="button" onClick={onLeave} className="h-9 rounded-[10px] bg-[#1E2A4A] px-3.5 text-[13.5px] font-semibold text-white">{tr("Leave")}</button>
       </div>
     </div>
   );
@@ -678,36 +680,36 @@ function LeavePopover({ onKeep, onLeave }: { onKeep: () => void; onLeave: () => 
 
 function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | null>; onEdit: (id: WizardQ) => void }) {
   const thai = a.country === "Thailand";
-  const miss = <b className="font-semibold text-[#B42318]">Missing</b>;
-  const notSet = <span className="text-[#9CA3AF]">Not set</span>;
+  const miss = <b className="font-semibold text-[#B42318]">{tr("Missing")}</b>;
+  const notSet = <span className="text-[#9CA3AF]">{tr("Not set")}</span>;
   const addrOk = !errors["a-street"] && !errors["a-district"] && !errors["a-province"] && !errors["a-postal"];
   const addrLine = fullAddress({ addrStreet: a.addr.street, addrUnit: a.addr.unit, addrDistrict: thai ? a.addr.district : a.city, addrProvince: a.addr.province, addrPostal: a.addr.postal, country: a.country, city: a.city });
   const deal = dealBandLabels(a.deal);
   type Row = [string, React.ReactNode, WizardQ];
   const groups: [string, Row[]][] = [
-    ["About the firm", [
-      ["Firm type", a.type || miss, "type"],
-      ["Based in", a.city ? `${a.city}, ${a.country}` : miss, "loc"],
-      ["Firm name", errors.name ? miss : a.name, "name"],
-      ["Year founded", errors.year ? miss : a.year, "name"],
-      ["Registration number", a.reg || (thai ? miss : notSet), "name"],
-      ["Business address", addrOk && addrLine ? addrLine : miss, "name"],
-      ["Website", errors.web ? miss : a.web, "web"],
+    [tr("About the firm"), [
+      [tr("Firm type"), a.type || miss, "type"],
+      [tr("Based in"), a.city ? `${a.city}, ${a.country}` : miss, "loc"],
+      [tr("Firm name"), errors.name ? miss : a.name, "name"],
+      [tr("Year founded"), errors.year ? miss : a.year, "name"],
+      [tr("Registration number"), a.reg || (thai ? miss : notSet), "name"],
+      [tr("Business address"), addrOk && addrLine ? addrLine : miss, "name"],
+      [tr("Website"), errors.web ? miss : a.web, "web"],
     ]],
-    ["Services and fees", [
-      ["Services", a.services.length ? a.services.join(", ") : miss, "services"],
+    [tr("Services and fees"), [
+      [tr("Services"), a.services.length ? a.services.join(", ") : miss, "services"],
       ...a.services.map((s): Row => [s, feeWords(a.fees[s] ?? newFee()) ? <span>{nowrapPct(feeWords(a.fees[s]!)!)}</span> : miss, "services"]),
     ]],
-    ["Your work", [
-      ["Typical deal size", deal ? deal.full : notSet, "deal"],
-      ["Team size", errors.team ? miss : `${a.team} people`, "team"],
-      ["Languages", a.langs.length ? a.langs.join(", ") : miss, "team"],
-      ["Sectors", a.agnostic ? "Sector agnostic" : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
+    [tr("Your work"), [
+      [tr("Typical deal size"), deal ? deal.full : notSet, "deal"],
+      [tr("Team size"), errors.team ? miss : `${a.team} people`, "team"],
+      [tr("Languages"), a.langs.length ? a.langs.join(", ") : miss, "team"],
+      [tr("Sectors"), a.agnostic ? "Sector agnostic" : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
     ]],
-    ["Contact", [["Email", errors.email ? miss : a.email, "contact"], ["Phone", errors.phone ? miss : a.phone, "contact"]]],
-    ["Your card", [
-      ["Logo", a.logo.url ? <span className="inline-flex items-center gap-2"><img src={a.logo.url} alt="" className="h-7 w-7 rounded border border-[#E3E6EB] bg-white object-contain" />{a.logo.source === "enrich" ? "Found on your website" : a.logo.name ?? "Your logo"}</span> : notSet, "logo"],
-      ["Description", !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">Needs a fix</b> : <span className="line-clamp-3">{a.desc}</span>, "desc"],
+    [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
+    [tr("Your card"), [
+      [tr("Logo"), a.logo.url ? <span className="inline-flex items-center gap-2"><img src={a.logo.url} alt="" className="h-7 w-7 rounded border border-[#E3E6EB] bg-white object-contain" />{a.logo.source === "enrich" ? "Found on your website" : a.logo.name ?? tr("Your logo")}</span> : notSet, "logo"],
+      [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{tr(a.desc)}</span>, "desc"],
     ]],
   ];
   return (
@@ -720,7 +722,7 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
               <div key={`${l}-${i}`} className="flex items-start gap-3 border-b border-[#F0F1F4] px-4 py-2.5 text-[14px] last:border-0 dark:border-border">
                 <span className="w-[170px] shrink-0 text-[#6B7280] max-sm:w-[110px]">{l}</span>
                 <span className="min-w-0 flex-1 break-words">{v}</span>
-                <button type="button" onClick={() => onEdit(id)} className="shrink-0 font-semibold text-[#1E2A4A] hover:underline dark:text-foreground">Edit</button>
+                <button type="button" onClick={() => onEdit(id)} className="shrink-0 font-semibold text-[#1E2A4A] hover:underline dark:text-foreground">{tr("Edit")}</button>
               </div>
             ))}
           </div>
@@ -753,9 +755,9 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
     return () => { off = true; window.clearTimeout(t1); };
   }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
   const rows: { icon: React.ReactNode; t: string; sub: string; found: string | null; show: boolean }[] = [
-    { icon: <Globe className="h-4 w-4" />, t: "Your website", sub: domain, found: res?.logo ? "Logo" : null, show: true },
-    { icon: <Landmark className="h-4 w-4" />, t: "Company registry", sub: `Registration ${a.reg}`, found: [res?.legalName && "Legal name", res?.thaiName && "Thai name"].filter(Boolean).join(" and ") || null, show: thaiReg },
-    { icon: <Newspaper className="h-4 w-4" />, t: "News", sub: "Recent deals and press", found: null, show: true },
+    { icon: <Globe className="h-4 w-4" />, t: tr("Your website"), sub: domain, found: res?.logo ? "Logo" : null, show: true },
+    { icon: <Landmark className="h-4 w-4" />, t: tr("Company registry"), sub: `Registration ${a.reg}`, found: [res?.legalName && tr("Legal name"), res?.thaiName && tr("Thai name")].filter(Boolean).join(" and ") || null, show: thaiReg },
+    { icon: <Newspaper className="h-4 w-4" />, t: tr("News"), sub: tr("Recent deals and press"), found: null, show: true },
   ].filter((r) => r.show);
   const n = res?.found ?? 0;
   useEffect(() => {
@@ -765,29 +767,29 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   }, [done, res, onDone]);
   return (
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-      {header("Auto Enrich", "Almost done", 100)}
+      {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{done ? "Your profile is filled in" : "Filling in your profile"}</h1>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{done ? "Your profile is filled in" : tr("Filling in your profile")}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">
-          {!done ? `We're reading ${domain} and public records. This takes a few seconds.` : n ? `We found ${n} detail${n === 1 ? "" : "s"}. Check them in the next step.` : "Nothing new to add. Check your profile in the next step."}
+          {!done ? `We're reading ${domain} and public records. This takes a few seconds.` : n ? `We found ${n} detail${n === 1 ? "" : "s"}. Check them in the next step.` : tr("Nothing new to add. Check your profile in the next step.")}
         </p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {rows.map((r, i) => (
-            <div key={r.t} className="flex items-center gap-3 border-b border-[#F0F1F4] px-4 py-3 last:border-0 dark:border-border">
+            <div key={tr(r.t)} className="flex items-center gap-3 border-b border-[#F0F1F4] px-4 py-3 last:border-0 dark:border-border">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-[#F3F4F6] text-[#6B7280] dark:bg-muted">{r.icon}</span>
-              <div className="min-w-0 flex-1"><b className="block text-[14.5px] font-semibold">{r.t}</b><span className="text-[12.5px] text-[#6B7280]">{r.sub}</span></div>
+              <div className="min-w-0 flex-1"><b className="block text-[14.5px] font-semibold">{tr(r.t)}</b><span className="text-[12.5px] text-[#6B7280]">{tr(r.sub)}</span></div>
               {done ? (r.found ? <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#15803D]"><Check className="h-4 w-4" />{r.found}</span>
-                : <span className="inline-flex items-center gap-1 text-[13px] text-[#6B7280]"><X className="h-4 w-4" />Nothing new found</span>)
-                : i <= step ? <span className="inline-flex items-center gap-1.5 text-[13px] text-[#6B7280]"><Loader2 className="h-4 w-4 animate-spin" />Reading…</span>
-                : <span className="inline-flex items-center gap-1.5 text-[13px] text-[#9CA3AF]"><Circle className="h-4 w-4 [stroke-dasharray:3_3]" />Waiting</span>}
+                : <span className="inline-flex items-center gap-1 text-[13px] text-[#6B7280]"><X className="h-4 w-4" />{tr("Nothing new found")}</span>)
+                : i <= step ? <span className="inline-flex items-center gap-1.5 text-[13px] text-[#6B7280]"><Loader2 className="h-4 w-4 animate-spin" />{tr("Reading…")}</span>
+                : <span className="inline-flex items-center gap-1.5 text-[13px] text-[#9CA3AF]"><Circle className="h-4 w-4 [stroke-dasharray:3_3]" />{tr("Waiting")}</span>}
             </div>
           ))}
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-2.5">
-          <button type="button" className={btnO} onClick={onBack}>Back to answers</button>
+          <button type="button" className={btnO} onClick={onBack}>{tr("Back to answers")}</button>
           <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>Save &amp; exit</button>
-            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!done} onClick={() => onDone(res)}>Review &amp; complete</button>
+            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>{tr("Save &amp; exit")}</button>
+            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!done} onClick={() => onDone(res)}>{tr("Review &amp; complete")}</button>
           </div>
         </div>
       </div>

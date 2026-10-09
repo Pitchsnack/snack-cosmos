@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/language";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Image as ImageIcon, Plus, Upload } from "lucide-react";
@@ -54,7 +55,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
         <span className={sub}>How you charge<Req /></span>
         <select autoFocus={autoFocus} aria-required aria-label={`How you charge for ${service}`} className={cn(small, "pr-8")} value={value.type}
           onChange={(e) => set({ type: e.target.value as FeeType })}>
-          {FEE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          {FEE_TYPES.map((t) => <option key={t.value} value={t.value}>{tr(t.label)}</option>)}
         </select>
       </div>
       {value.type === "fixed" && amountField("From", ex.fixed)}
@@ -90,15 +91,15 @@ export type Addr = { street: string; unit: string; district: string; province: s
 export function addrErrors(a: Addr, thai: boolean, city: string) {
   return thai
     ? {
-        street: a.street.trim() ? null : "Add the number and street.",
-        district: a.district.trim() ? null : "Add the city or district.",
-        province: a.province ? null : "Choose the province or state.",
-        postal: !a.postal ? "Add the postal code." : /^\d{5}$/.test(a.postal) ? null : "The postal code has 5 digits.",
+        street: a.street.trim() ? null : tr("Add the number and street."),
+        district: a.district.trim() ? null : tr("Add the city or district."),
+        province: a.province ? null : tr("Choose the province or state."),
+        postal: !a.postal ? "Add the postal code." : /^\d{5}$/.test(a.postal) ? null : tr("The postal code has 5 digits."),
       }
-    : { street: a.street.trim() ? null : "Add the street and number.", district: city.trim() ? null : "Add the city or district.", province: null, postal: null };
+    : { street: a.street.trim() ? null : "Add the street and number.", district: city.trim() ? null : tr("Add the city or district."), province: null, postal: null };
 }
 
-export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, compact, note, need, title = "Business address", stars = true }: {
+export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, compact, note, need, title = tr("Business address"), stars = true }: {
   a: Addr; thai: boolean; city: string; onCity?: (v: string) => void; onChange: (p: Partial<Addr>) => void;
   show: (k: keyof Addr) => string | null; onBlur: (k: keyof Addr) => void; compact?: boolean; note: string;
   /** Setup wizards: mark fields still needed light blue (see common/need-fill). */
@@ -141,7 +142,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
             {thai ? (
               <select id="ad-4" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
                 onBlur={() => onBlur("province")} onChange={(e) => onChange({ province: e.target.value })}>
-                <option value="">Choose a province</option>
+                <option value="">{tr("Choose a province")}</option>
                 {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             ) : (
@@ -220,12 +221,12 @@ export function LogoDrop({ logo, onFile, onRemove, error, busy }: {
       >
         {pick}
         <div className={cn("grid h-[88px] w-[88px] shrink-0 place-items-center overflow-hidden rounded-[18px]", has ? "border border-[#E3E6EB] bg-white" : "bg-[#EEF0F4] dark:bg-muted")}>
-          {has ? <img src={logo.url!} alt="Your logo" className="h-full w-full object-contain" /> : <ImageIcon className="h-7 w-7 text-[#9CA3AF]" />}
+          {has ? <img src={logo.url!} alt={tr("Your logo")} className="h-full w-full object-contain" /> : <ImageIcon className="h-7 w-7 text-[#9CA3AF]" />}
         </div>
         <div className="min-w-0 flex-1">
           {has ? (
             <>
-              <div className="truncate text-[15px] font-semibold">{logo.source === "enrich" ? "Found on your website" : logo.name ?? "Your logo"}</div>
+              <div className="truncate text-[15px] font-semibold">{logo.source === "enrich" ? "Found on your website" : logo.name ?? tr("Your logo")}</div>
               <div className="text-[13px] text-[#6B7280]">{logo.source === "enrich" ? "Replace it with your own file if you like." : `${logo.sizeKb != null ? `${logo.sizeKb} KB · ` : ""}sellers and buyers see it on your card`}</div>
               <div className="mt-2.5 flex items-center gap-3">
                 <button type="button" className={btn} disabled={busy} onClick={() => input.current?.click()}><Upload className="h-4 w-4" /> Replace</button>
@@ -262,7 +263,7 @@ export function LogoRow({ logo, onFile, onRemove, error, busy }: { logo: LogoSta
         </button>
         <div className="min-w-0 text-[13px]">
           <div className="text-[#434A5C] dark:text-muted-foreground">
-            {has ? (logo.source === "enrich" ? "Found on your website. Sellers and buyers see it on your card." : `${logo.name ?? "Your logo"}. Sellers and buyers see it on your card.`)
+            {has ? (logo.source === "enrich" ? "Found on your website. Sellers and buyers see it on your card." : `${logo.name ?? tr("Your logo")}. Sellers and buyers see it on your card.`)
               : "Sellers and buyers see it on your card. PNG, JPG or SVG, up to 2 MB."}
           </div>
           <div className="mt-0.5 flex gap-2">

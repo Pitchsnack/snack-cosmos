@@ -1,3 +1,4 @@
+import { tr, useTranslation } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Lock, AlertTriangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -44,8 +45,8 @@ function Radio({ list, value, onPick, grid }: {
               </span>
             )}
             <span>
-              <b className="block text-[15px] font-semibold">{o.label}</b>
-              {o.hint && <small className="mt-0.5 block text-[13.5px] text-[#6b7280]">{o.hint}</small>}
+              <b className="block text-[15px] font-semibold">{tr(o.label)}</b>
+              {o.hint && <small className="mt-0.5 block text-[13.5px] text-[#6b7280]">{tr(o.hint)}</small>}
             </span>
           </button>
         );
@@ -65,7 +66,7 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = "Add my business",
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = tr("Add my business"),
 }: {
   userId: string;
   initial: SellerDraft;
@@ -78,6 +79,7 @@ export function SellerWizard({
   persist?: (d: SellerDraft) => void;
   title?: string;
 }) {
+  useTranslation(); // re-render on language change
   const [d, setD] = useState<SellerDraft>(initial);
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
@@ -165,31 +167,31 @@ export function SellerWizard({
   const allIso = [...WIZARD_ISO, ...d.iso.filter((s) => !WIZARD_ISO.includes(s))];
 
   const Q: Record<string, { t: string; h?: string; body: React.ReactNode }> = {
-    role: { t: "Which best describes you?", h: "This determines who approves buyer requests for this listing.",
+    role: { t: tr("Which best describes you?"), h: tr("This determines who approves buyer requests for this listing."),
       body: <Radio list={SELLER_RELATIONS} value={d.role} onPick={(v) => pick({ role: v as SellerDraft["role"] })} /> },
-    name: { t: "What is your company's name, registration number and business address?", h: "Check that the name matches your company registration.", body: null as unknown as React.ReactNode },
+    name: { t: tr("What is your company's name, registration number and business address?"), h: tr("Check that the name matches your company registration."), body: null as unknown as React.ReactNode },
     nameBody: { t: "",
       body: (
         <div className="space-y-4">
-          <div><label className={fieldLbl}>Company name</label>
+          <div><label className={fieldLbl}>{tr("Company name")}</label>
             <input className={`${inp} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder="e.g. Siam Foods Co., Ltd." /></div>
-          <div><label className={fieldLbl}>Company Registration Number (เลขทะเบียนนิติบุคคล)</label>
+          <div><label className={fieldLbl}>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}</label>
             <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13}
               onChange={(e) => set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) })} placeholder="13 digits" />
             <p className="mt-1.5 text-[13px] text-[#6b7280]">Used to verify your company.{d.reg && d.reg.length !== 13 ? ` ${d.reg.length}/13 digits.` : ""}</p></div>
           <div className="pt-2">
             <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}
-              show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : "The postal code has 5 digits.", unit: null } as Record<string, string | null>)[k] ?? null : null)}
+              show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : tr("The postal code has 5 digits."), unit: null } as Record<string, string | null>)[k] ?? null : null)}
               onBlur={(k) => setTouched((t) => ({ ...t, [k]: true }))}
-              note="Buyers see only the province until you approve their NDA." />
+              note={tr("Buyers see only the province until you approve their NDA.")} />
           </div>
-          <p className="flex items-start gap-2 text-[13px] text-destructive"><Lock className="mt-0.5 h-3.5 w-3.5" />Your company identity stays confidential until you approve the buyer's NDA.</p>
+          <p className="flex items-start gap-2 text-[13px] text-destructive"><Lock className="mt-0.5 h-3.5 w-3.5" />{tr("Your company identity stays confidential until you approve the buyer's NDA.")}</p>
         </div>
       ) },
-    web: { t: "What is your company website?", h: "We use it to auto-fill your profile. You can skip this.",
+    web: { t: tr("What is your company website?"), h: tr("We use it to auto-fill your profile. You can skip this."),
       body: (
         <div>
-          <label className={fieldLbl}>Website URL</label>
+          <label className={fieldLbl}>{tr("Website URL")}</label>
           <div className="flex gap-2">
             <input className={inp} value={d.web} autoFocus maxLength={2048} onChange={(e) => set({ web: e.target.value })}
               onBlur={() => set({ web: d.web.trim() })} placeholder="https://www.yourcompany.com" />
@@ -205,9 +207,9 @@ export function SellerWizard({
             )}
           </div>
           {d.web.trim() && !valid.web ? (
-            <p className="mt-1.5 text-[13px] text-destructive">Enter a valid website address, e.g. www.yourcompany.com</p>
+            <p className="mt-1.5 text-[13px] text-destructive">{tr("Enter a valid website address, e.g. www.yourcompany.com")}</p>
           ) : (
-            <p className="mt-1.5 text-[13px] text-[#6b7280]">Click Check website to open it in a new tab and make sure it is your company.</p>
+            <p className="mt-1.5 text-[13px] text-[#6b7280]">{tr("Click Check website to open it in a new tab and make sure it is your company.")}</p>
           )}
           {webState === "unreachable" && (
             <div className="mt-4 rounded-[10px] border border-[#fcd34d] bg-[#fffbeb] p-3.5">
@@ -216,28 +218,28 @@ export function SellerWizard({
               </p>
               <div className="mt-3 flex gap-2">
                 <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#374151]"
-                  onClick={() => { setWebState("idle"); (document.querySelector("input[placeholder='https://www.yourcompany.com']") as HTMLInputElement | null)?.focus(); }}>Edit address</button>
+                  onClick={() => { setWebState("idle"); (document.querySelector("input[placeholder='https://www.yourcompany.com']") as HTMLInputElement | null)?.focus(); }}>{tr("Edit address")}</button>
                 <button type="button" className="rounded-[9px] bg-[#1e2a4a] px-3.5 py-2 text-[13px] font-semibold text-white"
-                  onClick={() => advance({ web: normalizeUrl(d.web) })}>Continue anyway</button>
+                  onClick={() => advance({ web: normalizeUrl(d.web) })}>{tr("Continue anyway")}</button>
               </div>
             </div>
           )}
         </div>
       ) },
-    year: { t: "What year was the company founded?",
+    year: { t: tr("What year was the company founded?"),
       body: <div><input className={`${inp} max-w-[200px]`} inputMode="numeric" value={d.year} maxLength={4} autoFocus
         onChange={(e) => set({ year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={`e.g. ${THIS_YEAR - 10}`} />
         {d.year.length === 4 && !valid.year && <p className="mt-1.5 text-[13px] text-destructive">Enter a year between 1800 and {THIS_YEAR}.</p>}</div> },
-    rev: { t: "What was your company's revenue last year?", h: "An approximate band is enough. Exact figures stay private.",
+    rev: { t: tr("What was your company's revenue last year?"), h: tr("An approximate band is enough. Exact figures stay private."),
       body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={d.rev} onPick={(v) => pick({ rev: v })} /> },
-    size: { t: "What is the size of your company?", h: "Number of employees.",
+    size: { t: tr("What is the size of your company?"), h: tr("Number of employees."),
       body: <Radio grid list={WIZARD_SIZES} value={d.size} onPick={(v) => pick({ size: v })} /> },
-    sector: { t: "What does your business mainly do?", h: "Choose the category that best represents your main products or services.",
+    sector: { t: tr("What does your business mainly do?"), h: tr("Choose the category that best represents your main products or services."),
       body: <SetSectorPicker mode="single" value={d.sector ? [d.sector] : []} onChange={(v) => set({ sector: v[0] ?? null })} /> },
-    lic: { t: "Licences and certifications", h: "Select any that apply. This is optional.",
+    lic: { t: tr("Licences and certifications"), h: tr("Select any that apply. This is optional."),
       body: (
         <div className="space-y-6">
-          <div><h4 className="text-[14.5px] font-semibold">Regulatory licences</h4>
+          <div><h4 className="text-[14.5px] font-semibold">{tr("Regulatory licences")}</h4>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {allLic.map((l) => {
                 const on = d.licences.some((x) => x.name === l.name);
@@ -246,11 +248,11 @@ export function SellerWizard({
               })}
             </div>
             <div className="mt-2 flex gap-2">
-              <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={120} placeholder="Other licence" value={otherLic} onChange={(e) => setOtherLic(e.target.value)} />
+              <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={120} placeholder={tr("Other licence")} value={otherLic} onChange={(e) => setOtherLic(e.target.value)} />
               <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-semibold text-[#374151]"
                 onClick={() => { const n = otherLic.trim(); if (n && !d.licences.some((x) => x.name.toLowerCase() === n.toLowerCase())) set({ licences: [...d.licences, { category: "Business", name: n }] }); setOtherLic(""); }}>Add</button>
             </div></div>
-          <div><h4 className="text-[14.5px] font-semibold">ISO and standards</h4>
+          <div><h4 className="text-[14.5px] font-semibold">{tr("ISO and standards")}</h4>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {allIso.map((s) => {
                 const on = d.iso.includes(s);
@@ -258,31 +260,31 @@ export function SellerWizard({
               })}
             </div>
             <div className="mt-2 flex gap-2">
-              <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={60} placeholder="Other standard" value={otherIso} onChange={(e) => setOtherIso(e.target.value)} />
+              <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={60} placeholder={tr("Other standard")} value={otherIso} onChange={(e) => setOtherIso(e.target.value)} />
               <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-semibold text-[#374151]"
                 onClick={() => { const n = otherIso.trim(); if (n && !d.iso.includes(n)) set({ iso: [...d.iso, n] }); setOtherIso(""); }}>Add</button>
             </div></div>
         </div>
       ) },
-    review: { t: "Review your answers", h: "Next, we'll auto-fill the rest of your profile. You can edit everything afterwards.",
+    review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div className="rounded-[10px] border border-[#e5e7eb]">
           {([
-            ["You are", SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
-            ["Company name", d.name, 1],
-            ["Registration no.", d.reg, 1],
-            ["Business address", addressLine(d.addr), 1],
-            ["Website", d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
-            ["Year founded", d.year, 3],
-            ["Revenue last year", d.rev, 4],
-            ["Company size", WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
-            ["Sector", d.sector, 6],
-            ["Licences & standards", [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],
+            [tr("You are"), SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
+            [tr("Company name"), d.name, 1],
+            [tr("Registration no."), d.reg, 1],
+            [tr("Business address"), addressLine(d.addr), 1],
+            [tr("Website"), d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
+            [tr("Year founded"), d.year, 3],
+            [tr("Revenue last year"), d.rev, 4],
+            [tr("Company size"), WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
+            [tr("Sector"), d.sector, 6],
+            [tr("Licences & standards"), [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],
           ] as [string, React.ReactNode, number][]).map(([k, v, n]) => (
             <div key={k} className="flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0">
               <span className="w-[170px] flex-none text-[#6b7280]">{k}</span>
-              <b className={`flex-1 font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || "Not provided"}</b>
-              <button type="button" className="text-[13px] font-semibold text-[#1e2a4a] underline underline-offset-2" onClick={() => { setFull(n); go(n); }}>Edit</button>
+              <b className={`flex-1 font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || tr("Not provided")}</b>
+              <button type="button" className="text-[13px] font-semibold text-[#1e2a4a] underline underline-offset-2" onClick={() => { setFull(n); go(n); }}>{tr("Edit")}</button>
             </div>
           ))}
         </div>
@@ -295,11 +297,11 @@ export function SellerWizard({
     <div className="-m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
         <span className="text-[14px] font-semibold">{title}</span>
-        <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : "All changes saved"}</span>
+        <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : tr("All changes saved")}</span>
       </div>
       <div className="mx-auto max-w-[680px] px-5 pb-16 pt-10">
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
-          <b className="font-semibold text-[#111827]">{SECTIONS[cur.sec]}</b>
+          <b className="font-semibold text-[#111827]">{tr(SECTIONS[cur.sec])}</b>
           <span>Step {pos + 1} of {shown.length}</span>
         </div>
         <div className="mb-8 h-1 overflow-hidden rounded-full bg-[#e5e7eb]">
@@ -307,22 +309,22 @@ export function SellerWizard({
         </div>
         <div className="rounded-[14px] border border-[#e5e7eb] bg-white px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-            <h2 className="mb-1.5 text-2xl font-bold leading-snug tracking-[-0.015em]">{q.t}</h2>
-            {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{q.h}</p>}
+            <h2 className="mb-1.5 text-2xl font-bold leading-snug tracking-[-0.015em]">{tr(q.t)}</h2>
+            {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{tr(q.h)}</p>}
             {!q.h && <div className="mb-6" />}
             {q.body}
           </div>
           <div className="mt-8 flex items-center gap-2.5">
             <button type="button" onClick={back}
-              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : "Back"}</button>
+              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : tr("Back")}</button>
             {canSkip && (
               <button type="button" className="text-sm font-semibold text-[#6b7280]"
-                onClick={() => { if (cur.id === "web") advance({ web: "" }); else advance(); }}>Skip</button>
+                onClick={() => { if (cur.id === "web") advance({ web: "" }); else advance(); }}>{tr("Skip")}</button>
             )}
             <div className="ml-auto flex items-center gap-2.5">
               {pos > 0 && (
                 <button type="button" onClick={() => setConfirmExit(true)}
-                  className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">Save &amp; exit</button>
+                  className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{tr("Save &amp; exit")}</button>
               )}
               <button type="button" disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
                 onClick={async () => {
@@ -340,7 +342,7 @@ export function SellerWizard({
                   advance();
                 }}
                 className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
-                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? "Back to review" : "Continue"}
+                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? "Back to review" : tr("Continue")}
 
               </button>
             </div>
@@ -349,20 +351,20 @@ export function SellerWizard({
         {confirmExit && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => setConfirmExit(false)}>
             <div role="dialog" aria-modal="true" className="w-full max-w-[400px] rounded-[14px] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold">Save and finish later?</h3>
-              <p className="mt-1 text-[14px] text-[#6b7280]">Your answers are saved. You can continue setup from My Business.</p>
+              <h3 className="text-lg font-bold">{tr("Save and finish later?")}</h3>
+              <p className="mt-1 text-[14px] text-[#6b7280]">{tr("Your answers are saved. You can continue setup from My Business.")}</p>
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
                 <i className="block h-full bg-[#1e2a4a]" style={{ width: `${Math.round((sellerProgress(d, fromSignup).n / sellerProgress(d, fromSignup).N) * 100)}%` }} />
               </div>
               <p className="mt-2 text-[13px] text-[#6b7280]">{sellerProgress(d, fromSignup).n} of {sellerProgress(d, fromSignup).N} questions answered</p>
               <div className="mt-5 flex justify-end gap-2">
-                <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151]">Keep going</button>
-                <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">Save &amp; exit</button>
+                <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151]">{tr("Keep going")}</button>
+                <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">{tr("Save &amp; exit")}</button>
               </div>
             </div>
           </div>
         )}
-        <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">Your company name, address, website and exact figures stay private until you approve a buyer's NDA.</p>
+        <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">{tr("Your company name, address, website and exact figures stay private until you approve a buyer's NDA.")}</p>
       </div>
     </div>
   );

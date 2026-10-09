@@ -1,3 +1,4 @@
+import { tr, useTranslation } from "@/i18n/language";
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -77,8 +78,8 @@ function Choice({ list, value, onPick, cols, icon }: {
               </span>
             )}
             <span>
-              <b className="block text-[15px] font-semibold">{o.label}{o.extra && <span className="ml-1.5 font-normal text-[#6B7280]">({o.extra})</span>}</b>
-              {o.hint && <small className="mt-0.5 block text-[13px] text-[#6B7280]">{o.hint}</small>}
+              <b className="block text-[15px] font-semibold">{tr(o.label)}{o.extra && <span className="ml-1.5 font-normal text-[#6B7280]">({o.extra})</span>}</b>
+              {o.hint && <small className="mt-0.5 block text-[13px] text-[#6B7280]">{tr(o.hint)}</small>}
             </span>
           </button>
         );
@@ -99,7 +100,7 @@ function Checks({ title, note, req, items, value, onChange }: { title: string; n
             <button key={it} type="button" role="checkbox" aria-checked={on} onClick={() => onChange(on ? value.filter((x) => x !== it) : [...value, it])}
               className={`flex min-h-[46px] items-center gap-2.5 rounded-[10px] border px-3 py-2 text-left text-[13.5px] ${on ? "border-[#1E2A4A] bg-[#EEF1F7] dark:bg-[#1B2140]" : "border-[#DCDFE5] bg-white hover:border-[#C3C8D2] dark:border-border dark:bg-background"}`}>
               <span className={`grid h-4 w-4 flex-none place-items-center rounded border-[1.5px] text-white ${on ? "border-[#1E2A4A] bg-[#1E2A4A]" : "border-[#C3C8D2]"}`}>{on && <Check className="h-3 w-3" />}</span>
-              <span>{m ? <>{m[1]}<span className="text-[#9CA3AF]">{m[2]}</span></> : it}</span>
+              <span>{m ? <>{tr(m[1])}<span className="text-[#9CA3AF]">{m[2]}</span></> : tr(it)}</span>
             </button>
           );
         })}
@@ -111,7 +112,7 @@ function Checks({ title, note, req, items, value, onChange }: { title: string; n
 /** Tick-box type cards (a representative's question 2): all seven types, two columns, nothing moves on by itself. */
 function TypeTicks({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   return (
-    <div role="group" aria-label="Investor types" className="grid gap-2.5 sm:grid-cols-2">
+    <div role="group" aria-label={tr("Investor types")} className="grid gap-2.5 sm:grid-cols-2">
       {ALL_TYPES.map((o) => {
         const on = value.includes(o.value);
         const tone = typeTone(o.value);
@@ -120,7 +121,7 @@ function TypeTicks({ value, onChange }: { value: string[]; onChange: (v: string[
             onClick={() => onChange(sortActsFor(on ? value.filter((x) => x !== o.value) : [...value, o.value]))}
             className={`flex min-h-[50px] items-center gap-3.5 rounded-[12px] border px-4 py-3 text-left transition-colors ${on ? "border-[#1E2A4A] bg-[#EEF1F7] dark:bg-[#1B2140]" : "border-[#DCDFE5] bg-white hover:border-[#C3C8D2] dark:border-border dark:bg-background"}`}>
             <span className={`grid h-10 w-10 flex-none place-items-center rounded-[10px] ${tone.bg} ${tone.fg}`}><TypeIcon type={o.value} className="h-5 w-5" /></span>
-            <span className="flex-1"><b className="block text-[15px] font-semibold">{o.label}</b><small className="mt-0.5 block text-[13px] text-[#6B7280]">{o.hint}</small></span>
+            <span className="flex-1"><b className="block text-[15px] font-semibold">{tr(o.label)}</b><small className="mt-0.5 block text-[13px] text-[#6B7280]">{tr(o.hint)}</small></span>
             <span className={`grid h-5 w-5 flex-none place-items-center rounded-[6px] border-2 ${on ? "border-[#1E2A4A] bg-[#1E2A4A] text-white" : "border-[#C3C8D2]"}`}>{on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}</span>
           </button>
         );
@@ -132,6 +133,7 @@ function TypeTicks({ value, onChange }: { value: string[]; onChange: (v: string[
 const bandList = (bands: Band[]) => bands.map((b) => ({ value: b.key, label: b.label, extra: b.baht }));
 
 export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: string }) {
+  useTranslation(); // re-render on language change
   const navigate = useNavigate();
   const qc = useQueryClient();
   const saveFn = useServerFn(saveBuyerWizard);
@@ -197,20 +199,20 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const agent = a.role === "agent";
   const stagesShown = showsStages(a.type, agent ? a.acts : null);
   const errors: Record<string, string | null> = {
-    role: a.role ? null : "Choose one to continue.",
-    type: agent ? (a.acts.length ? null : "Choose at least one to continue.") : a.type && a.type !== INDIVIDUAL_TYPE ? null : "Choose one to continue.",
-    country: a.country ? null : "Choose your country.",
-    city: a.city.trim() ? null : thai ? "Choose your province." : "Add your city.",
-    name: a.name.trim().length >= 2 ? null : "Add your firm's name.",
+    role: a.role ? null : tr("Choose one to continue."),
+    type: agent ? (a.acts.length ? null : tr("Choose at least one to continue.")) : a.type && a.type !== INDIVIDUAL_TYPE ? null : tr("Choose one to continue."),
+    country: a.country ? null : tr("Choose your country."),
+    city: a.city.trim() ? null : thai ? "Choose your province." : tr("Add your city."),
+    name: a.name.trim().length >= 2 ? null : tr("Add your firm's name."),
     year: individual ? null : yearError(a.year),
     reg: individual ? null : regError(a.reg, a.country),
-    web: isValidUrl(a.web) ? null : "Enter a valid website address, e.g. www.yourfirm.com",
-    aum: a.aum ? null : "Choose one to continue.",
-    ticket: a.ticket ? null : "Choose one to continue.",
-    rev: a.rev ? null : "Choose one, or click Skip.",
-    deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : "Pick at least one deal type.",
-    stages: !stagesShown || a.stages.length ? null : "Pick at least one stage.",
-    sectors: a.sectors.length ? null : "Pick at least one industry, or Sector agnostic.",
+    web: isValidUrl(a.web) ? null : tr("Enter a valid website address, e.g. www.yourfirm.com"),
+    aum: a.aum ? null : tr("Choose one to continue."),
+    ticket: a.ticket ? null : tr("Choose one to continue."),
+    rev: a.rev ? null : tr("Choose one, or click Skip."),
+    deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : tr("Pick at least one deal type."),
+    stages: !stagesShown || a.stages.length ? null : tr("Pick at least one stage."),
+    sectors: a.sectors.length ? null : tr("Pick at least one industry, or Sector agnostic."),
     desc: descErr || (leaks.length ? "leak" : null),
   };  const qRef = useRef<HTMLDivElement>(null);
   useFocusNeeded(qRef, `${phase}:${cur}`);
@@ -294,7 +296,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     try { await cap(flush()); } catch { /* flush already toasts */ }
     void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
     void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
-    toast.success(live ? "Your changes are saved." : "Saved as a draft. Continue setup any time from My Company.");
+    toast.success(live ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
     const fallback = window.setTimeout(() => { window.location.href = "/marketplace/my-company"; }, 1500);
     try { await navigate({ to: "/marketplace/my-company" }); window.clearTimeout(fallback); }
     catch { window.location.href = "/marketplace/my-company"; }
@@ -305,7 +307,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
 
   // Enter = Continue (not on buttons/links/textarea).
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter" || phase !== "q") return;
+    if (e.key !== tr("Enter") || phase !== "q") return;
     const t = e.target as HTMLElement;
     if (t.closest("button, a, textarea, [role=combobox], [role=listbox]")) return;
     e.preventDefault();
@@ -317,7 +319,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
 
   // ---------------- questions ----------------
   const Q: Record<QId, { t: React.ReactNode; h: React.ReactNode; body: React.ReactNode; req: boolean }> = {
-    role: { req: true, t: "Which best describes you?", h: "We use it to verify your firm and to know who can act for it.",
+    role: { req: true, t: tr("Which best describes you?"), h: tr("We use it to verify your firm and to know who can act for it."),
       body: <Choice list={ROLES} value={a.role ?? ""} onPick={(v) => {
         const r = v as BuyerRelation;
         const patch: Partial<A> = { role: r };
@@ -341,27 +343,27 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         autoPick("role", patch, server);
       }} /> },
     type: agent
-      ? { req: true, t: "Which types of investor do you act for?", h: "Pick all that apply. Sellers see them on your card.",
+      ? { req: true, t: tr("Which types of investor do you act for?"), h: tr("Pick all that apply. Sellers see them on your card."),
         body: <><TypeTicks value={a.acts} onChange={(v) => set({ acts: v, type: v[0] ?? "" }, { acts_for_types: v })} /><Err m={forced.type && errors.type} /></> }
-      : { req: true, t: "What type of investor is your firm?", h: "Sellers see this, and it sets the artwork on your card.",
+      : { req: true, t: tr("What type of investor is your firm?"), h: tr("Sellers see this, and it sets the artwork on your card."),
         body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
-    loc: { req: true, t: "Where is your firm based?", h: "Sellers see your country and city.",
+    loc: { req: true, t: tr("Where is your firm based?"), h: tr("Sellers see your country and city."),
       body: (
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={lbl} htmlFor="w-country">Country<Req /></label>
+            <label className={lbl} htmlFor="w-country">{tr("Country")}<Req /></label>
             <select id="w-country" aria-required className={inp} value={a.country}
               onChange={(e) => set({ country: e.target.value, city: "", reg: "" }, { country: e.target.value, city: null, registration_no: null })}>
               {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : "City"}<Req /></label>
+            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : tr("City")}<Req /></label>
             {thai ? (
               <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={`${inp} ${errors.city ? "need-fill" : ""} ${show("city") ? errCls : ""}`} value={a.city}
                 onBlur={() => setTouched((t) => ({ ...t, city: true }))}
                 onChange={(e) => set({ city: e.target.value }, { city: e.target.value })}>
-                <option value="">Choose a province</option>
+                <option value="">{tr("Choose a province")}</option>
                 {THAI_PROVINCES_77.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             ) : (
@@ -373,21 +375,21 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           </div>
         </div>
       ) },
-    name: { req: true, t: nameShort && !individual ? "What is your firm's name and registration number?" : "What is the name of your firm?",
+    name: { req: true, t: nameShort && !individual ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
       h: nameShort && !individual ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : `Sellers see "${tName}" instead of your name until they approve your NDA.`,
       body: (
         <div className="space-y-4">
           <div>
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="flex-1">
-                <label className={lbl} htmlFor="w-name">Firm name<Req /></label>
+                <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
                 <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder="e.g. Acme Ventures"
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {})} />
               </div>
               {!individual && !hiddenF.has("year") && (
                 <div className="sm:w-[150px]">
-                  <label className={lbl} htmlFor="w-year">Year founded<Req /></label>
+                  <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /></label>
                   <input id="w-year" aria-required inputMode="numeric" maxLength={4} className={`${inp} ${show("year") ? errCls : ""}`} value={a.year} placeholder="e.g. 2014"
                     onBlur={() => setTouched((t) => ({ ...t, year: true }))}
                     onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, !yearError(v) ? { year_founded: Number(v) } : {}); }} />
@@ -399,7 +401,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           </div>
           {!individual && (
             <div>
-              <label className={lbl} htmlFor="w-reg">{thai ? <>Company Registration Number (เลขทะเบียนนิติบุคคล)<Req /></> : <>Company registration number<Opt /></>}</label>
+              <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
               <input id="w-reg" aria-required={thai} {...(errors.reg ? { "data-need": "1" } : {})} className={`${inp} ${errors.reg ? "need-fill" : ""} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
                 maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : ""}
                 onBlur={() => setTouched((t) => ({ ...t, reg: true }))}
@@ -407,18 +409,18 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               <Err m={show("reg")} />
               <p className="mt-2.5 flex items-start gap-2 text-[13px] text-[#434A5C] dark:text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-[15px] w-[15px] flex-none text-[#15803D]" />
-                <span><b className="font-semibold text-[#151A28] dark:text-foreground">Sellers want genuine buyers, not window shoppers.</b>{" "}
+                <span><b className="font-semibold text-[#151A28] dark:text-foreground">{tr("Sellers want genuine buyers, not window shoppers.")}</b>{" "}
                   {thai ? "We verify your firm with this number, then show sellers a Verified investor badge on your card." : `Adding your registration number in ${a.country} helps us verify your firm.`}</span>
               </p>
             </div>
           )}
-          <p className="flex items-start gap-2 text-[13px] font-medium text-[#B42318]"><Lock className="mt-0.5 h-[15px] w-[15px] flex-none" />Your firm's identity stays confidential until a seller approves your NDA.</p>
+          <p className="flex items-start gap-2 text-[13px] font-medium text-[#B42318]"><Lock className="mt-0.5 h-[15px] w-[15px] flex-none" />{tr("Your firm's identity stays confidential until a seller approves your NDA.")}</p>
         </div>
       ) },
-    web: { req: true, t: "What is your firm's website?", h: "We use it to auto-fill your profile.",
+    web: { req: true, t: tr("What is your firm's website?"), h: tr("We use it to auto-fill your profile."),
       body: (
         <div>
-          <label className={lbl} htmlFor="w-web">Website URL<Req /></label>
+          <label className={lbl} htmlFor="w-web">{tr("Website URL")}<Req /></label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input id="w-web" aria-required autoFocus className={`${inp} ${(a.web.trim() || forced.web) && errors.web ? errCls : ""}`} value={a.web} maxLength={500} placeholder="https://www.yourfirm.com"
               onChange={(e) => { setWebOpened(false); set({ web: e.target.value }, isValidUrl(e.target.value) ? { website_url: normalizeUrl(e.target.value) } : {}); }} />
@@ -430,47 +432,47 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           </div>
           {(a.web.trim() || forced.web) && errors.web ? <Err m={errors.web} />
             : webOpened ? <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#15803D]"><Check className="h-4 w-4" />Opened {normalizeUrl(a.web).replace(/^https?:\/\//, "").split("/")[0]} in a new tab. Make sure it is your firm.</p>
-            : <p className="mt-1.5 text-[13px] text-[#6B7280]">Click Check website to open it in a new tab and make sure it is your firm.</p>}
+            : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
         </div>
       ) },
-    aum: { req: true, t: corp ? "What is your group's annual revenue in $USD?" : "How much does your firm manage (AUM) in $USD?", h: "Sellers see this band, never an exact figure.",
+    aum: { req: true, t: corp ? "What is your group's annual revenue in $USD?" : tr("How much does your firm manage (AUM) in $USD?"), h: tr("Sellers see this band, never an exact figure."),
       body: <><Choice list={bandList(AUM_BANDS)} value={a.aum} onPick={(v) => autoPick("aum", { aum: v }, { aum_band: v })} /><Err m={forced.aum && errors.aum} /></> },
-    ticket: { req: true, t: "What is your average investment per deal in $USD?", h: "Sellers see this range on your card and filter Browse investors by it.",
+    ticket: { req: true, t: tr("What is your average investment per deal in $USD?"), h: tr("Sellers see this range on your card and filter Browse investors by it."),
       body: <><Choice list={bandList(TICKET_BANDS)} value={a.ticket} onPick={(v) => autoPick("ticket", { ticket: v }, { ticket_band: v })} /><Err m={forced.ticket && errors.ticket} /></> },
-    rev: { req: false, t: <>Minimum target company <i>revenue</i> (USD)</>, h: "Enter the minimum annual revenue a company must generate for you to consider it as an acquisition target.",
+    rev: { req: false, t: <>{tr("Minimum target company")} <i>revenue</i> (USD)</>, h: tr("Enter the minimum annual revenue a company must generate for you to consider it as an acquisition target."),
       body: <><Choice list={bandList(REV_BANDS)} value={a.rev} onPick={(v) => autoPick("rev", { rev: v }, { revenue_min_band: v })} /><Err m={forced.rev && errors.rev} /></> },
-    deals: { req: true, t: "What kind of deals do you do?", h: "Pick all that apply. Sellers see these on your card.",
+    deals: { req: true, t: tr("What kind of deals do you do?"), h: tr("Pick all that apply. Sellers see these on your card."),
       body: (
         <div className="space-y-6">
           {peTicked && a.type.toLowerCase().includes("private equity") && (
-            <p className="flex items-start gap-2 rounded-[10px] bg-[#F3F4F6] px-3.5 py-2.5 text-[13px] text-[#434A5C] dark:bg-muted dark:text-muted-foreground"><Info className="mt-0.5 h-4 w-4 flex-none" />We've ticked the usual choices for private equity: Majority stake, Buyout and Thailand. Change them if they don't fit.</p>
+            <p className="flex items-start gap-2 rounded-[10px] bg-[#F3F4F6] px-3.5 py-2.5 text-[13px] text-[#434A5C] dark:bg-muted dark:text-muted-foreground"><Info className="mt-0.5 h-4 w-4 flex-none" />{tr("We've ticked the usual choices for private equity: Majority stake, Buyout and Thailand. Change them if they don't fit.")}</p>
           )}
-          <div><Checks title="Deal types" note="pick at least one" req items={Array.from(new Set([...DEAL_TYPES, ...a.deals]))} value={a.deals}
+          <div><Checks title={tr("Deal types")} note="pick at least one" req items={Array.from(new Set([...DEAL_TYPES, ...a.deals]))} value={a.deals}
             onChange={(v) => set({ deals: v }, { deal_types: v })} /><Err m={forced.deals && errors.deals} /></div>
-          {stagesShown && <div><Checks title="Preferred stages" note="pick at least one" req items={Array.from(new Set([...STAGE_OPTIONS, ...a.stages]))} value={a.stages}
+          {stagesShown && <div><Checks title={tr("Preferred stages")} note="pick at least one" req items={Array.from(new Set([...STAGE_OPTIONS, ...a.stages]))} value={a.stages}
             onChange={(v) => set({ stages: v }, { preferred_stages: v })} /><Err m={forced.deals && errors.stages} /></div>}
-          <Checks title="Geography" note="optional" items={Array.from(new Set([...GEOGRAPHY, ...a.geo]))} value={a.geo} onChange={(v) => set({ geo: v }, { geography: v })} />
+          <Checks title={tr("Geography")} note="optional" items={Array.from(new Set([...GEOGRAPHY, ...a.geo]))} value={a.geo} onChange={(v) => set({ geo: v }, { geography: v })} />
         </div>
       ) },
-    sectors: { req: true, t: "Which industries do you invest in?", h: "Pick up to 5, or Sector agnostic if you look at every industry.",
+    sectors: { req: true, t: tr("Which industries do you invest in?"), h: tr("Pick up to 5, or Sector agnostic if you look at every industry."),
       body: (() => {
         const ag = a.sectors.includes(SECTOR_AGNOSTIC);
         const picks = a.sectors.filter((s) => s !== SECTOR_AGNOSTIC);
         const setS = (v: string[]) => set({ sectors: v }, { preferred_industries: v });
         return (
           <SetSectorPicker mode="multi" value={picks} onChange={(v) => setS([...(ag ? [SECTOR_AGNOSTIC] : []), ...v])}
-            limitMsg="Pick up to 5 industries, or Sector agnostic."
-            agnostic={{ on: ag, onToggle: (on) => setS(on ? [SECTOR_AGNOSTIC, ...picks] : picks), line: "I look at companies in every industry",
-              note: "Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.",
-              summary: <>Sellers see <b className="text-[#151A28] dark:text-foreground">Sector agnostic</b> on your card.</> }}
+            limitMsg={tr("Pick up to 5 industries, or Sector agnostic.")}
+            agnostic={{ on: ag, onToggle: (on) => setS(on ? [SECTOR_AGNOSTIC, ...picks] : picks), line: tr("I look at companies in every industry"),
+              note: tr("Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you."),
+              summary: <>{tr("Sellers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
             error={forced.sectors ? errors.sectors : null} />
         );
       })() },
-    desc: { req: false, t: "How would you describe your firm to sellers?", h: "In one line. Sellers read it before any NDA, so leave out names, websites and contact details.",
+    desc: { req: false, t: tr("How would you describe your firm to sellers?"), h: tr("In one line. Sellers read it before any NDA, so leave out names, websites and contact details."),
       body: (
         <div>
-          <label className={lbl} htmlFor="w-desc">Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span></label>
-          <textarea id="w-desc" rows={3} maxLength={140} autoFocus value={a.desc} placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans"
+          <label className={lbl} htmlFor="w-desc">{tr("Description")} <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span></label>
+          <textarea id="w-desc" rows={3} maxLength={140} autoFocus value={tr(a.desc)} placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans"
             onBlur={() => setTouched((t) => ({ ...t, desc: true }))}
             onChange={(e) => set({ desc: e.target.value }, { description: e.target.value })}
             className={`w-full rounded-[12px] border border-[#DCDFE5] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#1E2A4A] focus:shadow-[0_0_0_3px_rgba(30,42,74,.12)] dark:border-border dark:bg-background ${(touched.desc || forced.desc) && descErr ? errCls : ""}`} />
@@ -478,24 +480,24 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <span className="text-[#B42318]">{(touched.desc || forced.desc) && descErr}</span>
             <span className="text-[#6B7280]">{a.desc.length} / 140</span>
           </div>
-          {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">Your description mentions <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
+          {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
           <div className="mt-5 rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">
-            <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">How sellers see you</div>
-            <PublicInvestorCard empty="Not added" i={{
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{tr("How sellers see you")}</div>
+            <PublicInvestorCard empty={tr("Not added")} i={{
               refNo: data.buyer.ref_no, codeName: tName, name: null, type: tName, city: a.city || null, country: a.country || null,
-              description: a.desc.trim() || "Your description appears here.", sectors: a.sectors, stages: a.stages, dealTypes: a.deals,
+              description: a.desc.trim() || tr("Your description appears here."), sectors: a.sectors, stages: a.stages, dealTypes: a.deals,
               geography: a.geo.join(", ") || null, verified: false, proofOfFunds: false, ticketLabel: null, aumLabel: null, revLabel: null,
               aumBand: a.aum || null, ticketBand: a.ticket || null, revBand: a.rev || null, relation: a.role, actsFor: agent ? a.acts : [],
             }} />
           </div>
         </div>
       ) },
-    review: { req: false, t: "Review your answers", h: "Check them, then we'll fill in the rest of your profile.",
+    review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
       body: <Review a={a} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
         onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[step.id];
-  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "desc" ? "Back to your profile" : fromReview ? "Back to review" : "Continue";
+  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "desc" ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
   const continueOk = cur === "review" ? allValid : qValid(cur);
 
   // ---------------- layout ----------------
@@ -503,14 +505,14 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     <div className="sticky top-0 z-20 flex h-[60px] items-center gap-3 border-b border-[#E9EBF0] bg-white px-5 dark:border-border dark:bg-card">
       <img src={logoBlack} alt="PitchSnack" className="h-6 w-auto dark:invert" />
       <span className="h-5 w-px bg-[#E9EBF0] dark:bg-border" />
-      <span className="text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground"><span className="hidden sm:inline">Investor Profile </span>Setup Wizard</span>
+      <span className="text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground"><span className="hidden sm:inline">{tr("Investor Profile")} </span>{tr("Setup Wizard")}</span>
       <span className="ml-auto inline-flex items-center gap-1.5 text-[12.5px] text-[#6B7280]">
-        {saving === "saving" ? <><span className="h-2 w-2 rounded-full bg-[#F6A823]" />Saving…</> : saving === "saved" ? <><Check className="h-3.5 w-3.5 text-[#15803D]" />Draft saved</> : null}
+        {saving === "saving" ? <><span className="h-2 w-2 rounded-full bg-[#F6A823]" />{tr("Saving…")}</> : saving === "saved" ? <><Check className="h-3.5 w-3.5 text-[#15803D]" />{tr("Draft saved")}</> : null}
       </span>
-      <button type="button" onClick={saveExit} disabled={exiting} aria-label="Save and exit setup"
+      <button type="button" onClick={saveExit} disabled={exiting} aria-label={tr("Save and exit setup")}
         className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[13px] font-semibold text-[#434A5C] transition-colors hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 dark:border-border dark:bg-background dark:text-foreground">
         {exiting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-        <span className="hidden sm:inline">{exiting ? "Exiting…" : "Save & exit"}</span>
+        <span className="hidden sm:inline">{exiting ? "Exiting…" : tr("Save & exit")}</span>
       </button>
     </div>
   );
@@ -539,15 +541,15 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               {q.body}
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">
-              <button type="button" className={btnO} disabled={idx === 0} onClick={back}>Back</button>
-              {optional && <button type="button" className="px-2 text-[15px] font-semibold text-[#6B7280]" onClick={skip}>Skip</button>}
+              <button type="button" className={btnO} disabled={idx === 0} onClick={back}>{tr("Back")}</button>
+              {optional && <button type="button" className="px-2 text-[15px] font-semibold text-[#6B7280]" onClick={skip}>{tr("Skip")}</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-                <button type="button" className={`${btnO} flex-1 cursor-pointer hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait sm:flex-none`} disabled={exiting} onClick={saveExit}>{exiting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Saving…</span> : <>Save &amp; exit</>}</button>
+                <button type="button" className={`${btnO} flex-1 cursor-pointer hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait sm:flex-none`} disabled={exiting} onClick={saveExit}>{exiting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr("Saving…")}</span> : <>{tr("Save &amp; exit")}</>}</button>
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk} onClick={tryContinue}>{continueLabel}</button>
               </div>
             </div>
           </div>
-          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">Your firm's name, website and exact figures stay private until a seller approves your NDA.</p>
+          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{tr("Your firm's name, website and exact figures stay private until a seller approves your NDA.")}</p>
         </div>
       )}
       {phase === "enrich" && (
@@ -569,31 +571,31 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
   const shown = new Set(steps.map((s) => s.id));
   type Row = [string, React.ReactNode, QId, "req" | "opt", string | null, string?];
   const groups: [string, Row[]][] = [
-    ["About you", [["Your role", ROLES.find((r) => r.value === a.role)?.label, "role", "req", errors.role]]],
-    ["About the firm", [
+    [tr("About you"), [[tr("Your role"), ROLES.find((r) => r.value === a.role)?.label, "role", "req", errors.role]]],
+    [tr("About the firm"), [
       ...(shown.has("type") ? [a.role === "agent"
-        ? ["Acts for", a.acts.map(typeLabel).join(", "), "type", "req", errors.type] as Row
-        : ["Investor type", WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
-      ["Based in", a.city ? `${a.city}, ${a.country}` : "", "loc", "req", errors.city],
-      ["Firm name", a.name, "name", "req", errors.name, "🔒 After NDA"],
+        ? [tr("Acts for"), a.acts.map(typeLabel).join(", "), "type", "req", errors.type] as Row
+        : [tr("Investor type"), WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
+      [tr("Based in"), a.city ? `${a.city}, ${a.country}` : "", "loc", "req", errors.city],
+      [tr("Firm name"), a.name, "name", "req", errors.name, "🔒 After NDA"],
       ...(!individual ? [
-        ["Year founded", a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,
-        ["Registration number", a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
+        [tr("Year founded"), a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,
+        [tr("Registration number"), a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
       ] : []),
-      ["Website", a.web, "web", "req", errors.web, "🔒 After NDA"],
+      [tr("Website"), a.web, "web", "req", errors.web, "🔒 After NDA"],
     ]],
-    ["Fund & ticket", [
-      ...(shown.has("aum") ? [[corp ? "Group revenue" : "AUM", bandText(a.aum), "aum", "req", errors.aum, "Range"] as Row] : []),
-      ["Average investment", bandText(a.ticket), "ticket", "req", errors.ticket, "Range"],
+    [tr("Fund & ticket"), [
+      ...(shown.has("aum") ? [[corp ? "Group revenue" : "AUM", bandText(a.aum), "aum", "req", errors.aum, tr("Range")] as Row] : []),
+      [tr("Average investment"), bandText(a.ticket), "ticket", "req", errors.ticket, tr("Range")],
     ]],
-    ["Buying Requirement", [
-      ["Min. target revenue", bandText(a.rev), "rev", "opt", null],
-      ["Deal types", a.deals.join(", "), "deals", "req", errors.deals],
-      ...(stagesShown ? [["Preferred stages", a.stages.join(", "), "deals", "req", errors.stages] as Row] : []),
-      ["Geography", a.geo.join(", "), "deals", "opt", null],
-      ["Industries", a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors],
+    [tr("Buying Requirement"), [
+      [tr("Min. target revenue"), bandText(a.rev), "rev", "opt", null],
+      [tr("Deal types"), a.deals.join(", "), "deals", "req", errors.deals],
+      ...(stagesShown ? [[tr("Preferred stages"), a.stages.join(", "), "deals", "req", errors.stages] as Row] : []),
+      [tr("Geography"), a.geo.join(", "), "deals", "opt", null],
+      [tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors],
     ]],
-    ["Public profile", [["Description", a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]],
+    [tr("Public profile"), [[tr("Description"), a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]],
   ];
   return (
     <div className="space-y-5">
@@ -603,9 +605,9 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
           <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
             {rows.map(([k, v, id, kind, err, tag], i) => {
               const empty = !v;
-              const status = kind === "req" && (empty || err) ? <b className="font-semibold text-[#B42318]">Missing</b>
-                : id === "desc" && err ? <b className="font-semibold text-[#B42318]">Needs a fix</b>
-                : empty ? <span className="text-[#9CA3AF]">Not set</span> : null;
+              const status = kind === "req" && (empty || err) ? <b className="font-semibold text-[#B42318]">{tr("Missing")}</b>
+                : id === "desc" && err ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b>
+                : empty ? <span className="text-[#9CA3AF]">{tr("Not set")}</span> : null;
               return (
                 <div key={k + i} className="flex items-start gap-3 border-b border-[#F0F1F4] px-4 py-3 text-[14px] last:border-0 dark:border-border">
                   <span className="w-[150px] flex-none text-[#6B7280]">{k}</span>
@@ -613,7 +615,7 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
                     {status ?? v}
                     {!status && tag && <span className={`ml-2 rounded px-1.5 py-0.5 text-[10.5px] font-semibold ${tag === "Range" ? "bg-[#EEF0FF] text-[#4338CA]" : "bg-muted text-muted-foreground"}`}>{tag}</span>}
                   </span>
-                  <button type="button" className="text-[13px] font-semibold text-[#2563EB] hover:underline" onClick={() => onEdit(id)}>Edit</button>
+                  <button type="button" className="text-[13px] font-semibold text-[#2563EB] hover:underline" onClick={() => onEdit(id)}>{tr("Edit")}</button>
                 </div>
               );
             })}
@@ -643,18 +645,18 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   const found = (r: EnrichInvestorResult | null) => {
     const site = [r?.bio && "description", r?.yearFounded && a.role === "individual" && !a.year && "year founded"].filter(Boolean) as string[];
     return {
-      site: site.length ? `Found ${site.join(" and ")}` : "Nothing new found",
-      linkedin: r?.linkedinUrl ? "Found LinkedIn URL" : "No company page found",
-      registry: r?.businessAddress ? "Found address" : "Nothing new found",
-      news: "No recent deals found",
+      site: site.length ? `Found ${site.join(" and ")}` : tr("Nothing new found"),
+      linkedin: r?.linkedinUrl ? "Found LinkedIn URL" : tr("No company page found"),
+      registry: r?.businessAddress ? "Found address" : tr("Nothing new found"),
+      news: tr("No recent deals found"),
     };
   };
   const f = found(res);
   const sources: [string, string, string, boolean][] = [
-    ["Your website", domain, f.site, true],
-    ["LinkedIn", "Company page", f.linkedin, true],
-    ["Company registry", `Registration ${a.reg}`, f.registry, thaiReg],
-    ["News", "Recent deals and press", f.news, true],
+    [tr("Your website"), domain, f.site, true],
+    [tr("LinkedIn"), tr("Company page"), f.linkedin, true],
+    [tr("Company registry"), `Registration ${a.reg}`, f.registry, thaiReg],
+    [tr("News"), tr("Recent deals and press"), f.news, true],
   ];
   const n = res ? Object.entries(res).filter(([k, v]) => k !== "_debug" && v != null && (Array.isArray(v) ? v.length : String(v).trim())).length : 0;
   useEffect(() => {
@@ -664,9 +666,9 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   }, [state, res, onDone]);
   return (
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-      {header("Auto Enrich", "Almost done", 100)}
+      {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? "Your profile is filled in" : "Filling in your profile"}</h1>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? "Your profile is filled in" : tr("Filling in your profile")}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{state === "done" ? `We found ${n} details. Check them in the next step.` : `We're reading ${domain} and public records. This takes a few seconds.`}</p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {sources.filter((s) => s[3]).map(([t, sub, what]) => (
@@ -678,10 +680,10 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
           ))}
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-2.5">
-          <button type="button" className={btnO} onClick={onBack}>Back to answers</button>
+          <button type="button" className={btnO} onClick={onBack}>{tr("Back to answers")}</button>
           <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>Save &amp; exit</button>
-            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={state !== "done"} onClick={() => onDone(res)}>Review &amp; complete</button>
+            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>{tr("Save &amp; exit")}</button>
+            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={state !== "done"} onClick={() => onDone(res)}>{tr("Review &amp; complete")}</button>
           </div>
         </div>
       </div>
@@ -704,10 +706,10 @@ function Complete({ header, enrich, answered, onBack, onSaved }: {
   if (!answered.desc.trim()) delete sources.description;
   return (
     <div className="mx-auto max-w-[880px] px-4 pb-16 pt-8 sm:pt-10">
-      {header("Review & complete", "Last step", 100)}
+      {header(tr("Review & complete"), tr("Last step"), 100)}
       <div className="mt-[22px] sm:mt-[34px]">
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>Check your profile and save it</h1>
-        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">Your answers and what Auto Enrich found are filled in. Change anything you need.</p>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{tr("Check your profile and save it")}</h1>
+        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr("Your answers and what Auto Enrich found are filled in. Change anything you need.")}</p>
         <BuyerInvestorForm data={data} setup={{ onBack, sources, onSaved, enrich }} />
       </div>
     </div>
