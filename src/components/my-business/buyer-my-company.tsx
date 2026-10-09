@@ -152,6 +152,7 @@ export function BuyerMyCompany() {
   const [layout, setLayout] = useState<Layout>("profiles");
   const inv = useBuyerInvestor();
   const navigate = useNavigate();
+  const openProfileEdit = useOpenProfileEdit();
   const { data: session } = useSessionContext();
   const role = session?.user?.accountRole ?? null;
   const oneCompany = role === "seller" || role === "buyer" || role === "advisor";
@@ -455,6 +456,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const { iv, inv, props } = useOwnCard(p, org);
   const title = typeName(org.type);
   const navigate = useNavigate();
+  const openProfileEdit = useOpenProfileEdit();
   const rel = (inv.data?.buyer.relation ?? null) as BuyerRelation | null;
   const prog = buyerProgressFor(rel, iv);
   const setupDone = !!iv?.setup_done_at;
