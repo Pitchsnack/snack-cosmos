@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { FirmCard } from "@/components/advisor/advisor-firm-card";
 import { ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
+import { useFocusNeeded } from "@/components/common/need-fill";
 import { AddressBox, Err, FeeControl, LogoDrop, Opt, Req, addrErrors, logoFileError, nowrapPct, useLogoUpload, type Addr, type LogoState } from "@/components/advisor/advisor-firm-fields";
 import { FirmEditForm, type FirmForm, type SourceTag } from "@/components/advisor/advisor-firm-edit";
 import { enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "@/lib/advisor-firm.functions";
@@ -354,7 +355,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           <div>
             <label className={lbl} htmlFor="w-city">{thai ? "City / province" : "City"}<Req /></label>
             {thai ? (
-              <select id="w-city" aria-required className={cn(inp, "pr-8", show("city") && errCls)} value={a.city} onBlur={blur("city")}
+              <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={cn(inp, "pr-8", errors.city && "need-fill", show("city") && errCls)} value={a.city} onBlur={blur("city")}
                 onChange={(e) => {
                   const v = e.target.value;
                   const prov = !a.addr.province || a.addr.province === a.city ? v : a.addr.province;
@@ -364,7 +365,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
                 {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             ) : (
-              <input id="w-city" aria-required maxLength={80} placeholder="e.g. Singapore" className={cn(inp, show("city") && errCls)} value={a.city} onBlur={blur("city")}
+              <input id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} maxLength={80} placeholder="e.g. Singapore" className={cn(inp, errors.city && "need-fill", show("city") && errCls)} value={a.city} onBlur={blur("city")}
                 onChange={(e) => set({ city: e.target.value }, { city: e.target.value || null, addr_district: e.target.value || null })} />
             )}
             <Err m={show("city")} />
@@ -378,7 +379,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           <div className={cn("grid gap-4", !hid("year", "name") && "sm:grid-cols-[1fr_150px]")}>
             <div>
               <label className={lbl} htmlFor="w-name">Firm name<Req /></label>
-              <input id="w-name" data-f="name" aria-required maxLength={80} placeholder="e.g. Acme Advisory" className={cn(inp, show("name") && errCls)} value={a.name} onBlur={blur("name")}
+              <input id="w-name" data-f="name" aria-required maxLength={80} placeholder="e.g. Acme Advisory" className={cn(inp, errors.name && "need-fill", show("name") && errCls)} {...(errors.name ? { "data-need": "1" } : {})} value={a.name} onBlur={blur("name")}
                 onChange={(e) => set({ name: e.target.value }, { name: e.target.value })} />
               <Err m={show("name")} />
             </div>
@@ -392,7 +393,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           <div className="mt-4">
             <label className={lbl} htmlFor="w-reg">{thai ? <>Company Registration Number (เลขทะเบียนนิติบุคคล)<Req /></> : <>Company registration number<Opt /></>}</label>
             <input id="w-reg" data-f="reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : undefined}
-              className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] focus:border-[#1E2A4A] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errCls)}
+              className={cn(inp, errors.reg && "need-fill", show("reg") && errCls)} {...(errors.reg ? { "data-need": "1" } : {})}
               value={a.reg} onBlur={blur("reg")}
               onChange={(e) => { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50); set({ reg: v }, { registration_no: v || null }); }} />
             <Err m={show("reg")} />
@@ -403,7 +404,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             </p>
           </div>
           <div className="mt-6">
-            <AddressBox a={a.addr} thai={thai} city={a.city} note="Sellers and buyers see it on your profile as a link that opens a map."
+            <AddressBox need a={a.addr} thai={thai} city={a.city} note="Sellers and buyers see it on your profile as a link that opens a map."
               onCity={(v) => set({ city: v }, { city: v || null, addr_district: v || null })} onChange={setAddr}
               show={(k) => show(`a-${k}`)} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           </div>
@@ -607,7 +608,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
           {header(SECTION[cur], `Step ${idx + 1} of ${shown.length}`, ((idx + 1) / shown.length) * 100)}
           <div className={card} ref={cardRef}>
-            <div key={cur} className="animate-in fade-in duration-200">
+            <div key={cur} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
                 {q.t}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
               </h1>
