@@ -220,12 +220,12 @@ export function LogoDrop({ logo, onFile, onRemove, error, busy }: {
       >
         {pick}
         <div className={cn("grid h-[88px] w-[88px] shrink-0 place-items-center overflow-hidden rounded-[18px]", has ? "border border-[#E3E6EB] bg-white" : "bg-[#EEF0F4] dark:bg-muted")}>
-          {has ? <img src={logo.url!} alt="Your logo" className="h-full w-full object-contain" /> : <ImageIcon className="h-7 w-7 text-[#9CA3AF]" />}
+          {has ? <img src={logo.url!} alt=tr("Your logo") className="h-full w-full object-contain" /> : <ImageIcon className="h-7 w-7 text-[#9CA3AF]" />}
         </div>
         <div className="min-w-0 flex-1">
           {has ? (
             <>
-              <div className="truncate text-[15px] font-semibold">{logo.source === "enrich" ? "Found on your website" : logo.name ?? "Your logo"}</div>
+              <div className="truncate text-[15px] font-semibold">{logo.source === "enrich" ? "Found on your website" : logo.name ?? tr("Your logo")}</div>
               <div className="text-[13px] text-[#6B7280]">{logo.source === "enrich" ? "Replace it with your own file if you like." : `${logo.sizeKb != null ? `${logo.sizeKb} KB · ` : ""}sellers and buyers see it on your card`}</div>
               <div className="mt-2.5 flex items-center gap-3">
                 <button type="button" className={btn} disabled={busy} onClick={() => input.current?.click()}><Upload className="h-4 w-4" /> Replace</button>

@@ -179,7 +179,7 @@ export function SellerWizard({
             <p className="mt-1.5 text-[13px] text-[#6b7280]">Used to verify your company.{d.reg && d.reg.length !== 13 ? ` ${d.reg.length}/13 digits.` : ""}</p></div>
           <div className="pt-2">
             <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}
-              show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : "The postal code has 5 digits.", unit: null } as Record<string, string | null>)[k] ?? null : null)}
+              show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : tr("The postal code has 5 digits."), unit: null } as Record<string, string | null>)[k] ?? null : null)}
               onBlur={(k) => setTouched((t) => ({ ...t, [k]: true }))}
               note={tr("Buyers see only the province until you approve their NDA.")} />
           </div>
@@ -268,20 +268,20 @@ export function SellerWizard({
       body: (
         <div className="rounded-[10px] border border-[#e5e7eb]">
           {([
-            ["You are", SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
-            ["Company name", d.name, 1],
-            ["Registration no.", d.reg, 1],
-            ["Business address", addressLine(d.addr), 1],
-            ["Website", d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
-            ["Year founded", d.year, 3],
-            ["Revenue last year", d.rev, 4],
-            ["Company size", WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
-            ["Sector", d.sector, 6],
-            ["Licences & standards", [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],
+            [tr("You are"), SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
+            [tr("Company name"), d.name, 1],
+            [tr("Registration no."), d.reg, 1],
+            [tr("Business address"), addressLine(d.addr), 1],
+            [tr("Website"), d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
+            [tr("Year founded"), d.year, 3],
+            [tr("Revenue last year"), d.rev, 4],
+            [tr("Company size"), WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
+            [tr("Sector"), d.sector, 6],
+            [tr("Licences & standards"), [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],
           ] as [string, React.ReactNode, number][]).map(([k, v, n]) => (
             <div key={k} className="flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0">
               <span className="w-[170px] flex-none text-[#6b7280]">{k}</span>
-              <b className={`flex-1 font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || "Not provided"}</b>
+              <b className={`flex-1 font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || tr("Not provided")}</b>
               <button type="button" className="text-[13px] font-semibold text-[#1e2a4a] underline underline-offset-2" onClick={() => { setFull(n); go(n); }}>{tr("Edit")}</button>
             </div>
           ))}
@@ -295,7 +295,7 @@ export function SellerWizard({
     <div className="-m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
         <span className="text-[14px] font-semibold">{title}</span>
-        <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : "All changes saved"}</span>
+        <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : tr("All changes saved")}</span>
       </div>
       <div className="mx-auto max-w-[680px] px-5 pb-16 pt-10">
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
@@ -314,7 +314,7 @@ export function SellerWizard({
           </div>
           <div className="mt-8 flex items-center gap-2.5">
             <button type="button" onClick={back}
-              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : "Back"}</button>
+              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : tr("Back")}</button>
             {canSkip && (
               <button type="button" className="text-sm font-semibold text-[#6b7280]"
                 onClick={() => { if (cur.id === "web") advance({ web: "" }); else advance(); }}>{tr("Skip")}</button>
@@ -340,7 +340,7 @@ export function SellerWizard({
                   advance();
                 }}
                 className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
-                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? "Back to review" : "Continue"}
+                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? "Back to review" : tr("Continue")}
 
               </button>
             </div>

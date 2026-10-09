@@ -754,8 +754,8 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
   const rows: { icon: React.ReactNode; t: string; sub: string; found: string | null; show: boolean }[] = [
     { icon: <Globe className="h-4 w-4" />, t: tr("Your website"), sub: domain, found: res?.logo ? "Logo" : null, show: true },
-    { icon: <Landmark className="h-4 w-4" />, t: tr("Company registry"), sub: `Registration ${a.reg}`, found: [res?.legalName && "Legal name", res?.thaiName && "Thai name"].filter(Boolean).join(" and ") || null, show: thaiReg },
-    { icon: <Newspaper className="h-4 w-4" />, t: tr("News"), sub: "Recent deals and press", found: null, show: true },
+    { icon: <Landmark className="h-4 w-4" />, t: tr("Company registry"), sub: `Registration ${a.reg}`, found: [res?.legalName && tr("Legal name"), res?.thaiName && tr("Thai name")].filter(Boolean).join(" and ") || null, show: thaiReg },
+    { icon: <Newspaper className="h-4 w-4" />, t: tr("News"), sub: tr("Recent deals and press"), found: null, show: true },
   ].filter((r) => r.show);
   const n = res?.found ?? 0;
   useEffect(() => {
@@ -765,11 +765,11 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   }, [done, res, onDone]);
   return (
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-      {header("Auto Enrich", "Almost done", 100)}
+      {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{done ? "Your profile is filled in" : "Filling in your profile"}</h1>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{done ? "Your profile is filled in" : tr("Filling in your profile")}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">
-          {!done ? `We're reading ${domain} and public records. This takes a few seconds.` : n ? `We found ${n} detail${n === 1 ? "" : "s"}. Check them in the next step.` : "Nothing new to add. Check your profile in the next step."}
+          {!done ? `We're reading ${domain} and public records. This takes a few seconds.` : n ? `We found ${n} detail${n === 1 ? "" : "s"}. Check them in the next step.` : tr("Nothing new to add. Check your profile in the next step.")}
         </p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {rows.map((r, i) => (

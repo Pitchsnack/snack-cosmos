@@ -569,31 +569,31 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
   const shown = new Set(steps.map((s) => s.id));
   type Row = [string, React.ReactNode, QId, "req" | "opt", string | null, string?];
   const groups: [string, Row[]][] = [
-    ["About you", [["Your role", ROLES.find((r) => r.value === a.role)?.label, "role", "req", errors.role]]],
-    ["About the firm", [
+    [tr("About you"), [[tr("Your role"), ROLES.find((r) => r.value === a.role)?.label, "role", "req", errors.role]]],
+    [tr("About the firm"), [
       ...(shown.has("type") ? [a.role === "agent"
-        ? ["Acts for", a.acts.map(typeLabel).join(", "), "type", "req", errors.type] as Row
-        : ["Investor type", WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
-      ["Based in", a.city ? `${a.city}, ${a.country}` : "", "loc", "req", errors.city],
-      ["Firm name", a.name, "name", "req", errors.name, "🔒 After NDA"],
+        ? [tr("Acts for"), a.acts.map(typeLabel).join(", "), "type", "req", errors.type] as Row
+        : [tr("Investor type"), WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
+      [tr("Based in"), a.city ? `${a.city}, ${a.country}` : "", "loc", "req", errors.city],
+      [tr("Firm name"), a.name, "name", "req", errors.name, "🔒 After NDA"],
       ...(!individual ? [
-        ["Year founded", a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,
-        ["Registration number", a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
+        [tr("Year founded"), a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,
+        [tr("Registration number"), a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
       ] : []),
-      ["Website", a.web, "web", "req", errors.web, "🔒 After NDA"],
+      [tr("Website"), a.web, "web", "req", errors.web, "🔒 After NDA"],
     ]],
-    ["Fund & ticket", [
-      ...(shown.has("aum") ? [[corp ? "Group revenue" : "AUM", bandText(a.aum), "aum", "req", errors.aum, "Range"] as Row] : []),
-      ["Average investment", bandText(a.ticket), "ticket", "req", errors.ticket, "Range"],
+    [tr("Fund & ticket"), [
+      ...(shown.has("aum") ? [[corp ? "Group revenue" : "AUM", bandText(a.aum), "aum", "req", errors.aum, tr("Range")] as Row] : []),
+      [tr("Average investment"), bandText(a.ticket), "ticket", "req", errors.ticket, tr("Range")],
     ]],
-    ["Buying Requirement", [
-      ["Min. target revenue", bandText(a.rev), "rev", "opt", null],
-      ["Deal types", a.deals.join(", "), "deals", "req", errors.deals],
-      ...(stagesShown ? [["Preferred stages", a.stages.join(", "), "deals", "req", errors.stages] as Row] : []),
-      ["Geography", a.geo.join(", "), "deals", "opt", null],
-      ["Industries", a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors],
+    [tr("Buying Requirement"), [
+      [tr("Min. target revenue"), bandText(a.rev), "rev", "opt", null],
+      [tr("Deal types"), a.deals.join(", "), "deals", "req", errors.deals],
+      ...(stagesShown ? [[tr("Preferred stages"), a.stages.join(", "), "deals", "req", errors.stages] as Row] : []),
+      [tr("Geography"), a.geo.join(", "), "deals", "opt", null],
+      [tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors],
     ]],
-    ["Public profile", [["Description", a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]],
+    [tr("Public profile"), [[tr("Description"), a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]],
   ];
   return (
     <div className="space-y-5">
@@ -643,18 +643,18 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   const found = (r: EnrichInvestorResult | null) => {
     const site = [r?.bio && "description", r?.yearFounded && a.role === "individual" && !a.year && "year founded"].filter(Boolean) as string[];
     return {
-      site: site.length ? `Found ${site.join(" and ")}` : "Nothing new found",
-      linkedin: r?.linkedinUrl ? "Found LinkedIn URL" : "No company page found",
-      registry: r?.businessAddress ? "Found address" : "Nothing new found",
-      news: "No recent deals found",
+      site: site.length ? `Found ${site.join(" and ")}` : tr("Nothing new found"),
+      linkedin: r?.linkedinUrl ? "Found LinkedIn URL" : tr("No company page found"),
+      registry: r?.businessAddress ? "Found address" : tr("Nothing new found"),
+      news: tr("No recent deals found"),
     };
   };
   const f = found(res);
   const sources: [string, string, string, boolean][] = [
-    ["Your website", domain, f.site, true],
-    ["LinkedIn", "Company page", f.linkedin, true],
-    ["Company registry", `Registration ${a.reg}`, f.registry, thaiReg],
-    ["News", "Recent deals and press", f.news, true],
+    [tr("Your website"), domain, f.site, true],
+    [tr("LinkedIn"), tr("Company page"), f.linkedin, true],
+    [tr("Company registry"), `Registration ${a.reg}`, f.registry, thaiReg],
+    [tr("News"), tr("Recent deals and press"), f.news, true],
   ];
   const n = res ? Object.entries(res).filter(([k, v]) => k !== "_debug" && v != null && (Array.isArray(v) ? v.length : String(v).trim())).length : 0;
   useEffect(() => {
@@ -664,9 +664,9 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   }, [state, res, onDone]);
   return (
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-      {header("Auto Enrich", "Almost done", 100)}
+      {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? "Your profile is filled in" : "Filling in your profile"}</h1>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? "Your profile is filled in" : tr("Filling in your profile")}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{state === "done" ? `We found ${n} details. Check them in the next step.` : `We're reading ${domain} and public records. This takes a few seconds.`}</p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {sources.filter((s) => s[3]).map(([t, sub, what]) => (
@@ -695,7 +695,7 @@ function Complete({ header, enrich, answered, onBack, onSaved }: {
   const qc = useQueryClient();
   const data = qc.getQueryData<Data>(BUYER_INVESTOR_KEY);
   if (!data) return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-[#6B7280]" /></div>;
-  const ans: SourceTag = "Your answer";
+  const ans: SourceTag = tr("Your answer");
   const sources: Record<string, SourceTag> = {
     investor_name: ans, investor_type: ans, year_founded: ans, registration_no: ans, aum_band: ans, ticket_band: ans,
     revenue_min_band: ans, deal_types: ans, geography: ans, preferred_industries: ans, description: ans,
@@ -704,7 +704,7 @@ function Complete({ header, enrich, answered, onBack, onSaved }: {
   if (!answered.desc.trim()) delete sources.description;
   return (
     <div className="mx-auto max-w-[880px] px-4 pb-16 pt-8 sm:pt-10">
-      {header("Review & complete", "Last step", 100)}
+      {header(tr("Review & complete"), tr("Last step"), 100)}
       <div className="mt-[22px] sm:mt-[34px]">
         <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{tr("Check your profile and save it")}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr("Your answers and what Auto Enrich found are filled in. Change anything you need.")}</p>
