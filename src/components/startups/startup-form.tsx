@@ -286,6 +286,10 @@ export function StartupForm({
   const [companyTypeReset, setCompanyTypeReset] = useState(false);
   const [companyTypeSource, setCompanyTypeSource] = useState<string>((startup as any)?.company_type_source ?? "account");
   const create = useServerFn(createStartup);
+  const saveHidden = useServerFn(saveHiddenProfile);
+  const setListingImage = useServerFn(setMyListingImage);
+  /** Sector image picked in Listing Identity (undefined = unchanged). */
+  const [imagePick, setImagePick] = useState<string | null | undefined>(undefined);
   const update = useServerFn(updateStartup);
   const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
@@ -468,6 +472,14 @@ export function StartupForm({
 
   // Logo + Media — hydrated from persisted paths in edit mode.
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMediaState(startup));
+
+  // Edit information › Public view: the listing draft, saved by the same Save.
+  const listingSource = useMemo<ListingSource | undefined>(
+    () => (popup && startup ? ({ ...(startup as unknown as ListingSource), sector, city, headquarters, product_tags: productTags, market_tags: marketTags, people: popup.facts?.people ?? [] } as ListingSource) : undefined),
+    [popup?.facts, startup, sector, city, headquarters, productTags, marketTags], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const pd = usePublicDraft(popup?.row ?? null, popup?.facts, listingSource);
+  const [nameErr, setNameErr] = useState(false);
 
   // Ownership (create only — required by current API)
   // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
@@ -657,7 +669,7 @@ export function StartupForm({
   const updateM = useMutation({
     mutationFn: async () => {
       const { logoPath, media: resolvedMedia } = await uploadAllForStartup(startup!.id);
-      return update({
+      const res = await update({
         data: {
           id: startup!.id,
           startupName,
@@ -672,8 +684,28 @@ export function StartupForm({
           ...buildProfileBase(),
         },
       });
+      if (popup?.row) {
+        if (pd.changedFromRow) await saveHidden({ data: { startupId: startup!.id, draft: pd.payload } });
+        const sectorChanged = (sector ?? null) !== (startup!.sector ?? null);
+        if (imagePick !== undefined || sectorChanged) {
+          await setListingImage({ data: { startupId: startup!.id, imageId: imagePick ?? null } });
+        }
+      }
+      return res;
     },
     onSuccess: async () => {
+      if (popup) {
+        toast.success(tr("Changes saved.", "บันทึกการเปลี่ยนแปลงแล้ว"));
+        await Promise.all([
+          qc.invalidateQueries({ queryKey: ["startup", startup!.id] }),
+          qc.invalidateQueries({ queryKey: ["startups"] }),
+          qc.invalidateQueries({ queryKey: ["hidden-profiles"] }),
+          qc.invalidateQueries({ queryKey: ["hidden-profile-facts", startup!.id] }),
+        ]);
+        guard.markSaved();
+        editCtx?.done();
+        return;
+      }
       // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
       void investorStartupLinksAdapter.saveStartupInvestorRelationships(startup!.id, investorLinks);
       toast.success("Saved");
@@ -730,6 +762,9 @@ export function StartupForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startup?.id]);
   const isDirty = initialSnapshot !== "" && currentSnapshot !== initialSnapshot;
+  const popupDirty = isDirty || pd.dirty || imagePick !== undefined
+    || JSON.stringify([regulatoryLicenses, isoStandards, sector, businessModel]) !== JSON.stringify([startup?.regulatory_licenses ?? [], startup?.iso_standards ?? [], startup?.sector ?? null, startup?.business_model ?? null]);
+  useEffect(() => { editCtx?.setDirty(!!popup && popupDirty); }, [popupDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const performSave = () => {
     if (isEdit) updateM.mutate();
