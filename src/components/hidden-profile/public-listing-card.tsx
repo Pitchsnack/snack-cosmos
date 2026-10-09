@@ -58,7 +58,7 @@ export function TagChips({ tags, green }: { tags: string[]; green?: boolean }) {
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map((t) => (
-        <span key={t} className={cn("rounded-full px-2 py-0.5 text-[11.5px] font-semibold", green ? "bg-[#ECFDF5] text-[#065F46]" : "bg-muted text-foreground/80")}>{t}</span>
+        <span key={t} className={cn("rounded-full px-2 py-0.5 text-[11.5px] font-semibold", green ? "border border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]" : "bg-muted text-foreground/80")}>{t}</span>
       ))}
     </div>
   );
