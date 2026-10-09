@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2, Lock } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
+import { AddressBox } from "@/components/advisor/advisor-firm-fields";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -337,7 +338,14 @@ export function StartupForm({
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? prefill?.startupName ?? "");
   const [companyType, setCompanyType] = useState<string>(startup?.company_type || "SME");
-  const [businessAddress, setBusinessAddress] = useState(startup?.business_address ?? "");
+  const [businessAddress] = useState(startup?.business_address ?? "");
+  const [addr, setAddr] = useState({
+    street: startup?.address_line1 ?? prefill?.addr?.street ?? "",
+    unit: startup?.address_line2 ?? prefill?.addr?.unit ?? "",
+    district: startup?.address_city_district ?? prefill?.addr?.district ?? "",
+    province: startup?.address_province_state ?? prefill?.addr?.province ?? "",
+    postal: startup?.postal_code ?? prefill?.addr?.postal ?? "",
+  });
   const [registeredName, setRegisteredName] = useState(startup?.registered_name ?? "");
   const [registeredNumber, setRegisteredNumber] = useState(startup?.registered_number ?? prefill?.registeredNumber ?? "");
   const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? prefill?.yearFounded ?? "");
@@ -540,7 +548,7 @@ export function StartupForm({
     businessModel: businessModel || null,
     companyType: (companyType || "SME") as "SME" | "Corporate Enterprise" | "Individual",
     ...(companyTypeReset ? { companyTypeReset: true } : {}),
-    businessAddress: businessAddress.trim() || null,
+    address: addr,
     registeredName: registeredName || null,
     registeredNumber: registeredNumber || null,
     companySize: companySize || null,
@@ -1312,16 +1320,11 @@ export function StartupForm({
           })()}
         </div>
         <div className="col-span-4 space-y-1.5 @[760px]:col-span-3">
-          <Label htmlFor="business-address">Business Address</Label>
-          <Textarea
-            id="business-address"
-            value={businessAddress}
-            onChange={(e) => setBusinessAddress(e.target.value)}
-            placeholder="Street address, building, district and postal code"
-            maxLength={1000}
-            rows={1}
-            className="field-sizing-content min-h-9 max-h-[4.75rem] resize-none overflow-y-auto px-3 py-2 text-sm shadow-sm"
-          />
+          <Label htmlFor="ad-1">Business Address</Label>
+          <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null}
+            onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
+            onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
+            note={ctAdmin ? "Buyers see only the province until the seller approves their NDA." : "Buyers see only the province until you approve their NDA."} />
         </div>
       </div>
       </div>
