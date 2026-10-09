@@ -54,7 +54,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
         <span className={sub}>How you charge<Req /></span>
         <select autoFocus={autoFocus} aria-required aria-label={`How you charge for ${service}`} className={cn(small, "pr-8")} value={value.type}
           onChange={(e) => set({ type: e.target.value as FeeType })}>
-          {FEE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          {FEE_TYPES.map((t) => <option key={t.value} value={t.value}>{tr(t.label)}</option>)}
         </select>
       </div>
       {value.type === "fixed" && amountField("From", ex.fixed)}
@@ -141,7 +141,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
             {thai ? (
               <select id="ad-4" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
                 onBlur={() => onBlur("province")} onChange={(e) => onChange({ province: e.target.value })}>
-                <option value="">Choose a province</option>
+                <option value="">{tr("Choose a province")}</option>
                 {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             ) : (
