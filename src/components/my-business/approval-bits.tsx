@@ -157,7 +157,7 @@ export function ApprovalFooter({
     action = submitBtn();
   } else {
     text = <>Everything is ready. Your Public view and Private view are submitted together; Admin usually reviews within 1 business day.</>;
-    action = submitBtn(st === "rejected" || st === "unpublished" ? "Resubmit" : "Submit for approval");
+    action = submitBtn(st === "rejected" || st === "unpublished" ? "Resubmit" : "Publish");
   }
   return (
     <>
