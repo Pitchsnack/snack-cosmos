@@ -5,7 +5,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2 } from "lucide-react";
+import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2, Lock } from "lucide-react";
+import { useTranslation } from "@/i18n/language";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,7 +99,9 @@ function mapSwitchError(msg: string): string {
 
 
 // ── Taxonomies (mirrored from PitchSnack1 AdminStartupManager) ──
-const COMPANY_TYPES = ["SME", "Startup", "Corporate Enterprise"];
+// "Startup" is hidden until the startup part opens (see STARTUPS_ENABLED).
+const COMPANY_TYPES = ["SME", "Corporate Enterprise", "Individual"];
+const STARTUPS_ENABLED = false;
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
 const REVENUE_RANGES = [
   "Pre-revenue",
@@ -246,6 +249,11 @@ export function StartupForm({
   };
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
+  const { language } = useTranslation();
+  const th = language === "th";
+  const ctAdmin = ((session?.user as any)?.accountRole ?? "admin") === "admin";
+  const [companyTypeReset, setCompanyTypeReset] = useState(false);
+  const [companyTypeSource, setCompanyTypeSource] = useState<string>((startup as any)?.company_type_source ?? "account");
   const create = useServerFn(createStartup);
   const update = useServerFn(updateStartup);
   const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
@@ -328,7 +336,7 @@ export function StartupForm({
 
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? prefill?.startupName ?? "");
-  const [companyType, setCompanyType] = useState<string>(startup?.company_type ?? "");
+  const [companyType, setCompanyType] = useState<string>(startup?.company_type || "SME");
   const [businessAddress, setBusinessAddress] = useState(startup?.business_address ?? "");
   const [registeredName, setRegisteredName] = useState(startup?.registered_name ?? "");
   const [registeredNumber, setRegisteredNumber] = useState(startup?.registered_number ?? prefill?.registeredNumber ?? "");
@@ -530,7 +538,8 @@ export function StartupForm({
   const buildProfileBase = () => ({
     sector: sector || null,
     businessModel: businessModel || null,
-    companyType: companyType || null,
+    companyType: (companyType || "SME") as "SME" | "Corporate Enterprise" | "Individual",
+    ...(companyTypeReset ? { companyTypeReset: true } : {}),
     businessAddress: businessAddress.trim() || null,
     registeredName: registeredName || null,
     registeredNumber: registeredNumber || null,
@@ -735,7 +744,6 @@ export function StartupForm({
     };
     handle("Company Name", !!r.startupName, isEmpty(startupName), () => setStartupName(r.startupName!));
     handle("Registered Name", !!r.registeredName, isEmpty(registeredName), () => setRegisteredName(r.registeredName!));
-    handle("Company Type", !!r.companyType, isEmpty(companyType), () => setCompanyType(r.companyType!));
     handle("Year Founded", !!r.yearFounded, isEmpty(yearFounded), () => setYearFounded(String(r.yearFounded)));
     handle("Email", !!r.email, isEmpty(email), () => setEmail(r.email!));
     handle("Headquarters", !!r.headquarters, isEmpty(headquarters), () => {
@@ -749,7 +757,6 @@ export function StartupForm({
     handle("LinkedIn URL", !!r.linkedinUrl, isEmpty(linkedinUrl), () => setLinkedinUrl(r.linkedinUrl!));
     handle("Short Description", !!r.shortDescription, isEmpty(shortDescription), () => setShortDescription(r.shortDescription!));
     handle("Long Description", !!r.longDescription, isEmpty(longDescription), () => setLongDescription(r.longDescription!));
-    handle("Investment Stage", !!r.investmentStage, isEmpty(investmentStage), () => setInvestmentStage(r.investmentStage!));
     handle("Industries", !!r.industries?.length, industries.length === 0, () => setIndustries(r.industries!.slice(0, 5)));
     handle("Product Tags", !!r.productTags?.length, productTags.length === 0, () => setProductTags(r.productTags!.slice(0, 5)));
     handle("Market Tags", !!r.marketTags?.length, marketTags.length === 0, () => setMarketTags(r.marketTags!.slice(0, 5)));
@@ -916,14 +923,28 @@ export function StartupForm({
               required={false}
             />
             <div className="space-y-1.5">
-              <Label>Startup Type</Label>
-              <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Select startup type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— Select —</SelectItem>
-                  {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
+              <Label>Company Type</Label>
+              {(() => {
+            const fromAdmin = companyTypeSource === "admin" && !companyTypeReset;
+            const label = (v: string) => (th && v === "Individual" ? "บุคคลธรรมดา" : v);
+            if (!ctAdmin) return (<>
+              <div className="flex h-9 items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F7F8FA] px-3 text-sm" aria-readonly="true">
+                <span>{label(companyType || "SME")}</span><Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              </div>
+              <p className="text-xs text-[#6B7280]">{fromAdmin ? (th ? "กำหนดโดย PitchSnack" : "Set by PitchSnack") : (th ? "กำหนดจากประเภทบัญชีของท่าน" : "Set from your account type")}</p>
+            </>);
+            return (<>
+              <Select value={companyType || "SME"} onValueChange={(v) => { setCompanyType(v); setCompanyTypeReset(false); setCompanyTypeSource(v === "SME" && companyTypeSource !== "admin" ? "account" : "admin"); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{label(c)}</SelectItem>)}</SelectContent>
               </Select>
+              {fromAdmin && (
+                <p className="text-xs text-[#6B7280]">{th ? "แก้ไขโดย Admin · " : "Changed by Admin · "}
+                  <button type="button" className="font-medium underline" onClick={() => { setCompanyType("SME"); setCompanyTypeReset(true); }}>{th ? "คืนค่าตามประเภทบัญชี" : "Reset to account type"}</button>
+                </p>
+              )}
+            </>);
+          })()}
             </div>
 
             <div className="space-y-1.5">
@@ -971,14 +992,12 @@ export function StartupForm({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Funding Stage</Label>
-              <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Select funding stage" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— Select —</SelectItem>
-                  {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label className="text-[#9CA3AF]">{th ? "ระยะการลงทุน" : "Investment Stage"}</Label>
+              <TooltipProvider><Tooltip><TooltipTrigger asChild>
+            <div tabIndex={-1} aria-disabled="true" className="flex h-9 cursor-not-allowed items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-3 text-sm text-[#9CA3AF]">
+              <span>{th ? "สำหรับสตาร์ทอัพ · เร็วๆ นี้" : "For startups · coming soon"}</span><span aria-hidden="true">⌄</span>
+            </div>
+          </TooltipTrigger><TooltipContent>{th ? "ระยะการลงทุนใช้สำหรับสตาร์ทอัพ ส่วนนี้ของ PitchSnack ยังไม่เปิดใช้งาน" : "Investment stage is for startups. This part of PitchSnack isn't open yet."}</TooltipContent></Tooltip></TooltipProvider>
             </div>
             <div className="space-y-1.5">
               <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
@@ -1269,16 +1288,28 @@ export function StartupForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(companyType)) ? MISSING_LABEL : undefined}>Company Type</Label>
-          <Select value={companyType || "none"} onValueChange={(v) => setCompanyType(v === "none" ? "" : v)}>
-            <SelectTrigger className={miss(isStrEmpty(companyType)) ? MISSING_INPUT : undefined}>
-              <SelectValue placeholder={miss(isStrEmpty(companyType)) ? missingPh("Type") : "Type"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Label>Company Type</Label>
+          {(() => {
+            const fromAdmin = companyTypeSource === "admin" && !companyTypeReset;
+            const label = (v: string) => (th && v === "Individual" ? "บุคคลธรรมดา" : v);
+            if (!ctAdmin) return (<>
+              <div className="flex h-9 items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F7F8FA] px-3 text-sm" aria-readonly="true">
+                <span>{label(companyType || "SME")}</span><Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              </div>
+              <p className="text-xs text-[#6B7280]">{fromAdmin ? (th ? "กำหนดโดย PitchSnack" : "Set by PitchSnack") : (th ? "กำหนดจากประเภทบัญชีของท่าน" : "Set from your account type")}</p>
+            </>);
+            return (<>
+              <Select value={companyType || "SME"} onValueChange={(v) => { setCompanyType(v); setCompanyTypeReset(false); setCompanyTypeSource(v === "SME" && companyTypeSource !== "admin" ? "account" : "admin"); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{label(c)}</SelectItem>)}</SelectContent>
+              </Select>
+              {fromAdmin && (
+                <p className="text-xs text-[#6B7280]">{th ? "แก้ไขโดย Admin · " : "Changed by Admin · "}
+                  <button type="button" className="font-medium underline" onClick={() => { setCompanyType("SME"); setCompanyTypeReset(true); }}>{th ? "คืนค่าตามประเภทบัญชี" : "Reset to account type"}</button>
+                </p>
+              )}
+            </>);
+          })()}
         </div>
         <div className="col-span-4 space-y-1.5 @[760px]:col-span-3">
           <Label htmlFor="business-address">Business Address</Label>
@@ -1299,24 +1330,12 @@ export function StartupForm({
       {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
       <div className="grid grid-cols-3 gap-4">
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="stage">{secOn("stage") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label className={miss(isStrEmpty(investmentStage)) ? MISSING_LABEL : undefined}>Investment Stage</Label>
-          <Select value={investmentStage || "none"} onValueChange={(v) => setInvestmentStage(v === "none" ? "" : v)}>
-            <SelectTrigger className={miss(isStrEmpty(investmentStage)) ? MISSING_INPUT : undefined}>
-              <SelectValue placeholder={miss(isStrEmpty(investmentStage)) ? missingPh("Investment Stage") : "Stage"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {STAGES.map((s) => (
-                <SelectItem
-                  key={s}
-                  value={s}
-                  className={s === "Inactive" ? "text-red-600 focus:text-red-600 data-[highlighted]:text-red-600" : undefined}
-                >
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label className="text-[#9CA3AF]">{th ? "ระยะการลงทุน" : "Investment Stage"}</Label>
+          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+            <div tabIndex={-1} aria-disabled="true" className="flex h-9 cursor-not-allowed items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-3 text-sm text-[#9CA3AF]">
+              <span>{th ? "สำหรับสตาร์ทอัพ · เร็วๆ นี้" : "For startups · coming soon"}</span><span aria-hidden="true">⌄</span>
+            </div>
+          </TooltipTrigger><TooltipContent>{th ? "ระยะการลงทุนใช้สำหรับสตาร์ทอัพ ส่วนนี้ของ PitchSnack ยังไม่เปิดใช้งาน" : "Investment stage is for startups. This part of PitchSnack isn't open yet."}</TooltipContent></Tooltip></TooltipProvider>
         </div>
 
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="size">{secOn("size") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
