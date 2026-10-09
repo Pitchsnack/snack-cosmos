@@ -697,7 +697,7 @@ function Complete({ header, enrich, answered, onBack, onSaved }: {
   const qc = useQueryClient();
   const data = qc.getQueryData<Data>(BUYER_INVESTOR_KEY);
   if (!data) return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-[#6B7280]" /></div>;
-  const ans: SourceTag = tr("Your answer");
+  const ans: SourceTag = "Your answer";
   const sources: Record<string, SourceTag> = {
     investor_name: ans, investor_type: ans, year_founded: ans, registration_no: ans, aum_band: ans, ticket_band: ans,
     revenue_min_band: ans, deal_types: ans, geography: ans, preferred_industries: ans, description: ans,
