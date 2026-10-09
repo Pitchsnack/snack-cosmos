@@ -6,8 +6,7 @@
 - Report offers/prices live in report-catalog.json; paid orders in report_orders(+_events); My Financials unlocks only on delivered orders.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages: one page (messages-page.tsx) for all tabs; keys 'p:'/'a:'/'c:<deal_advisor>:<side>'; 'c:' threads, members and events are derived in message-threads.server.ts (no copies) with membership checked every call.
-- Private notes (private_notes) are server-only so the other party never sees them.
-- Business Address stays on startups via shared StartupForm.
+- private_notes are server-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
 - Loading overlay opt-in (meta.pageLoading); badges use light count fns.
