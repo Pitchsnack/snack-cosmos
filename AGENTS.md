@@ -1,7 +1,7 @@
 # Project decisions
 
 - Reuse `StartupCard` for My Business private card and Directory grid card so they stay identical.
-- Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Listing image is Admin-only (pending_cover → cover_image_url).
+- Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Sellers pick their listing's sector picture (public_image_id via setMyListingImage, member + same-sector checks); covers count a pick only while it matches the sector.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx so Admin sees the seller screen.
 - Report offers/prices live in report-catalog.json; paid orders in report_orders(+_events); My Financials unlocks only on delivered orders.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
@@ -27,3 +27,6 @@
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
 - Contact enquiries use sendContactEnquiry (rate-limited, Admin-read) and email_alert_log. Shared email-identity.ts drives replies and Admin Sending rules to prevent drift.
+
+- My Company Edit information opens one pop-up (edit-info-popup.tsx) driven by ?edit= (startup on /my-startups, profile on /marketplace/my-company); forms portal Cancel/Save into its footer, so seller, buyer and advisor share one close/confirm/Back behaviour.
+- Edit my startup holds Edit public view as its Public view tabs (public-view-fields.tsx) so one Save stores the business and its listing draft.
