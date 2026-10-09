@@ -137,7 +137,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
             <Err m={show("district")} />
           </div>
           <div>
-            <label className={lbl} htmlFor="ad-4">Province/State{thai ? (stars ? {stars && <Req />} : null) : <Opt />}</label>
+            <label className={lbl} htmlFor="ad-4">Province/State{thai ? (stars ? <Req /> : null) : <Opt />}</label>
             {thai ? (
               <select id="ad-4" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
                 onBlur={() => onBlur("province")} onChange={(e) => onChange({ province: e.target.value })}>
@@ -151,7 +151,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
           </div>
         </div>
         <div className="sm:w-1/2 sm:pr-[7px]">
-          <label className={lbl} htmlFor="ad-5">Postal code{thai ? (stars ? {stars && <Req />} : null) : <Opt />}</label>
+          <label className={lbl} htmlFor="ad-5">Postal code{thai ? (stars ? <Req /> : null) : <Opt />}</label>
           <input id="ad-5" aria-required={thai} autoComplete="postal-code" inputMode={thai ? "numeric" : undefined} maxLength={thai ? 5 : 12}
             placeholder={thai ? "5 digits" : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
             onChange={(e) => onChange({ postal: thai ? e.target.value.replace(/\D/g, "").slice(0, 5) : e.target.value.slice(0, 12) })} />
