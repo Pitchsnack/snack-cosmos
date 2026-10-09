@@ -90,3 +90,17 @@ export function valueCap(a: PlanAccess): number | null {
   if (!a.plan) return a.role === "buyer" || a.role === "advisor" ? 0 : null;
   return a.plan.value_cap_thb_m == null ? null : Number(a.plan.value_cap_thb_m);
 }
+
+export const ONE_COMPANY_MSG = "Your account has one company. Ask PitchSnack if you need another.";
+
+/** Sellers, buyers and advisors have one company; Admin has no limit. Throws when the account already has one. */
+export async function assertCanAddCompany(userId: string, kind: "seller" | "advisor") {
+  const r = await roleOf(userId);
+  if (r === "admin" || r === null) return;
+  const sb = await admin();
+  const q = kind === "seller"
+    ? sb.from("startup_users").select("startup_id", { count: "exact", head: true }).eq("user_id", userId)
+    : sb.from("advisor_firms").select("id", { count: "exact", head: true }).eq("owner_user_id", userId);
+  const { count } = await q;
+  if ((count ?? 0) > 0) throw new Error(ONE_COMPANY_MSG);
+}

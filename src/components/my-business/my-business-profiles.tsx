@@ -25,6 +25,8 @@ import { SectionEditLink } from "@/components/common/edit-section";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { SellerSetupBanner, useSellerSetup } from "@/components/my-business/signup-welcome";
 import { ReportOffers, ReportHeaderAction, reportPrice } from "@/components/my-business/report-offers";
 
 type View = "public" | "private";
@@ -377,18 +379,21 @@ function PublicPanel({ s, editing, setEditing, pill }: { s: StartupListItem; edi
                 </DropdownMenuLabel>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => void create()} disabled={actions.create.isPending}>
-              <Pencil className="mr-1.5 h-3.5 w-3.5" />{row ? "Edit public view" : "Create public view"}
-            </Button>
+          ) : null}
+          {adminReview && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           {pill}
+          {!adminReview && (
+            <CompanyMenu name={row?.code_name || s.startup_name} onEdit={() => void create()}>
+              <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
+            </CompanyMenu>
+          )}
         </div>
       </div>
       <HiddenProfileTab
@@ -444,7 +449,14 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
   const adminReview = useAdminReview();
   const pill = current ? <ProgressPill s={current} onItem={onItem} /> : null;
 
-  const right = current && sel ? (
+  const currentSetup = useSellerSetup(adminReview ? null : current?.id);
+  const draftSetup = currentSetup.data && !currentSetup.data.setupDoneAt ? currentSetup.data : null;
+
+  const right = current && draftSetup ? (
+    <DraftCompanyPanel role="seller" name={current.startup_name} banner={<SellerSetupBanner setup={draftSetup} />}
+      onEdit={() => void navigate({ to: "/my-startups/$id/edit", params: { id: current.id } })}
+      onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })} />
+  ) : current && sel ? (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm" style={{ overflow: "visible" }}>
       {!adminReview && !(editing && sel.view === "public") && (
         <PanelNotice s={current} onEditPublic={() => { setSel({ id: current.id, view: "public" }); setEditing(true); }} />
@@ -455,13 +467,15 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
         <>
           <div className="mb-2 flex items-center justify-between gap-3">
             <PrivateKindPill id={current.id} />
-            {pill}
+            {adminReview && pill}
           </div>
           <StartupDetailPanel
             key={current.id}
             id={current.id}
             showPublication
             workspace="my-startups"
+            headerPill={adminReview ? undefined : pill}
+            companyMenuEdit={adminReview ? undefined : () => void navigate({ to: "/my-startups/$id/edit", params: { id: current.id } })}
              afterFounders={!adminReview && <ReportOffers id={current.id} />}
              sectionEdit={adminReview ? undefined : (k) => (
                <SectionEditLink tone="seller" label={k === "founders-add" ? "Add founder" : "Edit"}
@@ -496,7 +510,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
     <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="space-y-5">
         {items.map((s) => (
-          <BusinessCard key={s.id} s={s} view={sel?.id === s.id ? sel.view : null} onView={(v) => pick(s.id, v)} />
+          <SellerCardSlot key={s.id} s={s} skipDraft={!!adminReview} view={sel?.id === s.id ? sel.view : null} onView={(v) => pick(s.id, v)} />
         ))}
       </div>
       {!isMobile && <div className="min-w-0 lg:self-start">{right}</div>}
@@ -531,4 +545,16 @@ function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) =>
 function PrivateKindPill({ id }: { id: string }) {
   const { row } = useHiddenProfile(id);
   return <KindPill kind="private" row={row} />;
+}
+
+function SellerCardSlot({ s, view, onView, skipDraft }: { s: StartupListItem; view: View | null; onView: (v: View) => void; skipDraft: boolean }) {
+  const { data } = useSellerSetup(skipDraft ? null : s.id);
+  if (data && !data.setupDoneAt) {
+    return (
+      <div role="button" tabIndex={0} onClick={() => onView("public")} onKeyDown={(e) => { if (e.key === "Enter") onView("public"); }} className="cursor-pointer">
+        <DraftCompanyCard role="seller" name={s.startup_name} founded={data.year || null} size={data.size} website={data.web || null} selected={view != null} />
+      </div>
+    );
+  }
+  return <BusinessCard s={s} view={view} onView={onView} />;
 }

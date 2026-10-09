@@ -39,6 +39,8 @@ export async function sellerTenant(sb: SB, userId: string): Promise<string | nul
 }
 
 export async function createSellerBusiness(sb: SB, userId: string, s: SellerSeed): Promise<string> {
+  const { assertCanAddCompany } = await import("./plan-access.server");
+  await assertCanAddCompany(userId, "seller");
   const tenantFromRole = await sellerTenant(sb, userId);
   const cfg = await intake(sb, tenantFromRole).catch(() => intake(sb));
   await ensureSellerRole(sb, userId, cfg.tenant_id);
