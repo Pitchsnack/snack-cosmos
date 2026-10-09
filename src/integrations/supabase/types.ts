@@ -4881,6 +4881,10 @@ export type Database = {
       }
       startups: {
         Row: {
+          address_city_district: string | null
+          address_line1: string | null
+          address_line2: string | null
+          address_province_state: string | null
           business_address: string | null
           business_model: string | null
           business_size: string | null
@@ -4903,6 +4907,7 @@ export type Database = {
           long_description: string | null
           market_tags: string[]
           peer_basis: string
+          postal_code: string | null
           product_tags: string[]
           region: string | null
           registered_capital: string | null
@@ -4929,6 +4934,10 @@ export type Database = {
           year_founded: number | null
         }
         Insert: {
+          address_city_district?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_province_state?: string | null
           business_address?: string | null
           business_model?: string | null
           business_size?: string | null
@@ -4951,6 +4960,7 @@ export type Database = {
           long_description?: string | null
           market_tags?: string[]
           peer_basis?: string
+          postal_code?: string | null
           product_tags?: string[]
           region?: string | null
           registered_capital?: string | null
@@ -4977,6 +4987,10 @@ export type Database = {
           year_founded?: number | null
         }
         Update: {
+          address_city_district?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_province_state?: string | null
           business_address?: string | null
           business_model?: string | null
           business_size?: string | null
@@ -4999,6 +5013,7 @@ export type Database = {
           long_description?: string | null
           market_tags?: string[]
           peer_basis?: string
+          postal_code?: string | null
           product_tags?: string[]
           region?: string | null
           registered_capital?: string | null
