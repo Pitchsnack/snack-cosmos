@@ -232,7 +232,7 @@ export function SellerWizard({
       body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={d.rev} onPick={(v) => pick({ rev: v })} /> },
     size: { t: "What is the size of your company?", h: "Number of employees.",
       body: <Radio grid list={WIZARD_SIZES} value={d.size} onPick={(v) => pick({ size: v })} /> },
-    sector: { t: "What is your business sector?", h: "Based on the SET sector classification.",
+    sector: { t: "What does your business mainly do?", h: "Choose the category that best represents your main products or services.",
       body: <SetSectorPicker mode="single" value={d.sector ? [d.sector] : []} onChange={(v) => set({ sector: v[0] ?? null })} /> },
     lic: { t: "Licences and certifications", h: "Select any that apply. This is optional.",
       body: (
