@@ -477,6 +477,13 @@
       "when": 1791526926092,
       "tag": "0067_backfill_company_emails_from_login",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1791533468805,
+      "tag": "0068_company_type_source",
+      "breakpoints": true
     }
   ]
 }
