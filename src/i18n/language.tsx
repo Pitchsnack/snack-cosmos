@@ -5,6 +5,14 @@ export type Language = "en" | "th";
 
 const STORAGE_KEY = "sp2.lang";
 
+// Current language for tr(); set while the provider renders.
+let currentLanguage: Language = "en";
+
+/** Translate outside hooks. Components using it must re-render on language change (call useTranslation() in the root). */
+export function tr(text: string): string {
+  return currentLanguage === "th" ? TH[text] ?? text : text;
+}
+
 type Ctx = {
   language: Language;
   setLanguage: (next: Language) => void;
@@ -35,6 +43,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = language;
     document.documentElement.dataset.lang = language;
   }, [language]);
+
+  currentLanguage = language;
 
   const value = useMemo<Ctx>(
     () => ({

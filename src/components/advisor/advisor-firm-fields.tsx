@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/language";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Image as ImageIcon, Plus, Upload } from "lucide-react";

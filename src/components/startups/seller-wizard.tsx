@@ -1,3 +1,4 @@
+import { tr, useTranslation } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Lock, AlertTriangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -78,6 +79,7 @@ export function SellerWizard({
   persist?: (d: SellerDraft) => void;
   title?: string;
 }) {
+  useTranslation(); // re-render on language change
   const [d, setD] = useState<SellerDraft>(initial);
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
@@ -299,7 +301,7 @@ export function SellerWizard({
       </div>
       <div className="mx-auto max-w-[680px] px-5 pb-16 pt-10">
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
-          <b className="font-semibold text-[#111827]">{SECTIONS[cur.sec]}</b>
+          <b className="font-semibold text-[#111827]">{tr(SECTIONS[cur.sec])}</b>
           <span>Step {pos + 1} of {shown.length}</span>
         </div>
         <div className="mb-8 h-1 overflow-hidden rounded-full bg-[#e5e7eb]">

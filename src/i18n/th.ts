@@ -1,3 +1,5 @@
+import { TH_WIZARDS } from "./th-wizards";
+
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 export const TH: Record<string, string> = {

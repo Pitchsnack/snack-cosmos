@@ -1,3 +1,4 @@
+import { tr, useTranslation } from "@/i18n/language";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { useNavigate } from "@tanstack/react-router";
@@ -46,6 +47,7 @@ function fromFirm(f: AdvisorFirm): A {
 const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a");
 
 export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
+  useTranslation(); // re-render on language change
   const navigate = useNavigate();
   const qc = useQueryClient();
   const saveFn = useServerFn(saveAdvisorWizard);
@@ -608,7 +610,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       {topBar}
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-          {header(SECTION[cur], `Step ${idx + 1} of ${shown.length}`, ((idx + 1) / shown.length) * 100)}
+          {header(tr(SECTION[cur]), `Step ${idx + 1} of ${shown.length}`, ((idx + 1) / shown.length) * 100)}
           <div className={card} ref={cardRef}>
             <div key={cur} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>

@@ -1,3 +1,4 @@
+import { tr, useTranslation } from "@/i18n/language";
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -99,7 +100,7 @@ function Checks({ title, note, req, items, value, onChange }: { title: string; n
             <button key={it} type="button" role="checkbox" aria-checked={on} onClick={() => onChange(on ? value.filter((x) => x !== it) : [...value, it])}
               className={`flex min-h-[46px] items-center gap-2.5 rounded-[10px] border px-3 py-2 text-left text-[13.5px] ${on ? "border-[#1E2A4A] bg-[#EEF1F7] dark:bg-[#1B2140]" : "border-[#DCDFE5] bg-white hover:border-[#C3C8D2] dark:border-border dark:bg-background"}`}>
               <span className={`grid h-4 w-4 flex-none place-items-center rounded border-[1.5px] text-white ${on ? "border-[#1E2A4A] bg-[#1E2A4A]" : "border-[#C3C8D2]"}`}>{on && <Check className="h-3 w-3" />}</span>
-              <span>{m ? <>{m[1]}<span className="text-[#9CA3AF]">{m[2]}</span></> : it}</span>
+              <span>{m ? <>{tr(m[1])}<span className="text-[#9CA3AF]">{m[2]}</span></> : tr(it)}</span>
             </button>
           );
         })}
@@ -132,6 +133,7 @@ function TypeTicks({ value, onChange }: { value: string[]; onChange: (v: string[
 const bandList = (bands: Band[]) => bands.map((b) => ({ value: b.key, label: b.label, extra: b.baht }));
 
 export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: string }) {
+  useTranslation(); // re-render on language change
   const navigate = useNavigate();
   const qc = useQueryClient();
   const saveFn = useServerFn(saveBuyerWizard);
