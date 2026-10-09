@@ -104,7 +104,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
   /** Setup wizards: mark fields still needed light blue (see common/need-fill). */
   need?: boolean; title?: string | null;
 }) {
-  const errs = addrErrors(a, thai, city);
+  const errs = addrErrors(a, thai, city) as Record<keyof Addr, string | null | undefined>;
   const nd = (k: keyof Addr) => (need && errs[k] ? { "data-need": "1", "aria-invalid": show(k) ? true : undefined } : { "aria-invalid": show(k) ? true : undefined });
   const nc = (k: keyof Addr) => (need && errs[k] ? "need-fill" : "");
   const inp = cn(compact ? "h-[42px] text-[14px]" : "h-[50px] text-[16px]", "w-full rounded-[12px] border border-[#DCDFE5] bg-white px-3.5 outline-none focus:border-[#1E2A4A] dark:border-border dark:bg-background");
