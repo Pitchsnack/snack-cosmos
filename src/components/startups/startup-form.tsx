@@ -338,7 +338,6 @@ export function StartupForm({
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? prefill?.startupName ?? "");
   const [companyType, setCompanyType] = useState<string>(startup?.company_type || "SME");
-  const [businessAddress] = useState(startup?.business_address ?? "");
   const [addr, setAddr] = useState({
     street: startup?.address_line1 ?? prefill?.addr?.street ?? "",
     unit: startup?.address_line2 ?? prefill?.addr?.unit ?? "",
@@ -686,7 +685,7 @@ export function StartupForm({
   // ── Unsaved Changes: snapshot-diff dirty detection ──
   const currentSnapshot = buildStartupFormSnapshot({
     isEdit,
-    tenantId, startupName, companyType, businessAddress, registeredName, registeredNumber, companySize, lastYearRevenue,
+    tenantId, startupName, companyType, businessAddress: JSON.stringify(addr), registeredName, registeredNumber, companySize, lastYearRevenue,
     yearFounded, email, headquarters,
     region, city, websiteUrl, linkedinUrl, shortDescription, longDescription,
     industries, productTags, marketTags, investmentStage,
