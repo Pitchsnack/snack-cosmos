@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { FileClock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSessionContext } from "@/hooks/use-session-context";
-import { answeredCount, clearDraft, firstOpenStep, loadDraft, WIZARD_QUESTION_TITLES, type SellerDraft } from "@/lib/seller-wizard";
+import { answeredCount, clearDraft, firstOpenStep, loadDraft, WIZARD_QUESTION_TITLES, REVIEW_STEP, type SellerDraft } from "@/lib/seller-wizard";
 
 /** Unfinished "Add my business" wizard, shown as a Draft in My Business. */
 export function SellerDraftCard() {
@@ -19,7 +19,7 @@ export function SellerDraftCard() {
   if (!draft || !userId) return null;
   const n = answeredCount(draft);
   const next = firstOpenStep(draft);
-  const resumeAt = next >= 9 ? "Review" : WIZARD_QUESTION_TITLES[next];
+  const resumeAt = next >= REVIEW_STEP ? "Review" : WIZARD_QUESTION_TITLES[next];
   return (
     <div className="flex items-center gap-4 rounded-lg border border-dashed border-border bg-card p-4 shadow-card">
       <FileClock className="h-6 w-6 text-muted-foreground" />

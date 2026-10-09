@@ -1,3 +1,4 @@
+import { useFocusNeeded } from "@/components/common/need-fill";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -211,7 +212,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     stages: !stagesShown || a.stages.length ? null : "Pick at least one stage.",
     sectors: a.sectors.length ? null : "Pick at least one industry, or Sector agnostic.",
     desc: descErr || (leaks.length ? "leak" : null),
-  };
+  };  const qRef = useRef<HTMLDivElement>(null);
+  useFocusNeeded(qRef, `${phase}:${cur}`);
+
   const fieldsOf: Record<QId, string[]> = {
     role: ["role"], type: ["type"], loc: ["country", "city"], name: ["name", "year", "reg"], web: ["web"], aum: ["aum"], ticket: ["ticket"],
     rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], desc: ["desc"], review: [],
@@ -355,14 +358,14 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           <div>
             <label className={lbl} htmlFor="w-city">{thai ? "City / province" : "City"}<Req /></label>
             {thai ? (
-              <select id="w-city" aria-required className={`${inp} ${show("city") ? errCls : ""}`} value={a.city}
+              <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={`${inp} ${errors.city ? "need-fill" : ""} ${show("city") ? errCls : ""}`} value={a.city}
                 onBlur={() => setTouched((t) => ({ ...t, city: true }))}
                 onChange={(e) => set({ city: e.target.value }, { city: e.target.value })}>
                 <option value="">Choose a province</option>
                 {THAI_PROVINCES_77.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             ) : (
-              <input id="w-city" aria-required className={`${inp} ${show("city") ? errCls : ""}`} value={a.city} maxLength={120} placeholder="e.g. Singapore"
+              <input id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={`${inp} ${errors.city ? "need-fill" : ""} ${show("city") ? errCls : ""}`} value={a.city} maxLength={120} placeholder="e.g. Singapore"
                 onBlur={() => setTouched((t) => ({ ...t, city: true }))}
                 onChange={(e) => set({ city: e.target.value }, { city: e.target.value })} />
             )}
@@ -378,7 +381,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="flex-1">
                 <label className={lbl} htmlFor="w-name">Firm name<Req /></label>
-                <input id="w-name" aria-required autoFocus className={`${inp} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder="e.g. Acme Ventures"
+                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder="e.g. Acme Ventures"
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {})} />
               </div>
@@ -397,7 +400,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           {!individual && (
             <div>
               <label className={lbl} htmlFor="w-reg">{thai ? <>Company Registration Number (เลขทะเบียนนิติบุคคล)<Req /></> : <>Company registration number<Opt /></>}</label>
-              <input id="w-reg" aria-required={thai} className={`${inp} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
+              <input id="w-reg" aria-required={thai} {...(errors.reg ? { "data-need": "1" } : {})} className={`${inp} ${errors.reg ? "need-fill" : ""} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
                 maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : ""}
                 onBlur={() => setTouched((t) => ({ ...t, reg: true }))}
                 onChange={(e) => { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value; set({ reg: v }, { registration_no: v }); }} />
@@ -528,7 +531,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
           {header(step.sec, `Step ${idx + 1} of ${steps.length}`, ((idx + 1) / steps.length) * 100)}
           <div className={card}>
-            <div key={step.id} className="animate-in fade-in duration-200">
+            <div key={step.id} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
                 {q.t}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
               </h1>

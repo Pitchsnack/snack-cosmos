@@ -57,18 +57,21 @@ export const WIZARD_ISO = [
 ];
 
 export const WIZARD_QUESTION_TITLES = [
-  "Your role", "Company name", "Website", "Year founded", "Location",
+  "Your role", "Company name", "Website", "Year founded",
   "Revenue", "Company size", "Sector", "Licences & certifications",
 ];
 
-/** Answered flags for the 9 questions (review excluded). */
+export type SellerAddr = { street: string; unit: string; district: string; province: string; postal: string };
+export const emptyAddr = (): SellerAddr => ({ street: "", unit: "", district: "", province: "", postal: "" });
+export const addrComplete = (a: SellerAddr) => !!a.street.trim() && !!a.district.trim() && !!a.province && /^\d{5}$/.test(a.postal);
+
+/** Answered flags for the questions (review excluded). */
 export function answeredFlags(d: SellerDraft): boolean[] {
   return [
     !!d.role,
-    !!d.name.trim() && /^\d{13}$/.test(d.reg),
+    !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
     !!d.web.trim(),
     /^\d{4}$/.test(d.year),
-    !!d.city,
     !!d.rev,
     !!d.size,
     !!d.sector,
@@ -76,13 +79,13 @@ export function answeredFlags(d: SellerDraft): boolean[] {
   ];
 }
 export const answeredCount = (d: SellerDraft) => answeredFlags(d).filter(Boolean).length;
-/** The wizard's questions in order (index = step number; 9 = review). */
+/** The wizard's questions in order (index = step number; REVIEW_STEP = review). */
+export const REVIEW_STEP = 8;
 export const SELLER_STEPS = [
   { id: "role", sec: "About you" },
   { id: "name", sec: "About the company" },
   { id: "web", sec: "About the company" },
   { id: "year", sec: "About the company" },
-  { id: "loc", sec: "About the company" },
   { id: "rev", sec: "Financial & business profile" },
   { id: "size", sec: "Financial & business profile" },
   { id: "sector", sec: "Financial & business profile" },
@@ -114,13 +117,14 @@ export function sellerProgress(d: SellerDraft, fromSignup: string[] = []) {
   const f = answeredFlags(d);
   return { n: shown.filter((i) => f[i]).length, N: shown.length };
 }
-/** First unanswered required question (website + licences are optional); 9 = review. */
+/** First unanswered required question (website + licences are optional); REVIEW_STEP = review. */
 export function firstOpenStep(d: SellerDraft, fromSignup: string[] = []): number {
   const f = answeredFlags(d);
   const shown = new Set(sellerShown(d, fromSignup));
-  const required = [0, 1, 3, 4, 5, 6, 7].filter((n) => shown.has(n));
+  const optional = new Set(["web", "lic"]);
+  const required = SELLER_STEPS.map((q, n) => (optional.has(q.id) ? -1 : n)).filter((n) => n >= 0 && shown.has(n));
   const i = required.find((n) => !f[n]);
-  return i ?? 9;
+  return i ?? REVIEW_STEP;
 }
 
 export const normalizeUrl = (raw: string) => {
@@ -141,12 +145,13 @@ export interface SellerDraft {
   sector: string | null;
   licences: RegulatoryLicence[];
   iso: string[];
+  addr: SellerAddr;
   savedAt: string;
 }
 
 export const emptyDraft = (): SellerDraft => ({
   step: 0, role: null, name: "", reg: "", web: "", year: "", city: "",
-  rev: null, size: null, sector: null, licences: [], iso: [], savedAt: new Date().toISOString(),
+  rev: null, size: null, sector: null, licences: [], iso: [], addr: emptyAddr(), savedAt: new Date().toISOString(),
 });
 
 const key = (userId: string) => `ps.sellerDraft.${userId}`;
@@ -155,7 +160,13 @@ export function loadDraft(userId: string | undefined): SellerDraft | null {
   if (!userId || typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(key(userId));
-    return raw ? ({ ...emptyDraft(), ...JSON.parse(raw) } as SellerDraft) : null;
+    if (!raw) return null;
+    const x = JSON.parse(raw);
+    // Older drafts had a separate location question; its province fills the address.
+    const addr = { ...emptyAddr(), ...(x.addr ?? {}) };
+    if (!addr.province && x.city) addr.province = x.city;
+    const step = typeof x.step === "number" && x.step >= 5 && !x.addr ? x.step - 1 : x.step;
+    return { ...emptyDraft(), ...x, addr, step } as SellerDraft;
   } catch {
     return null;
   }
@@ -193,6 +204,7 @@ export interface SellerPrefill {
   sector: string | null;
   licences: RegulatoryLicence[];
   isoStandards: string[];
+  addr: SellerAddr;
 }
 
 export function draftToPrefill(d: SellerDraft): SellerPrefill {
@@ -204,11 +216,12 @@ export function draftToPrefill(d: SellerDraft): SellerPrefill {
     websiteUrl: web && isValidUrl(web) ? (/^https?:\/\//i.test(web) ? web : `https://${web}`) : "",
     yearFounded: d.year,
     country: "Thailand",
-    city: d.city,
+    city: d.addr.province || d.city,
     lastYearRevenue: d.rev ?? "",
     companySize: d.size ?? "",
     sector: d.sector,
     licences: d.licences,
     isoStandards: d.iso,
+    addr: d.addr,
   };
 }

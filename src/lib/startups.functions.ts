@@ -101,6 +101,7 @@ export interface StartupRow {
   company_type: string | null;
   company_type_source?: string | null;
   business_address: string | null;
+  address_line1?: string | null; address_line2?: string | null; address_city_district?: string | null; address_province_state?: string | null; postal_code?: string | null;
   registered_name: string | null;
   registered_number: string | null;
   company_size: string | null;
@@ -188,7 +189,7 @@ async function logActivity(
 const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, industry, sector, business_model,
   short_description, long_description, status, visibility, created_at, updated_at,
-   logo_url, company_type, company_type_source, business_address, registered_name, registered_number, company_size, last_year_revenue,
+   logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
   product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
@@ -365,7 +366,7 @@ export const getStartup = createServerFn({ method: "GET" })
       .select(`
         id, tenant_id, startup_name, website_url, linkedin_url, city, industry, sector, business_model,
         short_description, long_description, status, visibility, created_at, updated_at,
-         logo_url, company_type, company_type_source, business_address, registered_name, registered_number, company_size, last_year_revenue,
+         logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
         product_tags, market_tags, regulatory_licenses, iso_standards, url_key, source_global_id, imported_at,
         tenants!inner(tenant_name),
@@ -482,11 +483,25 @@ const MediaInput = z.object({
   caption: z.string().max(500).nullable().optional(),
 });
 
+/** Business Address parts (private like Business Address); business_address keeps the one-line form. */
+function addrCols(a?: { street: string; unit: string; district: string; province: string; postal: string }) {
+  if (!a) return {};
+  const tail = [a.province.trim(), a.postal.trim()].filter(Boolean).join(" ");
+  const line = [a.unit.trim(), a.street.trim(), a.district.trim(), tail].filter(Boolean).join(", ");
+  return {
+    address_line1: a.street.trim() || null, address_line2: a.unit.trim() || null, address_city_district: a.district.trim() || null,
+    address_province_state: a.province.trim() || null, postal_code: a.postal.trim() || null, business_address: line || null,
+  };
+}
+
 const ProfileFields = {
   logoPath: z.string().max(1024).nullable().optional(),
   companyType: z.enum(["SME", "Corporate Enterprise", "Individual"]).nullable().optional(),
   companyTypeReset: z.boolean().optional(),
   businessAddress: z.string().max(1000).nullable().optional(),
+  address: z.object({
+    street: z.string().max(120), unit: z.string().max(120), district: z.string().max(80), province: z.string().max(80), postal: z.string().max(12),
+  }).optional(),
   registeredName: z.string().max(255).nullable().optional(),
   registeredNumber: z.string().max(64).nullable().optional(),
   companySize: z.string().max(100).nullable().optional(),
@@ -667,6 +682,7 @@ export const createStartup = createServerFn({ method: "POST" })
         logo_url: emptyToNull(data.logoPath),
         company_type: "SME",
         business_address: emptyToNull(data.businessAddress),
+        ...addrCols(data.address),
         registered_name: emptyToNull(data.registeredName),
         registered_number: emptyToNull(data.registeredNumber),
         company_size: emptyToNull(data.companySize),
@@ -788,6 +804,7 @@ export const updateStartup = createServerFn({ method: "POST" })
       }
     }
     if (data.businessAddress !== undefined) patch.business_address = emptyToNull(data.businessAddress);
+    if (data.address) Object.assign(patch, addrCols(data.address));
     if (data.registeredName !== undefined) patch.registered_name = emptyToNull(data.registeredName);
     if (data.registeredNumber !== undefined) patch.registered_number = emptyToNull(data.registeredNumber);
     if (data.companySize !== undefined) patch.company_size = emptyToNull(data.companySize);

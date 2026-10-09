@@ -301,3 +301,9 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .edit-sec-box.is-seller { background: #FFF4E5; border-color: #FDBA74; }
 .dark .edit-sec-box.is-buyer { background: #13243F; border-color: #3B6BB0; }
 .dark .edit-sec-box.is-seller { background: #3A2712; border-color: #B4691F; }
+
+/* Setup wizards: a field still needed (see components/common/need-fill.tsx). */
+.need-fill { background-color: #EFF6FF !important; }
+.need-fill:not(:focus):not([aria-invalid="true"]) { border-color: #93C5FD !important; }
+.dark .need-fill { background-color: #13243F !important; }
+.dark .need-fill:not(:focus):not([aria-invalid="true"]) { border-color: #3B6BB0 !important; }
