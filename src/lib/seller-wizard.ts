@@ -20,7 +20,7 @@ export const THB_REVENUE_BANDS: string[] = [
   "฿100M – 250M",
   "฿250M – 500M",
   "฿500M – 1B",
-  "Over ฿1B",
+  "฿1B +",
 ];
 
 /** Values line up with the form's company-size options; last one is its own band. */
