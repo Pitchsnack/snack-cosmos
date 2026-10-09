@@ -102,7 +102,6 @@ export function SellerWizard({
   };
   const shown = shownOf(d, full ?? step);
   const pos = Math.max(0, shown.indexOf(step));
-  const nameFromSignup = fromSignup.includes("name") && full !== 1;
 
   // Autosave on every answer.
   useEffect(() => {

@@ -27,7 +27,7 @@ export const sellerSetupKey = (id: string) => ["seller-setup", id];
 function toDraft(s: SellerSetup): SellerDraft {
   const d: SellerDraft = {
     ...emptyDraft(), role: s.role, name: s.name, reg: s.reg, web: s.web, year: s.year, city: s.city,
-    rev: s.rev, size: s.size, sector: s.sector, licences: s.licences as SellerDraft["licences"], iso: s.iso,
+    rev: s.rev, size: s.size, sector: s.sector, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
   };
   return { ...d, step: firstOpenStep(d, s.fromSignup) };
 }
@@ -44,7 +44,7 @@ function Page() {
   const timer = useRef<number | null>(null);
   const payload = (d: SellerDraft, done?: boolean) => ({
     id, role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size,
-    sector: d.sector, licences: d.licences, iso: d.iso, done,
+    sector: d.sector, licences: d.licences, iso: d.iso, addr: d.addr, done,
   });
   const persist = (d: SellerDraft) => {
     if (timer.current) window.clearTimeout(timer.current);

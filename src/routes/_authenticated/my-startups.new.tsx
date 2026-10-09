@@ -47,7 +47,7 @@ function NewMyStartupPage() {
   const finish = async (d: SellerDraft) => {
     if (!sellerAccount) { setPrefill(draftToPrefill(d)); return; }
     try {
-      const { id } = await createMine({ data: { role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size, sector: d.sector, licences: d.licences, iso: d.iso } });
+      const { id } = await createMine({ data: { role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size, sector: d.sector, licences: d.licences, iso: d.iso, addr: d.addr } });
       if (userId) clearDraft(userId);
       navigate({ to: "/my-startups/$id/edit", params: { id } });
     } catch (e) { toast.error((e as Error).message); }

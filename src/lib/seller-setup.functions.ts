@@ -12,7 +12,21 @@ export type SellerSetup = {
   id: string; name: string; reg: string; web: string; year: string; city: string; rev: string | null; size: string | null;
   sector: string | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
   role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null;
+  addr: { street: string; unit: string; district: string; province: string; postal: string };
 };
+
+const AddrInput = z.object({
+  street: z.string().max(120), unit: z.string().max(120), district: z.string().max(80), province: z.string().max(80), postal: z.string().max(5),
+});
+type AddrT = z.infer<typeof AddrInput>;
+function addrPatch(a: AddrT) {
+  const tail = [a.province.trim(), a.postal.trim()].filter(Boolean).join(" ");
+  const line = [a.unit.trim(), a.street.trim(), a.district.trim(), tail].filter(Boolean).join(", ");
+  return {
+    address_line1: a.street.trim() || null, address_line2: a.unit.trim() || null, address_city_district: a.district.trim() || null,
+    address_province_state: a.province || null, postal_code: a.postal || null, business_address: line || null,
+  };
+}
 
 export const getSellerSetup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -29,6 +43,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       id: s.id, name: s.startup_name ?? "", reg: s.registered_number ?? "", web: s.website_url ?? "",
       year: s.year_founded ? String(s.year_founded) : "", city: s.city ?? "", rev: s.last_year_revenue ?? null,
       size: s.company_size ?? null, sector: s.sector ?? null, licences: s.regulatory_licenses ?? [], iso: s.iso_standards ?? [],
+      addr: { street: s.address_line1 ?? "", unit: s.address_line2 ?? "", district: s.address_city_district ?? "", province: s.address_province_state ?? s.city ?? "", postal: s.postal_code ?? "" },
       role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null,
     };
   });
@@ -42,6 +57,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     city: z.string().max(100), rev: z.string().max(60).nullable(), size: z.string().max(30).nullable(), sector: z.string().max(100).nullable(),
     licences: z.array(z.object({ category: z.string().max(40), name: z.string().max(160), number: z.string().max(120).nullable().optional() })).max(50),
     iso: z.array(z.string().max(80)).max(20),
+    addr: AddrInput.optional(),
     done: z.boolean().optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
@@ -54,6 +70,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
       city: data.city || null, headquarters: "Thailand", last_year_revenue: data.rev, company_size: data.size, sector: data.sector,
       regulatory_licenses: data.licences, iso_standards: data.iso, updated_by: context.userId, updated_at: new Date().toISOString(),
     };
+    if (data.addr) { Object.assign(patch, addrPatch(data.addr)); if (data.addr.province) patch.city = data.addr.province; }
     if (data.name.trim()) patch.startup_name = data.name.trim();
     if (data.done) patch.setup_done_at = new Date().toISOString();
     const { error } = await sb.from("startups").update(patch).eq("id", data.id);
@@ -71,6 +88,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
     city: z.string().max(100), rev: z.string().max(60).nullable(), size: z.string().max(30).nullable(), sector: z.string().max(100).nullable(),
     licences: z.array(z.object({ category: z.string().max(40), name: z.string().max(160), number: z.string().max(120).nullable().optional() })).max(50),
     iso: z.array(z.string().max(80)).max(20),
+    addr: AddrInput.optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { createSellerBusiness, sellerTenant } = await import("./seller-setup.server");
@@ -81,6 +99,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
       size: data.size, regNo: data.reg || null, city: data.city || null, revenue: data.rev, sector: data.sector,
       licences: data.licences, iso: data.iso, setupDone: true,
     });
+    if (data.addr) await sb.from("startups").update({ ...addrPatch(data.addr), ...(data.addr.province ? { city: data.addr.province } : {}) }).eq("id", id);
     return { id };
   });
 
