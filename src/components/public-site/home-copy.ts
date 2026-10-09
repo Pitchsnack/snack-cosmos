@@ -56,7 +56,7 @@ export const BADGES = {
   h2: c("Every badge means one specific check, on a recorded date", "ตราสัญลักษณ์แต่ละตรา หมายถึงการตรวจสอบหนึ่งรายการ ณ วันที่บันทึกไว้"),
   intro: c("None of them is an opinion on whether a business is a good buy or a buyer worth meeting, and none can be bought with a dearer plan.", "ไม่มีตราใดเป็นความเห็นว่ากิจการน่าซื้อหรือผู้ซื้อน่าพบ และไม่มีตราใดได้มาเพียงเพราะเลือกแผนที่แพงกว่า"),
   tiles: [
-    { name: "Registry Verified", x: c("Company details match\nthe DBD register", "ข้อมูลบริษัทตรงกับ\nทะเบียน DBD") },
+    { name: "Registry Verified", x: c("Company details match\nthe tax filing\n", "ข้อมูลบริษัทตรงกับ\nทะเบียน DBD") },
     { name: "Accounts Filed", x: c("Filed accounts\nread by us", "เราอ่านงบการเงิน\nที่ยื่นไว้แล้ว") },
     { name: "Site Visited", x: c("We visited the premises,\non a recorded date", "เราเยี่ยมชมสถานที่จริง\nในวันที่บันทึกไว้") },
     { name: "Licences Current", x: c("Licences sighted\nand in date", "ใบอนุญาตตรวจแล้ว\nและยังไม่หมดอายุ") },
