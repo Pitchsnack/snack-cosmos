@@ -27,6 +27,8 @@ type Ctx = {
   footer: HTMLElement | null;
   /** Scroll container of the body (section links scroll inside it). */
   body: HTMLElement | null;
+  /** Header slot for Edit my startup's main tabs. */
+  tabsSlot: HTMLElement | null;
   setDirty: (d: boolean) => void;
   /** Cancel: asks first while dirty. */
   requestClose: () => void;
@@ -42,6 +44,13 @@ export function EditInfoFooter({ children, inline }: { children: ReactNode; inli
   if (!ctx) return <>{inline ?? children}</>;
   if (!ctx.footer) return null;
   return createPortal(<div className="flex w-full items-center justify-end gap-2">{children}</div>, ctx.footer);
+}
+
+/** Puts the form's main tabs into the pop-up header. */
+export function EditInfoTabsSlot({ children }: { children: ReactNode }) {
+  const ctx = useEditInfo();
+  if (!ctx?.tabsSlot) return null;
+  return createPortal(children, ctx.tabsSlot);
 }
 
 /* --------------------------- history bookkeeping --------------------------- */
@@ -64,11 +73,10 @@ const ROLE_FILL: Record<RoleTone, string> = {
   advisor: "bg-[#0F766E] text-white",
 };
 
-export function EditInfoPopup({ open, subtitle, companyName, mainTabs, onClosed, children, phoneTabs }: {
+export function EditInfoPopup({ open, subtitle, companyName, onClosed, children, phoneTabs }: {
   open: boolean;
   subtitle: string;
   companyName: string;
-  mainTabs?: ReactNode;
   /** Leaves the ?edit= address (the pop-up then unmounts). */
   onClosed: () => void;
   children: ReactNode;
@@ -77,6 +85,7 @@ export function EditInfoPopup({ open, subtitle, companyName, mainTabs, onClosed,
   const tr = useTr();
   const [footer, setFooter] = useState<HTMLElement | null>(null);
   const [body, setBody] = useState<HTMLElement | null>(null);
+  const [tabsSlot, setTabsSlot] = useState<HTMLElement | null>(null);
   const dirtyRef = useRef(false);
   const bypass = useRef(false);
   const [confirm, setConfirm] = useState<null | { go: () => void; stay: () => void }>(null);
@@ -114,7 +123,7 @@ export function EditInfoPopup({ open, subtitle, companyName, mainTabs, onClosed,
   }, [blocker.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ctx: Ctx = {
-    footer, body,
+    footer, body, tabsSlot,
     setDirty: (d) => { dirtyRef.current = d; },
     requestClose,
     done: leave,
@@ -161,7 +170,7 @@ export function EditInfoPopup({ open, subtitle, companyName, mainTabs, onClosed,
                 <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
                 <div className="mt-[3px] text-[13px] text-[#6B7280] dark:text-muted-foreground">{subtitle}</div>
               </div>
-              {mainTabs && <div className={cn("shrink-0", phoneTabs && "max-sm:order-3 max-sm:mt-4 max-sm:w-full")}>{mainTabs}</div>}
+              <div ref={setTabsSlot} className={cn("shrink-0 empty:hidden", phoneTabs && "max-sm:order-3 max-sm:mt-4 max-sm:w-full")} />
               <button type="button" aria-label={tr("Close", "ปิด")} onClick={requestClose}
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] text-[#434A5C] hover:bg-[#F2F4F7] dark:text-muted-foreground dark:hover:bg-muted">
                 <X className="h-[18px] w-[18px]" />
