@@ -422,7 +422,8 @@ export function buildPublicListing(
     headline: p?.headline?.trim() || "",
     description: p?.description?.trim() || suggestBusinessDescription(s) || suggestDescription(s.long_description || s.short_description, terms),
     productTags: cleanTags(p?.product_tags ?? s.product_tags, terms),
-    marketTags: cleanTags(p?.market_tags ?? s.market_tags, terms),
+    // MARKETS = the company's Market Tags (Edit information › Industry & Market); older listing copies are the fallback.
+    marketTags: cleanTags(s.market_tags?.length ? s.market_tags : p?.market_tags ?? [], terms),
     revenueBand: revenueBand(s.last_year_revenue),
     location: provinceOnly(s.city, s.headquarters),
     typeFounded: [typ, dec ? `Founded ${dec}` : null].filter(Boolean).join(" · ") || null,
