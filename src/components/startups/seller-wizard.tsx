@@ -3,8 +3,10 @@ import { ExternalLink, Lock, AlertTriangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
+import { AddressBox } from "@/components/advisor/advisor-firm-fields";
+import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
-  SELLER_RELATIONS, THAI_PROVINCES, THB_REVENUE_BANDS, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
+  SELLER_RELATIONS, THB_REVENUE_BANDS, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
   isValidUrl, saveDraft, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
 } from "@/lib/seller-wizard";
 
@@ -14,7 +16,6 @@ const STEPS = [
   { id: "name", sec: 1 },
   { id: "web", sec: 1 },
   { id: "year", sec: 1 },
-  { id: "loc", sec: 1 },
   { id: "rev", sec: 2 },
   { id: "size", sec: 2 },
   { id: "sector", sec: 2 },
@@ -84,6 +85,8 @@ export function SellerWizard({
   const [confirmExit, setConfirmExit] = useState(false);
   // A question opened from Review shows all its fields, even ones sign-up answered.
   const [full, setFull] = useState<number | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const [webState, setWebState] = useState<"idle" | "checking" | "unreachable">("idle");
   const checkWeb = useServerFn(checkWebsiteReachable);
   const timer = useRef<number | null>(null);
@@ -120,6 +123,8 @@ export function SellerWizard({
 
 
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
+  // The address's province answers "where is the company" (the business's City).
+  const setAddr = (p: Partial<SellerAddr>) => setD((x) => { const addr = { ...x.addr, ...p }; return { ...x, addr, city: addr.province }; });
   const go = (n: number) => set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
   /** Step after `from`: back to Review when opened from it, else the next question that shows. */
   const nextOf = (x: SellerDraft, from: number) => {
@@ -146,10 +151,9 @@ export function SellerWizard({
   const yearN = Number(d.year);
   const valid: Record<string, boolean> = {
     role: !!d.role,
-    name: d.name.trim().length > 0 && /^\d{13}$/.test(d.reg),
+    name: d.name.trim().length > 0 && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
     web: isValidUrl(d.web),
     year: /^\d{4}$/.test(d.year) && yearN >= 1800 && yearN <= THIS_YEAR,
-    loc: !!d.city,
     rev: !!d.rev,
     size: !!d.size,
     sector: !!d.sector,
@@ -164,18 +168,22 @@ export function SellerWizard({
   const Q: Record<string, { t: string; h?: string; body: React.ReactNode }> = {
     role: { t: "Which best describes you?", h: "This determines who approves buyer requests for this listing.",
       body: <Radio list={SELLER_RELATIONS} value={d.role} onPick={(v) => pick({ role: v as SellerDraft["role"] })} /> },
-    name: nameFromSignup
-      ? { t: "What is your company's name and registration number?", h: "Check that the name matches your company registration.", body: null as unknown as React.ReactNode }
-      : { t: "What is the name of your company?", h: "Use the registered company name.", body: null as unknown as React.ReactNode },
+    name: { t: "What is your company's name, registration number and business address?", h: "Check that the name matches your company registration.", body: null as unknown as React.ReactNode },
     nameBody: { t: "",
       body: (
         <div className="space-y-4">
           <div><label className={fieldLbl}>Company name</label>
-            <input className={inp} value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder="e.g. Siam Foods Co., Ltd." /></div>
+            <input className={`${inp} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder="e.g. Siam Foods Co., Ltd." /></div>
           <div><label className={fieldLbl}>Company Registration Number (เลขทะเบียนนิติบุคคล)</label>
-            <input className={inp} inputMode="numeric" value={d.reg} maxLength={13}
+            <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13}
               onChange={(e) => set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) })} placeholder="13 digits" />
             <p className="mt-1.5 text-[13px] text-[#6b7280]">Used to verify your company.{d.reg && d.reg.length !== 13 ? ` ${d.reg.length}/13 digits.` : ""}</p></div>
+          <div className="pt-2">
+            <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need
+              show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : "The postal code has 5 digits.", unit: null } as Record<string, string | null>)[k] ?? null : null)}
+              onBlur={(k) => setTouched((t) => ({ ...t, [k]: true }))}
+              note="Buyers see only the province until you approve their NDA." />
+          </div>
           <p className="flex items-start gap-2 text-[13px] text-destructive"><Lock className="mt-0.5 h-3.5 w-3.5" />Your company identity stays confidential until you approve the buyer's NDA.</p>
         </div>
       ) },
@@ -221,18 +229,6 @@ export function SellerWizard({
       body: <div><input className={`${inp} max-w-[200px]`} inputMode="numeric" value={d.year} maxLength={4} autoFocus
         onChange={(e) => set({ year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={`e.g. ${THIS_YEAR - 10}`} />
         {d.year.length === 4 && !valid.year && <p className="mt-1.5 text-[13px] text-destructive">Enter a year between 1800 and {THIS_YEAR}.</p>}</div> },
-    loc: { t: "Where is the company located?",
-      body: (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div><label className={fieldLbl}>Country</label>
-            <div className="flex items-center justify-between rounded-[10px] border border-[#e5e7eb] bg-[#f9fafb] px-3.5 py-3 text-[#374151]">Thailand <span className="text-xs text-[#9ca3af]">Fixed</span></div></div>
-          <div><label className={fieldLbl}>City / province</label>
-            <select className={inp} value={d.city} onChange={(e) => set({ city: e.target.value })}>
-              <option value="">Select…</option>
-              {THAI_PROVINCES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select></div>
-        </div>
-      ) },
     rev: { t: "What was your company's revenue last year?", h: "An approximate band is enough. Exact figures stay private.",
       body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={d.rev} onPick={(v) => pick({ rev: v })} /> },
     size: { t: "What is the size of your company?", h: "Number of employees.",
@@ -276,13 +272,13 @@ export function SellerWizard({
             ["You are", SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
             ["Company name", d.name, 1],
             ["Registration no.", d.reg, 1],
+            ["Business address", addressLine(d.addr), 1],
             ["Website", d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
             ["Year founded", d.year, 3],
-            ["Location", d.city ? `${d.city}, Thailand` : "", 4],
-            ["Revenue last year", d.rev, 5],
-            ["Company size", WIZARD_SIZES.find((s) => s.value === d.size)?.label, 6],
-            ["Sector", d.sector, 7],
-            ["Licences & standards", [...d.licences.map((l) => l.name), ...d.iso].join(", "), 8],
+            ["Revenue last year", d.rev, 4],
+            ["Company size", WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
+            ["Sector", d.sector, 6],
+            ["Licences & standards", [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],
           ] as [string, React.ReactNode, number][]).map(([k, v, n]) => (
             <div key={k} className="flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0">
               <span className="w-[170px] flex-none text-[#6b7280]">{k}</span>
@@ -293,6 +289,7 @@ export function SellerWizard({
         </div>
       ) },
   };
+  useFocusNeeded(cardRef, `${cur.id}:${full ?? ""}`);
   const q = cur.id === "name" ? { ...Q.name!, body: Q.nameBody!.body } : Q[cur.id]!;
 
   return (
@@ -310,7 +307,7 @@ export function SellerWizard({
           <i className="block h-full bg-[#1e2a4a] transition-[width] duration-300" style={{ width: `${((pos + 1) / shown.length) * 100}%` }} />
         </div>
         <div className="rounded-[14px] border border-[#e5e7eb] bg-white px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
-          <div key={cur.id} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
+          <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
             <h2 className="mb-1.5 text-2xl font-bold leading-snug tracking-[-0.015em]">{q.t}</h2>
             {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{q.h}</p>}
             {!q.h && <div className="mb-6" />}
@@ -366,7 +363,7 @@ export function SellerWizard({
             </div>
           </div>
         )}
-        <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">Your company name, website and exact figures stay private until you approve a buyer's NDA.</p>
+        <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">Your company name, address, website and exact figures stay private until you approve a buyer's NDA.</p>
       </div>
     </div>
   );
