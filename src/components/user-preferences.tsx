@@ -1,3 +1,4 @@
+import { ShowClosedTipsLink } from "@/components/marketplace/browse-header";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -98,6 +99,7 @@ export function UserPreferences() {
             onChange={(v) => updateNotif({ systemEnabled: v }).then(() => toast.success("Saved"))}
           />
         </div>
+        <div className="mt-4"><ShowClosedTipsLink /></div>
       </Card>
     </div>
   );
