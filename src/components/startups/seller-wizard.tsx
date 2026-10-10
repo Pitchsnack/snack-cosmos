@@ -191,7 +191,8 @@ export function SellerWizard({
     const state: StepItem["state"] = inBar && bar[i] === step ? "here" : k !== "review" && ok[k] ? "done" : k !== "review" && isMissed(k, d) ? "missed" : "todo";
     return { key: k, label: L(...STEP_SHORT[k]), full: L(...STEP_FULL[k]), state, tip: tipOf(k, state) };
   });
-  const lineTo = Math.max(barKeys.indexOf(laterKey(reached, inBar ? cur.id : null) as StepKey), 0);
+  const farIdx = stepIdx(laterKey(reached, inBar ? cur.id : null));
+  const lineTo = Math.max(0, barKeys.filter((k) => stepIdx(k) <= farIdx).length - 1);
   const missed = items.map((it, i) => ({ key: it.key, n: i + 1, full: it.full, st: it.state })).filter((x) => x.st === "missed");
   const openStep = (k: string) => { setFull(null); focusTitle.current = true; go(STEPS.findIndex((x) => x.id === k)); };
   const stepWord = (n: number) => L(`Step ${n}`, `ขั้นที่ ${n}`);

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { StepBar, type StepItem } from "@/components/common/step-bar";
 import { useTranslation } from "@/i18n/language";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
