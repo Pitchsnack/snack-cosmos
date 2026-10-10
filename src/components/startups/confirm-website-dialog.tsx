@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, Check, ExternalLink, Globe, Info, Loader2, Lock } from "lucide-react";
+import { AlertTriangle, CircleCheck, ExternalLink, Info, Loader2, Lock } from "lucide-react";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { isValidUrl, normalizeUrl } from "@/lib/seller-wizard";
 
@@ -68,52 +68,46 @@ export function ConfirmWebsiteDialog({ initial, L, onCancel, onDone }: {
             e.preventDefault(); f[(i + (e.shiftKey ? f.length - 1 : 1)) % f.length]?.focus();
           }
         }}>
-        {hasWeb ? (
-          <span className="grid h-11 w-11 place-items-center rounded-[12px] bg-[#F4F9FF] dark:bg-[#16283A]"><Globe className="h-[22px] w-[22px] text-[#2563EB] dark:text-[#8CBFF0]" /></span>
-        ) : (
-          <span className="grid h-11 w-11 place-items-center rounded-[12px] bg-[#FEF3C7] dark:bg-amber-950"><AlertTriangle className="h-[22px] w-[22px] text-[#B45309] dark:text-amber-400" /></span>
-        )}
-        <h3 id="cw-t" className="mt-3.5 text-[20px] font-bold" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
+        <p className="text-[12px] font-bold uppercase tracking-[.06em] text-[#B91C1C] dark:text-red-400">{L("Important", "สำคัญ")}</p>
+        <h3 id="cw-t" className="mt-1.5 text-[20px] font-bold" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
           {hasWeb ? L("Confirm your website", "ยืนยันเว็บไซต์ของท่าน") : L("Continue without a website?", "ไปต่อโดยไม่มีเว็บไซต์ใช่ไหม")}
         </h3>
         <p id="cw-d" className="mt-2 text-[14.5px] leading-[1.55] text-[#434A5C] dark:text-muted-foreground">
           {hasWeb
-            ? <><b className="font-bold text-[#B91C1C] dark:text-red-400">{L("Important:", "สำคัญ:")}</b>{" "}{L("Auto-fill reads this website to pre-fill your company description and corporate information. If it's wrong, that information won't be pre-filled.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์นี้เพื่อกรอกคำอธิบายบริษัทและข้อมูลบริษัทให้ล่วงหน้า หากเว็บไซต์ไม่ถูกต้อง ข้อมูลเหล่านี้จะไม่ถูกกรอกให้")}</>
-            : L("Auto-fill needs your website to pre-fill your company description and corporate information. Without it, they won't be pre-filled, and you'll fill them in yourself.", "ระบบกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์ของท่านเพื่อกรอกคำอธิบายบริษัทและข้อมูลบริษัทให้ล่วงหน้า หากไม่มีเว็บไซต์ ข้อมูลเหล่านี้จะไม่ถูกกรอกให้ และท่านจะต้องกรอกเอง")}
+            ? L("Auto-fill reads it to pre-fill your company description and corporate information. If it's wrong, correct it here.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์นี้ เพื่อกรอกคำอธิบายบริษัทและข้อมูลบริษัทให้ หากไม่ถูกต้อง แก้ไขได้ที่นี่")
+            : L("Auto-fill needs your website to pre-fill your company description and corporate information. Without it, you'll fill them in yourself.", "ระบบกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์ของท่าน เพื่อกรอกคำอธิบายบริษัทและข้อมูลบริษัทให้ หากไม่มีเว็บไซต์ ท่านจะต้องกรอกเอง")}
         </p>
-        <label htmlFor="cw-web" className="mt-4 mb-1.5 block text-[14px] font-semibold text-[#374151] dark:text-foreground">{L("Company website", "เว็บไซต์บริษัท")}</label>
-        <div className="relative">
+        <div className="relative mt-[18px]">
           <input id="cw-web" ref={inputRef} value={val} maxLength={2048} placeholder="www.yourcompany.com"
-            aria-describedby="cw-ans" aria-invalid={err || undefined}
+            aria-labelledby="cw-t" aria-describedby="cw-ans" aria-invalid={err || undefined}
             onChange={(e) => { setVal(e.target.value); setErr(false); setAnswer(null); setChecking(false); run.current++; }}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
-            className={`h-11 w-full rounded-[10px] border bg-white pl-3 pr-[112px] text-[15px] outline-none sm:pr-[170px] dark:bg-background ${err ? "border-[#B42318]" : "border-[#DCDFE5] focus:border-[#1e2a4a] dark:border-border"}`} />
+            className={`h-[52px] w-full rounded-[12px] border bg-white pl-4 pr-[100px] text-[17px] text-[#1D4ED8] no-underline outline-none placeholder:text-[#9CA3AF] sm:pr-[160px] dark:bg-background dark:text-[#93C5FD] ${err ? "border-[#B42318] ring-2 ring-[#B42318]/20" : "border-[#DCDFE5] focus:border-[#1e2a4a] focus:ring-2 focus:ring-[#1e2a4a]/15 dark:border-border"}`} />
           <button type="button" onClick={doCheck} aria-disabled={!valid || checking ? "true" : undefined}
             aria-label={checking ? L("Checking…", "กำลังตรวจสอบ…") : L("Check website (opens in a new tab)", "ตรวจสอบเว็บไซต์ (เปิดในแท็บใหม่)")}
-            className={`absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1.5 rounded-[8px] border border-[#DCDFE5] bg-white px-3 text-[13.5px] font-semibold dark:border-border dark:bg-transparent ${valid ? "text-[#1E2A4A] hover:bg-[#F3F5F9] dark:text-foreground dark:hover:bg-muted" : "cursor-not-allowed text-[#9CA3AF]"}`}>
-            {checking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
+            className={`absolute right-2 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-1.5 rounded-[9px] border border-[#DCDFE5] bg-white px-3 text-[13.5px] font-semibold dark:border-border dark:bg-transparent ${valid ? "text-[#1E2A4A] hover:bg-[#F3F5F9] dark:text-foreground dark:hover:bg-muted" : "cursor-not-allowed text-[#9CA3AF]"}`}>
+            {checking ? <Loader2 className="h-[15px] w-[15px] animate-spin" /> : <ExternalLink className="h-[15px] w-[15px]" />}
             <span className={checking ? "max-sm:hidden" : ""}>
               {checking ? L("Checking…", "กำลังตรวจสอบ…") : <><span className="max-sm:hidden">{L("Check website", "ตรวจสอบเว็บไซต์")}</span><span className="sm:hidden">{L("Check", "ตรวจสอบ")}</span></>}
             </span>
           </button>
         </div>
-        <div id="cw-ans" aria-live="polite" className="text-[13px] leading-[1.45]">
-          {err && <p className="mt-1.5 text-[#B42318]">{L("Enter a valid website address, e.g. www.yourcompany.com", "กรุณากรอกที่อยู่เว็บไซต์ที่ถูกต้อง เช่น www.yourcompany.com")}</p>}
-          {answer?.kind === "working" && (
-            <p className="mt-1.5 flex items-start gap-1.5 font-semibold text-[#15803D] dark:text-emerald-400"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        <div id="cw-ans" aria-live="polite" className="text-[13.5px] leading-[1.45]">
+          {err ? <p className="mt-2 text-[#B42318] dark:text-red-400">{L("Enter a valid website address, e.g. www.yourcompany.com", "กรุณากรอกที่อยู่เว็บไซต์ที่ถูกต้อง เช่น www.yourcompany.com")}</p>
+          : answer?.kind === "working" ? (
+            <p className="mt-2 flex items-start gap-1.5 font-semibold text-[#15803D] dark:text-emerald-400"><CircleCheck className="mt-px h-4 w-4 shrink-0" />
               {answer.title ? L(`Website is working: ${answer.title}`, `เว็บไซต์ใช้งานได้: ${answer.title}`) : L("Website is working", "เว็บไซต์ใช้งานได้")}</p>
-          )}
-          {answer?.kind === "not_working" && (
-            <p className="mt-1.5 flex items-start gap-1.5 font-medium text-[#B45309] dark:text-amber-400"><AlertTriangle className="mt-0.5 h-[15px] w-[15px] shrink-0" />
-              {L(`We couldn't open ${bare(val)}. Check the address. If it's right, you can still continue.`, `เปิด ${bare(val)} ไม่ได้ ตรวจสอบที่อยู่อีกครั้ง หากถูกต้องแล้ว ท่านยังไปต่อได้`)}</p>
-          )}
-          {answer?.kind === "unchecked" && (
-            <p className="mt-1.5 flex items-start gap-1.5 font-medium text-[#6B7280] dark:text-muted-foreground"><Info className="mt-0.5 h-[15px] w-[15px] shrink-0" />
+          ) : answer?.kind === "not_working" ? (
+            <p className="mt-2 flex items-start gap-1.5 font-medium text-[#B45309] dark:text-amber-400"><AlertTriangle className="mt-px h-4 w-4 shrink-0" />
+              {L("We couldn't open this website. Check that the address is right.", "เปิดเว็บไซต์นี้ไม่ได้ ตรวจสอบว่าที่อยู่ถูกต้อง")}</p>
+          ) : answer?.kind === "unchecked" ? (
+            <p className="mt-2 flex items-start gap-1.5 font-medium text-[#6B7280] dark:text-muted-foreground"><Info className="mt-px h-4 w-4 shrink-0" />
               {L("We couldn't check the website right now. You can still continue.", "ตรวจสอบเว็บไซต์ไม่ได้ในขณะนี้ ท่านยังไปต่อได้")}</p>
-          )}
+          ) : !hasWeb ? (
+            <p className="mt-2 flex items-start gap-1.5 text-[#434A5C] dark:text-muted-foreground"><Lock className="mt-px h-4 w-4 shrink-0" />{L("Buyers can't see your website until you approve their NDA.", "ผู้ซื้อจะไม่เห็นเว็บไซต์ของท่าน จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
+          ) : null}
         </div>
-        <p className="mt-3 flex items-start gap-2 text-[13px] text-[#434A5C] dark:text-muted-foreground"><Lock className="mt-0.5 h-[15px] w-[15px] shrink-0" />{L("Buyers can't see your website until you approve their NDA.", "ผู้ซื้อจะไม่เห็นเว็บไซต์ของท่าน จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
-        <div className="mt-[22px] flex justify-end gap-2.5 max-[599px]:flex-col-reverse">
+        <div className="mt-5 flex justify-end gap-2.5 max-[599px]:flex-col-reverse">
           {hasWeb ? (
             <>
               <button type="button" onClick={onCancel} className={btn2}>{L("Cancel", "ยกเลิก")}</button>
