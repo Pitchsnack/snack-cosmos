@@ -3,7 +3,7 @@
 - Reuse `StartupCard` for My Business private card and Directory grid card.
 - Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Sellers pick their listing's sector picture (public_image_id via setMyListingImage, member + same-sector checks); covers count a pick only while it matches the sector.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx so Admin sees the seller screen.
-- Report offers/prices live in report-catalog.json; paid orders in report_orders(+_events); My Financials unlocks only on delivered orders.
+- Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages: one page (messages-page.tsx) for all tabs; keys 'p:'/'a:'/'c:<deal_advisor>:<side>'; 'c:' threads, members and events are derived in message-threads.server.ts (no copies) with membership checked every call.
 - private_notes are server-only.
@@ -25,7 +25,7 @@
 - Roles/plans: account_role enforced in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
-- Contact enquiries use sendContactEnquiry (rate-limited, Admin-read) and email_alert_log. Shared email-identity.ts drives replies and Admin Sending rules to prevent drift.
+- Contact enquiries use sendContactEnquiry (rate-limited); email-identity.ts drives replies and Admin Sending rules so they never drift.
 
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
-- Browse/Favourites header, plan pill, NDA strip (users.dismissed_hints) and match tags live in browse-header.tsx; matches come only from myBrowseMatches (match.functions.ts) so both sides share one rule. Buyer Company Type follows buyer_relation via a DB trigger; Admin overrides via updateInvestor.
+- Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides share one rule. Buyer Company Type follows buyer_relation (DB trigger).
