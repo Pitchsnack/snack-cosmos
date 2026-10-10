@@ -4,6 +4,7 @@ import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { Badge } from "@/components/ui/badge";
 import { ViewAsSwitcher } from "@/components/view-switcher/view-as-switcher";
+import { RouteBreadcrumbs } from "@/components/route-breadcrumbs";
 import { ViewModeBadge } from "@/components/view-switcher/view-mode-badge";
 
 
@@ -30,8 +31,9 @@ export function WorkspaceHeader() {
   const roleLabel = primaryRole ? ROLE_LABELS[primaryRole] ?? primaryRole : "—";
 
   return (
-    <header className="sticky top-0 z-20 -mx-8 -mt-10 mb-8 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/95 px-8 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className={`sticky top-0 z-20 -mx-8 -mt-10 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/95 px-8 backdrop-blur ${isControl ? "mb-8" : "mb-4"} supports-[backdrop-filter]:bg-background/70`}>
+      <div className="flex min-w-0 flex-1 items-center gap-3 pr-6">
+        <RouteBreadcrumbs placement="bar" className="min-w-0" />
         {isControl && (
           <>
             <WorkspaceSwitcher />
@@ -55,7 +57,7 @@ export function WorkspaceHeader() {
           </>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <ViewModeBadge />
         <ViewAsSwitcher />
         <GlobalSearch />
