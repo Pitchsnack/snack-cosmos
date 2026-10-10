@@ -1,6 +1,7 @@
 import { tr, useTranslation } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Lock, AlertTriangle } from "lucide-react";
+import { ExternalLink, Lock, AlertTriangle, Check as CheckIcon, Sparkles, Globe } from "lucide-react";
+import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { useServerFn } from "@tanstack/react-start";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
@@ -9,6 +10,7 @@ import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-f
 import {
   SELLER_RELATIONS, THB_REVENUE_BANDS, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
   isValidUrl, saveDraft, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
+  sellerValid, STEP_SHORT, STEP_FULL, stepIdx, laterKey, isMissed, joinNames, type StepKey,
 } from "@/lib/seller-wizard";
 
 const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review"];
@@ -79,7 +81,8 @@ export function SellerWizard({
   persist?: (d: SellerDraft) => void;
   title?: string;
 }) {
-  useTranslation(); // re-render on language change
+  const th = useTranslation().language === "th"; // re-render on language change
+  const L = (en: string, t: string) => (th ? t : en);
   const [d, setD] = useState<SellerDraft>(initial);
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
@@ -89,6 +92,16 @@ export function SellerWizard({
   const [full, setFull] = useState<number | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const webRef = useRef<HTMLInputElement | null>(null);
+  const skipRef = useRef<HTMLButtonElement | null>(null);
+  const addWebRef = useRef<HTMLButtonElement | null>(null);
+  const fwdRef = useRef<HTMLButtonElement | null>(null);
+  const focusTitle = useRef(false);
+  const [skipAsk, setSkipAsk] = useState(false);
+  const [revWeb, setRevWeb] = useState("");
+  const [revWebErr, setRevWebErr] = useState(false);
+  const [webAdded, setWebAdded] = useState(false);
   const [webState, setWebState] = useState<"idle" | "checking" | "unreachable">("idle");
   const checkWeb = useServerFn(checkWebsiteReachable);
   const timer = useRef<number | null>(null);
@@ -149,20 +162,48 @@ export function SellerWizard({
     timer.current = window.setTimeout(() => advance(), 250);
   };
 
-  const yearN = Number(d.year);
-  const valid: Record<string, boolean> = {
-    role: !!d.role,
-    name: d.name.trim().length > 0 && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
-    web: isValidUrl(d.web),
-    year: /^\d{4}$/.test(d.year) && yearN >= 1800 && yearN <= THIS_YEAR,
-    rev: !!d.rev,
-    size: !!d.size,
-    sector: !!d.sector,
-    lic: true,
-    review: true,
-  };
-  const canSkip = cur.id === "web" || cur.id === "lic";
+  const ok = sellerValid(d);
+  // Review moves on once Company, Revenue and Sector are answered.
+  const blockers = (["name", "rev", "sector"] as StepKey[]).filter((k) => !ok[k]);
+  const valid: Record<string, boolean> = { ...ok, review: blockers.length === 0 };
+  const canSkip = (cur.id === "web" && !ok.web) || (cur.id === "lic" && !ok.lic);
 
+  // The step bar: questions that show, plus Review.
+  const bar = shownOf(d, null);
+  const barKeys = bar.map((i) => STEPS[i]!.id as StepKey);
+  const inBar = bar.includes(step) && !(full != null && !shownOf(d, null).includes(full));
+  const reached = d.reached ?? null;
+  useEffect(() => {
+    if (!inBar) return;
+    const nx = laterKey(reached, cur.id);
+    if (nx !== reached) setD((p) => ({ ...p, reached: nx }));
+  }, [cur.id, inBar]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (focusTitle.current) { focusTitle.current = false; window.setTimeout(() => titleRef.current?.focus(), 30); }
+  }, [cur.id]);
+  const tipOf = (k: StepKey, st: StepItem["state"]) =>
+    st === "here" ? L("You are here", "คุณอยู่ที่ขั้นนี้")
+      : k === "review" ? L("Check your answers · click to go there", "ตรวจสอบคำตอบ · กดเพื่อไปที่ขั้นนี้")
+      : st === "done" ? L("Answered · click to change", "ตอบแล้ว · กดเพื่อแก้ไข")
+      : st === "missed" ? L("Not answered · click to answer", "ยังไม่ได้ตอบ · กดเพื่อตอบ")
+      : L("Not reached yet · click to go there", "ยังไม่ถึงขั้นนี้ · กดเพื่อไปที่ขั้นนี้");
+  const items: StepItem[] = barKeys.map((k, i) => {
+    const state: StepItem["state"] = inBar && bar[i] === step ? "here" : k !== "review" && ok[k] ? "done" : k !== "review" && isMissed(k, d) ? "missed" : "todo";
+    return { key: k, label: L(...STEP_SHORT[k]), full: L(...STEP_FULL[k]), state, tip: tipOf(k, state) };
+  });
+  const lineTo = Math.max(barKeys.indexOf(laterKey(reached, inBar ? cur.id : null) as StepKey), 0);
+  const missed = items.map((it, i) => ({ key: it.key, n: i + 1, full: it.full, st: it.state })).filter((x) => x.st === "missed");
+  const openStep = (k: string) => { setFull(null); focusTitle.current = true; go(STEPS.findIndex((x) => x.id === k)); };
+  const stepWord = (n: number) => L(`Step ${n}`, `ขั้นที่ ${n}`);
+
+  const privacy = (
+    <p className="mt-3 flex items-start gap-2 text-[13px] text-[#434A5C]"><Lock className="mt-0.5 h-[15px] w-[15px] shrink-0" />{L("Buyers can't see your website until you approve their NDA.", "ผู้ซื้อจะไม่เห็นเว็บไซต์ของท่าน จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
+  );
+  function addReviewWeb() {
+    if (!isValidUrl(revWeb)) { setRevWebErr(true); return; }
+    set({ web: normalizeUrl(revWeb) }); setWebAdded(true);
+    window.setTimeout(() => (blockers.length ? document.getElementById("sw-web-added") : fwdRef.current)?.focus(), 40);
+  }
   const allLic = [...WIZARD_LICENCES, ...d.licences.filter((l) => !WIZARD_LICENCES.some((w) => w.name === l.name))];
   const allIso = [...WIZARD_ISO, ...d.iso.filter((s) => !WIZARD_ISO.includes(s))];
 
@@ -188,13 +229,14 @@ export function SellerWizard({
           <p className="flex items-start gap-2 text-[13px] text-destructive"><Lock className="mt-0.5 h-3.5 w-3.5" />{tr("Your company identity stays confidential until you approve the buyer's NDA.")}</p>
         </div>
       ) },
-    web: { t: tr("What is your company website?"), h: tr("We use it to auto-fill your profile. You can skip this."),
+    web: { t: L("What is your company website?", "เว็บไซต์ของบริษัทคืออะไร"), h: L("Optional, but auto-fill needs it.", "ไม่บังคับ แต่การกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์นี้"),
       body: (
         <div>
-          <label className={fieldLbl}>{tr("Website URL")}</label>
+          <label htmlFor="sw-web" className={fieldLbl}>{L("Company website", "เว็บไซต์บริษัท")}</label>
           <div className="flex gap-2">
-            <input className={inp} value={d.web} autoFocus maxLength={2048} onChange={(e) => set({ web: e.target.value })}
-              onBlur={() => set({ web: d.web.trim() })} placeholder="https://www.yourcompany.com" />
+            <input id="sw-web" ref={webRef} className={inp} value={d.web} autoFocus maxLength={2048} onChange={(e) => set({ web: e.target.value })}
+              onKeyDown={(e) => { if (e.key === "Enter" && ok.web) { e.preventDefault(); fwdRef.current?.click(); } }}
+              onBlur={() => set({ web: d.web.trim() })} placeholder="www.yourcompany.com" />
             {valid.web ? (
               <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer"
                 className="inline-flex flex-none items-center gap-1.5 rounded-[10px] border border-[#d1d5db] bg-white px-3.5 text-[13.5px] font-semibold text-[#1e2a4a] hover:border-[#1e2a4a]">
@@ -208,9 +250,18 @@ export function SellerWizard({
           </div>
           {d.web.trim() && !valid.web ? (
             <p className="mt-1.5 text-[13px] text-destructive">{tr("Enter a valid website address, e.g. www.yourcompany.com")}</p>
-          ) : (
-            <p className="mt-1.5 text-[13px] text-[#6b7280]">{tr("Click Check website to open it in a new tab and make sure it is your company.")}</p>
-          )}
+          ) : ok.web ? (
+            <p className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-[#15803D]"><CheckIcon className="h-3.5 w-3.5" />{L("Website found. Auto-fill will read it after Review.", "พบเว็บไซต์แล้ว ระบบจะอ่านข้อมูลหลังขั้นตรวจสอบ")}</p>
+          ) : null}
+          <div className="mt-[22px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4">
+            <p className="flex items-center gap-2 text-[14.5px] font-bold text-[#151A28]"><Sparkles className="h-[18px] w-[18px] text-[#2563EB]" />{L("Auto-fill reads your website", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์ของท่าน")}</p>
+            <ul className="mt-2.5 space-y-1.5">
+              {[L("Suggests your company description and corporate information", "แนะนำคำอธิบายบริษัทและข้อมูลบริษัทให้"), L("Takes a few seconds, and you can change anything later", "ใช้เวลาไม่กี่วินาที และท่านแก้ไขได้ทุกอย่างภายหลัง")].map((x) => (
+                <li key={x} className="flex items-start gap-2 text-[14px] text-[#434A5C]"><CheckIcon className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#2563EB]" />{x}</li>
+              ))}
+            </ul>
+            {privacy}
+          </div>
           {webState === "unreachable" && (
             <div className="mt-4 rounded-[10px] border border-[#fcd34d] bg-[#fffbeb] p-3.5">
               <p className="flex items-start gap-2 text-[13.5px] font-medium text-[#92400e]">
@@ -218,7 +269,7 @@ export function SellerWizard({
               </p>
               <div className="mt-3 flex gap-2">
                 <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#374151]"
-                  onClick={() => { setWebState("idle"); (document.querySelector("input[placeholder='https://www.yourcompany.com']") as HTMLInputElement | null)?.focus(); }}>{tr("Edit address")}</button>
+                  onClick={() => { setWebState("idle"); webRef.current?.focus(); }}>{tr("Edit address")}</button>
                 <button type="button" className="rounded-[9px] bg-[#1e2a4a] px-3.5 py-2 text-[13px] font-semibold text-white"
                   onClick={() => advance({ web: normalizeUrl(d.web) })}>{tr("Continue anyway")}</button>
               </div>
@@ -266,9 +317,10 @@ export function SellerWizard({
             </div></div>
         </div>
       ) },
-    review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
+    review: { t: tr("Review your answers"), h: ok.web ? tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards.") : L("Check your answers. Next, you'll complete your profile and save it.", "ตรวจสอบคำตอบของท่าน ขั้นต่อไป ท่านจะกรอกโปรไฟล์ให้ครบและบันทึก"),
       body: (
-        <div className="rounded-[10px] border border-[#e5e7eb]">
+        <div>
+        <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
           {([
             [tr("You are"), SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
             [tr("Company name"), d.name, 1],
@@ -280,13 +332,48 @@ export function SellerWizard({
             [tr("Company size"), WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
             [tr("Sector"), d.sector, 6],
             [tr("Licences & standards"), [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],
-          ] as [string, React.ReactNode, number][]).map(([k, v, n]) => (
-            <div key={k} className="flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0">
-              <span className="w-[170px] flex-none text-[#6b7280]">{k}</span>
-              <b className={`flex-1 font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || tr("Not provided")}</b>
-              <button type="button" className="text-[13px] font-semibold text-[#1e2a4a] underline underline-offset-2" onClick={() => { setFull(n); go(n); }}>{tr("Edit")}</button>
+          ] as [string, React.ReactNode, number][]).map(([k, v, n], ri) => {
+            const key = STEPS[n]!.id as StepKey;
+            const rowOk = [!!d.role, !!d.name.trim(), /^\d{13}$/.test(d.reg), addrComplete(d.addr), ok.web, ok.year, ok.rev, ok.size, ok.sector, ok.lic][ri];
+            const red = !rowOk && barKeys.includes(key);
+            return (
+              <div key={k} className={`flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0 ${red ? "bg-[#FEF2F2]" : ""}`}>
+                <span className="w-[170px] flex-none text-[#6b7280] max-[599px]:w-[110px]">{k}</span>
+                {red ? (
+                  <b className="flex flex-1 items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{L("Not answered", "ยังไม่ได้ตอบ")}</b>
+                ) : (
+                  <b className={`min-w-0 flex-1 break-words font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || tr("Not provided")}</b>
+                )}
+                <button type="button" className={`text-[13px] underline underline-offset-2 ${red ? "font-bold text-[#B91C1C]" : "font-semibold text-[#1e2a4a]"}`}
+                  onClick={() => { setFull(n); focusTitle.current = true; go(n); }}>{red ? L("Answer", "ตอบคำถาม") : tr("Edit")}</button>
+              </div>
+            );
+          })}
+        </div>
+        {barKeys.includes("web") && (!ok.web || webAdded) && (
+          webAdded && ok.web ? (
+            <p tabIndex={-1} id="sw-web-added" className="mt-[18px] flex items-center gap-1.5 text-[13.5px] font-semibold text-[#15803D] outline-none">
+              <CheckIcon className="h-4 w-4" />{L(`Website added. Auto-fill will read ${d.web.replace(/^https?:\/\//i, "").replace(/\/$/, "")}.`, `เพิ่มเว็บไซต์แล้ว ระบบจะอ่านข้อมูลจาก ${d.web.replace(/^https?:\/\//i, "").replace(/\/$/, "")}`)}
+            </p>
+          ) : (
+            <div className="mt-[18px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4">
+              <p className="flex items-center gap-2 text-[14.5px] font-bold text-[#151A28]"><Sparkles className="h-[18px] w-[18px] text-[#2563EB]" />{L("Add your website to use auto-fill", "เพิ่มเว็บไซต์เพื่อใช้การกรอกข้อมูลอัตโนมัติ")}</p>
+              <p className="mt-1.5 text-[13.5px] text-[#434A5C]">{L("Auto-fill reads your website to suggest your company description and corporate information. Without it, you'll fill them in yourself on the next screen.", "ระบบจะอ่านเว็บไซต์ของท่านเพื่อแนะนำคำอธิบายบริษัทและข้อมูลบริษัท หากไม่มีเว็บไซต์ ท่านจะต้องกรอกเองในหน้าถัดไป")}</p>
+              <div className="mt-3 flex gap-2.5 max-[599px]:flex-col">
+                <input aria-label={L("Company website", "เว็บไซต์บริษัท")} value={revWeb} maxLength={2048} placeholder="www.yourcompany.com"
+                  onChange={(e) => { setRevWeb(e.target.value); setRevWebErr(false); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addReviewWeb(); } }}
+                  className={`h-11 min-w-0 flex-1 rounded-[10px] border bg-white px-3 text-[15px] outline-none ${revWebErr ? "border-[#B42318]" : "border-[#DCDFE5] focus:border-[#1e2a4a]"}`} />
+                <button type="button" onClick={addReviewWeb} className="h-11 rounded-[10px] bg-[#1e2a4a] px-4 text-[14.5px] font-semibold text-white">{L("Add website", "เพิ่มเว็บไซต์")}</button>
+              </div>
+              {revWebErr && <p className="mt-1.5 text-[13px] text-[#B42318]">{tr("Enter a valid website address, e.g. www.yourcompany.com")}</p>}
+              {privacy}
             </div>
-          ))}
+          )
+        )}
+        {blockers.length > 0 && (
+          <p className="mt-[18px] text-[13.5px] text-[#B91C1C]">{L(`Answer ${joinNames(blockers.map((k) => STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
+        )}
         </div>
       ) },
   };
@@ -304,12 +391,15 @@ export function SellerWizard({
           <b className="font-semibold text-[#111827]">{tr(SECTIONS[cur.sec])}</b>
           <span>Step {pos + 1} of {shown.length}</span>
         </div>
-        <div className="mb-8 h-1 overflow-hidden rounded-full bg-[#e5e7eb]">
-          <i className="block h-full bg-[#1e2a4a] transition-[width] duration-300" style={{ width: `${((pos + 1) / shown.length) * 100}%` }} />
+        <div className="mb-6 mt-5">
+          <StepBar steps={items} lineTo={lineTo} onPick={openStep} label={L("Setup steps", "ขั้นตอนการตั้งค่า")} stepWord={stepWord} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />
+          <MissedNote missed={missed} onPick={openStep} answerNow={L("Answer now", "ตอบเลย")}
+            desktop={th ? `มี ${missed.length} คำถามที่ยังไม่ได้ตอบ กดวงกลมสีแดงเพื่อตอบ` : missed.length === 1 ? "1 question not answered. Click the red step to answer it." : `${missed.length} questions not answered. Click a red step to answer it.`}
+            row={(n, f) => L(`Step ${n} · ${f} isn't answered yet`, `ขั้นที่ ${n} · ${f} ยังไม่ได้ตอบ`)} />
         </div>
         <div className="rounded-[14px] border border-[#e5e7eb] bg-white px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-            <h2 className="mb-1.5 text-2xl font-bold leading-snug tracking-[-0.015em]">{tr(q.t)}</h2>
+            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-[-0.015em]">{tr(q.t)}</h2>
             {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{tr(q.h)}</p>}
             {!q.h && <div className="mb-6" />}
             {q.body}
@@ -319,14 +409,14 @@ export function SellerWizard({
               className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : tr("Back")}</button>
             {canSkip && (
               <button type="button" className="text-sm font-semibold text-[#6b7280]"
-                onClick={() => { if (cur.id === "web") advance({ web: "" }); else advance(); }}>{tr("Skip")}</button>
+                ref={skipRef} onClick={() => { if (cur.id === "web") setSkipAsk(true); else advance(); }}>{tr("Skip")}</button>
             )}
             <div className="ml-auto flex items-center gap-2.5">
               {pos > 0 && (
                 <button type="button" onClick={() => setConfirmExit(true)}
                   className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{tr("Save &amp; exit")}</button>
               )}
-              <button type="button" disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
+              <button type="button" ref={fwdRef} disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
                 onClick={async () => {
                   if (cur.id === "review") return onFinish(d);
                   if (cur.id === "web") {
@@ -341,13 +431,36 @@ export function SellerWizard({
                   }
                   advance();
                 }}
-                className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
-                {cur.id === "review" ? "Continue to auto-fill" : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? "Back to review" : tr("Continue")}
+                className={cur.id === "review" && !ok.web
+                  ? "rounded-[10px] border border-[#DCDFE5] bg-white px-5 py-3 font-semibold text-[#434A5C] disabled:cursor-not-allowed disabled:opacity-50"
+                  : "rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]"}>
+                {cur.id === "review" ? (ok.web ? tr("Continue to auto-fill") : L("Continue without auto-fill", "ไปต่อโดยไม่ใช้การกรอกข้อมูลอัตโนมัติ")) : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? tr("Back to review") : tr("Continue")}
 
               </button>
             </div>
           </div>
         </div>
+        {skipAsk && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => { setSkipAsk(false); skipRef.current?.focus(); }}>
+            <div role="dialog" aria-modal="true" aria-labelledby="sw-skip-t" aria-describedby="sw-skip-d"
+              className="w-full max-w-[440px] rounded-[16px] bg-white p-6 shadow-xl dark:bg-card" onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") { e.stopPropagation(); setSkipAsk(false); skipRef.current?.focus(); }
+                if (e.key === "Tab") { const b = Array.from(e.currentTarget.querySelectorAll("button")); const i = b.indexOf(document.activeElement as HTMLButtonElement); e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length]?.focus(); }
+              }}>
+              <span className="grid h-11 w-11 place-items-center rounded-[12px] bg-[#F4F9FF] dark:bg-[#16283A]"><Globe className="h-[22px] w-[22px] text-[#2563EB] dark:text-[#8CBFF0]" /></span>
+              <h3 id="sw-skip-t" className="mt-3.5 text-[20px] font-bold" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{L("Skip your website?", "ข้ามเว็บไซต์ใช่ไหม")}</h3>
+              <p id="sw-skip-d" className="mt-2 text-[14.5px] leading-[1.55] text-[#434A5C] dark:text-muted-foreground">{L("Without your website, auto-fill can't suggest your company description or corporate information. You'll fill them in yourself after Review.", "หากไม่มีเว็บไซต์ ระบบกรอกข้อมูลอัตโนมัติจะแนะนำคำอธิบายบริษัทและข้อมูลบริษัทให้ไม่ได้ ท่านจะต้องกรอกเองหลังขั้นตรวจสอบ")}</p>
+              {privacy}
+              <div className="mt-[22px] flex justify-end gap-2.5 max-[599px]:flex-col-reverse">
+                <button type="button" onClick={() => { setSkipAsk(false); advance({ web: "" }); }}
+                  className="h-11 rounded-[10px] border border-[#DCDFE5] bg-white px-4 font-semibold text-[#374151] dark:border-border dark:bg-transparent dark:text-foreground">{L("Skip for now", "ข้ามไปก่อน")}</button>
+                <button type="button" ref={addWebRef} autoFocus onClick={() => { setSkipAsk(false); window.setTimeout(() => webRef.current?.focus(), 20); }}
+                  className="h-11 rounded-[10px] bg-[#1e2a4a] px-4 font-semibold text-white">{L("Add my website", "เพิ่มเว็บไซต์")}</button>
+              </div>
+            </div>
+          </div>
+        )}
         {confirmExit && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => setConfirmExit(false)}>
             <div role="dialog" aria-modal="true" className="w-full max-w-[400px] rounded-[14px] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
