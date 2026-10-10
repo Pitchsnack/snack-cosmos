@@ -5,9 +5,9 @@ import { listSectorImages, type SectorImage } from "@/lib/sector-images.function
 export const SECTOR_IMAGES_KEY = ["sector-images"] as const;
 
 /** Every sector image (oldest first), shared by all covers and the Sector images page. */
-export function useSectorImages() {
+export function useSectorImages(enabled = true) {
   const fn = useServerFn(listSectorImages);
-  return useQuery({ queryKey: SECTOR_IMAGES_KEY, queryFn: () => fn(), staleTime: 5 * 60_000 });
+  return useQuery({ queryKey: SECTOR_IMAGES_KEY, queryFn: () => fn(), staleTime: 5 * 60_000, enabled });
 }
 
 /**

@@ -9,9 +9,9 @@ import { useCanManageSectorImages } from "@/components/startups/sector-images-me
 export const INVESTOR_IMAGES_KEY = ["investor-images"] as const;
 export const INVESTOR_DIRECTORY_SEARCH_KEY = "investors-directory-search";
 
-export function useInvestorImages() {
+export function useInvestorImages(enabled = true) {
   const fn = useServerFn(listInvestorImages);
-  return useQuery({ queryKey: INVESTOR_IMAGES_KEY, queryFn: () => fn(), staleTime: 5 * 60_000 });
+  return useQuery({ queryKey: INVESTOR_IMAGES_KEY, queryFn: () => fn(), staleTime: 5 * 60_000, enabled });
 }
 
 /** Investors Directory ☰ button: one item, Investor images. Approvers only. */

@@ -5,6 +5,7 @@ import { INDIVIDUAL_TYPE, bandOf, typeName } from "@/lib/investor-bands";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 import { useInvestorTypeImage } from "@/hooks/use-investor-type-image";
+import { FadeImg } from "@/components/hidden-profile/bits";
 
 export function TypeIcon({ type, className }: { type: string | null; className?: string }) {
   const t = (type ?? "").toLowerCase();
@@ -14,13 +15,14 @@ export function TypeIcon({ type, className }: { type: string | null; className?:
 }
 
 /** Investor cover: Admin's investor-type image, else a drawn cover — never a logo. */
-export function BuyerCover({ type, className, children }: { type: string | null; className?: string; children?: React.ReactNode }) {
+export function BuyerCover({ type, className, children, src }: { type: string | null; className?: string; children?: React.ReactNode; /** Cover address sent by the server; skips the client lookup. */ src?: string | null }) {
   const tone = typeTone(type);
-  const img = useInvestorTypeImage(type);
+  const looked = useInvestorTypeImage(type, src === undefined);
+  const img = src !== undefined ? src : looked;
   if (img) {
     return (
-      <div className={cn("relative overflow-hidden", tone.bg, className)}>
-        <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+      <div className={cn("relative overflow-hidden bg-secondary", className)}>
+        <FadeImg src={img} />
         {children}
       </div>
     );
@@ -210,7 +212,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" && e.target === e.currentTarget) onClick(); } : undefined}
       className={cn("group/card overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-all duration-200 ease-out hover:border-accent hover:shadow-[var(--shadow-elevated)] [&_[data-card-title]]:transition-colors hover:[&_[data-card-title]]:text-accent", className)}
     >
-      <BuyerCover type={i.type} className="h-[110px]">
+      <BuyerCover type={i.type} src={(i as { coverUrl?: string | null }).coverUrl} className="h-[110px]">
         <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
           <EyeOff className="h-3 w-3" />Name hidden
         </span>

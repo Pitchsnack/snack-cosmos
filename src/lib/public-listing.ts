@@ -30,6 +30,8 @@ export interface ListingSource {
 }
 
 export interface PublicListing {
+  /** Card-sized cover address sent with Browse lists (undefined = look it up on the client, null = drawn cover). */
+  coverUrl?: string | null;
   headline: string;
   description: string;
   productTags: string[];

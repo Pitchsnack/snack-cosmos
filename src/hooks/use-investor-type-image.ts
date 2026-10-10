@@ -12,7 +12,7 @@ export function resolveInvestorCover(images: InvestorImage[] | undefined, type: 
   return withUrl.find((i) => i.type_key.toLowerCase() === t) ?? withUrl.find((i) => i.type_key === "Investor") ?? null;
 }
 
-export function useInvestorTypeImage(type: string | null | undefined): string | null {
-  const { data } = useInvestorImages();
-  return resolveInvestorCover(data, type)?.url ?? null;
+export function useInvestorTypeImage(type: string | null | undefined, enabled = true): string | null {
+  const { data } = useInvestorImages(enabled);
+  return enabled ? resolveInvestorCover(data, type)?.url ?? null : null;
 }

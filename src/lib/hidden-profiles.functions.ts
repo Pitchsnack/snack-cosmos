@@ -277,18 +277,21 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       rowsIn = rowsIn.filter((r) => !nda.has(r.id));
     }
     const nda = cap === null ? new Set<string>() : await (await import("@/lib/favourites.functions")).activeNdaIds(userId);
-    return rowsIn.map((r) => {
+    const cover = await (await import("@/lib/cover-urls.server")).sectorCoverResolver();
+    return Promise.all(rowsIn.map(async (r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
       // Above the plan's price cap (and no NDA yet): the card stays closed and no details are sent.
       if (cap !== null && live.asking_price != null && Number(live.asking_price) > cap && !nda.has(r.id)) {
-        // Only four safe fields: sector, region, ref and the price band.
+        // Only four safe fields: sector, region, ref and the price band. No picture.
         const o = open(r, live);
         const ask = Number(live.asking_price);
         const priceBand = ask < 50 ? "Asking under ฿50M" : ask <= 200 ? "Asking ฿50M – 200M" : "Asking over ฿200M";
         return { id: r.id, closed: true as const, needPlan: cap < 200 ? "Investor" : "Institutional", sector: o.listing.sector, region: o.listing.location || null, refNo: o.listing.refNo || null, priceBand, capM: cap } as unknown as ReturnType<typeof open>;
       }
-      return open(r, live);
-    });
+      const o = open(r, live);
+      o.listing.coverUrl = await cover(o.listing.sector, o.listing.publicImageId);
+      return o;
+    }));
     function open(r: (typeof rowsIn)[number], live: HiddenDraft) {
       const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: (r as { public_image_id?: string | null }).public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
