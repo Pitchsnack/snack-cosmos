@@ -6,7 +6,7 @@ const c = (en: string, th: string): C => ({ en, th });
 export const NAV = {
   home: c("Home", "หน้าแรก"), sellers: c("For sellers", "ผู้ขาย"), buyers: c("For buyers", "ผู้ซื้อ"), partners: c("For partners", "พาร์ทเนอร์"),
   plans: c("Plans", "ค่าบริการ"), discovery: c("Discovery", "ตัวอย่างหน้าจอ"),
-  talk: c("Start a conversation", "เริ่มพูดคุยกับเรา"), langShort: c("EN", "ไทย"), login: c("Log in", "เข้าสู่ระบบ"),
+  talk: c("Start a conversation", "เริ่มพูดคุยกับเรา"), langShort: c("EN", "ไทย"), login: c("Log in", "เข้าสู่ระบบ"), signup: c("Sign up", "สร้างบัญชี"),
 };
 
 export const HERO = {
@@ -14,6 +14,7 @@ export const HERO = {
   h1: c("The confidential marketplace for Thai businesses changing hands.", "ตลาดกลางที่เป็นความลับ\nสำหรับกิจการไทย\nที่กำลังจะเปลี่ยนมือ"),
   intro: c("PitchSnack is a neutral Thai marketplace where verified SME owners meet corporate and investor buyers. We make the introduction and score every target against the documented failure predictors before an offer; licensed advisers run the deal, and PitchSnack never holds funds or takes a side.",
     "PitchSnack คือตลาดกลางที่เป็นกลาง ซึ่งเจ้าของกิจการ SME ไทยที่ผ่านการตรวจสอบ ได้พบกับผู้ซื้อระดับองค์กรและนักลงทุน เราทำหน้าที่ชี้ช่องแนะนำ และประเมินกิจการเป้าหมายทุกรายตามปัจจัยที่งานวิจัยระบุว่าทำให้ดีลล้มเหลว ก่อนมีการยื่นข้อเสนอ ธุรกรรมดำเนินการโดยที่ปรึกษาที่มีใบอนุญาต และ PitchSnack ไม่ถือเงินและไม่เข้าข้างฝ่ายใด"),
+  joinFree: c("Free to join, about 2 minutes · Learn more:", "สมัครฟรี ใช้เวลาประมาณ 2 นาที · อ่านเพิ่มเติม:"), forSellers: c("For sellers", "สำหรับผู้ขาย"), forBuyers: c("For buyers", "สำหรับผู้ซื้อ"), advisers: c("Advisers and partners, sign up here", "ที่ปรึกษาและพาร์ทเนอร์ สมัครที่นี่"),
   own: c("I own a business", "ฉันเป็นเจ้าของกิจการ"), acquire: c("I am looking to acquire", "ฉันต้องการซื้อกิจการ"),
   fine: c("Introducer · no custody of funds · no side taken · a 1.25–3.0% completion fee on the seller side, published in advance",
     "ชี้ช่อง · ไม่ถือเงิน · ไม่เข้าข้างฝ่ายใด · ค่าธรรมเนียมเมื่อปิดดีล 1.25–3.0% เรียกเก็บจากผู้ขาย และเปิดเผยล่วงหน้า"),

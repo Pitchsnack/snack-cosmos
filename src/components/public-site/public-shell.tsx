@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, Globe, LogIn } from "lucide-react";
+import { Check, ChevronDown, Globe, LogIn, UserPlus } from "lucide-react";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import { FOOTER, NAV, type Lang } from "./home-copy";
 import { PrivacyLink } from "./privacy-notice";
@@ -79,6 +79,7 @@ function TopBar({ current, talkHref }: { current: keyof typeof NAV | null; talkH
           <div className="ph-ctrls-r">
             <LangMenu />
             <Link to="/login" className="ph-login"><LogIn className="ph-login-ic" size={15} />{t(NAV.login)}</Link>
+            <a href="/signup" className="ph-signup"><UserPlus className="ph-login-ic" size={15} />{t(NAV.signup)}</a>
           </div>
         </div>
       </div>
