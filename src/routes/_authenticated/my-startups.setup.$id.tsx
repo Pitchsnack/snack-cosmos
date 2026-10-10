@@ -5,7 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SellerWizard } from "@/components/startups/seller-wizard";
 import { getSellerSetup, saveSellerSetup, type SellerSetup } from "@/lib/seller-setup.functions";
-import { emptyDraft, firstOpenStep, type SellerDraft } from "@/lib/seller-wizard";
+import { emptyDraft, firstUnanswered, SELLER_STEPS, type SellerDraft } from "@/lib/seller-wizard";
+import { z } from "zod";
 import { useSessionContext } from "@/hooks/use-session-context";
 
 export const Route = createFileRoute("/_authenticated/my-startups/setup/$id")({
@@ -19,32 +20,38 @@ export const Route = createFileRoute("/_authenticated/my-startups/setup/$id")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s) => z.object({ step: z.string().max(20).optional() }).parse(s),
   component: Page,
 });
 
 export const sellerSetupKey = (id: string) => ["seller-setup", id];
 
-function toDraft(s: SellerSetup): SellerDraft {
+function toDraft(s: SellerSetup, open?: string): SellerDraft {
   const d: SellerDraft = {
     ...emptyDraft(), role: s.role, name: s.name, reg: s.reg, web: s.web, year: s.year, city: s.city,
     rev: s.rev, size: s.size, sector: s.sector, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
+    reached: s.reached,
   };
-  return { ...d, step: firstOpenStep(d, s.fromSignup) };
+  // Opens the step asked for, else the first question without an answer (skipped included), else Review.
+  const key = open && [...SELLER_STEPS.map((x) => x.id), "review"].includes(open as never) ? open : firstUnanswered(d, s.fromSignup);
+  const i = SELLER_STEPS.findIndex((x) => x.id === key);
+  return { ...d, step: i < 0 ? SELLER_STEPS.length : i };
 }
 
 function Page() {
   const { id } = Route.useParams();
+  const { step: openAt } = Route.useSearch();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
   const fetchFn = useServerFn(getSellerSetup);
   const saveFn = useServerFn(saveSellerSetup);
   const { data, error } = useQuery({ queryKey: sellerSetupKey(id), queryFn: () => fetchFn({ data: { id } }), staleTime: 0 });
-  const initial = useMemo(() => (data ? toDraft(data) : null), [data]);
+  const initial = useMemo(() => (data ? toDraft(data, openAt) : null), [data]); // eslint-disable-line react-hooks/exhaustive-deps
   const timer = useRef<number | null>(null);
   const payload = (d: SellerDraft, done?: boolean) => ({
     id, role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size,
-    sector: d.sector, licences: d.licences, iso: d.iso, addr: d.addr, done,
+    sector: d.sector, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never,
   });
   const persist = (d: SellerDraft) => {
     if (timer.current) window.clearTimeout(timer.current);
