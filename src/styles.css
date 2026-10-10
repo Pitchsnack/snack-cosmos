@@ -323,3 +323,18 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .role-seller { --r-acc: #F0A93B; --r-soft: #FDF1DD; --r-ink: #8A4B06; --r-ring: rgba(240,169,59,.22); }
 .role-buyer { --r-acc: #4F46E5; --r-soft: #EEF0FF; --r-ink: #3730A3; --r-ring: rgba(79,70,229,.22); }
 .role-advisor { --r-acc: #0F766E; --r-soft: #E0F5F2; --r-ink: #0F766E; --r-ring: rgba(15,118,110,.22); }
+
+/* Setup wizards: gentle blue hover (scoped to .wiz; option cards use text-left and keep their own hover) */
+.wiz button:not(:disabled) { transition: background-color 150ms, border-color 150ms, color 150ms; }
+@media (prefers-reduced-motion: reduce) { .wiz button { transition: none; } }
+@media (hover: hover) {
+  .wiz button[class*="border"][class*="bg-white"]:not([class*="text-left"]):not(:disabled):hover,
+  .wiz button[class*="border"][class*="bg-white"]:not([class*="text-left"]):not(:disabled):hover * { background-color: #EFF6FF; border-color: #93C5FD; color: #1D4ED8; }
+  .wiz button[class*="bg-[#1e2a4a]"]:not(:disabled):hover, .wiz button[class*="bg-[#1E2A4A]"]:not(:disabled):hover { background-color: #3B6FD8; border-color: #3B6FD8; color: #fff; }
+  .wiz button[class*="underline"]:not([class*="text-[#B42318]"]):not(:disabled):hover { color: #1D4ED8; text-decoration: underline; }
+  .dark .wiz button[class*="border"][class*="bg-white"]:not([class*="text-left"]):not(:disabled):hover,
+  .dark .wiz button[class*="border"][class*="bg-white"]:not([class*="text-left"]):not(:disabled):hover * { background-color: #13243F; border-color: #3B6BB0; color: #93C5FD; }
+  .dark .wiz button[class*="underline"]:not(:disabled):hover { color: #93C5FD; }
+}
+.wiz button[class*="border"][class*="bg-white"]:not([class*="text-left"]):not(:disabled):active { background-color: #EFF6FF; border-color: #93C5FD; color: #1D4ED8; }
+.wiz button[class*="bg-[#1e2a4a]"]:not(:disabled):active, .wiz button[class*="bg-[#1E2A4A]"]:not(:disabled):active { background-color: #3B6FD8; }

@@ -606,7 +606,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const liveFirm = qc.getQueryData<AdvisorFirm[]>(ADVISOR_FIRMS_KEY)?.find((x) => x.id === firm.id) ?? firm;
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9] text-[#151A28] dark:bg-background dark:text-foreground" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }} onKeyDown={onKeyDown}>
+    <div className="wiz min-h-screen bg-[#F6F7F9] text-[#151A28] dark:bg-background dark:text-foreground" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }} onKeyDown={onKeyDown}>
       {topBar}
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
@@ -621,7 +621,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">
               <button type="button" className={btnO} disabled={idx === 0} onClick={back}>{tr("Back")}</button>
-              {optional && <button type="button" className="px-2 text-[15px] font-medium text-[#434A5C] hover:underline dark:text-muted-foreground" onClick={skip}>{tr("Skip")}</button>}
+              {optional && <button type="button" className={btnO} onClick={skip}>{tr("Skip")}</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
                 <button type="button" className={`${btnO} flex-1 hover:bg-[#F6F7F9] sm:flex-none`} disabled={exiting} onClick={() => void leave(true)}>{tr("Save &amp; exit")}</button>
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk && !optional} onClick={tryContinue}>{continueLabel}</button>
