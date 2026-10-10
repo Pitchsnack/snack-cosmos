@@ -92,8 +92,11 @@ export const listBrowseInvestors = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { requireRole } = await import("./plan-access.server");
     await requireRole(context.userId, ["seller"]);
-    const list = await loadPublicInvestors(await admin());
-    return list.map(({ userId: _u, liveSince: _l, ...i }) => i as PublicInvestor);
+    const [list, cover] = await Promise.all([
+      loadPublicInvestors(await admin()),
+      import("./cover-urls.server").then((m) => m.investorCoverResolver()),
+    ]);
+    return Promise.all(list.map(async ({ userId: _u, liveSince: _l, ...i }) => ({ ...(i as PublicInvestor), coverUrl: await cover(i.type) })));
   });
 
 export type SellerFavStatus = "approved" | "requested" | "saved";

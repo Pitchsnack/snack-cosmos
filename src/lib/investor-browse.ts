@@ -5,6 +5,8 @@
 import { AUM_BANDS, REV_BANDS, TICKET_BANDS, bandOf } from "@/lib/investor-bands";
 
 export type PublicInvestor = {
+  /** Card-sized cover address sent with Browse investors. */
+  coverUrl?: string | null;
   id: string;
   refNo: string;
   /** Seller-facing title before an NDA: the investor type ("Investor" when unset). */
