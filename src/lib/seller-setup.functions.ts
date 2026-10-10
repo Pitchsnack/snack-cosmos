@@ -11,7 +11,7 @@ async function admin() {
 export type SellerSetup = {
   id: string; name: string; reg: string; web: string; year: string; city: string; rev: string | null; size: string | null;
   sector: string | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
-  role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null;
+  role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null; reached: string | null;
   addr: { street: string; unit: string; district: string; province: string; postal: string };
 };
 
@@ -44,7 +44,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       year: s.year_founded ? String(s.year_founded) : "", city: s.city ?? "", rev: s.last_year_revenue ?? null,
       size: s.company_size ?? null, sector: s.sector ?? null, licences: s.regulatory_licenses ?? [], iso: s.iso_standards ?? [],
       addr: { street: s.address_line1 ?? "", unit: s.address_line2 ?? "", district: s.address_city_district ?? "", province: s.address_province_state ?? s.city ?? "", postal: s.postal_code ?? "" },
-      role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null,
+      role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null, reached: s.setup_reached ?? null,
     };
   });
 
@@ -59,6 +59,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
     done: z.boolean().optional(),
+    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "review"]).nullable().optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { assertCanSetup } = await import("./seller-setup.server");
@@ -73,6 +74,12 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if (data.addr) { Object.assign(patch, addrPatch(data.addr)); if (data.addr.province) patch.city = data.addr.province; }
     if (data.name.trim()) patch.startup_name = data.name.trim();
     if (data.done) patch.setup_done_at = new Date().toISOString();
+    if (data.reached) {
+      // Never moves back.
+      const order = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "review"];
+      const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
+      if (order.indexOf(data.reached) > order.indexOf(cur?.setup_reached ?? "")) patch.setup_reached = data.reached;
+    }
     const { error } = await sb.from("startups").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     if (data.role) await sb.from("startup_ownership").update({ seller_relation: data.role }).eq("startup_id", data.id);

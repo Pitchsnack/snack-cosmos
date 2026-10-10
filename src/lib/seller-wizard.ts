@@ -127,6 +127,49 @@ export function firstOpenStep(d: SellerDraft, fromSignup: string[] = []): number
   return i ?? REVIEW_STEP;
 }
 
+/* ── Step bar: answered = the saved answer is valid (Skip leaves it unanswered) ── */
+export const STEP_KEYS = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "review"] as const;
+export type StepKey = (typeof STEP_KEYS)[number];
+export const STEP_SHORT: Record<StepKey, [string, string]> = {
+  role: ["Role", "บทบาท"], name: ["Company", "บริษัท"], web: ["Website", "เว็บไซต์"], year: ["Founded", "ปีก่อตั้ง"],
+  rev: ["Revenue", "รายได้"], size: ["Size", "ขนาด"], sector: ["Sector", "กลุ่มอุตสาหกรรม"], lic: ["Licences", "ใบอนุญาต"], review: ["Review", "ตรวจสอบ"],
+};
+export const STEP_FULL: Record<StepKey, [string, string]> = {
+  role: ["Your role", "บทบาทของคุณ"], name: ["Company name, registration number and address", "ชื่อบริษัท เลขทะเบียน และที่อยู่"],
+  web: ["Company website", "เว็บไซต์บริษัท"], year: ["Year founded", "ปีที่ก่อตั้ง"], rev: ["Revenue last year", "รายได้ปีที่แล้ว"],
+  size: ["Company size", "ขนาดบริษัท"], sector: ["Business sector", "กลุ่มอุตสาหกรรม"], lic: ["Licences and certifications", "ใบอนุญาตและมาตรฐาน"],
+  review: ["Review your answers", "ตรวจสอบข้อมูล"],
+};
+const YEAR_NOW = new Date().getFullYear();
+/** The checks each question's Continue uses. */
+export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
+  const y = Number(d.year);
+  return {
+    role: !!d.role,
+    name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
+    web: isValidUrl(d.web),
+    year: /^\d{4}$/.test(d.year) && y >= 1800 && y <= YEAR_NOW,
+    rev: !!d.rev, size: !!d.size, sector: !!d.sector,
+    lic: d.licences.length + d.iso.length > 0,
+    review: false,
+  };
+}
+export const stepIdx = (k: string | null | undefined) => (k ? STEP_KEYS.indexOf(k as StepKey) : -1);
+/** Later of two reached keys. */
+export const laterKey = (a: string | null | undefined, b: string | null | undefined) => (stepIdx(b) > stepIdx(a) ? b ?? null : a ?? null);
+/** Question keys that show (sign-up answers left out), in order. */
+export const sellerQuestionKeys = (d: SellerDraft, fromSignup: string[] = []): StepKey[] =>
+  sellerShown(d, fromSignup).map((i) => SELLER_STEPS[i]!.id as StepKey);
+/** Not answered = no valid answer and before the furthest step opened. */
+export const isMissed = (k: StepKey, d: SellerDraft) => !sellerValid(d)[k] && stepIdx(k) < stepIdx(d.reached);
+/** First question without an answer (skipped included), else review. */
+export function firstUnanswered(d: SellerDraft, fromSignup: string[] = []): StepKey {
+  const v = sellerValid(d);
+  return sellerQuestionKeys(d, fromSignup).find((k) => !v[k]) ?? "review";
+}
+export const joinNames = (n: string[], th: boolean) =>
+  n.length < 2 ? n.join("") : th ? `${n.slice(0, -1).join(", ")} และ ${n[n.length - 1]}` : `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`;
+
 export const normalizeUrl = (raw: string) => {
   const v = raw.trim();
   return v && !/^https?:\/\//i.test(v) ? `https://${v}` : v;
@@ -146,12 +189,14 @@ export interface SellerDraft {
   licences: RegulatoryLicence[];
   iso: string[];
   addr: SellerAddr;
+  /** Furthest step key opened (setup_reached). */
+  reached?: string | null;
   savedAt: string;
 }
 
 export const emptyDraft = (): SellerDraft => ({
   step: 0, role: null, name: "", reg: "", web: "", year: "", city: "",
-  rev: null, size: null, sector: null, licences: [], iso: [], addr: emptyAddr(), savedAt: new Date().toISOString(),
+  rev: null, size: null, sector: null, licences: [], iso: [], addr: emptyAddr(), reached: null, savedAt: new Date().toISOString(),
 });
 
 const key = (userId: string) => `ps.sellerDraft.${userId}`;
