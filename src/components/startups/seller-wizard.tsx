@@ -384,7 +384,7 @@ export function SellerWizard({
   const q = cur.id === "name" ? { ...Q.name!, body: Q.nameBody!.body } : Q[cur.id]!;
 
   return (
-    <div className="-m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+    <div className="wiz -m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
         <span className="text-[14px] font-semibold">{title}</span>
         <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : tr("All changes saved")}</span>
@@ -411,7 +411,7 @@ export function SellerWizard({
             <button type="button" onClick={back}
               className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : tr("Back")}</button>
             {canSkip && (
-              <button type="button" className="text-sm font-semibold text-[#6b7280]"
+              <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
                 ref={skipRef} onClick={() => { if (cur.id === "web") setSkipAsk(true); else advance(); }}>{tr("Skip")}</button>
             )}
             <div className="ml-auto flex items-center gap-2.5">
@@ -482,7 +482,7 @@ export function SellerWizard({
               <p className="mt-2 text-[13px] text-[#6b7280]">{sellerProgress(d, fromSignup).n} of {sellerProgress(d, fromSignup).N} questions answered</p>
               <div className="mt-5 flex justify-end gap-2">
                 <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151]">{tr("Keep going")}</button>
-                <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">{tr("Save &amp; exit")}</button>
+                <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">{tr("Save & exit")}</button>
               </div>
             </div>
           </div>

@@ -527,7 +527,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const btnP = "cursor-pointer h-[50px] rounded-[12px] bg-[#1E2A4A] px-6 text-[16px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CACED8]";
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9] text-[#151A28] dark:bg-background dark:text-foreground" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }} onKeyDown={onKeyDown}>
+    <div className="wiz min-h-screen bg-[#F6F7F9] text-[#151A28] dark:bg-background dark:text-foreground" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }} onKeyDown={onKeyDown}>
       {topBar}
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
@@ -542,7 +542,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">
               <button type="button" className={btnO} disabled={idx === 0} onClick={back}>{tr("Back")}</button>
-              {optional && <button type="button" className="px-2 text-[15px] font-semibold text-[#6B7280]" onClick={skip}>{tr("Skip")}</button>}
+              {optional && <button type="button" className={btnO} onClick={skip}>{tr("Skip")}</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
                 <button type="button" className={`${btnO} flex-1 cursor-pointer hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait sm:flex-none`} disabled={exiting} onClick={saveExit}>{exiting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr("Saving…")}</span> : <>{tr("Save &amp; exit")}</>}</button>
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk} onClick={tryContinue}>{continueLabel}</button>
