@@ -8,6 +8,7 @@ import { AlertCircle, AlertTriangle, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { SECTOR_GROUPS, sectorGroupOf } from "@/lib/sectors";
 import { cn } from "@/lib/utils";
+import { tr, useTranslation } from "@/i18n/language";
 
 type Agnostic = {
   on: boolean;
@@ -37,6 +38,7 @@ export function SetSectorPicker({
   agnostic?: Agnostic;
   error?: string | null;
 }) {
+  useTranslation();
   const [group, setGroup] = useState(() => sectorGroupOf(value[0]) ?? SECTOR_GROUPS[0]!.group);
   const tabsRef = useRef<HTMLDivElement>(null);
   const radiosRef = useRef<HTMLDivElement>(null);
@@ -62,7 +64,7 @@ export function SetSectorPicker({
   };
   const toggle = (s: string) => {
     if (value.includes(s)) return onChange(value.filter((x) => x !== s));
-    if (value.length >= max) { toast.error(limitMsg ?? `Pick up to ${max}.`); return; }
+    if (value.length >= max) { toast.error(limitMsg ?? `${tr("Pick up to")} ${max}.`); return; }
     onChange([...value, s]);
   };
   const countIn = (sectors: string[]) => value.filter((v) => sectors.includes(v)).length;
@@ -80,7 +82,7 @@ export function SetSectorPicker({
             <span className={cn("grid h-[18px] w-[18px] flex-none place-items-center rounded-[5px] border-[1.5px] text-white",
               off ? cn("border-transparent", navy) : "border-[#C3C8D2] dark:border-[#3A4158]")}>{off && <Check className="h-3 w-3" strokeWidth={3} />}</span>
             <span>
-              <b className="block text-[14.5px] font-semibold text-[#151A28] dark:text-foreground">Sector agnostic</b>
+              <b className="block text-[14.5px] font-semibold text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b>
               <span className="text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{agnostic.line}</span>
             </span>
           </button>
@@ -107,7 +109,7 @@ export function SetSectorPicker({
                   "max-sm:rounded-full max-sm:border max-sm:border-[#DCDFE5] max-sm:px-3 max-sm:py-1.5 dark:max-sm:border-[#2A3044]",
                   on ? "bg-white font-semibold text-[#151A28] shadow-[0_1px_3px_rgba(16,24,40,.08)] max-sm:border-[#1E2A4A] dark:bg-[#161B2B] dark:text-foreground dark:max-sm:border-[#4A5CA6]"
                     : "font-medium text-[#434A5C] hover:bg-white dark:text-muted-foreground dark:hover:bg-[#161B2B]")}>
-                <span className="truncate">{g.group}</span>
+                <span className="truncate">{tr(g.group)}</span>
                 {n > 0 ? (
                   single
                     ? <span className={cn("ml-auto grid h-5 w-5 flex-none place-items-center rounded-full text-white", navy)}><Check className="h-3 w-3" strokeWidth={3} /></span>
@@ -119,7 +121,7 @@ export function SetSectorPicker({
         </div>
 
         <div role="tabpanel" aria-label={open.group} className="max-h-[300px] overflow-y-auto p-2 sm:max-h-none">
-          <div className="px-2 pb-2 pt-1.5 text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">{open.group}</div>
+          <div className="px-2 pb-2 pt-1.5 text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">{tr(open.group)}</div>
           <div ref={radiosRef} role={single ? "radiogroup" : "group"} aria-label={`${open.group} sectors`}>
             {open.sectors.map((s, i) => {
               const on = value.includes(s);
@@ -131,7 +133,7 @@ export function SetSectorPicker({
                     on ? "bg-[#F4F6FA] font-semibold dark:bg-[#1B2238]" : "hover:bg-[#F6F7F9] dark:hover:bg-[#1B2238]/60")}>
                   <span className={cn("h-5 w-5 flex-none rounded-full border-[1.5px]",
                     on ? "border-[6px] border-[#1E2A4A] dark:border-[#4A5CA6]" : "border-[#C3C8D2] dark:border-[#3A4158]")} />
-                  {s}
+                  {tr(s)}
                 </button>
               ) : (
                 <label key={s} className={cn("flex w-full cursor-pointer items-center gap-3 rounded-[8px] px-2 py-2.5 text-[14px] text-[#151A28] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#1E2A4A]/40 dark:text-foreground",
@@ -139,7 +141,7 @@ export function SetSectorPicker({
                   <input type="checkbox" className="sr-only" checked={on} disabled={off} onChange={() => toggle(s)} />
                   <span className={cn("grid h-[18px] w-[18px] flex-none place-items-center rounded-[5px] border-[1.5px] text-white",
                     on ? cn("border-transparent", navy) : "border-[#C3C8D2] dark:border-[#3A4158]")}>{on && <Check className="h-3 w-3" strokeWidth={3} />}</span>
-                  {s}
+                  {tr(s)}
                 </label>
               );
             })}
@@ -150,20 +152,20 @@ export function SetSectorPicker({
       <div className="mt-3 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">
         {single ? (
           value[0] ? (
-            <span className="flex flex-wrap items-center gap-2">Your sector:
+            <span className="flex flex-wrap items-center gap-2">{tr("Your sector:")}
               <span className="rounded-[20px] border border-[#1E2A4A] bg-[#F4F6FA] px-3 py-1 font-semibold text-[#151A28] dark:border-[#4A5CA6] dark:bg-[#1B2238] dark:text-foreground">
-                {value[0]}{sectorGroupOf(value[0]) && <span className="font-normal text-[#6B7280]"> · {sectorGroupOf(value[0])}</span>}
+                {tr(value[0])}{sectorGroupOf(value[0]) && <span className="font-normal text-[#6B7280]"> · {tr(sectorGroupOf(value[0])!)}</span>}
               </span>
             </span>
-          ) : "Pick the sector your main business is in."
+          ) : tr("Pick the sector your main business is in.")
         ) : off ? (
           <span>{agnostic!.summary}</span>
-        ) : value.length === 0 ? "None selected yet" : (
+        ) : value.length === 0 ? tr("None selected yet") : (
           <span className="flex flex-wrap items-center gap-1.5">
-            <span>Selected <b className="text-[#151A28] dark:text-foreground">{value.length}</b> of {max}</span>
+            <span>{tr("Selected")} <b className="text-[#151A28] dark:text-foreground">{value.length}</b> {tr("of")} {max}</span>
             {value.map((s) => (
               <span key={s} className="inline-flex items-center gap-1 rounded-[20px] border border-[#1E2A4A] bg-[#F4F6FA] px-3 py-1 font-semibold text-[#151A28] dark:border-[#4A5CA6] dark:bg-[#1B2238] dark:text-foreground">
-                {s}<button type="button" aria-label={`Remove ${s}`} onClick={() => onChange(value.filter((x) => x !== s))}><X className="h-3 w-3" /></button>
+                {tr(s)}<button type="button" aria-label={`Remove ${s}`} onClick={() => onChange(value.filter((x) => x !== s))}><X className="h-3 w-3" /></button>
               </span>
             ))}
           </span>
