@@ -84,7 +84,7 @@ function resolveLabel(pathTemplate: string) {
   return PATH_LABELS[pathTemplate] ?? formatLabelFromTemplate(pathTemplate);
 }
 
-export function RouteBreadcrumbs({ className }: { className?: string }) {
+export function RouteBreadcrumbs({ className, placement }: { className?: string; placement?: "row" | "bar" }) {
   const matches = useRouterState({ select: (s) => s.matches as AnyRouteMatch[] });
   const isMarketplace = useIsMarketplace();
   const { persona } = usePersona();
@@ -150,6 +150,10 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
   }, [isMarketplace, matches, persona]);
 
   if (items.length === 0) return null;
+  // Admin keeps the row under the header; everyone else gets it inside the grey bar.
+  if (placement === "row" && !isControl) return null;
+  if (placement === "bar" && isControl) return null;
+  const inBar = placement === "bar";
 
   const firstPathTemplate = items[0]?.to;
   const isHomeRoute =
@@ -158,7 +162,7 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
 
   return (
     <nav aria-label="Breadcrumb" className={cn("text-sm", className)}>
-      <ol className="flex flex-wrap items-center gap-1.5 text-muted-foreground">
+      <ol className={cn("flex items-center gap-1.5 text-muted-foreground", inBar ? "min-w-0 flex-nowrap" : "flex-wrap")}>
         {isMarketplace ? (
           isControl && (
             <li className="inline-flex items-center gap-1.5">
@@ -197,25 +201,32 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
           return (
             <li
               key={`${item.to}-${index}`}
-              className="inline-flex items-center gap-1.5"
+              title={inBar ? item.label.trim() : undefined}
+              className={cn(
+                "inline-flex items-center gap-1.5",
+                inBar && "min-w-0",
+                inBar && !isLast && "hidden shrink sm:inline-flex",
+                inBar && index > 0 && !isLast && "max-w-[9rem]",
+                inBar && isLast && "shrink",
+              )}
             >
               {isLast ? (
                 <span
                   aria-current="page"
-                  className="font-medium text-foreground"
+                  className={cn("font-medium text-foreground", inBar && "min-w-0 truncate")}
                 >
-                  <span className="whitespace-pre">{item.label}</span>
+                  <span className={inBar ? "truncate" : "whitespace-pre"}>{item.label}</span>
                 </span>
               ) : (
                 <>
                   <Link
                     to={item.to as never}
                     params={item.params as never}
-                    className="transition-colors hover:text-foreground"
+                    className={cn("transition-colors hover:text-foreground", inBar && "min-w-0 truncate")}
                   >
-                    <span className="whitespace-pre">{item.label}</span>
+                    <span className={inBar ? "truncate" : "whitespace-pre"}>{item.label}</span>
                   </Link>
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                 </>
               )}
             </li>
