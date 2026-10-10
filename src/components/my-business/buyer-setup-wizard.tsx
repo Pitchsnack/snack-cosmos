@@ -544,7 +544,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               <button type="button" className={btnO} disabled={idx === 0} onClick={back}>{tr("Back")}</button>
               {optional && <button type="button" className={btnO} onClick={skip}>{tr("Skip")}</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-                <button type="button" className={`${btnO} flex-1 cursor-pointer hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait sm:flex-none`} disabled={exiting} onClick={saveExit}>{exiting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr("Saving…")}</span> : <>{tr("Save &amp; exit")}</>}</button>
+                <button type="button" className={`${btnO} flex-1 cursor-pointer hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait sm:flex-none`} disabled={exiting} onClick={saveExit}>{exiting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr("Saving…")}</span> : <>{tr("Save & exit")}</>}</button>
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk} onClick={tryContinue}>{continueLabel}</button>
               </div>
             </div>
@@ -682,8 +682,8 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
         <div className="mt-8 flex flex-wrap items-center gap-2.5">
           <button type="button" className={btnO} onClick={onBack}>{tr("Back to answers")}</button>
           <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>{tr("Save &amp; exit")}</button>
-            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={state !== "done"} onClick={() => onDone(res)}>{tr("Review &amp; complete")}</button>
+            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>{tr("Save & exit")}</button>
+            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={state !== "done"} onClick={() => onDone(res)}>{tr("Review & complete")}</button>
           </div>
         </div>
       </div>

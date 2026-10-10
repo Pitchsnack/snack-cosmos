@@ -623,7 +623,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               <button type="button" className={btnO} disabled={idx === 0} onClick={back}>{tr("Back")}</button>
               {optional && <button type="button" className={btnO} onClick={skip}>{tr("Skip")}</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-                <button type="button" className={`${btnO} flex-1 hover:bg-[#F6F7F9] sm:flex-none`} disabled={exiting} onClick={() => void leave(true)}>{tr("Save &amp; exit")}</button>
+                <button type="button" className={`${btnO} flex-1 hover:bg-[#F6F7F9] sm:flex-none`} disabled={exiting} onClick={() => void leave(true)}>{tr("Save & exit")}</button>
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk && !optional} onClick={tryContinue}>{continueLabel}</button>
               </div>
             </div>
@@ -788,8 +788,8 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
         <div className="mt-8 flex flex-wrap items-center gap-2.5">
           <button type="button" className={btnO} onClick={onBack}>{tr("Back to answers")}</button>
           <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
-            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>{tr("Save &amp; exit")}</button>
-            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!done} onClick={() => onDone(res)}>{tr("Review &amp; complete")}</button>
+            <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>{tr("Save & exit")}</button>
+            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!done} onClick={() => onDone(res)}>{tr("Review & complete")}</button>
           </div>
         </div>
       </div>
