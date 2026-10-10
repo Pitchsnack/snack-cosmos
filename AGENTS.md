@@ -28,3 +28,4 @@
 - Contact enquiries use sendContactEnquiry (rate-limited, Admin-read) and email_alert_log. Shared email-identity.ts drives replies and Admin Sending rules to prevent drift.
 
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
+- Browse/Favourites header, plan pill, NDA strip (users.dismissed_hints) and match tags live in browse-header.tsx; matches come only from myBrowseMatches (match.functions.ts) so both sides share one rule. Buyer Company Type follows buyer_relation via a DB trigger; Admin overrides via updateInvestor.
