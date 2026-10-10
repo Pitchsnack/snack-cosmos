@@ -6,11 +6,11 @@
 - Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages: one page (messages-page.tsx) for all tabs; keys 'p:'/'a:'/'c:<deal_advisor>:<side>'; 'c:' threads, members and events are derived in message-threads.server.ts (no copies) with membership checked every call.
-- private_notes are server-only.
+- private_notes: server-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
 - Loading overlay opt-in (meta.pageLoading).
-- LOI default note: config/loi-request.json.
+- LOI note: config/loi-request.json.
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only via Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
