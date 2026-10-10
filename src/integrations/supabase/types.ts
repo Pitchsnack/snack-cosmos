@@ -4927,6 +4927,7 @@ export type Database = {
           sector: string | null
           setup_done_at: string | null
           setup_from_signup: string[]
+          setup_reached: string | null
           short_description: string | null
           source_global_id: string | null
           startup_name: string
@@ -4980,6 +4981,7 @@ export type Database = {
           sector?: string | null
           setup_done_at?: string | null
           setup_from_signup?: string[]
+          setup_reached?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name: string
@@ -5033,6 +5035,7 @@ export type Database = {
           sector?: string | null
           setup_done_at?: string | null
           setup_from_signup?: string[]
+          setup_reached?: string | null
           short_description?: string | null
           source_global_id?: string | null
           startup_name?: string

@@ -1,0 +1,2 @@
+ALTER TABLE public.startups ADD COLUMN IF NOT EXISTS setup_reached text;
+COMMENT ON COLUMN public.startups.setup_reached IS 'Seller setup wizard: key of the furthest step opened (role,name,web,year,rev,size,sector,lic,review). Never moves back.';
