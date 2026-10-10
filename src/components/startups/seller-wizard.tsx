@@ -4,6 +4,7 @@ import { ExternalLink, Lock, AlertTriangle, Check as CheckIcon, Sparkles, Globe 
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { useServerFn } from "@tanstack/react-start";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
+import { ConfirmWebsiteDialog } from "@/components/startups/confirm-website-dialog";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
@@ -99,6 +100,7 @@ export function SellerWizard({
   const fwdRef = useRef<HTMLButtonElement | null>(null);
   const focusTitle = useRef(false);
   const [skipAsk, setSkipAsk] = useState(false);
+  const [webAsk, setWebAsk] = useState(false);
   const [revWeb, setRevWeb] = useState("");
   const [revWebErr, setRevWebErr] = useState(false);
   const [webAdded, setWebAdded] = useState(false);
@@ -318,7 +320,7 @@ export function SellerWizard({
             </div></div>
         </div>
       ) },
-    review: { t: tr("Review your answers"), h: ok.web ? tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards.") : L("Check your answers. Next, you'll complete your profile and save it.", "ตรวจสอบคำตอบของท่าน ขั้นต่อไป ท่านจะกรอกโปรไฟล์ให้ครบและบันทึก"),
+    review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div>
         <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
@@ -359,7 +361,7 @@ export function SellerWizard({
           ) : (
             <div className="mt-[18px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4">
               <p className="flex items-center gap-2 text-[14.5px] font-bold text-[#151A28]"><Sparkles className="h-[18px] w-[18px] text-[#2563EB]" />{L("Add your website to use auto-fill", "เพิ่มเว็บไซต์เพื่อใช้การกรอกข้อมูลอัตโนมัติ")}</p>
-              <p className="mt-1.5 text-[13.5px] text-[#434A5C]">{L("Auto-fill reads your website to suggest your company description and corporate information. Without it, you'll fill them in yourself on the next screen.", "ระบบจะอ่านเว็บไซต์ของท่านเพื่อแนะนำคำอธิบายบริษัทและข้อมูลบริษัท หากไม่มีเว็บไซต์ ท่านจะต้องกรอกเองในหน้าถัดไป")}</p>
+              <p className="mt-1.5 text-[13.5px] text-[#434A5C]">{L("Auto-fill reads your website to suggest your company description and corporate information. Without it, you'll fill them in yourself.", "ระบบจะอ่านเว็บไซต์ของท่านเพื่อแนะนำคำอธิบายบริษัทและข้อมูลบริษัท หากไม่มีเว็บไซต์ ท่านจะต้องกรอกเอง")}</p>
               <div className="mt-3 flex gap-2.5 max-[599px]:flex-col">
                 <input aria-label={L("Company website", "เว็บไซต์บริษัท")} value={revWeb} maxLength={2048} placeholder="www.yourcompany.com"
                   onChange={(e) => { setRevWeb(e.target.value); setRevWebErr(false); }}
@@ -419,7 +421,11 @@ export function SellerWizard({
               )}
               <button type="button" ref={fwdRef} disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
                 onClick={async () => {
-                  if (cur.id === "review") return onFinish(d);
+                  if (cur.id === "review") {
+                    // A valid website typed in Review's box is saved first; an invalid one shows its error.
+                    if (revWeb.trim() && !ok.web) { if (!isValidUrl(revWeb)) { setRevWebErr(true); return; } set({ web: normalizeUrl(revWeb) }); setWebAdded(true); }
+                    setWebAsk(true); return;
+                  }
                   if (cur.id === "web") {
                     const url = normalizeUrl(d.web);
                     setWebState("checking");
@@ -432,15 +438,18 @@ export function SellerWizard({
                   }
                   advance();
                 }}
-                className={cur.id === "review" && !ok.web
-                  ? "rounded-[10px] border border-[#DCDFE5] bg-white px-5 py-3 font-semibold text-[#434A5C] disabled:cursor-not-allowed disabled:opacity-50"
-                  : "rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]"}>
-                {cur.id === "review" ? (ok.web ? tr("Continue to auto-fill") : L("Continue without auto-fill", "ไปต่อโดยไม่ใช้การกรอกข้อมูลอัตโนมัติ")) : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? tr("Back to review") : tr("Continue")}
+                className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
+                {cur.id === "review" ? tr("Continue to auto-fill") : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? tr("Back to review") : tr("Continue")}
 
               </button>
             </div>
           </div>
         </div>
+        {webAsk && (
+          <ConfirmWebsiteDialog L={L} initial={revWeb.trim() && !ok.web && isValidUrl(revWeb) ? normalizeUrl(revWeb) : ok.web ? d.web : ""}
+            onCancel={() => { setWebAsk(false); fwdRef.current?.focus(); }}
+            onDone={(url) => { setWebAsk(false); const nd = { ...d, web: url || d.web }; if (url) set({ web: url }); onFinish(nd); }} />
+        )}
         {skipAsk && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => { setSkipAsk(false); skipRef.current?.focus(); }}>
             <div role="dialog" aria-modal="true" aria-labelledby="sw-skip-t" aria-describedby="sw-skip-d"
