@@ -38,8 +38,8 @@ function Buttons() {
   const { t } = useHomeLang();
   return (
     <div className="ph-btns">
-      <a href="/sellers" className="ph-red">{t(HERO.own)}</a>
-      <a href="/buyers" className="ph-outline ph-outline-lg">{t(HERO.acquire)}</a>
+      <a href="/signup?role=seller" className="ph-red">{t(HERO.own)}</a>
+      <a href="/signup?role=buyer" className="ph-outline ph-outline-lg">{t(HERO.acquire)}</a>
     </div>
   );
 }
@@ -57,6 +57,7 @@ function Hero() {
           <h1><Rich s={t(HERO.h1)} /></h1>
           <p className="ph-hero-intro">{t(HERO.intro)}</p>
           <Buttons />
+          <p className="ph-joinline">{t(HERO.joinFree)} <a href="/sellers">{t(HERO.forSellers)}</a> · <a href="/buyers">{t(HERO.forBuyers)}</a> · <a href="/signup?role=partner">{t(HERO.advisers)}</a></p>
         </div>
         <HeroArt />
         <p className="ph-fine">{t(HERO.fine)}</p>
