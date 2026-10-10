@@ -23,7 +23,7 @@ import { useTranslation } from "@/i18n/language";
 import { usePersona } from "@/hooks/use-marketplace";
 import { SellerFavourites } from "@/components/marketplace/seller-favourites";
 import { cn } from "@/lib/utils";
-import { BrowseHeader, MatchTag, NdaInfoStrip, PlanEndedBar, useBrowseMatches } from "@/components/marketplace/browse-header";
+import { BrowseHeader, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
 
 export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
   validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s.id === "string" ? { id: s.id } : {}),
@@ -98,7 +98,7 @@ function FavouritesRoute() {
 }
 
 function FavouritesPage() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const fn = useServerFn(listFavourites);
   const enabled = useHasSession();
   const { id: wantId } = Route.useSearch();
