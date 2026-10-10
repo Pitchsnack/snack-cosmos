@@ -491,6 +491,8 @@ export const createInvestor = createServerFn({ method: "POST" })
 
 const UpdateInput = z.object({
   id: z.string().uuid(),
+  companyType: z.enum(["SME", "Corporate Enterprise", "Individual"]).optional(),
+  companyTypeReset: z.boolean().optional(),
   actsForTypes: z.array(z.string().max(60)).max(7).optional(),
   investorName: z.string().min(1).max(255).optional(),
   legalName: z.string().max(255).nullable().optional(),
@@ -691,6 +693,21 @@ export const updateInvestor = createServerFn({ method: "POST" })
       );
     }
 
+    if (data.companyType !== undefined || data.companyTypeReset) {
+      const { roleOf } = await import("./plan-access.server");
+      if ((await roleOf(userId)) === "admin") {
+        const { data: cur } = await supabase.from("investors").select("company_type").eq("id", data.id).maybeSingle();
+        let next = cur?.company_type ?? null; let source: "account" | "admin" | null = null;
+        if (data.companyTypeReset) {
+          const { data: bp } = await supabase.from("buyer_profiles").select("buyer_relation").eq("investor_id", data.id).maybeSingle();
+          next = bp?.buyer_relation === "individual" ? "Individual" : bp?.buyer_relation ? "Corporate Enterprise" : null; source = "account";
+        } else if (data.companyType && data.companyType !== cur?.company_type) { next = data.companyType; source = "admin"; }
+        if (source) {
+          await supabase.from("investors").update({ company_type: next, company_type_source: source }).eq("id", data.id);
+          await logActivity(supabase, data.id, effectiveTenantId, userId, "COMPANY_TYPE_CHANGED", { from: cur?.company_type ?? null, to: next, source });
+        }
+      }
+    }
     await logActivity(supabase, data.id, effectiveTenantId, userId, "INVESTOR_UPDATED", patch);
     return { ok: true };
   });
