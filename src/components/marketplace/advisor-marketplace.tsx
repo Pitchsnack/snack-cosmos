@@ -1,4 +1,5 @@
-import { PlanStrip } from "@/components/marketplace/plan-strip";
+import { BrowseHeader, FilterPill, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
+import { useTranslation } from "@/i18n/language";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -222,6 +223,8 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
       onClick={() => (split && wide ? setSelected(x.key) : openInSplit(x.key))} />
   );
 
+  const th = useTranslation().language === "th";
+  const anyFilter = !!q || sector !== "all" || deal !== "all" || type !== "all" || country !== "all" || !!aum || !!ticket || !!revenue;
   const subtitle = needle ? (
     <><b className="font-semibold text-foreground">{items.length}</b> of {filtered.length} match “{q.trim()}” ·{" "}
       <button type="button" onClick={() => setQ("")} className="text-[#2563EB] hover:underline">Clear search</button></>
@@ -231,13 +234,13 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     : `${sellersN} live listing${sellersN === 1 ? "" : "s"} and ${buyersN} investor profile${buyersN === 1 ? "" : "s"}`;
 
   const tray = (
-    <div role="tablist" aria-label="Type" className="inline-flex gap-1 rounded-[12px] border border-border bg-card p-1">
+    <div role="tablist" aria-label="Type" className="inline-flex gap-1 rounded-full border border-border bg-card p-0.5">
       {([["all", "All", universe.length], ["sellers", "Sellers", sellersN], ["buyers", "Buyers", buyersN]] as const).map(([v, label, n]) => {
         const on = side === v;
         return (
           <button key={v} role="tab" aria-selected={on} type="button" onClick={() => pickSide(v)}
-            className={cn("inline-flex h-9 items-center gap-2 rounded-[9px] px-3 text-sm font-medium transition-colors",
-              on ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}>
+            className={cn("inline-flex h-8 items-center gap-2 rounded-full px-3 text-sm font-medium transition-colors",
+              on ? "bg-[#E0F5F2] font-semibold text-[#0F766E]" : "text-muted-foreground hover:text-foreground")}>
             {v === "sellers" && <span className="h-2 w-2 rounded-full bg-[#F6A823]" />}
             {v === "buyers" && <span className="h-2 w-2 rounded-full bg-[#4338CA]" />}
             {label}
@@ -305,82 +308,34 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
 
   return (
     <div className={splitFixed ? "flex h-[calc(100vh-7.5rem)] min-h-[520px] flex-col gap-5 [&>*]:shrink-0" : "space-y-5"}>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            {fav ? <Star className="h-3.5 w-3.5" /> : <Store className="h-3.5 w-3.5" />} Discover
-          </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{fav ? "Favourites" : "Browse marketplace"}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-        </div>
-        <ViewToggle value={view} onChange={persist} />
-      </div>
-
-      {!fav && <PlanStrip />}
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {tray}
-        <div className="relative w-full max-w-[380px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={fav ? "Search Favourites" : "Search sellers and buyers"} className="pl-9" />
-        </div>
-      </div>
-
-      {!fav && (
-        <div className="flex flex-wrap items-center gap-2">
-          {side !== "buyers" && (
-            <Select value={sector} onValueChange={setSector}>
-              <SelectTrigger className="w-[190px]"><SelectValue placeholder="Sector" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All sectors</SelectItem>
-                {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
-          {side === "sellers" && (
-            <Select value={deal} onValueChange={setDeal}>
-              <SelectTrigger className="w-[190px]"><SelectValue placeholder="Deal type" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All deal types</SelectItem>
-                {dealTypes.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
-          {side === "buyers" && (
-            <>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Investor type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  {types.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="w-[160px]"><SelectValue placeholder="Country" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All countries</SelectItem>
-                  {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FilterMenu label="AUM size" heading="AUM size" options={AUM_FILTER} value={aum} onChange={setAum} countFor={invCount("aum")}
+      <div>
+        <BrowseHeader role="advisor" eyebrow={<>{fav ? <Star className="h-3.5 w-3.5" /> : <Store className="h-3.5 w-3.5" />} {th ? "ค้นพบ" : "Discover"}</>}
+          title={fav ? (th ? "รายการโปรด" : "Favourites") : "Browse marketplace"}
+          subtitle={!needle && !fav && th ? `ประกาศขาย ${sellersN} รายการ และโปรไฟล์นักลงทุน ${buyersN} ราย` : subtitle}
+          toggle={<ViewToggle value={view} onChange={persist} />}
+          q={q} setQ={setQ} placeholder={fav ? (th ? "ค้นหารายการโปรด" : "Search favourites") : (th ? "ค้นหาผู้ขายและผู้ซื้อ" : "Search sellers and buyers")}
+          hasFilters={anyFilter} onClear={() => { setQ(""); pickSide(side); }}
+          count={th ? `แสดง ${items.length}` : `Showing ${items.length}`}
+          lead={tray}
+          filters={!fav && <>
+            {side !== "buyers" && <FilterPill label="All sectors" value={sector} onChange={setSector} options={sectors.map((x) => ({ value: x, label: x }))} />}
+            {side === "sellers" && <FilterPill label="All deal types" value={deal} onChange={setDeal} options={dealTypes.map((x) => ({ value: x, label: x }))} />}
+            {side === "buyers" && <>
+              <FilterPill label={th ? "ทุกประเภท" : "All types"} value={type} onChange={setType} options={types.map((x) => ({ value: x, label: x }))} />
+              <FilterPill label={th ? "ทุกประเทศ" : "All countries"} value={country} onChange={setCountry} options={countries.map((x) => ({ value: x, label: x }))} />
+              <FilterMenu label={th ? "ขนาด AUM" : "AUM size"} heading="AUM size" options={AUM_FILTER} value={aum} onChange={setAum} countFor={invCount("aum")}
                 hint="Fund size or AUM (group revenue for corporate buyers), matched on the band each card shows."
                 foot="Exact AUM is shown only after the NDA is approved." />
-              <FilterMenu label="Ticket size" heading="Ticket size" options={TICKET_FILTER} value={ticket} onChange={setTicket} countFor={invCount("ticket")}
+              <FilterMenu label={th ? "ขนาดเงินลงทุน" : "Ticket size"} heading="Ticket size" options={TICKET_FILTER} value={ticket} onChange={setTicket} countFor={invCount("ticket")}
                 hint="Shows investors whose average investment is in that band."
                 foot="Exact ticket sizes are shown only after the NDA is approved." />
-              <FilterMenu label="Revenue minimum" heading="Revenue minimum" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={invCount("revenue")}
+              <FilterMenu label={th ? "รายได้ขั้นต่ำ" : "Revenue minimum"} heading="Revenue minimum" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={invCount("revenue")}
                 hint="Shows investors whose minimum is at or below the revenue you pick." />
-            </>
-          )}
-        </div>
-      )}
-
-      {!fav && (
-        <div className="flex items-start gap-2 rounded-[12px] border border-[#F3D9A6] bg-[#FFF4E0] px-[15px] py-3 text-[13px] text-[#8A5A06]">
-          <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span><b className="font-semibold">Sellers and buyers appear without their names.</b> You see code names, sectors and ranges. Names, contacts and exact figures show once an NDA for one of your clients is approved.</span>
-        </div>
-      )}
+            </>}
+          </>} />
+        <div className="mt-[18px] empty:hidden"><PlanEndedBar /></div>
+        <NdaInfoStrip role="advisor" />
+      </div>
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

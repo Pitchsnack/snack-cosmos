@@ -15,6 +15,7 @@ import { InvestorDetail, StarBtn, useSavedInvestors } from "@/components/marketp
 import { listSellerFavourites, type SellerFavourite, type SellerFavStatus } from "@/lib/investor-browse.functions";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
+import { BrowseHeader, MatchTag, NdaInfoStrip, PlanEndedBar, useBrowseMatches } from "@/components/marketplace/browse-header";
 
 type Filter = "all" | SellerFavStatus;
 const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Starred"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
@@ -35,7 +36,8 @@ function NdaStar() {
 }
 
 export function SellerFavourites() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const matches = useBrowseMatches();
   const fn = useServerFn(listSellerFavourites);
   const enabled = useHasSession();
   const { data, isLoading } = useQuery({ queryKey: ["seller-favourites"], queryFn: () => fn(), enabled });
@@ -98,16 +100,13 @@ export function SellerFavourites() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Star className="h-3.5 w-3.5" /> {t("Discover")}</div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{t("Favourites")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("Investors you starred or have an NDA with")}</p>
-        </div>
-        <ViewToggle value={view} onChange={persist} />
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <BrowseHeader role="seller" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("Favourites")}
+          subtitle={t("Investors you starred or have an NDA with")} toggle={<ViewToggle value={view} onChange={persist} />}
+          q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหารายการโปรด" : "Search favourites"}
+          hasFilters={!!q || filter !== "all"} onClear={() => { setQ(""); setFilter("all"); }}
+          count={language === "th" ? `แสดง ${items.length} รายการ` : `Showing ${items.length}`}
+          lead={
         <div role="tablist" aria-label={t("Filter by status")} className="inline-flex flex-wrap gap-0.5 rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[3px]">
           {FILTERS.map(([k, label]) => {
             const on = filter === k;
@@ -121,10 +120,9 @@ export function SellerFavourites() {
             );
           })}
         </div>
-        <div className="relative w-full sm:w-[380px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search Favourites")} className="pl-9" />
-        </div>
+          } />
+        <div className="mt-[18px] empty:hidden"><PlanEndedBar /></div>
+        <NdaInfoStrip role="seller" />
       </div>
 
       {isLoading ? (
@@ -141,7 +139,7 @@ export function SellerFavourites() {
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((f) => (
-            <div key={f.id}>{badgeRow(f)}<PublicInvestorCard i={f} onClick={() => setModalId(f.id)} topRight={star(f)} /></div>
+            <div key={f.id}>{badgeRow(f)}<PublicInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => setModalId(f.id)} topRight={star(f)} /></div>
           ))}
         </div>
       ) : view === "split" ? (
@@ -150,7 +148,7 @@ export function SellerFavourites() {
             {items.map((f) => (
               <div key={f.id}>
                 {badgeRow(f)}
-                <PublicInvestorCard i={f} selected={wide && current?.id === f.id}
+                <PublicInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} selected={wide && current?.id === f.id}
                   onClick={() => (wide ? setSelected(f.id) : setModalId(f.id))}
                   expanded={expandedId === f.id} onToggleExpand={() => setExpandedId((e) => (e === f.id ? null : f.id))}
                   topRight={star(f)} />

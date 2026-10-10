@@ -1,7 +1,9 @@
-import { ContactRequestButton, PlanStrip } from "@/components/marketplace/plan-strip";
+import { ContactRequestButton } from "@/components/marketplace/plan-strip";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Briefcase, Lock, Search, Star, X } from "lucide-react";
+import { Briefcase, ChevronDown, Lock, Star } from "lucide-react";
+import { BrowseHeader, FilterPill, MatchBox, MatchTag, NdaInfoStrip, PlanEndedBar, pillCls, useBrowseMatches } from "@/components/marketplace/browse-header";
+import { useTranslation } from "@/i18n/language";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -68,23 +70,11 @@ export function FilterMenu({ label, heading, hint, foot, options, value, onChang
   const pick = (v: string) => { onChange(v); setOpen(false); btn.current?.focus(); };
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div className="relative inline-flex">
-        <PopoverTrigger asChild>
-          <button ref={btn} type="button" aria-haspopup="listbox" aria-expanded={open}
-            className={cn("inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors",
-              active ? "border-[#F3D9A6] bg-[#FFF4E0] pr-8 font-medium text-[#8A5A06]" : "border-input bg-background text-foreground",
-              open && "border-[#F6A823] ring-[3px] ring-[rgba(246,168,35,.2)]")}>
-            {active?.active ?? label}
-            {!active && <span className="text-muted-foreground">▾</span>}
-          </button>
-        </PopoverTrigger>
-        {active && (
-          <button type="button" aria-label={`Clear ${label}`} onClick={() => onChange("")}
-            className="absolute right-1.5 top-1/2 grid h-[22px] w-[22px] -translate-y-1/2 place-items-center rounded text-[#8A5A06] hover:bg-[#F3D9A6]/60">
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
+      <PopoverTrigger asChild>
+        <button ref={btn} type="button" aria-haspopup="listbox" aria-expanded={open} className={pillCls(!!active, open)}>
+          <span className="truncate">{active?.active ?? label}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
+        </button>
+      </PopoverTrigger>
       <PopoverContent align="start" sideOffset={6} collisionPadding={16}
         className="w-[292px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[14px] border-[#DCDFE5] p-2 shadow-lg"
         style={{ maxHeight: "min(470px, calc(100vh - 150px))" }}
@@ -125,8 +115,10 @@ export function FilterMenu({ label, heading, hint, foot, options, value, onChang
   );
 }
 
-export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions }: {
+export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, match }: {
   i: PublicInvestor; saved: boolean; onSave: () => void; ndaApproved?: boolean;
+  /** Criteria this investor's mandate matched (seller view). */
+  match?: string[];
   /** Optional role pill before the title (Advisor view). */
   pill?: React.ReactNode;
   /** Replaces the star on the right of the header (Advisor view). */
@@ -158,6 +150,7 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions }:
         {actions ?? <StarBtn saved={saved} onClick={onSave} />}
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+        {match && <MatchBox side="seller" criteria={match} />}
         <PublicInvestorCard i={i} panel />
         <div>
           <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mandate · shown as ranges</h4>
@@ -223,6 +216,9 @@ export function InvestorBrowse() {
   const items = all.filter((i) => passes(i));
   const count = (key: keyof typeof f) => (v: string) => all.filter((i) => passes(i, { [key]: v })).length;
 
+  const th = useTranslation().language === "th";
+  const matches = useBrowseMatches();
+  const tagOf = (id: string) => (matches[id] ? <MatchTag side="seller" /> : undefined);
   const hasFilter = !!q || type !== "all" || country !== "all" || !!aum || !!ticket || !!revenue;
   const clearAll = () => { setQ(""); setType("all"); setCountry("all"); setAum(""); setTicket(""); setRevenue(""); };
 
@@ -260,56 +256,26 @@ export function InvestorBrowse() {
 
   return (
     <div className={cn("flex flex-col gap-5", splitFixed && "h-[calc(100vh-7.5rem)] min-h-[520px]")}>
-      <div className="flex shrink-0 flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Briefcase className="h-3.5 w-3.5" /> Discover
-          </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Browse investors</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {hasFilter ? (
-              <><b className="font-semibold text-foreground">{items.length}</b> of {all.length} investors match your filters ·{" "}
-                <button type="button" onClick={clearAll} className="text-[#2563EB] hover:underline">Clear filters</button></>
-            ) : `${all.length} investor${all.length === 1 ? "" : "s"} looking for companies like yours`}
-          </p>
-        </div>
-        <ViewToggle value={view} onChange={persist} />
-      </div>
-
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search investors" className="pl-9" />
-        </div>
-        <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="w-[170px]"><SelectValue placeholder="Investor type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            {types.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={country} onValueChange={setCountry}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Country" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All countries</SelectItem>
-            {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <FilterMenu label="AUM size" heading="AUM size" options={AUM_FILTER} value={aum} onChange={setAum} countFor={count("aum")}
-          hint="Fund size or AUM (group revenue for corporate buyers), matched on the band each card shows."
-          foot="Exact AUM is shown only after the NDA is approved." />
-        <FilterMenu label="Ticket size" heading="Ticket size" options={TICKET_FILTER} value={ticket} onChange={setTicket} countFor={count("ticket")}
-          hint="Pick the amount you're raising or selling for. Shows investors whose average investment is in that band."
-          foot="Exact ticket sizes are shown only after the NDA is approved." />
-        <FilterMenu label="Revenue minimum" heading="Revenue minimum" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={count("revenue")}
-          hint="Pick your company's revenue. Shows investors whose minimum is at or below it." />
-      </div>
-
-      <div className="shrink-0"><PlanStrip /></div>
-
-      <div className="flex shrink-0 items-start gap-2 rounded-[10px] bg-muted/60 px-3 py-2 text-[12.5px] text-muted-foreground">
-        <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Investors appear as hidden profiles. Names, contacts and exact figures show in your Pipeline and Contacts once an NDA is approved.
+      <div>
+        <BrowseHeader role="seller" eyebrow={<><Briefcase className="h-3.5 w-3.5" /> {th ? "ค้นพบ" : "Discover"}</>}
+          title={th ? "ค้นหานักลงทุน" : "Browse investors"} toggle={<ViewToggle value={view} onChange={persist} />}
+          q={q} setQ={setQ} placeholder={th ? "ค้นหานักลงทุน" : "Search investors"}
+          hasFilters={hasFilter} onClear={clearAll}
+          count={th ? `แสดงนักลงทุน ${items.length} ราย` : `Showing ${items.length} investor${items.length === 1 ? "" : "s"}`}
+          filters={<>
+            <FilterPill label={th ? "ทุกประเภท" : "All types"} value={type} onChange={setType} options={types.map((t) => ({ value: t, label: t }))} />
+            <FilterPill label={th ? "ทุกประเทศ" : "All countries"} value={country} onChange={setCountry} options={countries.map((c) => ({ value: c, label: c }))} />
+            <FilterMenu label={th ? "ขนาด AUM" : "AUM size"} heading="AUM size" options={AUM_FILTER} value={aum} onChange={setAum} countFor={count("aum")}
+              hint="Fund size or AUM (group revenue for corporate buyers), matched on the band each card shows."
+              foot="Exact AUM is shown only after the NDA is approved." />
+            <FilterMenu label={th ? "ขนาดเงินลงทุน" : "Ticket size"} heading="Ticket size" options={TICKET_FILTER} value={ticket} onChange={setTicket} countFor={count("ticket")}
+              hint="Pick the amount you're raising or selling for. Shows investors whose average investment is in that band."
+              foot="Exact ticket sizes are shown only after the NDA is approved." />
+            <FilterMenu label={th ? "รายได้ขั้นต่ำ" : "Revenue minimum"} heading="Revenue minimum" options={REVENUE_FILTER} value={revenue} onChange={setRevenue} countFor={count("revenue")}
+              hint="Pick your company's revenue. Shows investors whose minimum is at or below it." />
+          </>} />
+        <div className="mt-[18px] empty:hidden"><PlanEndedBar /></div>
+        <NdaInfoStrip role="seller" />
       </div>
 
       {isLoading ? (
@@ -319,7 +285,7 @@ export function InvestorBrowse() {
       ) : view === "grid" ? (
         items.length === 0 ? empty : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((i) => <PublicInvestorCard key={i.id} i={i} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
+            {items.map((i) => <PublicInvestorCard key={i.id} i={i} tag={tagOf(i.id)} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
           </div>
         )
       ) : view === "split" ? (
@@ -328,7 +294,7 @@ export function InvestorBrowse() {
             className={cn("space-y-3 outline-none", splitFixed && "min-h-0 overflow-y-scroll pr-2 [scrollbar-gutter:stable]")}>
             {items.length === 0 ? empty : items.map((i) => (
               <div key={i.id} data-id={i.id}>
-                <PublicInvestorCard i={i} selected={current?.id === i.id}
+                <PublicInvestorCard i={i} tag={tagOf(i.id)} selected={current?.id === i.id}
                   expanded={expandedId === i.id} onToggleExpand={() => setExpandedId((e) => (e === i.id ? null : i.id))}
                   onClick={() => setSelected(i.id)}
                   topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />
@@ -338,7 +304,7 @@ export function InvestorBrowse() {
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
               {current ? (
-                <InvestorDetail key={current.id} i={current} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} /><ContactRequestButton investorId={current.id} /></div>} />
+                <InvestorDetail key={current.id} i={current} match={matches[current.id]} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} /><ContactRequestButton investorId={current.id} /></div>} />
               ) : (
                 <p className="px-6 py-16 text-center text-sm text-muted-foreground">No investor selected. Widen or clear the filters to see investors.</p>
               )}
@@ -357,6 +323,7 @@ export function InvestorBrowse() {
                     i.revLabel && `Revenue min. ${i.revLabel}`].filter(Boolean).join(" · ")}
                 </div>
               </div>
+              {tagOf(i.id)}
               {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
               <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />
             </div>
@@ -365,7 +332,7 @@ export function InvestorBrowse() {
       )}
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent className="max-h-[88vh] overflow-y-auto p-0 sm:max-w-[820px]">
-          {modal && <InvestorDetail key={modal.id} i={modal} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} /><ContactRequestButton investorId={modal.id} /></div>} />}
+          {modal && <InvestorDetail key={modal.id} i={modal} match={matches[modal.id]} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} /><ContactRequestButton investorId={modal.id} /></div>} />}
         </DialogContent>
       </Dialog>
     </div>

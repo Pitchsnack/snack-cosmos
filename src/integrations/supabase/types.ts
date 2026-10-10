@@ -3075,6 +3075,8 @@ export type Database = {
           bio: string | null
           business_address: string | null
           company_size_band: string | null
+          company_type: string | null
+          company_type_source: string
           country: string | null
           created_at: string
           created_by: string | null
@@ -3122,6 +3124,8 @@ export type Database = {
           bio?: string | null
           business_address?: string | null
           company_size_band?: string | null
+          company_type?: string | null
+          company_type_source?: string
           country?: string | null
           created_at?: string
           created_by?: string | null
@@ -3169,6 +3173,8 @@ export type Database = {
           bio?: string | null
           business_address?: string | null
           company_size_band?: string | null
+          company_type?: string | null
+          company_type_source?: string
           country?: string | null
           created_at?: string
           created_by?: string | null
@@ -5480,6 +5486,7 @@ export type Database = {
           ai_agent_id: string | null
           created_at: string
           created_by: string | null
+          dismissed_hints: string[]
           email: string
           first_name: string | null
           id: string
@@ -5498,6 +5505,7 @@ export type Database = {
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null
+          dismissed_hints?: string[]
           email: string
           first_name?: string | null
           id: string
@@ -5516,6 +5524,7 @@ export type Database = {
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null
+          dismissed_hints?: string[]
           email?: string
           first_name?: string | null
           id?: string
@@ -5795,6 +5804,7 @@ export type Database = {
         Args: { _key: string; _uid: string }
         Returns: boolean
       }
+      company_type_for_relation: { Args: { _rel: string }; Returns: string }
       current_term_start: { Args: { _uid: string }; Returns: string }
       fn_import_global_startup: {
         Args: {

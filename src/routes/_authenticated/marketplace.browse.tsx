@@ -23,7 +23,8 @@ import { ListingPill, PublicListingCard } from "@/components/hidden-profile/publ
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
-import { ClosedListingCard, PlanStrip } from "@/components/marketplace/plan-strip";
+import { ClosedListingCard } from "@/components/marketplace/plan-strip";
+import { BrowseHeader, FilterPill, MatchBox, MatchTag, NdaInfoStrip, PlanEndedBar, useBrowseMatches } from "@/components/marketplace/browse-header";
 import type { ClosedTeaser } from "@/lib/hidden-profiles.functions";
 
 export const Route = createFileRoute("/_authenticated/marketplace/browse")({
@@ -127,6 +128,9 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   const current = items.find((t) => t.id === selected) ?? items[0] ?? null;
   const modal = teasers.find((t) => t.id === modalId) ?? null;
   const hasFilter = !!q || sector !== "all" || deal !== "all";
+  const th = useTranslation().language === "th";
+  const matches = useBrowseMatches();
+  const tagOf = (id: string) => (buyer && matches[id] ? <MatchTag side="buyer" /> : undefined);
 
   const listRef = useRef<HTMLDivElement>(null);
   const splitFixed = wide && (ownOnly || view === "split") && !isLoading && items.length > 0;
@@ -134,52 +138,27 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
 
   return (
     <div className={splitFixed ? "flex h-[calc(100vh-7.5rem)] min-h-[520px] flex-col gap-6 [&>*]:shrink-0" : "space-y-6"}>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      {ownOnly ? (
         <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Store className="h-3.5 w-3.5" /> {ownOnly ? t("My listing") : t("Discover")}
-          </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{ownOnly ? t("My company on the Marketplace") : t("Browse listings")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {ownOnly
-              ? t("This is exactly how buyers see your company. Other companies are not shown here.")
-              : closedItems.length > 0 ? `${items.length + closedItems.length} ${t("businesses for sale")} · ${items.length} ${t("open on your plan")}`
-              : items.length > 0 ? `${items.length} ${items.length === 1 ? t("live listing") : t("live listings")}` : t("Approved businesses appear here.")}
-          </p>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Store className="h-3.5 w-3.5" /> {t("My listing")}</div>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{t("My company on the Marketplace")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("This is exactly how buyers see your company. Other companies are not shown here.")}</p>
         </div>
-        {!ownOnly && <ViewToggle value={view} onChange={persist} />}
-      </div>
-
-      {!ownOnly && <PlanStrip />}
-
-      {!ownOnly && (
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search listings")} className="pl-9" />
+      ) : (
+        <div>
+          <BrowseHeader role="buyer" eyebrow={<><Store className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("Browse listings")}
+            toggle={<ViewToggle value={view} onChange={persist} />}
+            q={q} setQ={setQ} placeholder={th ? "ค้นหากิจการ" : "Search listings"}
+            hasFilters={hasFilter} onClear={() => { setQ(""); setSector("all"); setDeal("all"); }}
+            count={th ? `แสดง ${items.length} รายการ` : `Showing ${items.length} listing${items.length === 1 ? "" : "s"}`}
+            filters={<>
+              <FilterPill label={t("All sectors")} value={sector} onChange={setSector} options={sectors.map((x) => ({ value: x, label: x }))} />
+              <FilterPill label={t("All deal types")} value={deal} onChange={setDeal} options={dealTypes.map((x) => ({ value: x, label: x }))} />
+            </>} />
+          <div className="mt-[18px] empty:hidden"><PlanEndedBar /></div>
+          <NdaInfoStrip role="buyer" />
         </div>
-        <Select value={sector} onValueChange={setSector}>
-          <SelectTrigger className="w-[190px]"><SelectValue placeholder={t("Sector")} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("All sectors")}</SelectItem>
-            {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={deal} onValueChange={setDeal}>
-          <SelectTrigger className="w-[190px]"><SelectValue placeholder={t("Deal type")} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("All deal types")}</SelectItem>
-            {dealTypes.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        {hasFilter && (
-          <Button variant="ghost" size="sm" onClick={() => { setQ(""); setSector("all"); setDeal("all"); }}>
-            <X className="mr-1 h-4 w-4" />{t("Clear")}
-          </Button>
-        )}
-      </div>
       )}
-
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -193,7 +172,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       ) : !ownOnly && view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((t) => (
-            <PublicListingCard key={t.id} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} />
+            <PublicListingCard key={t.id} tag={tagOf(t.id)} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} />
           ))}
           {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
@@ -203,6 +182,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
             {items.map((t) => (
               <PublicListingCard
                 key={t.id}
+                tag={tagOf(t.id)}
                 l={t.listing}
                 deal={t}
                 expanded={expandedId === t.id}
@@ -218,7 +198,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
               {current ? (
-                <BrowsePanel t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
+                <BrowsePanel match={buyer ? matches[current.id] : undefined} t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
               ) : (
                 <p className="py-16 text-center text-sm text-muted-foreground">{t("Select a listing to see the details.")}</p>
               )}
@@ -240,6 +220,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
+                  {tagOf(item.id)}
                   {(() => { const n = ndaOf(item.id); return <ListingPill kind={n ?? "hidden"} newDays={l.newDays} />; })()}
                   {star(item.id)}
                 </div>
@@ -254,7 +235,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
         <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-[820px]">
           {modal && (
             <div className="-m-6 flex flex-col">
-              <BrowsePanel t={modal} ownOnly={!!ownOnly} nda={ndaOf(modal.id)} saved={savedIds.has(modal.id)} onToggleSave={() => toggleSave(modal.id)} onRequested={onRequested} />
+              <BrowsePanel match={buyer ? matches[modal.id] : undefined} t={modal} ownOnly={!!ownOnly} nda={ndaOf(modal.id)} saved={savedIds.has(modal.id)} onToggleSave={() => toggleSave(modal.id)} onRequested={onRequested} />
             </div>
           )}
         </DialogContent>
@@ -263,8 +244,8 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   );
 }
 
-function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
-  t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string) => void;
+function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested, match }: {
+  match?: string[]; t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string) => void;
 }) {
   const { t: tr } = useTranslation();
   const datesFn = useServerFn(myNdaRequestDates);
@@ -305,6 +286,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested }: {
             <span>{tr("Your NDA is approved. This listing is in your Favourites, where its private view shows the company’s name and exact figures.")}</span>
           </div>
         )}
+        {match && <MatchBox side="buyer" criteria={match} />}
         <ListingDetail t={t} requested={nda === "requested"} approved={nda === "approved"} onRequested={onRequested} />
       </div>
     </>
