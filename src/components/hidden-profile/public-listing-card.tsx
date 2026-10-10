@@ -97,8 +97,10 @@ function PartEdit({ k, on }: { k: ListingPart; on?: (k: ListingPart) => void }) 
 }
 
 export function PublicListingCard({
-  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta, editable,
+  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta, editable, tag,
 }: {
+  /** Optional tag at the top of the card body (e.g. "Matches your mandate"). */
+  tag?: React.ReactNode;
   /** Seller's own Public view preview only: an Edit link on each card part. Off by default. */
   editable?: (k: ListingPart) => void;
   l: PublicListing;
@@ -146,6 +148,7 @@ export function PublicListingCard({
         {topRight && <div className="absolute right-2.5 top-2.5">{topRight}</div>}
       </SectorArt>
       <div className="flex flex-1 flex-col p-3.5">
+        {tag && <div className="mb-1.5">{tag}</div>}
         {priv && <div className={cn("truncate text-[16px] font-bold text-[#111827] transition-colors", interactive && "group-hover:text-accent")} title={priv.name}>{priv.name}</div>}
         <h3 className={cn(priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]", "transition-colors", interactive && !priv && "group-hover:text-accent")}>{l.headline || <span className="text-muted-foreground">{t("Add a headline")}</span>}</h3>
         <div className="mt-2 flex flex-wrap gap-1">

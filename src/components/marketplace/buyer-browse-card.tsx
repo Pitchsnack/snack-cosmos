@@ -185,7 +185,9 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
 }
 
 /** The one public investor card (Browse investors, Favourites, My Company). Only public fields reach it. */
-export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel, editable }: {
+export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel, editable, tag }: {
+  /** Optional tag at the top of the card body (e.g. "Looking for companies like yours"). */
+  tag?: React.ReactNode;
   i: CardInvestor; className?: string; onClick?: () => void; selected?: boolean;
   /** Legacy props, ignored: the card always shows in full. */
   expanded?: boolean; onToggleExpand?: () => void; footerRight?: React.ReactNode;
@@ -215,6 +217,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
         {(topRight || status) && <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5">{status && <StatusPill status={status} />}{topRight}</div>}
       </BuyerCover>
       <div className="p-4">
+        {tag && <div className="mb-1.5">{tag}</div>}
         <CardBody i={i} empty={empty} desc={desc} oneRow={panel} onPart={editable} />
         {cardFooter}
       </div>
