@@ -141,7 +141,7 @@ function MyStartupsPageInner() {
   if (oneCompany) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">บริษัทของฉัน</h1>
         {isLoading && items.length === 0 ? (
           <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[320px]" /><Skeleton className="h-[420px]" /></div>
         ) : items.length === 0 ? (
