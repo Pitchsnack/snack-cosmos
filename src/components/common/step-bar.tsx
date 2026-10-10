@@ -50,14 +50,13 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
                   {s.state === "missed" && <span className={cn("block font-medium", b ? "text-[11px]" : "text-[11.5px]")}>{missedWord}</span>}
                 </span>
               </button>
-              <span aria-hidden="true" role="presentation"
+              <span aria-hidden="true"
                 className={cn("pointer-events-none absolute z-20 w-max max-w-[240px] rounded-[9px] bg-[#151A28] px-[11px] py-2 text-[12.5px] leading-[1.4] opacity-0 shadow-[0_10px_24px_rgba(16,24,40,.24)] transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-[599px]:hidden dark:bg-popover dark:ring-1 dark:ring-border",
-                  i === 0 ? "left-0" : last ? "right-0" : "left-1/2 -translate-x-1/2")}
-                style={{ bottom: `calc(100% - ${0}px + 12px)`, top: "auto", transform: undefined, ...(i !== 0 && !last ? { transform: "translateX(-50%)" } : {}), marginBottom: 0, inset: undefined }}>
+                  "bottom-[calc(100%+12px)]", i === 0 ? "left-[calc(50%-24px)]" : last ? "right-[calc(50%-24px)]" : "left-1/2 -translate-x-1/2")}>
                 <b className="block font-bold text-white">{stepWord(i + 1)} · {s.full}</b>
                 <span className="text-[#D7DBE3]">{s.tip}</span>
                 <span className="absolute top-full border-[5px] border-transparent border-t-[#151A28] dark:border-t-popover"
-                  style={i === 0 ? { left: half - 5 } : last ? { right: half - 5 } : { left: "50%", marginLeft: -5 }} />
+                  style={i === 0 ? { left: 19 } : last ? { right: 19 } : { left: "50%", marginLeft: -5 }} />
               </span>
             </li>
           );
