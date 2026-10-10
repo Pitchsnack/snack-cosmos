@@ -9,14 +9,14 @@
 - private_notes are server-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
-- Loading overlay opt-in (meta.pageLoading); badges use light count fns.
+- Loading overlay opt-in (meta.pageLoading).
 - LOI default note: config/loi-request.json.
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only via Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
 - Email alerts: wording defaults in src/config/email-alerts.ts, Admin overrides/switches in email_alert_settings; every send goes through sendAlert (email-alerts.server.ts), which checks the user switch and logs to email_alert_log; pipeline emails fire from pipeline log() so steps and emails never drift.
 - Advisor view: users.advisor_view gates it; advisor stars live in advisor_favourites (view='advisor'), separate from buyer/seller saves; advisor-marketplace.tsx reuses existing cards/panels and only public loaders (listAdvisorMarketplace).
-- Edit-at-section: every My Company Edit/Add link opens its form with ?section=…; forms mark sections with EditSec and call useOpenAtSection (components/common/edit-section.tsx), so Advisor, Buyer and Seller share one scroll/focus/box behaviour.
+- Edit-at-section: My Company Edit/Add links pass ?section=; forms use EditSec + useOpenAtSection (edit-section.tsx) so all roles share one scroll/focus behaviour.
 - Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields (startups.setup_from_signup, investors.wizard.from_signup, advisor_firms.wizard_state.fromSignup) so wizards skip them while set (rules in seller-wizard.ts, buyer-wizard.ts, advisor-firm.ts).
 - Sellers (STARTUP_USER) edit only businesses they belong to: DB policies via is_startup_member, a guard trigger keeps tenant/visibility, and listings still go live only by Admin approval.
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types (list order, Investor Classification = first, empty for non-agents) and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts so the rule stays in one place. Sign-up stores the relation and types in signup_answers (buyer_relation, investor_types).
