@@ -1,0 +1,1 @@
+- Browse card covers: list server fns attach card-sized coverUrl via lib/cover-urls.server.ts (long-lived signed, reused), mirroring resolveCover/resolveInvestorCover; closed cards get no picture.
