@@ -318,3 +318,8 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 @media (prefers-reduced-motion: reduce) {
   .edit-info-pop[data-state="open"] { animation: edit-info-shade-in 150ms ease-out; }
 }
+
+/* Browse / Favourites header: each role's accent */
+.role-seller { --r-acc: #F0A93B; --r-soft: #FDF1DD; --r-ink: #8A4B06; --r-ring: rgba(240,169,59,.22); }
+.role-buyer { --r-acc: #4F46E5; --r-soft: #EEF0FF; --r-ink: #3730A3; --r-ring: rgba(79,70,229,.22); }
+.role-advisor { --r-acc: #0F766E; --r-soft: #E0F5F2; --r-ink: #0F766E; --r-ring: rgba(15,118,110,.22); }
