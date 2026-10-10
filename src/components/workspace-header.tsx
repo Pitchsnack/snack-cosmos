@@ -33,27 +33,30 @@ export function WorkspaceHeader() {
   return (
     <header className="sticky top-0 z-20 -mx-8 -mt-10 mb-8 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/95 px-8 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="flex min-w-0 items-center gap-3">
-        <WorkspaceSwitcher />
-        <div className="hidden min-w-0 items-center gap-2 sm:flex">
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold leading-tight text-foreground">
-              {tenantName}
+        {isControl && (
+          <>
+            <WorkspaceSwitcher />
+            <div className="hidden min-w-0 items-center gap-2 sm:flex">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold leading-tight text-foreground">
+                  {tenantName}
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
+                  <span className="truncate">{roleLabel}</span>
+                  <span className="hidden md:inline">·</span>
+                  <Badge
+                    variant="outline"
+                    className="hidden h-4 px-1.5 text-[9px] font-medium uppercase tracking-wider md:inline-flex"
+                  >
+                    {wsType}
+                  </Badge>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
-              <span className="truncate">{roleLabel}</span>
-              <span className="hidden md:inline">·</span>
-              <Badge
-                variant="outline"
-                className="hidden h-4 px-1.5 text-[9px] font-medium uppercase tracking-wider md:inline-flex"
-              >
-                {wsType}
-              </Badge>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
       <div className="flex items-center gap-2">
-        <LanguageSwitcher />
         <ViewModeBadge />
         <ViewAsSwitcher />
         <GlobalSearch />
