@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "@/i18n/language";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SellerDraftCard } from "@/components/my-business/seller-draft-card";
@@ -75,6 +76,7 @@ function MyStartupsPage() {
 
 function MyStartupsPageInner() {
   const { has, roles } = usePermissions();
+  const { t } = useTranslation();
   const { data: session } = useSessionContext();
   const meId = session?.user?.id ?? null;
   const isStartupUser = roles.includes("STARTUP_USER");
@@ -141,7 +143,7 @@ function MyStartupsPageInner() {
   if (oneCompany) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-semibold tracking-tight">บริษัทของฉัน</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("My Company")}</h1>
         {isLoading && items.length === 0 ? (
           <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[320px]" /><Skeleton className="h-[420px]" /></div>
         ) : items.length === 0 ? (
