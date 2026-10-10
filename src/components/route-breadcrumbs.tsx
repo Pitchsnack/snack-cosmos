@@ -160,13 +160,15 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
     <nav aria-label="Breadcrumb" className={cn("text-sm", className)}>
       <ol className="flex flex-wrap items-center gap-1.5 text-muted-foreground">
         {isMarketplace ? (
-          <li className="inline-flex items-center gap-1.5">
-            <Link to={HOME_ROUTE} className="font-medium text-foreground transition-colors hover:text-foreground/70">
-              Control
-            </Link>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
-          </li>
-        ) : workspaceLabel && (
+          isControl && (
+            <li className="inline-flex items-center gap-1.5">
+              <Link to={HOME_ROUTE} className="font-medium text-foreground transition-colors hover:text-foreground/70">
+                Control
+              </Link>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
+            </li>
+          )
+        ) : isControl && workspaceLabel && (
           <li className="inline-flex items-center gap-1.5">
             <span
               className="max-w-[180px] truncate font-medium text-foreground"
