@@ -125,11 +125,13 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   }, [sessionTenants, assignableQ.data, assignableQ.isLoading]);
 
   const active = tenants.find((t) => t.tenantId === activeId);
+  // No active tenant: show "Control" for control principals, otherwise show
+  // nothing — never guess the first tenant in the list.
   const label = active
     ? active.tenantName
     : isControl
       ? CONTROL_LABEL
-      : tenants[0]?.tenantName ?? "—";
+      : "";
   const roleCode = session?.activeWorkspace.roleCode ?? session?.roles?.[0] ?? null;
   const isMarket = useIsMarketplace();
   const { persona } = usePersona();
