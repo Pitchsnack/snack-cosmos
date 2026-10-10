@@ -1,3 +1,4 @@
+import { CompanyTypeField, companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { sortActsFor } from "@/lib/investor-bands";
@@ -321,6 +322,9 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [firmName, setFirmName] = useState(investor?.firm_name ?? "");
   const [title, setTitle] = useState(investor?.investor_type ?? "");
   const agentRel = investor?.buyer_relation === "agent";
+  const [companyType, setCompanyType] = useState<string | null>((investor as any)?.company_type ?? companyTypeForRelation(investor?.buyer_relation));
+  const [companyTypeSource, setCompanyTypeSource] = useState<string>((investor as any)?.company_type_source ?? "account");
+  const [companyTypeDirty, setCompanyTypeDirty] = useState<"" | "set" | "reset">("");
   const [actsFor, setActsFor] = useState<string[]>(() => sortActsFor(investor?.acts_for_types?.length ? investor.acts_for_types : investor?.investor_type ? [investor.investor_type] : []));
   const [email, setEmail] = useState(investor?.email ?? "");
   const [headquarters, setHeadquarters] = useState(investor?.country ?? "");
@@ -601,6 +605,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           linkedinUrl: linkedinUrl || null,
           country: headquarters || null,
           investorType: agentRel ? actsFor[0] ?? (title || null) : title || null,
+          ...(companyTypeDirty === "reset" ? { companyTypeReset: true } : companyTypeDirty === "set" && companyType ? { companyType: companyType as "SME" } : {}),
           ...(agentRel && actsFor.length ? { actsForTypes: actsFor } : {}),
           logoPath,
           media: resolvedMedia,
@@ -1085,6 +1090,13 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           </Select>
         </div>}
       </div>
+      {investor?.buyer_relation !== undefined && investor && (
+        <div className="grid grid-cols-[220px_1fr] gap-4">
+          <CompanyTypeField value={companyType} source={companyTypeSource} admin={isAdminUser}
+            onChange={(v) => { setCompanyType(v); setCompanyTypeSource("admin"); setCompanyTypeDirty("set"); }}
+            onReset={() => { setCompanyType(companyTypeForRelation(investor?.buyer_relation)); setCompanyTypeSource("account"); setCompanyTypeDirty("reset"); }} />
+        </div>
+      )}
       {agentRel && (
         <ActsForField value={actsFor} onChange={setActsFor} id="inv-acts-for"
           error={actsFor.length ? null : "Pick at least one investor type this representative acts for."} />

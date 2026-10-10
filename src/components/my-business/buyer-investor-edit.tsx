@@ -1,3 +1,4 @@
+import { CompanyTypeField, companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { CompanySizeField } from "@/components/investors/company-size-field";
@@ -364,6 +365,9 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
           <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>Acts for<Tag s={src.investor_type} /></>} />
         </S>}
 
+        <div className="grid grid-cols-[220px_1fr] gap-4">
+          <CompanyTypeField value={(inv as { company_type?: string | null }).company_type ?? companyTypeForRelation(rel)} source={(inv as { company_type_source?: string }).company_type_source ?? "account"} admin={false} />
+        </div>
         {!individual && (
           <div className="grid grid-cols-[220px_1fr] gap-4">
             <CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} />
