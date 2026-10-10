@@ -57,7 +57,7 @@ function Hero() {
           <h1><Rich s={t(HERO.h1)} /></h1>
           <p className="ph-hero-intro">{t(HERO.intro)}</p>
           <Buttons />
-          <p className="ph-join">{t(HERO.joinFree)} <a href="/sellers">{t(HERO.forSellers)}</a> · <a href="/buyers">{t(HERO.forBuyers)}</a> · <a href="/signup?role=partner">{t(HERO.advisers)}</a></p>
+          <p className="ph-joinline">{t(HERO.joinFree)} <a href="/sellers">{t(HERO.forSellers)}</a> · <a href="/buyers">{t(HERO.forBuyers)}</a> · <a href="/signup?role=partner">{t(HERO.advisers)}</a></p>
         </div>
         <HeroArt />
         <p className="ph-fine">{t(HERO.fine)}</p>

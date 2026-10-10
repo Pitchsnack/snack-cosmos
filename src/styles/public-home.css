@@ -379,9 +379,9 @@
 .ph-signup { height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 9px; background: #FFFFFF; color: #1E3E56 !important; font-size: 14px; font-weight: 700; line-height: 1; white-space: nowrap; transition: transform .15s, background .15s; }
 .ph[data-lang="th"] .ph-signup { font-size: 14.5px; }
 .ph-signup:hover { background: #EAF0F5; transform: translateY(-1px); }
-.ph-hero .ph-join { margin-top: 14px; font-size: .88rem; color: #B9C0CD; }
-.ph-hero .ph-join a { color: #fff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.4); }
-.ph-hero .ph-join a:hover { text-decoration-color: #fff; }
+.ph-hero .ph-joinline { margin-top: 14px; font-size: .88rem; color: #B9C0CD; }
+.ph-hero .ph-joinline a { color: #fff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.4); }
+.ph-hero .ph-joinline a:hover { text-decoration-color: #fff; }
 @media (max-width: 720px) { .ph-signup { height: 36px; font-size: 13.5px; padding: 0 12px; } }
 @media (max-width: 560px) {
   .ph-ctrls .ph-talk { display: none; }
