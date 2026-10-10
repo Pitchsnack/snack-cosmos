@@ -248,6 +248,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [switchError, setSwitchError] = useState<string | null>(null);
   const enabled = useHasSession();
   const perms = usePermissions();
+  const isAdminUser = session?.user?.accountRole === "admin" || perms.isControl;
 
   const sessionTenants = useMemo(() => session?.tenants ?? [], [session]);
   // Principal-scoped cache key. Cross-principal cleanup is delegated to the
@@ -1090,7 +1091,7 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           </Select>
         </div>}
       </div>
-      {investor?.buyer_relation !== undefined && investor && (
+      {!!investor?.buyer_relation && (
         <div className="grid grid-cols-[220px_1fr] gap-4">
           <CompanyTypeField value={companyType} source={companyTypeSource} admin={isAdminUser}
             onChange={(v) => { setCompanyType(v); setCompanyTypeSource("admin"); setCompanyTypeDirty("set"); }}
