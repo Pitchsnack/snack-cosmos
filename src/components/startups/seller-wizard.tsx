@@ -417,7 +417,7 @@ export function SellerWizard({
             <div className="ml-auto flex items-center gap-2.5">
               {pos > 0 && (
                 <button type="button" onClick={() => setConfirmExit(true)}
-                  className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{tr("Save &amp; exit")}</button>
+                  className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{tr("Save & exit")}</button>
               )}
               <button type="button" ref={fwdRef} disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
                 onClick={async () => {
