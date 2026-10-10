@@ -5486,6 +5486,7 @@ export type Database = {
           ai_agent_id: string | null
           created_at: string
           created_by: string | null
+          dismissed_hints: string[]
           email: string
           first_name: string | null
           id: string
@@ -5504,6 +5505,7 @@ export type Database = {
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null
+          dismissed_hints?: string[]
           email: string
           first_name?: string | null
           id: string
@@ -5522,6 +5524,7 @@ export type Database = {
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null
+          dismissed_hints?: string[]
           email?: string
           first_name?: string | null
           id?: string
