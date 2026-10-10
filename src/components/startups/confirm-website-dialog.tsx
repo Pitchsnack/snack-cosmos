@@ -78,7 +78,7 @@ export function ConfirmWebsiteDialog({ initial, L, onCancel, onDone }: {
         </h3>
         <p id="cw-d" className="mt-2 text-[14.5px] leading-[1.55] text-[#434A5C] dark:text-muted-foreground">
           {hasWeb
-            ? L("Auto-fill reads this website to pre-fill your company description and corporate information. If it's wrong, that information won't be pre-filled.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์นี้เพื่อกรอกคำอธิบายบริษัทและข้อมูลบริษัทให้ล่วงหน้า หากเว็บไซต์ไม่ถูกต้อง ข้อมูลเหล่านี้จะไม่ถูกกรอกให้")
+            ? <><b className="font-bold text-[#B91C1C] dark:text-red-400">{L("Important:", "สำคัญ:")}</b>{" "}{L("Auto-fill reads this website to pre-fill your company description and corporate information. If it's wrong, that information won't be pre-filled.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์นี้เพื่อกรอกคำอธิบายบริษัทและข้อมูลบริษัทให้ล่วงหน้า หากเว็บไซต์ไม่ถูกต้อง ข้อมูลเหล่านี้จะไม่ถูกกรอกให้")}</>
             : L("Auto-fill needs your website to pre-fill your company description and corporate information. Without it, they won't be pre-filled, and you'll fill them in yourself.", "ระบบกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์ของท่านเพื่อกรอกคำอธิบายบริษัทและข้อมูลบริษัทให้ล่วงหน้า หากไม่มีเว็บไซต์ ข้อมูลเหล่านี้จะไม่ถูกกรอกให้ และท่านจะต้องกรอกเอง")}
         </p>
         <label htmlFor="cw-web" className="mt-4 mb-1.5 block text-[14px] font-semibold text-[#374151] dark:text-foreground">{L("Company website", "เว็บไซต์บริษัท")}</label>
