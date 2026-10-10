@@ -87,7 +87,7 @@ export function DraftCompanyPanel({ role, name, banner, onEdit, onFinish }: {
       {role !== "seller" && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5">
         <span className="text-[13px] text-[#6A7181] dark:text-muted-foreground">{line}</span>
         <button type="button" onClick={onFinish} className="inline-flex h-9 items-center rounded-md bg-[#1E2A4A] px-3 text-[13px] font-semibold text-white hover:bg-[#101d43]">
-          {role === "seller" ? "Finish setup to submit" : "Finish setup to publish"}
+          Finish setup to publish
         </button>
       </div>}
     </div>
