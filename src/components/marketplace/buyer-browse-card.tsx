@@ -5,6 +5,7 @@ import { INDIVIDUAL_TYPE, bandOf, typeName } from "@/lib/investor-bands";
 import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 import { useInvestorTypeImage } from "@/hooks/use-investor-type-image";
+import { FadeImg } from "@/components/hidden-profile/bits";
 
 export function TypeIcon({ type, className }: { type: string | null; className?: string }) {
   const t = (type ?? "").toLowerCase();
@@ -14,13 +15,14 @@ export function TypeIcon({ type, className }: { type: string | null; className?:
 }
 
 /** Investor cover: Admin's investor-type image, else a drawn cover — never a logo. */
-export function BuyerCover({ type, className, children }: { type: string | null; className?: string; children?: React.ReactNode }) {
+export function BuyerCover({ type, className, children, src }: { type: string | null; className?: string; children?: React.ReactNode; /** Cover address sent by the server; skips the client lookup. */ src?: string | null }) {
   const tone = typeTone(type);
-  const img = useInvestorTypeImage(type);
+  const looked = useInvestorTypeImage(type, src === undefined);
+  const img = src !== undefined ? src : looked;
   if (img) {
     return (
-      <div className={cn("relative overflow-hidden", tone.bg, className)}>
-        <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+      <div className={cn("relative overflow-hidden bg-secondary", className)}>
+        <FadeImg src={img} />
         {children}
       </div>
     );

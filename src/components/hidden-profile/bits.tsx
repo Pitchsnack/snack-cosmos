@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link2, Lock, ArrowLeftRight, Waves, Building2, Factory, ShoppingBag, Truck, HeartPulse, Utensils, Monitor, Clapperboard, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveCover, useSectorImages } from "@/hooks/use-sector-images";
@@ -81,19 +81,29 @@ export function Flagged({ text, terms }: { text: string; terms: { term: string; 
  * Listing cover. Follows the shared cover rule (picked image → sector's first
  * image → drawn default). `plain` always draws the default cover.
  */
-export function SectorArt({ art, sector, imageId, plain, className, children, tile }: { art?: string | null; sector?: string | null; imageId?: string | null; plain?: boolean; className?: string; children?: ReactNode; tile?: ReactNode }) {
-  const { data: images } = useSectorImages();
-  const img = plain ? null : resolveCover(images, sector ?? art, imageId);
-  if (img?.url) {
+export function SectorArt({ art, sector, imageId, plain, className, children, tile, src }: { art?: string | null; sector?: string | null; imageId?: string | null; plain?: boolean; className?: string; children?: ReactNode; tile?: ReactNode; /** Cover address sent by the server; when given, no client lookup happens. */ src?: string | null }) {
+  const lookup = src === undefined && !plain;
+  const { data: images } = useSectorImages(lookup);
+  const url = plain ? null : src !== undefined ? src : resolveCover(images, sector ?? art, imageId)?.url ?? null;
+  if (url) {
     return (
       <div className={cn("relative overflow-hidden bg-secondary", className)}>
-        <img src={img.url} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <FadeImg src={url} className="object-center" />
         {tile && <div className="absolute inset-0 grid place-items-center"><div className="grid h-12 w-12 place-items-center overflow-hidden rounded-lg border border-border bg-card shadow-sm">{tile}</div></div>}
         {children}
       </div>
     );
   }
   return <DrawnCover art={art ?? sector} className={className} tile={tile}>{children}</DrawnCover>;
+}
+
+/** Cover photo over the grey background; fades in over 200ms once downloaded (instantly when cached). */
+export function FadeImg({ src, className }: { src: string; className?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const ref = useRef<HTMLImageElement>(null);
+  useEffect(() => { setLoaded(!!ref.current?.complete && ref.current.naturalWidth > 0); }, [src]);
+  return <img ref={ref} src={src} alt="" decoding="async" onLoad={() => setLoaded(true)}
+    className={cn("absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ease-out motion-reduce:transition-none", loaded ? "opacity-100" : "opacity-0", className)} />;
 }
 
 function DrawnCover({ art, className, children, tile }: { art?: string | null; className?: string; children?: ReactNode; tile?: ReactNode }) {
