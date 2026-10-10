@@ -699,7 +699,8 @@ export const updateInvestor = createServerFn({ method: "POST" })
         const { data: cur } = await supabase.from("investors").select("company_type").eq("id", data.id).maybeSingle();
         let next = cur?.company_type ?? null; let source: "account" | "admin" | null = null;
         if (data.companyTypeReset) {
-          const { data: bp } = await supabase.from("buyer_profiles").select("buyer_relation").eq("investor_id", data.id).maybeSingle();
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: bp } = await (supabaseAdmin as any).from("buyer_profiles").select("buyer_relation").eq("investor_id", data.id).maybeSingle();
           next = bp?.buyer_relation === "individual" ? "Individual" : bp?.buyer_relation ? "Corporate Enterprise" : null; source = "account";
         } else if (data.companyType && data.companyType !== cur?.company_type) { next = data.companyType; source = "admin"; }
         if (source) {
