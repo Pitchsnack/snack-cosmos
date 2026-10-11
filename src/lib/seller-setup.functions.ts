@@ -120,3 +120,64 @@ export const ensureMySellerDraft = createServerFn({ method: "POST" })
     if (!a || a.role !== "seller" || !a.done_at) return { id: null as string | null };
     return { id: await ensureSellerDraftFromSignup(sb, context.userId, a) };
   });
+
+/** Auto-fill after the seller wizard: writes what the website reader found into empty fields only, then the Public headline. */
+export const applySellerEnrich = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    id: z.string().uuid(),
+    r: z.object({
+      registeredName: z.string().max(255).optional().nullable(), yearFounded: z.number().int().min(1800).max(2100).optional().nullable(),
+      email: z.string().max(255).optional().nullable(), city: z.string().max(100).optional().nullable(), linkedinUrl: z.string().max(2048).optional().nullable(),
+      shortDescription: z.string().max(600).optional().nullable(), longDescription: z.string().max(3000).optional().nullable(),
+      productTags: z.array(z.string().max(80)).max(10).optional().nullable(), marketTags: z.array(z.string().max(80)).max(10).optional().nullable(),
+      isoStandards: z.array(z.string().max(80)).max(20).optional().nullable(),
+      regulatoryLicenses: z.array(z.object({ category: z.string().max(40), name: z.string().max(160) })).max(20).optional().nullable(),
+      founders: z.array(z.object({ full_name: z.string().max(160), position: z.string().max(160).optional().nullable(), linkedin_url: z.string().max(2048).optional().nullable() })).max(10).optional().nullable(),
+    }),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { assertCanSetup } = await import("./seller-setup.server");
+    const sb = await admin();
+    await assertCanSetup(sb, context.supabase, context.userId, data.id);
+    const { data: s } = await sb.from("startups").select("*").eq("id", data.id).single();
+    const r = data.r;
+    const empty = (v: unknown) => v == null || (typeof v === "string" ? !v.trim() : Array.isArray(v) ? v.length === 0 : false);
+    const patch: Record<string, unknown> = {};
+    const put = (col: string, v: unknown) => { if (!empty(v) && empty(s[col])) patch[col] = v; };
+    put("registered_name", r.registeredName?.trim()); put("year_founded", r.yearFounded); put("email", r.email?.trim());
+    put("city", r.city?.trim()); put("linkedin_url", r.linkedinUrl?.trim());
+    put("short_description", r.shortDescription?.trim()); put("long_description", r.longDescription?.trim());
+    put("product_tags", r.productTags?.slice(0, 5)); put("market_tags", r.marketTags?.slice(0, 5));
+    // Licences and standards add to the wizard's answers, never replace them.
+    if (r.isoStandards?.length) { const cur: string[] = s.iso_standards ?? []; const add = r.isoStandards.filter((x) => !cur.includes(x)); if (add.length) patch.iso_standards = [...cur, ...add]; }
+    if (r.regulatoryLicenses?.length) {
+      const cur: { name: string }[] = s.regulatory_licenses ?? [];
+      const add = r.regulatoryLicenses.filter((x) => !cur.some((c) => c.name.toLowerCase() === x.name.toLowerCase()));
+      if (add.length) patch.regulatory_licenses = [...cur, ...add];
+    }
+    let found = Object.keys(patch).length;
+    if (found) {
+      patch.updated_by = context.userId; patch.updated_at = new Date().toISOString();
+      const { error } = await sb.from("startups").update(patch).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    }
+    if (r.founders?.length) {
+      const { count } = await sb.from("startup_founders").select("id", { count: "exact", head: true }).eq("startup_id", data.id);
+      if (!count) {
+        const { error } = await sb.from("startup_founders").insert(r.founders.filter((f) => f.full_name.trim()).map((f) => ({
+          startup_id: data.id, tenant_id: s.tenant_id, full_name: f.full_name.trim(), position: f.position ?? null, linkedin_url: f.linkedin_url ?? null,
+        })));
+        if (!error) found += 1;
+      }
+    }
+    // Public view: its description and tags come from the private fields; the headline is stored, so draft it when empty.
+    const { data: hp } = await sb.from("hidden_profiles").select("id, headline").eq("startup_id", data.id).maybeSingle();
+    if (hp && !String(hp.headline ?? "").trim()) {
+      const { suggestHeadline } = await import("@/lib/public-listing");
+      const { data: s2 } = await sb.from("startups").select("*").eq("id", data.id).single();
+      const headline = suggestHeadline(s2).slice(0, 120);
+      if (headline) await sb.from("hidden_profiles").update({ headline, updated_by: context.userId }).eq("id", hp.id);
+    }
+    return { found };
+  });
