@@ -70,8 +70,6 @@ import {
 } from "@/components/startups/connection-action";
 import { useConnectionState } from "@/hooks/use-connection-state";
 
-import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
-import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { ShareStartupDialog } from "@/components/startups/share-startup-dialog";
 import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
@@ -409,8 +407,6 @@ export function StartupDetailPanel({
 
   const { data, isLoading, error } = useStartup(id);
   const connectionState = useConnectionState(id);
-  // Basic Information Restrictions gate what non-authorized viewers receive.
-  const { mask } = useRestrictionMask(workspace);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
@@ -445,8 +441,8 @@ export function StartupDetailPanel({
     );
   }
 
-  const s = mask(data);
-  const restricted = restrictedSet(s);
+  const s = data;
+
 
   // Relationship counterpart: primary founder when available, else the startup.
   const primaryFounder = s.founders?.[0];
@@ -456,8 +452,7 @@ export function StartupDetailPanel({
     : (s.company_type ?? null);
 
 
-  const mediaMasked = restricted.has("media_images");
-  const mediaSlots = mediaMasked ? s.media : s.media.filter((m) => m.image_signed_url);
+  const mediaSlots = s.media.filter((m) => m.image_signed_url);
 
 
   return (
@@ -467,9 +462,7 @@ export function StartupDetailPanel({
 
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
-            {restricted.has("logo") ? (
-              <MaskedImage seed={`${s.id}-logo`} cells={8} />
-            ) : s.logo_signed_url ? (
+            {s.logo_signed_url ? (
               <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
             ) : (
               <span className="text-sm font-semibold text-muted-foreground">
@@ -663,7 +656,7 @@ export function StartupDetailPanel({
           tagline: s.short_description,
           location: s.headquarters,
           website: s.website_url,
-          logoUrl: restricted.has("logo") ? null : s.logo_signed_url,
+          logoUrl: s.logo_signed_url,
         }}
       />
 
@@ -748,25 +741,21 @@ export function StartupDetailPanel({
               <button
                 key={m.slot}
                 type="button"
-                onClick={() => !mediaMasked && m.image_signed_url && setLightbox(m.image_signed_url)}
+                onClick={() => m.image_signed_url && setLightbox(m.image_signed_url)}
                 className={cn(
                   "block overflow-hidden rounded-lg bg-muted/40 text-left",
                   single ? "w-[48%] max-w-[50%]" : "aspect-video",
                 )}
                 style={single ? { aspectRatio: "64 / 25" } : undefined}
               >
-                {mediaMasked ? (
-                  <MaskedImage seed={`${s.id}-media-${m.slot}`} cells={12} label="Restricted image" />
-                ) : (
-                  <img
-                    src={m.image_signed_url ?? ""}
-                    alt={m.caption ?? ""}
-                    className={cn(
-                      "h-full w-full transition duration-300 hover:scale-105",
-                      single ? "object-cover object-center" : "object-cover",
-                    )}
-                  />
-                )}
+                <img
+                  src={m.image_signed_url ?? ""}
+                  alt={m.caption ?? ""}
+                  className={cn(
+                    "h-full w-full transition duration-300 hover:scale-105",
+                    single ? "object-cover object-center" : "object-cover",
+                  )}
+                />
 
               </button>
             );
@@ -819,19 +808,6 @@ export function StartupDetailPanel({
             linkedinUrl: f.linkedin_url,
           })),
         }}
-        renderFounderAvatar={(f) =>
-          restricted.has("founders") ? (
-            <MaskedImage
-              seed={`${s.id}-${f.id}`}
-              cells={6}
-              className="rounded-full"
-              showLock={false}
-              label="Restricted founder picture"
-            />
-          ) : (
-            (f.fullName ?? "").charAt(0).toUpperCase()
-          )
-        }
         afterFounders={afterFounders}
         sectionEdit={sectionEdit}
       />
