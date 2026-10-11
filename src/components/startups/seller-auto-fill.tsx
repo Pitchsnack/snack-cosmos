@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Loader2 } from "lucide-react";
-import { tr, currentLanguage, useTranslation } from "@/i18n/language";
+import { tr, useTranslation } from "@/i18n/language";
 import { enrichStartupFromUrl } from "@/lib/auto-enrich/auto-enrich.functions";
 import { applySellerEnrich } from "@/lib/seller-setup.functions";
 import { normalizeUrl } from "@/lib/seller-wizard";
 
 /** Seller wizard's Auto Enrich step: reads the website, fills empty Private fields and drafts the Public headline. */
 export function SellerAutoFill({ id, web, onDone }: { id: string; web: string; onDone: () => void }) {
-  useTranslation();
-  const th = currentLanguage() === "th";
+  const { language } = useTranslation();
+  const th = language === "th";
   const L = (en: string, t: string) => (th ? t : en);
   const read = useServerFn(enrichStartupFromUrl);
   const apply = useServerFn(applySellerEnrich);
