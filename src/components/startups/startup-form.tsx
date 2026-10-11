@@ -205,16 +205,15 @@ interface Props {
   popup?: StartupPopup;
 }
 
-export type PrivateTab = "images" | "about" | "market" | "licenses" | "restrictions";
+export type PrivateTab = "images" | "about" | "market" | "licenses";
 export const PUBLIC_TABS: PublicTab[] = ["identity", "description", "deal"];
-export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "market", "licenses", "restrictions"];
+export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "market", "licenses"];
 export type StartupPopup = {
   view: "public" | "private";
   tab: string;
   onNav: (view: "public" | "private", tab: string) => void;
   row: HiddenProfileRow | null;
   facts: EntryFacts | undefined;
-  restrictions?: React.ReactNode;
 };
 
 
@@ -1660,7 +1659,6 @@ export function StartupForm({
     about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(linkedinUrl), has(shortDescription), has(longDescription), founders.some((f) => f.full_name.trim())].filter((x) => !x).length,
     market: (industries.length ? 0 : 1) + (productTags.length ? 0 : 1),
     licenses: 0,
-    restrictions: 0,
   };
   const privTotal = privateCounts.images + privateCounts.about + privateCounts.market;
   const pubTotal = pd.counts.identity + pd.counts.description + pd.counts.deal;
@@ -1669,7 +1667,6 @@ export function StartupForm({
     { key: "about" as const, label: tr("About Company", "เกี่ยวกับบริษัท"), count: privateCounts.about },
     { key: "market" as const, label: tr("Industry & Market", "อุตสาหกรรมและตลาด"), count: privateCounts.market },
     { key: "licenses" as const, label: tr("Licenses", "ใบอนุญาต") },
-    ...(popup?.restrictions ? [{ key: "restrictions" as const, label: "Basic Information Restrictions", icon: <Lock className="h-3.5 w-3.5" /> }] : []),
   ];
   const pubTabs = [
     { key: "identity" as const, label: tr("Listing Identity", "ตัวตนของประกาศ"), count: pd.counts.identity },
@@ -1719,7 +1716,6 @@ export function StartupForm({
                 <div className="mt-4"><LicenceLists licences={regulatoryLicenses} onLicences={setRegulatoryLicenses} iso={isoStandards} onIso={setIsoStandards} /></div>
               </EditSec>
             )}
-            {curPriv === "restrictions" && popup?.restrictions}
           </div>
         </>
       )}

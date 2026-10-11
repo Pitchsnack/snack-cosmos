@@ -3,7 +3,6 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditInfoPopup, leaveEditUrl, markEditPushed, useTr } from "@/components/common/edit-info-popup";
 import { StartupForm, PRIVATE_TABS, PUBLIC_TABS, type PrivateTab } from "@/components/startups/startup-form";
-import { BasicInformationRestrictionsTab } from "@/components/startups/basic-information-restrictions-tab";
 import { useStartup } from "@/hooks/use-startup";
 import { useEntryFacts, useHiddenProfile, useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import type { StartupDetail } from "@/lib/startups.functions";
@@ -88,7 +87,6 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
             onNav,
             row,
             facts,
-            restrictions: <BasicInformationRestrictionsTab startup={data as unknown as StartupDetail} scope="my-startups" />,
           }}
         />
       )}
