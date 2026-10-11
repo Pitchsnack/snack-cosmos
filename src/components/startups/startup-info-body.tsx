@@ -179,15 +179,12 @@ function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) 
 
 export function StartupInfoBody({
   data,
-  renderFounderAvatar,
   afterFounders,
   sectionEdit,
 }: {
   data: StartupInfoData;
   /** Seller › My Company only: Edit link for a section. */
   sectionEdit?: (key: "description" | "facts" | "product" | "tags" | "founders" | "founders-add") => React.ReactNode;
-  /** Lets a surface mask founder pictures (Basic Information Restrictions). */
-  renderFounderAvatar?: (founder: StartupInfoFounder) => React.ReactNode;
   afterFounders?: React.ReactNode;
 }) {
   const [descExpanded, setDescExpanded] = useState(false);
@@ -393,9 +390,7 @@ export function StartupInfoBody({
             {founders.map((f) => (
               <div key={f.id} className="flex items-start gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted/60 text-xs font-semibold text-muted-foreground">
-                  {renderFounderAvatar
-                    ? renderFounderAvatar(f)
-                    : (f.fullName ?? "").charAt(0).toUpperCase()}
+                  {(f.fullName ?? "").charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium leading-tight">{f.fullName}</div>
