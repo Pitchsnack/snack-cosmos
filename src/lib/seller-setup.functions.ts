@@ -166,7 +166,7 @@ export const applySellerEnrich = createServerFn({ method: "POST" })
       const { count } = await sb.from("startup_founders").select("id", { count: "exact", head: true }).eq("startup_id", data.id);
       if (!count) {
         const { error } = await sb.from("startup_founders").insert(r.founders.filter((f) => f.full_name.trim()).map((f) => ({
-          startup_id: data.id, full_name: f.full_name.trim(), position: f.position ?? null, linkedin_url: f.linkedin_url ?? null,
+          startup_id: data.id, tenant_id: s.tenant_id, full_name: f.full_name.trim(), position: f.position ?? null, linkedin_url: f.linkedin_url ?? null,
         })));
         if (!error) found += 1;
       }
