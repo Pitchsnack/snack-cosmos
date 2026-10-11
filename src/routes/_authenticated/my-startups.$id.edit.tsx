@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { ArrowLeft, Building2, Lock } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { z } from "zod";
 
 import { StartupForm } from "@/components/startups/startup-form";
