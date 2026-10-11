@@ -2,7 +2,6 @@ import { useState, type CSSProperties } from "react";
 import { MapPin, Users, Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { RelationshipChips } from "@/components/relationships/relationship-chips";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
@@ -31,7 +30,6 @@ export function StartupRow({
   onSelect: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const restricted = restrictedSet(s);
 
 
   return (
@@ -52,9 +50,7 @@ export function StartupRow({
 
       {/* Logo */}
       <div className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
-        {restricted.has("logo") ? (
-          <MaskedImage seed={`${s.id}-logo`} cells={7} />
-        ) : s.logo_signed_url ? (
+        {s.logo_signed_url ? (
           <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
         ) : (
           <span className="text-sm font-semibold text-muted-foreground">

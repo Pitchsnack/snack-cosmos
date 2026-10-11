@@ -7,7 +7,6 @@ import { RelationshipChips } from "@/components/relationships/relationship-chips
 import { OverflowRow } from "@/components/startups/overflow-row";
 import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassignment-badge";
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
-import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 
 
 
@@ -42,7 +41,6 @@ export function StartupListItem({
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const restricted = restrictedSet(s);
 
 
 
@@ -80,9 +78,7 @@ export function StartupListItem({
 
       <div className="flex w-full items-start gap-3 pr-8">
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
-          {restricted.has("logo") ? (
-            <MaskedImage seed={`${s.id}-logo`} cells={7} />
-          ) : s.logo_signed_url ? (
+          {s.logo_signed_url ? (
             <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
           ) : (
             <span className="text-xs font-semibold text-muted-foreground">
