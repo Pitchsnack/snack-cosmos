@@ -11,7 +11,6 @@ import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { useHiddenProfile } from "@/hooks/use-hidden-profiles";
 import { cn } from "@/lib/utils";
-import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 
 
 function monogram(name: string) {
@@ -79,7 +78,6 @@ export function StartupCard({
   const bookmarked = isFavorite(s.id);
 
   const [isPressed, setIsPressed] = useState(false);
-  const restricted = restrictedSet(s);
   const BROAD = ["Enterprise", "Consumers"];
   const allIndustries = s.industry ?? [];
   const displayIndustries =
@@ -131,11 +129,6 @@ export function StartupCard({
 
       {/* Product image banner */}
 
-      {restricted.has("media_images") ? (
-        <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
-          <MaskedImage seed={`${s.id}-tile`} cells={14} />
-        </div>
-      ) : null}
       {s.tile_image_signed_url && (
         <div className="h-[120px] w-full overflow-hidden rounded-t-xl bg-muted">
           <img
@@ -153,9 +146,7 @@ export function StartupCard({
         {/* Header row: Logo + Name + Badges; HQ below */}
         <div className={headerRowClass}>
           <div className="flex h-[32px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
-            {restricted.has("logo") ? (
-              <MaskedImage seed={`${s.id}-logo`} cells={6} />
-            ) : s.logo_signed_url ? (
+            {s.logo_signed_url ? (
               <img
                 src={s.logo_signed_url}
                 alt=""

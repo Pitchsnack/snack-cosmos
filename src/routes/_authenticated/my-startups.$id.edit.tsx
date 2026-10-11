@@ -1,11 +1,10 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { ArrowLeft, Building2, Lock } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { z } from "zod";
 
 import { StartupForm } from "@/components/startups/startup-form";
 import { PermissionGuard } from "@/components/permission-guard";
 import { StartupNotFound } from "@/components/startups/startup-not-found";
-import { BasicInformationRestrictionsTab } from "@/components/startups/basic-information-restrictions-tab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStartup } from "@/hooks/use-startup";
 import type { StartupDetail } from "@/lib/startups.functions";
@@ -25,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
     selected: z.string().optional(),
     page: z.coerce.number().int().optional(),
     fav: z.coerce.boolean().optional(),
-    tab: z.enum(["edit", "basic-restrictions"]).optional(),
+    tab: z.enum(["edit"]).optional(),
     focus: z.literal("sector").optional(),
     returnTo: z.literal("valuation").optional(),
     section: z.string().regex(/^[a-z-]{2,30}$/).optional(),
@@ -89,12 +88,6 @@ function EditMyStartupPage() {
                   >
                     Edit My Startup
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="basic-restrictions"
-                    className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none gap-1.5"
-                  >
-                    Basic Information Restrictions <Lock className="h-3.5 w-3.5" />
-                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="edit" className="mt-6">
                   <div className="mx-auto max-w-4xl">
@@ -106,12 +99,6 @@ function EditMyStartupPage() {
                       section={returnSearch.section}
                     />
                   </div>
-                </TabsContent>
-                <TabsContent value="basic-restrictions" className="mt-6">
-                  <BasicInformationRestrictionsTab
-                    startup={data as unknown as StartupDetail}
-                    scope="my-startups"
-                  />
                 </TabsContent>
               </Tabs>
             )}

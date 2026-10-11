@@ -11,7 +11,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
-import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
@@ -191,11 +190,9 @@ function StartupsPageInner() {
       return st === "none" || st === "na";
     });
   }, [rawItems, hpFilter, byStartup]);
-  const { mask } = useRestrictionMask("startups");
   const items = useMemo(
-    () =>
-      (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems).map((it) => mask(it)),
-    [baseItems, favOnly, favIds, mask],
+    () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems),
+    [baseItems, favOnly, favIds],
   );
 
   const total = favOnly ? items.length : data && "total" in data ? data.total : 0;
