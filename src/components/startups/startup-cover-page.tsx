@@ -29,8 +29,6 @@ import {
   COVER_BACKGROUNDS,
   coverBackgroundPreset,
 } from "@/lib/cover/cover-background";
-import { useRestrictionMask } from "@/hooks/use-startup-restrictions";
-import { MaskedImage, restrictedSet } from "@/components/startups/restricted-placeholder";
 import { cn } from "@/lib/utils";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
@@ -87,7 +85,6 @@ export function StartupCoverPage({
   canEditBackground?: boolean;
 }) {
   const { data, isLoading, error } = useStartup(id);
-  const { mask } = useRestrictionMask(workspace);
   const { selected, select } = useCoverBackground(id);
   const [mediaFailed, setMediaFailed] = useState(false);
   const [aboutExpanded, setAboutExpanded] = useState(false);
@@ -108,17 +105,17 @@ export function StartupCoverPage({
     );
   }
 
-  const s = mask(data);
-  const restricted = restrictedSet(s);
+  const s = data;
+
 
   // Cover background priority: explicit selection → Yellow default.
   // Media1 is NOT used as the left-panel background; it is displayed as its own
   // image block between the statement and Quick Facts.
   const preset = coverBackgroundPreset(selected);
 
-  // Media1 image block (left panel only). Hidden when restricted or missing.
+  // Media1 image block (left panel only). Hidden when missing.
   const media1 = s.media?.find((m) => m.slot === 1);
-  const media1Url = !restricted.has("media_images") && !mediaFailed ? media1?.image_signed_url ?? null : null;
+  const media1Url = !mediaFailed ? media1?.image_signed_url ?? null : null;
 
   const metaItems: { icon: typeof Calendar; label: string }[] = [];
   if (s.investment_stage) metaItems.push({ icon: TrendingUp, label: s.investment_stage });
@@ -240,9 +237,7 @@ export function StartupCoverPage({
             {/* Header */}
             <div className="flex flex-wrap items-start gap-4 sm:flex-nowrap">
               <div className="flex h-[96px] w-[96px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#E6ECF5] bg-white shadow-[0_6px_18px_-12px_rgba(11,45,99,0.5)]">
-                {restricted.has("logo") ? (
-                  <MaskedImage seed={`${s.id}-logo`} cells={8} />
-                ) : s.logo_signed_url ? (
+                {s.logo_signed_url ? (
                   <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain p-2" />
                 ) : (
                   <span className="text-xl font-semibold" style={{ color: NAVY }}>
@@ -360,17 +355,7 @@ export function StartupCoverPage({
                             className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[13px] font-semibold"
                             style={{ backgroundColor: "#F1F5FB", color: NAVY }}
                           >
-                            {restricted.has("founders") ? (
-                              <MaskedImage
-                                seed={`${s.id}-${f.id}`}
-                                cells={6}
-                                className="rounded-full"
-                                showLock={false}
-                                label="Restricted founder picture"
-                              />
-                            ) : (
-                              (f.full_name ?? "").charAt(0).toUpperCase()
-                            )}
+                            {(f.full_name ?? "").charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
                             <div className="text-[14px] font-semibold leading-tight" style={{ color: NAVY }}>
