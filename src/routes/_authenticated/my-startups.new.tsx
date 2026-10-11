@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { StartupForm } from "@/components/startups/startup-form";
 import { SellerWizard } from "@/components/startups/seller-wizard";
+import { SellerAutoFill } from "@/components/startups/seller-auto-fill";
 import { PermissionGuard } from "@/components/permission-guard";
 import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,6 +30,7 @@ function NewMyStartupPage() {
   const { data } = useSessionContext();
   const userId = data?.user?.id as string | undefined;
   const [initial, setInitial] = useState<SellerDraft | null>(null);
+  const [fill, setFill] = useState<{ id: string; web: string } | null>(null);
   const [prefill, setPrefill] = useState<SellerPrefill | null>(null);
   const { roles, has } = usePermissions();
   // Seller accounts own their businesses directly (no workspace owner pickers).
@@ -49,6 +51,7 @@ function NewMyStartupPage() {
     try {
       const { id } = await createMine({ data: { role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size, sector: d.sector, licences: d.licences, iso: d.iso, addr: d.addr } });
       if (userId) clearDraft(userId);
+      if (d.web.trim()) { setFill({ id, web: d.web }); return; }
       navigate({ to: "/my-startups/$id/edit", params: { id } });
     } catch (e) { toast.error((e as Error).message); }
   };
@@ -59,7 +62,9 @@ function NewMyStartupPage() {
 
   return (
     <PermissionGuard permission="startups.write" message="You don't have permission to create startups.">
-      {prefill ? (
+      {fill ? (
+        <SellerAutoFill id={fill.id} web={fill.web} onDone={() => navigate({ to: "/my-startups/$id/edit", params: { id: fill.id } })} />
+      ) : prefill ? (
         <div className="mx-auto max-w-4xl space-y-6">
           <Link to="/my-startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to My Business

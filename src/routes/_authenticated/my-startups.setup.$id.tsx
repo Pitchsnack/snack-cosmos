@@ -1,4 +1,5 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
+import { SellerAutoFill } from "@/components/startups/seller-auto-fill";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -49,6 +50,7 @@ function Page() {
   const { data, error } = useQuery({ queryKey: sellerSetupKey(id), queryFn: () => fetchFn({ data: { id } }), staleTime: 0 });
   const initial = useMemo(() => (data ? toDraft(data, openAt) : null), [data]); // eslint-disable-line react-hooks/exhaustive-deps
   const timer = useRef<number | null>(null);
+  const [fill, setFill] = useState<string | null>(null);
   const payload = (d: SellerDraft, done?: boolean) => ({
     id, role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size,
     sector: d.sector, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never,
@@ -61,6 +63,7 @@ function Page() {
 
   if (error) return <p className="p-8 text-sm text-muted-foreground">{(error as Error).message}</p>;
   if (!data || !initial || !session?.user?.id) return null;
+  if (fill) return <SellerAutoFill id={id} web={fill} onDone={() => { void qc.invalidateQueries(); navigate({ to: "/my-startups/$id/edit", params: { id } }); }} />;
   return (
     <SellerWizard
       userId={session.user.id}
@@ -73,6 +76,7 @@ function Page() {
       onFinish={async (d) => {
         if (timer.current) window.clearTimeout(timer.current);
         try { await saveFn({ data: payload(d, true) }); } catch (e) { toast.error((e as Error).message); return; }
+        if (d.web.trim()) { setFill(d.web); return; }
         void qc.invalidateQueries();
         navigate({ to: "/my-startups/$id/edit", params: { id } });
       }}
