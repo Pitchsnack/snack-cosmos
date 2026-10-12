@@ -2,7 +2,7 @@
 import { bkkToday, dateEn, dateTh, daysLeft } from "./access-codes";
 import type { MailPart } from "./email-templates/soft-launch";
 
-const SUBS_URL = "https://pitchsnack.com/preferences?tab=subscription";
+const SUBS_URL = "https://pitchsnack.com/preferences#subscription";
 type Role = "seller" | "buyer" | "advisor";
 
 const WILL: Record<Role, { th: string; en: string }> = {
