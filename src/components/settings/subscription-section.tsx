@@ -46,7 +46,7 @@ export function SubscriptionSection() {
                 <li key={l as string} className={`flex items-center gap-1.5 ${on ? "" : "text-muted-foreground"}`}>{on ? <Check className="h-3 w-3" /> : <Lock className="h-3 w-3" />}{l as string}</li>
               ))}
             </ul>
-            {strip?.freeEndedPlan === p.name && strip.freeEndedOn && <p className="text-center text-[12px] text-[#69738A]">You had it free until {dateEn(strip.freeEndedOn)}</p>}
+            {strip?.freeEndedPlan === p.name && strip?.freeEndedOn && <p className="text-center text-[12px] text-[#69738A]">You had it free until {dateEn(strip!.freeEndedOn!)}</p>}
           </div>
         ))}
       </div>
