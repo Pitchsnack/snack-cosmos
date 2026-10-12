@@ -5994,6 +5994,10 @@ export type Database = {
         Args: { _key: string; _uid: string }
         Returns: boolean
       }
+      claim_access_seat: {
+        Args: { _code_id: string; _role: string; _uid: string }
+        Returns: string
+      }
       company_type_for_relation: { Args: { _rel: string }; Returns: string }
       current_term_start: { Args: { _uid: string }; Returns: string }
       fn_import_global_startup: {

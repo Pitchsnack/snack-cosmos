@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useGate } from "@/components/access-gate/access-gate";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarCheck, Check, ChevronDown, CircleAlert, Lock, Mail, MessageCircleMore, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -50,7 +51,7 @@ const TOPICS: [string, { en: string; th: string }][] = [
   ["selling", c("Selling my business", "การขายกิจการ")], ["buying", c("Buying or investing in a business", "การซื้อหรือลงทุนในกิจการ")],
   ["partner", c("Joining as a partner", "การเข้าร่วมเป็นพาร์ทเนอร์")], ["plans", c("Plans and billing", "แผนบริการและการชำระเงิน")],
   ["verification", c("Verification and badges", "การตรวจสอบและตราสัญลักษณ์")], ["account", c("My account and signing in", "บัญชีผู้ใช้และการเข้าสู่ระบบ")],
-  ["press", c("Press and collaborations", "สื่อมวลชนและความร่วมมือ")], ["other", c("Something else", "เรื่องอื่นๆ")],
+  ["press", c("Press and collaborations", "สื่อมวลชนและความร่วมมือ")], ["feedback", c("Soft launch feedback", "ความเห็นช่วงทดลองใช้งาน")], ["other", c("Something else", "เรื่องอื่นๆ")],
 ];
 const CARDS = [
   { to: "/sellers#faq", h: c("For sellers", "สำหรับผู้ขาย"), p: c("How your name stays hidden, what it costs, and the steps from listing to signing.", "ชื่อกิจการถูกซ่อนอย่างไร ค่าบริการเท่าไร และขั้นตอนตั้งแต่ประกาศขายจนถึงวันลงนาม"), l: c("Questions sellers ask →", "คำถามจากผู้ขาย →") },
@@ -145,6 +146,10 @@ function EnquiryCard() {
   const sentRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => { if (sent) sentRef.current?.focus(); }, [sent]);
+  const gate = useGate();
+  useEffect(() => {
+    if (gate.gateOn && new URLSearchParams(window.location.search).get("topic") === "feedback") setF((p) => ({ ...p, topic: "feedback" }));
+  }, [gate.gateOn]);
 
   const err = (k: keyof typeof ERR) => (shown[k] && !check(f, k) ? t(ERR[k]) : null);
   const set = <K extends keyof F>(k: K, v: F[K]) => setF((p) => ({ ...p, [k]: v }));
@@ -224,7 +229,7 @@ function EnquiryCard() {
             <div className="ct-select">
               <select id="ct-topic" data-f="topic" value={f.topic} onChange={(e) => { set("topic", e.target.value); setShown((s) => ({ ...s, topic: true })); }} onBlur={blur("topic")} {...aria("topic")}>
                 <option value="" disabled>{t(C.topicPh)}</option>
-                {TOPICS.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
+                {TOPICS.filter(([v]) => v !== "feedback" || gate.gateOn).map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
               </select>
               <ChevronDown size={16} />
             </div>

@@ -6,7 +6,7 @@ import { z } from "zod";
 import {
   ArrowLeft, ArrowRight, BadgeCheck, Briefcase, Building, Building2, Calculator, Calendar, ChartColumn, Check, ChevronDown,
   Circle, CircleAlert, Eye, EyeOff, Factory, FilePenLine, FileText, Gauge, Globe, Handshake, House, Landmark, LoaderCircle,
-  Lock, LogOut, Mail, Rocket, Scale, Search, ShieldCheck, Sprout, Store, Tag, User, Users, type LucideIcon,
+  Info, Lock, LogIn, LogOut, Mail, MailCheck, Rocket, Ticket, Scale, Search, ShieldCheck, Sprout, Store, Tag, User, Users, type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { finishSignup, getSignupState, saveSignupAnswers } from "@/lib/signup.functions";
@@ -17,6 +17,8 @@ import { ADVISOR_OPTS, BUYER_OPTS, BUYER_REL_OPTS, S, SELLER_OPTS, type Role } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import "@/styles/login-page.css";
 import "@/styles/signup-page.css";
+import { AccessGate, useClaimSeat, useGate } from "@/components/access-gate/access-gate";
+import { G, months as monthsText } from "@/components/access-gate/access-copy";
 
 const LANG_KEY = "ps-home-lang";
 const PENDING_KEY = "ps-signup-pending";
@@ -72,7 +74,14 @@ function setPersona(userId: string, role: Role) {
 }
 
 function SignupPage() {
+  return <AccessGate claimInBackground={false}><SignupInner /></AccessGate>;
+}
+
+function SignupInner() {
   const navigate = useNavigate();
+  const gate = useGate();
+  const claimSeat = useClaimSeat();
+  const [full, setFull] = useState(false);
   const search = Route.useSearch();
   const qc = useQueryClient();
   const fetchState = useServerFn(getSignupState);
@@ -138,6 +147,7 @@ function SignupPage() {
           s = await fetchState();
         }
         writePending(null);
+        if (!s.answers?.done_at && !(await claimOk())) return;
         if (!s.answers) { navigate({ to: "/tenants" }); return; }
         if (s.answers.done_at) { setPersona(uid, s.answers.role); navigate({ to: myCompanyPath(s.answers.role) }); return; }
         setRole(s.answers.role); setAnswers((a) => ({ ...a, [s.answers!.role]: s.answers!.first_answer })); restoreTypes(s.answers.first_answer, s.answers.investor_types); setEmail(s.email);
@@ -148,6 +158,21 @@ function SignupPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const r = gate.details?.role;
+    if (!preRole && r && r !== "any") setRole((cur) => cur ?? r);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gate.details]);
+  /** Soft launch: links a new account to its code. False when the account was removed. */
+  async function claimOk(): Promise<boolean> {
+    const r = await claimSeat();
+    if (r.result === "works") return true;
+    setBusy(false);
+    if (r.result === "full") { setFull(true); setStep(1); setReady(true); return false; }
+    window.location.reload();
+    return false;
+  }
 
   useEffect(() => { if (ready) { titleRef.current?.focus({ preventScroll: true }); window.scrollTo(0, 0); } }, [step, ready]);
   useEffect(() => {
@@ -176,8 +201,13 @@ function SignupPage() {
     if (!list?.length) return;
     if (ans === "corporate") setCorpType(list[0]!); else if (ans === "agent") setAgentTypes(list);
   }
-  const pts = S.points[role ?? "none"];
-  const ptIcons = POINT_ICONS[role ?? "none"];
+  const inv = gate.details;
+  const sellerFree = role === "seller" && inv?.plans?.seller ? inv.plans.seller : null;
+  const pts = sellerFree && inv
+    ? [...S.points.seller.slice(0, 2), { th: G.sellerPt.th.replace("{plan}", sellerFree).replace("{n}", monthsText(inv.months, "th")), en: G.sellerPt.en.replace("{plan}", sellerFree).replace("{n}", monthsText(inv.months, "en")) }]
+    : S.points[role ?? "none"];
+  const ptIcons = sellerFree ? [...POINT_ICONS.seller.slice(0, 2), Ticket] : POINT_ICONS[role ?? "none"];
+  const noneLeft = !!inv && (full || inv.left <= 0);
 
   const rules = [pw.length >= 8, /[A-Za-z\u0E00-\u0E7F]/.test(pw), /\d/.test(pw)];
   const go = (n: Step) => { setPickErr(false); setStep(n); };
@@ -217,6 +247,7 @@ function SignupPage() {
         await saveAnswers({ data: { role: pend.role, firstAnswer: pend.answer, investorTypes: pend.types, firstName: pend.first, lastName: pend.last, terms: pend.terms, news: pend.news } });
         writePending(null);
       } catch { /* answers are retried from pending on next load */ }
+      if (!(await claimOk())) return;
       setBusy(false);
       go(5);
       return;
@@ -255,6 +286,7 @@ function SignupPage() {
       await saveAnswers({ data: { role: role!, firstAnswer: answer!, investorTypes: p?.types ?? types, firstName: p?.first ?? first, lastName: p?.last ?? last, terms: p?.terms ?? terms, news: p?.news ?? news } });
       writePending(null);
     } catch { /* retried on resume */ }
+    if (!(await claimOk())) return;
     setBusy(false); go(5);
   }
 
@@ -375,6 +407,34 @@ function SignupPage() {
         <div className="lg-mid">
           <div className="lg-col su-col">
             <div className="lg-card su-card">
+              {inv && (step <= 3 || step === 6) && (() => {
+                const plan = role ? inv.plans?.[role] : null;
+                const freeLine = noneLeft || !inv.plans ? null
+                  : role && plan ? t(G.free).replace("{plan}", plan).replace("{n}", monthsText(inv.months, lang))
+                  : !role ? t(G.freeAny).replace("{n}", monthsText(inv.months, lang)) : null;
+                const line2 = noneLeft ? (inv.max === 1 ? t(G.invNone1) : t(G.invNone)) : t(G.invLeft);
+                const [a, b] = line2.split("{code}");
+                return (
+                  <div className="su-inv">
+                    <MailCheck size={20} />
+                    <div className="su-inv-b">
+                      <div className="su-inv-1">{t(G.invFor).replace("{client}", inv.client)}</div>
+                      <div className="su-inv-2">{a}<code>{inv.code}</code>{b!.replace("{n}", String(inv.left)).replace("{max}", String(inv.max))}</div>
+                      {freeLine && <div className="su-inv-3"><Ticket size={15} /><span>{freeLine}</span></div>}
+                    </div>
+                  </div>
+                );
+              })()}
+              {inv && noneLeft && step === 1 ? (
+                <div className="su-step">
+                  <h1 ref={titleRef} tabIndex={-1}>{t(S.s1Title)}</h1>
+                  <div className="su-full">
+                    <div className="su-full-h"><Users size={20} />{t(G.fullT)}</div>
+                    <p>{t(G.fullP).replace("{client}", inv.client).replace("{max}", String(inv.max))}</p>
+                  </div>
+                  <Link to="/login" className="lg-btn" style={{ marginTop: 18 }}>{t(G.signIn)}<LogIn size={18} /></Link>
+                </div>
+              ) : <>
               <div className="su-prog">
                 <div className="su-prow"><b>{t(NAMES[step])}</b><span>{t(S.progress).replace("{n}", String(shownN)).replace("{N}", String(order.length))}</span></div>
                 <div className="su-bars">{order.map((n, k) => <i key={n} className={k < shownN ? "on" : ""} />)}</div>
@@ -390,6 +450,7 @@ function SignupPage() {
                         <Choice key={r} name="role" big tone={r} o={{ v: r, icon: r === "seller" ? "store" : r === "buyer" ? "search" : "briefcase", t: S.roles[r][0], l: S.roles[r][1] }} />
                       ))}
                     </fieldset>
+                    {inv && inv.role !== "any" && role === inv.role && <p className="su-rnote"><Info size={15} />{t(G.roleNote)}</p>}
                     {pickErr && <Err text={S.pickOne} />}
                     <div className="su-actions">
                       <Primary label={S.next} onClick={() => { if (!role) { setPickErr(true); document.querySelector<HTMLInputElement>(".su-cards input")?.focus(); } else go(2); }} />
@@ -590,8 +651,9 @@ function SignupPage() {
                   </>}
                 </div>
               )}
+              </>}
             </div>
-            {(step <= 3 || step === 6) && <p className="lg-noacc">{t(S.haveAcc)} <Link to="/login">{t(S.signIn)}</Link></p>}
+            {(step <= 3 || step === 6) && !(noneLeft && step === 1) && <p className="lg-noacc">{t(S.haveAcc)} <Link to="/login">{t(S.signIn)}</Link></p>}
             <p className="lg-pw2">Powered by SnackPortal2</p>
           </div>
         </div>

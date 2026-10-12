@@ -93,9 +93,14 @@ export const finishSignup = createServerFn({ method: "POST" })
     const { data: u } = await sb.auth.admin.getUserById(uid);
     if (!u?.user?.email_confirmed_at) throw new Error("Confirm your email first.");
     const { data: a } = await sb.from("signup_answers").select("*").eq("user_id", uid).maybeSingle();
+    // Soft launch: while the gate is on, a new account gets its role only after claim-access-seat linked it to a code.
+    const { data: gate } = await sb.from("soft_launch_settings").select("gate_on,changed_at").eq("id", true).maybeSingle();
+    const { data: cur } = await sb.from("users").select("account_role,access_code_id").eq("id", uid).maybeSingle();
+    if (gate?.gate_on && !cur?.account_role && !cur?.access_code_id && Date.parse(u.user.created_at) >= Date.parse(gate.changed_at)) {
+      throw new Error("New accounts need the code from your invitation.");
+    }
     // One role per account, from the role step; new sellers start on the Entry plan (from the plans table).
     if (a && ["seller", "buyer", "advisor"].includes(a.role)) {
-      const { data: cur } = await sb.from("users").select("account_role").eq("id", uid).maybeSingle();
       if (!cur?.account_role) await sb.from("users").update({ account_role: a.role }).eq("id", uid);
       if (a.role === "seller") {
         const { data: entry } = await sb.from("plans").select("id, term_months").eq("role", "seller").eq("status", "live").order("sort").limit(1).maybeSingle();
