@@ -29,3 +29,4 @@
 
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
+- Soft-launch gate: AccessGate (components/access-gate) wraps PublicShell and sign-up; codes, passes and seat claims are checked only in access-gate.functions.ts (signed pass, claim_access_seat locks the code row), so the browser never decides who gets in.
