@@ -3,7 +3,7 @@ import { EditInfoPopup, leaveEditUrl, markEditPushed, useTr } from "@/components
 import { BuyerInvestorEdit, BUYER_INVESTOR_KEY } from "@/components/my-business/buyer-investor-edit";
 import { AdvisorFirmEdit } from "@/components/advisor/advisor-firm-edit";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { EditSection } from "@/lib/advisor-firm";
 
 type S = { edit?: "profile"; section?: string; firm?: string; from?: "public" | "private"; add?: "1" };
@@ -22,7 +22,8 @@ export function ProfileEditPopup({ advisor }: { advisor: boolean }) {
   const navigate = useNavigate();
   const tr = useTr();
   const firms = useMyAdvisorFirms();
-  const buyer = useQuery<{ investor?: { investor_name?: string | null } }>({ queryKey: BUYER_INVESTOR_KEY, enabled: false });
+  const queryClient = useQueryClient();
+  const buyer = queryClient.getQueryData<{ investor?: { investor_name?: string | null } }>(BUYER_INVESTOR_KEY);
   if (s.edit !== "profile") return null;
   const firm = advisor ? (firms.data?.find((f) => f.id === s.firm) ?? firms.data?.[0]) : undefined;
   const name = advisor ? firm?.name ?? "" : buyer.data?.investor?.investor_name ?? "";
