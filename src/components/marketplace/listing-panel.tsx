@@ -19,7 +19,7 @@ export type Teaser = {
   listing: PublicListing;
   dealType?: string | null;
   askingPrice?: number | null;
-  stakePct?: number | null;
+  handover?: string | null;
 };
 
 /** Refresh everything that depends on a listing's saved / NDA state. */
@@ -166,9 +166,9 @@ export function DealTerms({ t }: { t: Teaser }) {
     <div className={BOX}>
       <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Deal terms")}</h4>
       <KV rows={[
-        [tr("Stake offered"), t.stakePct != null ? `${t.stakePct}%` : null],
-        [tr("Asking price"), t.askingPrice == null ? tr("On request") : `฿${t.askingPrice}M`],
         [tr("Deal type"), t.dealType ?? null],
+        [tr("Asking price"), t.askingPrice == null ? tr("On request") : `฿${t.askingPrice}M`],
+        [tr("Owner handover"), t.handover ?? null],
         [tr("Reason"), x.reason ?? null],
         [tr("Buyer interest"), interest],
       ]} />

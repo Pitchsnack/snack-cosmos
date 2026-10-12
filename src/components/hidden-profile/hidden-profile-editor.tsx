@@ -12,7 +12,6 @@ import {
   COVER_ARTS,
   DEAL_TYPES,
   HIDDEN_FIELD_LABEL,
-  OPEN_TO,
   decadeOf,
   exactMoney,
   isBuyerVisible,
@@ -242,7 +241,6 @@ export function HiddenProfileEditor({
                 <input type="checkbox" checked={d.asking_price == null} onChange={(e) => set("asking_price", e.target.checked ? null : 0)} /> Price on request
               </label>
             </Field>
-            <Field label="Stake %"><Input type="number" min={1} max={100} value={d.stake_pct ?? ""} onChange={(e) => set("stake_pct", e.target.value === "" ? null : Number(e.target.value))} /></Field>
           </div>
           <Field label="Deal type">
             <Select value={d.deal_type ?? ""} onValueChange={(v) => set("deal_type", v)}>
@@ -250,21 +248,12 @@ export function HiddenProfileEditor({
               <SelectContent>{DEAL_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
           </Field>
-          {(["structure", "reason", "handover", "process"] as const).map((k) => (
+          {(["reason"] as const).map((k) => (
             <Field key={k} label={HIDDEN_FIELD_LABEL[k]}>
               <Textarea id={`hp-${k}`} rows={2} value={d[k] ?? ""} onChange={(e) => set(k, e.target.value || null)} className={flagCls(k)} />
               <Msg k={k} />
             </Field>
           ))}
-          <Field label="Open to">
-            <div className="flex flex-wrap gap-3 text-sm">
-              {OPEN_TO.map((o) => (
-                <label key={o} className="flex items-center gap-1.5">
-                  <input type="checkbox" checked={d.open_to.includes(o)} onChange={(e) => set("open_to", e.target.checked ? [...d.open_to, o] : d.open_to.filter((x) => x !== o))} /> {o}
-                </label>
-              ))}
-            </div>
-          </Field>
         </Section>
 
         <Section n={4} title="Figures (read-only)">

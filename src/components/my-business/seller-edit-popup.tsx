@@ -23,7 +23,8 @@ export function useOpenSellerEdit() {
   };
 }
 
-function viewAndTab(view: string | undefined, tab: string | undefined, fallback: View): [View, string] {
+function viewAndTab(view: string | undefined, rawTab: string | undefined, fallback: View): [View, string] {
+  const tab = rawTab === "description" ? "identity" : rawTab === "restrictions" ? "images" : rawTab;
   const isPub = PUBLIC_TABS.includes(tab as PublicTab);
   const isPriv = PRIVATE_TABS.includes(tab as PrivateTab);
   let v: View = view === "public" || view === "private" ? view : isPub ? "public" : isPriv ? "private" : fallback;

@@ -10,6 +10,7 @@ import {
   pickDraft,
   runIdentityCheck,
   suggestCodeName,
+  handoverLine,
   suggestRegion,
   type EntryFacts,
   type HiddenDraft,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields";
 
 type Sb = SupabaseClient<Database>;
 
@@ -81,8 +82,7 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
           code_name: suggestCodeName(),
           region: suggestRegion(facts),
           headline,
-          deal_type: "Full acquisition",
-          stake_pct: 100,
+          deal_type: null,
           open_to: ["Private equity", "Family office", "Corporate"],
           nda_approver: "admin",
           created_by: context.userId,
@@ -117,13 +117,15 @@ const DraftSchema = z.object({
   process: z.string().max(400).nullable(),
   open_to: z.array(z.string()).max(5),
   nda_approver: z.enum(["seller", "admin"]),
+  owner_stays: z.enum(["yes", "no"]).nullable().optional(),
+  handover_months: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal(9), z.literal(12), z.literal(18), z.literal(24)]).nullable().optional(),
   product_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   market_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   cover_image_url: z.string().max(500).nullable().optional(),
 });
 
 function draftError(msg: string) {
-  if (/hidden_profiles_code_name_uq/.test(msg)) return new Error("That code name is already used in the Marketplace");
+  if (/hidden_profiles_code_name_uq/.test(msg)) return new Error("NAME_TAKEN: That listing name is already used by another listing");
   return new Error(msg);
 }
 
@@ -296,6 +298,20 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: (r as { public_image_id?: string | null }).public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       (listing as { certified?: boolean }).certified = !!(st as { registration_verified_at?: string | null }).registration_verified_at;
-      return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, stakePct: live.stake_pct };
+      return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, handover: handoverLine(live.owner_stays, live.handover_months) };
     }
 }
+
+/** Is a listing name free? Trimmed, case-insensitive, against every other listing in any status. */
+export const checkListingName = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ name: z.string().max(80), startupId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const name = data.name.trim();
+    if (!name) return { available: false };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin.from("hidden_profiles").select("startup_id, code_name").ilike("code_name", name.replace(/[\\%_]/g, (c) => `\\${c}`));
+    if (error) throw new Error(error.message);
+    const taken = (rows ?? []).some((r) => r.startup_id !== data.startupId && r.code_name.trim().toLowerCase() === name.toLowerCase());
+    return { available: !taken };
+  });
