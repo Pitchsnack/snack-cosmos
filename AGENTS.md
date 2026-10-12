@@ -18,7 +18,7 @@
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types (list order, Investor Classification = first, empty for non-agents) and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts so the rule stays in one place. Sign-up stores the relation and types in signup_answers (buyer_relation, investor_types).
 - Sector picking uses one SetSectorPicker (components/common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic — so every form behaves the same.
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts, so the rules hold even through the database API.
-- Roles/plans: account_role enforced in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
+- Roles/plans: account_role checked in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
 - Contact enquiries use sendContactEnquiry (rate-limited); email-identity.ts drives replies and Admin Sending rules so they never drift.
