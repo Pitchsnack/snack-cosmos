@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_codes: {
+        Row: {
+          client_name: string
+          code: string
+          created_at: string
+          created_by: string
+          ends_on: string | null
+          free_months: number
+          free_plan: string | null
+          id: string
+          invite_email: string | null
+          invite_sent_at: string | null
+          invite_sent_by: string | null
+          max_accounts: number
+          note: string | null
+          role: string
+          switched_off_at: string | null
+          switched_off_by: string | null
+        }
+        Insert: {
+          client_name: string
+          code: string
+          created_at?: string
+          created_by: string
+          ends_on?: string | null
+          free_months?: number
+          free_plan?: string | null
+          id?: string
+          invite_email?: string | null
+          invite_sent_at?: string | null
+          invite_sent_by?: string | null
+          max_accounts?: number
+          note?: string | null
+          role: string
+          switched_off_at?: string | null
+          switched_off_by?: string | null
+        }
+        Update: {
+          client_name?: string
+          code?: string
+          created_at?: string
+          created_by?: string
+          ends_on?: string | null
+          free_months?: number
+          free_plan?: string | null
+          id?: string
+          invite_email?: string | null
+          invite_sent_at?: string | null
+          invite_sent_by?: string | null
+          max_accounts?: number
+          note?: string | null
+          role?: string
+          switched_off_at?: string | null
+          switched_off_by?: string | null
+        }
+        Relationships: []
+      }
+      access_devices: {
+        Row: {
+          code_id: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          visits: number
+        }
+        Insert: {
+          code_id: string
+          first_seen_at?: string
+          id: string
+          last_seen_at?: string
+          visits?: number
+        }
+        Update: {
+          code_id?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          visits?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_devices_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "access_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_failures: {
+        Row: {
+          hour_count: number
+          hour_started_at: string
+          in_a_row: number
+          key: string
+          paused_until: string | null
+        }
+        Insert: {
+          hour_count?: number
+          hour_started_at?: string
+          in_a_row?: number
+          key: string
+          paused_until?: string | null
+        }
+        Update: {
+          hour_count?: number
+          hour_started_at?: string
+          in_a_row?: number
+          key?: string
+          paused_until?: string | null
+        }
+        Relationships: []
+      }
       advisor_favourites: {
         Row: {
           created_at: string
@@ -4431,6 +4544,30 @@ export type Database = {
         }
         Relationships: []
       }
+      soft_launch_settings: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          gate_on: boolean
+          id: boolean
+          usual_free_plans: Json
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          gate_on?: boolean
+          id?: boolean
+          usual_free_plans?: Json
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          gate_on?: boolean
+          id?: boolean
+          usual_free_plans?: Json
+        }
+        Relationships: []
+      }
       startup_activity: {
         Row: {
           activity_details: Json
@@ -5075,12 +5212,18 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          access_code_id: string | null
+          free_bar_hidden_on: string | null
+          free_end_email_sent_at: string | null
+          free_end_seen_at: string | null
+          free_reminder_sent_at: string | null
           id: string
           manager_user_id: string | null
           nda_credits: number
           plan_id: string
           price_locked_thb: number | null
           price_paid_thb: number | null
+          source: string | null
           status: string
           term_end: string | null
           term_start: string
@@ -5088,12 +5231,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_code_id?: string | null
+          free_bar_hidden_on?: string | null
+          free_end_email_sent_at?: string | null
+          free_end_seen_at?: string | null
+          free_reminder_sent_at?: string | null
           id?: string
           manager_user_id?: string | null
           nda_credits?: number
           plan_id: string
           price_locked_thb?: number | null
           price_paid_thb?: number | null
+          source?: string | null
           status?: string
           term_end?: string | null
           term_start?: string
@@ -5101,12 +5250,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_code_id?: string | null
+          free_bar_hidden_on?: string | null
+          free_end_email_sent_at?: string | null
+          free_end_seen_at?: string | null
+          free_reminder_sent_at?: string | null
           id?: string
           manager_user_id?: string | null
           nda_credits?: number
           plan_id?: string
           price_locked_thb?: number | null
           price_paid_thb?: number | null
+          source?: string | null
           status?: string
           term_end?: string | null
           term_start?: string
@@ -5114,6 +5269,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_access_code_id_fkey"
+            columns: ["access_code_id"]
+            isOneToOne: false
+            referencedRelation: "access_codes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscriptions_plan_id_fkey"
             columns: ["plan_id"]
@@ -5499,6 +5661,7 @@ export type Database = {
       }
       users: {
         Row: {
+          access_code_id: string | null
           account_role: string | null
           advisor_view: boolean
           ai_agent_id: string | null
@@ -5518,6 +5681,7 @@ export type Database = {
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
+          access_code_id?: string | null
           account_role?: string | null
           advisor_view?: boolean
           ai_agent_id?: string | null
@@ -5537,6 +5701,7 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Update: {
+          access_code_id?: string | null
           account_role?: string | null
           advisor_view?: boolean
           ai_agent_id?: string | null
@@ -5556,6 +5721,13 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: [
+          {
+            foreignKeyName: "users_access_code_id_fkey"
+            columns: ["access_code_id"]
+            isOneToOne: false
+            referencedRelation: "access_codes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "users_primary_role_id_fkey"
             columns: ["primary_role_id"]
