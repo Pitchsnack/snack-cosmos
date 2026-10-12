@@ -252,10 +252,11 @@ async function withPlans(supabase: any, rows: any[]) {
   const ids = rows.map((r) => r.id);
   if (!ids.length) return rows;
   const [{ data: subs }, { data: profs }] = await Promise.all([
-    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id, nda_credits").in("user_id", ids),
+    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id, nda_credits, source, access_codes(code)").in("user_id", ids),
     supabase.from("user_profiles").select("user_id, organisation").in("user_id", ids),
   ]);
-  const sm = Object.fromEntries((subs ?? []).map((x: any) => [x.user_id, x]));
+  // An ended free plan counts as no plan (listed under Plan to set, no "Plan ended" line).
+  const sm = Object.fromEntries((subs ?? []).filter((x: any) => !(x.source === "access_code" && x.status === "ended")).map((x: any) => [x.user_id, x]));
   const om = Object.fromEntries((profs ?? []).map((x: any) => [x.user_id, x.organisation]));
   return rows.map((r) => ({ ...r, subscription: sm[r.id] ?? null, organisation: om[r.id] ?? null }));
 }
