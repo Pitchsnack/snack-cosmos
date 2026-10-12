@@ -5,7 +5,8 @@ import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar
 import { useServerFn } from "@tanstack/react-start";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { ConfirmWebsiteDialog } from "@/components/startups/confirm-website-dialog";
-import { SetSectorPicker } from "@/components/common/set-sector-picker";
+import { SellerTypeQuestion } from "@/components/common/business-type-question";
+import type { SectorPick } from "@/lib/business-types";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
@@ -288,8 +289,8 @@ export function SellerWizard({
       body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={d.rev} onPick={(v) => pick({ rev: v })} /> },
     size: { t: tr("What is the size of your company?"), h: tr("Number of employees."),
       body: <Radio grid list={WIZARD_SIZES} value={d.size} onPick={(v) => pick({ size: v })} /> },
-    sector: { t: tr("What does your business mainly do?"), h: tr("Choose the category that best represents your main products or services."),
-      body: <SetSectorPicker mode="single" value={d.sector ? [d.sector] : []} onChange={(v) => set({ sector: v[0] ?? null })} /> },
+    sector: { t: tr("What does your business do?"), h: tr("Pick the closest match. We'll put you in the right sector for buyers."),
+      body: <SellerTypeQuestion pick={(d.pick ?? null) as SectorPick | null} sector={d.sector} onChange={(p, s) => set({ pick: p, sector: s })} /> },
     lic: { t: tr("Licences and certifications"), h: tr("Select any that apply. This is optional."),
       body: (
         <div className="space-y-6">
