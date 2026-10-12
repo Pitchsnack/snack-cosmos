@@ -2,11 +2,10 @@
 
 - Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Sellers pick their listing's sector picture (public_image_id via setMyListingImage, member + same-sector checks); covers count a pick only while it matches the sector.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
-- Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders.
+- Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx (prefs: seller_report_prefs).
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages: one page (messages-page.tsx) for all tabs; keys 'p:'/'a:'/'c:<deal_advisor>:<side>'; 'c:' threads, members and events are derived in message-threads.server.ts (no copies) with membership checked every call.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
-- My Financials/Valuation = one page (my-reports-page.tsx), prefs in seller_report_prefs.
 - Loading overlay opt-in (meta.pageLoading); LOI note in config/loi-request.json.
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
@@ -15,7 +14,7 @@
 - Advisor view: users.advisor_view gates it; advisor stars live in advisor_favourites (view='advisor'), separate from buyer/seller saves; advisor-marketplace.tsx reuses existing cards/panels and only public loaders (listAdvisorMarketplace).
 - Edit-at-section: My Company Edit/Add links pass ?section=; forms use EditSec + useOpenAtSection (edit-section.tsx) so all roles share one scroll/focus behaviour.
 - Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields (startups.setup_from_signup, investors.wizard.from_signup, advisor_firms.wizard_state.fromSignup) so wizards skip them while set (rules in seller-wizard.ts, buyer-wizard.ts, advisor-firm.ts).
-- Sellers (STARTUP_USER) edit only businesses they belong to: DB policies via is_startup_member, a guard trigger keeps tenant/visibility, and listings still go live only by Admin approval.
+- Sellers edit only their own businesses: DB policies via is_startup_member, a guard trigger keeps tenant/visibility, and listings still go live only by Admin approval.
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types (list order, Investor Classification = first, empty for non-agents) and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts so the rule stays in one place. Sign-up stores the relation and types in signup_answers (buyer_relation, investor_types).
 - Sector picking uses one SetSectorPicker (components/common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic — so every form behaves the same.
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts, so the rules hold even through the database API.
