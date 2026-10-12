@@ -407,6 +407,34 @@ function SignupInner() {
         <div className="lg-mid">
           <div className="lg-col su-col">
             <div className="lg-card su-card">
+              {inv && (step <= 3 || step === 6) && (() => {
+                const plan = role ? inv.plans?.[role] : null;
+                const freeLine = noneLeft || !inv.plans ? null
+                  : role && plan ? t(G.free).replace("{plan}", plan).replace("{n}", monthsText(inv.months, lang))
+                  : !role ? t(G.freeAny).replace("{n}", monthsText(inv.months, lang)) : null;
+                const line2 = noneLeft ? (inv.max === 1 ? t(G.invNone1) : t(G.invNone)) : t(G.invLeft);
+                const [a, b] = line2.split("{code}");
+                return (
+                  <div className="su-inv">
+                    <MailCheck size={20} />
+                    <div className="su-inv-b">
+                      <div className="su-inv-1">{t(G.invFor).replace("{client}", inv.client)}</div>
+                      <div className="su-inv-2">{a}<code>{inv.code}</code>{b!.replace("{n}", String(inv.left)).replace("{max}", String(inv.max))}</div>
+                      {freeLine && <div className="su-inv-3"><Ticket size={15} /><span>{freeLine}</span></div>}
+                    </div>
+                  </div>
+                );
+              })()}
+              {inv && noneLeft && step === 1 ? (
+                <div className="su-step">
+                  <h1 ref={titleRef} tabIndex={-1}>{t(S.s1Title)}</h1>
+                  <div className="su-full">
+                    <div className="su-full-h"><Users size={20} />{t(G.fullT)}</div>
+                    <p>{t(G.fullP).replace("{client}", inv.client).replace("{max}", String(inv.max))}</p>
+                  </div>
+                  <Link to="/login" className="lg-btn" style={{ marginTop: 18 }}>{t(G.signIn)}<LogIn size={18} /></Link>
+                </div>
+              ) : <>
               <div className="su-prog">
                 <div className="su-prow"><b>{t(NAMES[step])}</b><span>{t(S.progress).replace("{n}", String(shownN)).replace("{N}", String(order.length))}</span></div>
                 <div className="su-bars">{order.map((n, k) => <i key={n} className={k < shownN ? "on" : ""} />)}</div>
@@ -422,6 +450,7 @@ function SignupInner() {
                         <Choice key={r} name="role" big tone={r} o={{ v: r, icon: r === "seller" ? "store" : r === "buyer" ? "search" : "briefcase", t: S.roles[r][0], l: S.roles[r][1] }} />
                       ))}
                     </fieldset>
+                    {inv && inv.role !== "any" && role === inv.role && <p className="su-rnote"><Info size={15} />{t(G.roleNote)}</p>}
                     {pickErr && <Err text={S.pickOne} />}
                     <div className="su-actions">
                       <Primary label={S.next} onClick={() => { if (!role) { setPickErr(true); document.querySelector<HTMLInputElement>(".su-cards input")?.focus(); } else go(2); }} />
