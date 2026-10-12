@@ -10,7 +10,7 @@ async function admin() {
 
 export type SellerSetup = {
   id: string; name: string; reg: string; web: string; year: string; city: string; rev: string | null; size: string | null;
-  sector: string | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
+  sector: string | null; pick: { type: string; kind?: string } | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
   role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null; reached: string | null;
   addr: { street: string; unit: string; district: string; province: string; postal: string };
 };
