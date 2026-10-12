@@ -1333,7 +1333,7 @@ export function StartupForm({
           })()}
         </div>
         <div className="col-span-4 space-y-1.5 @[760px]:col-span-3">
-          <Label htmlFor="ad-1">Business Address</Label>
+          <Label htmlFor="addr-street">Business Address</Label>
           <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}

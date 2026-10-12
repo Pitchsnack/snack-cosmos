@@ -115,45 +115,45 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
       {title && <div className="mb-3 text-[16px] font-bold">{title}</div>}
       <div className="space-y-3.5">
         <div>
-          <label className={lbl} htmlFor="ad-1">{thai ? "No. and street" : "Street and number"}{stars && <Req />}</label>
-          <input id="ad-1" aria-required autoComplete="address-line1" maxLength={120} placeholder={thai ? "e.g. 191 Sukhumvit Road" : "e.g. 1 Raffles Place"}
+          <label className={lbl} htmlFor="addr-street">{thai ? "No. and street" : "Street and number"}{stars && <Req />}</label>
+          <input id="addr-street" aria-required autoComplete="address-line1" maxLength={120} placeholder={thai ? "e.g. 191 Sukhumvit Road" : "e.g. 1 Raffles Place"}
             className={cn(inp, nc("street"), show("street") && bad)} {...nd("street")} value={a.street} onBlur={() => onBlur("street")} onChange={(e) => onChange({ street: e.target.value })} />
           <Err m={show("street")} />
         </div>
         <div>
-          <label className={lbl} htmlFor="ad-2">{thai ? "Floor / unit / soi" : "Floor / unit"}<Opt /></label>
-          <input id="ad-2" autoComplete="address-line2" maxLength={120} placeholder={thai ? "e.g. Unit 1203, 12th Floor" : "e.g. #20-01"}
+          <label className={lbl} htmlFor="addr-unit">{thai ? "Floor / unit / soi" : "Floor / unit"}<Opt /></label>
+          <input id="addr-unit" autoComplete="address-line2" maxLength={120} placeholder={thai ? "e.g. Unit 1203, 12th Floor" : "e.g. #20-01"}
             className={inp} value={a.unit} onChange={(e) => onChange({ unit: e.target.value })} />
         </div>
         <div className="grid gap-3.5 sm:grid-cols-2">
           <div>
-            <label className={lbl} htmlFor="ad-3">City/District{stars && <Req />}</label>
+            <label className={lbl} htmlFor="addr-district">City/District{stars && <Req />}</label>
             {thai ? (
-              <input id="ad-3" aria-required autoComplete="address-level2" maxLength={80} placeholder="e.g. Watthana"
+              <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder="e.g. Watthana"
                 className={cn(inp, nc("district"), show("district") && bad)} {...nd("district")} value={a.district} onBlur={() => onBlur("district")} onChange={(e) => onChange({ district: e.target.value })} />
             ) : (
-              <input id="ad-3" aria-required autoComplete="address-level2" maxLength={80} placeholder="e.g. Singapore"
+              <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder="e.g. Singapore"
                 className={cn(inp, nc("district"), show("district") && bad)} {...nd("district")} value={city} onBlur={() => onBlur("district")} onChange={(e) => onCity?.(e.target.value)} />
             )}
             <Err m={show("district")} />
           </div>
           <div>
-            <label className={lbl} htmlFor="ad-4">Province/State{thai ? (stars ? <Req /> : null) : <Opt />}</label>
+            <label className={lbl} htmlFor="addr-province">Province/State{thai ? (stars ? <Req /> : null) : <Opt />}</label>
             {thai ? (
-              <select id="ad-4" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
+              <select id="addr-province" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
                 onBlur={() => onBlur("province")} onChange={(e) => onChange({ province: e.target.value })}>
                 <option value="">{tr("Choose a province")}</option>
                 {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             ) : (
-              <input id="ad-4" autoComplete="address-level1" maxLength={80} className={inp} value={a.province} onChange={(e) => onChange({ province: e.target.value })} />
+              <input id="addr-province" autoComplete="address-level1" maxLength={80} className={inp} value={a.province} onChange={(e) => onChange({ province: e.target.value })} />
             )}
             <Err m={show("province")} />
           </div>
         </div>
         <div className="sm:w-1/2 sm:pr-[7px]">
-          <label className={lbl} htmlFor="ad-5">Postal code{thai ? (stars ? <Req /> : null) : <Opt />}</label>
-          <input id="ad-5" aria-required={thai} autoComplete="postal-code" inputMode={thai ? "numeric" : undefined} maxLength={thai ? 5 : 12}
+          <label className={lbl} htmlFor="addr-postal">Postal code{thai ? (stars ? <Req /> : null) : <Opt />}</label>
+          <input id="addr-postal" aria-required={thai} autoComplete="postal-code" inputMode={thai ? "numeric" : undefined} maxLength={thai ? 5 : 12}
             placeholder={thai ? "5 digits" : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
             onChange={(e) => onChange({ postal: thai ? e.target.value.replace(/\D/g, "").slice(0, 5) : e.target.value.slice(0, 12) })} />
           <Err m={show("postal")} />
