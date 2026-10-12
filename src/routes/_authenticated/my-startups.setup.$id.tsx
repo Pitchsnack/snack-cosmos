@@ -30,7 +30,7 @@ export const sellerSetupKey = (id: string) => ["seller-setup", id];
 function toDraft(s: SellerSetup, open?: string): SellerDraft {
   const d: SellerDraft = {
     ...emptyDraft(), role: s.role, name: s.name, reg: s.reg, web: s.web, year: s.year, city: s.city,
-    rev: s.rev, size: s.size, sector: s.sector, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
+    rev: s.rev, size: s.size, sector: s.sector, pick: s.pick, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
     reached: s.reached,
   };
   // Opens the step asked for, else the first question without an answer (skipped included), else Review.
@@ -53,7 +53,7 @@ function Page() {
   const [fill, setFill] = useState<string | null>(null);
   const payload = (d: SellerDraft, done?: boolean) => ({
     id, role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size,
-    sector: d.sector, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never,
+    sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never,
   });
   const persist = (d: SellerDraft) => {
     if (timer.current) window.clearTimeout(timer.current);

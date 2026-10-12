@@ -519,6 +519,13 @@
       "when": 1791790139895,
       "tag": "0073_listing_owner_handover",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1791800447391,
+      "tag": "0074_sector_short_list_picks",
+      "breakpoints": true
     }
   ]
 }

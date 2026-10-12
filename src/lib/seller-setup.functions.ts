@@ -10,7 +10,7 @@ async function admin() {
 
 export type SellerSetup = {
   id: string; name: string; reg: string; web: string; year: string; city: string; rev: string | null; size: string | null;
-  sector: string | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
+  sector: string | null; pick: { type: string; kind?: string } | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
   role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null; reached: string | null;
   addr: { street: string; unit: string; district: string; province: string; postal: string };
 };
@@ -42,7 +42,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     return {
       id: s.id, name: s.startup_name ?? "", reg: s.registered_number ?? "", web: s.website_url ?? "",
       year: s.year_founded ? String(s.year_founded) : "", city: s.city ?? "", rev: s.last_year_revenue ?? null,
-      size: s.company_size ?? null, sector: s.sector ?? null, licences: s.regulatory_licenses ?? [], iso: s.iso_standards ?? [],
+      size: s.company_size ?? null, sector: s.sector ?? null, pick: (s.sector_pick ?? null) as { type: string; kind?: string } | null, licences: s.regulatory_licenses ?? [], iso: s.iso_standards ?? [],
       addr: { street: s.address_line1 ?? "", unit: s.address_line2 ?? "", district: s.address_city_district ?? "", province: s.address_province_state ?? s.city ?? "", postal: s.postal_code ?? "" },
       role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null, reached: s.setup_reached ?? null,
     };
@@ -55,6 +55,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     role: z.enum(["owner", "family_owner", "agent"]).nullable(),
     name: z.string().max(255), reg: z.string().max(13), web: z.string().max(2048), year: z.string().max(4),
     city: z.string().max(100), rev: z.string().max(60).nullable(), size: z.string().max(30).nullable(), sector: z.string().max(100).nullable(),
+    pick: z.object({ type: z.string().max(30), kind: z.string().max(30).optional() }).nullable().optional(),
     licences: z.array(z.object({ category: z.string().max(40), name: z.string().max(160), number: z.string().max(120).nullable().optional() })).max(50),
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
@@ -68,7 +69,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     const y = /^\d{4}$/.test(data.year) ? Number(data.year) : null;
     const patch: Record<string, unknown> = {
       registered_number: data.reg || null, website_url: data.web.trim() || null, year_founded: y,
-      city: data.city || null, headquarters: "Thailand", last_year_revenue: data.rev, company_size: data.size, sector: data.sector,
+      city: data.city || null, headquarters: "Thailand", last_year_revenue: data.rev, company_size: data.size, sector: data.sector, sector_pick: data.pick ?? null,
       regulatory_licenses: data.licences, iso_standards: data.iso, updated_by: context.userId, updated_at: new Date().toISOString(),
     };
     if (data.addr) { Object.assign(patch, addrPatch(data.addr)); if (data.addr.province) patch.city = data.addr.province; }
@@ -93,6 +94,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
     role: z.enum(["owner", "family_owner", "agent"]).nullable(),
     name: z.string().trim().min(1).max(255), reg: z.string().max(13), web: z.string().max(2048), year: z.string().max(4),
     city: z.string().max(100), rev: z.string().max(60).nullable(), size: z.string().max(30).nullable(), sector: z.string().max(100).nullable(),
+    pick: z.object({ type: z.string().max(30), kind: z.string().max(30).optional() }).nullable().optional(),
     licences: z.array(z.object({ category: z.string().max(40), name: z.string().max(160), number: z.string().max(120).nullable().optional() })).max(50),
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
@@ -106,7 +108,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
       size: data.size, regNo: data.reg || null, city: data.city || null, revenue: data.rev, sector: data.sector,
       licences: data.licences, iso: data.iso, setupDone: true,
     });
-    if (data.addr) await sb.from("startups").update({ ...addrPatch(data.addr), ...(data.addr.province ? { city: data.addr.province } : {}) }).eq("id", id);
+    if (data.addr) await sb.from("startups").update({ sector_pick: data.pick ?? null, ...addrPatch(data.addr), ...(data.addr.province ? { city: data.addr.province } : {}) }).eq("id", id);
     return { id };
   });
 

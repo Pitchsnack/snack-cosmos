@@ -186,6 +186,8 @@ export interface SellerDraft {
   rev: string | null;
   size: string | null;
   sector: string | null;
+  /** The short-list pick that gave the sector. */
+  pick?: { type: string; kind?: string } | null;
   licences: RegulatoryLicence[];
   iso: string[];
   addr: SellerAddr;

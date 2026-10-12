@@ -130,6 +130,7 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         setup_done_at: inv.setup_done_at as string | null,
         wizard: (inv.wizard ?? {}) as { answered?: string[]; pe_ticked?: boolean; from_signup?: string[] },
         investment_focus_raw: (inv.investment_focus ?? []) as string[],
+        sector_picks: (inv.sector_picks ?? null) as { types: string[]; kinds: Record<string, string[]>; other: string[] } | null,
       },
       buyer: {
         relation: (p.buyer_relation ?? null) as "individual" | "corporate" | "agent" | null,
@@ -155,7 +156,7 @@ const Patch = z.object({
   company_size_band: z.enum(["1-10", "11-50", "51-200", "201-500", "500+"]).nullable().optional(),
   country: txt(120), city: txt(120), email: txt(255), website_url: txt(500), linkedin_url: txt(500),
   firm_name: txt(200), business_address: txt(1000), aum: txt(120), min_ticket_size: txt(60), max_ticket_size: txt(60),
-  short_description: txt(4000), keywords: arr(5), investment_focus: arr(10), preferred_stages: arr(12), preferred_industries: arr(20),
+  short_description: txt(4000), keywords: arr(5), investment_focus: arr(10), preferred_stages: arr(12), preferred_industries: arr(40),
   portfolio_extra: arr(50), logo_path: txt(1000),
   revenue_min_m: z.number().min(0).max(100000).nullable().optional(),
   revenue_max_m: z.number().min(0).max(100000).nullable().optional(),
@@ -302,7 +303,8 @@ const Wizard = z.object({
   aum_band: z.enum(AUM_KEYS).nullable().optional(),
   ticket_band: z.enum(TICKET_KEYS).nullable().optional(),
   revenue_min_band: z.enum(REV_KEYS).nullable().optional(),
-  deal_types: arr(12), preferred_stages: arr(12), geography: arr(12), preferred_industries: arr(20),
+  deal_types: arr(12), preferred_stages: arr(12), geography: arr(12), preferred_industries: arr(40),
+  sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable().optional(),
   description: z.string().trim().max(140).optional(),
   answered: z.array(z.string().max(20)).max(20).optional(),
   pe_ticked: z.boolean().optional(),
@@ -351,6 +353,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     if (data.preferred_stages) { inv.preferred_stages = data.preferred_stages; bp.stages = data.preferred_stages; }
     if (data.geography) { inv.investment_focus = data.geography; bp.geography = data.geography.join(", ") || null; }
     if (data.preferred_industries) { inv.preferred_industries = data.preferred_industries; bp.sectors = data.preferred_industries; }
+    if (has("sector_picks")) inv.sector_picks = data.sector_picks;
     if (has("description")) { bp.description = data.description || null; bp.headline = data.description || null; }
     if (data.answered || data.pe_ticked !== undefined) {
       inv.wizard = { ...(cur.wizard ?? {}), ...(data.answered ? { answered: data.answered } : {}), ...(data.pe_ticked !== undefined ? { pe_ticked: data.pe_ticked } : {}) };

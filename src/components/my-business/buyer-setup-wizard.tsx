@@ -7,7 +7,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, Info, Loader2, Lock, ShieldCheck, X, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import logoBlack from "@/assets/pitchsnack-black.png";
-import { SetSectorPicker } from "@/components/common/set-sector-picker";
+import { ManyTypeQuestion, buyerWords, manyError, useL } from "@/components/common/business-type-question";
+import { normPicks, picksToSectors, type SectorPicks } from "@/lib/business-types";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { typeTone } from "@/lib/buyer-profile";
 import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
@@ -24,7 +25,7 @@ import { stepsFor, buyerSkips, buyerHiddenFields, buyerProgress, type BuyerRelat
 
 type A = {
   role: BuyerRelation | null; type: string; country: string; city: string; name: string; year: string; reg: string; web: string;
-  aum: string; ticket: string; rev: string; deals: string[]; stages: string[]; geo: string[]; sectors: string[]; desc: string;
+  aum: string; ticket: string; rev: string; deals: string[]; stages: string[]; geo: string[]; sectors: string[]; picks: SectorPicks; desc: string;
   /** A representative's investor types (list order; the first is Investor Classification). */
   acts: string[];
 };
@@ -48,7 +49,7 @@ function fromData(d: Data): A {
     role: d.buyer.relation, type: inv.investor_type ?? "", country: inv.country ?? "Thailand", city: inv.city ?? "",
     name: inv.investor_name ?? "", year: inv.year_founded?.toString() ?? "", reg: inv.registration_no ?? "", web: inv.website_url ?? "",
     aum: inv.aum_band ?? "", ticket: inv.ticket_band ?? "", rev: inv.revenue_min_band ?? "",
-    deals: d.buyer.deal_types, stages: inv.preferred_stages, geo: inv.investment_focus_raw, sectors: inv.preferred_industries, desc: d.buyer.description,
+    deals: d.buyer.deal_types, stages: inv.preferred_stages, geo: inv.investment_focus_raw, sectors: inv.preferred_industries, picks: normPicks((inv as { sector_picks?: unknown }).sector_picks), desc: d.buyer.description,
     acts: d.buyer.relation === "agent" ? sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []) : [],
   };
 }
@@ -134,6 +135,7 @@ const bandList = (bands: Band[]) => bands.map((b) => ({ value: b.key, label: b.l
 
 export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: string }) {
   useTranslation(); // re-render on language change
+  const L = useL();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const saveFn = useServerFn(saveBuyerWizard);
@@ -212,7 +214,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     rev: a.rev ? null : tr("Choose one, or click Skip."),
     deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : tr("Pick at least one deal type."),
     stages: !stagesShown || a.stages.length ? null : tr("Pick at least one stage."),
-    sectors: a.sectors.length ? null : tr("Pick at least one industry, or Sector agnostic."),
+    sectors: manyError(a.picks, a.sectors.includes(SECTOR_AGNOSTIC), L),
     desc: descErr || (leaks.length ? "leak" : null),
   };  const qRef = useRef<HTMLDivElement>(null);
   useFocusNeeded(qRef, `${phase}:${cur}`);
@@ -454,20 +456,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           <Checks title={tr("Geography")} note="optional" items={Array.from(new Set([...GEOGRAPHY, ...a.geo]))} value={a.geo} onChange={(v) => set({ geo: v }, { geography: v })} />
         </div>
       ) },
-    sectors: { req: true, t: tr("Which industries do you invest in?"), h: tr("Pick up to 5, or Sector agnostic if you look at every industry."),
-      body: (() => {
-        const ag = a.sectors.includes(SECTOR_AGNOSTIC);
-        const picks = a.sectors.filter((s) => s !== SECTOR_AGNOSTIC);
-        const setS = (v: string[]) => set({ sectors: v }, { preferred_industries: v });
-        return (
-          <SetSectorPicker mode="multi" value={picks} onChange={(v) => setS([...(ag ? [SECTOR_AGNOSTIC] : []), ...v])}
-            limitMsg={tr("Pick up to 5 industries, or Sector agnostic.")}
-            agnostic={{ on: ag, onToggle: (on) => setS(on ? [SECTOR_AGNOSTIC, ...picks] : picks), line: tr("I look at companies in every industry"),
-              note: tr("Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you."),
-              summary: <>{tr("Sellers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
-            error={forced.sectors ? errors.sectors : null} />
-        );
-      })() },
+    sectors: { req: true, t: tr("Which industries do you invest in?"), h: L("Pick up to 5 types of business, or Sector agnostic if you look at every industry.", "เลือกประเภทธุรกิจได้สูงสุด 5 ประเภท หรือไม่จำกัดกลุ่มอุตสาหกรรมหากท่านพิจารณาทุกอุตสาหกรรม"),
+      body: (
+        <ManyTypeQuestion picks={a.picks} agnostic={a.sectors.includes(SECTOR_AGNOSTIC)} words={buyerWords(L)} error={forced.sectors ? errors.sectors : null}
+          onChange={(p, ag) => { const v = ag ? [SECTOR_AGNOSTIC] : picksToSectors(p); set({ sectors: v, picks: p }, { preferred_industries: v, sector_picks: ag ? null : p }); }} />
+      ) },
     desc: { req: false, t: tr("How would you describe your firm to sellers?"), h: tr("In one line. Sellers read it before any NDA, so leave out names, websites and contact details."),
       body: (
         <div>
