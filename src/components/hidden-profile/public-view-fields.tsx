@@ -168,7 +168,7 @@ function FlagMsg({ pd, k }: { pd: PublicDraftState; k: HiddenTextField }) {
   return <p className="mt-1 text-[11.5px] text-destructive">Could name the company: {hits.map((f) => `"${f.term}" (${f.reason.toLowerCase()})`).join(", ")}</p>;
 }
 
-export function PublicViewTab({ tab, pd, sector, pickedImage, section, source }: {
+export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, refNo }: {
   tab: PublicTab; pd: PublicDraftState; sector: string | null;
   /** The listing's saved public image (cover rule). */
   pickedImage: string | null | undefined;
@@ -193,7 +193,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source }:
         <IdentityMsg pd={pd} />
         <TabHead title={tr("Marketplace listing name", "ชื่อประกาศใน Marketplace")}>{fill}</TabHead>
         <div className="mt-4 grid grid-cols-[260px_minmax(0,1fr)] items-start gap-7 max-sm:grid-cols-1 max-sm:gap-4">
-          <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={(pd as { refNo?: string }).refNo} />
+          <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={refNo} />
           <div className="min-w-0 space-y-[22px]">
             <EditSec id="codename" tone="seller" active={section === "codename"}>
               <ListingNameField pd={pd} />

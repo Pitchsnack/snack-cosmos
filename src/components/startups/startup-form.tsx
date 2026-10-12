@@ -67,7 +67,7 @@ import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
 import { LicenceLists } from "./licence-lists";
 import { EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
-import { PublicViewTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
+import { PublicViewTab, normalizePublicTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
 import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
 import { setMyListingImage } from "@/lib/sector-images.functions";
 import type { EntryFacts, HiddenProfileRow } from "@/lib/hidden-profile";
@@ -206,7 +206,7 @@ interface Props {
 }
 
 export type PrivateTab = "images" | "about" | "market" | "licenses";
-export const PUBLIC_TABS: PublicTab[] = ["identity", "description", "deal"];
+export const PUBLIC_TABS: PublicTab[] = ["identity", "deal"];
 export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "market", "licenses"];
 export type StartupPopup = {
   view: "public" | "private";
@@ -1661,7 +1661,7 @@ export function StartupForm({
     licenses: 0,
   };
   const privTotal = privateCounts.images + privateCounts.about + privateCounts.market;
-  const pubTotal = pd.counts.identity + pd.counts.description + pd.counts.deal;
+  const pubTotal = pd.counts.identity + pd.counts.deal;
   const privTabs = [
     { key: "images" as const, label: tr("Images & Logo", "รูปภาพและโลโก้"), count: privateCounts.images },
     { key: "about" as const, label: tr("About Company", "เกี่ยวกับบริษัท"), count: privateCounts.about },
@@ -1670,12 +1670,11 @@ export function StartupForm({
   ];
   const pubTabs = [
     { key: "identity" as const, label: tr("Listing Identity", "ตัวตนของประกาศ"), count: pd.counts.identity },
-    { key: "description" as const, label: tr("Public Description", "คำอธิบายสาธารณะ"), count: pd.counts.description },
     { key: "deal" as const, label: tr("Deal Terms", "เงื่อนไขดีล"), count: pd.counts.deal },
   ];
   const showPublic = !!popup?.row && pView === "public";
   const curPriv = (PRIVATE_TABS.includes(pTab as PrivateTab) ? pTab : "images") as PrivateTab;
-  const curPub = (PUBLIC_TABS.includes(pTab as PublicTab) ? pTab : "identity") as PublicTab;
+  const curPub = (PUBLIC_TABS.includes(normalizePublicTab(pTab) as PublicTab) ? normalizePublicTab(pTab) : "identity") as PublicTab;
   const sectorLine = [sector, [city, headquarters].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
   const tabbedJsx = (
     <div role="tabpanel" id="sf-main-panel" aria-labelledby={`sf-main-${showPublic ? "public" : "private"}`}>
@@ -1692,9 +1691,8 @@ export function StartupForm({
         <>
           <TabRow idBase="sfp" label={tr("Public view sections", "ส่วนของมุมมองสาธารณะ")} tabs={pubTabs} value={curPub} onChange={(k) => navTab("public", k)} />
           <div role="tabpanel" id="sfp-panel" aria-labelledby={`sfp-tab-${curPub}`}>
-            <PublicViewTab tab={curPub} pd={pd} sector={sector} onSector={setSector} section={section}
-              pickedImage={imagePick !== undefined ? imagePick : ((popup?.row as { public_image_id?: string | null } | null)?.public_image_id ?? null)}
-              onPickImage={setImagePick} />
+            <PublicViewTab tab={curPub} pd={pd} sector={sector} section={section} source={listingSource} refNo={popup?.row?.ref_no}
+              pickedImage={(popup?.row as { public_image_id?: string | null } | null)?.public_image_id ?? null} />
           </div>
         </>
       ) : (
@@ -1730,8 +1728,8 @@ export function StartupForm({
       setTimeout(() => document.getElementById("sf-company-name")?.focus(), 80);
       return;
     }
-    if (popup?.row && !pd.d.code_name.trim()) {
-      toast.error(tr("Add a code name before you save.", "กรุณากรอกชื่อรหัสก่อนบันทึก"));
+    if (popup?.row && (!pd.d.code_name.trim() || pd.nameTaken)) {
+      toast.error(pd.nameTaken ? tr("That listing name is already used by another listing.", "ชื่อประกาศนี้มีประกาศอื่นใช้แล้ว") : tr("Add a listing name before you save.", "กรุณากรอกชื่อประกาศก่อนบันทึก"));
       navTab("public", "identity");
       setTimeout(() => document.getElementById("hp-code_name")?.focus(), 80);
       return;
