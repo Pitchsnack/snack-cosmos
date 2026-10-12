@@ -1,3 +1,4 @@
+import { handoverLine } from "@/lib/hidden-profile";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -59,10 +60,10 @@ async function context(pipelineId: string, userId: string, sbUser: any) {
 export async function buildNoteProfile(sb: any, p: any, direction: NoteDirection) { return build(sb, p, direction); }
 
 async function build(sb: any, p: any, direction: NoteDirection) {
-  const { data: hp } = await sb.from("hidden_profiles").select("code_name, asking_price, stake_pct, deal_type, reason").eq("id", p.hidden_profile_id).maybeSingle();
+  const { data: hp } = await sb.from("hidden_profiles").select("code_name, asking_price, deal_type, reason, owner_stays, handover_months").eq("id", p.hidden_profile_id).maybeSingle();
   const deal = {
     askingPrice: money(hp?.asking_price),
-    stake: hp?.stake_pct != null ? `${Number(hp.stake_pct)}%` : null,
+    handover: handoverLine(hp?.owner_stays, hp?.handover_months),
     dealType: hp?.deal_type ?? null,
     reason: hp?.reason ?? null,
   };

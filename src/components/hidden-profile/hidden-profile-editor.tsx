@@ -12,7 +12,6 @@ import {
   COVER_ARTS,
   DEAL_TYPES,
   HIDDEN_FIELD_LABEL,
-  OPEN_TO,
   decadeOf,
   exactMoney,
   isBuyerVisible,
