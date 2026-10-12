@@ -60,7 +60,7 @@ export function MarketplaceAdminSwitch() {
   const { locked } = usePersona();
   const path = useRouterState({ select: (s) => s.location.pathname });
   // Sellers, buyers and advisors stay in the Marketplace; only Settings is open outside it.
-  const outside = !!locked && !isMarket && !/^\/preferences(\/|$)/.test(path) && !/^\/(marketplace|advisor)(\/|$)/.test(path);
+  const outside = !!locked && !isMarket && !/^\/preferences(\/|$)/.test(path) && !/^\/(marketplace|advisor|buyer)(\/|$)/.test(path);
   useEffect(() => { if (outside) navigate({ to: "/marketplace/browse", replace: true }); }, [outside, navigate]);
   if (locked) return null;
   const base =
