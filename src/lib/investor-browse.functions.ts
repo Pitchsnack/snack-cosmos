@@ -18,7 +18,7 @@ function hash(s: string) {
   return h;
 }
 
-/** Verified, live buyers as public investor cards. `onlyIds` narrows to given investor ids. */
+/** Admin-approved, live buyers as public investor cards. `onlyIds` narrows to given investor ids. */
 export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<PublicInvestor & { userId: string; liveSince: string | null }>> {
   let bq = sb.from("buyer_profiles").select("*").eq("status", "live").not("investor_id", "is", null);
   if (onlyIds) { if (!onlyIds.length) return []; bq = bq.in("investor_id", onlyIds); }
@@ -28,9 +28,8 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
   const { data: bvs } = await sb.from("buyer_verifications")
     .select("user_id, company_name, buyer_type, status").in("user_id", userIds).eq("status", "verified");
   const bvByUser = new Map<string, any>((bvs ?? []).map((b: any) => [b.user_id, b]));
-  const buyerByInv = new Map<string, any>(
-    (buyers ?? []).filter((b: any) => bvByUser.has(b.user_id)).map((b: any) => [b.investor_id, b]),
-  );
+  // Admin approval (status "live") is what publishes; verification only adds the badge.
+  const buyerByInv = new Map<string, any>((buyers ?? []).map((b: any) => [b.investor_id, b]));
   const ids = [...buyerByInv.keys()];
   if (!ids.length) return [];
 
@@ -68,7 +67,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       stages: (r.preferred_stages ?? bp?.stages ?? []) as string[],
       dealTypes: (bp?.deal_types ?? []) as string[],
       geography: bp?.geography || ((r.investment_focus ?? []) as string[]).join(", ") || null,
-      verified: bv?.status === "approved",
+      verified: bv?.status === "verified",
       proofOfFunds: !!bp?.pof_verified_at,
       aumBand: aum?.key ?? null,
       ticketBand: tkt?.key ?? null,
