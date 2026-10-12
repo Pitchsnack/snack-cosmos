@@ -32,7 +32,16 @@ export const HIDDEN_FIELD_LABEL: Record<HiddenTextField, string> = {
 };
 
 export const OPEN_TO = ["Private equity", "Family office", "Corporate"] as const;
-export const DEAL_TYPES = ["Full acquisition", "Majority stake", "Minority stake", "Merger"] as const;
+export const DEAL_TYPES = ["Full acquisition", "Majority stake (above 51%)", "Minority stake (below 49%)"] as const;
+export const HANDOVER_MONTHS = [1, 3, 6, 9, 12, 18, 24] as const;
+/** Buyer-facing owner handover line; empty while not picked. */
+export function handoverLine(stays: string | null | undefined, months: number | null | undefined, th = false): string | null {
+  if (stays === "yes") return th ? `เจ้าของอยู่ช่วยต่อ ${months ?? 6} เดือนหลังการขาย` : `Owner stays ${months ?? 6} month${(months ?? 6) === 1 ? "" : "s"} after the sale`;
+  if (stays === "no") return th ? "เจ้าของออกเมื่อการขายเสร็จสิ้น" : "Owner leaves at completion";
+  return null;
+}
+/** Mandate fit's control check (51%+). */
+export const givesControl = (dealType: string | null | undefined) => dealType === "Full acquisition" || dealType === "Majority stake (above 51%)";
 export const COVER_ARTS = [
   "Food & beverage",
   "Manufacturing",
@@ -62,6 +71,8 @@ export interface HiddenDraft {
   process: string | null;
   open_to: string[];
   nda_approver: "seller" | "admin";
+  owner_stays?: "yes" | "no" | null;
+  handover_months?: number | null;
   /** Public tags; null = derived from the private view (Auto Enrich). */
   product_tags?: string[] | null;
   market_tags?: string[] | null;
@@ -343,7 +354,6 @@ export function missingForPublish(d: Partial<HiddenDraft>): string[] {
   const m: string[] = [];
   if (!d.code_name?.trim()) m.push("Code name");
   if (!d.headline?.trim()) m.push("Headline");
-  if (!(d.stake_pct != null && d.stake_pct >= 1 && d.stake_pct <= 100)) m.push("Stake 1–100%");
   if (!d.deal_type) m.push("Deal type");
   if ((d.headline ?? "").length > 90) m.push("Headline up to 90 characters");
   if ((d.description ?? "").length > 420) m.push("Description up to 420 characters");
@@ -368,6 +378,8 @@ export function pickDraft(r: Partial<HiddenDraft>): HiddenDraft {
     process: r.process ?? null,
     open_to: r.open_to ?? [],
     nda_approver: r.nda_approver ?? "admin",
+    owner_stays: r.owner_stays ?? null,
+    handover_months: r.handover_months ?? null,
     product_tags: r.product_tags ?? null,
     market_tags: r.market_tags ?? null,
     cover_image_url: r.cover_image_url ?? null,
