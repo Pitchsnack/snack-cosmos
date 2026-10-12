@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { BUYER_VISIBLE } from "@/lib/hidden-profile";
+import { BUYER_VISIBLE, handoverLine } from "@/lib/hidden-profile";
 import type { PublicListing } from "@/lib/public-listing";
 
 /**
