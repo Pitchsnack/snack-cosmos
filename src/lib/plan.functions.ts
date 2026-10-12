@@ -18,6 +18,8 @@ export type PlanStrip = {
   free: null | { lastDay: string; daysLeft: number; hiddenToday: boolean };
   /** A free plan that ran its term and whose notice hasn't shown yet. */
   freeEnded: null | { plan: string; lastDay: string };
+  /** The plan last had free (kept after the notice), for "You had it free until". */
+  freeEndedPlan: string | null; freeEndedOn: string | null;
 };
 
 /** Plan strip on the Browse pages. Every value comes from the plans table. */
@@ -73,7 +75,7 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
     };
   });
 
-async function freeInfo(userId: string, sub: any): Promise<Pick<PlanStrip, "free" | "freeEnded">> {
+async function freeInfo(userId: string, sub: any): Promise<Pick<PlanStrip, "free" | "freeEnded" | "freeEndedPlan" | "freeEndedOn">> {
   const { bkkToday, daysLeft } = await import("./access-codes");
   const { lastDayOf } = await import("./free-plan.server");
   const today = bkkToday();
@@ -81,12 +83,14 @@ async function freeInfo(userId: string, sub: any): Promise<Pick<PlanStrip, "free
     ? { lastDay: lastDayOf(sub.term_end), daysLeft: daysLeft({ ends_on: lastDayOf(sub.term_end) }) ?? 0, hiddenToday: sub.free_bar_hidden_on === today }
     : null;
   let freeEnded: PlanStrip["freeEnded"] = null;
+  let freeEndedPlan: string | null = null, freeEndedOn: string | null = null;
   if (!free) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: s } = await (supabaseAdmin as any).from("subscriptions").select("free_ended_on,free_plan_name,free_end_seen_at").eq("user_id", userId).maybeSingle();
     if (s?.free_ended_on && s.free_plan_name && !s.free_end_seen_at) freeEnded = { plan: s.free_plan_name, lastDay: s.free_ended_on };
+    if (s?.free_ended_on) { freeEndedPlan = s.free_plan_name; freeEndedOn = s.free_ended_on; }
   }
-  return { free, freeEnded };
+  return { free, freeEnded, freeEndedPlan, freeEndedOn };
 }
 
 /** × on the 14-day bar (hide until tomorrow), or the end notice has shown. */

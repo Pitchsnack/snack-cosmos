@@ -1,3 +1,4 @@
+import { FreePlanBars } from "@/components/free-plan-bars";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   return (
     <AppSidebar>
+      <FreePlanBars />
       <Outlet />
     </AppSidebar>
   );
