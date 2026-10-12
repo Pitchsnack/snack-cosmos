@@ -24,4 +24,4 @@
 - Contact enquiries use sendContactEnquiry (rate-limited); email-identity.ts drives replies and Admin Sending rules so they never drift.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
-- Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts.
+- Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan reminders/ends only in free-plan.server.ts.

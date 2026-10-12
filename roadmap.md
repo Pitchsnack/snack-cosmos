@@ -33,4 +33,5 @@
 ## Soft launch
 - [x] Phase 1: codes, Admin › Access codes, free-plan data
 - [x] Phase 2: access page, ribbon, welcome note, sign-up invitation box and claim, feedback topic
-- [ ] Phase 3: invitation/reminder/end emails, 14-day bar, free-term end and daily job — awaits Dan's go-ahead
+- [x] Phase 3: invitation/reminder/end emails, 14-day bar, free-term end, daily job, Admin Users free-plan line
+- [ ] Live check of Phase 3 with a real free-plan account; daily job reaches the site only after publishing
