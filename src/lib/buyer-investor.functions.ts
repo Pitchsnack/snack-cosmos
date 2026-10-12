@@ -130,7 +130,7 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         setup_done_at: inv.setup_done_at as string | null,
         wizard: (inv.wizard ?? {}) as { answered?: string[]; pe_ticked?: boolean; from_signup?: string[] },
         investment_focus_raw: (inv.investment_focus ?? []) as string[],
-        sector_picks: (inv.sector_picks ?? null) as unknown,
+        sector_picks: (inv.sector_picks ?? null) as { types: string[]; kinds: Record<string, string[]>; other: string[] } | null,
       },
       buyer: {
         relation: (p.buyer_relation ?? null) as "individual" | "corporate" | "agent" | null,
