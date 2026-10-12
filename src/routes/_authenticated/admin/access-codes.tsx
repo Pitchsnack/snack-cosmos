@@ -94,6 +94,7 @@ function AccessCodesPage() {
       setAskOff(false); reload();
     } catch (e: any) { toast.error(e.message); }
   }
+  const sendInvFn = useServerFn(sendAccessInvitation);
   const invite = (c: AccessCode) => {
     const pn = planName(c, plans);
     return { client: c.client_name, code: c.code, role: c.role, max: c.max_accounts, endsOn: c.ends_on, planName: pn, months: c.free_months };
@@ -163,7 +164,8 @@ function AccessCodesPage() {
                 <div className="flex items-center gap-2.5"><span className="text-[19px] font-semibold tracking-[.08em]" style={mono}>{c.code}</span><Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(c.code); toast.success(`Copied ${c.code}.`); }}><Copy className="size-3.5" />Copy</Button></div>
                 <p className="mt-1 text-[12.5px] leading-[1.55] text-[#4B5563]">{c.invite_sent_at ? <>Emailed to <b>{c.invite_email}</b> on {dateEn(c.invite_sent_at)} by {personName(admins.get(c.invite_sent_by!))}.</> : 'Not emailed. Copy the invitation to send it yourself, for example on LINE.'}</p>
                 <FreeBox role={c.role} pn={pn} months={c.free_months} plans={plans} usual={usual} />
-                <div className="mt-2.5 flex gap-1.5"><Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(inviteCopy(invite(c))); toast.success('Invitation copied, in Thai and English.'); }}>Copy invitation</Button></div>
+                <div className="mt-2.5 flex gap-1.5"><Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(inviteCopy(invite(c))); toast.success('Invitation copied, in Thai and English.'); }}>Copy invitation</Button>
+                  {c.invite_email && <Button size="sm" variant="outline" onClick={async () => { try { await sendInvFn({ data: { id: c.id } }); toast.success(`Invitation emailed to ${c.invite_email}.`); reload(); } catch (e: any) { toast.error(e.message); } }}>{c.invite_sent_at ? 'Send again' : 'Email invitation'}</Button>}</div>
               </div>
               <div className="px-4 py-[14px]">
                 <Cap>Accounts · {used.length} of {c.max_accounts}</Cap>
