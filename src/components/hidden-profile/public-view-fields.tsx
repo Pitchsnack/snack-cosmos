@@ -254,7 +254,8 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
     <div>
       <IdentityMsg pd={pd} />
       <TabHead title={tr("Deal Info", "ข้อมูลดีล")} />
-      <EditSec id="deal" tone="seller" active={section === "deal" || section === "terms"} className="space-y-[22px]">
+      <EditSec id="deal" tone="seller" active={section === "deal" || section === "terms"}>
+        <div className="space-y-[22px]">
         <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
           <AskingPrice d={d} set={set} />
           <FieldRow label={tr("Deal type", "รูปแบบดีล")} htmlFor="hp-deal-type" missing={!dealOk}>
@@ -273,6 +274,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
           <Textarea id="hp-reason" value={d.reason ?? ""} onChange={(e) => set("reason", e.target.value || null)} className={cn(AREA, "h-24 min-h-24 resize-y", flag("reason"))} />
         </FieldRow>
         <FlagMsg pd={pd} k="reason" />
+        </div>
       </EditSec>
     </div>
   );
