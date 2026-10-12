@@ -288,6 +288,7 @@ export type Database = {
           registration_no: string | null
           review_checklist: string[]
           sector_agnostic: boolean
+          sector_picks: Json | null
           sectors: string[]
           services: string[]
           setup_answered: string[]
@@ -349,6 +350,7 @@ export type Database = {
           registration_no?: string | null
           review_checklist?: string[]
           sector_agnostic?: boolean
+          sector_picks?: Json | null
           sectors?: string[]
           services?: string[]
           setup_answered?: string[]
@@ -410,6 +412,7 @@ export type Database = {
           registration_no?: string | null
           review_checklist?: string[]
           sector_agnostic?: boolean
+          sector_picks?: Json | null
           sectors?: string[]
           services?: string[]
           setup_answered?: string[]
@@ -3108,6 +3111,7 @@ export type Database = {
           revenue_max_m: number | null
           revenue_min_band: string | null
           revenue_min_m: number | null
+          sector_picks: Json | null
           setup_done_at: string | null
           short_description: string | null
           source_global_id: string | null
@@ -3157,6 +3161,7 @@ export type Database = {
           revenue_max_m?: number | null
           revenue_min_band?: string | null
           revenue_min_m?: number | null
+          sector_picks?: Json | null
           setup_done_at?: string | null
           short_description?: string | null
           source_global_id?: string | null
@@ -3206,6 +3211,7 @@ export type Database = {
           revenue_max_m?: number | null
           revenue_min_band?: string | null
           revenue_min_m?: number | null
+          sector_picks?: Json | null
           setup_done_at?: string | null
           short_description?: string | null
           source_global_id?: string | null
@@ -4931,6 +4937,7 @@ export type Database = {
           registration_verified_at: string | null
           regulatory_licenses: Json
           sector: string | null
+          sector_pick: Json | null
           setup_done_at: string | null
           setup_from_signup: string[]
           setup_reached: string | null
@@ -4985,6 +4992,7 @@ export type Database = {
           registration_verified_at?: string | null
           regulatory_licenses?: Json
           sector?: string | null
+          sector_pick?: Json | null
           setup_done_at?: string | null
           setup_from_signup?: string[]
           setup_reached?: string | null
@@ -5039,6 +5047,7 @@ export type Database = {
           registration_verified_at?: string | null
           regulatory_licenses?: Json
           sector?: string | null
+          sector_pick?: Json | null
           setup_done_at?: string | null
           setup_from_signup?: string[]
           setup_reached?: string | null
