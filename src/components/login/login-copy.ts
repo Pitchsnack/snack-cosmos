@@ -13,7 +13,7 @@ export const L = {
     "เข้าสู่ระบบเพื่อดูการจับคู่ คำขอติดต่อ และห้องข้อมูลของท่าน ชื่อของทั้งสองฝ่ายยังเป็นความลับ จนกว่าจะลงนาม NDA",
     "Sign in to see your matches, contact requests and data room. Names on both sides stay private until an NDA is signed.",
   ),
-  p1: c("ตรวจสอบผู้ขายและผู้ซื้อทุกรายกับทะเบียน DBD", "Every seller and buyer checked against the DBD register"),
+  p1: c("ตรวจสอบผู้ขายและผู้ซื้อทุกรายกับทะเบียน", "Every seller and buyer checked against the DBD register"),
   p2: c("ห้องข้อมูลเปิดเมื่อเจ้าของกิจการพร้อมเท่านั้น", "The data room opens only when the owner is ready"),
   p3: c("ไม่ถือเงิน และไม่เข้าข้างฝ่ายใด", "No funds held, no side taken"),
   signs: [
