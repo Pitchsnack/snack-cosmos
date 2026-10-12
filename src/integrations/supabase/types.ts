@@ -2491,6 +2491,7 @@ export type Database = {
           directory_category: string | null
           featured: boolean
           handover: string | null
+          handover_months: number | null
           has_unpublished_changes: boolean
           headline: string
           highlights: string[]
@@ -2503,6 +2504,7 @@ export type Database = {
           new_until: string | null
           notify_admin_edits: boolean
           open_to: string[]
+          owner_stays: string | null
           pending_cover: string | null
           process: string | null
           product_tags: string[] | null
@@ -2544,6 +2546,7 @@ export type Database = {
           directory_category?: string | null
           featured?: boolean
           handover?: string | null
+          handover_months?: number | null
           has_unpublished_changes?: boolean
           headline?: string
           highlights?: string[]
@@ -2556,6 +2559,7 @@ export type Database = {
           new_until?: string | null
           notify_admin_edits?: boolean
           open_to?: string[]
+          owner_stays?: string | null
           pending_cover?: string | null
           process?: string | null
           product_tags?: string[] | null
@@ -2597,6 +2601,7 @@ export type Database = {
           directory_category?: string | null
           featured?: boolean
           handover?: string | null
+          handover_months?: number | null
           has_unpublished_changes?: boolean
           headline?: string
           highlights?: string[]
@@ -2609,6 +2614,7 @@ export type Database = {
           new_until?: string | null
           notify_admin_edits?: boolean
           open_to?: string[]
+          owner_stays?: string | null
           pending_cover?: string | null
           process?: string | null
           product_tags?: string[] | null

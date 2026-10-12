@@ -512,6 +512,13 @@
       "when": 1791656591182,
       "tag": "0072_startups_setup_reached",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1791790139895,
+      "tag": "0073_listing_owner_handover",
+      "breakpoints": true
     }
   ]
 }
