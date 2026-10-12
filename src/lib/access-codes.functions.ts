@@ -78,3 +78,37 @@ export const updateAccessCode = createServerFn({ method: 'POST' }).middleware([r
     if (e2) throw new Error(e2.message);
     return row;
   });
+
+/** Emails the invitation (Thai then English) to the code's invite email, and records who sent it. */
+export const sendAccessInvitation = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d)).handler(async ({ data, context }) => {
+    const sb = await admin(context);
+    const { data: c, error } = await sb.from('access_codes').select('*').eq('id', data.id).single();
+    if (error) throw new Error(error.message);
+    if (!c.invite_email) throw new Error('This code has no email to send to.');
+    let planName: string | null = null;
+    if (c.free_plan === 'usual') planName = 'usual';
+    else if (c.free_plan) { const { data: p } = await sb.from('plans').select('name').eq('role', c.role).eq('key', c.free_plan).maybeSingle(); planName = p?.name ?? c.free_plan; }
+    const { inviteText } = await import('./access-codes');
+    const inv = { client: c.client_name, code: c.code, role: c.role, max: c.max_accounts, endsOn: c.ends_on, planName, months: c.free_months };
+    const part = (lang: 'th' | 'en') => {
+      const lines = inviteText(inv, lang);
+      const link = `https://pitchsnack.com/?invite=${c.code}`;
+      const body = lines.slice(1).filter((l) => !l.includes(link));
+      return { title: lines[0]!, lines: body, code: c.code, button: { label: lang === 'th' ? 'เปิด PitchSnack' : 'Open PitchSnack', url: link } };
+    };
+    const subject = 'คำเชิญทดลองใช้งาน PitchSnack · Your invitation to try PitchSnack';
+    const { sendTemplateEmail } = await import('@/lib/email-templates/send-email');
+    const base = { alert_key: 'Access invitation', role: c.role, user_id: null, email: c.invite_email, subject, ref_key: `access-invite:${c.id}:${Date.now()}` };
+    try {
+      const r = await sendTemplateEmail('soft-launch', c.invite_email, { templateData: { subject, th: part('th'), en: part('en') } });
+      await sb.from('email_alert_log').insert({ ...base, status: r.sent ? 'sent' : 'suppressed' });
+      if (!r.sent) throw new Error('That address has asked not to get our emails.');
+    } catch (e) {
+      if ((e as Error).message.startsWith('That address')) throw e;
+      await sb.from('email_alert_log').insert({ ...base, status: 'failed', reason: (e as Error).message.slice(0, 300) });
+      throw new Error('The email could not be sent. Try again, or copy the invitation.');
+    }
+    const { data: row } = await sb.from('access_codes').update({ invite_sent_at: new Date().toISOString(), invite_sent_by: context.userId }).eq('id', c.id).select('*').single();
+    return row;
+  });

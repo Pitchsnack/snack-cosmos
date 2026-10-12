@@ -172,6 +172,8 @@ function AccessDialog({ u, plans, admins, onClose, onSaved }: { u: any; plans: a
   const [manager, setManager] = useState<string | null>(u.subscription?.manager_user_id ?? null);
   const [credits, setCredits] = useState<number>(u.subscription?.nda_credits ?? 0);
   const [busy, setBusy] = useState(false);
+  const [makeNormal, setMakeNormal] = useState(false);
+  const freeSub = u.subscription?.source === "access_code" && u.subscription?.status === "active" ? u.subscription : null;
   const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email;
   const choices = role && role !== "admin" ? plans.filter((p) => p.role === role && (p.status === "live" || p.id === u.subscription?.plan_id)) : [];
   const plan = plans.find((p) => p.id === planId);
@@ -184,7 +186,7 @@ function AccessDialog({ u, plans, admins, onClose, onSaved }: { u: any; plans: a
     if (!role) return;
     setBusy(true);
     try {
-      await save({ data: { targetUserId: u.id, role, planId: role === "admin" ? null : planId, managerUserId: plan?.has_manager ? manager : null, ...(plan?.requests_mode === "bundles" ? { ndaCredits: credits } : {}) } });
+      await save({ data: { targetUserId: u.id, role, planId: role === "admin" ? null : planId, managerUserId: plan?.has_manager ? manager : null, ...(plan?.requests_mode === "bundles" ? { ndaCredits: credits } : {}), makeNormal } });
       toast.success(`Saved. ${name} now opens the ${role === "admin" ? "Admin and all three" : cap(role)} tab${role === "admin" ? "s" : ""}${plan && role !== "admin" ? `, on the ${plan.name} plan` : ""}.`);
       onSaved();
       onClose();
@@ -223,7 +225,10 @@ function AccessDialog({ u, plans, admins, onClose, onSaved }: { u: any; plans: a
                     {choices.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · {priceText(p)}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                {role === "buyer" && <p className="text-xs text-muted-foreground">Every buyer is on a paid plan.</p>}
+                {freeSub && role === u.account_role && planId === freeSub.plan_id ? <>
+                  <p className="text-[12px] text-[#1D4ED8]">Free with access code {freeSub.access_codes?.code ?? ""} until {freeSub.term_end ? fmtDay(freeSub.term_end) : ""}.</p>
+                  <label className="flex items-center gap-2 text-[13px] text-[#374151]"><input type="checkbox" className="size-4 accent-[#192957]" checked={makeNormal} onChange={(e) => setMakeNormal(e.target.checked)} /><b>Make {plan?.name} a normal plan from today</b></label>
+                </> : role === "buyer" && <p className="text-xs text-muted-foreground">Every buyer is on a paid plan.</p>}
                 {u.subscription?.status === "ended" && planId === u.subscription.plan_id && (
                   <p className="text-xs text-muted-foreground"><b>Plan ended {u.subscription.term_end ? fmtDay(u.subscription.term_end) : ""}.</b> The user can look around but can't send requests until it's renewed.</p>
                 )}

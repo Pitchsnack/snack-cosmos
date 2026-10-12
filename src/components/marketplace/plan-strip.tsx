@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Check, Lock } from "lucide-react";
+import { AlarmClock, AlertTriangle, Check, KeyRound, Lock } from "lucide-react";
+import { dateEn } from "@/lib/access-codes";
 import { getMyPlanStrip, type PlanStrip as Strip } from "@/lib/plan.functions";
 import { myContactState, sendContactRequest } from "@/lib/contact-requests.functions";
 import type { ClosedTeaser } from "@/lib/hidden-profiles.functions";
@@ -53,9 +54,13 @@ export function PlanStrip() {
           <Link to="/preferences" hash="subscription" className="ml-auto font-semibold underline">Renew plan</Link>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[12px] border border-border bg-card px-4 py-3 shadow-card">
+      <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[12px] border px-4 py-3 shadow-card ${data.free ? "border-[#D6E7FC] bg-[#F9FBFF]" : "border-border bg-card"}`}>
         {p ? <PlanBadge name={p.name} style={p.badgeStyle} ended={data.ended} /> : <span className="text-[13px] font-semibold text-muted-foreground">No plan yet</span>}
-        {p && <span className="text-[13px] text-muted-foreground">{priceLine(p, data.termEnd)}</span>}
+        {p && data.free ? (
+          data.free.daysLeft <= 14
+            ? <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#8A5A06]"><AlarmClock className="h-3.5 w-3.5 text-[#B7791F]" />Free with your invitation · ends {data.free.daysLeft === 0 ? "today" : `${dateEn(data.free.lastDay)} · ${data.free.daysLeft === 1 ? "1 day" : `${data.free.daysLeft} days`} left`}</span>
+            : <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#1E3A5F]"><KeyRound className="h-3.5 w-3.5 text-[#2563EB]" />Free with your invitation · until {dateEn(data.free.lastDay)}</span>
+        ) : p && <span className="text-[13px] text-muted-foreground">{priceLine(p, data.termEnd)}</span>}
         <div className="flex flex-wrap gap-1.5">
           {(p?.features ?? []).map((f) => (
             <span key={f.label} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold ${f.on ? "border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]" : LOCK_STYLE}`}>

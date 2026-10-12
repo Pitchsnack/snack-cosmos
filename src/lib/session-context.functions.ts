@@ -108,9 +108,9 @@ export const getSessionContext = createServerFn({ method: "GET" })
       planTenant
         ? supabase.from("tenant_subscription").select("subscription_plan").eq("tenant_id", planTenant).maybeSingle()
         : Promise.resolve({ data: null }),
-      supabase.from("subscriptions").select("status, term_end, plans(id, key, name, badge_style)").eq("user_id", userId).maybeSingle(),
+      supabase.from("subscriptions").select("status, term_end, source, plans(id, key, name, badge_style)").eq("user_id", userId).maybeSingle(),
     ]);
-    const sp = (mySub as any)?.plans;
+    const sp = (mySub as any)?.source === "access_code" && (mySub as any)?.status === "ended" ? null : (mySub as any)?.plans;
     const planInfo = sp ? { id: sp.id, key: sp.key, name: sp.name, badgeStyle: sp.badge_style, ended: (mySub as any).status === "ended" || !!((mySub as any).term_end && new Date((mySub as any).term_end) < new Date()), termEnd: (mySub as any).term_end ?? null } : null;
     const plan = (sub as { subscription_plan?: string } | null)?.subscription_plan ?? null;
 

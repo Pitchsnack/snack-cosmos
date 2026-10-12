@@ -252,10 +252,11 @@ async function withPlans(supabase: any, rows: any[]) {
   const ids = rows.map((r) => r.id);
   if (!ids.length) return rows;
   const [{ data: subs }, { data: profs }] = await Promise.all([
-    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id, nda_credits").in("user_id", ids),
+    supabase.from("subscriptions").select("user_id, plan_id, status, term_end, manager_user_id, nda_credits, source, access_codes(code)").in("user_id", ids),
     supabase.from("user_profiles").select("user_id, organisation").in("user_id", ids),
   ]);
-  const sm = Object.fromEntries((subs ?? []).map((x: any) => [x.user_id, x]));
+  // An ended free plan counts as no plan (listed under Plan to set, no "Plan ended" line).
+  const sm = Object.fromEntries((subs ?? []).filter((x: any) => !(x.source === "access_code" && x.status === "ended")).map((x: any) => [x.user_id, x]));
   const om = Object.fromEntries((profs ?? []).map((x: any) => [x.user_id, x.organisation]));
   return rows.map((r) => ({ ...r, subscription: sm[r.id] ?? null, organisation: om[r.id] ?? null }));
 }
@@ -278,6 +279,7 @@ export const setUserAccess = createServerFn({ method: "POST" })
     planId: z.string().uuid().nullable(),
     managerUserId: z.string().uuid().nullable().optional(),
     ndaCredits: z.number().int().min(0).max(10000).optional(),
+    makeNormal: z.boolean().optional(),
   }).parse(input))
   .handler(async ({ context, data }) => {
     await (await import("./plan-access.server")).requireAccountAdmin(context.userId);
@@ -286,6 +288,13 @@ export const setUserAccess = createServerFn({ method: "POST" })
     if (!isCtl) throw new Error("Only admins can change roles and plans");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const sb = supabaseAdmin as any;
+    const { data: before } = await sb.from("users").select("account_role").eq("id", data.targetUserId).maybeSingle();
+    const { data: was } = await sb.from("subscriptions").select("plan_id, status, source").eq("user_id", data.targetUserId).maybeSingle();
+    const freeRunning = was?.source === "access_code" && was.status === "active";
+    // Admin ends a running free plan at once (no reminder, end email or notice) on another plan, "make normal", or a role change.
+    const endFree = freeRunning && (data.makeNormal || data.planId !== was.plan_id || before?.account_role !== data.role);
+    const now = new Date().toISOString();
+    const freeClosed = endFree ? { source: null, free_end_seen_at: now, free_end_email_sent_at: now, free_reminder_sent_at: now, free_ended_on: null } : {};
     const { error } = await sb.from("users").update({ account_role: data.role }).eq("id", data.targetUserId);
     if (error) throw new Error(error.message);
     if (data.role === "admin" || !data.planId) {
@@ -294,12 +303,12 @@ export const setUserAccess = createServerFn({ method: "POST" })
       const { data: plan } = await sb.from("plans").select("id, role, term_months").eq("id", data.planId).single();
       if (!plan || plan.role !== data.role) throw new Error("That plan is for another role");
       const { data: cur } = await sb.from("subscriptions").select("plan_id, status").eq("user_id", data.targetUserId).maybeSingle();
-      const fresh = !cur || cur.plan_id !== plan.id || cur.status === "ended";
+      const fresh = !cur || cur.plan_id !== plan.id || cur.status === "ended" || endFree;
       const end = new Date(); end.setMonth(end.getMonth() + plan.term_months);
       await sb.from("subscriptions").upsert({
         user_id: data.targetUserId, plan_id: plan.id, status: "active", manager_user_id: data.managerUserId ?? null,
         ...(data.ndaCredits != null ? { nda_credits: data.ndaCredits } : {}),
-        ...(fresh ? { term_start: new Date().toISOString(), term_end: end.toISOString() } : {}), updated_at: new Date().toISOString(),
+        ...(fresh ? { term_start: new Date().toISOString(), term_end: end.toISOString() } : {}), ...freeClosed, ...(endFree ? { price_paid_thb: null } : {}), updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
     }
     await supabase.from("security_events").insert({ user_id: userId, event_type: "ROLE_CHANGE", details: { targetUserId: data.targetUserId, accountRole: data.role, planId: data.planId } });

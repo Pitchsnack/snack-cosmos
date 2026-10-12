@@ -40,7 +40,15 @@ export type PlanAccess = {
 export async function planAccess(userId: string): Promise<PlanAccess> {
   const sb = await admin();
   const role = await roleOf(userId);
-  const { data: sub } = await sb.from("subscriptions").select("*, plans(*)").eq("user_id", userId).maybeSingle();
+  let { data: sub } = await sb.from("subscriptions").select("*, plans(*)").eq("user_id", userId).maybeSingle();
+  // A free plan past its last free day ends here too, in case the daily job runs late.
+  const { freeOverdue, endFreePlan } = await import("./free-plan.server");
+  if (freeOverdue(sub)) {
+    await endFreePlan(sb, sub);
+    ({ data: sub } = await sb.from("subscriptions").select("*, plans(*)").eq("user_id", userId).maybeSingle());
+  }
+  // An ended free plan counts as no plan: no "ended" bar, badge or renew prompts.
+  if (sub?.source === "access_code" && sub.status === "ended") sub = null;
   const plan = sub?.plans ?? null;
   const ended = !!sub && (sub.status === "ended" || (sub.term_end && new Date(sub.term_end) < new Date()));
   const used: Record<UsageKind, number> = { contact: 0, nda: 0 };

@@ -7,6 +7,7 @@ import { planPrice, type PlanRecord } from "@/lib/plan-editor";
 import { listPlans } from "@/lib/users.functions";
 import { PlanBadge } from "@/components/plan-badge";
 import { usePlanStrip } from "@/components/marketplace/plan-strip";
+import { dateEn } from "@/lib/access-codes";
 
 /** Settings › Subscription: your plan and the plans for your role (values from the plans table). */
 export function SubscriptionSection() {
@@ -25,7 +26,7 @@ export function SubscriptionSection() {
       <div>
         <h2 className="text-lg font-semibold">Subscription</h2>
         <p className="text-sm text-muted-foreground">
-          {strip?.plan ? <>You are on <strong>{strip.plan.name}</strong>{strip.ended ? " (ended)" : strip.termEnd ? ` until ${new Date(strip.termEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}.</> : "You have no plan yet."}
+          {strip?.plan ? <>You are on <strong>{strip.plan.name}</strong>{strip.free ? ` · Free with your invitation · until ${dateEn(strip.free.lastDay)}` : strip.ended ? " (ended)" : strip.termEnd ? ` until ${new Date(strip.termEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}.</> : "You have no plan yet."}
           {" "}To change, renew or buy a bundle, contact PitchSnack — online payment isn't open yet.
         </p>
       </div>
@@ -45,6 +46,7 @@ export function SubscriptionSection() {
                 <li key={l as string} className={`flex items-center gap-1.5 ${on ? "" : "text-muted-foreground"}`}>{on ? <Check className="h-3 w-3" /> : <Lock className="h-3 w-3" />}{l as string}</li>
               ))}
             </ul>
+            {strip?.freeEndedPlan === p.name && strip?.freeEndedOn && <p className="text-center text-[12px] text-[#69738A]">You had it free until {dateEn(strip!.freeEndedOn!)}</p>}
           </div>
         ))}
       </div>
