@@ -1,3 +1,4 @@
+import { MissingText } from "@/components/my-business/missing-info";
 import { cloneElement, isValidElement, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Clock, LockOpen, BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
@@ -53,7 +54,8 @@ function Badge({ tone, icon, children }: { tone: "blue" | "green" | "violet" | "
   return <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", t)}>{icon}{children}</span>;
 }
 
-export function TagChips({ tags, green }: { tags: string[]; green?: boolean }) {
+export function TagChips({ tags, green, red }: { tags: string[]; green?: boolean; red?: boolean }) {
+  if (!tags.length && red) return <MissingText small className="text-[12px]">—</MissingText>;
   if (!tags.length) return <span className="text-[12px] text-muted-foreground">—</span>;
   return (
     <div className="flex flex-wrap gap-1">
@@ -149,7 +151,7 @@ export function PublicListingCard({
       <div className="flex flex-1 flex-col p-3.5">
         {tag && <div className="mb-1.5">{tag}</div>}
         {priv && <div className={cn("truncate text-[16px] font-bold text-[#111827] transition-colors", interactive && "group-hover:text-accent")} title={priv.name}>{priv.name}</div>}
-        <h3 className={cn(priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]", "transition-colors", interactive && !priv && "group-hover:text-accent")}>{l.headline || <span className="text-muted-foreground">{t("Add a headline")}</span>}</h3>
+        <h3 className={cn(priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]", "transition-colors", interactive && !priv && "group-hover:text-accent")}>{l.headline || (editable ? <MissingText small>{t("Add a headline")}</MissingText> : <span className="text-muted-foreground">{t("Add a headline")}</span>)}</h3>
         <div className="mt-2 flex flex-wrap gap-1">
           {l.certified && <Badge tone="green" icon={<ShieldCheck className="h-3 w-3" />}>{t("Certified")}</Badge>}
           {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>{t("Verified company")}</Badge>}
@@ -176,20 +178,20 @@ export function PublicListingCard({
         {expanded && (
           <div className="mt-3 space-y-2.5 border-t border-border pt-3">
             {l.description ? <p className="text-[13px] text-foreground/80">{l.description}{editable && <span className="ml-2 inline-flex"><PartEdit k="description" on={editable} /></span>}</p>
-              : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("description"); }} className="text-[13px] text-muted-foreground hover:underline">Write a public description</button>}
+              : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("description"); }} className="text-[13px] hover:underline"><MissingText small>Write a public description</MissingText></button>}
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
               <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Products & services")}</span>
-              <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><TagChips tags={l.productTags} /></div><PartEdit k="chips" on={editable} /></div>
+              <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><TagChips tags={l.productTags} red={!!editable} /></div><PartEdit k="chips" on={editable} /></div>
             </div>
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
               <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Markets")}</span>
-              <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><TagChips tags={l.marketTags} green /></div><PartEdit k="markets" on={editable} /></div>
+              <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><TagChips tags={l.marketTags} green red={!!editable} /></div><PartEdit k="markets" on={editable} /></div>
             </div>
             {l.certifications.length > 0 && (
               <div className="flex items-center gap-2 text-[12.5px]"><ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />{l.certifications.join(" · ")}</div>
             )}
             {dl ? <div className="flex items-center gap-2 text-[12.5px] font-medium"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />{dl}<PartEdit k="terms" on={editable} /></div>
-              : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("terms"); }} className="flex items-center gap-2 text-[12.5px] text-muted-foreground hover:underline"><Briefcase className="h-3.5 w-3.5" />Set deal terms</button>}
+              : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("terms"); }} className="flex items-center gap-2 text-[12.5px] hover:underline"><MissingText small>Set deal terms</MissingText></button>}
           </div>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-2 text-[12px] text-muted-foreground" style={{ marginTop: 12 }}>

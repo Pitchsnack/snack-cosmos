@@ -1,3 +1,5 @@
+import { useStartup } from "@/hooks/use-startup";
+import { LogoPhotoAlert } from "@/components/my-business/missing-info";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronDown, Eye, EyeOff, Lock, MoreVertical, Pencil } from "lucide-react";
@@ -378,6 +380,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
           )}
         </div>
       </div>
+      {!adminReview && <PublicMediaAlert id={s.id} onAdd={() => openEdit(s.id, "private", "images", "media")} />}
       <HiddenProfileTab
         name={s.startup_name}
         companyType={s.company_type}
@@ -472,6 +475,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
             workspace="my-startups"
             headerPill={adminReview ? undefined : pill}
             companyMenuEdit={adminReview ? undefined : () => openEdit(current.id, "private", "images")}
+            ownerMedia={adminReview ? undefined : () => openEdit(current.id, "private", "images", "media")}
              afterFounders={!adminReview && <ReportOffers id={current.id} />}
              sectionEdit={adminReview ? undefined : (k) => (
                <SectionEditLink tone="seller" label={k === "founders-add" ? "Add founder" : "Edit"}
@@ -558,4 +562,11 @@ function SellerCardSlot({ s, view, onView, skipDraft }: { s: StartupListItem; vi
     );
   }
   return <BusinessCard s={s} view={view} onView={onView} />;
+}
+
+function PublicMediaAlert({ id, onAdd }: { id: string; onAdd: () => void }) {
+  const { data } = useStartup(id);
+  if (!data) return null;
+  const d = data as unknown as { logo_signed_url?: string | null; media?: { image_signed_url?: string | null }[] };
+  return <LogoPhotoAlert className="-mt-[2px] mb-[14px]" hasLogo={!!d.logo_signed_url} hasPhoto={(d.media ?? []).some((m) => !!m.image_signed_url)} onAdd={onAdd} />;
 }

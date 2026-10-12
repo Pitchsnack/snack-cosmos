@@ -148,7 +148,7 @@ export function ApprovalFooter({
     action = <><Button size="sm" variant="outline" onClick={onCreate}>Create public view</Button>{submitBtn()}</>;
   } else if (!ready) {
     const parts: React.ReactNode[] = missing.map((m) => (
-      <button key={m.key} type="button" onClick={() => onItem(m.key)} className="font-semibold text-foreground underline-offset-2 hover:underline">{m.label}</button>
+      <button key={m.key} type="button" onClick={() => onItem(m.key)} className="font-semibold text-[#DC2626] underline-offset-2 hover:underline dark:text-[#F87171]">{m.label}</button>
     ));
     if (flagged) parts.push(<span key="id" className="font-semibold text-destructive">Identity check</span>);
     text = blockedReason && !parts.length ? blockedReason : (
