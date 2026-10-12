@@ -26,7 +26,7 @@ export function ProfileEditPopup({ advisor }: { advisor: boolean }) {
   const buyer = queryClient.getQueryData<{ investor?: { investor_name?: string | null } }>(BUYER_INVESTOR_KEY);
   if (s.edit !== "profile") return null;
   const firm = advisor ? (firms.data?.find((f) => f.id === s.firm) ?? firms.data?.[0]) : undefined;
-  const name = advisor ? firm?.name ?? "" : buyer.data?.investor?.investor_name ?? "";
+  const name = advisor ? firm?.name ?? "" : buyer?.investor?.investor_name ?? "";
   const subtitle = advisor ? name || tr("Firm profile", "โปรไฟล์บริษัท")
     : `${name || tr("Your company", "บริษัทของท่าน")} · ${s.from === "private" ? tr("Private view", "มุมมองส่วนตัว") : tr("Public view", "มุมมองสาธารณะ")}`;
   const close = () => leaveEditUrl(() => void navigate({ to: "/marketplace/my-company", search: {} as never, replace: true }));
