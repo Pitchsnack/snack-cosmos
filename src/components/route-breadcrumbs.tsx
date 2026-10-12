@@ -44,6 +44,7 @@ const PATH_LABELS: Record<string, string> = {
   "/intake-queue": "Default Intake Queue",
   "/users": "Users",
   "/admin/plans": "Plans",
+  "/admin/access-codes": "Access codes",
   "/access-management": "Access Management",
   "/audit": "Audit Logs",
   "/security": "Security",
@@ -190,7 +191,7 @@ export function RouteBreadcrumbs({ className, placement }: { className?: string;
               className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
             >
               <Home className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{items.some(i => i.to === "/admin/plans") ? "Admin" : "Home"}</span>
+              <span className="hidden sm:inline">{items.some(i => i.to === "/admin/plans" || i.to === "/admin/access-codes") ? "Admin" : "Home"}</span>
             </Link>
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
           </li>

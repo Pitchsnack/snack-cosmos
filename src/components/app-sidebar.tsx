@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
+import { KeyRound,
   Building2,
   ScrollText,
   ChevronLeft,
@@ -61,6 +61,7 @@ type NavPath =
   | "/audit"
   | "/users"
   | "/admin/plans"
+  | "/admin/access-codes"
   | "/access-management"
   | "/peer-comparables"
   | "/security"
@@ -226,6 +227,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
   { label: "Plans", icon: Tag, path: "/admin/plans", exact: false, controlOnly: true, perm: "users.assign_role" },
+  { label: "Access codes", icon: KeyRound, path: "/admin/access-codes", exact: false, controlOnly: true, perm: "users.assign_role" },
   {
     label: "Access Management",
     icon: ShieldCheck,
