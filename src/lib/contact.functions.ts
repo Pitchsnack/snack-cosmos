@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 /** Public Contact form: validates, rate-limits, saves the enquiry and sends both emails. */
-const TOPICS = ["selling", "buying", "partner", "plans", "verification", "account", "press", "other"] as const;
-const TOPIC_EN: Record<string, string> = { selling: "Selling my business", buying: "Buying or investing in a business", partner: "Joining as a partner", plans: "Plans and billing", verification: "Verification and badges", account: "My account and signing in", press: "Press and collaborations", other: "Something else" };
-const TOPIC_TH: Record<string, string> = { selling: "การขายกิจการ", buying: "การซื้อหรือลงทุนในกิจการ", partner: "การเข้าร่วมเป็นพาร์ทเนอร์", plans: "แผนบริการและการชำระเงิน", verification: "การตรวจสอบและตราสัญลักษณ์", account: "บัญชีผู้ใช้และการเข้าสู่ระบบ", press: "สื่อมวลชนและความร่วมมือ", other: "เรื่องอื่นๆ" };
+const TOPICS = ["selling", "buying", "partner", "plans", "verification", "account", "press", "feedback", "other"] as const;
+const TOPIC_EN: Record<string, string> = { selling: "Selling my business", buying: "Buying or investing in a business", partner: "Joining as a partner", plans: "Plans and billing", verification: "Verification and badges", account: "My account and signing in", press: "Press and collaborations", feedback: "Soft launch feedback", other: "Something else" };
+const TOPIC_TH: Record<string, string> = { selling: "การขายกิจการ", buying: "การซื้อหรือลงทุนในกิจการ", partner: "การเข้าร่วมเป็นพาร์ทเนอร์", plans: "แผนบริการและการชำระเงิน", verification: "การตรวจสอบและตราสัญลักษณ์", account: "บัญชีผู้ใช้และการเข้าสู่ระบบ", press: "สื่อมวลชนและความร่วมมือ", feedback: "ความเห็นช่วงทดลองใช้งาน", other: "เรื่องอื่นๆ" };
 
 const input = z.object({
   role: z.enum(["seller", "buyer", "partner", "other"]),
