@@ -29,4 +29,3 @@
 
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
-- Soft launch: access_codes/soft_launch_settings are admin-only (is_control); code status is derived in access-codes.ts, never stored; users.access_code_id is server-set only (trigger).
