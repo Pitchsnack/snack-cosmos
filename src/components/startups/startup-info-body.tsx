@@ -1,3 +1,4 @@
+import { MissingText } from "@/components/my-business/missing-info";
 /**
  * Canonical Startup Information Panel body.
  *
@@ -160,8 +161,8 @@ export function StartupInfoSection({
 
 
 
-function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
-  if (tags.length === 0) return <span className="text-sm text-muted-foreground">Not available</span>;
+function ChipRow({ tags, tone, red }: { tags: string[]; tone: "primary" | "muted"; red?: boolean }) {
+  if (tags.length === 0) return red ? <MissingText className="text-sm">Not available</MissingText> : <span className="text-sm text-muted-foreground">Not available</span>;
   const base =
     tone === "primary"
       ? "bg-primary/5 text-foreground/85 border-primary/20"
@@ -268,7 +269,7 @@ export function StartupInfoBody({
       <div className="flex items-start gap-3">
         <p className="min-w-0 flex-1 text-[15px] leading-relaxed text-foreground/85">
           {data.shortDescription || (
-            <span className="text-muted-foreground">No description available yet.</span>
+            sectionEdit ? <MissingText>No description available yet.</MissingText> : <span className="text-muted-foreground">No description available yet.</span>
           )}
         </p>
         {sectionEdit && <div className="shrink-0 pt-0.5">{sectionEdit("description")}</div>}
@@ -312,22 +313,22 @@ export function StartupInfoBody({
             )}
           </>
         ) : (
-          <span className="text-sm text-muted-foreground">Not available</span>
+          sectionEdit ? <MissingText className="text-sm">Not available</MissingText> : <span className="text-sm text-muted-foreground">Not available</span>
         )}
       </StartupInfoSection>
 
       {/* Product & service tags, full width (values are long) */}
       <StartupInfoSection icon={Layers} title="Product & service tags" right={sectionEdit?.("tags")}>
-        <ChipRow tags={productTags} tone="primary" />
+        <ChipRow red={!!sectionEdit} tags={productTags} tone="primary" />
       </StartupInfoSection>
 
       {/* Band 1 — Industry | Market tags */}
       <PairedSection
-        left={{ icon: Layers, title: "Industry", content: <ChipRow tags={industry} tone="muted" />, action: sectionEdit?.("tags") }}
+        left={{ icon: Layers, title: "Industry", content: <ChipRow red={!!sectionEdit} tags={industry} tone="muted" />, action: sectionEdit?.("tags") }}
         right={{
           icon: ShoppingCart,
           title: "Market tags",
-          content: <ChipRow tags={marketTags} tone="muted" />,
+          content: <ChipRow red={!!sectionEdit} tags={marketTags} tone="muted" />,
           action: sectionEdit?.("tags"),
         }}
       />
@@ -341,7 +342,7 @@ export function StartupInfoBody({
         const licenceContent = <LicenceRow licences={licences} />;
         const isoContent = (
           <>
-            <ChipRow tags={isoStandards.slice(0, MAX_PILLS)} tone="muted" />
+            <ChipRow red={!!sectionEdit} tags={isoStandards.slice(0, MAX_PILLS)} tone="muted" />
             {isoStandards.length > MAX_PILLS && (
               <span className="mt-1 inline-block text-[11px] text-muted-foreground">
                 +{isoStandards.length - MAX_PILLS} more
@@ -384,7 +385,7 @@ export function StartupInfoBody({
         right={sectionEdit && <span className="flex items-center gap-3">{sectionEdit("founders-add")}{sectionEdit("founders")}</span>}
       >
         {founders.length === 0 ? (
-          <span className="text-sm text-muted-foreground">Not available</span>
+          sectionEdit ? <MissingText className="text-sm">Not available</MissingText> : <span className="text-sm text-muted-foreground">Not available</span>
         ) : (
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
             {founders.map((f) => (

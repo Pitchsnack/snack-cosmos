@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { autoEnrichFinancials, saveStartupFinancials } from "@/lib/financials-edit.functions";
 import { updateStartup } from "@/lib/startups.functions";
 import { Input } from "@/components/ui/input";
+import { LogoPhotoAlert, EmptyLogoTile, MediaSpaces } from "@/components/my-business/missing-info";
 import {
   MapPin,
   Calendar,
@@ -344,8 +345,11 @@ export function StartupDetailPanel({
   extraMenuItems,
   headerPill,
   companyMenuEdit,
+  ownerMedia,
 }: {
   id: string;
+  /** Seller › My Company only: missing logo/photo alert, empty tiles; opens Images & Logo. */
+  ownerMedia?: () => void;
   /** My Company only: completeness pill, placed before the ⋮ menu. */
   headerPill?: ReactNode;
   /** My Company only: turns ⋮ into the company menu with Edit information first. */
@@ -461,9 +465,11 @@ export function StartupDetailPanel({
       <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
 
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
+          <div className={cn("flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg", !(ownerMedia && !s.logo_signed_url) && "border border-border/60 bg-muted/30")}>
             {s.logo_signed_url ? (
               <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
+            ) : ownerMedia ? (
+              <EmptyLogoTile onClick={ownerMedia} />
             ) : (
               <span className="text-sm font-semibold text-muted-foreground">
                 {monogram(s.startup_name)}
@@ -630,6 +636,7 @@ export function StartupDetailPanel({
         </div>
       </header>
 
+      {ownerMedia && <LogoPhotoAlert className="mt-[18px]" hasLogo={!!s.logo_signed_url} hasPhoto={mediaSlots.length > 0} onAdd={ownerMedia} />}
       {belowHeader}
 
       {showPublication && !replaceBody && (
@@ -727,8 +734,9 @@ export function StartupDetailPanel({
       {replaceBody ? replaceBody : !isMyWorkspace && connectionState === "requested" ? null : (
         <>
       {/* Media */}
-      {sectionEdit && mediaSlots.length > 0 && <div className="-mb-1 flex justify-end">{sectionEdit("photos")}</div>}
-      {mediaSlots.length > 0 && (
+      {ownerMedia && <MediaSpaces photos={mediaSlots.map((m) => m.image_signed_url ?? "")} onAdd={ownerMedia} edit={sectionEdit?.("photos")} />}
+      {!ownerMedia && sectionEdit && mediaSlots.length > 0 && <div className="-mb-1 flex justify-end">{sectionEdit("photos")}</div>}
+      {!ownerMedia && mediaSlots.length > 0 && (
         <div
           className={cn(
             "grid gap-3",
@@ -769,7 +777,7 @@ export function StartupDetailPanel({
       )}
 
 
-      {mediaSlots.length === 0 && (
+      {!ownerMedia && mediaSlots.length === 0 && (
         <Section icon={FileText} title="Media" right={sectionEdit?.("photos")}>
           <span className="text-sm text-muted-foreground">Not available</span>
         </Section>
