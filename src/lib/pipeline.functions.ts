@@ -697,7 +697,7 @@ export const sellerProfile = createServerFn({ method: "GET" })
     const sb = await admin();
     const approved = !!p.nda_approved_at;
     const [{ data: hp }, { data: st }, { data: own }] = await Promise.all([
-      sb.from("hidden_profiles").select("code_name, asking_price, stake_pct, deal_type, reason, headline, region").eq("id", p.hidden_profile_id).maybeSingle(),
+      sb.from("hidden_profiles").select("code_name, asking_price, deal_type, reason, headline, region").eq("id", p.hidden_profile_id).maybeSingle(),
       sb.from("startups").select("startup_name, industry, city, year_founded, company_size, website_url, short_description").eq("id", p.startup_id).maybeSingle(),
       sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id).maybeSingle(),
     ]);
@@ -715,7 +715,6 @@ export const sellerProfile = createServerFn({ method: "GET" })
       city: approved ? st?.city ?? hp?.region ?? null : hp?.region ?? null,
       about: (approved ? st?.short_description : null) || hp?.headline || null,
       askingPrice: hp?.asking_price != null ? Number(hp.asking_price) : null,
-      stakePct: hp?.stake_pct != null ? Number(hp.stake_pct) : null,
       dealType: hp?.deal_type ?? null,
       reason: hp?.reason ?? null,
       codeName: hp?.code_name ?? null,
