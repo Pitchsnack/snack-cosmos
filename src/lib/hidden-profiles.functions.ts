@@ -125,7 +125,7 @@ const DraftSchema = z.object({
 });
 
 function draftError(msg: string) {
-  if (/hidden_profiles_code_name_uq/.test(msg)) return new Error("That code name is already used in the Marketplace");
+  if (/hidden_profiles_code_name_uq/.test(msg)) return new Error("NAME_TAKEN: That listing name is already used by another listing");
   return new Error(msg);
 }
 
@@ -301,3 +301,17 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, handover: handoverLine(live.owner_stays, live.handover_months) };
     }
 }
+
+/** Is a listing name free? Trimmed, case-insensitive, against every other listing in any status. */
+export const checkListingName = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ name: z.string().max(80), startupId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const name = data.name.trim();
+    if (!name) return { available: false };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin.from("hidden_profiles").select("startup_id, code_name").ilike("code_name", name.replace(/[\\%_]/g, (c) => `\\${c}`));
+    if (error) throw new Error(error.message);
+    const taken = (rows ?? []).some((r) => r.startup_id !== data.startupId && r.code_name.trim().toLowerCase() === name.toLowerCase());
+    return { available: !taken };
+  });
