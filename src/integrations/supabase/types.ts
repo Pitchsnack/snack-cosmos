@@ -5216,6 +5216,8 @@ export type Database = {
           free_bar_hidden_on: string | null
           free_end_email_sent_at: string | null
           free_end_seen_at: string | null
+          free_ended_on: string | null
+          free_plan_name: string | null
           free_reminder_sent_at: string | null
           id: string
           manager_user_id: string | null
@@ -5235,6 +5237,8 @@ export type Database = {
           free_bar_hidden_on?: string | null
           free_end_email_sent_at?: string | null
           free_end_seen_at?: string | null
+          free_ended_on?: string | null
+          free_plan_name?: string | null
           free_reminder_sent_at?: string | null
           id?: string
           manager_user_id?: string | null
@@ -5254,6 +5258,8 @@ export type Database = {
           free_bar_hidden_on?: string | null
           free_end_email_sent_at?: string | null
           free_end_seen_at?: string | null
+          free_ended_on?: string | null
+          free_plan_name?: string | null
           free_reminder_sent_at?: string | null
           id?: string
           manager_user_id?: string | null

@@ -540,6 +540,13 @@
       "when": 1791823136230,
       "tag": "0076_claim_access_seat",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1791823787337,
+      "tag": "0077_free_plan_end_record",
+      "breakpoints": true
     }
   ]
 }
