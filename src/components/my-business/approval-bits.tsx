@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import {
   getSubmissionPreview, submitListing, unpublishListing, withdrawListing,
 } from "@/lib/approvals.functions";
-import type { ApprovalStatus, HiddenProfileRow } from "@/lib/hidden-profile";
+import { handoverLine, type ApprovalStatus, type HiddenProfileRow } from "@/lib/hidden-profile";
 import { cn } from "@/lib/utils";
 import { reportPrice } from "@/components/my-business/report-offers";
 

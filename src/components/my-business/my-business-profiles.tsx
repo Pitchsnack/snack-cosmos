@@ -46,7 +46,7 @@ function useCompleteness(s: StartupListItem) {
     { key: "logo", label: "Logo & photos", weight: 20, required: false, done: !!s.logo_signed_url && !!s.tile_image_signed_url },
     { key: "fin", label: `Verified financial report ${reportPrice("financials")}`, weight: 0, required: false, done: false },
     { key: "valuation", label: `Estimated valuation ${reportPrice("valuation")}`, weight: 0, required: false, done: false },
-    { key: "terms", label: "Deal terms", weight: 20, required: true, done: !!row && row.stake_pct != null && !!row.deal_type },
+    { key: "terms", label: "Deal terms", weight: 20, required: true, done: !!row && !!row.deal_type && !!row.owner_stays },
     { key: "hidden", label: "Public headline", weight: 25, required: true, done: !!row && !!row.headline?.trim() },
     { key: "people", label: "Key people & customers", weight: 15, required: false, done: (facts?.people?.length ?? 0) > 0 && (facts?.customers?.length ?? 0) > 0 },
   ];
