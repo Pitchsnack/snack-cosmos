@@ -7,7 +7,7 @@ export const S = {
   title: c("PitchSnack · สมัครใช้งาน", "PitchSnack · Sign up"),
   intro: c("สร้างบัญชีในไม่กี่นาที แล้วเริ่มตั้งค่าโปรไฟล์ของท่านได้ทันที", "Create your account in a few minutes, then set up your profile straight away."),
   points: {
-    none: [c("ชื่อของท่านเป็นความลับ จนกว่าท่านจะเลือกเปิดเผย", "Your name stays private until you choose to share it"), c("ผู้ขายและผู้ซื้อทุกรายตรวจสอบกับทะเบียน", "Every seller and buyer checked against the DBD register"), c("ไม่ถือเงิน และไม่เข้าข้างฝ่ายใด", "No funds held, no side taken")],
+    none: [c("ชื่อของท่านเป็นความลับ จนกว่าท่านจะเลือกเปิดเผย", "Your name stays private until you choose to share it"), c("ผู้ขายและผู้ซื้อทุกรายตรวจสอบกับทะเบียน", "Every seller and buyer checked against the official register"), c("ไม่ถือเงิน และไม่เข้าข้างฝ่ายใด", "No funds held, no side taken")],
     seller: [c("ผู้ซื้อเห็นเพียงโปรไฟล์ไม่ระบุชื่อ จนกว่าท่านจะอนุมัติ NDA", "Buyers see an anonymous profile until you approve their NDA"), c("ไม่มีสัญญาผูกขาด ถอนประกาศได้ทุกเมื่อ", "No exclusivity. Withdraw at any time"), c("เริ่มต้นได้ฟรีด้วยแผน Entry", "Start free on the Entry plan")],
     buyer: [c("ผู้ขายทุกรายตรวจสอบกับทะเบียน DBD", "Every seller checked against the DBD register"), c("เห็นงบการเงินที่ยื่นจริงก่อนการแนะนำ", "Filed accounts before an introduction"), c("ผู้ซื้อจ่ายเพียงค่าสมาชิก ไม่มีค่าธรรมเนียมเมื่อปิดดีล", "Buyers pay a subscription only, never a completion fee")],
     advisor: [c("ตรา Verified advisor ที่ลูกค้าไว้วางใจ", "A Verified advisor badge clients trust"), c("แสดงค่าบริการในแบบของท่าน", "Show your fees your way"), c("ข้อมูลลูกค้าของท่านเป็นความลับ", "Your clients stay confidential")],
