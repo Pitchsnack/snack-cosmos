@@ -29,3 +29,8 @@
 - [x] Verify Admin Plans and Review screenshots
 
 - Scheduled midnight execution and subscriber-price retention are implemented; future-date execution has not been observed live.
+
+## Soft launch
+- [x] Phase 1: codes, Admin › Access codes, free-plan data
+- [x] Phase 2: access page, ribbon, welcome note, sign-up invitation box and claim, feedback topic
+- [ ] Phase 3: invitation/reminder/end emails, 14-day bar, free-term end and daily job — awaits Dan's go-ahead
