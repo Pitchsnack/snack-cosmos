@@ -129,7 +129,7 @@ export type AdvisorFirm = {
   description: string | null; yearFounded: number | null; city: string | null; country: string | null;
   services: string[]; fees: Record<string, string>; feeDetails: Record<string, FeeDetail>;
   dealBand: string | null; teamSize: number | null;
-  languages: string[]; sectors: string[]; sectorAgnostic?: boolean;
+  languages: string[]; sectors: string[]; sectorAgnostic?: boolean; sectorPicks?: unknown;
   legalName: string | null; thaiName: string | null; registrationNo: string | null;
   addrStreet: string | null; addrUnit: string | null; addrDistrict: string | null;
   addrProvince: string | null; addrPostal: string | null;

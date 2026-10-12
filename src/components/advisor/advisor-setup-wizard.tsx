@@ -1,6 +1,7 @@
 import { tr, useTranslation } from "@/i18n/language";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SetSectorPicker } from "@/components/common/set-sector-picker";
+import { ManyTypeQuestion, advisorWords, manyError, useL } from "@/components/common/business-type-question";
+import { normPicks, picksToSectors, type SectorPicks } from "@/lib/business-types";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 type A = {
   type: string; country: string; city: string; name: string; year: string; reg: string; addr: Addr; web: string;
-  services: string[]; fees: Record<string, FeeDetail>; deal: string; team: string; langs: string[]; sectors: string[]; agnostic: boolean; email: string; phone: string;
+  services: string[]; fees: Record<string, FeeDetail>; deal: string; team: string; langs: string[]; sectors: string[]; picks: SectorPicks; agnostic: boolean; email: string; phone: string;
   logo: LogoState; desc: string;
 };
 const SECTION: Record<WizardQ, string> = {
@@ -40,7 +41,7 @@ function fromFirm(f: AdvisorFirm): A {
     year: f.yearFounded ? String(f.yearFounded) : "", reg: f.registrationNo ?? "",
     addr: { street: f.addrStreet ?? "", unit: f.addrUnit ?? "", district: thai ? f.addrDistrict ?? "" : "", province: f.addrProvince ?? (thai ? f.city ?? "" : ""), postal: f.addrPostal ?? "" },
     web: f.website ?? "", services: f.services, fees: { ...f.feeDetails }, deal: f.dealBand ?? "",
-    team: f.teamSize ? String(f.teamSize) : "", langs: f.languages, sectors: f.sectors, agnostic: !!f.sectorAgnostic, email: f.email ?? "", phone: f.phone ?? "",
+    team: f.teamSize ? String(f.teamSize) : "", langs: f.languages, sectors: f.sectors, picks: normPicks(f.sectorPicks), agnostic: !!f.sectorAgnostic, email: f.email ?? "", phone: f.phone ?? "",
     logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, desc: f.description ?? "",
   };
 }
@@ -48,6 +49,7 @@ const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a");
 
 export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   useTranslation(); // re-render on language change
+  const L = useL();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const saveFn = useServerFn(saveAdvisorWizard);
@@ -96,7 +98,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     deal: a.deal ? null : "hint",
     team: teamSizeError(a.team),
     langs: a.langs.length ? null : tr("Pick at least one language."),
-    sectors: a.agnostic || a.sectors.length ? null : tr("Pick at least one sector, or Sector agnostic."),
+    sectors: manyError(a.picks, a.agnostic, L),
     email: emailError(a.email),
     phone: phoneError(a.phone),
     logo: a.logo.path ? null : "hint",
@@ -480,13 +482,10 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {hint && <p className="mt-2 text-[13px] text-[#6B7280]">{hint}</p>}
         </div>
       ) },
-    sectors: { req: true, t: tr("Which sectors do you know best?"), h: tr("Pick up to 5, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card."),
+    sectors: { req: true, t: tr("Which sectors do you know best?"), h: L("Pick up to 5 types of business, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card.", "เลือกประเภทธุรกิจได้สูงสุด 5 ประเภท หรือไม่จำกัดกลุ่มอุตสาหกรรมหากท่านทำงานในทุกอุตสาหกรรม ผู้ขายและผู้ซื้อจะเห็นบนการ์ดของท่าน"),
       body: (
-        <SetSectorPicker mode="multi" value={a.sectors} onChange={(v) => set({ sectors: v }, { sectors: v })}
-          limitMsg={tr("Pick up to 5 sectors, or Sector agnostic.")}
-          agnostic={{ on: a.agnostic, onToggle: (on) => set({ agnostic: on }, { sector_agnostic: on }), line: tr("I work with companies in every industry"),
-            summary: <>{tr("Sellers and buyers see")} <b className="text-[#151A28] dark:text-foreground">{tr("Sector agnostic")}</b> on your card.</> }}
-          error={forced.sectors ? errors.sectors : null} />
+        <ManyTypeQuestion picks={a.picks} agnostic={a.agnostic} words={advisorWords(L)} error={forced.sectors ? errors.sectors : null}
+          onChange={(p, ag) => { const v = ag ? [] : picksToSectors(p); set({ sectors: v, picks: p, agnostic: ag }, { sectors: v, sector_agnostic: ag, sector_picks: ag ? null : p }); }} />
       ) },
     team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : tr("What is your company size?"),
       h: hid("team", "team") ? "Sellers and buyers see them on your card." : tr("Sellers and buyers see your team size on your card, and the languages you work in."),
