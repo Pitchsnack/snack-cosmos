@@ -88,6 +88,7 @@ import { Route as AuthenticatedStartupsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authenticated/startups.$id'
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsSectorImagesRouteImport } from './routes/_authenticated/startups.sector-images'
+import { Route as ApiPublicFreePlanJobRouteImport } from './routes/api/public/free-plan-job'
 import { Route as AuthenticatedApprovalsBuyersIdRouteImport } from './routes/_authenticated/approvals.buyers.$id'
 import { Route as AuthenticatedApprovalsListingsIdRouteImport } from './routes/_authenticated/approvals.listings.$id'
 import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
@@ -551,6 +552,11 @@ const AuthenticatedStartupsSectorImagesRoute =
     path: '/sector-images',
     getParentRoute: () => AuthenticatedStartupsRoute,
   } as any)
+const ApiPublicFreePlanJobRoute = ApiPublicFreePlanJobRouteImport.update({
+  id: '/api/public/free-plan-job',
+  path: '/api/public/free-plan-job',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedApprovalsBuyersIdRoute =
   AuthenticatedApprovalsBuyersIdRouteImport.update({
     id: '/approvals/buyers/$id',
@@ -755,6 +761,7 @@ export interface FileRoutesByFullPath {
   '/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/startups/new': typeof AuthenticatedStartupsNewRoute
   '/startups/sector-images': typeof AuthenticatedStartupsSectorImagesRoute
+  '/api/public/free-plan-job': typeof ApiPublicFreePlanJobRoute
   '/advisors/': typeof AuthenticatedAdvisorsIndexRoute
   '/approvals/': typeof AuthenticatedApprovalsIndexRoute
   '/contacts/': typeof AuthenticatedContactsIndexRoute
@@ -847,6 +854,7 @@ export interface FileRoutesByTo {
   '/shared-deals/$id': typeof AuthenticatedSharedDealsIdRoute
   '/startups/new': typeof AuthenticatedStartupsNewRoute
   '/startups/sector-images': typeof AuthenticatedStartupsSectorImagesRoute
+  '/api/public/free-plan-job': typeof ApiPublicFreePlanJobRoute
   '/advisors': typeof AuthenticatedAdvisorsIndexRoute
   '/approvals': typeof AuthenticatedApprovalsIndexRoute
   '/contacts': typeof AuthenticatedContactsIndexRoute
@@ -952,6 +960,7 @@ export interface FileRoutesById {
   '/_authenticated/startups/$id': typeof AuthenticatedStartupsIdRouteWithChildren
   '/_authenticated/startups/new': typeof AuthenticatedStartupsNewRoute
   '/_authenticated/startups/sector-images': typeof AuthenticatedStartupsSectorImagesRoute
+  '/api/public/free-plan-job': typeof ApiPublicFreePlanJobRoute
   '/_authenticated/advisors/': typeof AuthenticatedAdvisorsIndexRoute
   '/_authenticated/approvals/': typeof AuthenticatedApprovalsIndexRoute
   '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
@@ -1057,6 +1066,7 @@ export interface FileRouteTypes {
     | '/startups/$id'
     | '/startups/new'
     | '/startups/sector-images'
+    | '/api/public/free-plan-job'
     | '/advisors/'
     | '/approvals/'
     | '/contacts/'
@@ -1149,6 +1159,7 @@ export interface FileRouteTypes {
     | '/shared-deals/$id'
     | '/startups/new'
     | '/startups/sector-images'
+    | '/api/public/free-plan-job'
     | '/advisors'
     | '/approvals'
     | '/contacts'
@@ -1253,6 +1264,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups/$id'
     | '/_authenticated/startups/new'
     | '/_authenticated/startups/sector-images'
+    | '/api/public/free-plan-job'
     | '/_authenticated/advisors/'
     | '/_authenticated/approvals/'
     | '/_authenticated/contacts/'
@@ -1306,6 +1318,7 @@ export interface RootRouteChildren {
   SellersRoute: typeof SellersRoute
   SignupRoute: typeof SignupRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
+  ApiPublicFreePlanJobRoute: typeof ApiPublicFreePlanJobRoute
   AdvisorCompanyIdSetupRoute: typeof AdvisorCompanyIdSetupRoute
   BuyerCompanyIdSetupRoute: typeof BuyerCompanyIdSetupRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1868,6 +1881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartupsSectorImagesRouteImport
       parentRoute: typeof AuthenticatedStartupsRoute
     }
+    '/api/public/free-plan-job': {
+      id: '/api/public/free-plan-job'
+      path: '/api/public/free-plan-job'
+      fullPath: '/api/public/free-plan-job'
+      preLoaderRoute: typeof ApiPublicFreePlanJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/approvals/buyers/$id': {
       id: '/_authenticated/approvals/buyers/$id'
       path: '/approvals/buyers/$id'
@@ -2360,6 +2380,7 @@ const rootRouteChildren: RootRouteChildren = {
   SellersRoute: SellersRoute,
   SignupRoute: SignupRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
+  ApiPublicFreePlanJobRoute: ApiPublicFreePlanJobRoute,
   AdvisorCompanyIdSetupRoute: AdvisorCompanyIdSetupRoute,
   BuyerCompanyIdSetupRoute: BuyerCompanyIdSetupRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
