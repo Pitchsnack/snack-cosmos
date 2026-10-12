@@ -7,7 +7,7 @@ export const L = {
   logo: c("PitchSnack · กลับไปหน้าแรก", "PitchSnack · Back to the homepage"),
   chipA: c("กิจการท้องถิ่น · ", "Local businesses · "),
   chipB: c("ส่งต่ออย่างเป็นความลับ", "handed on in confidence"),
-  h1: c("สร้างมาทั้งชีวิต", "Built over a lifetime."),
+  h1: c("สร้างธุรกิจมาทั้งชีวิต", "Built over a lifetime."),
   h2: c("ส่งต่อให้ถูกมือ", "Handed to the right hands."),
   intro: c(
     "เข้าสู่ระบบเพื่อดูการจับคู่ คำขอติดต่อ และห้องข้อมูลของท่าน ชื่อของทั้งสองฝ่ายยังเป็นความลับ จนกว่าจะลงนาม NDA",
