@@ -472,8 +472,8 @@ export const decideBuyerProfile = createServerFn({ method: "POST" })
 
 export const FIELD_LABEL: Record<string, string> = {
   headline: "Headline", description: "Description", product_tags: "Products & services", market_tags: "Markets", code_name: "Code name",
-  region: "Region", deal_type: "Deal type", stake_pct: "Stake", asking_price: "Asking price", structure: "Structure", reason: "Reason for sale",
-  handover: "Handover", process: "Process", open_to: "Open to", highlights: "Highlights", customers_summary: "Customers", cover_art: "Sector artwork",
+  region: "Region", deal_type: "Deal type", owner_stays: "Owner handover", handover_months: "Handover months", asking_price: "Asking price", reason: "Reason for sale",
+  highlights: "Highlights", customers_summary: "Customers", cover_art: "Sector artwork",
   pending_cover: "Public image", nda_approver: "NDA approver",
 };
 const UNDOABLE = new Set(Object.keys(FIELD_LABEL));

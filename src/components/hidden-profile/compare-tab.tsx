@@ -36,7 +36,7 @@ export function CompareTab({
     ["Address", "Shown", "Hidden until NDA", "nda"],
     ["People", "Names and roles", "Roles only", "own"],
     ["Customers", "Named", "Described without names", "own"],
-    ["Deal terms", "Asking price, stake, deal type, reason", "The same", "shared"],
+    ["Deal terms", "Asking price, deal type, owner handover, reason", "The same", "shared"],
     ["Data room", "Documents", "Hidden until NDA", "nda"],
   ];
   const groups: { title: string; kinds: MarkerKind[]; note: string }[] = [

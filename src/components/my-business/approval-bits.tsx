@@ -99,8 +99,8 @@ export function ApprovalNotice({ row, onEditPublic }: { row: HiddenProfileRow | 
 
 const FIELD_LABEL: Record<string, string> = {
   headline: "Headline", description: "Description", product_tags: "Products & services", market_tags: "Markets",
-  code_name: "Code name", asking_price: "Asking price", stake_pct: "Stake", deal_type: "Deal type", cover_image_url: "Cover picture",
-  highlights: "Highlights", region: "Region", structure: "Structure", reason: "Reason for sale",
+  code_name: "Code name", asking_price: "Asking price", deal_type: "Deal type", owner_stays: "Owner handover", handover_months: "Handover months", cover_image_url: "Cover picture",
+  highlights: "Highlights", region: "Region", reason: "Reason for sale",
 };
 function changedFields(row: HiddenProfileRow) {
   const live = (row.live ?? {}) as unknown as Record<string, unknown>;
@@ -211,7 +211,7 @@ function ConfirmSubmitDialog({
     ["Staff", v.company_size || "—"],
     ["Revenue FY23–25", years.length ? `Financials for FY${years.join(", FY")}` : "—"],
     ["EBITDA FY25", years.length ? "From your financial statements" : "—"],
-    ["Deal terms", [p.deal_type, p.stake_pct != null ? `${p.stake_pct}% stake` : null, p.asking_price ? `Asking ${Number(p.asking_price).toLocaleString()}` : null].filter(Boolean).join(" · ") || "—"],
+    ["Deal terms", [p.deal_type, handoverLine(p.owner_stays, p.handover_months), p.asking_price ? `Asking ${Number(p.asking_price).toLocaleString()}` : null].filter(Boolean).join(" · ") || "—"],
     ["Founder & key people", list(v.people)],
     ["Photos", v.photos ? `${v.photos} uploaded` : "—"],
     ["Data room", "Not set up yet"],
