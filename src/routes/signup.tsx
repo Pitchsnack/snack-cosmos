@@ -651,8 +651,9 @@ function SignupInner() {
                   </>}
                 </div>
               )}
+              </>}
             </div>
-            {(step <= 3 || step === 6) && <p className="lg-noacc">{t(S.haveAcc)} <Link to="/login">{t(S.signIn)}</Link></p>}
+            {(step <= 3 || step === 6) && !(noneLeft && step === 1) && <p className="lg-noacc">{t(S.haveAcc)} <Link to="/login">{t(S.signIn)}</Link></p>}
             <p className="lg-pw2">Powered by SnackPortal2</p>
           </div>
         </div>
