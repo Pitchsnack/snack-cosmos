@@ -16,7 +16,7 @@ export const Route = createFileRoute("/privacy")({
     ],
   }),
   component: () => (
-    <PublicShell current={null}>
+    <PublicShell current={null} noGate>
       <div className="pv-page"><div className="pv-sheet"><PrivacyDoc /></div></div>
     </PublicShell>
   ),

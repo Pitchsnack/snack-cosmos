@@ -4,6 +4,7 @@ import { Check, ChevronDown, Globe, LogIn, UserPlus } from "lucide-react";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import { FOOTER, NAV, type Lang } from "./home-copy";
 import { PrivacyLink } from "./privacy-notice";
+import { AccessGate, SoftLaunchRibbon } from "@/components/access-gate/access-gate";
 
 /** Shared chrome for the public pages: language, top bar, footer. */
 
@@ -31,7 +32,7 @@ export function Rich({ s }: { s: string }) {
   );
 }
 
-export function PublicShell({ current, children, talkHref, footCurrent }: { current: keyof typeof NAV | null; children: ReactNode; talkHref?: string; footCurrent?: "contact" }) {
+export function PublicShell({ current, children, talkHref, footCurrent, noGate }: { current: keyof typeof NAV | null; children: ReactNode; talkHref?: string; footCurrent?: "contact"; noGate?: boolean }) {
   const [lang, setLangState] = useState<Lang>("th");
   useEffect(() => {
     const saved = localStorage.getItem(KEY);
@@ -46,14 +47,18 @@ export function PublicShell({ current, children, talkHref, footCurrent }: { curr
   }, [lang]);
   const setLang = (l: Lang) => { setLangState(l); localStorage.setItem(KEY, l); };
   const t = (c: { en: string; th: string }) => c[lang];
+  const page = (
+    <div className="ph" data-lang={lang}>
+      {!noGate && <SoftLaunchRibbon lang={lang} />}
+      <TopBar current={current} talkHref={talkHref} />
+      <main>{children}</main>
+      <Footer current={footCurrent} />
+    </div>
+  );
   return (
     <LangCtx.Provider value={{ lang, setLang, t }}>
       <link rel="stylesheet" href={FONT_URL} precedence="default" />
-      <div className="ph" data-lang={lang}>
-        <TopBar current={current} talkHref={talkHref} />
-        <main>{children}</main>
-        <Footer current={footCurrent} />
-      </div>
+      {noGate ? page : <AccessGate onLang={setLangState}>{page}</AccessGate>}
     </LangCtx.Provider>
   );
 }
