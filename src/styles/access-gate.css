@@ -1,0 +1,68 @@
+/* Soft-launch access page, ribbon, welcome note and sign-up invitation box. */
+.ag-loading { position: fixed; inset: 0; display: grid; place-items: center; background: #f2f5f8; z-index: 50; }
+@media (prefers-color-scheme: dark) { .ag-loading { background: #151e29; } }
+
+.ag .lg-logo { cursor: default; }
+.ag-rtop { justify-content: flex-end; }
+.ag-amber { color: #f0c46e; }
+.ag-field input { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; font-size: 1.05rem; letter-spacing: .09em; text-transform: uppercase; }
+.ag-field input::placeholder { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .09em; }
+.ag-field.off { background: var(--sunk); }
+.ag .lg-btn.ag-busy { background: #b53a45; transform: none; }
+.ag .lg-btn:disabled:not(.ag-busy) { background: var(--sunk); color: var(--muted); box-shadow: none; }
+.ag-help { display: flex; gap: 10px; align-items: flex-start; margin: 20px 0 0; padding-top: 16px; border-top: 1px solid var(--edge-soft); font-size: .875rem; color: var(--text-2); line-height: 1.55; }
+.ag-help > svg { flex: none; color: var(--muted); margin-top: 2px; }
+.ag-help a { color: var(--blue); font-weight: 600; white-space: nowrap; }
+.ag-help a:hover { text-decoration: underline; }
+@media (max-width: 960px) { .ag-field input { font-size: 16px; } }
+
+/* Ribbon */
+.ag-ribbon { background: #f4f9ff; border-bottom: 1px solid #d6e7fc; }
+.ag-ribbon-in { max-width: 1120px; margin: 0 auto; padding: 6px 20px; min-height: 46px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+.ag-rl { display: inline-flex; align-items: center; gap: 8px; font-size: .86rem; line-height: 1.4; color: #1e3e56; min-width: 0; }
+.ag-rl > svg { flex: none; color: #3b82f6; }
+.ag-rl b { font-weight: 700; }
+.ag-fb { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border-radius: 8px; font-size: .86rem; font-weight: 600; color: #25638d; }
+.ag-fb:hover { background: #e6f0fd; }
+@media (prefers-color-scheme: dark) {
+  .ag-ribbon { background: #16283a; border-color: #2b4763; }
+  .ag-rl { color: #edeff4; } .ag-rl > svg { color: #8cbff0; }
+  .ag-fb { color: #71aad3; } .ag-fb:hover { background: #1d3349; }
+}
+@media (max-width: 640px) {
+  .ag-ribbon-in { padding: 8px 16px; flex-wrap: nowrap; }
+  .ag-rtext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ag-fb { padding: 0 8px; } .ag-fb span { display: none; }
+}
+@media (max-width: 480px) { .ag-rfor { display: none; } }
+
+/* Welcome note */
+.ag-welcome { position: fixed; left: 50%; top: 128px; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 10px;
+  max-width: calc(100vw - 32px); padding: 11px 16px; background: #fff; border: 1px solid #dde2ea; border-radius: 12px; color: #27303d;
+  box-shadow: 0 14px 34px -14px rgba(10,20,30,.55); font-size: .92rem; line-height: 1.45; animation: ag-in .35s ease both; transition: opacity .35s; }
+.ag-welcome.out { opacity: 0; }
+.ag-wcheck { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #e3f3ea; color: #1e7a4c; }
+@keyframes ag-in { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-color-scheme: dark) { .ag-welcome { background: #1e2a37; border-color: #2f4050; color: #edeff4; } .ag-wcheck { background: #183326; color: #6fd08c; } }
+@media (max-width: 640px) { .ag-welcome { top: auto; bottom: calc(20px + env(safe-area-inset-bottom)); } }
+@media (prefers-reduced-motion: reduce) { .ag-welcome { animation: none; } }
+
+/* Sign-up invitation box */
+.su-inv { display: flex; gap: 12px; margin-bottom: 20px; padding: 12px 14px; background: #f4f9ff; border: 1px solid #d6e7fc; border-radius: 12px; }
+.su-inv > svg { flex: none; color: #3b82f6; margin-top: 2px; }
+.su-inv-b { min-width: 0; flex: 1; }
+.su-inv-1 { font-size: .92rem; font-weight: 600; color: var(--text); line-height: 1.45; }
+.su-inv-2 { font-size: .82rem; color: var(--text-2); line-height: 1.5; }
+.su-inv-2 code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; font-size: .8rem; letter-spacing: .04em; white-space: nowrap; }
+.su-inv-3 { display: flex; gap: 7px; margin-top: 7px; padding-top: 7px; border-top: 1px dashed #d6e7fc; font-size: .82rem; font-weight: 600; line-height: 1.45; color: #1e7a4c; }
+.su-inv-3 > svg { flex: none; margin-top: 2px; }
+.su-rnote { display: flex; gap: 7px; align-items: center; margin-top: 10px; font-size: .82rem; color: var(--text-2); line-height: 1.45; }
+.su-rnote > svg { flex: none; color: #3b82f6; }
+.su-full { margin-top: 18px; padding: 16px; background: #f7f9fb; border: 1px solid var(--edge); border-radius: 12px; display: grid; gap: 6px; }
+.su-full-h { display: flex; gap: 10px; align-items: center; font-weight: 600; color: var(--text); }
+.su-full-h > svg { color: var(--muted); }
+.su-full p { margin: 0; font-size: .88rem; color: var(--text-2); line-height: 1.6; }
+@media (prefers-color-scheme: dark) {
+  .su-inv { background: #16283a; border-color: #2b4763; } .su-inv > svg, .su-rnote > svg { color: #8cbff0; }
+  .su-inv-3 { border-color: #2b4763; color: #6fd08c; } .su-full { background: #243242; }
+}
