@@ -1,3 +1,4 @@
+import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -98,6 +99,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("all");
   const [deal, setDeal] = useState("all");
+  const [price, setPrice] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
   const [modalId, setModalId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -118,23 +120,25 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       const l = t.listing;
       if (sector !== "all" && l.sector !== sector) return false;
       if (deal !== "all" && t.dealType !== deal) return false;
+      // The range comes from the server; listings without a price show only with Any asking price.
+      if (price !== "all" && t.priceBand?.key !== price) return false;
       if (!needle) return true;
       return [l.codeName, l.refNo, l.headline, l.description, l.location, l.sector, ...l.productTags, ...l.marketTags]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(needle));
     });
-  }, [teasers, q, sector, deal]);
+  }, [teasers, q, sector, deal, price]);
 
   const current = items.find((t) => t.id === selected) ?? items[0] ?? null;
   const modal = teasers.find((t) => t.id === modalId) ?? null;
-  const hasFilter = !!q || sector !== "all" || deal !== "all";
+  const hasFilter = !!q || sector !== "all" || deal !== "all" || price !== "all";
   const th = useTranslation().language === "th";
   const matches = useBrowseMatches();
   const tagOf = (id: string) => (buyer && matches[id] ? <MatchTag side="buyer" /> : undefined);
 
   const listRef = useRef<HTMLDivElement>(null);
   const splitFixed = wide && (ownOnly || view === "split") && !isLoading && items.length > 0;
-  useEffect(() => { listRef.current?.scrollTo({ top: 0 }); }, [q, sector, deal]);
+  useEffect(() => { listRef.current?.scrollTo({ top: 0 }); }, [q, sector, deal, price]);
 
   return (
     <div className={splitFixed ? "flex h-[calc(100vh-7.5rem)] min-h-[520px] flex-col gap-6 [&>*]:shrink-0" : "space-y-6"}>
@@ -149,11 +153,13 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           <BrowseHeader role="buyer" eyebrow={<><Store className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("Browse listings")}
             toggle={<ViewToggle value={view} onChange={persist} />}
             q={q} setQ={setQ} placeholder={th ? "ค้นหากิจการ" : "Search listings"}
-            hasFilters={hasFilter} onClear={() => { setQ(""); setSector("all"); setDeal("all"); }}
+            hasFilters={hasFilter} onClear={() => { setQ(""); setSector("all"); setDeal("all"); setPrice("all"); }}
             count={th ? `แสดง ${items.length} รายการ` : `Showing ${items.length} listing${items.length === 1 ? "" : "s"}`}
             filters={<>
               <FilterPill label={t("All sectors")} value={sector} onChange={setSector} options={sectors.map((x) => ({ value: x, label: x }))} />
               <FilterPill label={t("All deal types")} value={deal} onChange={setDeal} options={dealTypes.map((x) => ({ value: x, label: x }))} />
+              <FilterPill label={th ? "ทุกช่วงราคา" : "Any asking price"} value={price} onChange={setPrice}
+                options={PRICE_BANDS.map((b) => ({ value: b.key, label: th ? `ราคา ${b.th}` : `Price ${bandInText(b.label)}` }))} />
             </>} />
           <div className="mt-[18px] empty:hidden"><PlanEndedBar /></div>
           <NdaInfoStrip role="buyer" />
