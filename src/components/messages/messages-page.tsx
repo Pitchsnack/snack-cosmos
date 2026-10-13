@@ -453,7 +453,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
           })}
         </div>
         {data?.closed ? (
-          <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{isC ? "This conversation is closed because the advisor NDA ended." : "This conversation is closed because the NDA ended."}</div>
+          <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{data.endedNote ? tr("This conversation is closed because {organisation} withdrew from the deal on {date}.").replace("{organisation}", data.endedNote.org).replace("{date}", data.endedNote.date) : isC ? "This conversation is closed because the advisor NDA ended." : "This conversation is closed because the NDA ended."}</div>
         ) : (
           <Composer placeholder={placeholder} as={as} onSend={send} />
         )}
