@@ -278,16 +278,17 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       const nda = await activeNdaIds(userId);
       rowsIn = rowsIn.filter((r) => !nda.has(r.id));
     }
-    const nda = cap === null ? new Set<string>() : await (await import("@/lib/favourites.functions")).activeNdaIds(userId);
+    const nda = role === "buyer" || cap !== null ? await (await import("@/lib/favourites.functions")).activeNdaIds(userId) : new Set<string>();
+    const { thbOf, priceFor, bandOf } = await import("@/lib/asking-price");
     const cover = await (await import("@/lib/cover-urls.server")).sectorCoverResolver();
     return Promise.all(rowsIn.map(async (r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
       // Above the plan's price cap (and no NDA yet): the card stays closed and no details are sent.
-      if (cap !== null && live.asking_price != null && Number(live.asking_price) > cap && !nda.has(r.id)) {
+      const thb = thbOf(live as never);
+      if (cap !== null && thb != null && thb / 1_000_000 > cap && !nda.has(r.id)) {
         // Only four safe fields: sector, region, ref and the price band. No picture.
         const o = open(r, live);
-        const ask = Number(live.asking_price);
-        const priceBand = ask < 50 ? "Asking under ฿50M" : ask <= 200 ? "Asking ฿50M – 200M" : "Asking over ฿200M";
+        const priceBand = `Asking ${bandOf(thb)?.label ?? ""}`.trim();
         return { id: r.id, closed: true as const, needPlan: cap < 200 ? "Investor" : "Institutional", sector: o.listing.sector, region: o.listing.location || null, refNo: o.listing.refNo || null, priceBand, capM: cap } as unknown as ReturnType<typeof open>;
       }
       const o = open(r, live);
@@ -298,7 +299,9 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: (r as { public_image_id?: string | null }).public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       (listing as { certified?: boolean }).certified = !!(st as { registration_verified_at?: string | null }).registration_verified_at;
-      return { id: r.id, listing, dealType: live.deal_type, askingPrice: live.asking_price, handover: handoverLine(live.owner_stays, live.handover_months) };
+      // Exact amount only for Admin or an approved NDA; everyone else (sellers' own previews too) gets the range.
+      const price = priceFor(live as never, role === "admin" || nda.has(r.id));
+      return { id: r.id, listing, dealType: live.deal_type, ...price, handover: handoverLine(live.owner_stays, live.handover_months) };
     }
 }
 

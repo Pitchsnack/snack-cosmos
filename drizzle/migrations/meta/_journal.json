@@ -554,6 +554,13 @@
       "when": 1791824073822,
       "tag": "0078_free_plan_daily_job",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1791902825819,
+      "tag": "0079_asking_price_thb_and_setup_fields",
+      "breakpoints": true
     }
   ]
 }

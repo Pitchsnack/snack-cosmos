@@ -1,3 +1,4 @@
+import { bandOf, thbOf } from "@/lib/asking-price";
 import { EyeOff, Plus, TrendingUp, Wallet, Users } from "lucide-react";
 import type { StartupListItem } from "@/lib/startups.functions";
 import {
@@ -14,8 +15,8 @@ import { Flagged, SectorArt } from "./bits";
 import { cn } from "@/lib/utils";
 
 function priceLabel(d: HiddenDraft) {
-  if (d.asking_price == null) return "Price on request";
-  return `฿${d.asking_price}M`;
+  const b = bandOf(thbOf(d as never));
+  return b ? b.label : "";
 }
 
 function isNew(publishedAt: string | null) {

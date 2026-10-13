@@ -1,3 +1,4 @@
+import { fmtThb } from "@/lib/asking-price";
 import { MissingText } from "@/components/my-business/missing-info";
 import { cloneElement, isValidElement, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -75,13 +76,14 @@ function Fact({ icon, children, full }: { icon: React.ReactNode; children: React
   );
 }
 
-export type ListingDeal = { dealType?: string | null; askingPrice?: number | null };
+export type ListingDeal = { dealType?: string | null; askingPrice?: number | null; priceBand?: { key: string; label: string; th: string } | null };
 
 export function dealLine(d?: ListingDeal, t: (s: string) => string = (s) => s) {
   if (!d) return "";
   return [
     d.dealType,
-    d.askingPrice == null ? t("price on request") : `฿${d.askingPrice}M ${t("asking")}`,
+    // Exact amount (baht) only reaches the browser after an approved NDA; otherwise the range.
+    d.askingPrice != null ? `${fmtThb(d.askingPrice)} ${t("asking")}` : d.priceBand ? `${t(d.priceBand.label)} ${t("asking")}` : null,
   ].filter(Boolean).join(" · ");
 }
 

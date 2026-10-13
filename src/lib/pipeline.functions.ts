@@ -1,3 +1,4 @@
+import { priceFor, thbOf } from "@/lib/asking-price";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -132,8 +133,8 @@ export const requestNda = createServerFn({ method: "POST" })
     const { requireRole, planAccess, valueCap, spendRequest } = await import("./plan-access.server");
     await requireRole(context.userId, ["buyer"]);
     const cap = valueCap(await planAccess(context.userId));
-    const ask = (hp.live as { asking_price?: number | null } | null)?.asking_price;
-    if (cap !== null && ask != null && Number(ask) > cap) throw new Error("This listing is above your plan's price range");
+    const ask = thbOf(hp.live as never);
+    if (cap !== null && ask != null && ask / 1_000_000 > cap) throw new Error("This listing is above your plan's price range");
     await spendRequest(context.userId, "nda", hp.id);
     // A withdrawn or declined request can be made again: reopen the same row.
     const { data: prev } = await sb.from("deal_pipelines").select("id, status").eq("hidden_profile_id", hp.id).eq("buyer_user_id", context.userId).maybeSingle();
@@ -221,7 +222,7 @@ export const listPipeline = createServerFn({ method: "GET" })
     const empty = { data: [] as any[] };
     // Independent lookups run in parallel.
     const [{ data: hps }, { data: sts }, { data: owners }, { data: bvs }, { data: shares }, dkList] = await Promise.all([
-      hpIds.length ? sb.from("hidden_profiles").select("id, code_name, region, asking_price, startup_id").in("id", hpIds) : empty,
+      hpIds.length ? sb.from("hidden_profiles").select("id, code_name, region, asking_price, asking_price_thb, startup_id").in("id", hpIds) : empty,
       stIds.length ? sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : empty,
       stIds.length ? sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds) : empty,
       buyerIds.length ? sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", buyerIds) : empty,
@@ -253,7 +254,8 @@ export const listPipeline = createServerFn({ method: "GET" })
         buyerName: names[r.buyer_user_id] ?? null,
         sellerName: revealed0 ? names[ownerMap[r.startup_id]] ?? null : null,
       };
-      const asking = hp.asking_price != null ? Number(hp.asking_price) : null;
+      // Sellers see their own amount; a buyer sees it only with an approved NDA.
+      const asking = data.as === "seller" || r.nda_approved_at ? thbOf(hp) : null;
       if (data.as === "seller") {
         const bv = bvMap[r.buyer_user_id] ?? {};
         return mapRow(r, {
@@ -710,7 +712,7 @@ export const sellerProfile = createServerFn({ method: "GET" })
     const sb = await admin();
     const approved = !!p.nda_approved_at;
     const [{ data: hp }, { data: st }, { data: own }] = await Promise.all([
-      sb.from("hidden_profiles").select("code_name, asking_price, deal_type, reason, headline, region").eq("id", p.hidden_profile_id).maybeSingle(),
+      sb.from("hidden_profiles").select("code_name, asking_price, asking_price_thb, deal_type, reason, headline, region").eq("id", p.hidden_profile_id).maybeSingle(),
       sb.from("startups").select("startup_name, industry, city, year_founded, company_size, website_url, short_description").eq("id", p.startup_id).maybeSingle(),
       sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id).maybeSingle(),
     ]);
@@ -727,7 +729,7 @@ export const sellerProfile = createServerFn({ method: "GET" })
       industry: st?.industry ?? null,
       city: approved ? st?.city ?? hp?.region ?? null : hp?.region ?? null,
       about: (approved ? st?.short_description : null) || hp?.headline || null,
-      askingPrice: hp?.asking_price != null ? Number(hp.asking_price) : null,
+      ...priceFor(hp as never, approved),
       dealType: hp?.deal_type ?? null,
       reason: hp?.reason ?? null,
       codeName: hp?.code_name ?? null,
