@@ -1,6 +1,7 @@
 /* Soft-launch access page, ribbon, welcome note and sign-up invitation box. */
-.ag-loading { position: fixed; inset: 0; display: grid; place-items: center; background: #f2f5f8; z-index: 50; }
-@media (prefers-color-scheme: dark) { .ag-loading { background: #151e29; } }
+.ag-loading { position: fixed; inset: 0; display: grid; place-items: center; background: #0f1b2d; z-index: 50; opacity: 0; animation: ag-fade-in .2s ease-out .35s forwards; }
+@keyframes ag-fade-in { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ag-loading { animation: none; opacity: 1; } }
 
 .ag .lg-logo { cursor: default; }
 .ag-rtop { justify-content: flex-end; }
