@@ -15,7 +15,7 @@ export type AlertDef = {
   n: number;
   group: "Approvals" | "NDA" | "Pipeline" | "Matches" | "Messages" | "Advisors";
   name: string;
-  icon: "check" | "edit" | "x" | "lock" | "unlock" | "ban" | "file" | "pen" | "spark" | "mail" | "handshake" | "user-check" | "user-x";
+  icon: "log-out" | "check" | "edit" | "x" | "lock" | "unlock" | "ban" | "file" | "pen" | "spark" | "mail" | "handshake" | "user-check" | "user-x";
   color: string;
   instant?: boolean; // ignores quiet hours
   wired: boolean; // sent automatically today
@@ -123,6 +123,16 @@ export const EMAIL_ALERTS: AlertDef[] = [
     buyer: v("The seller replies to the letter of intent", BUYER_TO, "Pipeline › Tracking › LOI", "/marketplace/pipeline",
       { subject: "{seller company} replied to your letter of intent", title: "The seller replied to your letter of intent", body: "{seller company} replied to your letter of intent. Read their answer in the app.", button: "Read the reply" },
       { subject: "{seller company} ตอบกลับหนังสือแสดงเจตจำนงของคุณ", title: "ผู้ขายตอบกลับหนังสือแสดงเจตจำนงของคุณ", body: "{seller company} ตอบกลับหนังสือแสดงเจตจำนงของคุณแล้ว อ่านคำตอบในแอป", button: "อ่านคำตอบ" }),
+  },
+  {
+    key: "deal_withdrawn", n: 15, group: "Pipeline", name: "Deal withdrawn", icon: "log-out", color: "#B91C1C", wired: true,
+    placeholders: ["{buyer company}", "{seller company}", "{listing code name}", "{organisation}", "{date}", "{NDA expiry}"],
+    seller: v("A seller or buyer withdraws from a deal", SELLER_TO, "Pipeline › Tracking › Ended", "/marketplace/pipeline?view=ended",
+      { subject: "{buyer company} withdrew from the deal for {listing code name}", title: "The buyer withdrew from the deal", body: "{organisation} withdrew from the deal on {date}. The NDA stays in force until {NDA expiry}.", button: "See the deal" },
+      { subject: "{buyer company} ถอนตัวจากดีล {listing code name}", title: "ผู้ซื้อถอนตัวจากดีล", body: "{organisation} ถอนตัวจากดีลเมื่อ {date} NDA ยังมีผลจนถึง {NDA expiry}", button: "ดูดีล" }),
+    buyer: v("A seller or buyer withdraws from a deal", BUYER_TO, "Pipeline › Tracking › Ended", "/marketplace/pipeline?view=ended",
+      { subject: "{seller company} withdrew from the deal for {listing code name}", title: "The seller withdrew from the deal", body: "{organisation} withdrew from the deal on {date}. The NDA stays in force until {NDA expiry}.", button: "See the deal" },
+      { subject: "{seller company} ถอนตัวจากดีล {listing code name}", title: "ผู้ขายถอนตัวจากดีล", body: "{organisation} ถอนตัวจากดีลเมื่อ {date} NDA ยังมีผลจนถึง {NDA expiry}", button: "ดูดีล" }),
   },
   {
     key: "criteria_match", n: 9, group: "Matches", name: "Criteria match", icon: "spark", color: "#F6A823", wired: false,

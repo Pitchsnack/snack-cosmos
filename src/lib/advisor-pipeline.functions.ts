@@ -30,6 +30,7 @@ export type AdvInvitation = {
 };
 export type AdvDeal = AdvInvitation & {
   joinedAt: string; legalAt: string | null; spaAt: string | null; paymentAt: string | null; updatedAt: string;
+  endedAt: string | null; endedBySide: "seller" | "buyer" | null;
   buyerName: string; wait: { who: "you" | "client" | "other"; what: string } | null; legalTask: string | null;
 };
 
@@ -51,7 +52,7 @@ export const listAdvisorPipeline = createServerFn({ method: "GET" })
     ]);
     const dealIds = [...new Set([...(invs ?? []), ...(das ?? [])].map((x: any) => x.deal_id))];
     if (!dealIds.length) return { me, invitations: [], deals: [] };
-    const { data: deals } = await sb.from("deal_pipelines").select("id, hidden_profile_id, startup_id, buyer_user_id, status, nda_approved_at, report_shared_at, loi_accepted_at, exclusivity_until, contact_at, legal_at, spa_at, payment_at, updated_at, wait_kind, wait_task").in("id", dealIds);
+    const { data: deals } = await sb.from("deal_pipelines").select("id, hidden_profile_id, startup_id, buyer_user_id, status, nda_approved_at, report_shared_at, loi_accepted_at, exclusivity_until, contact_at, legal_at, spa_at, payment_at, updated_at, wait_kind, wait_task, ended_at, ended_by_side").in("id", dealIds);
     const dMap = Object.fromEntries((deals ?? []).map((d: any) => [d.id, d]));
     // First report shared date only (never which report or its contents).
     const { data: shares } = await sb.from("report_shares").select("pipeline_id, shared_at").in("pipeline_id", dealIds).order("shared_at");
@@ -81,13 +82,14 @@ export const listAdvisorPipeline = createServerFn({ method: "GET" })
       const b = base(a.deal_id, a.side, a.firm_profile_id, invBy[a.invitation_id] ?? "", a.joined_at, a.invitation_id ?? a.id);
       const d = dMap[a.deal_id];
       if (!b || !d || ["declined", "withdrawn"].includes(d.status)) continue;
-      const w = S.dealWait(d);
+      const w = d.status === "ended" ? null : S.dealWait(d);
       const wait = !w ? null : w.side === a.side
         ? { who: (w.kind === "work" ? "you" : "client") as "you" | "client", what: w.kind === "work" ? w.own : w.own.replace(/\byour\b/g, "their") }
         : { who: "other" as const, what: w.others };
       deals2.push({
         ...b, joinedAt: a.joined_at, legalAt: d.legal_at, spaAt: d.spa_at, paymentAt: d.payment_at, updatedAt: d.updated_at,
         buyerName: parties[a.deal_id]!.buyer.name, wait, legalTask: d.wait_task ?? null,
+        endedAt: d.status === "ended" ? d.ended_at : null, endedBySide: d.status === "ended" ? d.ended_by_side : null,
       });
     }
     return { me, invitations, deals: deals2 };

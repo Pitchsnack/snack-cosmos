@@ -25,6 +25,12 @@ async function load(id: string) {
   if (error || !data) throw new Error("Pipeline not found");
   return data;
 }
+/** Same as load, but refuses deals that have ended (withdrawn). */
+async function loadOpen(id: string) {
+  const p = await load(id);
+  if (p.status === "ended") throw new Error("This deal has ended");
+  return p;
+}
 async function assertSeller(ctx: Ctx, startupId: string) {
   const { data } = await ctx.supabase.rpc("can_access_startup", { _user_id: ctx.userId, _startup_id: startupId });
   if (!data) throw new Error("Only the seller can do this");
@@ -41,6 +47,11 @@ async function update(id: string, patch: Record<string, unknown>) {
   if (error) throw new Error(error.message);
 }
 
+export type Withdrawal = {
+  at: string; side: "seller" | "buyer"; mine: boolean; step: number;
+  reason: string | null; comment: string | null; shared: boolean; feedbackSent: boolean;
+  byOrg: string; byName: string | null;
+};
 export type PipelineRow = {
   id: string;
   status: string;
@@ -76,6 +87,8 @@ export type PipelineRow = {
   /** Active seller share (null when none / revoked). */
   share: { financials: boolean; valuation: boolean; allowDownload: boolean; sharedAt: string } | null;
   revokedAt: string | null;
+  /** Set when either side withdrew; reason/comment only when mine or shared. */
+  withdrawal: Withdrawal | null;
   /** Reports Admin has authorised for this business (buyer: only what's shared). */
   reports: { financials: boolean; valuation: boolean };
 };
@@ -115,6 +128,7 @@ function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: numbe
     share: null,
     revokedAt: null,
     reports: { financials: false, valuation: false },
+    withdrawal: null,
   };
 }
 
@@ -290,6 +304,23 @@ export const listPipeline = createServerFn({ method: "GET" })
       it.reports = data.as === "seller" ? { financials: d.financials, valuation: d.valuation } : { financials: !!it.share?.financials, valuation: !!it.share?.valuation };
       if (data.as === "buyer" && !it.share) it.reportSharedAt = null;
     });
+    const endedIds = rows.filter((r) => r.status === "ended").map((r) => r.id);
+    if (endedIds.length) {
+      const { data: ws } = await sb.from("deal_withdrawals").select("*").in("deal_id", endedIds);
+      const wn = await userNames([...new Set((ws ?? []).map((w: any) => w.withdrawn_by))] as string[]);
+      items.forEach((it) => {
+        const w = (ws ?? []).find((x: any) => x.deal_id === it.id);
+        if (!w) return;
+        const mine = w.side === data.as;
+        const show = mine || w.shared;
+        it.withdrawal = {
+          at: w.withdrawn_at, side: w.side, mine, step: w.step_at_withdrawal,
+          reason: show ? w.reason_code : null, comment: show ? w.comment ?? null : null, shared: w.shared,
+          feedbackSent: mine && w.withdrawn_by === context.userId && w.feedback_sent,
+          byOrg: w.side === "seller" ? it.parties.sellerCompany : it.parties.buyerOrg, byName: wn[w.withdrawn_by] ?? null,
+        };
+      });
+    }
     return items;
   });
 
@@ -302,14 +333,14 @@ export const pipelineBadgeCount = createServerFn({ method: "GET" })
     const cols = "id, startup_id, status, nda_approved_at, nda_expires_at, report_requested_at, report_shared_at, loi_sent_at, loi_accepted_at, legal_at, spa_at, payment_at";
     let rows: any[] = [];
     if (data.as === "buyer") {
-      rows = (await sb.from("deal_pipelines").select(cols).eq("buyer_user_id", context.userId).not("status", "in", "(declined,withdrawn)")).data ?? [];
+      rows = (await sb.from("deal_pipelines").select(cols).eq("buyer_user_id", context.userId).not("status", "in", "(declined,withdrawn,ended)")).data ?? [];
     } else {
       const [{ data: own }, { data: su }] = await Promise.all([
         sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId),
         sb.from("startup_users").select("startup_id").eq("user_id", context.userId),
       ]);
       const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
-      if (ids.length) rows = (await sb.from("deal_pipelines").select(cols).in("startup_id", ids).not("status", "in", "(declined,withdrawn)")).data ?? [];
+      if (ids.length) rows = (await sb.from("deal_pipelines").select(cols).in("startup_id", ids).not("status", "in", "(declined,withdrawn,ended)")).data ?? [];
     }
     const seller = data.as === "seller";
     // Only seller rows waiting on a report share need report/share lookups.
@@ -347,7 +378,7 @@ export const decideNda = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.extend({ approve: z.boolean(), shareReport: z.boolean().optional() }).parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
     const now = new Date().toISOString();
     if (!data.approve) {
@@ -371,7 +402,7 @@ export const shareReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.extend({ financials: z.boolean().default(true), valuation: z.boolean().default(false), allowDownload: z.boolean().default(false) }).parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
     const { saveShare, activeShare } = await import("./report-shares.server");
     const had = await activeShare(await admin(), p.id);
@@ -384,7 +415,7 @@ export const revokeReportShare = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
     const { revokeShare } = await import("./report-shares.server");
     await revokeShare(await admin(), p, context.userId);
@@ -396,7 +427,7 @@ export const askForReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     if (p.buyer_user_id !== context.userId) throw new Error("Not your pipeline");
     await update(p.id, { report_requested_at: new Date().toISOString() });
     await log(p.id, "report_requested", context.userId);
@@ -455,7 +486,7 @@ export const sendLoi = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     if (p.buyer_user_id !== context.userId) throw new Error("Not your pipeline");
     if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
     const now = new Date().toISOString();
@@ -497,7 +528,7 @@ export const requestLoi = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
     if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
     if (p.loi_sent_at && !p.loi_accepted_at) throw new Error("The buyer has already sent a letter of intent");
@@ -523,7 +554,7 @@ export const withdrawLoiRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
     if (!p.loi_requested_at) return { ok: true };
     await update(p.id, { loi_requested_at: null, loi_requested_by: null });
@@ -535,7 +566,7 @@ export const decideLoi = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.extend({ decision: z.enum(["accept", "decline", "changes"]), consent: z.string().max(2000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
     if (!p.loi_sent_at || p.loi_accepted_at) throw new Error("No letter of intent to decide");
     const now = new Date();
@@ -559,7 +590,7 @@ export const shareStep = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.extend({ step: z.enum(["legal", "spa", "payment"]) }).parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
     const prev = { legal: p.contact_at, spa: p.legal_at, payment: p.spa_at }[data.step];
     if (!prev) throw new Error("Finish the previous step first");
@@ -643,7 +674,7 @@ export const getPipelineReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Id.parse(d))
   .handler(async ({ data, context }) => {
-    const p = await load(data.id);
+    const p = await loadOpen(data.id);
     const role = await assertParty(context, p);
     if (role === "buyer") {
       const { assertBuyerAccess } = await import("./report-shares.server");
@@ -738,4 +769,70 @@ export const sellerProfile = createServerFn({ method: "GET" })
       website: approved ? st?.website_url ?? null : null,
       person,
     };
+  });
+
+
+const SELLER_REASONS = ["offer_too_low", "terms", "other_buyer", "not_selling", "other"] as const;
+const BUYER_REASONS = ["price_too_high", "report_concerns", "other_business", "plans_changed", "timing", "other"] as const;
+const SELLER_FB = ["concerns_buyer", "buyer_slow", "offer_not_serious", "buyer_funding", "hard_to_use", "too_long", "something_else"];
+const BUYER_FB = ["concerns_seller", "seller_slow", "figures_mismatch", "price_unrealistic", "hard_to_use", "too_long", "something_else"];
+
+/** Seller or buyer leaves a deal: ends it, report access, LOI/exclusivity and chats, then tells the other side and advisors. */
+export const withdrawDeal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.extend({ reason: z.string(), comment: z.string().max(500).default(""), shared: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const p = await loadOpen(data.id);
+    const side = await assertParty(context, p);
+    if (!p.nda_approved_at || p.status === "declined") throw new Error("This deal can't be withdrawn");
+    if (p.spa_at || p.payment_at) throw new Error("Contact PitchSnack to stop this deal");
+    const allowed: readonly string[] = side === "seller" ? SELLER_REASONS : BUYER_REASONS;
+    if (!allowed.includes(data.reason)) throw new Error("Choose a reason");
+    const comment = data.comment.trim();
+    if (data.reason === "other" && !comment) throw new Error("Add a comment to explain your reason.");
+    const dates = [p.nda_approved_at, p.report_shared_at, p.loi_accepted_at, p.contact_at, p.legal_at, p.spa_at, p.payment_at];
+    const step = Math.max(0, dates.findIndex((x) => !x));
+    const sb = await admin();
+    const now = new Date().toISOString();
+    const patch: Record<string, unknown> = { status: "ended", ended_at: now, ended_by_side: side, ended_at_step: step };
+    if (p.exclusivity_until && new Date(p.exclusivity_until) > new Date()) patch.exclusivity_until = now;
+    const { error } = await sb.from("deal_pipelines").update(patch).eq("id", p.id).neq("status", "ended");
+    if (error) throw new Error(error.message);
+    await sb.from("report_shares").update({ revoked_at: now, revoked_by: context.userId }).eq("pipeline_id", p.id).is("revoked_at", null);
+    const { error: we } = await sb.from("deal_withdrawals").insert({
+      deal_id: p.id, withdrawn_by: context.userId, side, reason_code: data.reason, comment: comment || null, shared: data.shared, withdrawn_at: now, step_at_withdrawal: step,
+    });
+    if (we) throw new Error(we.message);
+    await log(p.id, "withdrawn", context.userId);
+    // Bell: the other side and every advisor on the deal. No reason or comment.
+    try {
+      const { sideUsers, bell, dealParties } = await import("./advisor-pipeline.server");
+      const parties = (await dealParties(sb, [p]))[p.id];
+      const { data: hp } = await sb.from("hidden_profiles").select("code_name").eq("id", p.hidden_profile_id).maybeSingle();
+      const org = side === "seller" ? parties.seller.name : parties.buyer.name;
+      const title = `${org} withdrew from the deal for ${hp?.code_name ?? "your listing"}`;
+      const other = await sideUsers(sb, p, side === "seller" ? "buyer" : "seller");
+      await bell(sb, other, title, "The NDA stays in force until it expires.", `/marketplace/pipeline?deal=${p.id}&view=ended`);
+      const { data: das } = await sb.from("deal_advisors").select("advisor_user_id").eq("deal_id", p.id);
+      await bell(sb, [...new Set((das ?? []).map((d: any) => d.advisor_user_id).filter(Boolean))] as string[], title, "", `/advisor/pipeline?deal=${p.id}`);
+    } catch (e) { console.error("[withdraw] bell", (e as Error).message); }
+    return { ok: true };
+  });
+
+/** Private feedback for PitchSnack after a withdrawal; once, by the person who withdrew. */
+export const sendWithdrawalFeedback = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => Id.extend({ options: z.array(z.string()).max(7), more: z.string().max(1000).default(""), improve: z.string().max(1000).default("") }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = await admin();
+    const { data: w } = await sb.from("deal_withdrawals").select("*").eq("deal_id", data.id).maybeSingle();
+    if (!w || w.withdrawn_by !== context.userId) throw new Error("Not allowed");
+    if (w.feedback_sent) throw new Error("Feedback already sent");
+    const codes = w.side === "seller" ? SELLER_FB : BUYER_FB;
+    const options = data.options.filter((o) => codes.includes(o));
+    if (!options.length && !data.more.trim() && !data.improve.trim()) throw new Error("Nothing to send");
+    const { error } = await sb.from("withdrawal_feedback").insert({ withdrawal_id: w.id, user_id: context.userId, options, more_text: data.more.trim() || null, improve_text: data.improve.trim() || null });
+    if (error) throw new Error(error.message);
+    await sb.from("deal_withdrawals").update({ feedback_sent: true }).eq("id", w.id);
+    return { ok: true };
   });

@@ -29,6 +29,7 @@ export async function activeShare(sb: any, pipelineId: string): Promise<ShareRow
 
 /** Throws unless the buyer may open (and, if asked, download) this report. */
 export async function assertBuyerAccess(sb: any, p: any, kind: ReportKind | "any", download = false) {
+  if (p?.status === "ended") throw new Error("This deal has ended");
   if (!ndaActive(p)) throw new Error("The NDA is not active");
   const [d, s] = await Promise.all([deliveredKinds(sb, p.startup_id), activeShare(sb, p.id)]);
   if (!s) throw new Error("The seller hasn't shared a report with you");

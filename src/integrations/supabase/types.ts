@@ -1759,6 +1759,9 @@ export type Database = {
           buyer_user_id: string
           contact_at: string | null
           created_at: string
+          ended_at: string | null
+          ended_at_step: number | null
+          ended_by_side: string | null
           exclusivity_until: string | null
           hidden_profile_id: string
           id: string
@@ -1798,6 +1801,9 @@ export type Database = {
           buyer_user_id: string
           contact_at?: string | null
           created_at?: string
+          ended_at?: string | null
+          ended_at_step?: number | null
+          ended_by_side?: string | null
           exclusivity_until?: string | null
           hidden_profile_id: string
           id?: string
@@ -1837,6 +1843,9 @@ export type Database = {
           buyer_user_id?: string
           contact_at?: string | null
           created_at?: string
+          ended_at?: string | null
+          ended_at_step?: number | null
+          ended_by_side?: string | null
           exclusivity_until?: string | null
           hidden_profile_id?: string
           id?: string
@@ -2057,6 +2066,53 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_withdrawals: {
+        Row: {
+          comment: string | null
+          deal_id: string
+          feedback_sent: boolean
+          id: string
+          reason_code: string
+          shared: boolean
+          side: string
+          step_at_withdrawal: number
+          withdrawn_at: string
+          withdrawn_by: string
+        }
+        Insert: {
+          comment?: string | null
+          deal_id: string
+          feedback_sent?: boolean
+          id?: string
+          reason_code: string
+          shared?: boolean
+          side: string
+          step_at_withdrawal: number
+          withdrawn_at?: string
+          withdrawn_by: string
+        }
+        Update: {
+          comment?: string | null
+          deal_id?: string
+          feedback_sent?: boolean
+          id?: string
+          reason_code?: string
+          shared?: boolean
+          side?: string
+          step_at_withdrawal?: number
+          withdrawn_at?: string
+          withdrawn_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_withdrawals_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: true
+            referencedRelation: "deal_pipelines"
             referencedColumns: ["id"]
           },
         ]
@@ -5882,6 +5938,44 @@ export type Database = {
             columns: ["startup_id"]
             isOneToOne: false
             referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withdrawal_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          improve_text: string | null
+          more_text: string | null
+          options: string[]
+          user_id: string
+          withdrawal_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          improve_text?: string | null
+          more_text?: string | null
+          options?: string[]
+          user_id: string
+          withdrawal_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          improve_text?: string | null
+          more_text?: string | null
+          options?: string[]
+          user_id?: string
+          withdrawal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_feedback_withdrawal_id_fkey"
+            columns: ["withdrawal_id"]
+            isOneToOne: true
+            referencedRelation: "deal_withdrawals"
             referencedColumns: ["id"]
           },
         ]
