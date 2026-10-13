@@ -91,6 +91,7 @@ export async function pipelineAlert(pipelineId: string, event: string) {
     loi_accepted: ["loi", "buyer"],
     loi_changes_requested: ["loi", "buyer"],
     loi_declined: ["loi", "buyer"],
+    withdrawn: ["deal_withdrawn", "buyer"],
   };
   const m = map[event];
   if (!m) return;
@@ -111,8 +112,15 @@ export async function pipelineAlert(pipelineId: string, event: string) {
       "seller company": ndaOk ? st?.startup_name ?? hp?.code_name : hp?.code_name,
       "report name": "verified financial report",
       date: fmtDate(),
+      organisation: "",
+      "NDA expiry": p.nda_expires_at ? fmtDate(new Date(p.nda_expires_at)) : "",
     };
-    const [alert, role] = m;
+    let [alert, role] = m;
+    if (event === "withdrawn") {
+      // Sent to the side that didn't withdraw; no reason or comment.
+      role = p.ended_by_side === "buyer" ? "seller" : "buyer";
+      vars.organisation = String(p.ended_by_side === "buyer" ? vars["buyer company"] : vars["seller company"]);
+    }
     const details: [string, string][] = [];
     if (alert === "nda_request") details.push(["Buyer", `${buyerCode}`], ["Verified", "Yes"]);
     if (alert === "nda_approved") details.push(["Listing", vars["listing code name"]], ["Approved", fmtDate()], ...(p.nda_expires_at ? [["Valid until", fmtDate(new Date(p.nda_expires_at))] as [string, string]] : []));
