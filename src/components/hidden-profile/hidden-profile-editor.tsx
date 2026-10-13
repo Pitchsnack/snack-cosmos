@@ -1,3 +1,4 @@
+import { bandInText, bandOf, fmtThb, thbWords } from "@/lib/asking-price";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Sparkles, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -235,11 +236,10 @@ export function HiddenProfileEditor({
 
         <Section n={3} title="Deal terms">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Asking price (฿M)">
-              <Input type="number" min={0} disabled={d.asking_price == null} value={d.asking_price ?? ""} onChange={(e) => set("asking_price", e.target.value === "" ? 0 : Number(e.target.value))} />
-              <label className="mt-1 flex items-center gap-1.5 text-xs">
-                <input type="checkbox" checked={d.asking_price == null} onChange={(e) => set("asking_price", e.target.checked ? null : 0)} /> Price on request
-              </label>
+            <Field label="Asking price (Estimate)">
+              <Input inputMode="numeric" placeholder="e.g. 120,000,000" value={d.asking_price_thb ? fmtThb(d.asking_price_thb) : ""}
+                onChange={(e) => { const x = e.target.value.replace(/\D/g, "").slice(0, 13); set("asking_price_thb", x ? Number(x) : null); }} />
+              {d.asking_price_thb ? <p className="mt-1 text-xs text-muted-foreground">{thbWords(d.asking_price_thb)} · buyers see {bandInText(bandOf(d.asking_price_thb)?.label ?? "")}</p> : null}
             </Field>
           </div>
           <Field label="Deal type">
