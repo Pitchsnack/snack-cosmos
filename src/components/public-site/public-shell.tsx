@@ -75,7 +75,7 @@ function TopBar({ current, talkHref }: { current: keyof typeof NAV | null; talkH
           {links.map(([k, to]) => (
             k === "home" && onHome
               ? <a key={k} href="#top" aria-current="page" className="is-cur">{t(NAV[k])}</a>
-              : <Link key={k} to={to} preload="intent" aria-current={current === k ? "page" : undefined} className={current === k ? "is-cur" : undefined}>{t(NAV[k])}</Link>
+              : <Link key={k} to={to} preload="viewport" aria-current={current === k ? "page" : undefined} className={current === k ? "is-cur" : undefined}>{t(NAV[k])}</Link>
           ))}
         </nav>
         <div className="ph-ctrls">
@@ -142,8 +142,8 @@ function Footer({ current }: { current?: "contact" }) {
       <div className="ph-wrap">
         <p className="ph-legal">{t(FOOTER.legal)}</p>
         <nav className="ph-foot-links" aria-label="Footer">
-          {FOOTER.links.map(([to, l]) => <Link key={to} to={to} preload="intent">{t(l)}</Link>)}
-          <Link to="/contact" preload="intent" aria-current={current === "contact" ? "page" : undefined}>{t(FOOTER.contact)}</Link>
+          {FOOTER.links.map(([to, l]) => <Link key={to} to={to} preload="viewport">{t(l)}</Link>)}
+          <Link to="/contact" preload="viewport" aria-current={current === "contact" ? "page" : undefined}>{t(FOOTER.contact)}</Link>
           <PrivacyLink>{t(FOOTER.privacy)}</PrivacyLink>
         </nav>
       </div>

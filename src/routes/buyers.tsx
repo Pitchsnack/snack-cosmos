@@ -20,6 +20,7 @@ export const Route = createFileRoute("/buyers")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  loader: () => getHomeHeroImages().catch(() => ({ seller: null, investor: null })),
+  // Fetch on first page load only; on in-app clicks the page fetches its own pictures so the switch is instant.
+  loader: () => (typeof window === "undefined" ? getHomeHeroImages().catch(() => ({ seller: null, investor: null })) : undefined),
   component: BuyersRoute,
 });
