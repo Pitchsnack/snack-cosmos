@@ -12,6 +12,10 @@ import { cn } from "@/lib/utils";
 import { PrivateNote } from "./private-note";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
 import type { SampleReportData } from "@/lib/sample-report";
+import { FinancialsOverview } from "@/components/financials/financials-overview";
+import { StatementTable } from "@/components/financials/statement-table";
+import { RatiosTable } from "@/components/financials/ratios-table";
+import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
 import {
   getPipelineReport, compareReports, investorProfile, sellerProfile, decideLoi,
   type PipelineRow, type ReportData,
@@ -186,7 +190,25 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                   ))}
                 </div>
               </div>
-              {finTab === "overview" && (<>
+              {!sample && data.full && finTab === "overview" && (
+                <div className="pt-3"><FinancialsOverview years={years} currency="THB" income={data.full.income} position={data.full.position} ratios={data.full.ratios} /></div>
+              )}
+              {!sample && data.full && finTab === "statements" && (
+                <div className="space-y-5 pt-3">
+                  <Caption>Income statement</Caption>
+                  <StatementTable years={years} rows={INCOME_ROWS} items={data.full.income} />
+                  <Caption>Financial position</Caption>
+                  <StatementTable years={years} rows={POSITION_ROWS} items={data.full.position} />
+                  {data.full.cashFlow.length > 0 && (<>
+                    <Caption>Cash flow</Caption>
+                    <StatementTable years={years} items={data.full.cashFlow} sections={CASH_FLOW_SECTIONS.map((x) => ({ title: x.title, rows: x.rows }))} />
+                  </>)}
+                </div>
+              )}
+              {!sample && data.full && finTab === "ratios" && (
+                <div className="pt-3"><RatiosTable years={years} ratios={data.full.ratios} /></div>
+              )}
+              {(sample || !data.full) && finTab === "overview" && (<>
               <Caption>Key finance summary · FY{last}</Caption>
               <div className="grid grid-cols-4 gap-3">
                 {([
@@ -210,7 +232,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 <Rows rows={[["Employees", data.info.employees], ["Directors", data.info.directors], ["Shareholders", data.info.shareholders]]} />
               </div>
               </>)}
-              {finTab === "statements" && (<>
+              {(sample || !data.full) && finTab === "statements" && (<>
               <Caption>Income statement · ฿ million</Caption>
               <FigTable years={years} yl={yl} rows={[
                 ["Revenue", (y) => metrics(data, y).revenue, null],
@@ -227,7 +249,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 ["Equity", (y) => metrics(data, y).equity, null],
               ]} />
               </>)}
-              {finTab === "ratios" && (<>
+              {(sample || !data.full) && finTab === "ratios" && (<>
               <Caption>Financial ratios · FY{last}</Caption>
               <div className="grid grid-cols-4 gap-3">
                 {(allRatios ? data.ratios : data.ratios.slice(0, 8)).map((r) => (
