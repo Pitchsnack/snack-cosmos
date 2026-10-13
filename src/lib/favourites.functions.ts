@@ -1,3 +1,4 @@
+import { priceFor } from "@/lib/asking-price";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -146,7 +147,7 @@ export const listFavourites = createServerFn({ method: "GET" })
       const at = state === "approved" ? p.nda_approved_at : state === "requested" ? p.nda_requested_at : savedAt.get(r.id)!;
       return {
         id: r.id, status, saved: savedAt.has(r.id), at, pipelineId: p?.id ?? null, ndaRequestedAt: p?.nda_requested_at ?? null,
-        listing, dealType: live.deal_type, askingPrice: live.asking_price, handover: handoverLine(live.owner_stays, live.handover_months), priv,
+        listing, dealType: live.deal_type, ...priceFor(live as never, state === "approved"), handover: handoverLine(live.owner_stays, live.handover_months), priv,
       };
     });
     const rank = { approved: 0, requested: 1, saved: 2 } as const;
