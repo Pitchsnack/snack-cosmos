@@ -91,10 +91,12 @@ function MyStartupsPageInner() {
   const favOnly = !!s.fav;
   const { ids: favIds } = useFavoriteStartups();
 
-  const [modalId, setModalId] = useState<string | null>(s.panel ?? null);
+  const [modalId, setModalId] = useState<string | null>(s.edit === "startup" ? null : s.panel ?? null);
   useEffect(() => {
-    if (s.panel) setModalId(s.panel);
-  }, [s.panel]);
+    // Preview follows the URL only; while editing (or after the editor closes) it stays shut.
+    if (s.edit === "startup" || !s.panel) setModalId(null);
+    else setModalId(s.panel);
+  }, [s.panel, s.edit]);
   const closeStartup = () => {
     setModalId(null);
     if (s.panel) navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }), replace: true });
