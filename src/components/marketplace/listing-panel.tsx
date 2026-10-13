@@ -1,3 +1,4 @@
+import { fmtThb } from "@/lib/asking-price";
 import { usePlanStrip, requestLock } from "@/components/marketplace/plan-strip";
 import { ListingPill } from "@/components/hidden-profile/public-listing-card";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ export type Teaser = {
   listing: PublicListing;
   dealType?: string | null;
   askingPrice?: number | null;
+  priceBand?: { key: string; label: string; th: string } | null;
   handover?: string | null;
 };
 
@@ -167,7 +169,7 @@ export function DealTerms({ t }: { t: Teaser }) {
       <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Deal terms")}</h4>
       <KV rows={[
         [tr("Deal type"), t.dealType ?? null],
-        [tr("Asking price"), t.askingPrice == null ? tr("On request") : `฿${t.askingPrice}M`],
+        [tr("Asking price"), t.askingPrice != null ? fmtThb(t.askingPrice) : t.priceBand ? tr(t.priceBand.label) : null],
         [tr("Owner handover"), t.handover ?? null],
         [tr("Reason"), x.reason ?? null],
         [tr("Buyer interest"), interest],
