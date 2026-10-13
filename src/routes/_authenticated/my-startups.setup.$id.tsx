@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SellerWizard } from "@/components/startups/seller-wizard";
 import { getSellerSetup, saveSellerSetup, type SellerSetup } from "@/lib/seller-setup.functions";
-import { emptyDraft, firstUnanswered, SELLER_STEPS, type SellerDraft } from "@/lib/seller-wizard";
+import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, type SellerDraft } from "@/lib/seller-wizard";
 import { z } from "zod";
 import { useSessionContext } from "@/hooks/use-session-context";
 
@@ -32,6 +32,9 @@ function toDraft(s: SellerSetup, open?: string): SellerDraft {
     ...emptyDraft(), role: s.role, name: s.name, reg: s.reg, web: s.web, year: s.year, city: s.city,
     rev: s.rev, size: s.size, sector: s.sector, pick: s.pick, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
     reached: s.reached,
+    hasLogo: !!s.media.logoPath, photos: s.media.slots.length,
+    deal: s.listing.deal, stays: s.listing.stays, months: s.listing.months, price: s.listing.price,
+    listingName: s.listing.name, nameOk: s.listing.name ? true : undefined,
   };
   // Opens the step asked for, else the first question without an answer (skipped included), else Review.
   const key = open && [...SELLER_STEPS.map((x) => x.id), "review"].includes(open as never) ? open : firstUnanswered(d, s.fromSignup);
@@ -53,7 +56,7 @@ function Page() {
   const [fill, setFill] = useState<string | null>(null);
   const payload = (d: SellerDraft, done?: boolean) => ({
     id, role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size,
-    sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never,
+    sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never, listing: listingPayload(d),
   });
   const persist = (d: SellerDraft) => {
     if (timer.current) window.clearTimeout(timer.current);
@@ -70,6 +73,7 @@ function Page() {
       initial={initial}
       fromSignup={data.fromSignup}
       persist={persist}
+      media={{ startupId: id, tenantId: data.tenantId, initial: data.media, facts: { name: data.name, web: data.web } }}
       title="Set up your business"
       onExit={leave}
       onCancel={leave}

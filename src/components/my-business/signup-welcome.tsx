@@ -53,7 +53,7 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
   if (!mine) return null;
   const c = mine.company;
   const draft: SellerDraft | null = setup ? { ...emptyDraft(), role: setup.role, name: setup.name, reg: setup.reg, web: setup.web, year: setup.year, city: setup.city,
-    rev: setup.rev, size: setup.size, sector: setup.sector, licences: setup.licences as SellerDraft["licences"], iso: setup.iso } : null;
+    rev: setup.rev, size: setup.size, sector: setup.sector, licences: setup.licences as SellerDraft["licences"], iso: setup.iso, hasLogo: !!setup.media.logoPath, photos: setup.media.slots.length, deal: setup.listing.deal, stays: setup.listing.stays, months: setup.listing.months, price: setup.listing.price, listingName: setup.listing.name, nameOk: setup.listing.name ? true : undefined } : null;
   const sellerOpen = role === "seller" && !!setup && !setup.setupDoneAt;
   const showBoxes = role === "seller" ? sellerOpen : !setupDone;
   const opts = role === "seller" ? SELLER_OPTS : role === "buyer" ? BUYER_OPTS : ADVISOR_OPTS;
@@ -152,7 +152,7 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
   const L = (en: string, t: string) => (th ? t : en);
   const navigate = useNavigate();
   const draft: SellerDraft = { ...emptyDraft(), role: setup.role, name: setup.name, reg: setup.reg, web: setup.web, year: setup.year, city: setup.city,
-    rev: setup.rev, size: setup.size, sector: setup.sector, licences: setup.licences as SellerDraft["licences"], iso: setup.iso, addr: setup.addr, reached: setup.reached };
+    rev: setup.rev, size: setup.size, sector: setup.sector, licences: setup.licences as SellerDraft["licences"], iso: setup.iso, addr: setup.addr, reached: setup.reached, hasLogo: !!setup.media.logoPath, photos: setup.media.slots.length, deal: setup.listing.deal, stays: setup.listing.stays, months: setup.listing.months, price: setup.listing.price, listingName: setup.listing.name, nameOk: setup.listing.name ? true : undefined };
   // Answered = the saved answer is valid (a skipped question isn't answered).
   const keys = sellerQuestionKeys(draft, setup.fromSignup);
   const ok = sellerValid(draft);

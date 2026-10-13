@@ -12,7 +12,7 @@ import { createMyBusiness } from "@/lib/seller-setup.functions";
 import { useStartups } from "@/hooks/use-startups";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import {
-  clearDraft, draftToPrefill, emptyDraft, loadDraft, firstOpenStep, type SellerDraft, type SellerPrefill,
+  clearDraft, draftToPrefill, emptyDraft, loadDraft, firstOpenStep, listingPayload, type SellerDraft, type SellerPrefill,
 } from "@/lib/seller-wizard";
 
 export const Route = createFileRoute("/_authenticated/my-startups/new")({
@@ -49,7 +49,7 @@ function NewMyStartupPage() {
   const finish = async (d: SellerDraft) => {
     if (!sellerAccount) { setPrefill(draftToPrefill(d)); return; }
     try {
-      const { id } = await createMine({ data: { role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size, sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr } });
+      const { id } = await createMine({ data: { role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size, sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr, listing: listingPayload(d) } });
       if (userId) clearDraft(userId);
       if (d.web.trim()) { setFill({ id, web: d.web }); return; }
       navigate({ to: "/my-startups/$id/edit", params: { id } });
@@ -57,7 +57,7 @@ function NewMyStartupPage() {
   };
 
   useEffect(() => {
-    if (userId && !initial) { const saved = loadDraft(userId); setInitial(saved ? { ...saved, step: firstOpenStep(saved) } : emptyDraft()); }
+    if (userId && !initial) { const saved = loadDraft(userId); const base = saved ? { ...saved, noUpload: true } : { ...emptyDraft(), noUpload: true }; setInitial({ ...base, step: firstOpenStep(base) }); }
   }, [userId, initial]);
 
   return (
