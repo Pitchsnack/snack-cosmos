@@ -63,6 +63,8 @@ export interface HiddenDraft {
   highlights: string[];
   customers_summary: string;
   asking_price: number | null;
+  /** Asking price (Estimate), whole baht. The only price screens read and write. */
+  asking_price_thb?: number | null;
   stake_pct: number | null;
   deal_type: string | null;
   structure: string | null;
@@ -370,6 +372,7 @@ export function pickDraft(r: Partial<HiddenDraft>): HiddenDraft {
     highlights: [...(r.highlights ?? []), "", "", "", ""].slice(0, 4),
     customers_summary: r.customers_summary ?? "",
     asking_price: r.asking_price ?? null,
+    asking_price_thb: r.asking_price_thb != null ? Number(r.asking_price_thb) : r.asking_price != null && Number(r.asking_price) > 0 ? Math.round(Number(r.asking_price) * 1_000_000) : null,
     stake_pct: r.stake_pct ?? null,
     deal_type: r.deal_type ?? null,
     structure: r.structure ?? null,
