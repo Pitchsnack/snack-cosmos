@@ -590,17 +590,20 @@ export type ReportData = {
   ratios: { code: string; label: string; value: number | null; unit: string | null }[];
   info: { registration: string | null; capital: number | null; founded: string | null; employees: string | null; directors: string | null; shareholders: string | null };
   valuationShared: boolean;
+  /** Full filed line items, same shape the seller's My Financials uses. */
+  full: { income: StatementItem[]; position: StatementItem[]; cashFlow: StatementItem[]; ratios: RatioItem[] };
 };
 
 async function buildReport(startupId: string): Promise<ReportData> {
   const sb = await admin();
-  const [inc, pos, rat, ci, st, vo] = await Promise.all([
-    sb.from("income_statement_items").select("fiscal_year, item_code, amount").eq("startup_id", startupId),
-    sb.from("financial_position_items").select("fiscal_year, item_code, amount").eq("startup_id", startupId),
-    sb.from("financial_ratios").select("fiscal_year, ratio_code, ratio_label, value, unit, display_order").eq("startup_id", startupId).order("display_order"),
+  const [inc, pos, rat, ci, st, vo, cf] = await Promise.all([
+    sb.from("income_statement_items").select("fiscal_year, item_code, item_label, amount, percent_change, display_order, is_total").eq("startup_id", startupId),
+    sb.from("financial_position_items").select("fiscal_year, item_code, item_label, amount, percent_change, display_order, is_total").eq("startup_id", startupId),
+    sb.from("financial_ratios").select("fiscal_year, ratio_category, ratio_code, ratio_label, value, unit, display_order").eq("startup_id", startupId).order("display_order"),
     sb.from("company_info_th").select("registration_number, registered_capital_thb, registration_date, authorized_signatory_th").eq("startup_id", startupId).maybeSingle(),
     sb.from("startups").select("registered_number, registered_capital, year_founded, company_size").eq("id", startupId).maybeSingle(),
     sb.from("report_orders").select("kind, status").eq("startup_id", startupId).eq("status", "delivered"),
+    sb.from("cash_flow_items").select("fiscal_year, item_code, item_label, amount, percent_change, display_order, is_total, section").eq("startup_id", startupId),
   ]);
   const income: ReportData["income"] = {}; const position: ReportData["position"] = {};
   const ys = new Set<number>();
@@ -609,6 +612,14 @@ async function buildReport(startupId: string): Promise<ReportData> {
   const years = [...ys].sort((a, b) => a - b).slice(-5);
   const last = years[years.length - 1];
   const ratios = (rat.data ?? []).filter((r: any) => r.fiscal_year === last).map((r: any) => ({ code: r.ratio_code, label: r.ratio_label, value: r.value != null ? Number(r.value) : null, unit: r.unit }));
+  const nn = (v: unknown) => (v == null ? null : Number(v));
+  const items = (rows: any[] | null): StatementItem[] => (rows ?? []).filter((r) => years.includes(r.fiscal_year)).map((r) => ({
+    fiscal_year: r.fiscal_year, item_code: r.item_code, item_label: r.item_label, amount: nn(r.amount), percent_change: nn(r.percent_change),
+    display_order: r.display_order ?? 0, is_total: !!r.is_total, section: r.section ?? null,
+  }));
+  const fullRatios: RatioItem[] = (rat.data ?? []).filter((r: any) => years.includes(r.fiscal_year)).map((r: any) => ({
+    fiscal_year: r.fiscal_year, ratio_category: r.ratio_category, ratio_code: r.ratio_code, ratio_label: r.ratio_label, value: nn(r.value), unit: r.unit, display_order: r.display_order ?? 0,
+  }));
   return {
     years, income, position, ratios,
     info: {
@@ -620,6 +631,7 @@ async function buildReport(startupId: string): Promise<ReportData> {
       shareholders: null,
     },
     valuationShared: (vo.data ?? []).some((o: any) => o.kind === "valuation" || o.kind === "bundle"),
+    full: { income: items(inc.data), position: items(pos.data), cashFlow: items(cf.data), ratios: fullRatios },
   };
 }
 
