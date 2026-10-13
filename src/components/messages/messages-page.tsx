@@ -16,6 +16,8 @@ import { NdaDialog, LoiDialog, ReportViewer, InvestorProfile, SellerProfile } fr
 import { AdvisorNdaDialog, AdvisorProfileDialog } from "@/components/pipeline/advisor-bits";
 import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
+import { tr } from "@/i18n/language";
+import { HatMark } from "./hat-mark";
 
 /**
  * Marketplace › Messages for every tab (seller, buyer, advisor). Seller–buyer
@@ -31,7 +33,6 @@ type Conv = {
 };
 type Dialog = null | "nda" | "loi" | "report" | "profile" | "advProfile" | { advNda: { dealId: string; side: Side } };
 
-const HELP = "PitchSnack HelpDesk";
 const DOT: Record<Role, string> = { seller: "#F6A823", buyer: "#4338CA", advisor: "#0F766E" };
 const TAG: Record<Role, string> = { seller: "bg-[#FEF3DE] text-[#8A4B06]", buyer: "bg-[#EEF0FF] text-[#4338CA]", advisor: "bg-[#E0F5F2] text-[#0F766E]" };
 const TEXT: Record<Role, string> = { seller: "text-[#8A4B06]", buyer: "text-[#4338CA]", advisor: "text-[#0F766E]" };
@@ -115,7 +116,7 @@ export function MessagesPage() {
     const t = (c: Conv) => c.last?.at ?? c.startAt ?? "0";
     out.sort((a, b) => t(b).localeCompare(t(a)));
     const help = sums.find((s) => s.key.startsWith("a:"));
-    if (help) out.unshift({ key: help.key, kind: "a", p: null, adv: null, meta: null, who: null, name: HELP, person: null, sub: "PitchSnack M&A advisor", codeName: null, unread: help.key === sel ? 0 : help.unread, last: help.last, startAt: null });
+    if (help) out.unshift({ key: help.key, kind: "a", p: null, adv: null, meta: null, who: null, name: tr("Help desk"), person: null, sub: "", codeName: null, unread: help.key === sel ? 0 : help.unread, last: help.last, startAt: null });
     return out;
   }, [rows, advData, sums, as, sel]);
 
@@ -166,7 +167,21 @@ export function MessagesPage() {
           </label>
           <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
             {shown.length === 0 && <div className="py-8 text-center text-[13px] text-[#9CA3AF]">{convs.length ? "No conversations match." : "No conversations yet."}</div>}
-            {shown.map((c) => (
+            {shown.map((c) => c.kind === "a" ? (
+              <div key={c.key}>
+                <button
+                  onClick={() => { setSel(c.key); setMobileChat(true); setPanel(false); }}
+                  aria-label={c.last ? (c.unread ? `${tr("Help desk")}, ${tr("new message")}, ${listTime(c.last.at)}` : `${tr("Help desk")}, ${listTime(c.last.at)}`) : tr("Help desk")}
+                  className={cn("flex h-11 w-full items-center rounded-[10px] pl-[14px] pr-3 text-left hover:bg-[#F2F3F6] dark:hover:bg-white/5", c.key === sel && "bg-[#F2F3F6] dark:bg-white/5")}
+                >
+                  <HatMark width={18} />
+                  <span className="ml-2 whitespace-nowrap text-[14px] font-medium text-[#374151] dark:text-[#E5E7EB]">{tr("Help desk")}</span>
+                  {c.unread > 0 && <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />}
+                  <span className={cn("shrink-0 text-[12px] text-[#9CA3AF]", c.unread > 0 ? "ml-2" : "ml-auto pl-2")}>{c.last ? listTime(c.last.at) : ""}</span>
+                </button>
+                <div className="mx-2 my-[5px] h-px bg-[#F0F1F4] dark:bg-white/10" />
+              </div>
+            ) : (
               <button
                 key={c.key}
                 onClick={() => { setSel(c.key); setMobileChat(true); setPanel(false); }}
@@ -320,14 +335,14 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
   const dates = adv ? advDates(adv) : p ? stepDates(p) : null;
   const step = dates ? (() => { const i = dates.findIndex((x) => !x); return i === -1 ? 7 : i; })() : p ? currentStep(p) : 0;
   const otherRole: Role | null = c.kind === "a" ? null : isC ? (as === "advisor" ? meta!.withSide : "advisor") : seller ? "buyer" : "seller";
-  const placeholder = c.kind === "a" ? "Message PitchSnack Help" : others.length >= 2 ? `Message ${c.name}` : `Message ${others[0]?.name ?? c.person ?? c.name}`;
+  const placeholder = c.kind === "a" ? `${tr("Message")} ${tr("Help desk")}` : others.length >= 2 ? `Message ${c.name}` : `Message ${others[0]?.name ?? c.person ?? c.name}`;
   const files = msgs.flatMap((m) => m.files.map((f) => ({ ...f, at: m.at }))).reverse();
   const hasPanel = c.kind !== "a";
   const pipeHref = as === "advisor" ? `/advisor/pipeline?deal=${meta?.dealId}` : `/marketplace/pipeline?deal=${meta?.dealId ?? p?.id}`;
   const shownNames = others.slice(0, 3);
 
   const line2 = c.kind === "a" ? (
-    <span>PitchSnack team · we usually reply within 1 business day</span>
+    <span>{tr("PitchSnack team · we usually reply within 1 business day")}</span>
   ) : (
     <>
       {shownNames.map((m, i) => (
@@ -363,6 +378,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
           <button onClick={onBack} className="-ml-2 flex items-center text-[13px] font-medium text-[#2563EB] min-[760px]:hidden"><ChevronLeft className="h-4 w-4" />Messages</button>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
+              {c.kind === "a" && <HatMark width={20} />}
               <span className="truncate text-[15px] font-semibold text-[#111827]">{c.name}</span>
               {otherRole && <RoleTag role={otherRole} />}
             </div>
@@ -419,10 +435,10 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
                 </div>
               );
             const help = c.kind === "a";
-            const name = help ? "PitchSnack Help" : who?.name ?? c.name;
+            const name = help ? tr("Help desk") : who?.name ?? c.name;
             return (
               <div key={it.id} className="my-2 flex max-w-[70%] gap-2.5">
-                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", help ? "bg-[#192957] text-white" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{help ? "P" : initials(name)}</span>
+                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", help ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{help ? <HatMark width={16} /> : initials(name)}</span>
                 <div className="flex min-w-0 flex-col items-start gap-1">
                   <div className="flex flex-wrap items-center gap-x-1.5 px-1 text-[12px] leading-[18px]">
                     <span className="font-semibold text-[#111827]">{name}</span>

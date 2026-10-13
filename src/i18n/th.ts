@@ -374,4 +374,8 @@ const TH_BASE: Record<string, string> = {
 
 
 // Existing app wording wins where both define a line.
-export const TH: Record<string, string> = { ...TH_WIZARDS, ...TH_BASE };
+export const TH: Record<string, string> = { ...TH_WIZARDS, ...TH_BASE,
+  "Help desk": "ฝ่ายช่วยเหลือ",
+  "PitchSnack Help desk": "ฝ่ายช่วยเหลือ PitchSnack",
+  "new message": "ข้อความใหม่",
+};
