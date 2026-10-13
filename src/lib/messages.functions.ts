@@ -37,12 +37,24 @@ async function myPipelineIds(sb: any, userId: string, as: "seller" | "buyer" | "
   return (data ?? []).map((r: any) => r.id as string);
 }
 
+/** "This conversation is closed because {org} withdrew from the deal on {date}." */
+async function endedNote(sb: any, dealId: string) {
+  const { data: w } = await sb.from("deal_withdrawals").select("side, withdrawn_at").eq("deal_id", dealId).maybeSingle();
+  const { data: d } = await sb.from("deal_pipelines").select("*").eq("id", dealId).maybeSingle();
+  if (!w || !d) return null;
+  const { dealParties } = await import("./advisor-pipeline.server");
+  const pp = (await dealParties(sb, [d]))[d.id];
+  const date = new Date(w.withdrawn_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Bangkok" });
+  return { org: w.side === "seller" ? pp.seller.name : pp.buyer.name, date };
+}
+
 /** Throws unless the caller belongs to the thread. Returns whether it is closed. */
 async function assertMember(ctx: { supabase: any; userId: string }, key: string) {
   if (key.startsWith("c:")) {
     const T = await import("./message-threads.server");
     const m = await T.daMember(await admin(), ctx.userId, key);
     if (!m) throw new Error("You are not part of this conversation");
+    if (m.deal?.status === "ended") return { closed: true, endedNote: await endedNote(await admin(), m.deal.id) };
     return { closed: m.closed };
   }
   const { data } = await ctx.supabase.rpc("can_read_message_thread", { _uid: ctx.userId, _key: key });
@@ -50,6 +62,7 @@ async function assertMember(ctx: { supabase: any; userId: string }, key: string)
   if (key.startsWith("p:")) {
     const sb = await admin();
     const { data: p } = await sb.from("deal_pipelines").select("status, nda_approved_at, nda_expires_at").eq("id", key.slice(2)).single();
+    if (p?.status === "ended") return { closed: true, endedNote: await endedNote(sb, key.slice(2)) };
     const exp = p?.nda_expires_at ?? (p?.nda_approved_at ? new Date(new Date(p.nda_approved_at).getTime() + 730 * 86_400_000).toISOString() : null);
     const closed = ["revoked", "expired", "declined"].includes(p?.status) || (!!exp && new Date(exp) < new Date());
     return { closed };
@@ -130,7 +143,7 @@ export const threadMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ key: Key }).parse(d))
   .handler(async ({ data, context }) => {
-    const { closed } = await assertMember(context, data.key);
+    const { closed, endedNote } = await assertMember(context, data.key) as { closed: boolean; endedNote?: { org: string; date: string } | null };
     const sb = await admin();
     const [{ data: msgs }, { data: reads }, { data: me }, { data: prof }] = await Promise.all([
       sb.from("marketplace_messages").select("*").eq("thread_key", data.key).order("created_at", { ascending: true }).limit(2000),
@@ -146,6 +159,7 @@ export const threadMessages = createServerFn({ method: "GET" })
     const otherRead = (reads ?? []).filter((r: any) => !members.length || otherIds.has(r.user_id)).map((r: any) => r.read_at as string).sort().pop() ?? null;
     return {
       closed,
+      endedNote: endedNote ?? null,
       meId: context.userId,
       members,
       myRole,
@@ -173,7 +187,7 @@ export const sendMessage = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ key: Key, body: z.string().max(5000), files: z.array(FileZ).max(10).default([]) }).parse(d))
   .handler(async ({ data, context }) => {
     const { closed } = await assertMember(context, data.key);
-    if (closed) throw new Error("This conversation is closed because the NDA ended.");
+    if (closed) throw new Error("This conversation is closed.");
     if (!data.body.trim() && !data.files.length) throw new Error("Message is empty");
     if (data.files.some((f) => !f.path.startsWith(`${fileDir(data.key)}/`))) throw new Error("Invalid file");
     const sb = await admin();
