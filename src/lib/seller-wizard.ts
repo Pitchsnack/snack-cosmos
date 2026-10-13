@@ -59,6 +59,7 @@ export const WIZARD_ISO = [
 export const WIZARD_QUESTION_TITLES = [
   "Your role", "Company name", "Website", "Year founded",
   "Revenue", "Company size", "Sector", "Licences & certifications",
+  "Logo and photos", "Deal type", "Owner handover", "Asking price (Estimate)", "Listing name",
 ];
 
 export type SellerAddr = { street: string; unit: string; district: string; province: string; postal: string };
@@ -76,11 +77,16 @@ export function answeredFlags(d: SellerDraft): boolean[] {
     !!d.size,
     !!d.sector,
     d.licences.length + d.iso.length > 0,
+    !!d.hasLogo && (d.photos ?? 0) > 0,
+    !!d.deal,
+    d.stays === "yes" || d.stays === "no",
+    (d.price ?? 0) > 0,
+    !!d.listingName?.trim() && d.nameOk !== false,
   ];
 }
 export const answeredCount = (d: SellerDraft) => answeredFlags(d).filter(Boolean).length;
 /** The wizard's questions in order (index = step number; REVIEW_STEP = review). */
-export const REVIEW_STEP = 8;
+export const REVIEW_STEP = 13;
 export const SELLER_STEPS = [
   { id: "role", sec: "About you" },
   { id: "name", sec: "About the company" },
@@ -90,7 +96,33 @@ export const SELLER_STEPS = [
   { id: "size", sec: "Financial & business profile" },
   { id: "sector", sec: "Financial & business profile" },
   { id: "lic", sec: "Intangible assets" },
+  { id: "photos", sec: "Company images" },
+  { id: "deal", sec: "Your listing" },
+  { id: "handover", sec: "Your listing" },
+  { id: "price", sec: "Your listing" },
+  { id: "lname", sec: "Your listing" },
 ] as const;
+/** The five listing questions (all required, no Skip). */
+export const LISTING_KEYS = ["photos", "deal", "handover", "price", "lname"] as const;
+export const DEAL_HINTS: Record<string, [string, string]> = {
+  "Full acquisition": ["Sell the whole company", "ขายกิจการทั้งหมด"],
+  "Majority stake (above 51%)": ["Sell control and keep a share", "ขายอำนาจควบคุมและถือหุ้นส่วนหนึ่งไว้"],
+  "Minority stake (below 49%)": ["Keep control and sell a share", "คงอำนาจควบคุมและขายหุ้นส่วนหนึ่ง"],
+};
+const NAME_A = ["Golden", "Silver", "Northern", "Eastern", "Coastal", "Royal", "Evergreen", "Lotus", "Summit", "Harbour", "Jade", "Amber", "Sapphire", "Bright", "Crown", "Pioneer"];
+const NAME_B = ["River", "Orchid", "Peak", "Bridge", "Harvest", "Lantern", "Compass", "Anchor", "Meridian", "Horizon", "Garden", "Falcon", "Banyan", "Delta", "Tiger", "Monsoon"];
+const NAME_C = ["Holdings", "Industries", "Group", "Enterprises", "Partners", "Works", "Trading", "Ventures", "Company", "Collective"];
+/** Four listing names: 3 words, never "Project", none in `avoid`. */
+export function listingNameIdeas(avoid: Set<string>, seed = Math.random()): string[] {
+  const out: string[] = [];
+  let r = seed;
+  for (let i = 0; out.length < 4 && i < 200; i++) {
+    r = (r * 9301 + 49297) % 233280 / 233280;
+    const n = `${NAME_A[Math.floor(r * NAME_A.length)]} ${NAME_B[Math.floor((r * 7919) % 1 * NAME_B.length)]} ${NAME_C[Math.floor((r * 104729) % 1 * NAME_C.length)]}`;
+    if (!avoid.has(n.toLowerCase()) && !out.includes(n)) out.push(n);
+  }
+  return out;
+}
 
 /**
  * Questions sign-up fully answered, so the wizard skips them. A field counts only
@@ -104,6 +136,7 @@ export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<stri
   if (f.has("web") && d.web.trim()) s.add("web");
   if (f.has("year") && /^\d{4}$/.test(d.year)) s.add("year");
   if (f.has("size") && d.size) s.add("size");
+  if (d.noUpload) s.add("photos");
   return s;
 }
 /** Indexes of the questions that show. */
@@ -128,16 +161,20 @@ export function firstOpenStep(d: SellerDraft, fromSignup: string[] = []): number
 }
 
 /* ── Step bar: answered = the saved answer is valid (Skip leaves it unanswered) ── */
-export const STEP_KEYS = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "review"] as const;
+export const STEP_KEYS = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "lname", "review"] as const;
 export type StepKey = (typeof STEP_KEYS)[number];
 export const STEP_SHORT: Record<StepKey, [string, string]> = {
   role: ["Role", "บทบาท"], name: ["Company", "บริษัท"], web: ["Website", "เว็บไซต์"], year: ["Founded", "ปีก่อตั้ง"],
-  rev: ["Revenue", "รายได้"], size: ["Size", "ขนาด"], sector: ["Sector", "กลุ่มอุตสาหกรรม"], lic: ["Licences", "ใบอนุญาต"], review: ["Review", "ตรวจสอบ"],
+  rev: ["Revenue", "รายได้"], size: ["Size", "ขนาด"], sector: ["Sector", "กลุ่มอุตสาหกรรม"], lic: ["Licences", "ใบอนุญาต"],
+  photos: ["Photos", "รูปภาพ"], deal: ["Deal type", "รูปแบบดีล"], handover: ["Handover", "ส่งมอบ"], price: ["Price", "ราคา"], lname: ["Name", "ชื่อ"],
+  review: ["Review", "ตรวจสอบ"],
 };
 export const STEP_FULL: Record<StepKey, [string, string]> = {
   role: ["Your role", "บทบาทของคุณ"], name: ["Company name, registration number and address", "ชื่อบริษัท เลขทะเบียน และที่อยู่"],
   web: ["Company website", "เว็บไซต์บริษัท"], year: ["Year founded", "ปีที่ก่อตั้ง"], rev: ["Revenue last year", "รายได้ปีที่แล้ว"],
   size: ["Company size", "ขนาดบริษัท"], sector: ["Business sector", "กลุ่มอุตสาหกรรม"], lic: ["Licences and certifications", "ใบอนุญาตและมาตรฐาน"],
+  photos: ["Logo and photos", "โลโก้และรูปภาพ"], deal: ["Deal type", "รูปแบบดีล"], handover: ["Owner handover", "การส่งมอบงานของเจ้าของ"],
+  price: ["Asking price (Estimate)", "ราคาที่ต้องการ (ประมาณการ)"], lname: ["Listing name", "ชื่อประกาศ"],
   review: ["Review your answers", "ตรวจสอบข้อมูล"],
 };
 const YEAR_NOW = new Date().getFullYear();
@@ -151,6 +188,11 @@ export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
     year: /^\d{4}$/.test(d.year) && y >= 1800 && y <= YEAR_NOW,
     rev: !!d.rev, size: !!d.size, sector: !!d.sector,
     lic: d.licences.length + d.iso.length > 0,
+    photos: !!d.hasLogo && (d.photos ?? 0) > 0,
+    deal: !!d.deal,
+    handover: d.stays === "yes" || d.stays === "no",
+    price: (d.price ?? 0) > 0,
+    lname: !!d.listingName?.trim() && d.nameOk !== false,
     review: false,
   };
 }
@@ -191,6 +233,19 @@ export interface SellerDraft {
   licences: RegulatoryLicence[];
   iso: string[];
   addr: SellerAddr;
+  /** Listing questions (saved on the business's listing). */
+  hasLogo?: boolean;
+  photos?: number;
+  deal?: string | null;
+  stays?: "yes" | "no" | null;
+  months?: number | null;
+  /** Asking price (Estimate), whole baht. */
+  price?: number | null;
+  listingName?: string;
+  /** false while a typed name is taken or names the company. */
+  nameOk?: boolean;
+  /** + Add My Business before the business exists: photos are added in My Company. */
+  noUpload?: boolean;
   /** Furthest step key opened (setup_reached). */
   reached?: string | null;
   savedAt: string;
@@ -270,5 +325,13 @@ export function draftToPrefill(d: SellerDraft): SellerPrefill {
     licences: d.licences,
     isoStandards: d.iso,
     addr: d.addr,
+  };
+}
+
+/** What the listing questions save (the name only once it passed its checks). */
+export function listingPayload(d: SellerDraft) {
+  return {
+    deal: (d.deal ?? null) as never, stays: d.stays ?? null, months: (d.stays === "yes" ? d.months ?? 6 : null) as never,
+    price: d.price && d.price > 0 ? d.price : null, name: d.listingName?.trim() && d.nameOk === true ? d.listingName.trim() : null,
   };
 }

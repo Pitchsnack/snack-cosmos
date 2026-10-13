@@ -14,6 +14,7 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
 }) {
   const b = variant === "banner";
   const many = steps.length > 6;
+  const lots = steps.length > 10;
   // circle size (desktop) and its vertical centre
   const size = b ? 28 : 32;
   const half = size / 2;
@@ -34,14 +35,14 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
                 className="relative z-[1] flex flex-col items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-4 max-[599px]:h-11 max-[599px]:w-full max-[599px]:justify-center">
                 <span aria-hidden="true"
                   className={cn("grid place-items-center rounded-full font-bold transition-transform duration-150 group-hover:scale-[1.08] motion-reduce:transition-none motion-reduce:group-hover:scale-100",
-                    b ? "h-7 w-7 text-[13px]" : "h-8 w-8 text-[14px]", many ? "max-[599px]:h-6 max-[599px]:w-6" : "max-[599px]:h-7 max-[599px]:w-7",
+                    b ? "h-7 w-7 text-[13px]" : "h-8 w-8 text-[14px]", lots ? "max-[599px]:h-5 max-[599px]:w-5 max-[599px]:text-[11px]" : many ? "max-[599px]:h-6 max-[599px]:w-6" : "max-[599px]:h-7 max-[599px]:w-7",
                     s.state === "done" && "bg-[#1E2A4A] text-white shadow-[0_0_0_4px_var(--sb-ring)] dark:bg-[#8CA3D8] dark:text-[#11161F]",
                     s.state === "here" && "border-2 border-[#1E2A4A] bg-white text-[#1E2A4A] shadow-[0_0_0_5px_rgba(30,42,74,.14)] dark:border-[#8CA3D8] dark:bg-card dark:text-[#C9D5F0]",
                     s.state === "missed" && "bg-[#DC2626] text-white shadow-[0_0_0_5px_rgba(220,38,38,.16)]",
                     s.state === "todo" && "border-[1.5px] border-[#C9CED8] bg-white font-semibold text-[#6B7280] shadow-[0_0_0_4px_var(--sb-ring)] dark:border-border dark:bg-card dark:text-muted-foreground")}>
                   {s.state === "done" ? <Check className={b ? "h-3.5 w-3.5" : "h-4 w-4"} strokeWidth={3} /> : i + 1}
                 </span>
-                <span aria-hidden="true" className={cn("mt-2 px-0.5 text-center leading-[1.35] group-hover:underline max-[599px]:hidden", b ? "mt-1.5 text-[12px]" : "text-[12.5px]",
+                <span aria-hidden="true" className={cn("mt-2 px-0.5 text-center leading-[1.35] group-hover:underline max-[599px]:hidden", lots ? "text-[11.5px]" : b ? "mt-1.5 text-[12px]" : "text-[12.5px]",
                   s.state === "done" && "font-medium text-[#374151] dark:text-foreground",
                   s.state === "here" && "font-bold text-[#151A28] dark:text-foreground",
                   s.state === "missed" && "font-semibold text-[#B91C1C] dark:text-red-400",

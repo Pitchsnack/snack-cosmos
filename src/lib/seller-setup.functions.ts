@@ -13,6 +13,10 @@ export type SellerSetup = {
   sector: string | null; pick: { type: string; kind?: string } | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
   role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null; reached: string | null;
   addr: { street: string; unit: string; district: string; province: string; postal: string };
+  tenantId: string;
+  /** The listing's answers (empty until the listing exists). */
+  listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string };
+  media: { logoPath: string | null; logoUrl: string | null; slots: { slot: number; path: string; url: string | null }[] };
 };
 
 const AddrInput = z.object({
@@ -28,6 +32,36 @@ function addrPatch(a: AddrT) {
   };
 }
 
+const ListingInput = z.object({
+  deal: z.enum(["Full acquisition", "Majority stake (above 51%)", "Minority stake (below 49%)"]).nullable(),
+  stays: z.enum(["yes", "no"]).nullable(),
+  months: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal(9), z.literal(12), z.literal(18), z.literal(24)]).nullable(),
+  price: z.number().int().positive().max(999_999_999_999).nullable(),
+  /** Sent only once it passed the name checks. */
+  name: z.string().trim().max(80).nullable(),
+});
+
+/** The listing questions save to the business's listing (made here if it isn't there yet), as the seller. */
+async function saveListingAnswers(userSb: any, startupId: string, userId: string, l: z.infer<typeof ListingInput>) {
+  const { data: cur } = await userSb.from("hidden_profiles").select("id").eq("startup_id", startupId).maybeSingle();
+  const patch: Record<string, unknown> = {
+    deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
+    asking_price_thb: l.price, updated_by: userId,
+  };
+  if (l.name) patch.code_name = l.name;
+  if (!cur) {
+    const { data: st } = await userSb.from("startups").select("tenant_id, city").eq("id", startupId).single();
+    const { error } = await userSb.from("hidden_profiles").insert({
+      startup_id: startupId, tenant_id: st.tenant_id, region: st.city ?? null, open_to: ["Private equity", "Family office", "Corporate"], nda_approver: "admin",
+      code_name: l.name || `Draft ${startupId.slice(0, 8)}`, created_by: userId, ...patch,
+    });
+    if (error) throw new Error(/code_name/.test(error.message) ? "NAME_TAKEN: That listing name is already used by another listing" : error.message);
+    return;
+  }
+  const { error } = await userSb.from("hidden_profiles").update(patch).eq("startup_id", startupId);
+  if (error) throw new Error(/code_name/.test(error.message) ? "NAME_TAKEN: That listing name is already used by another listing" : error.message);
+}
+
 export const getSellerSetup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
@@ -35,16 +69,35 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     const { assertCanSetup } = await import("./seller-setup.server");
     const sb = await admin();
     await assertCanSetup(sb, context.supabase, context.userId, data.id);
-    const [{ data: s }, { data: o }] = await Promise.all([
+    const [{ data: s }, { data: o }, { data: hp }, { data: med }] = await Promise.all([
       sb.from("startups").select("*").eq("id", data.id).single(),
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
+      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name").eq("startup_id", data.id).maybeSingle(),
+      sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
     ]);
+    const paths = [s.logo_url, ...(med ?? []).map((m: any) => m.image_url)].filter((x: any): x is string => !!x && !/^https?:/.test(x));
+    const signed = new Map<string, string>();
+    if (paths.length) {
+      const { data: su } = await sb.storage.from("startup-media").createSignedUrls(paths, 3600);
+      for (const x of su ?? []) if (x.path && x.signedUrl) signed.set(x.path, x.signedUrl);
+    }
+    const { thbOf } = await import("./asking-price");
+    const DEALS = ["Full acquisition", "Majority stake (above 51%)", "Minority stake (below 49%)"];
     return {
       id: s.id, name: s.startup_name ?? "", reg: s.registered_number ?? "", web: s.website_url ?? "",
       year: s.year_founded ? String(s.year_founded) : "", city: s.city ?? "", rev: s.last_year_revenue ?? null,
       size: s.company_size ?? null, sector: s.sector ?? null, pick: (s.sector_pick ?? null) as { type: string; kind?: string } | null, licences: s.regulatory_licenses ?? [], iso: s.iso_standards ?? [],
       addr: { street: s.address_line1 ?? "", unit: s.address_line2 ?? "", district: s.address_city_district ?? "", province: s.address_province_state ?? s.city ?? "", postal: s.postal_code ?? "" },
       role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null, reached: s.setup_reached ?? null,
+      tenantId: s.tenant_id,
+      listing: {
+        deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
+        price: thbOf(hp), name: hp?.code_name && !/^project\b/i.test(hp.code_name) ? hp.code_name : "",
+      },
+      media: {
+        logoPath: s.logo_url ?? null, logoUrl: s.logo_url ? signed.get(s.logo_url) ?? (/^https?:/.test(s.logo_url) ? s.logo_url : null) : null,
+        slots: (med ?? []).map((m: any) => ({ slot: m.slot, path: m.image_url, url: signed.get(m.image_url) ?? null })),
+      },
     };
   });
 
@@ -60,7 +113,8 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
     done: z.boolean().optional(),
-    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "review"]).nullable().optional(),
+    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "lname", "review"]).nullable().optional(),
+    listing: ListingInput.optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { assertCanSetup } = await import("./seller-setup.server");
@@ -77,13 +131,14 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if (data.done) patch.setup_done_at = new Date().toISOString();
     if (data.reached) {
       // Never moves back.
-      const order = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "review"];
+      const order = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "lname", "review"];
       const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
       if (order.indexOf(data.reached) > order.indexOf(cur?.setup_reached ?? "")) patch.setup_reached = data.reached;
     }
     const { error } = await sb.from("startups").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     if (data.role) await sb.from("startup_ownership").update({ seller_relation: data.role }).eq("startup_id", data.id);
+    if (data.listing) await saveListingAnswers(context.supabase, data.id, context.userId, data.listing);
     return { ok: true };
   });
 
@@ -98,6 +153,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
     licences: z.array(z.object({ category: z.string().max(40), name: z.string().max(160), number: z.string().max(120).nullable().optional() })).max(50),
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
+    listing: ListingInput.optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { createSellerBusiness, sellerTenant } = await import("./seller-setup.server");
@@ -109,6 +165,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
       licences: data.licences, iso: data.iso, setupDone: true,
     });
     if (data.addr) await sb.from("startups").update({ sector_pick: data.pick ?? null, ...addrPatch(data.addr), ...(data.addr.province ? { city: data.addr.province } : {}) }).eq("id", id);
+    if (data.listing) await saveListingAnswers(context.supabase, id, context.userId, data.listing);
     return { id };
   });
 

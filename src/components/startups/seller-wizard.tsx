@@ -8,6 +8,9 @@ import { ConfirmWebsiteDialog } from "@/components/startups/confirm-website-dial
 import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
+import { DealQ, HandoverQ, NameQ, PhotosQ, PriceQ, type WizardMedia } from "@/components/startups/seller-listing-questions";
+import { LISTING_KEYS } from "@/lib/seller-wizard";
+import { bandInText, bandOf, fmtThb } from "@/lib/asking-price";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
   SELLER_RELATIONS, THB_REVENUE_BANDS, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
@@ -15,7 +18,7 @@ import {
   sellerValid, STEP_SHORT, STEP_FULL, stepIdx, laterKey, isMissed, joinNames, type StepKey,
 } from "@/lib/seller-wizard";
 
-const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review"];
+const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review", "Company images", "Your listing"];
 const STEPS = [
   { id: "role", sec: 0 },
   { id: "name", sec: 1 },
@@ -25,6 +28,11 @@ const STEPS = [
   { id: "size", sec: 2 },
   { id: "sector", sec: 2 },
   { id: "lic", sec: 3 },
+  { id: "photos", sec: 5 },
+  { id: "deal", sec: 6 },
+  { id: "handover", sec: 6 },
+  { id: "price", sec: 6 },
+  { id: "lname", sec: 6 },
   { id: "review", sec: 4 },
 ] as const;
 const THIS_YEAR = new Date().getFullYear();
@@ -70,8 +78,10 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = tr("Add my business"),
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = tr("Add my business"), media,
 }: {
+  /** Upload target for Logo and photos (the business exists). */
+  media?: WizardMedia;
   userId: string;
   initial: SellerDraft;
   onExit: () => void;
@@ -167,7 +177,8 @@ export function SellerWizard({
 
   const ok = sellerValid(d);
   // Review moves on once Company, Revenue and Sector are answered.
-  const blockers = (["name", "rev", "sector"] as StepKey[]).filter((k) => !ok[k]);
+  const barNow = shownOf(d, null).map((i) => STEPS[i]!.id as StepKey);
+  const blockers = (["name", "rev", "sector", ...LISTING_KEYS.filter((k) => barNow.includes(k))] as StepKey[]).filter((k) => !ok[k]);
   const valid: Record<string, boolean> = { ...ok, review: blockers.length === 0 };
   const canSkip = (cur.id === "web" && !ok.web) || (cur.id === "lic" && !ok.lic);
 
@@ -321,9 +332,20 @@ export function SellerWizard({
             </div></div>
         </div>
       ) },
+    photos: { t: L("Add your logo and photos", "เพิ่มโลโก้และรูปภาพ"), h: L("Add your logo and at least 1 photo (up to 3) of the premises, the team or the products. Buyers see them like this after you approve their NDA.", "เพิ่มโลโก้และรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสถานที่ ทีมงาน หรือสินค้า ผู้ซื้อจะเห็นแบบนี้หลังจากท่านอนุมัติ NDA"),
+      body: media ? <PhotosQ media={media} d={d} set={set} L={L} sectorLine={[d.sector, d.addr.province].filter(Boolean).join(" · ")} /> : null },
+    deal: { t: L("What kind of deal are you looking for?", "ท่านต้องการดีลแบบใด"), h: L("Buyers see this on your listing.", "ผู้ซื้อจะเห็นข้อมูลนี้ในประกาศของท่าน"),
+      body: <DealQ d={d} pick={pick} L={L} /> },
+    handover: { t: L("Will the owner stay on after the sale to hand over the business?", "เจ้าของจะอยู่ช่วยส่งมอบกิจการหลังการขายหรือไม่"), h: L("Buyers see your answer on your listing.", "ผู้ซื้อจะเห็นคำตอบนี้ในประกาศของท่าน"),
+      body: <HandoverQ d={d} set={set} L={L} /> },
+    price: { t: L("What is your estimated asking price?", "ราคาที่ท่านต้องการโดยประมาณคือเท่าใด"), h: L("An estimate is fine. You can change it later.", "ประมาณการได้ ท่านเปลี่ยนได้ภายหลัง"),
+      body: <PriceQ d={d} set={set} L={L} th={th} /> },
+    lname: { t: L("Choose your listing name", "เลือกชื่อประกาศของท่าน"), h: L("Buyers see this name instead of your real company name. It must be unique in the Marketplace.", "ผู้ซื้อจะเห็นชื่อนี้แทนชื่อบริษัทจริงของท่าน และต้องไม่ซ้ำกับประกาศอื่นในตลาด"),
+      body: <NameQ d={d} set={set} L={L} startupId={media?.startupId ?? null} companyName={d.name} website={d.web} /> },
     review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div>
+        <h3 className="mb-2 text-[14px] font-bold text-[#151A28]">{L("Your company", "บริษัทของท่าน")}</h3>
         <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
           {([
             [tr("You are"), SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
@@ -354,6 +376,29 @@ export function SellerWizard({
             );
           })}
         </div>
+        <h3 className="mb-2 mt-[22px] text-[14px] font-bold text-[#151A28]">{L("Your listing", "ประกาศของท่าน")}</h3>
+        <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
+          {LISTING_KEYS.filter((k) => barKeys.includes(k)).map((k) => {
+            const n = STEPS.findIndex((x) => x.id === k);
+            const band = bandOf(d.price ?? null);
+            const v: React.ReactNode = k === "photos" ? L(`Logo and ${d.photos ?? 0} photo${(d.photos ?? 0) === 1 ? "" : "s"}`, `โลโก้และรูปภาพ ${d.photos ?? 0} รูป`)
+              : k === "deal" ? (d.deal ? L(d.deal, d.deal) : "")
+              : k === "handover" ? (d.stays === "yes" ? L(`Yes, for ${d.months ?? 6} month${(d.months ?? 6) === 1 ? "" : "s"} after the sale`, `ใช่ อยู่ต่อ ${d.months ?? 6} เดือนหลังการขาย`) : d.stays === "no" ? L("No, the owner leaves at completion", "ไม่ เจ้าของออกเมื่อการขายเสร็จสิ้น") : "")
+              : k === "price" ? (d.price ? <span>{fmtThb(d.price)}<span className="mt-px block text-[12.5px] font-normal text-[#6B7280]">{L(`Buyers see ${bandInText(band?.label ?? "")} until you approve their NDA`, `ผู้ซื้อจะเห็น ${band?.th ?? ""} จนกว่าท่านจะอนุมัติ NDA`)}</span></span> : "")
+              : d.listingName ?? "";
+            const red = !ok[k];
+            return (
+              <div key={k} className={`flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0 ${red ? "bg-[#FEF2F2]" : ""}`}>
+                <span className="w-[170px] flex-none text-[#6b7280] max-[599px]:w-[110px]">{L(...STEP_FULL[k])}</span>
+                {red ? (
+                  <b className="flex flex-1 items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{L("Not answered", "ยังไม่ได้ตอบ")}</b>
+                ) : <b className="min-w-0 flex-1 break-words font-semibold">{v}</b>}
+                <button type="button" className={`text-[13px] underline underline-offset-2 ${red ? "font-bold text-[#B91C1C]" : "font-semibold text-[#1e2a4a]"}`}
+                  onClick={() => { setFull(n); focusTitle.current = true; go(n); }}>{red ? L("Answer", "ตอบคำถาม") : tr("Edit")}</button>
+              </div>
+            );
+          })}
+        </div>
         {barKeys.includes("web") && (!ok.web || webAdded) && (
           webAdded && ok.web ? (
             <p tabIndex={-1} id="sw-web-added" className="mt-[18px] flex items-center gap-1.5 text-[13.5px] font-semibold text-[#15803D] outline-none">
@@ -376,7 +421,7 @@ export function SellerWizard({
           )
         )}
         {blockers.length > 0 && (
-          <p className="mt-[18px] text-[13.5px] text-[#B91C1C]">{L(`Answer ${joinNames(blockers.map((k) => STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
+          <p className="mt-[18px] text-[13.5px] text-[#B91C1C]">{L(`Answer ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][0] : STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][1] : STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
         )}
         </div>
       ) },
@@ -488,7 +533,7 @@ export function SellerWizard({
             </div>
           </div>
         )}
-        <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">{tr("Your company name, address, website and exact figures stay private until you approve a buyer's NDA.")}</p>
+        <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">{L("Your company name, website, logo, photos and exact figures stay private until you approve a buyer's NDA.", "ชื่อบริษัท เว็บไซต์ โลโก้ รูปภาพ และตัวเลขที่แท้จริงของท่านจะถูกเก็บเป็นความลับ จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
       </div>
     </div>
   );
