@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RequestLoiDialog, SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { useAdvisorContactRow } from "@/components/pipeline/advisor-bits";
-import { Check, ChevronDown, ChevronRight, Columns3, Lock } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Columns3, Lock, X } from "lucide-react";
 
 // Open/closed Tracking cards persist across tab/role switches; reset on reload.
 let sessionOpen = new Set<string>();
@@ -22,6 +22,7 @@ import {
   type PipelineRow,
 } from "@/lib/pipeline.functions";
 import { STEPS, currentStep, isPending, waitState } from "@/lib/pipeline-state";
+import { WithdrawLink, WithdrawnPill, EndedBox, withdrewText, closedWhen } from "@/components/pipeline/withdraw-deal";
 import { ReportViewer, CompareReports, InvestorProfile, SellerProfile, NdaDialog, LoiDialog as LoiDocDialog } from "@/components/pipeline/pipeline-dialogs";
 import { Tooltip as TT, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvider delayDuration={200}><TT>{children}</TT></TooltipProvider>;
@@ -88,7 +89,7 @@ function PipelinePage() {
   const { t } = useTranslation();
   const fn = useServerFn(listPipeline);
   const { data = [], isLoading } = useQuery({ queryKey: ["pipeline", persona], queryFn: () => fn({ data: { as: persona } }) });
-  const pending = data.filter(isPending);
+  const pending = data.filter((p) => p.status !== "ended" && isPending(p));
   const tracking = data.filter((p) => !!p.ndaApprovedAt);
   const [tab, setTab] = useState<"pending" | "tracking">("pending");
   const [openIds, setOpenIdsState] = useState<string[]>(() => [...sessionOpen]);
@@ -97,6 +98,7 @@ function PipelinePage() {
   const allOpen = tracking.length > 0 && tracking.every((p) => openIds.includes(p.id));
   useEffect(() => {
     const deal = new URLSearchParams(window.location.search).get("deal");
+    if (new URLSearchParams(window.location.search).get("view") === "ended") setTab("tracking");
     if (!deal || !tracking.some((p) => p.id === deal)) return;
     setTab("tracking");
     if (!sessionOpen.has(deal)) setOpenIds([...sessionOpen, deal]);
@@ -104,7 +106,7 @@ function PipelinePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracking.length]);
   const seller = persona === "seller";
-  const waiting = seller ? pending.length : data.filter((p) => p.ndaApprovedAt && !p.reportSharedAt && !p.reportRequestedAt).length;
+  const waiting = seller ? pending.length : data.filter((p) => p.status !== "ended" && p.ndaApprovedAt && !p.reportSharedAt && !p.reportRequestedAt).length;
 
   return (
     <div className="mx-auto max-w-[1180px] space-y-6 p-6 md:p-8">
@@ -126,7 +128,7 @@ function PipelinePage() {
       {(persona === "seller" || persona === "buyer") && <ContactRequestsSection as={persona} />}
 
       <div className="flex gap-1 border-b">
-        {([["pending", t("Pending approval"), pending.length], ["tracking", t("Tracking"), tracking.length]] as const).map(([k, label, n]) => (
+        {([["pending", t("Pending approval"), pending.length], ["tracking", t("Tracking"), tracking.filter((p) => p.status !== "ended").length]] as const).map(([k, label, n]) => (
           <button key={k} onClick={() => setTab(k)}
             className={cn("-mb-px flex items-center gap-2 border-b-2 px-4 py-3 text-[15px] font-semibold",
               tab === k ? "border-link text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
@@ -151,16 +153,20 @@ function PipelinePage() {
 function TrackingList({ tracking, seller, openIds, setOpenIds, toggle, allOpen, t }: {
   tracking: PipelineRow[]; seller: boolean; openIds: string[]; setOpenIds: (ids: string[]) => void; toggle: (id: string) => void; allOpen: boolean; t: T;
 }) {
-  const [filter, setFilter] = useState<"all" | "you" | "other">("all");
+  const [filter, setFilter] = useState<"all" | "you" | "other" | "ended">(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "ended" ? "ended" : "all");
+  const all = tracking;
+  const ended = all.filter((p) => p.status === "ended").sort((a, b) => +new Date(b.withdrawal?.at ?? b.updatedAt) - +new Date(a.withdrawal?.at ?? a.updatedAt));
+  tracking = all.filter((p) => p.status !== "ended");
+  const onEnded = (id: string) => { setFilter("ended"); setOpenIds([...new Set([...openIds, id])]); };
   const [sort, setSort] = useState<"step" | "recent">("step");
   const [compare, setCompare] = useState(false);
   const [viewing, setViewing] = useState<PipelineRow | null>(null);
   const you = tracking.filter((p) => waitState(p, seller).onYou);
   const other = tracking.filter((p) => !waitState(p, seller).onYou);
-  const list = (filter === "you" ? you : filter === "other" ? other : tracking).slice().sort((a, b) =>
+  const list = filter === "ended" ? ended : (filter === "you" ? you : filter === "other" ? other : tracking).slice().sort((a, b) =>
     sort === "step" && currentStep(b) !== currentStep(a) ? currentStep(b) - currentStep(a) : +new Date(b.updatedAt) - +new Date(a.updatedAt));
   const received = tracking.filter((p) => p.reportSharedAt).length;
-  const pills: [typeof filter, string, number][] = [["all", t("All"), tracking.length], ["you", t("Waiting on you"), you.length], ["other", seller ? t("Waiting on the buyer") : t("Waiting on the seller"), other.length]];
+  const pills: [typeof filter, string, number][] = [["all", t("All"), tracking.length], ["you", t("Waiting on you"), you.length], ["other", seller ? t("Waiting on the buyer") : t("Waiting on the seller"), other.length], ["ended", t("Ended"), ended.length]];
   const cmpBtn = (
     <button disabled={received < 2} onClick={() => setCompare(true)} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#2563EB] disabled:opacity-50">
       <Columns3 className="h-4 w-4" />{t("Compare reports")} {received}
@@ -193,15 +199,16 @@ function TrackingList({ tracking, seller, openIds, setOpenIds, toggle, allOpen, 
             : cmpBtn)}
           {!seller && <span className="h-4 w-px bg-[#E5E7EB]" />}
           {tracking.length > 0 && (
-            <button className="shrink-0 text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setOpenIds(allOpen ? [] : tracking.map((p) => p.id))}>
+            <button className="shrink-0 text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setOpenIds(allOpen ? [] : list.map((p) => p.id))}>
               {allOpen ? t("Collapse all") : t("Expand all")}
             </button>
           )}
         </div>
       </div>
-      {tracking.length === 0 && <Empty text={seller ? t("No buyers past the NDA yet.") : t("No seller has approved your NDA yet.")} />}
-      {tracking.length > 0 && list.length === 0 && <Empty text={t("No cards match this filter.")} />}
-      {list.map((p) => <TrackingCard key={p.id} p={p} seller={seller} open={openIds.includes(p.id)} onToggle={() => toggle(p.id)} t={t} />)}
+      {filter === "ended" && ended.length === 0 && <Empty text={t("No ended deals.")} />}
+      {filter !== "ended" && tracking.length === 0 && <Empty text={seller ? t("No buyers past the NDA yet.") : t("No seller has approved your NDA yet.")} />}
+      {filter !== "ended" && tracking.length > 0 && list.length === 0 && <Empty text={t("No cards match this filter.")} />}
+      {list.map((p) => <TrackingCard key={p.id} p={p} seller={seller} open={openIds.includes(p.id)} onToggle={() => toggle(p.id)} onEnded={() => onEnded(p.id)} t={t} />)}
       {compare && <CompareReports rows={tracking} onOpen={(p) => setViewing(p)} onClose={() => setCompare(false)} />}
       {viewing && <ReportViewer p={viewing} seller={false} onClose={() => setViewing(null)} />}
     </div>
@@ -391,7 +398,24 @@ function BuyerPending({ rows, t }: { rows: PipelineRow[]; t: T }) {
   );
 }
 
-function Stepper({ cur, t }: { cur: number; t: T }) {
+function Stepper({ cur, t, endedOn }: { cur: number; t: T; endedOn?: string }) {
+  if (endedOn) return (
+    <div className="grid grid-cols-7 pt-3">
+      {STEPS.map((s, i) => {
+        const done = i < cur, stop = i === cur;
+        return (
+          <div key={s} className="relative flex flex-col items-center">
+            {i > 0 && <div className={cn("absolute right-1/2 top-[6px] h-[2px] w-[calc(100%-18px)] -translate-x-[9px]", i <= cur ? "bg-[#D1D5DB]" : "bg-border")} />}
+            {stop
+              ? <div className="relative z-10 -mt-[1px] grid h-4 w-4 place-items-center rounded-full bg-[#6B7280]"><X className="h-2.5 w-2.5 text-white" strokeWidth={3} /></div>
+              : <div className={cn("relative z-10 h-[14px] w-[14px] rounded-full border-2", done ? "border-[#9CA3AF] bg-[#9CA3AF]" : "border-border bg-card")} />}
+            <div className={cn("mt-2 text-center text-[12px]", stop ? "font-semibold text-[#4B5563]" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}</div>
+            {stop && <div className="text-center text-[11.5px] text-[#9CA3AF]">{endedOn}</div>}
+          </div>
+        );
+      })}
+    </div>
+  );
   return (
     <div className="grid grid-cols-7 pt-3">
       {STEPS.map((s, i) => {
@@ -409,14 +433,15 @@ function Stepper({ cur, t }: { cur: number; t: T }) {
   );
 }
 
-function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; t: T }) {
+function TrackingCard({ p, seller, open, onToggle, onEnded, t }: { p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; onEnded: () => void; t: T }) {
+  const wd = p.status === "ended" ? p.withdrawal : null;
   const [loiOpen, setLoiOpen] = useState(false);
   const [reqOpen, setReqOpen] = useState(false);
   const withdrawReq = useServerFn(withdrawLoiRequest);
   const lr = p.loiRequest;
   const [histOpen, setHistOpen] = useState(false);
   const [dlg, setDlg] = useState<null | "report" | "investor" | "seller" | "nda" | "loi" | "share">(null);
-  const cur = currentStep(p);
+  const cur = wd ? wd.step : currentStep(p);
   const refresh = useRefresh();
   const fShare = useServerFn(shareReport);
   const fAsk = useServerFn(askForReport);
@@ -467,6 +492,23 @@ function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller
     ["Payment", p.paymentAt, p.paymentAt ? t("Completed") : t("Not started · escrow and completion"),
       seller && p.spaAt && !p.paymentAt ? <Button size="sm" variant="outline" onClick={() => act(() => fStep({ data: { id: p.id, step: "payment" } }), t("Marked complete"))}>{t("Mark complete")}</Button> : undefined],
   ];
+  if (wd) {
+    const cw = closedWhen(wd, t);
+    const by = wd.mine ? t("you") : wd.side === "seller" ? t("the seller") : t("the buyer");
+    const approver = seller ? t("you") : t("the seller");
+    const exp = p.ndaExpiresAt ? day(p.ndaExpiresAt) : "—";
+    const ended: typeof rows = [
+      ["NDA", p.ndaApprovedAt, `${t("Approved by")} ${approver} · ${t("in force until")} ${exp}`, <Button size="sm" variant="outline" onClick={() => setDlg("nda")}>{t("View NDA")}</Button>],
+      ["Financial & Valuation", p.reportSharedAt ?? p.reportRequestedAt,
+        wd.mine ? t("Report access ended when you withdrew") : seller ? t("Report access ended when the buyer withdrew") : t("You can no longer open the reports"), undefined],
+    ];
+    if (p.loiSentAt) ended.push(["Letter of intent", p.loiSentAt, `${money(p.loiAmount)} · ${t("sent")} ${day(p.loiSentAt)} · ${cw}`, <Button size="sm" variant="outline" onClick={() => setDlg("loi")}>{t("View LOI")}</Button>]);
+    if (p.contactAt) ended.push(["Contact M&A", p.contactAt, `${t("Contact M&A")} · ${cw}`, undefined]);
+    if (p.legalAt) ended.push(["Legal", p.legalAt, `${seller ? t("Legal folder shared") : t("Legal folder received")} · ${cw}`, undefined]);
+    if (p.spaAt) ended.push(["Offer & SPA", p.spaAt, `${seller ? t("SPA draft shared") : t("SPA draft received")} · ${cw}`, undefined]);
+    rows.splice(0, rows.length, ...ended.slice(0, Math.max(1, wd.step + 1)));
+    void by;
+  }
 
   return (
     <div id={`deal-${p.id}`} className={cn("overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-card transition-shadow hover:border-[#D9DCE2]", open && "shadow-[0_6px_20px_rgba(16,24,40,.06)]")}>
@@ -474,21 +516,24 @@ function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller
         onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onToggle(); } }}
         className="grid w-full cursor-pointer grid-cols-[40px_1fr_auto] items-center gap-[14px] px-5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2563EB]">
         <div className="[&>*]:!h-10 [&>*]:!w-10 [&>*]:!text-[14px]">
-          <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} />
+          {wd
+            ? <span className="grid place-items-center rounded-full bg-gradient-to-b from-[#A3A9B6] to-[#7C8496] font-bold text-white">{p.counterparty.name.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase()}</span>
+            : <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} />}
         </div>
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
-            <span className="truncate text-[16px] font-bold">{p.counterparty.name}</span>
+            <span className={cn("truncate text-[16px] font-bold", wd && "text-[#374151] dark:text-[#D1D5DB]")}>{p.counterparty.name}</span>
+            {wd && <WithdrawnPill t={t} />}
 
           </div>
           <div className="truncate text-[12.5px] text-[#6B7280]">
             {[p.counterparty.sub, p.loiAmount ? `${seller ? t("offer") : t("your offer")} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
             {" · "}
-            <span className={cn("font-semibold", w.onYou ? "text-[#B45309]" : "text-[#6B7280]")}>
+            {wd ? <span className="font-semibold text-[#4B5563]">{withdrewText(wd, t)}</span> : <span className={cn("font-semibold", w.onYou ? "text-[#B45309]" : "text-[#6B7280]")}>
               {w.onYou && w.what === "send a letter of intent"
                 ? `${t("Pending")}: ${t("send a letter of intent")}`
                 : `${t("waiting on")} ${w.onYou ? t("you") : other}: ${t(w.what)}`}
-            </span>
+            </span>}
           </div>
         </div>
         <div className="flex items-center gap-[14px] text-[12.5px] font-semibold text-[#6B7280]">
@@ -503,9 +548,10 @@ function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller
           </span>
         </div>
       </div>
-      <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} t={t} /></div>
+      <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} t={t} endedOn={wd ? `${t("withdrawn")} ${day(wd.at)}` : undefined} /></div>
       <div className={cn("grid transition-[grid-template-rows] duration-[250ms] ease-in-out motion-reduce:transition-none", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
+          {wd && <EndedBox w={wd} p={p} seller={seller} t={t} />}
           <div className="mx-5 border-t border-[#F0F1F4]">
             {rows.map(([label, date, text, action]) => (
               <div key={label} className="grid min-h-[50px] grid-cols-[168px_72px_1fr_auto] items-center gap-4 border-b border-[#F0F1F4] py-2 text-[13.5px]">
@@ -516,7 +562,8 @@ function TrackingCard({ p, seller, open, onToggle, t }: { p: PipelineRow; seller
               </div>
             ))}
           </div>
-          <div className="flex justify-end px-5 pb-4 pt-2.5">
+          <div className="flex items-center justify-between gap-3 px-5 pb-4 pt-2.5">
+            <WithdrawLink p={p} seller={seller} t={t} onDone={() => { refresh(); onEnded(); }} />
             <button className="text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setHistOpen(true)}>{t("History")}</button>
           </div>
         </div>
@@ -539,7 +586,7 @@ const EVENT_LABEL: Record<string, string> = {
   nda_requested: "NDA requested", nda_approved: "NDA approved", nda_declined: "NDA declined",
   report_requested: "Financial report requested", report_shared: "Report shared", report_share_changed: "Report sharing changed", report_revoked: "Seller stopped sharing the report",
   loi_sent: "Letter of intent sent", loi_accepted: "Letter of intent accepted", loi_declined: "Letter of intent declined", loi_changes_requested: "Changes to the letter of intent requested", loi_requested: "Seller requested a letter of intent", loi_request_withdrawn: "Letter of intent request withdrawn", loi_request_fulfilled: "Letter of intent request answered", report_viewed: "Financial report opened",
-  legal_shared: "Legal folder shared", spa_shared: "SPA draft shared", payment_shared: "Payment completed",
+  withdrawn: "Withdrawn from the deal", legal_shared: "Legal folder shared", spa_shared: "SPA draft shared", payment_shared: "Payment completed",
 };
 
 function HistoryDialog({ id, onClose, t }: { id: string; other: string; onClose: () => void; t: T }) {
