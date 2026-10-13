@@ -307,6 +307,11 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       if (!res.ok) throw new Error(`Could not upload ${f.name}`);
       uploaded.push({ path, name: f.name, size: f.size, type: f.type });
     }
+    const tKey = ["messages", "thread", c.key];
+    qc.setQueryData(tKey, (old: any) => old ? {
+      ...old,
+      messages: [...old.messages, { id: `tmp-${Date.now()}`, senderId: old.meId, mine: true, body, files: uploaded, at: new Date().toISOString() }],
+    } : old);
     await sendFn({ data: { key: c.key, body, files: uploaded } });
     await qc.invalidateQueries({ queryKey: ["messages"] });
   };
@@ -620,11 +625,14 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
   const submit = async () => {
     if (empty || busy) return;
     setBusy(true);
+    const body = text, picked = files;
+    setText("");
+    setFiles([]);
     try {
-      await onSend(text, files);
-      setText("");
-      setFiles([]);
+      await onSend(body, picked);
     } catch (e) {
+      setText(body);
+      setFiles(picked);
       toast.error((e as Error).message);
     } finally {
       setBusy(false);
