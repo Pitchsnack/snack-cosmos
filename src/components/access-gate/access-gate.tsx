@@ -63,6 +63,7 @@ const Ctx = createContext<GateValue>({ gateOn: false, details: null, signedIn: f
 export const useGate = () => useContext(Ctx);
 
 let cache: { at: number; gateOn: boolean; details: GateDetails | null } | null = null;
+let signedInKnown = false;
 
 /** Runs the seat claim for a signed-in new account. On failure the account is gone: sign out and return the reason. */
 export function useClaimSeat() {
@@ -87,13 +88,19 @@ export function useClaimSeat() {
 export function AccessGate({ children, claimInBackground = true, onLang }: { children: ReactNode; claimInBackground?: boolean; onLang?: (l: Lang) => void }) {
   const status = useServerFn(accessStatus);
   const claim = useClaimSeat();
-  const [state, setState] = useState<"loading" | "open" | "gate">("loading");
-  const [val, setVal] = useState<GateValue>({ gateOn: false, details: null, signedIn: false });
+  // On in-app navigation the last answer is already known: start open, no loading frame.
+  const known = signedInKnown || (cache && Date.now() - cache.at < FRESH && (!cache.gateOn || cache.details));
+  const [state, setState] = useState<"loading" | "open" | "gate">(known ? "open" : "loading");
+  const [val, setVal] = useState<GateValue>(
+    signedInKnown ? { gateOn: false, details: null, signedIn: true }
+      : known && cache ? { gateOn: cache.gateOn, details: cache.details, signedIn: false }
+      : { gateOn: false, details: null, signedIn: false });
   const [flash, setFl] = useState<Flash | null>(null);
   const [welcome, setWelcome] = useState<string | null>(null);
 
   const decide = async () => {
     const { data } = await supabase.auth.getSession();
+    signedInKnown = !!data.session;
     if (data.session) {
       setVal({ gateOn: false, details: null, signedIn: true }); setState("open");
       if (claimInBackground) {
