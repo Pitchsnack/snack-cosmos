@@ -406,6 +406,7 @@ export type Database = {
           services: string[]
           setup_answered: string[]
           setup_done_at: string | null
+          setup_reached: string | null
           status: string
           team_size: number | null
           thai_name: string | null
@@ -468,6 +469,7 @@ export type Database = {
           services?: string[]
           setup_answered?: string[]
           setup_done_at?: string | null
+          setup_reached?: string | null
           status?: string
           team_size?: number | null
           thai_name?: string | null
@@ -530,6 +532,7 @@ export type Database = {
           services?: string[]
           setup_answered?: string[]
           setup_done_at?: string | null
+          setup_reached?: string | null
           status?: string
           team_size?: number | null
           thai_name?: string | null
@@ -2591,6 +2594,8 @@ export type Database = {
         Row: {
           approval_status: string
           asking_price: number | null
+          asking_price_band: string | null
+          asking_price_thb: number | null
           assignee_id: string | null
           code_name: string
           cover_art: string | null
@@ -2646,6 +2651,8 @@ export type Database = {
         Insert: {
           approval_status?: string
           asking_price?: number | null
+          asking_price_band?: string | null
+          asking_price_thb?: number | null
           assignee_id?: string | null
           code_name: string
           cover_art?: string | null
@@ -2701,6 +2708,8 @@ export type Database = {
         Update: {
           approval_status?: string
           asking_price?: number | null
+          asking_price_band?: string | null
+          asking_price_thb?: number | null
           assignee_id?: string | null
           code_name?: string
           cover_art?: string | null
@@ -3191,6 +3200,10 @@ export type Database = {
       investors: {
         Row: {
           acts_for_types: string[]
+          address_city_district: string | null
+          address_line1: string | null
+          address_line2: string | null
+          address_province_state: string | null
           aum: string | null
           aum_band: string | null
           aum_exact_usd: number | null
@@ -3218,6 +3231,7 @@ export type Database = {
           max_ticket_size: string | null
           media: Json
           min_ticket_size: string | null
+          postal_code: string | null
           preferred_industries: string[] | null
           preferred_stages: string[] | null
           registration_no: string | null
@@ -3226,6 +3240,7 @@ export type Database = {
           revenue_min_m: number | null
           sector_picks: Json | null
           setup_done_at: string | null
+          setup_reached: string | null
           short_description: string | null
           source_global_id: string | null
           status: string
@@ -3241,6 +3256,10 @@ export type Database = {
         }
         Insert: {
           acts_for_types?: string[]
+          address_city_district?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_province_state?: string | null
           aum?: string | null
           aum_band?: string | null
           aum_exact_usd?: number | null
@@ -3268,6 +3287,7 @@ export type Database = {
           max_ticket_size?: string | null
           media?: Json
           min_ticket_size?: string | null
+          postal_code?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
           registration_no?: string | null
@@ -3276,6 +3296,7 @@ export type Database = {
           revenue_min_m?: number | null
           sector_picks?: Json | null
           setup_done_at?: string | null
+          setup_reached?: string | null
           short_description?: string | null
           source_global_id?: string | null
           status?: string
@@ -3291,6 +3312,10 @@ export type Database = {
         }
         Update: {
           acts_for_types?: string[]
+          address_city_district?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_province_state?: string | null
           aum?: string | null
           aum_band?: string | null
           aum_exact_usd?: number | null
@@ -3318,6 +3343,7 @@ export type Database = {
           max_ticket_size?: string | null
           media?: Json
           min_ticket_size?: string | null
+          postal_code?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
           registration_no?: string | null
@@ -3326,6 +3352,7 @@ export type Database = {
           revenue_min_m?: number | null
           sector_picks?: Json | null
           setup_done_at?: string | null
+          setup_reached?: string | null
           short_description?: string | null
           source_global_id?: string | null
           status?: string
@@ -5058,6 +5085,7 @@ export type Database = {
           iso_standards: string[]
           last_year_revenue: string | null
           linkedin_url: string | null
+          listing_autofill_at: string | null
           logo_url: string | null
           long_description: string | null
           market_tags: string[]
@@ -5113,6 +5141,7 @@ export type Database = {
           iso_standards?: string[]
           last_year_revenue?: string | null
           linkedin_url?: string | null
+          listing_autofill_at?: string | null
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
@@ -5168,6 +5197,7 @@ export type Database = {
           iso_standards?: string[]
           last_year_revenue?: string | null
           linkedin_url?: string | null
+          listing_autofill_at?: string | null
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
@@ -5959,6 +5989,7 @@ export type Database = {
         Returns: undefined
       }
       apply_scheduled_plan_changes: { Args: never; Returns: number }
+      asking_price_band: { Args: { _thb: number }; Returns: string }
       can_access_deal: {
         Args: { _deal_id: string; _user_id: string }
         Returns: boolean
