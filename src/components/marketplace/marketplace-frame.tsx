@@ -192,6 +192,20 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
   const subtitle = [u?.title, org].filter(Boolean).join(" · ");
   const neutral = persona === "seller" ? workspace : advisor ? null : u?.buyerType ?? null;
   const location = [u?.city, u?.country].filter(Boolean).join(", ");
+  // Until the account is known, hold a neutral placeholder instead of guessing a 2-tab layout.
+  if (!data) {
+    return collapsed ? (
+      <div className="flex flex-col items-center px-2 pt-3" aria-hidden="true">
+        <div className="h-9 w-9 animate-pulse rounded-[10px] bg-[var(--mkt-tray)]" />
+        <div className="mt-3 h-[100px] w-[42px] animate-pulse rounded-[10px] bg-[var(--mkt-tray)]" />
+      </div>
+    ) : (
+      <div className="space-y-3 border-b border-sidebar-border p-3" aria-hidden="true">
+        <div className="h-[150px] animate-pulse rounded-[14px] bg-[var(--mkt-tray)]" />
+        <div className="h-12 animate-pulse rounded-[12px] bg-[var(--mkt-tray)]" />
+      </div>
+    );
+  }
   if (collapsed) {
     const tip = `${name} · ${persona === "seller" ? "Seller" : advisor ? "Advisor" : "Buyer"}`;
     return (
