@@ -128,6 +128,13 @@ function MyStartupsPageInner() {
     () => (favOnly ? mineItems.filter((it) => favIds.has(it.id)) : mineItems),
     [mineItems, favOnly, favIds],
   );
+
+  // Edit information opened without a company id: fall back to the user's only company.
+  useEffect(() => {
+    if (s.edit === "startup" && !s.panel && mineItems.length === 1) {
+      navigate({ search: (prev: typeof s) => ({ ...prev, panel: mineItems[0].id }), replace: true });
+    }
+  }, [s.edit, s.panel, mineItems]); // eslint-disable-line react-hooks/exhaustive-deps
   const total = items.length;
 
   const update = (patch: Partial<typeof s>) =>

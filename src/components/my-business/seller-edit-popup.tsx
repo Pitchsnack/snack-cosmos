@@ -59,7 +59,7 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
   if (!id) return null;
   const close = () => leaveEditUrl(() => void navigate({
     to: "/my-startups",
-    search: ((p: Record<string, unknown>) => ({ ...p, edit: undefined, view: undefined, tab: undefined, section: undefined })) as never,
+    search: ((p: Record<string, unknown>) => ({ ...p, edit: undefined, panel: undefined, view: undefined, tab: undefined, section: undefined })) as never,
     replace: true,
   }));
   const onNav = (v: View, t: string) => void navigate({
