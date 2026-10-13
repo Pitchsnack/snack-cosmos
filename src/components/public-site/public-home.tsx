@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { HERO_PICS } from "./home-hero-pics";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -57,7 +58,7 @@ function Hero() {
           <h1><Rich s={t(HERO.h1)} /></h1>
           <p className="ph-hero-intro">{t(HERO.intro)}</p>
           <Buttons />
-          <p className="ph-joinline">{t(HERO.joinFree)} <a href="/sellers">{t(HERO.forSellers)}</a> · <a href="/buyers">{t(HERO.forBuyers)}</a> · <a href="/signup?role=partner">{t(HERO.advisers)}</a></p>
+          <p className="ph-joinline">{t(HERO.joinFree)} <Link to="/sellers">{t(HERO.forSellers)}</Link> · <Link to="/buyers">{t(HERO.forBuyers)}</Link> · <a href="/signup?role=partner">{t(HERO.advisers)}</a></p>
         </div>
         <HeroArt />
         <p className="ph-fine">{t(HERO.fine)}</p>
@@ -287,7 +288,7 @@ function Plans() {
           <div><h3>{t(PLANS.boxH)}</h3><p>{t(PLANS.boxX)}</p></div>
           <div className="ph-navychip"><b>{t(PLANS.chipT)}</b><p>{t(PLANS.chipX)}</p></div>
         </div>
-        <div className="ph-pfine"><span>{t(PLANS.fine)}</span><a href="/plans">{t(PLANS.link)}</a></div>
+        <div className="ph-pfine"><span>{t(PLANS.fine)}</span><Link to="/plans">{t(PLANS.link)}</Link></div>
       </div>
     </section>
   );
@@ -344,7 +345,7 @@ function SoonBody({ title }: { title: { en: string; th: string } }) {
       <div className="ph-wrap">
         <h1>{t(title)}</h1>
         <p>{t({ en: "This page is coming soon.", th: "หน้านี้กำลังจะเปิดให้บริการเร็ว ๆ นี้" })}</p>
-        <a href="/">{t({ en: "← Back to the homepage", th: "← กลับไปหน้าแรก" })}</a>
+        <Link to="/">{t({ en: "← Back to the homepage", th: "← กลับไปหน้าแรก" })}</Link>
       </div>
     </section>
   );

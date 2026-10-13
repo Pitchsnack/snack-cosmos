@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated")({
     }
   },
   component: AuthenticatedLayout,
-  pendingMs: 150,
+  pendingMs: 1500,
   pendingMinMs: 0,
   pendingComponent: PendingShell,
 });
