@@ -575,6 +575,13 @@
       "when": 1791903306259,
       "tag": "0081_asking_price_cap_trigger_thb",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1791919654669,
+      "tag": "0082_deal_withdrawals",
+      "breakpoints": true
     }
   ]
 }
