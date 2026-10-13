@@ -37,6 +37,16 @@ function feeToRow(firmId: string, service: string, d: FeeDetail) {
   };
 }
 
+/** The contact email shown is the owner account's sign-in email (read live, not a copy); no owner keeps the stored one. */
+async function withOwnerEmails(rows: any[]) {
+  const owners = [...new Set(rows.map((r) => r.owner_user_id).filter(Boolean))];
+  if (!owners.length) return rows;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await (supabaseAdmin as any).from("users").select("id, email").in("id", owners);
+  const by = new Map((data ?? []).map((u: any) => [u.id, u.email]));
+  return rows.map((r) => (r.owner_user_id && by.get(r.owner_user_id) ? { ...r, email: by.get(r.owner_user_id) } : r));
+}
+
 function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: any[]; reviews: any[] }, urls: Map<string, string>): AdvisorFirm {
   const mine = (rows: any[]) => rows.filter((x) => x.firm_id === r.id);
   const fees: Record<string, string> = {};
@@ -85,7 +95,7 @@ export const listMyAdvisorFirms = createServerFn({ method: "GET" })
       for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
     }
     const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: docs.data ?? [], reviews: reviews.data ?? [] };
-    return rows.map((r: any) => toFirm(r, kids, urls));
+    return (await withOwnerEmails(rows)).map((r: any) => toFirm(r, kids, urls));
   });
 
 /** Firm cards by id with the service client (callers check access first). Private files and documents are left out. */
@@ -106,7 +116,7 @@ export async function loadFirmCards(sb: any, ids: string[]): Promise<AdvisorFirm
     for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
   }
   const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: (creds.data ?? []).filter((c: any) => c.status !== "rejected"), docs: [], reviews: reviews.data ?? [] };
-  return rows.map((r: any) => toFirm(r, kids, urls));
+  return (await withOwnerEmails(rows)).map((r: any) => toFirm(r, kids, urls));
 }
 
 /** Admin: one firm in the advisor's own shape, for Edit in Advisors Directory. */
@@ -132,7 +142,8 @@ export const getAdvisorFirmForAdmin = createServerFn({ method: "GET" })
       const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 3600);
       for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
     }
-    return toFirm(r, { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: docs.data ?? [], reviews: reviews.data ?? [] }, urls);
+    const [rr] = await withOwnerEmails([r]);
+    return toFirm(rr, { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: docs.data ?? [], reviews: reviews.data ?? [] }, urls);
   });
 
 /** + Add Firm Profile: a new Draft with the next ADV reference. */
