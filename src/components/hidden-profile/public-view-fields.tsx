@@ -1,3 +1,5 @@
+import { Lock } from "lucide-react";
+import { bandOf, bandInText, fmtThb, thbWords, thbWordsTh } from "@/lib/asking-price";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, ChevronDown, CircleCheck, Eye, Info, Plus, RefreshCw, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -249,7 +251,6 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
 
   // Deal terms
   const dealOk = (DEAL_TYPES as readonly string[]).includes(d.deal_type ?? "");
-  const onRequest = d.asking_price == null;
   return (
     <div>
       <IdentityMsg pd={pd} />
@@ -260,7 +261,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
           <AskingPrice d={d} set={set} />
           <FieldRow label={tr("Deal type", "รูปแบบดีล")} htmlFor="hp-deal-type" missing={!dealOk}>
             <div className="relative">
-              <select id="hp-deal-type" {...(onRequest ? { "data-edit-focus": true } : {})} value={dealOk ? d.deal_type! : ""} onChange={(e) => set("deal_type", e.target.value || null)}
+              <select id="hp-deal-type" value={dealOk ? d.deal_type! : ""} onChange={(e) => set("deal_type", e.target.value || null)}
                 className={cn(BOX, "w-full appearance-none border bg-background pr-10 outline-none", !dealOk && cn(MISS_BOX, "text-[#8A90A0]"))}>
                 <option value="" disabled>{tr("Choose a deal type…", "เลือกรูปแบบดีล…")}</option>
                 {DEAL_TYPES.map((c) => <option key={c} value={c} className="text-foreground">{tr(c, DEAL_TH[c] ?? c)}</option>)}
@@ -284,25 +285,26 @@ type Setter = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => void;
 
 function AskingPrice({ d, set }: { d: HiddenDraft; set: Setter }) {
   const tr = useTr();
-  const onRequest = d.asking_price == null;
-  const kept = useRef<number | null>(d.asking_price);
-  const ref = useRef<HTMLInputElement>(null);
+  const v = d.asking_price_thb ?? null;
+  const band = bandOf(v);
+  const missing = !(v && v > 0);
   return (
     <div>
-      <label htmlFor="hp-asking" className={cn(LABEL, "mb-[6px] block")}>{tr("Asking price (฿M)", "ราคาที่ต้องการ (฿M)")}</label>
-      <Input id="hp-asking" ref={ref} {...(!onRequest ? { "data-edit-focus": true } : {})} type={onRequest ? "text" : "number"} min={0} readOnly={onRequest} tabIndex={onRequest ? -1 : 0}
-        value={onRequest ? tr("Price on request", "สอบถามราคา") : (d.asking_price ?? "")}
-        placeholder={tr("e.g. 120", "เช่น 120")}
-        onChange={(e) => { if (onRequest) return; const v = e.target.value === "" ? 0 : Number(e.target.value); kept.current = v; set("asking_price", v); }}
-        className={cn(BOX, onRequest && "bg-[#F3F4F6] text-[#6A7181] dark:bg-muted")} />
-      <label className="mt-2 flex items-center gap-2 text-[14px] text-[#374151] dark:text-foreground">
-        <input type="checkbox" className="h-4 w-4 accent-[#2563EB]" checked={onRequest}
-          onChange={(e) => {
-            if (e.target.checked) { if (d.asking_price != null) kept.current = d.asking_price; set("asking_price", null); }
-            else { set("asking_price", kept.current ?? 0); setTimeout(() => ref.current?.focus(), 0); }
-          }} />
-        {tr("Price on request", "สอบถามราคา")}
+      <label htmlFor="hp-asking" className={cn(LABEL, "mb-[6px] block", missing && "text-[#DC2626]")}>
+        {tr("Asking price (Estimate)", "ราคาที่ต้องการ (ประมาณการ)")}{missing && <span> · {tr("Missing", "ยังไม่ได้กรอก")}</span>}
       </label>
+      <Input id="hp-asking" data-edit-focus inputMode="numeric" autoComplete="off"
+        value={v ? fmtThb(v) : ""}
+        placeholder={tr("e.g. 120,000,000", "เช่น 120,000,000")}
+        onChange={(e) => { const digits = e.target.value.replace(/\D/g, "").slice(0, 13); set("asking_price_thb", digits ? Number(digits) : null); }}
+        className={cn(BOX, "h-[42px] text-[15px]", missing && "border-[#F87171]")} />
+      {v ? <p className="mt-[6px] text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr(thbWords(v), thbWordsTh(v))}</p> : null}
+      {band && (
+        <p className="mt-1 flex items-center gap-1 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">
+          <Lock className="h-[13px] w-[13px]" aria-hidden />
+          {tr(`Buyers see ${bandInText(band.label)} until you approve their NDA.`, `ผู้ซื้อจะเห็น ${band.th} จนกว่าคุณจะอนุมัติ NDA`)}
+        </p>
+      )}
     </div>
   );
 }
