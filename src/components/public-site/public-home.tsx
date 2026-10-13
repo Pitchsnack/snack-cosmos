@@ -345,7 +345,7 @@ function SoonBody({ title }: { title: { en: string; th: string } }) {
       <div className="ph-wrap">
         <h1>{t(title)}</h1>
         <p>{t({ en: "This page is coming soon.", th: "หน้านี้กำลังจะเปิดให้บริการเร็ว ๆ นี้" })}</p>
-        <Link to="/">{t({ en: "← Back to the homepage", th: "← กลับไปหน้าแรก" })}</a>
+        <Link to="/">{t({ en: "← Back to the homepage", th: "← กลับไปหน้าแรก" })}</Link>
       </div>
     </section>
   );
