@@ -6,7 +6,7 @@
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages: one page (messages-page.tsx); keys p:/a:/c:<deal_advisor>:<side>; c: threads derived in message-threads.server.ts, membership checked every call.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
-- Loading overlay opt-in (meta.pageLoading); LOI note: config/loi-request.json.
+- Loading overlay opt-in (meta.pageLoading); LOI note in config/loi-request.json.
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only by Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
@@ -15,8 +15,8 @@
 - Edit-at-section: My Company Edit/Add links pass ?section=; forms use EditSec + useOpenAtSection (edit-section.tsx).
 - Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields (startups.setup_from_signup, investors.wizard.from_signup, advisor_firms.wizard_state.fromSignup) so wizards skip them while set (rules in seller-wizard.ts, buyer-wizard.ts, advisor-firm.ts).
 - Sellers edit only their own businesses: DB policies via is_startup_member, a guard trigger keeps tenant/visibility, and listings still go live only by Admin approval.
-- Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types (list order, Investor Classification = first, empty for non-agents) and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts so the rule stays in one place. Sign-up stores the relation and types in signup_answers (buyer_relation, investor_types).
-- Sector picking uses one SetSectorPicker (components/common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic — so every form behaves the same.
+- Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types (list order, Investor Classification = first, empty for non-agents) and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts. Sign-up stores the relation and types in signup_answers (buyer_relation, investor_types).
+- Sector picking uses one SetSectorPicker (components/common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic —.
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts,.
 - Roles/plans: account_role checked in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
