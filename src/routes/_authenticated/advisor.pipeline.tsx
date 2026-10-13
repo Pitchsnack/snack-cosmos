@@ -1,3 +1,4 @@
+import { WithdrawnPill } from "@/components/pipeline/withdraw-deal";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -192,7 +193,7 @@ function DealCard({ d, t, open, onToggle }: { d: AdvDeal; t: (s: string) => stri
   const cur = curStep(d);
   const [dlg, setDlg] = useState<null | "nda" | "profile" | "history">(null);
   const waitTone = d.wait?.who === "you" ? "text-[#B45309]" : "text-[#6B7280]";
-  const waitText = !d.wait ? t("Completed") : d.wait.who === "you" ? `${t("waiting on you")}: ${t(d.wait.what)}` : d.wait.who === "client" ? `${t("waiting on your client")}: ${t(d.wait.what)}` : `${t("waiting on the other side")}: ${t(d.wait.what)}`;
+  const waitText = d.endedAt ? `${d.endedBySide === "seller" ? t("the seller withdrew on") : t("the buyer withdrew on")} ${new Date(d.endedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : !d.wait ? t("Completed") : d.wait.who === "you" ? `${t("waiting on you")}: ${t(d.wait.what)}` : d.wait.who === "client" ? `${t("waiting on your client")}: ${t(d.wait.what)}` : `${t("waiting on the other side")}: ${t(d.wait.what)}`;
   const rows: [string, string | null, string][] = [
     ["NDA", d.ndaAt, d.ndaAt ? t("Signed between the seller and the buyer") : "—"],
     ["Financial & Valuation", d.reportAt, d.reportAt ? t("Report shared with the buyer") : t("Not shared yet")],
@@ -208,7 +209,7 @@ function DealCard({ d, t, open, onToggle }: { d: AdvDeal; t: (s: string) => stri
         onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onToggle(); } }}
         className="flex cursor-pointer items-center gap-3 px-5 pt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0F766E]">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2"><span className="truncate text-[16px] font-bold">{d.client.name}</span><ClientChip side={d.side} t={t} /></div>
+          <div className="flex flex-wrap items-center gap-2"><span className="truncate text-[16px] font-bold">{d.client.name}</span><ClientChip side={d.side} t={t} />{d.endedAt && <WithdrawnPill />}</div>
           <div className="truncate text-[12.5px] text-[#6B7280]">{t("Deal with")} {d.other.name} · <span className={cn("font-semibold", waitTone)}>{waitText}</span></div>
         </div>
         <span className="flex items-center gap-2 text-[12.5px] font-semibold text-[#6B7280]">{open ? t("Hide details") : t("Details")}
