@@ -620,11 +620,14 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
   const submit = async () => {
     if (empty || busy) return;
     setBusy(true);
+    const body = text, picked = files;
+    setText("");
+    setFiles([]);
     try {
-      await onSend(text, files);
-      setText("");
-      setFiles([]);
+      await onSend(body, picked);
     } catch (e) {
+      setText(body);
+      setFiles(picked);
       toast.error((e as Error).message);
     } finally {
       setBusy(false);
