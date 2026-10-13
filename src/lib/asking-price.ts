@@ -38,3 +38,47 @@ export function bandInText(label: string) {
 }
 
 export const fmtThb = (n: number) => `฿ ${Math.round(n).toLocaleString("en-US")}`;
+
+const ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+function under1000(n: number): string {
+  const h = Math.floor(n / 100), r = n % 100;
+  const rest = r < 20 ? ONES[r] : TENS[Math.floor(r / 10)] + (r % 10 ? "-" + ONES[r % 10] : "");
+  return [h ? `${ONES[h]} hundred` : "", rest].filter(Boolean).join(" and ");
+}
+/** "One hundred and twenty million" */
+export function thbWords(n: number): string {
+  n = Math.floor(n);
+  if (n <= 0) return "";
+  const scales: [number, string][] = [[1e12, "trillion"], [1e9, "billion"], [1e6, "million"], [1e3, "thousand"], [1, ""]];
+  const parts: string[] = [];
+  for (const [v, w] of scales) {
+    const c = Math.floor(n / v) % 1000;
+    if (c) parts.push(`${under1000(c)}${w ? " " + w : ""}`);
+  }
+  const s = parts.join(" ");
+  return s[0].toUpperCase() + s.slice(1);
+}
+
+const TH_D = ["", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+const TH_P = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน"];
+function thUnderMillion(n: number): string {
+  const ds = String(n).split("").map(Number);
+  let out = "";
+  ds.forEach((d, i) => {
+    const pos = ds.length - 1 - i;
+    if (!d) return;
+    if (pos === 1 && d === 1) out += "สิบ";
+    else if (pos === 1 && d === 2) out += "ยี่สิบ";
+    else if (pos === 0 && d === 1 && ds.length > 1) out += "เอ็ด";
+    else out += TH_D[d] + TH_P[pos];
+  });
+  return out;
+}
+/** "หนึ่งร้อยยี่สิบล้าน" */
+export function thbWordsTh(n: number): string {
+  n = Math.floor(n);
+  if (n <= 0) return "";
+  const m = Math.floor(n / 1e6), r = n % 1e6;
+  return (m ? (m >= 1e6 ? thbWordsTh(m) : thUnderMillion(m)) + "ล้าน" : "") + (r ? thUnderMillion(r) : "");
+}
