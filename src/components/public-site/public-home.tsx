@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { HERO_PICS } from "./home-hero-pics";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -57,7 +58,7 @@ function Hero() {
           <h1><Rich s={t(HERO.h1)} /></h1>
           <p className="ph-hero-intro">{t(HERO.intro)}</p>
           <Buttons />
-          <p className="ph-joinline">{t(HERO.joinFree)} <a href="/sellers">{t(HERO.forSellers)}</a> · <a href="/buyers">{t(HERO.forBuyers)}</a> · <a href="/signup?role=partner">{t(HERO.advisers)}</a></p>
+          <p className="ph-joinline">{t(HERO.joinFree)} <Link to="/sellers">{t(HERO.forSellers)}</Link> · <Link to="/buyers">{t(HERO.forBuyers)}</Link> · <a href="/signup?role=partner">{t(HERO.advisers)}</a></p>
         </div>
         <HeroArt />
         <p className="ph-fine">{t(HERO.fine)}</p>
