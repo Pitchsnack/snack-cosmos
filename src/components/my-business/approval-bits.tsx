@@ -1,3 +1,4 @@
+import { fmtThb, thbOf } from "@/lib/asking-price";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -99,7 +100,7 @@ export function ApprovalNotice({ row, onEditPublic }: { row: HiddenProfileRow | 
 
 const FIELD_LABEL: Record<string, string> = {
   headline: "Headline", description: "Description", product_tags: "Products & services", market_tags: "Markets",
-  code_name: "Code name", asking_price: "Asking price", deal_type: "Deal type", owner_stays: "Owner handover", handover_months: "Handover months", cover_image_url: "Cover picture",
+  code_name: "Code name", asking_price: "Asking price", asking_price_thb: "Asking price (Estimate)", deal_type: "Deal type", owner_stays: "Owner handover", handover_months: "Handover months", cover_image_url: "Cover picture",
   highlights: "Highlights", region: "Region", reason: "Reason for sale",
 };
 function changedFields(row: HiddenProfileRow) {
@@ -211,7 +212,7 @@ function ConfirmSubmitDialog({
     ["Staff", v.company_size || "—"],
     ["Revenue FY23–25", years.length ? `Financials for FY${years.join(", FY")}` : "—"],
     ["EBITDA FY25", years.length ? "From your financial statements" : "—"],
-    ["Deal terms", [p.deal_type, handoverLine(p.owner_stays, p.handover_months), p.asking_price ? `Asking ${Number(p.asking_price).toLocaleString()}` : null].filter(Boolean).join(" · ") || "—"],
+    ["Deal terms", [p.deal_type, handoverLine(p.owner_stays, p.handover_months), thbOf(p as never) ? `Asking ${fmtThb(thbOf(p as never)!)}` : null].filter(Boolean).join(" · ") || "—"],
     ["Founder & key people", list(v.people)],
     ["Photos", v.photos ? `${v.photos} uploaded` : "—"],
     ["Data room", "Not set up yet"],

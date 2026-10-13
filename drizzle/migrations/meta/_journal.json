@@ -561,6 +561,20 @@
       "when": 1791902825819,
       "tag": "0079_asking_price_thb_and_setup_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1791903287686,
+      "tag": "0080_asking_price_cap_thb",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1791903306259,
+      "tag": "0081_asking_price_cap_trigger_thb",
+      "breakpoints": true
     }
   ]
 }

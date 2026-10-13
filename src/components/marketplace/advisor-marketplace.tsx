@@ -1,3 +1,4 @@
+import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { BrowseHeader, FilterPill, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
 import { useTranslation } from "@/i18n/language";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -113,6 +114,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("all");
   const [deal, setDeal] = useState("all");
+  const [price, setPrice] = useState("all");
   const [type, setType] = useState("all");
   const [country, setCountry] = useState("all");
   const [aum, setAum] = useState("");
@@ -125,7 +127,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
 
   const pickSide = (s: Side) => {
     setSide(s);
-    setSector("all"); setDeal("all"); setType("all"); setCountry("all"); setAum(""); setTicket(""); setRevenue("");
+    setSector("all"); setDeal("all"); setPrice("all"); setType("all"); setCountry("all"); setAum(""); setTicket(""); setRevenue("");
   };
 
   // Every live listing and Live investor profile, newest first (or newest star first in Favourites).
@@ -161,6 +163,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     if (x.kind === "listing") {
       if (sector !== "all" && x.t.listing.sector !== sector) return false;
       if (side === "sellers" && deal !== "all" && x.t.dealType !== deal) return false;
+      if (side === "sellers" && price !== "all" && (x.t as { priceBand?: { key: string } | null }).priceBand?.key !== price) return false;
       return true;
     }
     if (side === "all") return sector === "all" || x.i.sectors.includes(sector) || isAgnostic(x.i.sectors);
@@ -187,7 +190,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
 
   const current = items.find((x) => x.key === selected) ?? items[0] ?? null;
   useEffect(() => { panelRef.current?.scrollTo({ top: 0 }); }, [current?.key]);
-  useEffect(() => { listRef.current?.scrollTo({ top: 0 }); }, [side, q, sector, deal, type, country, aum, ticket, revenue]);
+  useEffect(() => { listRef.current?.scrollTo({ top: 0 }); }, [side, q, sector, deal, price, type, country, aum, ticket, revenue]);
 
   const openInSplit = (key: string) => {
     setSelected(key);
@@ -224,7 +227,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
   );
 
   const th = useTranslation().language === "th";
-  const anyFilter = !!q || sector !== "all" || deal !== "all" || type !== "all" || country !== "all" || !!aum || !!ticket || !!revenue;
+  const anyFilter = !!q || sector !== "all" || deal !== "all" || price !== "all" || type !== "all" || country !== "all" || !!aum || !!ticket || !!revenue;
   const subtitle = needle ? (
     <><b className="font-semibold text-foreground">{items.length}</b> of {filtered.length} match “{q.trim()}” ·{" "}
       <button type="button" onClick={() => setQ("")} className="text-[#2563EB] hover:underline">Clear search</button></>
@@ -320,6 +323,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
           filters={!fav && <>
             {side !== "buyers" && <FilterPill label="All sectors" value={sector} onChange={setSector} options={sectors.map((x) => ({ value: x, label: x }))} />}
             {side === "sellers" && <FilterPill label="All deal types" value={deal} onChange={setDeal} options={dealTypes.map((x) => ({ value: x, label: x }))} />}
+            {side === "sellers" && <FilterPill label={th ? "ทุกช่วงราคา" : "Any asking price"} value={price} onChange={setPrice} options={PRICE_BANDS.map((b) => ({ value: b.key, label: th ? `ราคา ${b.th}` : `Price ${bandInText(b.label)}` }))} />}
             {side === "buyers" && <>
               <FilterPill label={th ? "ทุกประเภท" : "All types"} value={type} onChange={setType} options={types.map((x) => ({ value: x, label: x }))} />
               <FilterPill label={th ? "ทุกประเทศ" : "All countries"} value={country} onChange={setCountry} options={countries.map((x) => ({ value: x, label: x }))} />

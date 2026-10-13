@@ -1,3 +1,4 @@
+import { bandOf, fmtThb, thbOf } from "@/lib/asking-price";
 import { useEffect, useMemo, useState } from "react";
 import { handoverLine } from "@/lib/hidden-profile";
 import { Link } from "@tanstack/react-router";
@@ -60,7 +61,7 @@ export function listingItems(rows: any[], names: Record<string, string>, emails:
     const years: string[] = pr.financial_years ?? [];
     const changed: [string, string, string][] = [];
     if (prev) {
-      const cmp: [string, string][] = [["Headline", "headline"], ["Description", "description"], ["Asking price", "asking_price"], ["Deal type", "deal_type"], ["Owner handover", "owner_stays"]];
+      const cmp: [string, string][] = [["Headline", "headline"], ["Description", "description"], ["Asking price (Estimate)", "asking_price_thb"], ["Deal type", "deal_type"], ["Owner handover", "owner_stays"]];
       for (const [label, k] of cmp) if (v(prev[k]) !== v(pub[k])) changed.push([label, v(prev[k]), v(pub[k])]);
     }
     return {
@@ -96,7 +97,7 @@ export function listingItems(rows: any[], names: Record<string, string>, emails:
           ["Website", v(pr.website_url), "Hidden"],
         ]],
         ["Financials", [["Revenue (last year)", thb(pr.last_year_revenue), v(revenueBand(pr.last_year_revenue))]]],
-        ["Deal terms", [["Deal type", v(pub.deal_type), "Same"], ["Asking price", thb(pub.asking_price), "Same"], ["Owner handover", handoverLine(pub.owner_stays, pub.handover_months) ?? "—", "Same"]]],
+        ["Deal terms", [["Deal type", v(pub.deal_type), "Same"], ["Asking price (Estimate)", thbOf(pub) ? `${fmtThb(thbOf(pub)!)} → ${bandOf(thbOf(pub))?.label}` : "—", "Same"], ["Owner handover", handoverLine(pub.owner_stays, pub.handover_months) ?? "—", "Same"]]],
       ],
     } satisfies Item;
   });

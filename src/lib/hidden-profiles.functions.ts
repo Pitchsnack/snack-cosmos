@@ -18,7 +18,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields";
 
 type Sb = SupabaseClient<Database>;
 
@@ -109,6 +109,7 @@ const DraftSchema = z.object({
   highlights: z.array(z.string().max(200)).max(4),
   customers_summary: z.string().max(400),
   asking_price: z.number().positive().nullable(),
+  asking_price_thb: z.number().int().positive().max(1e13).nullable().optional(),
   stake_pct: z.number().min(0).max(100).nullable(),
   deal_type: z.string().nullable(),
   structure: z.string().max(400).nullable(),
