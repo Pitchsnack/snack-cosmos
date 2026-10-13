@@ -366,7 +366,7 @@ function MyStartupsPageInner() {
       {/* Keep unused paging variable silenced */}
       <span className="hidden">{page}</span>
 
-      <Dialog open={!!modalId} onOpenChange={(o) => !o && closeStartup()}>
+      <Dialog open={!!modalId && s.edit !== "startup"} onOpenChange={(o) => !o && s.edit !== "startup" && closeStartup()}>
         <DialogContent
           className={cn(
             "[&>button]:hidden",
