@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isBuyerVisible } from "@/lib/hidden-profile";
+import type { StatementItem, RatioItem } from "@/lib/financials.functions";
 
 /**
  * Deal pipeline: one row per buyer × listing. Buyer requests the NDA, seller
@@ -591,7 +592,7 @@ export type ReportData = {
   info: { registration: string | null; capital: number | null; founded: string | null; employees: string | null; directors: string | null; shareholders: string | null };
   valuationShared: boolean;
   /** Full filed line items, same shape the seller's My Financials uses. */
-  full: { income: StatementItem[]; position: StatementItem[]; cashFlow: StatementItem[]; ratios: RatioItem[] };
+  full?: { income: StatementItem[]; position: StatementItem[]; cashFlow: StatementItem[]; ratios: RatioItem[] };
 };
 
 async function buildReport(startupId: string): Promise<ReportData> {
