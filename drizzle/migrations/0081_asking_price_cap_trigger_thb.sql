@@ -1,0 +1,2 @@
+DROP TRIGGER IF EXISTS asking_price_cap ON public.hidden_profiles;
+CREATE TRIGGER asking_price_cap BEFORE INSERT OR UPDATE OF asking_price, asking_price_thb ON public.hidden_profiles FOR EACH ROW EXECUTE FUNCTION public.tg_asking_price_cap();
