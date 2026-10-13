@@ -25,4 +25,4 @@
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
-- Asking price: hidden_profiles.asking_price_thb (whole baht) + DB asking_price_band(); servers send priceFor() from src/lib/asking-price.ts so the exact amount reaches only Admin, the listing's users or an approved NDA — everyone else gets the range. Advisor contact email is read live from the owner account (withOwnerEmails).
+- Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email read live from owner (withOwnerEmails).
