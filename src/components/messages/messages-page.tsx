@@ -307,6 +307,11 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       if (!res.ok) throw new Error(`Could not upload ${f.name}`);
       uploaded.push({ path, name: f.name, size: f.size, type: f.type });
     }
+    const tKey = ["messages", "thread", c.key];
+    qc.setQueryData(tKey, (old: any) => old ? {
+      ...old,
+      messages: [...old.messages, { id: `tmp-${Date.now()}`, senderId: old.meId, mine: true, body, files: uploaded, at: new Date().toISOString() }],
+    } : old);
     await sendFn({ data: { key: c.key, body, files: uploaded } });
     await qc.invalidateQueries({ queryKey: ["messages"] });
   };
