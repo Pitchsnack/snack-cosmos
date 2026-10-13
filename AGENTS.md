@@ -20,7 +20,7 @@
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts,.
 - Roles/plans: account_role checked in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
-- Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows, keeping prices and limits consistent.
+- Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows.
 - Contact enquiries: sendContactEnquiry (rate-limited); email-identity.ts drives replies and Sending rules.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
