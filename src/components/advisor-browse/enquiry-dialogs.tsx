@@ -94,7 +94,7 @@ export function ProposalRows({ p }: { p: ProposalDTO }) {
 
 /* ───────────────────────── Send enquiry ───────────────────────── */
 
-type FirmLite = { id: string; name: string; services: string[] };
+type FirmLite = { id: string; name: string; services: string[]; managed?: boolean };
 
 export function SendEnquiryDialog({ firm, me, service, onClose, onOpenMessages }: {
   firm: FirmLite; me: Me; service?: string | null; onClose: () => void; onOpenMessages: (key: string) => void;
