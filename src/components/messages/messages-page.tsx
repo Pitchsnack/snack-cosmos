@@ -18,6 +18,9 @@ import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
 import { tr } from "@/i18n/language";
 import { HatMark } from "./hat-mark";
+import { tf } from "@/components/advisor-browse/enquiry-dialogs";
+import { EnquiryCardView, EnquiryHeaderActions, ProposalCardView, enqStatusLabel } from "@/components/advisor-browse/enquiry-chat";
+import type { EnqMeta, EnquiryThread } from "@/lib/messages.functions";
 
 /**
  * Marketplace › Messages for every tab (seller, buyer, advisor). Seller–buyer
@@ -26,7 +29,7 @@ import { HatMark } from "./hat-mark";
  */
 type Side = "seller" | "buyer";
 type Conv = {
-  key: string; kind: "p" | "a" | "c"; name: string; person: string | null; sub: string; codeName: string | null;
+  key: string; kind: "p" | "a" | "c" | "e"; enq?: EnqMeta | null; name: string; person: string | null; sub: string; codeName: string | null;
   p: PipelineRow | null; adv: AdvDeal | null; meta: DaMeta | null;
   who: { label: string; dot: string } | null;
   unread: number; last: { body: string; mine: boolean; at: string; from: string | null } | null; startAt: string | null;
@@ -101,6 +104,17 @@ export function MessagesPage() {
       }
     }
     for (const s of sums) {
+      const e = s.enq;
+      if (!e) continue;
+      const firm = e.isFirm;
+      out.push({
+        key: s.key, kind: "e", enq: e, meta: null, p: null, adv: null,
+        name: firm ? e.clientCompany : e.firm.name, person: null, sub: firm ? "" : e.firm.sub, codeName: null,
+        who: { label: [firm ? (e.clientSide === "seller" ? "Seller" : "Buyer") : tr("Advisor"), enqStatusLabel(e.status, firm, e.isNew), firm ? e.service : tr(e.service)].join(" · "), dot: firm ? DOT[e.clientSide] : DOT.advisor },
+        unread: s.key === sel ? 0 : s.unread, last: s.last, startAt: null,
+      });
+    }
+    for (const s of sums) {
       const m = s.meta;
       if (!m) continue;
       const rel = relation(m, as);
@@ -124,9 +138,11 @@ export function MessagesPage() {
   const [mobileChat, setMobileChat] = useState(false);
   const [panel, setPanel] = useState(false);
   useEffect(() => { setPanel(false); setSel(null); }, [persona]);
+  const [wanted, setWanted] = useState<string | null>(() => typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("thread"));
   useEffect(() => {
-    if (!sel && convs.length) setSel(convs[0].key);
-  }, [convs, sel]);
+    if (wanted && convs.some((c) => c.key === wanted)) { setSel(wanted); setMobileChat(true); setWanted(null); return; }
+    if (!sel && convs.length && !wanted) setSel(convs[0].key);
+  }, [convs, sel, wanted]);
 
   const shown = convs.filter((c) => {
     const s = q.trim().toLowerCase();
@@ -153,6 +169,7 @@ export function MessagesPage() {
       if (as === "advisor") return "You joined the deal";
       return c.meta.clientSide === as ? `${c.meta.firm.name} joined as your advisor` : `${c.meta.firm.name} joined for ${c.meta.clientSide === "seller" ? c.meta.sellerOrg : c.meta.buyerOrg}`;
     }
+    if (c.kind === "e") return c.enq?.isFirm ? "New enquiry" : tr("Enquiry sent");
     return c.p ? "NDA approved. Say hello." : "Ask your advisor anything.";
   };
 
@@ -216,7 +233,8 @@ export function MessagesPage() {
 type Item =
   | { kind: "day"; id: string; label: string }
   | { kind: "event"; id: string; text: string; link: string | null; open: Dialog }
-  | { kind: "group"; id: string; sender: string; mine: boolean; msgs: ThreadMessage[] };
+  | { kind: "group"; id: string; sender: string; mine: boolean; msgs: ThreadMessage[] }
+  | { kind: "card"; id: string; card: { t: "q"; x: EnquiryThread["enquiries"][number] } | { t: "r"; x: EnquiryThread["proposals"][number] } };
 
 function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: Role; panel: boolean; setPanel: (b: boolean) => void; onBack: () => void; hiddenMobile: boolean }) {
   const qc = useQueryClient();
@@ -234,6 +252,8 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
   const scroller = useRef<HTMLDivElement>(null);
   const seller = as === "seller";
   const isC = c.kind === "c";
+  const isE = c.kind === "e";
+  const enq = ((data as any)?.enquiry ?? null) as EnquiryThread | null;
 
   const msgs: ThreadMessage[] = (data?.messages ?? []) as ThreadMessage[];
   const members: Member[] = (data?.members ?? []) as Member[];
@@ -259,8 +279,12 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       if (p.reportSharedAt) ev.push({ id: "rep", at: p.reportSharedAt, text: seller ? "You shared the financial report" : "Financial report shared", link: "View report", open: "report" });
       if (p.loiSentAt) ev.push({ id: "loi", at: p.loiSentAt, text: seller ? "Letter of intent received" : "Letter of intent sent", link: seller ? "Review LOI" : "View LOI", open: "loi" });
     }
-    for (const e of data?.events ?? []) ev.push({ id: e.id, at: e.at, text: e.text, link: e.link, open: e.nda ? { advNda: e.nda } : null });
-    const all = [...ev.map((e) => ({ t: "e" as const, at: e.at, e })), ...msgs.map((m) => ({ t: "m" as const, at: m.at, m }))].sort((a, b) => a.at.localeCompare(b.at));
+    for (const e of data?.events ?? []) ev.push({ id: e.id, at: e.at, text: e.text, link: e.link, open: e.nda ? { advNda: e.nda } : null, green: (e as any).green, tpl: (e as any).tpl, vars: (e as any).vars } as any);
+    const cards = enq ? [
+      ...enq.enquiries.map((x) => ({ t: "q" as const, at: x.at, id: `q${x.id}`, x })),
+      ...enq.proposals.map((x) => ({ t: "r" as const, at: x.sentAt, id: `r${x.id}`, x })),
+    ] : [];
+    const all = [...ev.map((e) => ({ t: "e" as const, at: e.at, e })), ...msgs.map((m) => ({ t: "m" as const, at: m.at, m })), ...cards].sort((a, b) => a.at.localeCompare(b.at));
     const out: Item[] = [];
     let lastDay = "";
     for (const x of all) {
@@ -270,6 +294,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
         out.push({ kind: "day", id: `d${lastDay}`, label: dayLabel(d) });
       }
       if (x.t === "e") out.push({ kind: "event", ...x.e });
+      else if (x.t === "q" || x.t === "r") out.push({ kind: "card", id: x.id, card: x } as any);
       else {
         const prev = out[out.length - 1];
         if (prev?.kind === "group" && prev.sender === x.m.senderId) prev.msgs.push(x.m);
@@ -277,7 +302,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       }
     }
     return out;
-  }, [msgs, c.p, c.kind, seller, data?.events]);
+  }, [msgs, c.p, c.kind, seller, data?.events, enq]);
   // Sent / Seen go under the latest group from my side (me or a colleague).
   const ourLast = [...msgs].reverse().find((m) => m.mine || (members.length > 0 && sameSide(m.senderId)));
 
@@ -334,10 +359,10 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
   const p = c.p, adv = c.adv, meta = c.meta;
   const dates = adv ? advDates(adv) : p ? stepDates(p) : null;
   const step = dates ? (() => { const i = dates.findIndex((x) => !x); return i === -1 ? 7 : i; })() : p ? currentStep(p) : 0;
-  const otherRole: Role | null = c.kind === "a" ? null : isC ? (as === "advisor" ? meta!.withSide : "advisor") : seller ? "buyer" : "seller";
+  const otherRole: Role | null = c.kind === "a" ? null : isE ? (c.enq?.isFirm ? c.enq.clientSide : "advisor") : isC ? (as === "advisor" ? meta!.withSide : "advisor") : seller ? "buyer" : "seller";
   const placeholder = c.kind === "a" ? `${tr("Message")} ${tr("Help desk")}` : others.length >= 2 ? `Message ${c.name}` : `Message ${others[0]?.name ?? c.person ?? c.name}`;
   const files = msgs.flatMap((m) => m.files.map((f) => ({ ...f, at: m.at }))).reverse();
-  const hasPanel = c.kind !== "a";
+  const hasPanel = c.kind !== "a" && !isE;
   const pipeHref = as === "advisor" ? `/advisor/pipeline?deal=${meta?.dealId}` : `/marketplace/pipeline?deal=${meta?.dealId ?? p?.id}`;
   const shownNames = others.slice(0, 3);
 
@@ -354,7 +379,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       {others.length > 3 && <span className="text-[#9CA3AF]"> +{others.length - 3}</span>}
       {!others.length && (c.person ?? "")}
       {isC && meta && <> · {relation(meta, as)}</>}
-      {step < 7 ? <> · {STEPS[step]}</> : <> · Completed</>}
+      {isE && c.enq ? <> · {enqStatusLabel(c.enq.status, c.enq.isFirm, c.enq.isNew)} · {c.enq.isFirm ? c.enq.service : tr(c.enq.service)}</> : step < 7 ? <> · {STEPS[step]}</> : <> · Completed</>}
     </>
   );
 
@@ -395,6 +420,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
               <Users className="h-[15px] w-[15px]" /> {members.length}<span className="max-[759px]:hidden"> {members.length === 1 ? "person" : "people"}</span>
             </button>
           )}
+          {isE && enq && <EnquiryHeaderActions t={enq} />}
           {hasPanel && (
             <button
               ref={pipeBtn}
@@ -416,6 +442,17 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
         <div ref={scroller} className="flex-1 overflow-y-auto px-7 pb-5 pt-3">
           {items.map((it) => {
             if (it.kind === "day") return <div key={it.id} className="py-3 text-center text-[11.5px] font-medium text-[#9CA3AF]">{it.label}</div>;
+            if (it.kind === "card" && enq)
+              return it.card.t === "q"
+                ? <EnquiryCardView key={it.id} t={enq} card={it.card.x} seen={!!it.card.x.readAt} />
+                : <ProposalCardView key={it.id} t={enq} p={it.card.x} me={enq.me} />;
+            if (it.kind === "card") return null;
+            if (it.kind === "event" && isE)
+              return (
+                <div key={it.id} className="py-1.5 text-center">
+                  <span className={cn("inline-block rounded-full px-3 py-1 text-[12px] font-medium", (it as any).green ? "bg-[#E9F6EE] text-[#15803D] dark:bg-green-950/50 dark:text-green-300" : "bg-[#F1F2F5] text-[#4B5563] dark:bg-muted dark:text-muted-foreground")}>{(it as any).tpl ? tf((it as any).tpl, (it as any).vars) : it.text}</span>
+                </div>
+              );
             if (it.kind === "event")
               return (
                 <div key={it.id} className="py-1.5 text-center text-[12px] text-[#9CA3AF]">
@@ -452,7 +489,9 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
             );
           })}
         </div>
-        {data?.closed ? (
+        {data?.closed && isE ? (
+          <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{enq?.closedTpl ? tf(enq.closedTpl, enq.closedVars) : ""}</div>
+        ) : data?.closed ? (
           <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{data.endedNote ? tr("This conversation is closed because {organisation} withdrew from the deal on {date}.").replace("{organisation}", data.endedNote.org).replace("{date}", data.endedNote.date) : isC ? "This conversation is closed because the advisor NDA ended." : "This conversation is closed because the NDA ended."}</div>
         ) : (
           <Composer placeholder={placeholder} as={as} onSend={send} />

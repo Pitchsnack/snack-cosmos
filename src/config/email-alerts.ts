@@ -194,7 +194,7 @@ export const EMAIL_ALERTS: AlertDef[] = [
   {
     key: "advisor_new_enquiry", n: 16, group: "Advisors", name: "New enquiry", icon: "inbox", color: "#0F766E", wired: true,
     placeholders: ["{client company}", "{client name}", "{firm}", "{service}", "{seller | buyer}"],
-    advisor: v("A seller or buyer sends an enquiry", "The users of the advisor account that owns the firm profile", "Messages", "/marketplace/messages?thread={thread}",
+    advisor: v("A seller or buyer sends an enquiry", "The users of the advisor account that owns the firm profile", "Advisor › Messages", "/advisor/messages?thread={thread}",
       { subject: "{client company} sent you an enquiry", title: "New enquiry from a {seller | buyer}", body: "{client name} at {client company} asked {firm} about {service}. Reply in Messages, or send a proposal.", button: "Open the enquiry" },
       { subject: "{client company} sent you an enquiry", title: "New enquiry from a {seller | buyer}", body: "{client name} at {client company} asked {firm} about {service}. Reply in Messages, or send a proposal.", button: "Open the enquiry" }),
   },
@@ -211,7 +211,7 @@ export const EMAIL_ALERTS: AlertDef[] = [
   {
     key: "advisor_proposal_accepted", n: 18, group: "Advisors", name: "Proposal accepted", icon: "user-check", color: "#16A34A", wired: true,
     placeholders: ["{client company}", "{service}", "{fee}"],
-    advisor: v("The client accepts the proposal", "The firm's users", "Messages", "/marketplace/messages?thread={thread}",
+    advisor: v("The client accepts the proposal", "The firm's users", "Advisor › Messages", "/advisor/messages?thread={thread}",
       { subject: "{client company} engaged you", title: "Your proposal was accepted", body: "{client company} accepted your proposal for {service}. You're now their advisor.", button: "Open the conversation" },
       { subject: "{client company} engaged you", title: "Your proposal was accepted", body: "{client company} accepted your proposal for {service}. You're now their advisor.", button: "Open the conversation" }),
   },

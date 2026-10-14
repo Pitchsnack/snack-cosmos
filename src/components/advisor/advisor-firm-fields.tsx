@@ -20,12 +20,14 @@ const bad = "!border-[#B42318]";
 
 /* --------------------------------- Fees --------------------------------- */
 
-export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlurAll }: {
+export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlurAll, proposal }: {
   service: string; value: FeeDetail; onChange: (v: FeeDetail) => void; showErr: boolean; autoFocus?: boolean; onBlurAll?: () => void;
+  /** Proposal mode: no Request a Price Quote, "Fixed fee ฿{amount}", "On the proposal". */
+  proposal?: { words: (f: FeeDetail) => string | null };
 }) {
   const ex = serviceOf(service);
   const err = showErr ? feeError(service, value) : null;
-  const words = feeWords(value);
+  const words = proposal ? proposal.words(value) : feeWords(value);
   const set = (p: Partial<FeeDetail>) => onChange({ ...value, ...p });
   const amountField = (label: string, ph: string) => (
     <div className="min-w-0">
@@ -55,10 +57,10 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
         <span className={sub}>How you charge<Req /></span>
         <select autoFocus={autoFocus} aria-required aria-label={`How you charge for ${service}`} className={cn(small, "pr-8")} value={value.type}
           onChange={(e) => set({ type: e.target.value as FeeType })}>
-          {FEE_TYPES.map((t) => <option key={t.value} value={t.value}>{tr(t.label)}</option>)}
+          {FEE_TYPES.filter((t) => !proposal || t.value !== "quote").map((t) => <option key={t.value} value={t.value}>{tr(t.label)}</option>)}
         </select>
       </div>
-      {value.type === "fixed" && amountField("From", ex.fixed)}
+      {value.type === "fixed" && amountField(proposal ? "Amount" : "From", ex.fixed)}
       {value.type === "hourly" && amountField("Per hour", "5,500")}
       {value.type === "retainer" && amountField("Per month", "120,000")}
       {value.type === "success" && pctField("Of the deal")}
@@ -73,7 +75,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
             onChange={(e) => set({ words: e.target.value })} />
         </div>
       )}
-      {words && <p className="text-[12.5px] text-[#6B7280]">On your profile: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}
+      {words && <p className="text-[12.5px] text-[#6B7280]">{proposal ? "On the proposal" : "On your profile"}: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}
       {err && <p className="text-[13px] text-[#B42318]">{err.msg}</p>}
     </div>
   );

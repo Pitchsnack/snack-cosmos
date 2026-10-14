@@ -4,6 +4,7 @@ import { BadgeCheck, Building2, ChevronDown, ChevronUp } from "lucide-react";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { dealBandLabels, initials, reviewStats, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
+import { tr } from "@/i18n/language";
 
 /** Advisor firm card: the investor public card's layout with firm content. */
 
@@ -61,11 +62,11 @@ export function ServiceChip({ name }: { name: string }) {
   );
 }
 
-function Cover({ f, wide }: { f: AdvisorFirm; wide?: boolean }) {
+function Cover({ f, wide, noStatus }: { f: AdvisorFirm; wide?: boolean; noStatus?: boolean }) {
   const pills = (
     <>
       {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
-      <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>
+      {!noStatus && <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>}
     </>
   );
   if (f.logoUrl) {
@@ -108,7 +109,7 @@ function MoreRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function FirmCard({ f, wide, preview, selected, onClick, className }: { f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string }) {
+export function FirmCard({ f, wide, preview, selected, onClick, className, foot, accent = "#F6A823", noStatus }: { f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string; foot?: React.ReactNode; accent?: string; noStatus?: boolean }) {
   const [open, setOpen] = useState(false);
   const deal = dealBandLabels(f.dealBand);
   const { n, avg } = reviewStats(f.reviews);
@@ -118,13 +119,15 @@ export function FirmCard({ f, wide, preview, selected, onClick, className }: { f
       onClick={onClick}
       className={cn(
         "group overflow-hidden rounded-[14px] border bg-card text-left transition-all",
-        selected ? "border-[#F6A823] shadow-[0_0_0_1px_#F6A823]" : "border-border",
-        onClick && "cursor-pointer hover:-translate-y-0.5 hover:border-[#F6A823]",
+        foot && "flex flex-col",
+        selected ? "" : "border-border",
+        onClick && "cursor-pointer hover:-translate-y-0.5",
         className,
       )}
+      style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
     >
-      <Cover f={f} wide={wide} />
-      <div className="space-y-2.5 p-4">
+      <Cover f={f} wide={wide} noStatus={noStatus} />
+      <div className={cn("space-y-2.5 p-4", foot && "flex-1")}>
         <div>
           <div className="flex items-start justify-between gap-3">
             <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name.trim() || "New firm profile"}</h3>
@@ -159,7 +162,14 @@ export function FirmCard({ f, wide, preview, selected, onClick, className }: { f
           </div>
         )}
       </div>
-      {!wide && !preview && (
+      {foot ? (
+        <div className="flex items-center justify-between gap-2 border-t border-[#F0F1F3] px-3.5 pb-[11px] pt-[9px] dark:border-border">
+          <button type="button" onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }} className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted-foreground hover:text-foreground">
+            {open ? <>{tr("Show less")} <ChevronUp className="h-4 w-4" /></> : <>{tr("Show more")} <ChevronDown className="h-4 w-4" /></>}
+          </button>
+          {foot}
+        </div>
+      ) : !wide && !preview && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Lock, Search } from "lucide-react";
+import { CheckCircle2, Info, Lock, Search } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
+import { myEngagedAdvisors } from "@/lib/advisor-enquiries.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,39 +68,77 @@ function InviteAdvisorDialog({ dealId, onClose, onDone }: { dealId: string; onCl
   const dq = useDebounced(q, 250);
   const search = useServerFn(searchAdvisorFirms);
   const invite = useServerFn(inviteAdvisor);
-  const [busy, setBusy] = useState<string | null>(null);
+  const mineFn = useServerFn(myEngagedAdvisors);
+  const stateQ = useAdvisorState(dealId, true);
+  const [pick, setPick] = useState<{ id: string; name: string } | null>(null);
+  const [busy, setBusy] = useState(false);
   const r = useQuery({ queryKey: ["advisor-search", dealId, dq], queryFn: () => search({ data: { dealId, q: dq } }), enabled: dq.trim().length > 0 });
+  const yours = useQuery({ queryKey: ["my-engaged-advisors"], queryFn: () => mineFn(), staleTime: 30_000 });
+  const otherFirm = (stateQ.data as any)?.other?.firm as string | undefined;
+  const radio = (on: boolean) => <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", on ? "border-[#1E2A4A] bg-[#1E2A4A] shadow-[inset_0_0_0_2px_#fff]" : "border-[#C9CEDA]")} />;
+  const rowCls = (on: boolean, off?: boolean) => cn("flex w-full items-center gap-3 rounded-[12px] border px-3 py-2.5 text-left", on ? "border-[#1E2A4A] bg-[#F6F7FB] shadow-[inset_0_0_0_1px_#1E2A4A] dark:bg-muted" : "border-[#DCDFE5] dark:border-border", off && "cursor-not-allowed opacity-50");
+  const who = pick?.name ?? "Your advisor";
   return (
-    <Shell width={560} onClose={onClose} label="Introduce advisor">
-      <DocHead title="Introduce advisor" sub="Invite a live firm on PitchSnack to work on this deal for you" onClose={onClose} />
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
+    <Shell width={600} onClose={onClose} label="Introduce your advisor">
+      <DocHead title="Introduce your advisor" sub="Invite the firm that advises you on this deal" onClose={onClose} />
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-4 pt-4">
+        <div>
+          <div className="mb-2 text-[13.5px] font-semibold">Your advisors</div>
+          {(yours.data ?? []).length === 0 ? (
+            <div className="flex gap-2 rounded-[10px] border border-[#E7E9EE] bg-[#F6F7F9] p-3 text-[13px] dark:border-border dark:bg-muted/40"><Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <span>You haven't engaged an advisor yet. <Link to="/marketplace/advisors" className="font-semibold text-[#2563EB] hover:underline" onClick={onClose}>Find one in Browse advisors</Link>, or search all firms below.</span></div>
+          ) : (
+            <div role="radiogroup" className="space-y-2">
+              {(yours.data ?? []).map((f) => {
+                const off = !!otherFirm && otherFirm === f.name;
+                const on = pick?.id === f.id;
+                return (
+                  <button key={f.id} type="button" role="radio" aria-checked={on} disabled={off} onClick={() => { setPick({ id: f.id, name: f.name }); setQ(""); }} className={rowCls(on, off)}>
+                    <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-[#E0F5F2] text-[12px] font-bold text-[#0F766E]">{f.logoUrl ? <img src={f.logoUrl} alt="" className="h-full w-full bg-white object-contain" /> : f.name.slice(0, 2).toUpperCase()}</span>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-semibold">{f.name}</span>
+                      <span className="block truncate text-[12.5px] text-[#6B7280]">{off ? "Advising the other side on this deal" : [f.status === "engaged" ? `Your advisor since ${fmtDate(f.since)}` : "Worked with you", f.service, f.verified ? "✓ Verified advisor" : null].filter(Boolean).join(" · ")}</span></span>
+                    {radio(on)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 pt-1 text-[11px] font-bold uppercase tracking-[.06em] text-[#9CA3AF]">Or search all firms<span className="h-px flex-1 bg-[#EEF0F3] dark:bg-border" /></div>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
-          <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Firm name or ADV reference" className="h-10 pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search firms by name or ADV ref" className="h-10 pl-9" />
         </div>
-        <div className="mt-3 space-y-2">
-          {!dq.trim() && <p className="text-[13px] text-[#6B7280]">Type a firm name to search.</p>}
+        <div className="space-y-2">
           {dq.trim() && r.data?.length === 0 && <p className="text-[13px] text-[#6B7280]">No live firm matches “{dq}”.</p>}
-          {(r.data ?? []).map((f: any) => (
-            <div key={f.id} className="flex items-center gap-3 rounded-[12px] border border-[#E5E7EB] p-3">
-              <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-[#E0F5F2] text-[13px] font-bold text-[#0F766E]">
-                {f.logoUrl ? <img src={f.logoUrl} alt="" className="h-full w-full object-cover" /> : f.name.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-semibold">{f.name}{f.verified && <span className="ml-1.5 text-[11px] font-bold text-[#15803D]">✓ Verified</span>}</div>
-                <div className="truncate text-[12.5px] text-[#6B7280]">{[f.ref, f.type, f.city].filter(Boolean).join(" · ")}</div>
-              </div>
-              {f.advisesOther
-                ? <span className="text-[12px] text-[#6B7280]">Advises the other side</span>
-                : <Button size="sm" disabled={!!busy} onClick={async () => {
-                    setBusy(f.id);
-                    try { await invite({ data: { dealId, firmId: f.id } }); toast.success(`Invitation sent to ${f.name}`); onDone(); onClose(); }
-                    catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
-                  }}>{busy === f.id ? "Sending…" : "Invite"}</Button>}
-            </div>
-          ))}
+          {dq.trim() && (r.data ?? []).map((f: any) => {
+            const on = pick?.id === f.id;
+            return (
+              <button key={f.id} type="button" role="radio" aria-checked={on} disabled={f.advisesOther} onClick={() => setPick({ id: f.id, name: f.name })} className={rowCls(on, f.advisesOther)}>
+                <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-[#E0F5F2] text-[12px] font-bold text-[#0F766E]">{f.logoUrl ? <img src={f.logoUrl} alt="" className="h-full w-full object-cover" /> : f.name.slice(0, 2).toUpperCase()}</span>
+                <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-semibold">{f.name}{f.verified && <span className="ml-1.5 text-[11px] font-bold text-[#15803D]">✓ Verified</span>}</span>
+                  <span className="block truncate text-[12.5px] text-[#6B7280]">{f.advisesOther ? "Advises the other side" : [f.ref, f.type, f.city].filter(Boolean).join(" · ")}</span></span>
+                {radio(on)}
+              </button>
+            );
+          })}
         </div>
-        <p className="mt-4 text-[12.5px] leading-relaxed text-[#6B7280]">The advisor sees the deal steps and dates only. They never see your NDA, reports, figures, letter of intent, private notes or messages. They sign an NDA with both sides before joining.</p>
+        <ul className="space-y-1.5 text-[13px] text-[#374151] dark:text-foreground">
+          <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-[15px] w-[15px] shrink-0 text-[#16A34A]" />{who} sees the deal steps and dates only, never your NDA, reports, figures, letter of intent, private notes or messages.</li>
+          <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-[15px] w-[15px] shrink-0 text-[#16A34A]" />To join, {pick ? pick.name : "your advisor"} signs an NDA with you and the other side.</li>
+        </ul>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-3.5">
+        <span className="text-[13px] text-[#6B7280]"><Link to="/marketplace/advisors" onClick={onClose} className="font-semibold text-[#2563EB] hover:underline">Browse advisors</Link> to compare firms</span>
+        <span className="flex gap-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button disabled={!pick || busy} onClick={async () => {
+            if (!pick) return;
+            setBusy(true);
+            try { await invite({ data: { dealId, firmId: pick.id } }); toast.success(`Invitation sent to ${pick.name}`); onDone(); onClose(); }
+            catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+          }}>{busy ? "Sending…" : "Send invitation"}</Button>
+        </span>
       </div>
     </Shell>
   );
