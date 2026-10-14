@@ -29,6 +29,7 @@ import {
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { MediaPreviewDialog } from "@/components/media/media-preview-dialog";
 import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
+import { toWebp } from "@/lib/media/to-webp";
 
 /**
  * Shared remove-X button. Only rendered when the tile has an image.
@@ -749,7 +750,8 @@ export async function uploadPending(
     ) => Promise<{ error: Error | null }>;
   },
 ): Promise<{ logoPath: string | null; media: { slot: 1 | 2 | 3; image_path: string }[] }> {
-  async function upload(file: File, kind: "logo" | "slot-1" | "slot-2" | "slot-3"): Promise<string> {
+  async function upload(original: File, kind: "logo" | "slot-1" | "slot-2" | "slot-3"): Promise<string> {
+    const file = await toWebp(original, kind === "logo" ? "logo" : "photo");
     const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
     const { path, token } = await uploadFn({ kind, ext });
     const { error } = await storage.uploadToSignedUrl(path, token, file, {
