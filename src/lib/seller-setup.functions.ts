@@ -48,12 +48,11 @@ async function saveListingAnswers(userSb: any, startupId: string, userId: string
     deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
     asking_price_thb: l.price, updated_by: userId,
   };
-  if (l.name) patch.code_name = l.name;
   if (!cur) {
     const { data: st } = await userSb.from("startups").select("tenant_id, city").eq("id", startupId).single();
     const { error } = await userSb.from("hidden_profiles").insert({
       startup_id: startupId, tenant_id: st.tenant_id, region: st.city ?? null, open_to: ["Private equity", "Family office", "Corporate"], nda_approver: "admin",
-      code_name: l.name || `Draft ${startupId.slice(0, 8)}`, created_by: userId, ...patch,
+      created_by: userId, ...patch,
     });
     if (error) throw new Error(/code_name/.test(error.message) ? "NAME_TAKEN: That listing name is already used by another listing" : error.message);
     return;

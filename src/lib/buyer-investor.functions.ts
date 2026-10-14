@@ -100,6 +100,11 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         website_url: inv.website_url as string | null,
         linkedin_url: inv.linkedin_url as string | null,
         business_address: inv.business_address as string | null,
+        address_line1: (inv.address_line1 ?? null) as string | null,
+        address_line2: (inv.address_line2 ?? null) as string | null,
+        address_city_district: (inv.address_city_district ?? null) as string | null,
+        address_province_state: (inv.address_province_state ?? null) as string | null,
+        postal_code: (inv.postal_code ?? null) as string | null,
         aum: inv.aum as string | null,
         min_ticket_size: inv.min_ticket_size as string | null,
         max_ticket_size: inv.max_ticket_size as string | null,
@@ -300,6 +305,7 @@ const Wizard = z.object({
   investor_name: z.string().trim().max(120).optional(),
   year_founded: z.number().int().min(1800).max(2100).nullable().optional(),
   registration_no: txt(50), website_url: txt(500),
+  address_line1: txt(120), address_line2: txt(120), address_city_district: txt(80), address_province_state: txt(80), postal_code: txt(12),
   aum_band: z.enum(AUM_KEYS).nullable().optional(),
   ticket_band: z.enum(TICKET_KEYS).nullable().optional(),
   revenue_min_band: z.enum(REV_KEYS).nullable().optional(),
@@ -340,6 +346,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     if (has("year_founded")) inv.year_founded = data.year_founded;
     if (has("registration_no")) inv.registration_no = data.registration_no || null;
     if (has("website_url")) inv.website_url = data.website_url || null;
+    for (const k of ["address_line1", "address_line2", "address_city_district", "address_province_state", "postal_code"] as const) if (has(k)) inv[k] = data[k] || null;
     if (has("aum_band")) { inv.aum_band = data.aum_band; inv.aum = bandOf(data.aum_band)?.label ?? null; }
     if (has("ticket_band")) {
       inv.ticket_band = data.ticket_band;

@@ -1,11 +1,10 @@
 /** Buyer investor-profile setup wizard: question order, visibility by role, progress. */
 export type BuyerRelation = "individual" | "corporate" | "agent";
-export type QId = "role" | "type" | "loc" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "desc" | "review";
+export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "desc" | "review";
 
 export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "role", sec: "About you" },
   { id: "type", sec: "About the firm" },
-  { id: "loc", sec: "About the firm" },
   { id: "name", sec: "About the firm" },
   { id: "web", sec: "About the firm" },
   { id: "aum", sec: "Fund & ticket" },
@@ -46,7 +45,6 @@ export function buyerSkips(fromSignup: string[] | undefined, v: BuyerSkipVals): 
   if (f.has("type") && (v.role === "agent" ? (v.actsFor ?? []).length > 0 : !!v.type && v.type !== "Individual Investor")) s.add("type");
   if (f.has("web") && v.web.trim()) s.add("web");
   if (f.has("sectors") && (v.sectors ?? []).length > 0) s.add("sectors");
-  if (v.role === "individual" && f.has("name") && v.name.trim().length >= 2) s.add("name");
   return s;
 }
 

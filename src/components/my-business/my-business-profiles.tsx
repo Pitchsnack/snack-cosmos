@@ -257,7 +257,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
       </SectorArt>
       <div className="px-3 pb-3">
         <div className="pt-2.5">
-          <div className="truncate text-[14px] font-bold">{d?.code_name || listing.headline || "Public view"}</div>
+          <div className="truncate text-[14px] font-bold">{d?.code_name || row?.ref_no || listing.headline || "Public view"}</div>
         </div>
         <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
         <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>No description yet</em>}</p>
@@ -342,7 +342,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
         <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-accent to-accent-dark text-accent-foreground"><EyeOff className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
           <KindPill kind="public" row={row} />
-          <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || "Public view"}</h2>
+          <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || row?.ref_no || "Public view"}</h2>
           <div className="truncate text-[13px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">

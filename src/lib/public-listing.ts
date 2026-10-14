@@ -435,7 +435,8 @@ export function buildPublicListing(
     subSector: s.business_model ?? null,
     verified: !!s.registered_verified,
     hasFinancials,
-    codeName: p?.code_name ?? "",
+    // No name yet: the ref shows wherever the name would.
+    codeName: p?.code_name || p?.ref_no || "",
     refNo: p?.ref_no ?? "",
     coverArt: p?.cover_art ?? null,
     // Public image is set by Admin and only shows once a version has been approved.

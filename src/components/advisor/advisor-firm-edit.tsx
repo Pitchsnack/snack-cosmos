@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/language";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { EditInfoFooter, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState } from "react";
@@ -157,7 +158,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
   // Save checks, in order.
   const errs: [string, string | null][] = [
     ["name", nameError(f.name)],
-    ["city", cityError(f.city, f.country)],
+    ["city", cityError(thai ? f.addr.province : f.city, f.country)],
     ["year", yearError(f.yearFounded)],
     ["desc", descError(f.description)],
     ["teamSize", teamSizeError(f.teamSize)],
@@ -189,7 +190,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       await save({
         data: {
           id: firm?.id ?? null, name: f.name.trim(), firmType: f.firmType || "Other", logoPath: f.logo.path, logoSource: f.logo.source,
-          description: f.description.trim(), yearFounded: Number(f.yearFounded), city: f.city.trim(), country: f.country,
+          description: f.description.trim(), yearFounded: Number(f.yearFounded), city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: Number(f.teamSize), languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
           legalName: f.legalName.trim(), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
@@ -243,20 +244,6 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
               <option value="" disabled>Select type</option>
               {FIRM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
-          </F>
-          <F label="Country" req tag={src.country}>
-            <select aria-required className={sel} value={COUNTRIES.includes(f.country) ? f.country : "Other"} onChange={(e) => changeCountry(e.target.value)}>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </F>
-          <F label={thai ? "City / province" : "City"} req tag={src.city} err={show("city")} htmlFor="fe-city">
-            {thai ? (
-              <select id="fe-city" aria-required className={cn(sel, show("city") && errB)} value={f.city} onBlur={blur("city")}
-                onChange={(e) => setF((p) => ({ ...p, city: e.target.value, addr: { ...p.addr, province: p.addr.province || e.target.value } }))}>
-                <option value="">Choose a province</option>
-                {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            ) : <Input id="fe-city" aria-required className={cn(inp, show("city") && errB)} maxLength={80} placeholder="e.g. Singapore" value={f.city} onBlur={blur("city")} onChange={(e) => set("city", e.target.value)} />}
           </F>
           <F label="Year founded" req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder="e.g. 2014" value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
@@ -331,7 +318,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
           <F label="Phone" req tag={src.phone} err={show("phone")} htmlFor="fe-phone"><Input id="fe-phone" aria-required className={cn(inp, show("phone") && errB)} maxLength={30} placeholder="+66 2 123 4567" value={f.phone} onBlur={blur("phone")} onChange={(e) => set("phone", e.target.value)} /></F>
         </div>
         <div>
-          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note="Sellers and buyers see it as a link that opens a map."
+          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+            country={f.country} onCountry={changeCountry}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
         </div>

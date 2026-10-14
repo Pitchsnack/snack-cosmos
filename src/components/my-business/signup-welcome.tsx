@@ -14,7 +14,7 @@ import { SELLER_OPTS, BUYER_OPTS, BUYER_REL_OPTS, ADVISOR_OPTS } from "@/compone
 import { typeLabel } from "@/lib/investor-bands";
 
 const ADVISOR_SEC: Record<string, string> = {
-  type: "About the firm", loc: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
+  type: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
   deal: "Your work", team: "Your work", sectors: "Your work", contact: "Contact", logo: "Your card", desc: "Your card",
 };
 const group = (secs: string[]): [string, number][] => {

@@ -83,7 +83,7 @@ async function build(sb: any, p: any, direction: NoteDirection) {
     }
     return {
       subject: String(p.startup_id),
-      name: st?.startup_name || hp?.code_name || "Business",
+      name: st?.startup_name || hp?.code_name || hp?.ref_no || "Business",
       sub: [st?.industry, st?.city].filter(Boolean).join(" · ") || null,
       logoUrl: st?.logo_url ?? null, verified: true,
       codeName: hp?.code_name ?? null, sizeLabel: null, contact,

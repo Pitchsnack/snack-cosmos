@@ -78,7 +78,7 @@ export const submitListing = createServerFn({ method: "POST" })
     if (e3) throw new Error(e3.message);
     const action = version > 1 ? "resubmit" : "submit";
     await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: context.userId, version, action, actor_id: context.userId });
-    await notify(context.userId, hp.tenant_id, "Submitted for approval", `${hp.code_name} (v${version}) is in review. Admin usually reviews within 1 business day.`);
+    await notify(context.userId, hp.tenant_id, "Submitted for approval", `${hp.code_name || hp.ref_no} (v${version}) is in review. Admin usually reviews within 1 business day.`);
     return { ok: true };
   });
 
@@ -93,7 +93,7 @@ export const withdrawListing = createServerFn({ method: "POST" })
     const { error } = await sb.from("hidden_profiles").update({ approval_status: next, updated_by: context.userId }).eq("id", hp.id);
     if (error) throw new Error(error.message);
     await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: context.userId, version: hp.version, action: "withdraw", actor_id: context.userId });
-    await notify(context.userId, hp.tenant_id, "Submission withdrawn", `${hp.code_name} is back to ${next === "draft" ? "Draft" : "Live · edits pending"}.`);
+    await notify(context.userId, hp.tenant_id, "Submission withdrawn", `${hp.code_name || hp.ref_no} is back to ${next === "draft" ? "Draft" : "Live · edits pending"}.`);
     return { ok: true };
   });
 
@@ -113,7 +113,7 @@ export const unpublishListing = createServerFn({ method: "POST" })
     await sbAdmin.from("startups").update({ visibility: "Private" }).eq("id", hp.startup_id).neq("visibility", "Private");
 
     await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: context.userId, version: hp.version, action: "unpublish", actor_id: context.userId });
-    await notify(context.userId, hp.tenant_id, "Listing unpublished", `${hp.code_name} is no longer visible to buyers.`);
+    await notify(context.userId, hp.tenant_id, "Listing unpublished", `${hp.code_name || hp.ref_no} is no longer visible to buyers.`);
     return { ok: true };
   });
 
@@ -319,9 +319,9 @@ export const decideListing = createServerFn({ method: "POST" })
       action: data.action, actor_id: context.userId, note: data.note ?? null, reasons: data.reasons ?? [], fields: data.fields ?? [],
     });
     const msg = {
-      approve: ["Listing approved", `${hp.code_name} is live in the Marketplace.`],
-      request_changes: ["Changes requested", `Admin asked for changes to ${hp.code_name}: ${data.note ?? ""}`],
-      reject: ["Listing rejected", `${hp.code_name} was rejected: ${data.note ?? ""}`],
+      approve: ["Listing approved", `${hp.code_name || hp.ref_no} is live in the Marketplace.`],
+      request_changes: ["Changes requested", `Admin asked for changes to ${hp.code_name || hp.ref_no}: ${data.note ?? ""}`],
+      reject: ["Listing rejected", `${hp.code_name || hp.ref_no} was rejected: ${data.note ?? ""}`],
     }[data.action];
     let extra = "";
     if (data.action === "approve" && hp.notify_admin_edits) {
@@ -334,9 +334,9 @@ export const decideListing = createServerFn({ method: "POST" })
       const { sendAlert, sellerTeam } = await import("./email-alerts.server");
       const key = { approve: "approved", request_changes: "changes_requested", reject: "declined" }[data.action];
       const det: [string, string][] = data.action === "approve"
-        ? [["Listing", hp.code_name], ["Approved", new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" })], ["Visible as", "Identity hidden until you approve an NDA"]]
+        ? [["Listing", hp.code_name || hp.ref_no], ["Approved", new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" })], ["Visible as", "Identity hidden until you approve an NDA"]]
         : [...((data.fields ?? []).length ? [["Fields to fix", (data.fields ?? []).map((f: string) => FIELD_LABEL[f] ?? f).join(", ")] as [string, string]] : []), ...((data.reasons ?? []).length ? [["Reason", (data.reasons ?? []).join(", ")] as [string, string]] : [])];
-      await sendAlert({ alert: key, role: "seller", userIds: [hp.submitted_by, ...(await sellerTeam(hp.startup_id))], vars: { "listing code name": hp.code_name }, details: det, quote: data.action === "approve" ? null : data.note, refKey: `listing:${hp.id}:v${hp.version}:${data.action}` });
+      await sendAlert({ alert: key, role: "seller", userIds: [hp.submitted_by, ...(await sellerTeam(hp.startup_id))], vars: { "listing code name": hp.code_name || hp.ref_no }, details: det, quote: data.action === "approve" ? null : data.note, refKey: `listing:${hp.id}:v${hp.version}:${data.action}` });
     }
     return { ok: true };
   });

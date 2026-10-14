@@ -29,7 +29,7 @@ type A = {
   logo: LogoState; desc: string;
 };
 const SECTION: Record<WizardQ, string> = {
-  type: "About the firm", loc: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
+  type: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
   deal: "Your work", team: "Your work", sectors: "Your work", contact: "Contact", logo: "Your card", desc: "Your card", review: "Review",
 };
 const STEPS: WizardQ[] = [...WIZARD_QS, "review"];
@@ -87,7 +87,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const addrErr = addrErrors(a.addr, thai, a.city);
   const errors: Record<string, string | null> = {
     type: a.type ? null : tr("Choose one to continue."),
-    country: a.country ? null : tr("Choose your country."),
+    country: a.country ? null : tr("Choose a country."),
     city: cityError(a.city, a.country),
     name: nameError(a.name),
     year: yearError(a.year),
@@ -105,7 +105,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     desc: descError(a.desc),
   };
   const fieldsOf: Record<WizardQ, string[]> = {
-    type: ["type"], loc: ["country", "city"], name: ["name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web"],
+    type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web"],
     services: ["services"], deal: ["deal"], team: ["team", "langs"], sectors: ["sectors"], contact: ["email", "phone"], logo: ["logo"], desc: ["desc"], review: [],
   };
   const qValid = (id: WizardQ) => fieldsOf[id].every((k) => !errors[k]);
@@ -348,37 +348,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {forced.type && errors.type && <p className="text-[13px] text-[#B42318] sm:col-span-2">{errors.type}</p>}
         </div>
       ) },
-    loc: { req: true, t: tr("Where is your firm based?"), h: tr("Sellers and buyers see your city on your card."),
-      body: (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={lbl} htmlFor="w-country">{tr("Country")}<Req /></label>
-            <select id="w-country" aria-required className={cn(inp, "pr-8")} value={COUNTRIES.includes(a.country) ? a.country : "Other"} onChange={(e) => changeCountry(e.target.value)}>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : tr("City")}<Req /></label>
-            {thai ? (
-              <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={cn(inp, "pr-8", errors.city && "need-fill", show("city") && errCls)} value={a.city} onBlur={blur("city")}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  const prov = !a.addr.province || a.addr.province === a.city ? v : a.addr.province;
-                  set({ city: v, addr: { ...a.addr, province: prov } }, { city: v, addr_province: prov || null });
-                }}>
-                <option value="">{tr("Choose a province")}</option>
-                {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            ) : (
-              <input id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} maxLength={80} placeholder="e.g. Singapore" className={cn(inp, errors.city && "need-fill", show("city") && errCls)} value={a.city} onBlur={blur("city")}
-                onChange={(e) => set({ city: e.target.value }, { city: e.target.value || null, addr_district: e.target.value || null })} />
-            )}
-            <Err m={show("city")} />
-          </div>
-        </div>
-      ) },
     name: { req: true, t: nameShort ? "What is your firm's name, registration number and business address?" : tr("What is the name of your firm?"),
-      h: nameShort ? "Check that the name matches your firm's registration. Sellers and buyers see the address on your profile." : tr("Sellers and buyers see this name on your card. Use the name your clients know."),
+      h: nameShort ? tr("Check that the name matches your firm's registration.") : tr("Sellers and buyers see this name on your card. Use the name your clients know."),
       body: (
         <div>
           <div className={cn("grid gap-4", !hid("year", "name") && "sm:grid-cols-[1fr_150px]")}>
@@ -409,7 +380,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             </p>
           </div>
           <div className="mt-6">
-            <AddressBox need a={a.addr} thai={thai} city={a.city} note={tr("Sellers and buyers see it on your profile as a link that opens a map.")}
+            <AddressBox need a={a.addr} thai={thai} city={a.city} note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+              country={a.country} onCountry={changeCountry} countryErr={show("country")}
               onCity={(v) => set({ city: v }, { city: v || null, addr_district: v || null })} onChange={setAddr}
               show={(k) => show(`a-${k}`)} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           </div>
@@ -627,7 +599,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               </div>
             </div>
           </div>
-          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{tr("Everything you add here is open to sellers and buyers on PitchSnack, so they can compare firms and choose one.")}</p>
+          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{tr("Everything you add here is open to sellers and buyers on PitchSnack, apart from your full address, so they can compare firms and choose one.")}</p>
         </div>
       )}
       {phase === "enrich" && (
@@ -688,7 +660,6 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
   const groups: [string, Row[]][] = [
     [tr("About the firm"), [
       [tr("Firm type"), a.type || miss, "type"],
-      [tr("Based in"), a.city ? `${a.city}, ${a.country}` : miss, "loc"],
       [tr("Firm name"), errors.name ? miss : a.name, "name"],
       [tr("Year founded"), errors.year ? miss : a.year, "name"],
       [tr("Registration number"), a.reg || (thai ? miss : notSet), "name"],

@@ -51,7 +51,7 @@ export async function dealParties(sb: any, deals: any[]) {
   for (const d of deals) {
     const h = hp[d.hidden_profile_id] ?? {}, s = st[d.startup_id] ?? {}, b = bv[d.buyer_user_id] ?? {}, i = bp[d.buyer_user_id] ?? {}, u = up[d.buyer_user_id] ?? {};
     out[d.id] = {
-      seller: { name: s.startup_name || h.code_name || "Seller", sub: [h.code_name, h.ref_no, s.city || h.region].filter(Boolean).join(" · "), key: `seller:${d.startup_id}` },
+      seller: { name: s.startup_name || h.code_name || h.ref_no || "Seller", sub: [h.code_name, h.ref_no, s.city || h.region].filter(Boolean).join(" · "), key: `seller:${d.startup_id}` },
       buyer: { name: i.investor_name || b.company_name || u.organisation || "Buyer", sub: [i.investor_type || b.buyer_type, i.city || u.city].filter(Boolean).join(" · "), key: `buyer:${d.buyer_user_id}` },
     };
   }
