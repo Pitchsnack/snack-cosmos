@@ -334,7 +334,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
       if (!pub) { status = "closed"; closedReason = "profile_unpublished"; closedAt = closedAt ?? inv.updated_at ?? inv.sent_at; }
       else if (hp && !isBuyerVisible(hp) && status !== "approved") { status = "closed"; closedReason = "listing_not_live"; closedAt = closedAt ?? inv.sent_at; }
     }
-    const { publicInvestor } = { publicInvestor: pub ? (({ userId: _u, liveSince: _l, ...rest }) => rest)(pub) : null };
+    const publicInvestor = pub ? (({ userId: _u, liveSince: _l, ...rest }) => rest)(pub) : null;
     const row: SellerInvitation = {
       id: inv.id, investorId: inv.investor_id, status,
       sentAt: inv.sent_at, viewedAt: inv.viewed_at, choiceAt: inv.choice_at, closedAt, closedReason,

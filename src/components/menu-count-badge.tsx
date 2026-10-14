@@ -90,9 +90,11 @@ export function MessagesCountBadge({ collapsed = false }: { collapsed?: boolean 
 export function InvitationsCountBadge({ collapsed = false }: { collapsed?: boolean }) {
   const { persona } = usePersona();
   const fn = useServerFn(invitationsBadgeCount);
-  const { data = 0 } = useQuery({ queryKey: ["invitations", "badge", persona], queryFn: () => fn(), enabled: persona === "buyer", refetchInterval: 60_000 });
-  if (persona !== "buyer" || !data) return null;
+  const { data = 0 } = useQuery({ queryKey: ["invitations", "badge", persona], queryFn: () => fn(), enabled: persona === "buyer" || persona === "seller", refetchInterval: 60_000 });
+  if ((persona !== "buyer" && persona !== "seller") || !data) return null;
   const label = data > 99 ? "99+" : String(data);
-  if (collapsed) return <span data-mkt-badge data-rail className="absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-[#4338CA] px-1 text-[9px] font-bold leading-none text-white">{label}</span>;
-  return <span data-mkt-badge className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#4338CA] px-1.5 text-[11.5px] font-bold text-white">{label}</span>;
+  // Buyer: New (indigo). Seller: Needs your review (amber).
+  const tone = persona === "seller" ? "bg-[#F6A823] text-[#0E162F]" : "bg-[#4338CA] text-white";
+  if (collapsed) return <span data-mkt-badge data-rail className={`absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full px-1 text-[9px] font-bold leading-none ${tone}`}>{label}</span>;
+  return <span data-mkt-badge className={`ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11.5px] font-bold ${tone}`}>{label}</span>;
 }

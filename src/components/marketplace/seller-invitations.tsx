@@ -397,13 +397,13 @@ export function ReviewInvestorDialog({ pipelineId, onClose }: { pipelineId: stri
             <div className={label}>{tr("Investor profile · name hidden", "โปรไฟล์นักลงทุน · ซ่อนชื่อ")}</div>
             {i?.description && <p className="mb-2 text-[13.5px] text-[#434A5C] dark:text-muted-foreground">{i.description}</p>}
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13.5px]">
-              {rows.filter(([, v]) => !!v).map(([k, v]) => <><dt key={`${k}-k`} className="text-[#6B7280]">{k}</dt><dd key={`${k}-v`} className="font-medium">{v}</dd></>)}
+              {rows.filter(([, v]) => !!v).flatMap(([k, v]) => [<dt key={`${k}-k`} className="text-[#6B7280]">{k}</dt>, <dd key={`${k}-v`} className="font-medium">{v}</dd>])}
             </dl>
           </div>
           <div className={box}>
             <div className={label}>{tr("The NDA they signed", "NDA ที่ผู้ซื้อลงนาม")}</div>
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13.5px]">
-              {terms.map(([k, v]) => <><dt key={`${k}-k`} className="text-[#6B7280]">{k}</dt><dd key={`${k}-v`} className="font-medium">{v}</dd></>)}
+              {terms.flatMap(([k, v]) => [<dt key={`${k}-k`} className="text-[#6B7280]">{k}</dt>, <dd key={`${k}-v`} className="font-medium">{v}</dd>])}
             </dl>
             <div className="mt-3"><Reader label={tr("Read the full NDA", "อ่าน NDA ฉบับเต็ม")} text={STANDARD_NDA_TEXT} /></div>
           </div>

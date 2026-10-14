@@ -1,4 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { SellerInvitationsPage } from "@/components/marketplace/seller-invitations";
 import { BuyerInvitationsPage } from "@/components/marketplace/buyer-invitations";
 import { usePersona } from "@/hooks/use-marketplace";
 
@@ -21,5 +22,6 @@ function InvitationsRoute() {
   const { persona } = usePersona();
   const { open } = Route.useSearch();
   if (persona === "buyer") return <BuyerInvitationsPage openId={open} />;
+  if (persona === "seller") return <SellerInvitationsPage openId={open} />;
   return <Navigate to="/marketplace/browse" replace />;
 }
