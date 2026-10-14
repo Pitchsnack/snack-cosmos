@@ -589,6 +589,13 @@
       "when": 1791951590341,
       "tag": "0083_listing_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1791960445670,
+      "tag": "0084_stage1_signup_done_place_advisor_lock",
+      "breakpoints": true
     }
   ]
 }
