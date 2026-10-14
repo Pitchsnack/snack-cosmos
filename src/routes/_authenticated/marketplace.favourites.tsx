@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import { AdvisorFavourites } from "@/components/marketplace/advisor-marketplace";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -218,7 +219,11 @@ function FavouritesPage() {
                     {[f.priv ? l.headline : null, f.priv ? (f.priv.revenue != null ? `${t("Revenue")} FY${fy(f.priv.fy)} ${baht(f.priv.revenue)}` : null) : l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
                   </div>
                 </div>
-                {f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />}
+                <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
+                  {f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : null}
+                  {l.managed && <ManagedBadge size="sm" />}
+                  {f.status !== "approved" && f.status !== "requested" && <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />}
+                </div>
               </div>
             );
           })}
