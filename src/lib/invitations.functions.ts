@@ -293,7 +293,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
   const { data: invs } = await sb.from("listing_invitations").select("*").in("startup_id", ids).order("sent_at", { ascending: false });
   if (!invs?.length) return [];
   const hpIds = [...new Set(invs.map((i: any) => i.hidden_profile_id as string))];
-  const invIds = [...new Set(invs.map((i: any) => String(i.investor_id)))];
+  const invIds: string[] = [...new Set<string>(invs.map((i: any) => String(i.investor_id)))];
   const [{ data: hps }, { data: sts }, { data: pipes }, { data: bps }, { loadPublicInvestors }, { isBuyerVisible }, { deriveStatus }] = await Promise.all([
     sb.from("hidden_profiles").select("id, startup_id, ref_no, code_name, approval_status, live").in("id", hpIds),
     sb.from("startups").select("id, startup_name").in("id", ids),

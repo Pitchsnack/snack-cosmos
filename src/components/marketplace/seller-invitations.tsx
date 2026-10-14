@@ -10,7 +10,6 @@ import { decideNda } from "@/lib/pipeline.functions";
 import type { PublicInvestor } from "@/lib/investor-browse";
 import { Reader } from "@/components/pipeline/pipeline-dialogs";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTr } from "@/components/common/edit-info-popup";
 import { useTranslation } from "@/i18n/language";
 import { STANDARD_NDA_TEXT } from "@/config/standard-nda";
@@ -76,12 +75,7 @@ function ApproveButton({ disabled, busy, onClick }: { disabled: boolean; busy: b
   const tr = useTr();
   const btn = <button type="button" disabled={disabled || busy} onClick={onClick} className={cn(NAVY, "h-11")}>{tr("Approve NDA", "อนุมัติ NDA")}</button>;
   if (!disabled) return btn;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild><span tabIndex={0}>{btn}</span></TooltipTrigger>
-      <TooltipContent>{tr("Tick the box to approve", "ทำเครื่องหมายในช่องเพื่ออนุมัติ")}</TooltipContent>
-    </Tooltip>
-  );
+  return <span tabIndex={0} title={tr("Tick the box to approve", "ทำเครื่องหมายในช่องเพื่ออนุมัติ")}>{btn}</span>;
 }
 
 export function SellerInvitationsPage({ openId }: { openId?: string }) {
