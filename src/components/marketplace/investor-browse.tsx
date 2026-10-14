@@ -1,4 +1,4 @@
-import { ContactRequestButton } from "@/components/marketplace/plan-strip";
+import { ConnectButton } from "@/components/marketplace/connect-invite";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Briefcase, ChevronDown, Lock, Star } from "lucide-react";
@@ -304,7 +304,7 @@ export function InvestorBrowse() {
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
               {current ? (
-                <InvestorDetail key={current.id} i={current} match={matches[current.id]} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} /><ContactRequestButton investorId={current.id} /></div>} />
+                <InvestorDetail key={current.id} i={current} match={matches[current.id]} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} /><ConnectButton big investorId={current.id} investorRef={current.refNo} /></div>} />
               ) : (
                 <p className="px-6 py-16 text-center text-sm text-muted-foreground">No investor selected. Widen or clear the filters to see investors.</p>
               )}
@@ -332,7 +332,7 @@ export function InvestorBrowse() {
       )}
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent className="max-h-[88vh] overflow-y-auto p-0 sm:max-w-[820px]">
-          {modal && <InvestorDetail key={modal.id} i={modal} match={matches[modal.id]} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} /><ContactRequestButton investorId={modal.id} /></div>} />}
+          {modal && <InvestorDetail key={modal.id} i={modal} match={matches[modal.id]} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} /><ConnectButton big investorId={modal.id} investorRef={modal.refNo} /></div>} />}
         </DialogContent>
       </Dialog>
     </div>
