@@ -6,7 +6,6 @@ import { Link } from "@tanstack/react-router";
 import { AlarmClock, AlertTriangle, Check, KeyRound, Lock } from "lucide-react";
 import { dateEn } from "@/lib/access-codes";
 import { getMyPlanStrip, type PlanStrip as Strip } from "@/lib/plan.functions";
-import { myContactState, sendContactRequest } from "@/lib/contact-requests.functions";
 import type { ClosedTeaser } from "@/lib/hidden-profiles.functions";
 import { PlanBadge } from "@/components/plan-badge";
 import { Button } from "@/components/ui/button";
@@ -116,47 +115,5 @@ export function ClosedListingCard({ c, star }: { c: ClosedTeaser; star?: React.R
         <Link to="/preferences" hash="subscription" className="mt-auto inline-flex h-[32px] w-fit items-center rounded-md border border-border px-3 text-[13px] font-semibold hover:bg-muted">See plans</Link>
       </div>
     </div>
-  );
-}
-
-/** Seller: send this investor a contact request. Locked on plans without contact requests. */
-export function ContactRequestButton({ investorId }: { investorId: string }) {
-  const { data: strip } = usePlanStrip();
-  const qc = useQueryClient();
-  const send = useServerFn(sendContactRequest);
-  const stateFn = useServerFn(myContactState);
-  const { data: st } = useQuery({ queryKey: ["contact-requests"], queryFn: () => stateFn() });
-  const [busy, setBusy] = useState(false);
-  const planLock = requestLock(strip);
-  const lock = planLock ?? (st && !st.hasListing ? "Add your business first" : null);
-  const goPlans = { label: "See plans", onClick: () => { window.location.href = "/preferences#subscription"; } };
-  if (st?.sent.includes(investorId)) return <span className="inline-flex h-[34px] items-center rounded-md border px-3 text-sm font-medium text-muted-foreground">Contact requested</span>;
-  return (
-    <Button
-      type="button"
-      aria-disabled={!!lock || undefined}
-      title={lock ?? "Send a contact request"}
-      disabled={busy}
-      onClick={async (e) => {
-        e.stopPropagation();
-        if (planLock) {
-          toast(planLock === "Professional plan" ? "Sending contact requests needs Professional. On Entry, investors can still contact you." : planLock, { action: goPlans });
-          return;
-        }
-        if (lock) { toast(lock, { action: { label: "My Company", onClick: () => { window.location.href = "/my-startups"; } } }); return; }
-        setBusy(true);
-        try {
-          const r = await send({ data: { investorId } });
-          const yr = r.termMonths === 12 ? "this year" : "this term";
-          const leftTxt = r.left === "unlimited" ? "" : r.left == null ? "" : ` ${r.left} left ${yr}.`;
-          toast.success(`Request sent. ${r.label} will see your anonymous listing.${leftTxt}`);
-        }
-        catch (err) { toast.error((err as Error).message); }
-        finally { setBusy(false); qc.invalidateQueries({ queryKey: ["plan-strip"] }); qc.invalidateQueries({ queryKey: ["contact-requests"] }); }
-      }}
-      className={`inline-flex h-[34px] items-center gap-1.5 rounded-md px-3 text-sm font-medium ${lock ? `cursor-pointer border border-dashed ${LOCK_STYLE}` : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
-    >
-      {lock && <Lock className="h-3.5 w-3.5" />}{lock === "Professional plan" ? "Professional plan" : lock === "Renew to request" ? "Renew to request" : lock === "Add your business first" ? "Add your business first" : "Request contact"}
-    </Button>
   );
 }

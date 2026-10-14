@@ -1,4 +1,3 @@
-import { ContactRequestsSection } from "@/components/pipeline/contact-requests";
 import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -124,8 +123,6 @@ function PipelinePage() {
       </div>
 
       {seller && <SellerStats rows={data} waiting={waiting} t={t} />}
-
-      {(persona === "seller" || persona === "buyer") && <ContactRequestsSection as={persona} />}
 
       <div className="flex gap-1 border-b">
         {([["pending", t("Pending approval"), pending.length], ["tracking", t("Tracking"), tracking.filter((p) => p.status !== "ended").length]] as const).map(([k, label, n]) => (

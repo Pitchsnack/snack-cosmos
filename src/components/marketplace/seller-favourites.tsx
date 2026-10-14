@@ -11,6 +11,7 @@ import { ViewToggle } from "@/components/shared/view-toggle";
 import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useHasSession } from "@/hooks/use-has-session";
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { ConnectButton } from "@/components/marketplace/connect-invite";
 import { InvestorDetail, StarBtn, useSavedInvestors } from "@/components/marketplace/investor-browse";
 import { listSellerFavourites, type SellerFavourite, type SellerFavStatus } from "@/lib/investor-browse.functions";
 import { useTranslation } from "@/i18n/language";
@@ -93,6 +94,7 @@ export function SellerFavourites() {
         {f.status === "requested" && (
           <Link to="/marketplace/pipeline" className="ml-auto text-[12.5px] font-semibold text-[#2563EB] hover:underline">{t("Review NDA request")}</Link>
         )}
+        {f.status === "saved" && <span className="ml-auto"><ConnectButton investorId={f.id} investorRef={f.refNo} /></span>}
       </div>
       <InvestorDetail i={f} ndaApproved={f.status === "approved"} saved={savedIds.has(f.id) || f.status !== "saved"} onSave={() => f.status === "saved" && toggle(f.id)} />
     </>
