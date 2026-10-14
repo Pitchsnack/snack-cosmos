@@ -144,7 +144,7 @@ export type EnquiryThread = {
   client: { company: string; side: ClientSide; name: string; first: string };
   status: string; service: string; enquiryId: string | null; isFirm: boolean;
   enquiries: EnquiryCard[]; proposals: (ProposalDTO & { enquiryId: string })[];
-  closedLine: string | null;
+  closedLine: string | null; closedTpl: string | null; closedVars: Record<string, string>;
   firmServices: string[]; firmFees: Record<string, any>;
   stars: number | null; me: { name: string; first: string; title: string | null; company: string; email: string | null; phone: string | null; side: ClientSide } | null;
 };
@@ -172,28 +172,32 @@ export async function enquiryThread(sb: any, userId: string, m: NonNullable<Awai
   }));
   const proposals = (props ?? []).map((p: any) => ({ ...toProposal(p), enquiryId: p.enquiry_id }));
   const enqOf = Object.fromEntries((es2 ?? []).map((e: any) => [e.id, e]));
+  const fillT = (t: string, v: Record<string, string>) => t.replace(/\{([^}]+)\}/g, (m, k) => v[k] ?? m);
   const events = (evs ?? []).filter((x: any) => !["enquiry", "proposal"].includes(x.kind)).map((x: any) => {
     const e = enqOf[x.enquiry_id] ?? {};
-    let text = "";
+    const v: Record<string, string> = { firm: firmName, client: org.name, reason: reasonText(e.declined_reason).toLowerCase(), n: String(x.data?.stars ?? "") };
+    let tpl = "";
     let green = false;
     switch (x.kind) {
-      case "accepted": text = isFirm ? `${org.name} accepted your proposal. You're now their advisor.` : `You accepted the proposal. ${firmName} is now your advisor.`; green = true; break;
-      case "proposal_declined": text = isFirm ? `${org.name} declined your proposal.` : "You declined the proposal."; break;
-      case "proposal_expired": text = "The proposal expired."; break;
-      case "declined": text = isFirm ? `You declined the enquiry: ${reasonText(e.declined_reason).toLowerCase()}.` : `${firmName} declined your enquiry: ${reasonText(e.declined_reason).toLowerCase()}.`; break;
-      case "done": text = isFirm ? `${org.name} marked the work as done and rated it ${x.data?.stars ?? ""} ★.` : `You marked the work as done and rated it ${x.data?.stars ?? ""} ★.`; green = true; break;
-      case "closed": text = `This enquiry closed because ${firmName} is no longer on PitchSnack.`; break;
+      case "accepted": tpl = isFirm ? "{client} accepted your proposal. You're now their advisor." : "You accepted the proposal. {firm} is now your advisor."; green = true; break;
+      case "proposal_declined": tpl = isFirm ? "{client} declined your proposal." : "You declined the proposal."; break;
+      case "proposal_expired": tpl = "The proposal expired."; break;
+      case "declined": tpl = isFirm ? "You declined the enquiry: {reason}." : "{firm} declined your enquiry: {reason}."; break;
+      case "done": tpl = isFirm ? "{client} marked the work as done and rated it {n} ★." : "You marked the work as done and rated it {n} ★."; green = true; break;
+      case "closed": tpl = "This enquiry closed because {firm} is no longer on PitchSnack."; break;
     }
-    return { id: x.id, at: x.created_at, text, link: null, nda: null, green };
+    return { id: x.id, at: x.created_at, text: fillT(tpl, v), tpl, vars: v, link: null, nda: null, green };
   });
-  const closedLine = !last ? null
-    : last.status === "declined" ? (isFirm ? `This enquiry is closed. ${org.name} can send a new one from Browse advisors.` : `${firmName} declined this enquiry. You can send a new one from Browse advisors.`)
-    : last.status === "closed" ? `This enquiry closed because ${firmName} is no longer on PitchSnack.` : null;
+  const cv = { firm: firmName, client: org.name };
+  const closedTpl = !last ? null
+    : last.status === "declined" ? (isFirm ? "This enquiry is closed. {client} can send a new one from Browse advisors." : "{firm} declined this enquiry. You can send a new one from Browse advisors.")
+    : last.status === "closed" ? "This enquiry closed because {firm} is no longer on PitchSnack." : null;
+  const closedLine = closedTpl ? fillT(closedTpl, cv) : null;
   const thread: EnquiryThread = {
     firm: { id: firm?.id, name: firmName, sub: [firm?.firm_type, firm?.city].filter(Boolean).join(" · ") },
     client: { company: org.name, side: conv.client_side, name: sender?.name ?? "", first: sender?.first ?? "" },
     status: last?.status ?? "enquiry", service: last?.service_key ?? "", enquiryId: last?.id ?? null, isFirm,
-    enquiries, proposals, closedLine, firmServices: [], firmFees: {},
+    enquiries, proposals, closedLine, closedTpl, closedVars: cv, firmServices: [], firmFees: {},
     stars: ([...(evs ?? [])].reverse().find((x: any) => x.kind === "done")?.data?.stars as number) ?? null,
     me: null,
   };

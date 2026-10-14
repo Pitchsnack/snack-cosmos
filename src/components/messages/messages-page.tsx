@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
 import { tr } from "@/i18n/language";
 import { HatMark } from "./hat-mark";
+import { tf } from "@/components/advisor-browse/enquiry-dialogs";
 import { EnquiryCardView, EnquiryHeaderActions, ProposalCardView, enqStatusLabel } from "@/components/advisor-browse/enquiry-chat";
 import type { EnqMeta, EnquiryThread } from "@/lib/messages.functions";
 
@@ -278,7 +279,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       if (p.reportSharedAt) ev.push({ id: "rep", at: p.reportSharedAt, text: seller ? "You shared the financial report" : "Financial report shared", link: "View report", open: "report" });
       if (p.loiSentAt) ev.push({ id: "loi", at: p.loiSentAt, text: seller ? "Letter of intent received" : "Letter of intent sent", link: seller ? "Review LOI" : "View LOI", open: "loi" });
     }
-    for (const e of data?.events ?? []) ev.push({ id: e.id, at: e.at, text: e.text, link: e.link, open: e.nda ? { advNda: e.nda } : null, green: (e as any).green } as any);
+    for (const e of data?.events ?? []) ev.push({ id: e.id, at: e.at, text: e.text, link: e.link, open: e.nda ? { advNda: e.nda } : null, green: (e as any).green, tpl: (e as any).tpl, vars: (e as any).vars } as any);
     const cards = enq ? [
       ...enq.enquiries.map((x) => ({ t: "q" as const, at: x.at, id: `q${x.id}`, x })),
       ...enq.proposals.map((x) => ({ t: "r" as const, at: x.sentAt, id: `r${x.id}`, x })),
@@ -449,7 +450,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
             if (it.kind === "event" && isE)
               return (
                 <div key={it.id} className="py-1.5 text-center">
-                  <span className={cn("inline-block rounded-full px-3 py-1 text-[12px] font-medium", (it as any).green ? "bg-[#E9F6EE] text-[#15803D] dark:bg-green-950/50 dark:text-green-300" : "bg-[#F1F2F5] text-[#4B5563] dark:bg-muted dark:text-muted-foreground")}>{tr(it.text)}</span>
+                  <span className={cn("inline-block rounded-full px-3 py-1 text-[12px] font-medium", (it as any).green ? "bg-[#E9F6EE] text-[#15803D] dark:bg-green-950/50 dark:text-green-300" : "bg-[#F1F2F5] text-[#4B5563] dark:bg-muted dark:text-muted-foreground")}>{(it as any).tpl ? tf((it as any).tpl, (it as any).vars) : it.text}</span>
                 </div>
               );
             if (it.kind === "event")
@@ -489,7 +490,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
           })}
         </div>
         {data?.closed && isE ? (
-          <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{enq?.closedLine ? tr(enq.closedLine) : ""}</div>
+          <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{enq?.closedTpl ? tf(enq.closedTpl, enq.closedVars) : ""}</div>
         ) : data?.closed ? (
           <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{data.endedNote ? tr("This conversation is closed because {organisation} withdrew from the deal on {date}.").replace("{organisation}", data.endedNote.org).replace("{date}", data.endedNote.date) : isC ? "This conversation is closed because the advisor NDA ended." : "This conversation is closed because the NDA ended."}</div>
         ) : (
