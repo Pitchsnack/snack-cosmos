@@ -23,6 +23,8 @@ export type ContactPerson = {
   website: string | null;
   connectedAt: string | null;
   pipelineStep: string | null;
+  /** PitchSnack team row (a managed company's admins). */
+  team?: boolean;
 };
 
 export type MyCard = { name: string; role: string | null; company: string | null; email: string | null; phone: string | null; linkedin: string | null };
@@ -190,6 +192,6 @@ export const listContacts = createServerFn({ method: "GET" })
       Object.assign(c, { name: "PitchSnack team", role: null, email: "support@pitchsnack.com", phone: null, linkedin: null, team: true });
     }
     const seenTeam = new Set<string>();
-    const out = contacts.filter((c) => !(c as { team?: boolean }).team || (!seenTeam.has(`${c.group}|${c.company}`) && !!seenTeam.add(`${c.group}|${c.company}`)));
+    const out = contacts.filter((c) => !c.team || (!seenTeam.has(`${c.group}|${c.company}`) && !!seenTeam.add(`${c.group}|${c.company}`)));
     return { my, contacts: out, visibleTo: out.length };
   });
