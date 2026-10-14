@@ -470,7 +470,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
             title={individual ? tr("Address") : tr("Business address")}
             note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
-            show={(k) => (addrShow && addrErr ? addrErr[k] ?? null : null)} onBlur={() => {}} />
+            show={(k) => (addrShow && addrErr ? (addrErr as Record<string, string | null>)[k] ?? null : null)} onBlur={() => {}} />
         </div>
 
         {/* Fund & ticket — US$ bands */}
