@@ -123,7 +123,7 @@ export const adminInvitations = createServerFn({ method: "GET" })
     const { data: hps } = await sb.from("hidden_profiles").select("id, ref_no, code_name, startup_id, approval_status, live").in("id", [...new Set(rows.map((r: any) => r.hidden_profile_id))]);
     const hpBy = new Map<string, any>((hps ?? []).map((h: any) => [h.id, h]));
     const { loadPublicInvestors } = await import("./investor-browse.functions");
-    const invs = await loadPublicInvestors(sb, [...new Set(rows.map((r: any) => String(r.investor_id)))]);
+    const invs = await loadPublicInvestors(sb, [...new Set((rows as any[]).map((r) => String(r.investor_id)))]);
     const invBy = new Map(invs.map((i) => [i.id, i]));
     const stateCache = new Map<string, Record<string, ConnectState>>();
     const out = [];
