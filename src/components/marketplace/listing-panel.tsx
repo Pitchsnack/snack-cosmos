@@ -192,7 +192,7 @@ export function ListingDetail({ t, requested, approved, onRequested, advisor }: 
   useEffect(() => setMore(false), [t.id]);
   return (
     <div className="space-y-5">
-      <PublicListingCard l={l} deal={t} badge={approved ? <NdaApprovedBadge /> : requested ? <NdaRequestedBadge /> : undefined} />
+      <PublicListingCard showManaged l={l} deal={t} badge={approved ? <NdaApprovedBadge /> : requested ? <NdaRequestedBadge /> : undefined} />
       {l.description && (
         <Section title={tr("Business overview")}>
           <p className={cn("text-[13.5px] text-foreground/80", !more && "line-clamp-3")}>{l.description}</p>

@@ -101,12 +101,10 @@ function PartEdit({ k, on }: { k: ListingPart; on?: (k: ListingPart) => void }) 
 }
 
 export function PublicListingCard({
-  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta, editable, tag, showManaged, panelBadge,
+  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta, editable, tag, showManaged,
 }: {
   /** Browse pages and Favourites only: the "Managed by" badge. */
   showManaged?: boolean;
-  /** Split panel placement (top right, 10px). */
-  panelBadge?: boolean;
   /** Optional tag at the top of the card body (e.g. "Matches your mandate"). */
   tag?: React.ReactNode;
   /** Seller's own Public view preview only: an Edit link on each card part. Off by default. */

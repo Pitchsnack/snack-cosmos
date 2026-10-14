@@ -216,13 +216,13 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     : <StarBtn saved={stars.isStarred("investor", x.id)} onClick={() => stars.toggle("investor", x.id)} />;
 
   const card = (x: Item, split: boolean) => x.kind === "listing" ? (
-    <PublicListingCard l={x.t.listing} deal={x.t} topRight={starOf(x)}
+    <PublicListingCard showManaged l={x.t.listing} deal={x.t} topRight={starOf(x)}
       expanded={split ? expanded === x.key : true}
       onToggleExpand={split ? () => setExpanded((e) => (e === x.key ? null : x.key)) : undefined}
       selected={split && wide && current?.key === x.key}
       onSelect={() => (split && wide ? setSelected(x.key) : openInSplit(x.key))} />
   ) : (
-    <PublicInvestorCard i={x.i} topRight={starOf(x)} selected={split && wide && current?.key === x.key}
+    <PublicInvestorCard showManaged i={x.i} topRight={starOf(x)} selected={split && wide && current?.key === x.key}
       onClick={() => (split && wide ? setSelected(x.key) : openInSplit(x.key))} />
   );
 

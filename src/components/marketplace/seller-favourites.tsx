@@ -141,7 +141,7 @@ export function SellerFavourites() {
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((f) => (
-            <div key={f.id}>{badgeRow(f)}<PublicInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => setModalId(f.id)} topRight={star(f)} /></div>
+            <div key={f.id}>{badgeRow(f)}<PublicInvestorCard showManaged i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => setModalId(f.id)} topRight={star(f)} /></div>
           ))}
         </div>
       ) : view === "split" ? (
@@ -150,7 +150,7 @@ export function SellerFavourites() {
             {items.map((f) => (
               <div key={f.id}>
                 {badgeRow(f)}
-                <PublicInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} selected={wide && current?.id === f.id}
+                <PublicInvestorCard showManaged i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} selected={wide && current?.id === f.id}
                   onClick={() => (wide ? setSelected(f.id) : setModalId(f.id))}
                   expanded={expandedId === f.id} onToggleExpand={() => setExpandedId((e) => (e === f.id ? null : f.id))}
                   topRight={star(f)} />

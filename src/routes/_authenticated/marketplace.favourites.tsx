@@ -78,6 +78,7 @@ function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, to
   const p = f.priv;
   return (
     <PublicListingCard
+      showManaged
       l={f.listing}
       deal={f}
       selected={selected}

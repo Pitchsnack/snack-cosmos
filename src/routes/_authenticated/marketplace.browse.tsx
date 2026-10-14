@@ -181,7 +181,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       ) : !ownOnly && view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((t) => (
-            <PublicListingCard key={t.id} tag={tagOf(t.id)} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} />
+            <PublicListingCard showManaged key={t.id} tag={tagOf(t.id)} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} />
           ))}
           {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
@@ -190,6 +190,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           <div ref={listRef} className={splitFixed ? "min-h-0 space-y-3 overflow-y-scroll pr-2 [scrollbar-gutter:stable]" : "space-y-3"}>
             {items.map((t) => (
               <PublicListingCard
+                showManaged
                 key={t.id}
                 tag={tagOf(t.id)}
                 l={t.listing}
