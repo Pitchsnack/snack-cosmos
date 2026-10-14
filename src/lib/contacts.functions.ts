@@ -153,5 +153,31 @@ export const listContacts = createServerFn({ method: "GET" })
         });
       }
     }
+    // Firms this company engaged through Browse advisors: the person who sent the accepted proposal.
+    {
+      const E = await import("@/lib/advisor-enquiries.server");
+      const org = await E.clientOrg(sb, context.userId, data.as);
+      if (org) {
+        const { data: es } = await sb.from("advisor_enquiries").select("id, firm_profile_id, service_key, engaged_at").eq("client_side", data.as).eq("client_org_id", org).in("status", ["engaged", "done"]);
+        if (es?.length) {
+          const [{ data: ps }, { data: fs }] = await Promise.all([
+            sb.from("advisor_proposals").select("enquiry_id, sent_by").in("enquiry_id", es.map((e: any) => e.id)).eq("status", "accepted"),
+            sb.from("advisor_firms").select("id, name, firm_type, city, country, website, email, phone").in("id", es.map((e: any) => e.firm_profile_id)),
+          ]);
+          const fm = Object.fromEntries((fs ?? []).map((f: any) => [f.id, f]));
+          const ap = await people(sb, (ps ?? []).map((x: any) => x.sent_by));
+          for (const e of es) {
+            const pid = (ps ?? []).find((x: any) => x.enquiry_id === e.id)?.sent_by;
+            const f = fm[e.firm_profile_id] ?? {}, u = ap.users[pid], pr = ap.profs[pid] ?? {};
+            contacts.push({
+              id: `eng-${e.id}`, group: "advisor", name: fullName(u) ?? f.name ?? "Advisor", role: pr.title ?? "Your advisor",
+              company: f.name ?? null, email: u?.email || f.email || null, phone: pr.phone || f.phone || null, linkedin: pr.linkedin ?? null,
+              bestTime: null, companyType: f.firm_type ?? null, location: [f.city, f.country].filter(Boolean).join(", ") || null,
+              website: f.website ?? null, connectedAt: e.engaged_at, pipelineStep: `Engaged · ${e.service_key}`,
+            });
+          }
+        }
+      }
+    }
     return { my, contacts, visibleTo: contacts.length };
   });
