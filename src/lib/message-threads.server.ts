@@ -15,7 +15,7 @@ export type DaMeta = {
   firm: { id: string; name: string; sub: string }; other: string; codeName: string | null; ref: string;
   sellerOrg: string; buyerOrg: string; joinedAt: string; expiresAt: string | null; closed: boolean;
 };
-export type ThreadEvent = { id: string; at: string; text: string; link: string | null; nda: { dealId: string; side: Side } | null };
+export type ThreadEvent = { id: string; at: string; text: string; link: string | null; nda: { dealId: string; side: Side } | null; green?: boolean };
 
 export type EnqMeta = {
   key: string; firm: { id: string; name: string; sub: string }; clientCompany: string; clientSide: Side;
