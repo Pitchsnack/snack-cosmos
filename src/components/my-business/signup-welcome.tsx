@@ -73,12 +73,13 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
     const d = draft ?? { ...emptyDraft(), role: mine.first_answer as SellerDraft["role"], name: c?.name ?? "", web: c?.website ?? "", year: c?.year ?? "", size: c?.size ?? null };
     sections = group(sellerShown(d, setup?.fromSignup ?? ["role", "name", "web", "year", "size"]).map((i) => SELLER_STEPS[i]!.sec));
   } else if (role === "buyer") {
-    const fs = individual ? ["role", "name", "web"] : [...(bRel ? ["role"] : []), "type", "name", "web", "year", "size"];
+    const sx = data?.sector ? ["sectors"] : [];
+    const fs = individual ? ["role", "name", "web", ...sx] : [...(bRel ? ["role"] : []), "type", "name", "web", "year", "size", ...sx];
     const rel = bRel as "individual" | "corporate" | "agent" | null;
-    const sk = buyerSkips(fs, { role: rel, type: bTypes[0] ?? "", web: c?.website ?? "", year: c?.year ?? "", name: c?.name ?? "", actsFor: rel === "agent" ? bTypes : [] });
+    const sk = buyerSkips(fs, { role: rel, type: bTypes[0] ?? "", web: c?.website ?? "", year: c?.year ?? "", name: c?.name ?? "", actsFor: rel === "agent" ? bTypes : [], sectors: data?.sector ? ["x"] : [] });
     sections = group(shownSteps(rel, sk).filter((s) => s.id !== "review").map((s) => s.sec));
   } else {
-    const sk = advisorSkips(["type", "web"], { type: mine.first_answer, web: c?.website ?? "", year: "", team: "" });
+    const sk = advisorSkips(["type", "web", ...(data?.sector ? ["sectors"] : [])], { type: mine.first_answer, web: c?.website ?? "", year: "", team: "", agnostic: !!data?.sector });
     sections = group(WIZARD_QS.filter((q) => !sk.has(q)).map((q) => ADVISOR_SEC[q]!));
   }
   const N = sections.reduce((s, x) => s + x[1], 0);
@@ -120,6 +121,12 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
                 <span className="w-28 text-[12.5px] text-[#6B7280]">Website</span>
                 {hasWeb ? <span className="text-sm font-semibold">{c.website}</span> : <span className="text-sm text-muted-foreground">Not added yet. Setup will ask for it.</span>}
               </li>
+              {data?.sector && (
+                <li className="flex items-center gap-2.5">
+                  <span className="grid h-[22px] w-[22px] place-items-center rounded-full bg-[#E3F3EA] text-[#1E7A4C]"><Check className="h-3.5 w-3.5" /></span>
+                  <span className="w-28 text-[12.5px] text-[#6B7280]">{data.sector.label}</span><span className="text-sm font-semibold">{data.sector.text}</span>
+                </li>
+              )}
             </ul>
             <p className="mt-3 text-[12.5px] text-[#6B7280]">Setup won't ask for these again. You can change them when you review your answers.</p>
           </div>

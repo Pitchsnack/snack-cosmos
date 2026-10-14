@@ -113,7 +113,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const isAnswered = useCallback((id: string) => answered.includes(id) && (id === "deal" || id === "logo" || qValid(id as WizardQ)), [answered, a]); // eslint-disable-line react-hooks/exhaustive-deps
   const requiredOk = WIZARD_QS.filter((q) => q !== "deal" && q !== "logo").every((q) => qValid(q));
 
-  const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team });
+  const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team, sectors: x.sectors, agnostic: x.agnostic });
   const skipSet = skipOf(a);
   const [cur, setCur] = useState<WizardQ>(() => {
     const sk = skipOf(fromFirm(firm));

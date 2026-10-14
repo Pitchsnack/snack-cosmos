@@ -145,7 +145,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [answered, setAnswered] = useState<string[]>(data.investor.wizard?.answered ?? []);
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
   const fromSignup = data.investor.wizard?.from_signup;
-  const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name, actsFor: x.acts });
+  const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name, actsFor: x.acts, sectors: x.sectors });
   const skipSet = skipOf(a);
   // A question opened from Review shows all its fields under its full title.
   const [full, setFull] = useState<QId | null>(null);

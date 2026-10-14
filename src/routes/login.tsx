@@ -123,7 +123,7 @@ function LoginPage() {
       try { await onLogin(); } catch { /* best effort */ }
       await qc.invalidateQueries();
       // Sign-up not finished (no Draft profile yet): reopen step 5.
-      try { const st = await getState(); if (st.answers && !st.answers.done_at) { navigate({ to: "/signup" }); return; } } catch { /* normal landing */ }
+      try { const st = await getState(); if (st.answers && (!st.answers.done_at || !st.signupDone)) { navigate({ to: "/signup" }); return; } } catch { /* normal landing */ }
       navigate({ to: search.redirect || "/tenants" });
     } catch {
       setPwErr("other");

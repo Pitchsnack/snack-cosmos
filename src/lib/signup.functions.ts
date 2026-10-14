@@ -19,6 +19,10 @@ export const ROLES = ["seller", "buyer", "advisor"] as const;
 export type SignupRole = (typeof ROLES)[number];
 export type SignupState = {
   email: string; confirmed: boolean; provider: string | null;
+  /** users.signup_done_at is set: sign-up's last step (the sector question) is answered, or the account didn't need it. */
+  signupDone: boolean;
+  /** The sector answer read from the profile, for Admin's "Saved when you signed up" box. */
+  sector: { label: string; text: string } | null;
   answers: null | {
     role: SignupRole; first_answer: string; investor_types?: string[] | null; buyer_relation?: string | null; first_name: string | null; last_name: string | null;
     company: { name: string; year: string | null; size: string | null; website: string | null } | null;
@@ -30,15 +34,35 @@ export const getSignupState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<SignupState> => {
     const sb = await admin();
-    const [{ data: u }, { data: a }] = await Promise.all([
+    const [{ data: u }, { data: a }, { data: me }] = await Promise.all([
       sb.auth.admin.getUserById(context.userId),
       sb.from("signup_answers").select("*").eq("user_id", context.userId).maybeSingle(),
+      sb.from("users").select("signup_done_at").eq("id", context.userId).maybeSingle(),
     ]);
     const user = u?.user;
+    let sector: SignupState["sector"] = null;
+    const fs = (x: unknown) => (Array.isArray(x) ? (x as string[]) : []);
+    if (a?.profile_id && a.done_at) {
+      const { sectorGroupOf } = await import("@/lib/sectors");
+      const { normPicks, picksSummary } = await import("@/lib/business-types");
+      if (a.role === "seller") {
+        const { data: st } = await sb.from("startups").select("sector, setup_from_signup").eq("id", a.profile_id).maybeSingle();
+        if (st?.sector && fs(st.setup_from_signup).includes("sector")) sector = { label: "Business sector", text: `${sectorGroupOf(st.sector) ?? ""} › ${st.sector}` };
+      } else if (a.role === "buyer") {
+        const { data: iv } = await sb.from("investors").select("preferred_industries, sector_picks, wizard").eq("id", a.profile_id).maybeSingle();
+        const ind = fs(iv?.preferred_industries);
+        if (ind.length && fs(iv?.wizard?.from_signup).includes("sectors")) sector = { label: "Industries", text: ind.includes("Sector Agnostic") ? "Sector agnostic" : picksSummary(normPicks(iv?.sector_picks)) || ind.join(", ") };
+      } else if (a.role === "advisor") {
+        const { data: f } = await sb.from("advisor_firms").select("sectors, sector_agnostic, sector_picks, wizard_state").eq("id", a.profile_id).maybeSingle();
+        if (f && fs(f.wizard_state?.fromSignup).includes("sectors") && (f.sector_agnostic || fs(f.sectors).length)) sector = { label: "Sectors", text: f.sector_agnostic ? "Sector agnostic" : picksSummary(normPicks(f.sector_picks)) || fs(f.sectors).join(", ") };
+      }
+    }
     return {
       email: user?.email ?? "",
       confirmed: !!user?.email_confirmed_at,
       provider: (user?.app_metadata?.provider as string) ?? null,
+      signupDone: !!me?.signup_done_at,
+      sector,
       answers: a ?? null,
     };
   });
@@ -111,10 +135,29 @@ export const finishSignup = createServerFn({ method: "POST" })
       }
     }
     if (!a) throw new Error("Sign-up answers not found.");
-    if (a.done_at) return { role: a.role as SignupRole, profileId: a.profile_id as string | null };
     const y = data.year ? Number(data.year) : null;
     if (y != null && (y < 1800 || y > new Date().getFullYear())) throw new Error("Invalid year.");
     const web = data.website ? data.website.replace(/^https?:\/\//i, "").replace(/\/+$/, "") : null;
+    if (a.done_at) {
+      // Back from the last step: Continue saves any change to the Draft made earlier.
+      const pid = a.profile_id as string | null;
+      const { data: me2 } = await sb.from("users").select("signup_done_at").eq("id", uid).maybeSingle();
+      if (pid && !me2?.signup_done_at) {
+        const now = new Date().toISOString();
+        if (a.role === "seller") {
+          const SZ: Record<string, string> = { "1-10": "1-10", "11-50": "11-50", "51-200": "51-200", "201-500": "201-500", "500+": "More than 500" };
+          await sb.from("startups").update({ startup_name: data.name, website_url: web, year_founded: y, company_size: data.size ? SZ[data.size] ?? null : null, updated_by: uid, updated_at: now }).eq("id", pid).eq("created_by", uid);
+        } else if (a.role === "buyer") {
+          const individual = a.buyer_relation === "individual";
+          await sb.from("investors").update({ investor_name: data.name, website_url: web, year_founded: individual ? null : y, company_size_band: individual ? null : (data.size ? SIZE_TO_BUYER[data.size] ?? null : null), updated_by: uid, updated_at: now }).eq("id", pid);
+        } else if (a.role === "advisor") {
+          const team = data.size && /^\d{1,5}$/.test(data.size) ? Number(data.size) : null;
+          await sb.from("advisor_firms").update({ name: data.name, website: web, year_founded: y, team_size: team }).eq("id", pid).eq("owner_user_id", uid);
+        }
+        await sb.from("signup_answers").update({ company: { name: data.name, year: data.year, size: data.size, website: web }, updated_at: now }).eq("user_id", uid);
+      }
+      return { role: a.role as SignupRole, profileId: pid };
+    }
     let profileId: string | null = null;
 
     // `fromSignup` lists the fields sign-up answered; the setup wizards hide them while they still hold a value.
@@ -160,8 +203,7 @@ export const finishSignup = createServerFn({ method: "POST" })
       profile_id: profileId, done_at: new Date().toISOString(), updated_at: new Date().toISOString(),
     }).eq("user_id", uid);
     if (error) throw new Error(error.message);
-    // Until sign-up's sector step ships, Your company finishes sign-up.
-    await sb.from("users").update({ status: "Active", signup_done_at: new Date().toISOString() }).eq("id", uid).is("signup_done_at", null);
+    // Sign-up finishes at the last step (saveSignupSector) or once the profile gets a sector answer elsewhere.
     await sb.from("users").update({ status: "Active" }).eq("id", uid);
     return { role: a.role as SignupRole, profileId };
   });
@@ -172,4 +214,66 @@ export const dismissWelcome = createServerFn({ method: "POST" })
     const sb = await admin();
     await sb.from("signup_answers").update({ welcome_seen_at: new Date().toISOString() }).eq("user_id", context.userId);
     return { ok: true };
+  });
+
+const PICKS = z.object({
+  types: z.array(z.string().max(30)).max(5),
+  kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)),
+  other: z.array(z.string().max(80)).max(80),
+});
+
+/** Sign-up's last step: saves the sector answer to the Draft, marks it a sign-up answer, finishes sign-up. */
+export const saveSignupSector = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    sector: z.string().max(120).nullable().optional(),
+    pick: z.object({ type: z.string().max(30), kind: z.string().max(30).optional() }).nullable().optional(),
+    picks: PICKS.nullable().optional(),
+    agnostic: z.boolean().optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = await admin();
+    const uid = context.userId;
+    const { data: a } = await sb.from("signup_answers").select("role, profile_id, done_at").eq("user_id", uid).maybeSingle();
+    if (!a?.done_at || !a.profile_id) throw new Error("Finish Your company first.");
+    const { picksToSectors, normPicks } = await import("@/lib/business-types");
+    const add = (l: unknown, k: string) => Array.from(new Set([...(Array.isArray(l) ? l : []), k]));
+    const now = new Date().toISOString();
+    if (a.role === "seller") {
+      if (!data.sector?.trim()) throw new Error("Pick what your business does.");
+      const { data: st } = await sb.from("startups").select("setup_from_signup").eq("id", a.profile_id).eq("created_by", uid).maybeSingle();
+      if (!st) throw new Error("Draft not found.");
+      const { error } = await sb.from("startups").update({
+        sector: data.sector, sector_pick: data.pick ?? null, setup_from_signup: add(st.setup_from_signup, "sector"), updated_by: uid, updated_at: now,
+      }).eq("id", a.profile_id);
+      if (error) throw new Error(error.message);
+    } else {
+      const agn = !!data.agnostic;
+      const p = normPicks(data.picks);
+      if (!agn && (!p.types.length || (p.types.includes("other" as never) && !p.other.length))) throw new Error("Pick at least one type of business, or Sector agnostic.");
+      const sectors = agn ? [] : picksToSectors(p);
+      if (a.role === "buyer") {
+        const { data: iv } = await sb.from("investors").select("wizard").eq("id", a.profile_id).maybeSingle();
+        if (!iv) throw new Error("Draft not found.");
+        const w = iv.wizard ?? {};
+        const ind = agn ? ["Sector Agnostic"] : sectors;
+        const { error } = await sb.from("investors").update({
+          preferred_industries: ind, sector_picks: agn ? null : p,
+          wizard: { ...w, answered: add(w.answered, "sectors"), from_signup: add(w.from_signup, "sectors") }, updated_by: uid, updated_at: now,
+        }).eq("id", a.profile_id);
+        if (error) throw new Error(error.message);
+        await sb.from("buyer_profiles").update({ sectors: ind }).eq("user_id", uid);
+      } else {
+        const { data: f } = await sb.from("advisor_firms").select("wizard_state, setup_answered").eq("id", a.profile_id).eq("owner_user_id", uid).maybeSingle();
+        if (!f) throw new Error("Draft not found.");
+        const ws = f.wizard_state ?? {};
+        const { error } = await sb.from("advisor_firms").update({
+          sectors, sector_agnostic: agn, sector_picks: agn ? null : p,
+          setup_answered: add(f.setup_answered, "sectors"), wizard_state: { ...ws, fromSignup: add(ws.fromSignup, "sectors") },
+        }).eq("id", a.profile_id);
+        if (error) throw new Error(error.message);
+      }
+    }
+    await sb.from("users").update({ signup_done_at: now }).eq("id", uid).is("signup_done_at", null);
+    return { role: a.role as SignupRole };
   });

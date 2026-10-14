@@ -224,13 +224,14 @@ export function setupProgress(answered: string[], skip?: Set<string>): { n: numb
   return { n: done.length, N: qs.length, first };
 }
 
-export type AdvisorSkipVals = { type: string; web: string; year: string; team: string };
+export type AdvisorSkipVals = { type: string; web: string; year: string; team: string; sectors?: string[]; agnostic?: boolean };
 /** Questions sign-up fully answered (only while the value is still there); the name stays in its question. */
 export function advisorSkips(fromSignup: string[] | undefined, v: AdvisorSkipVals): Set<string> {
   const f = new Set(fromSignup ?? []);
   const s = new Set<string>();
   if (f.has("type") && v.type) s.add("type");
   if (f.has("web") && v.web.trim()) s.add("web");
+  if (f.has("sectors") && (v.agnostic || (v.sectors ?? []).length > 0)) s.add("sectors");
   return s;
 }
 /** Sign-up fields hidden inside questions that still show. */
@@ -241,9 +242,9 @@ export function advisorHidden(fromSignup: string[] | undefined, v: AdvisorSkipVa
   if (f.has("team") && Number(v.team) >= 1) h.add("team");
   return h;
 }
-export function advisorSkipsFor(f: { firmType?: string | null; website?: string | null; yearFounded?: number | null; teamSize?: number | null; wizard?: unknown }) {
+export function advisorSkipsFor(f: { firmType?: string | null; website?: string | null; yearFounded?: number | null; teamSize?: number | null; wizard?: unknown; sectors?: string[] | null; sectorAgnostic?: boolean | null }) {
   const fs = (f.wizard as { fromSignup?: string[] } | null)?.fromSignup;
-  return advisorSkips(fs, { type: f.firmType ?? "", web: f.website ?? "", year: f.yearFounded ? String(f.yearFounded) : "", team: f.teamSize ? String(f.teamSize) : "" });
+  return advisorSkips(fs, { type: f.firmType ?? "", web: f.website ?? "", year: f.yearFounded ? String(f.yearFounded) : "", team: f.teamSize ? String(f.teamSize) : "", sectors: f.sectors ?? [], agnostic: !!f.sectorAgnostic });
 }
 
 export type WizardState = {
