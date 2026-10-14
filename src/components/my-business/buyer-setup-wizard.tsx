@@ -13,6 +13,7 @@ import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-bro
 import { typeTone } from "@/lib/buyer-profile";
 import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
 import { saveBuyerWizard } from "@/lib/buyer-investor.functions";
+import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
 import { BUYER_INVESTOR_KEY, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
@@ -28,6 +29,7 @@ type A = {
   aum: string; ticket: string; rev: string; deals: string[]; stages: string[]; geo: string[]; sectors: string[]; picks: SectorPicks; desc: string;
   /** A representative's investor types (list order; the first is Investor Classification). */
   acts: string[];
+  addr: Addr;
 };
 
 const ROLES: { value: BuyerRelation; label: string; hint: string }[] = [
@@ -50,6 +52,11 @@ function fromData(d: Data): A {
     name: inv.investor_name ?? "", year: inv.year_founded?.toString() ?? "", reg: inv.registration_no ?? "", web: inv.website_url ?? "",
     aum: inv.aum_band ?? "", ticket: inv.ticket_band ?? "", rev: inv.revenue_min_band ?? "",
     deals: d.buyer.deal_types, stages: inv.preferred_stages, geo: inv.investment_focus_raw, sectors: inv.preferred_industries, picks: normPicks((inv as { sector_picks?: unknown }).sector_picks), desc: d.buyer.description,
+    addr: (() => {
+      const iv = inv as Record<string, unknown>;
+      const prov = (iv.address_province_state as string) || "";
+      return { street: (iv.address_line1 as string) ?? "", unit: (iv.address_line2 as string) ?? "", district: (iv.address_city_district as string) ?? "", province: prov || ((inv.country ?? "Thailand") === "Thailand" && inv.city ? inv.city : ""), postal: (iv.postal_code as string) ?? "" };
+    })(),
     acts: d.buyer.relation === "agent" ? sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []) : [],
   };
 }
@@ -203,7 +210,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const errors: Record<string, string | null> = {
     role: a.role ? null : tr("Choose one to continue."),
     type: agent ? (a.acts.length ? null : tr("Choose at least one to continue.")) : a.type && a.type !== INDIVIDUAL_TYPE ? null : tr("Choose one to continue."),
-    country: a.country ? null : tr("Choose your country."),
+    country: a.country ? null : tr("Choose a country."),
+    ...(() => { const e = addrErrors(a.addr, thai, a.addr.district); return { "a-street": e.street ?? null, "a-district": e.district ?? null, "a-province": e.province ?? null, "a-postal": e.postal ?? null }; })(),
     city: a.city.trim() ? null : thai ? "Choose your province." : tr("Add your city."),
     name: a.name.trim().length >= 2 ? null : tr("Add your firm's name."),
     year: individual ? null : yearError(a.year),
@@ -220,7 +228,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   useFocusNeeded(qRef, `${phase}:${cur}`);
 
   const fieldsOf: Record<QId, string[]> = {
-    role: ["role"], type: ["type"], loc: ["country", "city"], name: ["name", "year", "reg"], web: ["web"], aum: ["aum"], ticket: ["ticket"],
+    role: ["role"], type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web"], aum: ["aum"], ticket: ["ticket"],
     rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], desc: ["desc"], review: [],
   };
   const qValid = (id: QId) => fieldsOf[id].every((k) => !errors[k]);
@@ -229,6 +237,23 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const idx = steps.findIndex((s) => s.id === cur);
   const step = steps[idx] ?? steps[0]!;
   const optional = cur === "rev" || cur === "desc";
+
+  // ---- address (Country first; a new country clears the address and registration number) ----
+  const setAddr = (p: Partial<Addr>) => {
+    const addr = { ...a.addr, ...p };
+    const server: Record<string, unknown> = {};
+    if ("street" in p) server.address_line1 = addr.street || null;
+    if ("unit" in p) server.address_line2 = addr.unit || null;
+    if ("district" in p) server.address_city_district = addr.district || null;
+    if ("province" in p) server.address_province_state = addr.province || null;
+    if ("postal" in p) server.postal_code = addr.postal || null;
+    set({ addr }, server);
+  };
+  const changeCountry = (c: string) => {
+    set({ country: c, city: "", reg: "", addr: { street: "", unit: "", district: "", province: "", postal: "" } },
+      { country: c, registration_no: null, address_line1: null, address_line2: null, address_city_district: null, address_province_state: null, postal_code: null });
+    setTimeout(() => document.getElementById("addr-country")?.focus(), 0);
+  };
 
   // ---- answer setters (each saves straight away) ----
   const set = (patch: Partial<A>, server: Record<string, unknown>) => {
@@ -349,34 +374,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         body: <><TypeTicks value={a.acts} onChange={(v) => set({ acts: v, type: v[0] ?? "" }, { acts_for_types: v })} /><Err m={forced.type && errors.type} /></> }
       : { req: true, t: tr("What type of investor is your firm?"), h: tr("Sellers see this, and it sets the artwork on your card."),
         body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
-    loc: { req: true, t: tr("Where is your firm based?"), h: tr("Sellers see your country and city."),
-      body: (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={lbl} htmlFor="w-country">{tr("Country")}<Req /></label>
-            <select id="w-country" aria-required className={inp} value={a.country}
-              onChange={(e) => set({ country: e.target.value, city: "", reg: "" }, { country: e.target.value, city: null, registration_no: null })}>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={lbl} htmlFor="w-city">{thai ? "City / province" : tr("City")}<Req /></label>
-            {thai ? (
-              <select id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={`${inp} ${errors.city ? "need-fill" : ""} ${show("city") ? errCls : ""}`} value={a.city}
-                onBlur={() => setTouched((t) => ({ ...t, city: true }))}
-                onChange={(e) => set({ city: e.target.value }, { city: e.target.value })}>
-                <option value="">{tr("Choose a province")}</option>
-                {THAI_PROVINCES_77.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            ) : (
-              <input id="w-city" aria-required {...(errors.city ? { "data-need": "1" } : {})} className={`${inp} ${errors.city ? "need-fill" : ""} ${show("city") ? errCls : ""}`} value={a.city} maxLength={120} placeholder="e.g. Singapore"
-                onBlur={() => setTouched((t) => ({ ...t, city: true }))}
-                onChange={(e) => set({ city: e.target.value }, { city: e.target.value })} />
-            )}
-            <Err m={show("city")} />
-          </div>
-        </div>
-      ) },
     name: { req: true, t: nameShort && !individual ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
       h: nameShort && !individual ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : `Sellers see "${tName}" instead of your name until they approve your NDA.`,
       body: (
@@ -416,6 +413,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               </p>
             </div>
           )}
+          <AddressBox need a={a.addr} thai={thai} city={a.addr.district} title={individual ? tr("Address") : tr("Business address")}
+            note={individual ? "" : tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+            country={a.country} onCountry={changeCountry} countryErr={show("country")}
+            onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+            show={(k) => show(`a-${k}`)} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           <p className="flex items-start gap-2 text-[13px] font-medium text-[#B42318]"><Lock className="mt-0.5 h-[15px] w-[15px] flex-none" />{tr("Your firm's identity stays confidential until a seller approves your NDA.")}</p>
         </div>
       ) },
@@ -569,7 +571,7 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
       ...(shown.has("type") ? [a.role === "agent"
         ? [tr("Acts for"), a.acts.map(typeLabel).join(", "), "type", "req", errors.type] as Row
         : [tr("Investor type"), WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
-      [tr("Based in"), a.city ? `${a.city}, ${a.country}` : "", "loc", "req", errors.city],
+      [individual ? tr("Address") : tr("Business address"), [a.addr.street, a.addr.unit, a.addr.district, a.addr.province, a.addr.postal, a.country].filter(Boolean).join(", "), "name", "req", errors["a-street"] || errors["a-district"] || errors["a-province"] || errors["a-postal"]],
       [tr("Firm name"), a.name, "name", "req", errors.name, "🔒 After NDA"],
       ...(!individual ? [
         [tr("Year founded"), a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,

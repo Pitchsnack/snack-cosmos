@@ -49,8 +49,8 @@ export async function daThreads(sb: any, userId: string, as: As, pipelineIds: st
   const fm = Object.fromEntries((firms ?? []).map((f: any) => [f.id, f]));
   const nm = Object.fromEntries((ndas ?? []).map((n: any) => [n.id, n]));
   const parties = await dealParties(sb, deals ?? []);
-  const { data: hps } = await sb.from("hidden_profiles").select("id, code_name").in("id", [...new Set((deals ?? []).map((d: any) => d.hidden_profile_id))]);
-  const code = Object.fromEntries((hps ?? []).map((h: any) => [h.id, h.code_name]));
+  const { data: hps } = await sb.from("hidden_profiles").select("id, code_name, ref_no").in("id", [...new Set((deals ?? []).map((d: any) => d.hidden_profile_id))]);
+  const code = Object.fromEntries((hps ?? []).map((h: any) => [h.id, h.code_name || h.ref_no]));
   const out: DaMeta[] = [];
   for (const a of das) {
     const d = dm[a.deal_id];

@@ -65,7 +65,7 @@ export function listingItems(rows: any[], names: Record<string, string>, emails:
       for (const [label, k] of cmp) if (v(prev[k]) !== v(pub[k])) changed.push([label, v(prev[k]), v(pub[k])]);
     }
     return {
-      key: `l:${l.id}`, id: l.id, kind: l.has_live ? "edit" : "new", name, ref: `${l.ref_no ?? ""} · ${l.code_name}`,
+      key: `l:${l.id}`, id: l.id, kind: l.has_live ? "edit" : "new", name, ref: l.code_name ? `${l.ref_no ?? ""} · ${l.code_name}` : l.ref_no ?? "",
       who: emails[l.submitted_by] || names[l.submitted_by] || "—", submittedAt: l.submitted_at, version: l.version ?? 1,
       initials: initials(name), art: l, dirLabel: "Startups Directory", dirTo: "/startups/$id", dirParams: { id: l.startup_id },
       reviewTo: { to: "/approvals/listings/$id", params: { id: l.id } },
@@ -85,7 +85,7 @@ export function listingItems(rows: any[], names: Record<string, string>, emails:
             <h4 className="mb-1.5 mt-0.5 text-sm font-semibold leading-snug">{pub.headline || "No headline yet"}</h4>
             <p className="line-clamp-3 text-xs text-muted-foreground">{pub.description || "No description yet"}</p>
             <div className="mt-1.5 text-xs text-muted-foreground">Revenue <b className="font-medium text-foreground">{revenueBand(pr.last_year_revenue) ?? "—"}</b></div>
-            <div className="mt-2 flex justify-between border-t border-border pt-1.5 text-[11.5px] text-muted-foreground"><span>{l.code_name} · {l.ref_no}</span><span>{l.has_live ? "Live · edits pending" : "Not published yet"}</span></div>
+            <div className="mt-2 flex justify-between border-t border-border pt-1.5 text-[11.5px] text-muted-foreground"><span>{[l.code_name, l.ref_no].filter(Boolean).join(" · ")}</span><span>{l.has_live ? "Live · edits pending" : "Not published yet"}</span></div>
           </div>
         </div>
       ),

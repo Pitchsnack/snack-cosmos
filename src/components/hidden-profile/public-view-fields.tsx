@@ -18,6 +18,7 @@ import {
 } from "@/lib/public-listing";
 import { checkListingName } from "@/lib/hidden-profiles.functions";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-session-context";
 
 /**
  * Edit information › Public view: Listing Identity and Deal Terms, as two tabs
@@ -37,6 +38,8 @@ const DEAL_TH: Record<string, string> = {
 type NameState = "idle" | "checking" | "available" | "taken";
 
 export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts | undefined, source: ListingSource | undefined) {
+  // Only Admin sets or changes a listing name; sellers see it read-only (or the ref).
+  const canName = usePermissions().isControl;
   const base = useMemo(() => pickDraft(row ?? {}), [row?.id, row?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
   const [d, setD] = useState<HiddenDraft>(base);
   const [baseline, setBaseline] = useState(() => JSON.stringify(base));
@@ -63,7 +66,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
     setD((p) => {
       const next = {
         ...p,
-        code_name: p.code_name.trim() ? p.code_name : (codeIdeas[0] ?? p.code_name),
+        code_name: p.code_name,
         headline: p.headline.trim() ? p.headline : headlineIdea,
         description: p.description.trim() ? p.description : descIdea,
         highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
@@ -76,7 +79,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
 
   const fillAll = () => setD((p) => ({
     ...p,
-    code_name: p.code_name.trim() || (codeIdeas[0] ?? suggestCodeName()),
+    code_name: canName ? (p.code_name.trim() || (codeIdeas[0] ?? suggestCodeName())) : p.code_name,
     headline: headlineIdea || p.headline,
     description: descIdea || p.description,
     highlights: p.highlights.map((h, i) => highlightIdeas[i] ?? h),
@@ -103,7 +106,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
 
   const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const counts: Record<PublicTab, number> = {
-    identity: (d.code_name.trim() ? 0 : 1) + (d.headline.trim() ? 0 : 1) + (d.description.trim() ? 0 : 1) + (d.highlights.slice(0, 3).every((h) => h.trim()) ? 0 : 1),
+    identity: (d.headline.trim() ? 0 : 1) + (d.description.trim() ? 0 : 1) + (d.highlights.slice(0, 3).every((h) => h.trim()) ? 0 : 1),
     deal: ((DEAL_TYPES as readonly string[]).includes(d.deal_type ?? "") ? 0 : 1) + (d.owner_stays ? 0 : 1),
   };
   const dirty = !!row && JSON.stringify(d) !== baseline;
@@ -111,7 +114,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
   const payload = { ...d, highlights: d.highlights.map((h) => h.trim()), handover_months: d.owner_stays === "yes" ? (d.handover_months ?? 6) : null };
   return {
     d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea }, moreNames: () => setSeed((s) => s + 1),
-    fillAll, findings, counts, dirty, changedFromRow, payload, nameState, nameTaken: nameState === "taken",
+    fillAll, findings, counts, dirty, changedFromRow, payload, nameState, nameTaken: canName && nameState === "taken", canName,
   };
 }
 export type PublicDraftState = ReturnType<typeof usePublicDraft>;
@@ -198,7 +201,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
           <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={refNo} />
           <div className="min-w-0 space-y-[22px]">
             <EditSec id="codename" tone="seller" active={section === "codename"}>
-              <ListingNameField pd={pd} />
+              {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <ListingNameRow name={d.code_name.trim()} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
               <FieldRow label={tr("Headline", "หัวข้อประกาศ")} htmlFor="hp-headline" missing={!d.headline.trim()} right={`${d.headline.length}/120`} suggest={ideas.headlineIdea ? () => set("headline", ideas.headlineIdea) : undefined}>
@@ -365,7 +368,20 @@ function OwnerHandover({ d, set }: { d: HiddenDraft; set: Setter }) {
   );
 }
 
-function ListingNameField({ pd }: { pd: PublicDraftState }) {
+/** Sellers: the name PitchSnack set, or the ref until there is one. */
+function ListingNameRow({ name, refNo }: { name: string; refNo?: string }) {
+  const tr = useTr();
+  const ref = refNo || "—";
+  return (
+    <div>
+      <div className={LABEL}>{tr("Listing name", "ชื่อประกาศ")}</div>
+      <div className="mt-[6px] text-[15px] font-semibold text-[#151A28] dark:text-foreground">{name || ref}</div>
+      {!name && <p className="mt-1 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr(`PitchSnack names your listing. Until then, buyers see ${ref}.`, `PitchSnack จะตั้งชื่อประกาศให้ท่าน ระหว่างนี้ผู้ซื้อจะเห็น ${ref}`)}</p>}
+    </div>
+  );
+}
+
+function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string }) {
   const tr = useTr();
   const { d, setD, ideas } = pd;
   const [open, setOpen] = useState(false);
@@ -387,12 +403,12 @@ function ListingNameField({ pd }: { pd: PublicDraftState }) {
   const tipText = tr("A private name buyers see instead of your real company name. It must be unique in the Marketplace.", "ชื่อที่ผู้ซื้อเห็นแทนชื่อจริงของบริษัทท่าน และต้องไม่ซ้ำกับประกาศอื่นใน Marketplace");
   const border = taken ? "border-[#DC2626] focus-visible:border-[#DC2626] focus-visible:shadow-[0_0_0_3px_rgba(220,38,38,0.12)]"
     : open ? "border-[#6D28D9] shadow-[0_0_0_3px_rgba(109,40,217,0.14)] focus-visible:border-[#6D28D9] focus-visible:shadow-[0_0_0_3px_rgba(109,40,217,0.14)]"
-    : empty ? MISS_BOX : "";
+    : "";
   return (
     <div ref={wrap} className="relative">
       <div className="mb-[6px] flex items-center">
         <label htmlFor="hp-code_name" onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)} onClick={() => setOpen(true)}
-          className={cn(LABEL, (empty || taken) && MISSING)}>{tr("Listing name", "ชื่อประกาศ")}</label>
+          className={cn(LABEL, taken && MISSING)}>{tr("Listing name", "ชื่อประกาศ")}</label>
         <span className="relative ml-[2px] inline-flex">
           <button type="button" aria-label={tr("What is a listing name?", "ชื่อประกาศคืออะไร")} aria-describedby={tipId}
             onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)} onFocus={() => setTip(true)} onBlur={() => setTip(false)} onClick={() => setTip((t) => !t)}
@@ -405,7 +421,7 @@ function ListingNameField({ pd }: { pd: PublicDraftState }) {
             {tipText}
           </span>
         </span>
-        {empty && <span className="ml-1 text-[12.5px] font-medium text-[#DC2626]">{tr("· Missing", "· ยังขาด")}</span>}
+  
       </div>
       <div className="relative">
         <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("Type a name or pick a suggestion", "พิมพ์ชื่อ หรือเลือกจากชื่อที่แนะนำ")}
@@ -419,6 +435,7 @@ function ListingNameField({ pd }: { pd: PublicDraftState }) {
           <ChevronDown className={cn("h-[18px] w-[18px] transition-transform", open ? "rotate-180 text-[#6D28D9]" : "text-[#6A7181]")} strokeWidth={2} />
         </span>
       </div>
+      {empty && !taken && <p className="mt-[6px] text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr(`No listing name yet. Buyers will see ${refNo || "the ref"}.`, `ยังไม่มีชื่อประกาศ ผู้ซื้อจะเห็น ${refNo || "เลขอ้างอิง"}`)}</p>}
       {taken && (
         <p id={errId} role="alert" className="mt-[6px] text-[12.5px] font-medium text-[#B42318]">
           {tr(`“${name}” is already used by another listing. Click the field to pick a suggestion, or try another name.`, `“${name}” มีประกาศอื่นใช้แล้ว คลิกที่ช่องเพื่อเลือกชื่อที่แนะนำ หรือลองชื่ออื่น`)}
@@ -468,7 +485,7 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
   const markets = (d.market_tags ?? source?.market_tags ?? []).slice(0, 3).join(", ");
   const rev = revenueBand(source?.last_year_revenue) ?? "—";
   const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{tr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}</div>;
-  const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
+  const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || refNo || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
   const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อประกาศของท่าน")}</div>;
   return (
     <div aria-hidden className="pointer-events-none sm:sticky sm:top-4">

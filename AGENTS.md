@@ -1,6 +1,6 @@
 # Project decisions
 
-- Only Admin approval publishes a listing (DB trigger); Public view previews from business fields. Sellers pick their listing's sector picture (public_image_id via setMyListingImage, member + same-sector checks); covers count a pick only while it matches the sector.
+- Only Admin approval publishes a listing (DB trigger). Sellers pick the sector picture (setMyListingImage); covers use it only while it matches the sector.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
 - Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx (prefs: seller_report_prefs).
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
@@ -26,3 +26,4 @@
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email read live from owner (withOwnerEmails).
+- Listing names: Admin-only (trigger zz_listing_name_admin_only, syncs live); NULL = show ref_no.

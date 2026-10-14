@@ -1337,7 +1337,7 @@ export function StartupForm({
           <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
-            note={ctAdmin ? "Buyers see only the province until the seller approves their NDA." : "Buyers see only the province until you approve their NDA."} />
+            note={ctAdmin ? "Buyers see the country and province, never the full address, until the seller approves their NDA." : tr("Buyers see your country and province, never the full address, until you approve their NDA.", "ผู้ซื้อจะเห็นเพียงประเทศและจังหวัดของท่าน ไม่เห็นที่อยู่เต็ม จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")} />
         </div>
       </div>
       </div>
@@ -1728,7 +1728,7 @@ export function StartupForm({
       setTimeout(() => document.getElementById("sf-company-name")?.focus(), 80);
       return;
     }
-    if (popup?.row && (!pd.d.code_name.trim() || pd.nameTaken)) {
+    if (popup?.row && pd.nameTaken) {
       toast.error(pd.nameTaken ? tr("That listing name is already used by another listing.", "ชื่อประกาศนี้มีประกาศอื่นใช้แล้ว") : tr("Add a listing name before you save.", "กรุณากรอกชื่อประกาศก่อนบันทึก"));
       navTab("public", "identity");
       setTimeout(() => document.getElementById("hp-code_name")?.focus(), 80);

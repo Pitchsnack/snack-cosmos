@@ -79,7 +79,6 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
         .insert({
           startup_id: data.startupId,
           tenant_id: facts.tenant_id,
-          code_name: suggestCodeName(),
           region: suggestRegion(facts),
           headline,
           deal_type: null,
@@ -101,7 +100,7 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
   });
 
 const DraftSchema = z.object({
-  code_name: z.string().trim().min(1).max(80),
+  code_name: z.string().trim().max(80).nullable().optional().transform((v) => v || null),
   cover_art: z.string().nullable(),
   region: z.string().nullable(),
   headline: z.string().max(120),
@@ -139,9 +138,12 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
     if (e1) throw new Error(e1.message);
     if (!cur) throw new Error("No hidden profile");
     // Public image is Admin-only (set via setPublicImage); never written from the draft.
-    const { cover_image_url: _c, ...draftNoCover } = data.draft;
+    const { cover_image_url: _c, ...draftNoCover0 } = data.draft;
     void _c;
     const { data: isAdmin } = await (sb as any).rpc("is_control", { _user_id: context.userId });
+    // Only Admin sets or changes a listing name.
+    const { code_name: _n, ...noName } = draftNoCover0;
+    const draftNoCover = isAdmin ? draftNoCover0 : noName;
     const adminReview = !!isAdmin && ["in_review", "changes_requested"].includes((cur as any).approval_status);
     if (adminReview) {
       const { recordAdminEdits } = await import("@/lib/approvals.functions");
@@ -182,7 +184,9 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
     if (missing.length) throw new Error(`Missing: ${missing.join(", ")}`);
     const { data: cur } = await sb.from("hidden_profiles").select("approval_status").eq("startup_id", data.startupId).maybeSingle();
     const wasLive = isBuyerVisible(cur as { approval_status?: string | null } | null);
-    const cleaned = { ...draft, highlights: draft.highlights.filter((h) => h.trim()) };
+    const { data: isAdm } = await (sb as any).rpc("is_control", { _user_id: context.userId });
+    const cleaned: Record<string, unknown> = { ...draft, highlights: draft.highlights.filter((h) => h.trim()) };
+    if (!isAdm) delete cleaned.code_name;
     const { data: row, error } = await sb
       .from("hidden_profiles")
       .update({

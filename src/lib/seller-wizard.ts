@@ -81,7 +81,7 @@ export function answeredFlags(d: SellerDraft): boolean[] {
     !!d.deal,
     d.stays === "yes" || d.stays === "no",
     (d.price ?? 0) > 0,
-    !!d.listingName?.trim() && d.nameOk !== false,
+    true, // Listing name: PitchSnack names the listing, the wizard never asks.
   ];
 }
 export const answeredCount = (d: SellerDraft) => answeredFlags(d).filter(Boolean).length;
@@ -138,6 +138,7 @@ export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<stri
   if (f.has("size") && d.size) s.add("size");
   if (f.has("sector") && d.sector) s.add("sector");
   if (d.noUpload) s.add("photos");
+  s.add("lname"); // Only Admin names a listing.
   return s;
 }
 /** Indexes of the questions that show. */
@@ -193,7 +194,7 @@ export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
     deal: !!d.deal,
     handover: d.stays === "yes" || d.stays === "no",
     price: (d.price ?? 0) > 0,
-    lname: !!d.listingName?.trim() && d.nameOk !== false,
+    lname: true,
     review: false,
   };
 }

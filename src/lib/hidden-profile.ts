@@ -354,7 +354,6 @@ export function runIdentityCheck(d: Partial<HiddenDraft>, facts: EntryFacts): Id
 
 export function missingForPublish(d: Partial<HiddenDraft>): string[] {
   const m: string[] = [];
-  if (!d.code_name?.trim()) m.push("Code name");
   if (!d.headline?.trim()) m.push("Headline");
   if (!d.deal_type) m.push("Deal type");
   if ((d.headline ?? "").length > 90) m.push("Headline up to 90 characters");

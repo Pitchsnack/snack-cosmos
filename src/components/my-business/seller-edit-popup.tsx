@@ -69,7 +69,7 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
   });
   const name = data?.startup_name ?? "";
   const showPublic = view === "public" && !!row;
-  const subtitle = showPublic ? `${row?.code_name || tr("Public view", "มุมมองสาธารณะ")} · ${tr("Public view", "มุมมองสาธารณะ")}` : `${name || tr("Your company", "บริษัทของท่าน")} · ${tr("Private view", "มุมมองส่วนตัว")}`;
+  const subtitle = showPublic ? `${row?.code_name || row?.ref_no || tr("Public view", "มุมมองสาธารณะ")} · ${tr("Public view", "มุมมองสาธารณะ")}` : `${name || tr("Your company", "บริษัทของท่าน")} · ${tr("Private view", "มุมมองส่วนตัว")}`;
   const ready = !!data && !(view === "public" && !row);
 
   return (

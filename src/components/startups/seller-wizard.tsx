@@ -239,7 +239,7 @@ export function SellerWizard({
             <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}
               show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : tr("The postal code has 5 digits."), unit: null } as Record<string, string | null>)[k] ?? null : null)}
               onBlur={(k) => setTouched((t) => ({ ...t, [k]: true }))}
-              note={tr("Buyers see only the province until you approve their NDA.")} />
+              note={tr("Buyers see your country and province, never the full address, until you approve their NDA.")} />
           </div>
           <p className="flex items-start gap-2 text-[13px] text-destructive"><Lock className="mt-0.5 h-3.5 w-3.5" />{tr("Your company identity stays confidential until you approve the buyer's NDA.")}</p>
         </div>

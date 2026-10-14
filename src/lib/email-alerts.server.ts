@@ -106,10 +106,10 @@ export async function pipelineAlert(pipelineId: string, event: string) {
     const ndaOk = !!p.nda_approved_at;
     const buyerCode = iv?.investor_type ? `A ${iv.investor_type} investor` : "A verified investor";
     const vars = {
-      "listing code name": hp?.code_name ?? "your listing",
+      "listing code name": hp?.code_name || hp?.ref_no || "your listing",
       "buyer code name": buyerCode,
       "buyer company": ndaOk ? iv?.investor_name ?? buyerCode : buyerCode,
-      "seller company": ndaOk ? st?.startup_name ?? hp?.code_name : hp?.code_name,
+      "seller company": ndaOk ? st?.startup_name ?? (hp?.code_name || hp?.ref_no) : (hp?.code_name || hp?.ref_no),
       "report name": "verified financial report",
       date: fmtDate(),
       organisation: "",
