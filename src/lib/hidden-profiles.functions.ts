@@ -280,13 +280,14 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       rowsIn = rowsIn.filter((r) => !nda.has(r.id));
     }
     const nda = role === "buyer" || cap !== null ? await (await import("@/lib/favourites.functions")).activeNdaIds(userId) : new Set<string>();
+    const invited = role === "buyer" ? await (await import("@/lib/invitations.server")).invitedListingIds(userId) : new Set<string>();
     const { thbOf, priceFor, bandOf } = await import("@/lib/asking-price");
     const cover = await (await import("@/lib/cover-urls.server")).sectorCoverResolver();
     return Promise.all(rowsIn.map(async (r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
       // Above the plan's price cap (and no NDA yet): the card stays closed and no details are sent.
       const thb = thbOf(live as never);
-      if (cap !== null && thb != null && thb / 1_000_000 > cap && !nda.has(r.id)) {
+      if (cap !== null && thb != null && thb / 1_000_000 > cap && !nda.has(r.id) && !invited.has(r.id)) {
         // Only four safe fields: sector, region, ref and the price band. No picture.
         const o = open(r, live);
         const priceBand = `Asking ${bandOf(thb)?.label ?? ""}`.trim();

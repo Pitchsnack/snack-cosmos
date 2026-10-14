@@ -106,7 +106,7 @@ export const sendInvitation = createServerFn({ method: "POST" })
       user_id: inv.userId, notification_type: "deal",
       title: `${name} invited you to view their business`,
       message: "Browse their listed profile. If you're interested, request an NDA to see the company's name and details.",
-      link_url: "/marketplace/browse",
+      link_url: `/marketplace/invitations?open=${row.id}`,
     });
     const a = await planAccess(context.userId);
     return { id: row.id as string, sentAt: row.sent_at as string, investorRef: inv.refNo, listingRef: hp.ref_no as string | null, left: requestsLeft(a, "contact"), termMonths: (a.plan?.term_months as number | undefined) ?? null };
@@ -143,4 +143,121 @@ export const adminInvitations = createServerFn({ method: "GET" })
       });
     }
     return out;
+  });
+
+/* ───────────────────────── Buyer side ───────────────────────── */
+
+export type BuyerInvitation = {
+  id: string; listingId: string; status: import("./invitations.server").InvStatus;
+  sentAt: string; viewedAt: string | null; choiceAt: string | null; closedAt: string | null; closedReason: string | null;
+  ndaAt: string | null; approvedAt: string | null; pipelineId: string | null;
+  name: string; refNo: string | null; companyName: string | null;
+  /** Public listing (Browse teaser); null once the listing is no longer live. */
+  teaser: any | null;
+};
+
+export const listMyInvitations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<BuyerInvitation[]> => {
+    await (await import("./plan-access.server")).requireRole(context.userId, ["buyer"]);
+    const { orgInvitations } = await import("./invitations.server");
+    const { rows } = await orgInvitations(context.userId);
+    if (!rows.length) return [];
+    const sb = await admin();
+    const hpIds = rows.map((r) => r.inv.hidden_profile_id as string);
+    const [{ data: hps }, { loadMarketplaceTeasers }] = await Promise.all([
+      sb.from("hidden_profiles").select("id, ref_no, code_name, startup_id").in("id", hpIds),
+      import("./hidden-profiles.functions"),
+    ]);
+    const hpBy = new Map<string, any>((hps ?? []).map((h: any) => [h.id, h]));
+    const teasers = new Map<string, any>(((await loadMarketplaceTeasers({ excludeNda: false }, context.userId, true)) as any[]).filter((t) => !t.closed).map((t) => [t.id, t]));
+    const approvedIds = rows.filter((r) => r.status === "approved").map((r) => hpBy.get(r.inv.hidden_profile_id)?.startup_id).filter(Boolean);
+    const { data: sts } = approvedIds.length ? await sb.from("startups").select("id, startup_name").in("id", approvedIds) : { data: [] };
+    const nameBy = new Map<string, string>((sts ?? []).map((s: any) => [s.id, s.startup_name]));
+    return rows.map(({ inv, pipe, status }) => {
+      const hp = hpBy.get(inv.hidden_profile_id);
+      const t = status === "closed" && inv.closed_reason === "listing_not_live" ? null : teasers.get(inv.hidden_profile_id) ?? null;
+      return {
+        id: inv.id, listingId: inv.hidden_profile_id, status,
+        sentAt: inv.sent_at, viewedAt: inv.viewed_at, choiceAt: inv.choice_at, closedAt: inv.closed_at, closedReason: inv.closed_reason,
+        ndaAt: pipe?.nda_requested_at ?? null, approvedAt: pipe?.nda_approved_at ?? null, pipelineId: pipe?.id ?? null,
+        name: t?.listing?.codeName || hp?.code_name || hp?.ref_no || "Listing", refNo: hp?.ref_no ?? null,
+        companyName: status === "approved" ? nameBy.get(hp?.startup_id) ?? null : null,
+        teaser: t,
+      };
+    });
+  });
+
+async function myInvitation(userId: string, id: string) {
+  const { orgInvitations } = await import("./invitations.server");
+  const { rows } = await orgInvitations(userId);
+  const r = rows.find((x) => x.inv.id === id);
+  if (!r) throw new Error("Invitation not found");
+  return r;
+}
+
+/** Buyer opened the invitation's panel. */
+export const openInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await (await import("./plan-access.server")).requireRole(context.userId, ["buyer"]);
+    const r = await myInvitation(context.userId, data.id);
+    await (await import("./invitations.server")).markViewed(r.inv);
+    return { ok: true };
+  });
+
+/** Buyer opened a listing (Browse panel, full page, bell or email): counts as viewing its invitation. */
+export const markListingViewed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ listingId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { roleOf } = await import("./plan-access.server");
+    if ((await roleOf(context.userId)) !== "buyer") return { ok: true };
+    const { orgInvitations, markViewed } = await import("./invitations.server");
+    const { rows } = await orgInvitations(context.userId, [data.listingId]);
+    for (const r of rows) if (!r.inv.closed_at) await markViewed(r.inv);
+    return { ok: true };
+  });
+
+/** Not interested / Reconsider. The seller is told once per invitation, the first time. */
+export const setInvitationChoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), notInterested: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await (await import("./plan-access.server")).requireRole(context.userId, ["buyer"]);
+    const r = await myInvitation(context.userId, data.id);
+    if (data.notInterested && r.status !== "new" && r.status !== "viewed") throw new Error("This invitation can't be changed now");
+    if (!data.notInterested && r.status !== "not_interested") throw new Error("This invitation can't be changed now");
+    const sb = await admin();
+    const now = new Date().toISOString();
+    const first = data.notInterested && !r.inv.choice_at;
+    await sb.from("listing_invitations").update(data.notInterested
+      ? { buyer_choice: "not_interested", choice_at: now, viewed_at: r.inv.viewed_at ?? now }
+      : { buyer_choice: "open" }).eq("id", r.inv.id);
+    if (first) {
+      const { loadPublicInvestors } = await import("./investor-browse.functions");
+      const [i] = await loadPublicInvestors(sb, [r.inv.investor_id]);
+      await (await import("./invitations.server")).notifySellers(r.inv.startup_id, `${i ? `${i.codeName} (${i.refNo})` : "An investor"} isn't interested in your listing.`, "");
+    }
+    return { ok: true };
+  });
+
+/** Buyer: listing ids with an invitation still New or Viewed (Invited you chip). */
+export const myInvitedListings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { roleOf } = await import("./plan-access.server");
+    if ((await roleOf(context.userId)) !== "buyer") return [] as string[];
+    return [...(await (await import("./invitations.server")).invitedListingIds(context.userId))];
+  });
+
+/** Buyer menu count: invitations still New. */
+export const invitationsBadgeCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { roleOf } = await import("./plan-access.server");
+    if ((await roleOf(context.userId)) !== "buyer") return 0;
+    const { rows } = await (await import("./invitations.server")).orgInvitations(context.userId);
+    return rows.filter((r) => r.status === "new").length;
   });

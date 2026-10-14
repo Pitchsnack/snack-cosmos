@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { useMyVerification } from "@/components/marketplace/buyer-verification";
 import { myNdaStatuses, requestNda } from "@/lib/pipeline.functions";
+import { myInvitedListings } from "@/lib/invitations.functions";
 import { mySavedListingIds, toggleSavedListing } from "@/lib/favourites.functions";
 import type { PublicListing } from "@/lib/public-listing";
 import { useTranslation } from "@/i18n/language";
@@ -102,7 +103,10 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
   const qc = useQueryClient();
   const st = statuses?.[listingId];
   const { data: strip } = usePlanStrip();
-  const planLock = requestLock(strip);
+  const invitedFn = useServerFn(myInvitedListings);
+  const { data: invited } = useQuery({ queryKey: ["invitations", "invited-ids"], queryFn: () => invitedFn(), staleTime: 15_000 });
+  // An invitation still New or Viewed opens Request NDA on any plan.
+  const planLock = invited?.includes(listingId) ? null : requestLock(strip);
   const locked = !data?.verified;
   if (st && st !== "declined") {
     return (
@@ -125,7 +129,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
           if (onRequested) onRequested(listingId);
           else toast.success("NDA request sent to the seller.");
           invalidate();
-        } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); qc.invalidateQueries({ queryKey: ["plan-strip"] }); }
+        } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); qc.invalidateQueries({ queryKey: ["plan-strip"] }); qc.invalidateQueries({ queryKey: ["invitations"] }); }
       }}
       className={cn(planLock && "opacity-70", "h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
     >

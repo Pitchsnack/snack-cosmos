@@ -22,6 +22,7 @@ import { listFavourites, withdrawNdaRequest, type Favourite, type FavStatus } fr
 import { useTranslation } from "@/i18n/language";
 import { usePersona } from "@/hooks/use-marketplace";
 import { SellerFavourites } from "@/components/marketplace/seller-favourites";
+import { NdaSentDialog } from "@/components/marketplace/buyer-invitations";
 import { cn } from "@/lib/utils";
 import { BrowseHeader, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
 
@@ -235,6 +236,8 @@ function FavouritesPage() {
 function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void }) {
   const { t } = useTranslation();
   const code = [f.listing.codeName, f.listing.refNo].filter(Boolean).join(" · ");
+  const [sentName, setSentName] = useState<string | null>(null);
+  if (sentName) return <NdaSentDialog name={sentName} onClose={() => setSentName(null)} />;
   if (f.status === "approved" && f.priv) return <PrivatePanel f={f} code={code} />;
   if (f.status === "requested") return <RequestedPanel f={f} code={code} savedIds={savedIds} />;
   return (
@@ -243,7 +246,7 @@ function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<str
         <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
         <div className="flex shrink-0 gap-2">
           <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
-          <NdaButton listingId={f.id} onRequested={() => toast.success(t("NDA requested."))} />
+          <NdaButton listingId={f.id} onRequested={() => setSentName(f.listing?.codeName || f.listing?.refNo || t("This listing"))} />
         </div>
       </div>
       <div className="overflow-y-auto p-5"><ListingDetail t={f} /></div>

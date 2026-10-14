@@ -38,6 +38,6 @@
 
 ## Connect & Invitations (brief lovable-connect-and-invitations_1)
 - [x] Stage 1: invitation records, Connect button + pop-up, old contact requests migrated/removed, Admin Invitations tab
-- [ ] Stage 2: Buyer › Invitations page, Invited you chip, Not interested/Reconsider, NDA-sent pop-up
+- [x] Stage 2: Buyer › Invitations page, Invited you chip, Not interested/Reconsider, NDA-sent pop-up
 - [ ] Stage 3: Seller › Invitations page, New NDA request pop-up, Review investor, Congratulations cards
 - [ ] Stage 4: Invitation email, bell items, Connect requests plan wording, closing rules

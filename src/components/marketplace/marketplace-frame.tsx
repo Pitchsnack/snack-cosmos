@@ -1,9 +1,9 @@
 import { BellRing } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert, Handshake } from "lucide-react";
+import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert, Handshake, Send } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
-import { PipelineCountBadge, MessagesCountBadge, AdvisorPipelineCountBadge } from "@/components/menu-count-badge";
+import { PipelineCountBadge, MessagesCountBadge, AdvisorPipelineCountBadge, InvitationsCountBadge } from "@/components/menu-count-badge";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -392,6 +392,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       ? [
           { to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid },
           { to: "/marketplace/favourites", label: "Favourites", icon: Star },
+          { to: "/marketplace/invitations", label: "Invitations", icon: Send },
         ]
       : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/favourites", label: "Favourites", icon: Star }];
   const workspace: MenuItem[] =
@@ -437,6 +438,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
         >
           <it.icon className="h-4 w-4 shrink-0" />
           {it.to === "/marketplace/pipeline" && <PipelineCountBadge collapsed />}
+          {it.to === "/marketplace/invitations" && <InvitationsCountBadge collapsed />}
           {(it.to === "/marketplace/messages" || it.to === "/advisor/messages") && <MessagesCountBadge collapsed />}
           {it.to === "/advisor/pipeline" && <AdvisorPipelineCountBadge collapsed />}
           {locked && (
@@ -479,6 +481,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       <it.icon className="h-4 w-4 shrink-0" />
       <span>{t(it.label)}</span>
       {it.to === "/marketplace/pipeline" && <PipelineCountBadge />}
+      {it.to === "/marketplace/invitations" && <InvitationsCountBadge />}
       {(it.to === "/marketplace/messages" || it.to === "/advisor/messages") && <MessagesCountBadge />}
       {it.to === "/advisor/pipeline" && <AdvisorPipelineCountBadge />}
       {it.lock && (isReportOrdered(it.lock) ? <PitchsnackTag /> : <PadlockTile />)}
