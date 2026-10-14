@@ -62,11 +62,11 @@ export function ServiceChip({ name }: { name: string }) {
   );
 }
 
-function Cover({ f, wide }: { f: AdvisorFirm; wide?: boolean }) {
+function Cover({ f, wide, noStatus }: { f: AdvisorFirm; wide?: boolean; noStatus?: boolean }) {
   const pills = (
     <>
       {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
-      <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>
+      {!noStatus && <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>}
     </>
   );
   if (f.logoUrl) {
