@@ -37,6 +37,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
     .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, investment_focus, acts_for_types, created_at")
     .in("id", ids).order("created_at", { ascending: false });
 
+  const managed = await (await import("@/lib/managed.server")).managedInvestorIds(sb, (rows ?? []).map((r: any) => r.id));
   return (rows ?? []).map((r: any) => {
     const bp = buyerByInv.get(r.id);
     const bv = bp ? bvByUser.get(bp.user_id) : null;
@@ -77,6 +78,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       aumLabel: bandText(r.aum_band),
       ticketLabel: bandText(r.ticket_band),
       revLabel: bandText(r.revenue_min_band),
+      managed: managed.has(r.id),
     };
   });
 }

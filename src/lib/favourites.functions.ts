@@ -117,6 +117,7 @@ export const listFavourites = createServerFn({ method: "GET" })
       return { fy: y, revenue: r0, netProfit: m[y].net ?? null, growthPct: r0 != null && r1 ? ((r0 - r1) / Math.abs(r1)) * 100 : null };
     };
 
+    const managed = await (await import("@/lib/managed.server")).managedStartupIds(sb, stIds);
     const out: Favourite[] = rows.map((r: any) => {
       const live = (r.live ?? {}) as any;
       const st = Array.isArray(r.startups) ? r.startups[0] : r.startups;
@@ -124,6 +125,8 @@ export const listFavourites = createServerFn({ method: "GET" })
       const p = pipeBy.get(r.id);
       const state = p ? ndaState(p) : null;
       const status: FavStatus = state ?? "saved";
+      // Not on the Private view (approved NDA).
+      listing.managed = state !== "approved" && managed.has(r.startup_id);
       let priv: FavPrivate | null = null;
       if (state === "approved") {
         const c = ciBy.get(r.startup_id) ?? {};
