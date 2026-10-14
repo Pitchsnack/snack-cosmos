@@ -3572,6 +3572,60 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_invitations: {
+        Row: {
+          buyer_choice: string
+          buyer_user_id: string | null
+          choice_at: string | null
+          closed_at: string | null
+          closed_reason: string | null
+          created_at: string
+          from_contact_request: string | null
+          hidden_profile_id: string
+          id: string
+          investor_id: string
+          pipeline_id: string | null
+          sent_at: string
+          sent_by: string
+          startup_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          buyer_choice?: string
+          buyer_user_id?: string | null
+          choice_at?: string | null
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          from_contact_request?: string | null
+          hidden_profile_id: string
+          id?: string
+          investor_id: string
+          pipeline_id?: string | null
+          sent_at?: string
+          sent_by: string
+          startup_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          buyer_choice?: string
+          buyer_user_id?: string | null
+          choice_at?: string | null
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          from_contact_request?: string | null
+          hidden_profile_id?: string
+          id?: string
+          investor_id?: string
+          pipeline_id?: string | null
+          sent_at?: string
+          sent_by?: string
+          startup_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
       listing_submissions: {
         Row: {
           hidden_profile_id: string
