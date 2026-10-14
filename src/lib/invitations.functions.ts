@@ -251,3 +251,13 @@ export const myInvitedListings = createServerFn({ method: "GET" })
     if ((await roleOf(context.userId)) !== "buyer") return [] as string[];
     return [...(await (await import("./invitations.server")).invitedListingIds(context.userId))];
   });
+
+/** Buyer menu count: invitations still New. */
+export const invitationsBadgeCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { roleOf } = await import("./plan-access.server");
+    if ((await roleOf(context.userId)) !== "buyer") return 0;
+    const { rows } = await (await import("./invitations.server")).orgInvitations(context.userId);
+    return rows.filter((r) => r.status === "new").length;
+  });

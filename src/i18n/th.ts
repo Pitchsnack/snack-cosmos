@@ -19,6 +19,7 @@ const TH_BASE: Record<string, string> = {
   "Browse listings": "ดูประกาศขาย",
   "Browse investors": "ดูนักลงทุน",
   Favourites: "รายการโปรด",
+  Invitations: "คำเชิญ",
   "My Company": "บริษัทของฉัน",
   Pipeline: "ดีลที่ดำเนินอยู่",
   Contacts: "ผู้ติดต่อ",

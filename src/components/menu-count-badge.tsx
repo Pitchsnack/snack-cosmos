@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { pendingApprovalsCount } from "@/lib/approvals.functions";
 import { pipelineBadgeCount } from "@/lib/pipeline.functions";
 import { advisorPipelineCount } from "@/lib/advisor-pipeline.functions";
+import { invitationsBadgeCount } from "@/lib/invitations.functions";
 import { usePersona } from "@/hooks/use-marketplace";
 import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
@@ -83,4 +84,15 @@ export function MessagesCountBadge({ collapsed = false }: { collapsed?: boolean 
     );
   }
   return <span key={bump} data-mkt-badge className={cn("ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold", bump && "mkt-bump", tone)}>{label}</span>;
+}
+
+/** Invitations menu: buyer counts New invitations (indigo pill), hidden at 0. */
+export function InvitationsCountBadge({ collapsed = false }: { collapsed?: boolean }) {
+  const { persona } = usePersona();
+  const fn = useServerFn(invitationsBadgeCount);
+  const { data = 0 } = useQuery({ queryKey: ["invitations", "badge", persona], queryFn: () => fn(), enabled: persona === "buyer", refetchInterval: 60_000 });
+  if (persona !== "buyer" || !data) return null;
+  const label = data > 99 ? "99+" : String(data);
+  if (collapsed) return <span data-mkt-badge data-rail className="absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-[#4338CA] px-1 text-[9px] font-bold leading-none text-white">{label}</span>;
+  return <span data-mkt-badge className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#4338CA] px-1.5 text-[11.5px] font-bold text-white">{label}</span>;
 }
