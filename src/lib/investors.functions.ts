@@ -210,7 +210,7 @@ export const getInvestor = createServerFn({ method: "GET" })
         id, tenant_id, investor_name, legal_name, website_url, linkedin_url, country, investor_type,
         aum, ticket_size, short_description, long_description, status, visibility,
         created_at, updated_at, logo_url, media,
-        firm_name, email, business_address, year_founded, company_size_band,
+        firm_name, email, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, year_founded, company_size_band,
         min_ticket_size, max_ticket_size, bio, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, aum_exact_usd,
         keywords, preferred_stages, preferred_industries, investment_focus, acts_for_types,
         tenants!inner(tenant_name),
@@ -327,12 +327,20 @@ const MediaInput = z.object({
   image_path: z.string().min(1).max(1024),
 });
 
+/** Address box → investor columns (city is worked out from these by a trigger). */
+function addrCols(a?: { street: string; unit: string; district: string; province: string; postal: string }) {
+  if (!a) return {};
+  const n = (v: string) => v.trim() || null;
+  return { address_line1: n(a.street), address_line2: n(a.unit), address_city_district: n(a.district), address_province_state: n(a.province), postal_code: n(a.postal) };
+}
+
 const ProfileFields = {
   logoPath: z.string().max(1024).nullable().optional(),
   media: z.array(MediaInput).max(3).optional(),
   firmName: z.string().max(255).nullable().optional(),
   email: z.string().max(255).nullable().optional(),
   businessAddress: z.string().max(500).nullable().optional(),
+  address: z.object({ street: z.string().max(120), unit: z.string().max(120), district: z.string().max(80), province: z.string().max(80), postal: z.string().max(12) }).optional(),
   yearFounded: z.number().int().min(1800).max(2100).nullable().optional(),
   companySizeBand: z.enum(["1-10", "11-50", "51-200", "201-500", "500+"]).nullable().optional(),
   aum: z.string().max(255).nullable().optional(),
@@ -426,6 +434,7 @@ export const createInvestor = createServerFn({ method: "POST" })
         firm_name: data.firmName || null,
         email: data.email || null,
         business_address: data.businessAddress || null,
+        ...addrCols(data.address),
         year_founded: data.yearFounded ?? null,
         company_size_band: data.companySizeBand ?? null,
         website_url: data.websiteUrl || null,
@@ -545,6 +554,7 @@ export const updateInvestor = createServerFn({ method: "POST" })
     if (data.firmName !== undefined) patch.firm_name = data.firmName;
     if (data.email !== undefined) patch.email = data.email;
     if (data.businessAddress !== undefined) patch.business_address = data.businessAddress;
+    if (data.address) Object.assign(patch, addrCols(data.address));
     if (data.yearFounded !== undefined) patch.year_founded = data.yearFounded;
     if (data.companySizeBand !== undefined) patch.company_size_band = data.companySizeBand;
     if (data.aum !== undefined) patch.aum = data.aum;
