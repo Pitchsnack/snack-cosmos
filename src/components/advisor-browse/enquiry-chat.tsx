@@ -82,8 +82,6 @@ export function EnquiryHeaderActions({ t }: { t: EnquiryThread }) {
     );
   }
   const greenChip = "inline-flex h-[30px] items-center rounded-full border border-[#BBE8CA] bg-[#E9F6EE] px-2.5 text-[12.5px] font-semibold text-[#15803D] dark:border-green-900 dark:bg-green-950/50 dark:text-green-300";
-  const lastReview = t.enquiries.length ? null : null;
-  void lastReview;
   return (
     <>
       {(t.status === "enquiry" || t.status === "talking") && t.enquiryId && (
@@ -94,7 +92,7 @@ export function EnquiryHeaderActions({ t }: { t: EnquiryThread }) {
       )}
       {t.status === "proposal" && <span className="inline-flex h-[30px] shrink-0 items-center gap-1.5 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-2.5 text-[12.5px] font-semibold text-[#1D4ED8] dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300"><Hourglass className="h-3.5 w-3.5" />Waiting for {t.client.first} to accept</span>}
       {t.status === "engaged" && <span className={greenChip}>Your client</span>}
-      {t.status === "done" && <span className={greenChip}>Work done</span>}
+      {t.status === "done" && <span className={greenChip}>Work done{t.stars ? ` · ${t.stars} ★` : ""}</span>}
       {dlg === "propose" && t.enquiryId && <SendProposalDialog enquiryId={t.enquiryId} client={t.client.company} clientName={t.client.name} clientFirst={t.client.first} service={t.service} services={t.firmServices} fees={t.firmFees} onClose={() => setDlg(null)} />}
       {dlg === "decline" && t.enquiryId && <DeclineEnquiryDialog enquiryId={t.enquiryId} client={t.client.company} clientName={t.client.name} clientFirst={t.client.first} onClose={() => setDlg(null)} />}
     </>

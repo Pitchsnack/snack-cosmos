@@ -146,6 +146,7 @@ export type EnquiryThread = {
   enquiries: EnquiryCard[]; proposals: (ProposalDTO & { enquiryId: string })[];
   closedLine: string | null;
   firmServices: string[]; firmFees: Record<string, any>;
+  stars: number | null; me: { name: string; first: string; title: string | null; company: string; email: string | null; phone: string | null; side: ClientSide } | null;
 };
 
 /** Cards, events and header facts of one enquiry conversation, worded for the reader. */
@@ -193,7 +194,13 @@ export async function enquiryThread(sb: any, userId: string, m: NonNullable<Awai
     client: { company: org.name, side: conv.client_side, name: sender?.name ?? "", first: sender?.first ?? "" },
     status: last?.status ?? "enquiry", service: last?.service_key ?? "", enquiryId: last?.id ?? null, isFirm,
     enquiries, proposals, closedLine, firmServices: [], firmFees: {},
+    stars: ([...(evs ?? [])].reverse().find((x: any) => x.kind === "done")?.data?.stars as number) ?? null,
+    me: null,
   };
+  if (!isFirm) {
+    const p = (await people(sb, [userId]))[userId];
+    thread.me = { name: p?.name ?? "", first: p?.first ?? "", title: p?.title ?? null, company: org.name, email: p?.email ?? null, phone: p?.phone ?? null, side: conv.client_side };
+  }
   if (isFirm) {
     const { rowToFee } = await import("@/lib/advisor-firm.functions");
     const [{ data: fr }, { data: fees }] = await Promise.all([
