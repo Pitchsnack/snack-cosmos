@@ -11,9 +11,10 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type MsgFile = { path: string; name: string; size: number; type: string };
 export type ThreadMessage = { id: string; senderId: string; mine: boolean; body: string; files: MsgFile[]; at: string };
-export type ThreadSummary = { key: string; last: { body: string; mine: boolean; at: string; from: string | null } | null; unread: number; meta: DaMeta | null };
-import type { DaMeta, Member, ThreadEvent, Role } from "./message-threads.server";
-export type { DaMeta, Member, ThreadEvent, Role };
+export type ThreadSummary = { key: string; last: { body: string; mine: boolean; at: string; from: string | null } | null; unread: number; meta: DaMeta | null; enq?: EnqMeta | null };
+import type { DaMeta, EnqMeta, Member, ThreadEvent, Role } from "./message-threads.server";
+import type { EnquiryThread } from "./advisor-enquiries.server";
+export type { DaMeta, EnqMeta, Member, ThreadEvent, Role, EnquiryThread };
 
 const ACCEPT = /\.(pdf|docx?|xlsx?|csv|png|jpe?g|gif|webp)$/i;
 const MAX = 25 * 1024 * 1024;
@@ -50,6 +51,12 @@ async function endedNote(sb: any, dealId: string) {
 
 /** Throws unless the caller belongs to the thread. Returns whether it is closed. */
 async function assertMember(ctx: { supabase: any; userId: string }, key: string) {
+  if (key.startsWith("e:")) {
+    const E = await import("./advisor-enquiries.server");
+    const m = await E.enquiryMember(await admin(), ctx.userId, key);
+    if (!m) throw new Error("You are not part of this conversation");
+    return { closed: m.closed };
+  }
   if (key.startsWith("c:")) {
     const T = await import("./message-threads.server");
     const m = await T.daMember(await admin(), ctx.userId, key);
@@ -70,7 +77,7 @@ async function assertMember(ctx: { supabase: any; userId: string }, key: string)
   return { closed: false };
 }
 
-const Key = z.string().regex(/^((p|a):[0-9a-f-]{36}|c:[0-9a-f-]{36}:(seller|buyer))$/);
+const Key = z.string().regex(/^((p|a|e):[0-9a-f-]{36}|c:[0-9a-f-]{36}:(seller|buyer))$/);
 const As = z.object({ as: z.enum(["seller", "buyer", "advisor"]) });
 const fileDir = (key: string) => key.replace(/:/g, "_");
 
@@ -78,8 +85,8 @@ const fileDir = (key: string) => key.replace(/:/g, "_");
 async function myKeys(sb: any, userId: string, as: "seller" | "buyer" | "advisor") {
   const T = await import("./message-threads.server");
   const pids = await myPipelineIds(sb, userId, as);
-  const meta = await T.daThreads(sb, userId, as, pids);
-  return { keys: [...pids.map((id: string) => `p:${id}`), ...meta.map((m) => m.key), `a:${userId}`], meta };
+  const [meta, enq] = await Promise.all([T.daThreads(sb, userId, as, pids), T.enqThreads(sb, userId, as)]);
+  return { keys: [...pids.map((id: string) => `p:${id}`), ...meta.map((m) => m.key), ...enq.map((m) => m.key), `a:${userId}`], meta, enq };
 }
 
 export const threadSummaries = createServerFn({ method: "GET" })
@@ -87,7 +94,8 @@ export const threadSummaries = createServerFn({ method: "GET" })
   .inputValidator((d) => As.parse(d))
   .handler(async ({ data, context }): Promise<ThreadSummary[]> => {
     const sb = await admin();
-    const { keys, meta } = await myKeys(sb, context.userId, data.as);
+    const { keys, meta, enq } = await myKeys(sb, context.userId, data.as);
+    const enqBy = Object.fromEntries(enq.map((m) => [m.key, m]));
     const metaBy = Object.fromEntries(meta.map((m) => [m.key, m]));
     const [{ data: msgs }, { data: reads }] = await Promise.all([
       sb.from("marketplace_messages").select("thread_key, sender_id, body, files, created_at").in("thread_key", keys).order("created_at", { ascending: false }).limit(3000),
@@ -101,7 +109,7 @@ export const threadSummaries = createServerFn({ method: "GET" })
     const { data: daRows } = daIds.length ? await sb.from("deal_advisors").select("id, advisor_user_id").in("id", daIds) : { data: [] };
     const advOf = Object.fromEntries((daRows ?? []).map((d: any) => [d.id, d.advisor_user_id]));
     const isColleague = (key: string, sender: string) => {
-      if (sender === context.userId || key.startsWith("a:") || data.as === "advisor") return false;
+      if (sender === context.userId || key.startsWith("a:") || key.startsWith("e:") || data.as === "advisor") return false;
       if (key.startsWith("p:")) return data.as === "seller" && sender !== buyerOf[key.slice(2)];
       return sender !== advOf[metaBy[key]?.daId];
     };
@@ -116,6 +124,7 @@ export const threadSummaries = createServerFn({ method: "GET" })
         key,
         unread,
         meta: metaBy[key] ?? null,
+        enq: enqBy[key] ?? null,
         last: l ? { body: l.body || (l.files?.[0]?.name ? `📎 ${l.files[0].name}` : ""), mine: l.sender_id === context.userId, at: l.created_at, from: isColleague(key, l.sender_id) ? firstOf[l.sender_id] ?? null : null } : null,
       };
     });
@@ -154,6 +163,13 @@ export const threadMessages = createServerFn({ method: "GET" })
     const T = await import("./message-threads.server");
     const [members, events] = await Promise.all([T.threadMembers(sb, data.key), T.threadEvents(sb, context.userId, data.key)]);
     const myRole = members.find((m) => m.id === context.userId)?.role ?? null;
+    let enquiry: EnquiryThread | null = null;
+    let enqEvents: ThreadEvent[] = [];
+    if (data.key.startsWith("e:")) {
+      const E = await import("./advisor-enquiries.server");
+      const m = await E.enquiryMember(sb, context.userId, data.key);
+      if (m) { const r = await E.enquiryThread(sb, context.userId, m); enquiry = r.thread; enqEvents = r.events as any; }
+    }
     const otherIds = new Set(members.filter((m) => m.role !== myRole).map((m) => m.id));
     // Seen = someone in the other organisation opened it (PitchSnack Help: anyone else).
     const otherRead = (reads ?? []).filter((r: any) => !members.length || otherIds.has(r.user_id)).map((r: any) => r.read_at as string).sort().pop() ?? null;
@@ -163,7 +179,8 @@ export const threadMessages = createServerFn({ method: "GET" })
       meId: context.userId,
       members,
       myRole,
-      events,
+      events: enquiry ? enqEvents : events,
+      enquiry,
       otherReadAt: otherRead,
       me: { name: [me?.first_name, me?.last_name].filter(Boolean).join(" ") || me?.email || "Me", role: prof?.title ?? null, company: prof?.organisation ?? null },
       messages: (msgs ?? []).map((m: any): ThreadMessage => ({ id: m.id, senderId: m.sender_id, mine: m.sender_id === context.userId, body: m.body, files: m.files ?? [], at: m.created_at })),
@@ -176,6 +193,12 @@ export const markThreadRead = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertMember(context, data.key);
     const sb = await admin();
+    if (data.key.startsWith("e:")) {
+      // The firm opening it marks its enquiries read.
+      const { data: c } = await sb.from("advisor_conversations").select("firm_profile_id").eq("id", data.key.slice(2)).maybeSingle();
+      const { data: f } = c ? await sb.from("advisor_firms").select("owner_user_id").eq("id", c.firm_profile_id).maybeSingle() : { data: null };
+      if (f?.owner_user_id === context.userId) await sb.from("advisor_enquiries").update({ read_at: new Date().toISOString() }).eq("conversation_id", data.key.slice(2)).is("read_at", null);
+    }
     await sb.from("marketplace_message_reads").upsert({ thread_key: data.key, user_id: context.userId, read_at: new Date().toISOString() });
     return { ok: true };
   });

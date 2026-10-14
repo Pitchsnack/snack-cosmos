@@ -127,6 +127,164 @@ export type Database = {
         }
         Relationships: []
       }
+      advisor_conversations: {
+        Row: {
+          client_org_id: string
+          client_side: string
+          created_at: string
+          firm_profile_id: string
+          id: string
+        }
+        Insert: {
+          client_org_id: string
+          client_side: string
+          created_at?: string
+          firm_profile_id: string
+          id?: string
+        }
+        Update: {
+          client_org_id?: string
+          client_side?: string
+          created_at?: string
+          firm_profile_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_conversations_firm_profile_id_fkey"
+            columns: ["firm_profile_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_enquiries: {
+        Row: {
+          client_org_id: string
+          client_side: string
+          closed_at: string | null
+          closed_reason: string | null
+          conversation_id: string
+          created_at: string
+          declined_at: string | null
+          declined_reason: string | null
+          done_at: string | null
+          engaged_at: string | null
+          firm_profile_id: string
+          id: string
+          need_text: string
+          read_at: string | null
+          sent_by: string
+          service_key: string
+          status: string
+          timing: string | null
+        }
+        Insert: {
+          client_org_id: string
+          client_side: string
+          closed_at?: string | null
+          closed_reason?: string | null
+          conversation_id: string
+          created_at?: string
+          declined_at?: string | null
+          declined_reason?: string | null
+          done_at?: string | null
+          engaged_at?: string | null
+          firm_profile_id: string
+          id?: string
+          need_text: string
+          read_at?: string | null
+          sent_by: string
+          service_key: string
+          status?: string
+          timing?: string | null
+        }
+        Update: {
+          client_org_id?: string
+          client_side?: string
+          closed_at?: string | null
+          closed_reason?: string | null
+          conversation_id?: string
+          created_at?: string
+          declined_at?: string | null
+          declined_reason?: string | null
+          done_at?: string | null
+          engaged_at?: string | null
+          firm_profile_id?: string
+          id?: string
+          need_text?: string
+          read_at?: string | null
+          sent_by?: string
+          service_key?: string
+          status?: string
+          timing?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_enquiries_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisor_enquiries_firm_profile_id_fkey"
+            columns: ["firm_profile_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_enquiry_events: {
+        Row: {
+          actor_user_id: string | null
+          conversation_id: string
+          created_at: string
+          data: Json
+          enquiry_id: string
+          id: string
+          kind: string
+          ref_id: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          conversation_id: string
+          created_at?: string
+          data?: Json
+          enquiry_id: string
+          id?: string
+          kind: string
+          ref_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          data?: Json
+          enquiry_id?: string
+          id?: string
+          kind?: string
+          ref_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_enquiry_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisor_enquiry_events_enquiry_id_fkey"
+            columns: ["enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_enquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advisor_favourites: {
         Row: {
           created_at: string
@@ -284,6 +442,7 @@ export type Database = {
           client_user_id: string | null
           comment: string | null
           created_at: string
+          enquiry_id: string | null
           firm_id: string
           id: string
           service: string | null
@@ -295,6 +454,7 @@ export type Database = {
           client_user_id?: string | null
           comment?: string | null
           created_at?: string
+          enquiry_id?: string | null
           firm_id: string
           id?: string
           service?: string | null
@@ -306,12 +466,20 @@ export type Database = {
           client_user_id?: string | null
           comment?: string | null
           created_at?: string
+          enquiry_id?: string | null
           firm_id?: string
           id?: string
           service?: string | null
           stars?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "advisor_firm_reviews_enquiry_id_fkey"
+            columns: ["enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_enquiries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "advisor_firm_reviews_firm_id_fkey"
             columns: ["firm_id"]
@@ -664,6 +832,80 @@ export type Database = {
             columns: ["firm_profile_id"]
             isOneToOne: false
             referencedRelation: "advisor_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advisor_proposals: {
+        Row: {
+          amount_thb: number | null
+          answered_at: string | null
+          answered_by: string | null
+          consent_text: string | null
+          enquiry_id: string
+          fee_text: string
+          fee_type: string
+          id: string
+          letter_file: Json | null
+          own_words: string | null
+          pct_max: number | null
+          pct_min: number | null
+          scope: string
+          sent_at: string
+          sent_by: string
+          service_key: string
+          status: string
+          timing: string | null
+          valid_until: string
+        }
+        Insert: {
+          amount_thb?: number | null
+          answered_at?: string | null
+          answered_by?: string | null
+          consent_text?: string | null
+          enquiry_id: string
+          fee_text: string
+          fee_type: string
+          id?: string
+          letter_file?: Json | null
+          own_words?: string | null
+          pct_max?: number | null
+          pct_min?: number | null
+          scope: string
+          sent_at?: string
+          sent_by: string
+          service_key: string
+          status?: string
+          timing?: string | null
+          valid_until: string
+        }
+        Update: {
+          amount_thb?: number | null
+          answered_at?: string | null
+          answered_by?: string | null
+          consent_text?: string | null
+          enquiry_id?: string
+          fee_text?: string
+          fee_type?: string
+          id?: string
+          letter_file?: Json | null
+          own_words?: string | null
+          pct_max?: number | null
+          pct_min?: number | null
+          scope?: string
+          sent_at?: string
+          sent_by?: string
+          service_key?: string
+          status?: string
+          timing?: string | null
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_proposals_enquiry_id_fkey"
+            columns: ["enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_enquiries"
             referencedColumns: ["id"]
           },
         ]
@@ -2573,6 +2815,32 @@ export type Database = {
             columns: ["startup_id"]
             isOneToOne: false
             referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firm_profile_views: {
+        Row: {
+          day: string
+          firm_profile_id: string
+          user_id: string
+        }
+        Insert: {
+          day?: string
+          firm_profile_id: string
+          user_id: string
+        }
+        Update: {
+          day?: string
+          firm_profile_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firm_profile_views_firm_profile_id_fkey"
+            columns: ["firm_profile_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_firms"
             referencedColumns: ["id"]
           },
         ]
@@ -5810,6 +6078,7 @@ export type Database = {
           access_code_id: string | null
           account_role: string | null
           advisor_view: boolean
+          advisors_intro_seen_at: string | null
           ai_agent_id: string | null
           created_at: string
           created_by: string | null
@@ -5831,6 +6100,7 @@ export type Database = {
           access_code_id?: string | null
           account_role?: string | null
           advisor_view?: boolean
+          advisors_intro_seen_at?: string | null
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -5852,6 +6122,7 @@ export type Database = {
           access_code_id?: string | null
           account_role?: string | null
           advisor_view?: boolean
+          advisors_intro_seen_at?: string | null
           ai_agent_id?: string | null
           created_at?: string
           created_by?: string | null

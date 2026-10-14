@@ -15,7 +15,7 @@ export type AlertDef = {
   n: number;
   group: "Approvals" | "NDA" | "Pipeline" | "Matches" | "Messages" | "Advisors";
   name: string;
-  icon: "log-out" | "check" | "edit" | "x" | "lock" | "unlock" | "ban" | "file" | "pen" | "spark" | "mail" | "handshake" | "user-check" | "user-x";
+  icon: "log-out" | "check" | "edit" | "x" | "lock" | "unlock" | "ban" | "file" | "pen" | "spark" | "mail" | "handshake" | "user-check" | "user-x" | "inbox";
   color: string;
   instant?: boolean; // ignores quiet hours
   wired: boolean; // sent automatically today
@@ -190,6 +190,40 @@ export const EMAIL_ALERTS: AlertDef[] = [
     buyer: v("The advisor declines, or joins the deal for the other side", "The client", "Pipeline › Tracking", "/marketplace/pipeline",
       { subject: "{firm} declined your invitation", title: "Your advisor declined", body: "{firm} declined your invitation to the deal with {other side}. You can invite another advisor from Pipeline.", button: "Invite another advisor" },
       { subject: "{firm} declined your invitation", title: "Your advisor declined", body: "{firm} declined your invitation to the deal with {other side}. You can invite another advisor from Pipeline.", button: "Invite another advisor" }),
+  },
+  {
+    key: "advisor_new_enquiry", n: 16, group: "Advisors", name: "New enquiry", icon: "inbox", color: "#0F766E", wired: true,
+    placeholders: ["{client company}", "{client name}", "{firm}", "{service}", "{seller | buyer}"],
+    advisor: v("A seller or buyer sends an enquiry", "The users of the advisor account that owns the firm profile", "Messages", "/marketplace/messages?thread={thread}",
+      { subject: "{client company} sent you an enquiry", title: "New enquiry from a {seller | buyer}", body: "{client name} at {client company} asked {firm} about {service}. Reply in Messages, or send a proposal.", button: "Open the enquiry" },
+      { subject: "{client company} sent you an enquiry", title: "New enquiry from a {seller | buyer}", body: "{client name} at {client company} asked {firm} about {service}. Reply in Messages, or send a proposal.", button: "Open the enquiry" }),
+  },
+  {
+    key: "advisor_proposal", n: 17, group: "Advisors", name: "Proposal from a firm", icon: "file", color: "#1D4ED8", wired: true,
+    placeholders: ["{firm}", "{service}", "{fee}", "{date}"],
+    seller: v("The firm sends a proposal", "The client's users", "Browse advisors", "/marketplace/advisors?firm={firmId}",
+      { subject: "Proposal from {firm}", title: "You have a proposal from {firm}", body: "{firm} sent you a proposal for {service}. Review it and accept it, or reply in Messages.", button: "Review the proposal" },
+      { subject: "Proposal from {firm}", title: "You have a proposal from {firm}", body: "{firm} sent you a proposal for {service}. Review it and accept it, or reply in Messages.", button: "Review the proposal" }),
+    buyer: v("The firm sends a proposal", "The client's users", "Browse advisors", "/marketplace/advisors?firm={firmId}",
+      { subject: "Proposal from {firm}", title: "You have a proposal from {firm}", body: "{firm} sent you a proposal for {service}. Review it and accept it, or reply in Messages.", button: "Review the proposal" },
+      { subject: "Proposal from {firm}", title: "You have a proposal from {firm}", body: "{firm} sent you a proposal for {service}. Review it and accept it, or reply in Messages.", button: "Review the proposal" }),
+  },
+  {
+    key: "advisor_proposal_accepted", n: 18, group: "Advisors", name: "Proposal accepted", icon: "user-check", color: "#16A34A", wired: true,
+    placeholders: ["{client company}", "{service}", "{fee}"],
+    advisor: v("The client accepts the proposal", "The firm's users", "Messages", "/marketplace/messages?thread={thread}",
+      { subject: "{client company} engaged you", title: "Your proposal was accepted", body: "{client company} accepted your proposal for {service}. You're now their advisor.", button: "Open the conversation" },
+      { subject: "{client company} engaged you", title: "Your proposal was accepted", body: "{client company} accepted your proposal for {service}. You're now their advisor.", button: "Open the conversation" }),
+  },
+  {
+    key: "advisor_enquiry_declined", n: 19, group: "Advisors", name: "Enquiry declined", icon: "user-x", color: "#B91C1C", wired: true,
+    placeholders: ["{firm}", "{service}", "{reason}"],
+    seller: v("The firm declines the enquiry", "The client's users", "Browse advisors", "/marketplace/advisors",
+      { subject: "{firm} declined your enquiry", title: "{firm} declined your enquiry", body: "{firm} declined your enquiry about {service}: {reason}. Other firms on PitchSnack can help.", button: "Find another firm" },
+      { subject: "{firm} declined your enquiry", title: "{firm} declined your enquiry", body: "{firm} declined your enquiry about {service}: {reason}. Other firms on PitchSnack can help.", button: "Find another firm" }),
+    buyer: v("The firm declines the enquiry", "The client's users", "Browse advisors", "/marketplace/advisors",
+      { subject: "{firm} declined your enquiry", title: "{firm} declined your enquiry", body: "{firm} declined your enquiry about {service}: {reason}. Other firms on PitchSnack can help.", button: "Find another firm" },
+      { subject: "{firm} declined your enquiry", title: "{firm} declined your enquiry", body: "{firm} declined your enquiry about {service}: {reason}. Other firms on PitchSnack can help.", button: "Find another firm" }),
   },
 ];
 export const ALERT_BY_KEY = Object.fromEntries(EMAIL_ALERTS.map((a) => [a.key, a])) as Record<string, AlertDef>;
