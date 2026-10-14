@@ -287,6 +287,7 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
     const invited = role === "buyer" ? await (await import("@/lib/invitations.server")).invitedListingIds(userId) : new Set<string>();
     const { thbOf, priceFor, bandOf } = await import("@/lib/asking-price");
     const cover = await (await import("@/lib/cover-urls.server")).sectorCoverResolver();
+    const managed = await (await import("@/lib/managed.server")).managedStartupIds(supabaseAdmin, rowsIn.map((r) => r.startup_id));
     return Promise.all(rowsIn.map(async (r) => {
       const live = (r.live ?? {}) as unknown as HiddenDraft;
       // Above the plan's price cap (and no NDA yet): the card stays closed and no details are sent.
@@ -305,6 +306,7 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       const st = (Array.isArray(r.startups) ? r.startups[0] : r.startups) as never;
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: (r as { public_image_id?: string | null }).public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       (listing as { certified?: boolean }).certified = !!(st as { registration_verified_at?: string | null }).registration_verified_at;
+      listing.managed = managed.has(r.startup_id);
       // Exact amount only for Admin or an approved NDA; everyone else (sellers' own previews too) gets the range.
       const price = priceFor(live as never, role === "admin" || nda.has(r.id));
       return { id: r.id, listing, dealType: live.deal_type, ...price, handover: handoverLine(live.owner_stays, live.handover_months) };
