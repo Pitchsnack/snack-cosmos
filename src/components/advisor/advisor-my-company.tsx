@@ -21,6 +21,7 @@ import { useHasSession } from "@/hooks/use-has-session";
 import { Group, Ring, Row } from "@/components/my-business/my-business-profiles";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/components/advisor/advisor-firm-card";
+import { myFirmViews } from "@/lib/advisor-enquiries.functions";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import {
   ADVISOR_SERVICES, SERVICE_COLS, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, setupProgress, advisorSkipsFor,
@@ -72,6 +73,8 @@ function useAddFirm() {
 }
 
 export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {}) {
+  const viewsFn = useServerFn(myFirmViews);
+  const { data: views } = useQuery({ queryKey: ["advisor-firm-views"], queryFn: () => viewsFn(), staleTime: 60_000 });
   const { data, isLoading, refetch, isFetching } = useMyAdvisorFirms();
   const { add, busy: adding } = useAddFirm();
   const [mode, setMode] = useState<"profiles" | ViewMode>("profiles");
@@ -117,7 +120,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
             <div className="space-y-4">{firms.map((f) => <FirmCard key={f.id} f={f} selected={sel?.id === f.id} onClick={() => setOpenId(f.id)} />)}</div>
-            {sel && <FirmPanel f={sel} />}
+            {sel && <FirmPanel f={sel} views={views?.[sel.id] ?? 0} />}
           </div>
         )}
       </div>
@@ -189,7 +192,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
           <div className="space-y-4">
             {list.map((f) => <FirmCard key={f.id} f={f} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} />)}
           </div>
-          {open && <FirmPanel f={open} />}
+          {open && <FirmPanel f={open} views={views?.[open.id] ?? 0} />}
         </div>
       ) : mode === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -499,7 +502,7 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
           </Box>
         </div>
 
-        <ClientFeedback f={f} />
+        <ClientFeedback f={f} client={!!client} />
       </div>
       </>}
 
@@ -687,7 +690,7 @@ function ClientFacts({ f }: { f: AdvisorFirm }) {
   );
 }
 
-function ClientFeedback({ f }: { f: AdvisorFirm }) {
+function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
   const [all, setAll] = useState(false);
   const { n, avg, counts } = reviewStats(f.reviews);
   const shown = all ? f.reviews : f.reviews.slice(0, 3);
@@ -698,7 +701,7 @@ function ClientFeedback({ f }: { f: AdvisorFirm }) {
         {n > 3 && <button type="button" onClick={() => setAll((v) => !v)} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{all ? "Show the latest 3" : `Show all ${n} reviews`}</button>}
       </div>
       {n === 0 ? (
-        <p className="text-[13.5px] text-muted-foreground"><strong className="text-foreground">No reviews yet.</strong> Sellers and buyers who engage you through PitchSnack can rate you once the work is done.</p>
+        <p className="text-[13.5px] text-muted-foreground"><strong className="text-foreground">{tr("No reviews yet.")}</strong> {client ? tr("Only sellers and buyers who engaged this firm through PitchSnack can rate it, once the work is done.") : "Sellers and buyers who engage you through PitchSnack can rate you once the work is done."}</p>
       ) : (
         <>
           <div className="grid gap-7 rounded-[12px] border border-[#F3E4C2] bg-[#FFFBF2] px-5 py-4 sm:grid-cols-[220px_1fr] dark:bg-muted/30">
