@@ -338,3 +338,6 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 }
 .wiz button[class*="border"][class*="bg-white"]:not([class*="text-left"]):not(:disabled):active { background-color: #EFF6FF; border-color: #93C5FD; color: #1D4ED8; }
 .wiz button[class*="bg-[#1e2a4a]"]:not(:disabled):active, .wiz button[class*="bg-[#1E2A4A]"]:not(:disabled):active { background-color: #3B6FD8; }
+.managed-badge .managed-hat { transition: transform .18s ease; }
+.managed-badge.is-open .managed-hat { transform: rotate(-10deg) translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .managed-badge .managed-hat { transition: none; } .managed-badge.is-open .managed-hat { transform: none; } }

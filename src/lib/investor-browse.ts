@@ -5,6 +5,8 @@
 import { AUM_BANDS, REV_BANDS, TICKET_BANDS, bandOf } from "@/lib/investor-bands";
 
 export type PublicInvestor = {
+  /** A PitchSnack private client (Control, Admin-owned). */
+  managed?: boolean;
   /** Card-sized cover address sent with Browse investors. */
   coverUrl?: string | null;
   id: string;

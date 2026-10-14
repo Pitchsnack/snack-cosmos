@@ -110,7 +110,7 @@ export function MessagesPage() {
       out.push({
         key: s.key, kind: "e", enq: e, meta: null, p: null, adv: null,
         name: firm ? e.clientCompany : e.firm.name, person: null, sub: firm ? "" : e.firm.sub, codeName: null,
-        who: { label: [firm ? (e.clientSide === "seller" ? "Seller" : "Buyer") : tr("Advisor"), enqStatusLabel(e.status, firm, e.isNew), firm ? e.service : tr(e.service)].join(" · "), dot: firm ? DOT[e.clientSide] : DOT.advisor },
+        who: { label: [firm ? (e.clientSide === "seller" ? "Seller" : "Buyer") : tr("Advisor"), enqStatusLabel(e.status, firm, e.isNew), firm ? e.service : tr(e.service), ...(firm && e.toFirm ? [tr("to {firm}").replace("{firm}", e.toFirm)] : [])].join(" · "), dot: firm ? DOT[e.clientSide] : DOT.advisor },
         unread: s.key === sel ? 0 : s.unread, last: s.last, startAt: null,
       });
     }
@@ -379,7 +379,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       {others.length > 3 && <span className="text-[#9CA3AF]"> +{others.length - 3}</span>}
       {!others.length && (c.person ?? "")}
       {isC && meta && <> · {relation(meta, as)}</>}
-      {isE && c.enq ? <> · {enqStatusLabel(c.enq.status, c.enq.isFirm, c.enq.isNew)} · {c.enq.isFirm ? c.enq.service : tr(c.enq.service)}</> : step < 7 ? <> · {STEPS[step]}</> : <> · Completed</>}
+      {isE && c.enq ? <> · {enqStatusLabel(c.enq.status, c.enq.isFirm, c.enq.isNew)} · {c.enq.isFirm ? c.enq.service : tr(c.enq.service)}{c.enq.isFirm && c.enq.toFirm ? <> · {tr("to {firm}").replace("{firm}", c.enq.toFirm)}</> : null}</> : step < 7 ? <> · {STEPS[step]}</> : <> · Completed</>}
     </>
   );
 
@@ -472,10 +472,11 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
                 </div>
               );
             const help = c.kind === "a";
-            const name = help ? tr("Help desk") : who?.name ?? c.name;
+            const team = !help && !!who?.team;
+            const name = help ? tr("Help desk") : team ? tr("PitchSnack team") : who?.name ?? c.name;
             return (
               <div key={it.id} className="my-2 flex max-w-[70%] gap-2.5">
-                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", help ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{help ? <HatMark width={16} /> : initials(name)}</span>
+                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", help || team ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{help || team ? <HatMark width={16} /> : initials(name)}</span>
                 <div className="flex min-w-0 flex-col items-start gap-1">
                   <div className="flex flex-wrap items-center gap-x-1.5 px-1 text-[12px] leading-[18px]">
                     <span className="font-semibold text-[#111827]">{name}</span>
@@ -646,9 +647,9 @@ function PeopleRows({ others, mine, meId, as }: { others: Member[]; mine: Member
     <div className="divide-y divide-[#F0F1F4]">
       {list.map(({ m, other }) => (
         <div key={m.id} className="flex items-center gap-2.5 py-2">
-          <span className={cn("grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full text-[11px] font-bold", TAG[m.role])}>{initials(m.name)}</span>
+          <span className={cn("grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full text-[11px] font-bold", m.team ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : TAG[m.role])}>{m.team ? <HatMark width={16} /> : initials(m.name)}</span>
           <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-1.5"><span className="truncate text-[13px] font-semibold text-[#111827]">{m.name}</span>{other && <RoleTag role={m.role} />}</span>
+            <span className="flex items-center gap-1.5"><span className="truncate text-[13px] font-semibold text-[#111827]">{m.team ? tr("PitchSnack team") : m.name}</span>{other && <RoleTag role={m.role} />}</span>
             <span className="block truncate text-[11.5px] text-[#6B7280]">{[m.title, m.org].filter(Boolean).join(" · ")}</span>
           </span>
           {m.id === meId && <span className={cn("rounded px-1.5 py-0.5 text-[10.5px] font-bold", TAG[as])}>You</span>}

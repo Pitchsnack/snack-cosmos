@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import { ConnectButton } from "@/components/marketplace/connect-invite";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -151,7 +152,7 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, m
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
         {match && <MatchBox side="seller" criteria={match} />}
-        <PublicInvestorCard i={i} panel />
+        <PublicInvestorCard showManaged i={i} panel />
         <div>
           <h4 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mandate · shown as ranges</h4>
           {rows.map(([k, v]) => (
@@ -285,7 +286,7 @@ export function InvestorBrowse() {
       ) : view === "grid" ? (
         items.length === 0 ? empty : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((i) => <PublicInvestorCard key={i.id} i={i} tag={tagOf(i.id)} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
+            {items.map((i) => <PublicInvestorCard showManaged key={i.id} i={i} tag={tagOf(i.id)} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
           </div>
         )
       ) : view === "split" ? (
@@ -294,7 +295,7 @@ export function InvestorBrowse() {
             className={cn("space-y-3 outline-none", splitFixed && "min-h-0 overflow-y-scroll pr-2 [scrollbar-gutter:stable]")}>
             {items.length === 0 ? empty : items.map((i) => (
               <div key={i.id} data-id={i.id}>
-                <PublicInvestorCard i={i} tag={tagOf(i.id)} selected={current?.id === i.id}
+                <PublicInvestorCard showManaged i={i} tag={tagOf(i.id)} selected={current?.id === i.id}
                   expanded={expandedId === i.id} onToggleExpand={() => setExpandedId((e) => (e === i.id ? null : i.id))}
                   onClick={() => setSelected(i.id)}
                   topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />
@@ -324,8 +325,11 @@ export function InvestorBrowse() {
                 </div>
               </div>
               {tagOf(i.id)}
-              {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
-              <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />
+              <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
+                {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
+                {i.managed && <ManagedBadge size="sm" />}
+                <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />
+              </div>
             </div>
           ))}
         </div>

@@ -6,6 +6,7 @@ import { typeTone, type PublicBuyer } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 import { useInvestorTypeImage } from "@/hooks/use-investor-type-image";
 import { FadeImg } from "@/components/hidden-profile/bits";
+import { ManagedBadge, useCoverFit } from "@/components/common/managed-badge";
 
 export function TypeIcon({ type, className }: { type: string | null; className?: string }) {
   const t = (type ?? "").toLowerCase();
@@ -187,7 +188,9 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
 }
 
 /** The one public investor card (Browse investors, Favourites, My Company). Only public fields reach it. */
-export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel, editable, tag }: {
+export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel, editable, tag, showManaged }: {
+  /** Browse pages and Favourites only: the "Managed by" badge on PitchSnack's private clients. */
+  showManaged?: boolean;
   /** Optional tag at the top of the card body (e.g. "Looking for companies like yours"). */
   tag?: React.ReactNode;
   i: CardInvestor; className?: string; onClick?: () => void; selected?: boolean;
@@ -204,6 +207,8 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
   editable?: (k: CardPart) => void;
 }) {
   const desc = i.description || (empty === "Not added" ? "Not added" : null);
+  const managed = !!showManaged && !!(i as { managed?: boolean }).managed;
+  const fit = useCoverFit(managed, 1);
   return (
     <div
       role={onClick ? "button" : undefined}
@@ -213,10 +218,11 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
       className={cn("group/card overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-all duration-200 ease-out hover:border-accent hover:shadow-[var(--shadow-elevated)] [&_[data-card-title]]:transition-colors hover:[&_[data-card-title]]:text-accent", className)}
     >
       <BuyerCover type={i.type} src={(i as { coverUrl?: string | null }).coverUrl} className="h-[110px]">
-        <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground">
+        <div ref={fit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
+        <span ref={fit.left as React.RefObject<HTMLSpanElement>} className={cn("absolute left-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground", panel && managed ? "top-3" : "top-2.5")}>
           <EyeOff className="h-3 w-3" />Name hidden
         </span>
-        {(topRight || status) && <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5">{status && <StatusPill status={status} />}{topRight}</div>}
+        {(topRight || status || managed) && <div ref={fit.right} className={cn("absolute flex items-center gap-1.5", panel && managed ? "right-3 top-3" : "right-2.5 top-2.5")}>{status && <StatusPill status={status} />}{managed && <ManagedBadge size={panel ? "panel" : "card"} border={false} shadow hatOnly={fit.level >= 1} />}{topRight}</div>}
       </BuyerCover>
       <div className="p-4">
         {tag && <div className="mb-1.5">{tag}</div>}

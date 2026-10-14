@@ -58,6 +58,8 @@ export interface PublicListing {
   publishedAt: string | null;
   /** Days since going live while under 14 (NEW); null otherwise. */
   newDays: number | null;
+  /** A PitchSnack private client (Control, Admin-owned). Only the flag is sent. */
+  managed?: boolean;
 }
 
 export const HEADLINE_MAX = 90;

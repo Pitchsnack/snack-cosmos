@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { BrowseHeader, FilterPill, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
 import { useTranslation } from "@/i18n/language";
@@ -216,13 +217,13 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     : <StarBtn saved={stars.isStarred("investor", x.id)} onClick={() => stars.toggle("investor", x.id)} />;
 
   const card = (x: Item, split: boolean) => x.kind === "listing" ? (
-    <PublicListingCard l={x.t.listing} deal={x.t} topRight={starOf(x)}
+    <PublicListingCard showManaged l={x.t.listing} deal={x.t} topRight={starOf(x)}
       expanded={split ? expanded === x.key : true}
       onToggleExpand={split ? () => setExpanded((e) => (e === x.key ? null : x.key)) : undefined}
       selected={split && wide && current?.key === x.key}
       onSelect={() => (split && wide ? setSelected(x.key) : openInSplit(x.key))} />
   ) : (
-    <PublicInvestorCard i={x.i} topRight={starOf(x)} selected={split && wide && current?.key === x.key}
+    <PublicInvestorCard showManaged i={x.i} topRight={starOf(x)} selected={split && wide && current?.key === x.key}
       onClick={() => (split && wide ? setSelected(x.key) : openInSplit(x.key))} />
   );
 
@@ -378,7 +379,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
                       {[x.t.listing.verified && "Verified company", x.t.listing.hasFinancials && "Verified financials", x.t.listing.revenueBand, x.t.listing.sector, x.t.listing.location].filter(Boolean).join(" · ")}
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5"><ListingPill kind="hidden" newDays={x.t.listing.newDays} />{starOf(x)}</div>
+                  <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end"><ListingPill kind="hidden" newDays={x.t.listing.newDays} />{x.t.listing.managed && <ManagedBadge size="sm" />}{starOf(x)}</div>
                 </>
               ) : (
                 <>
@@ -392,8 +393,11 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
                       {[x.i.country, x.i.ticketLabel && `Ticket ${x.i.ticketLabel}`, x.i.aumLabel && `${isCorporateBuyer(x.i.type) ? "Group revenue" : "AUM"} ${x.i.aumLabel}`, x.i.revLabel && `Revenue min. ${x.i.revLabel}`].filter(Boolean).join(" · ")}
                     </div>
                   </div>
-                  {!x.i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
-                  {starOf(x)}
+                  <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
+                    {!x.i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
+                    {x.i.managed && <ManagedBadge size="sm" />}
+                    {starOf(x)}
+                  </div>
                 </>
               )}
             </div>

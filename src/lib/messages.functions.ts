@@ -171,6 +171,16 @@ export const threadMessages = createServerFn({ method: "GET" })
       if (m) { const r = await E.enquiryThread(sb, context.userId, m); enquiry = r.thread; enqEvents = r.events as any; }
     }
     const otherIds = new Set(members.filter((m) => m.role !== myRole).map((m) => m.id));
+    // Admins on the other company show as one "PitchSnack team" entry; never their own details.
+    const { adminUserIds } = await import("./managed.server");
+    const teamIds = await adminUserIds(sb, [...otherIds]);
+    const TEAM = "pitchsnack-team";
+    if (teamIds.size) {
+      const firstTeam = members.find((m) => teamIds.has(m.id))!;
+      const kept = members.filter((m) => !teamIds.has(m.id));
+      members.length = 0;
+      members.push({ id: TEAM, name: "PitchSnack team", first: "PitchSnack team", title: null, org: firstTeam.org, role: firstTeam.role, main: firstTeam.main || true, team: true }, ...kept);
+    }
     // Seen = someone in the other organisation opened it (PitchSnack Help: anyone else).
     const otherRead = (reads ?? []).filter((r: any) => !members.length || otherIds.has(r.user_id)).map((r: any) => r.read_at as string).sort().pop() ?? null;
     return {
@@ -183,7 +193,7 @@ export const threadMessages = createServerFn({ method: "GET" })
       enquiry,
       otherReadAt: otherRead,
       me: { name: [me?.first_name, me?.last_name].filter(Boolean).join(" ") || me?.email || "Me", role: prof?.title ?? null, company: prof?.organisation ?? null },
-      messages: (msgs ?? []).map((m: any): ThreadMessage => ({ id: m.id, senderId: m.sender_id, mine: m.sender_id === context.userId, body: m.body, files: m.files ?? [], at: m.created_at })),
+      messages: (msgs ?? []).map((m: any): ThreadMessage => ({ id: m.id, senderId: teamIds.has(m.sender_id) ? TEAM : m.sender_id, mine: m.sender_id === context.userId, body: m.body, files: m.files ?? [], at: m.created_at })),
     };
   });
 

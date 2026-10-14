@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -141,7 +142,7 @@ export function SellerFavourites() {
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((f) => (
-            <div key={f.id}>{badgeRow(f)}<PublicInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => setModalId(f.id)} topRight={star(f)} /></div>
+            <div key={f.id}>{badgeRow(f)}<PublicInvestorCard showManaged i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => setModalId(f.id)} topRight={star(f)} /></div>
           ))}
         </div>
       ) : view === "split" ? (
@@ -150,7 +151,7 @@ export function SellerFavourites() {
             {items.map((f) => (
               <div key={f.id}>
                 {badgeRow(f)}
-                <PublicInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} selected={wide && current?.id === f.id}
+                <PublicInvestorCard showManaged i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} selected={wide && current?.id === f.id}
                   onClick={() => (wide ? setSelected(f.id) : setModalId(f.id))}
                   expanded={expandedId === f.id} onToggleExpand={() => setExpandedId((e) => (e === f.id ? null : f.id))}
                   topRight={star(f)} />
@@ -176,9 +177,12 @@ export function SellerFavourites() {
                     f.revLabel && `Revenue min. ${f.revLabel}`].filter(Boolean).join(" · ")}
                 </div>
               </div>
-              <StatusBadge s={f.status} />
-              {!f.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />{t("Name after NDA")}</span>}
-              {star(f)}
+              <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
+                <StatusBadge s={f.status} />
+                {!f.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />{t("Name after NDA")}</span>}
+                {f.managed && <ManagedBadge size="sm" />}
+                {star(f)}
+              </div>
             </div>
           ))}
         </div>

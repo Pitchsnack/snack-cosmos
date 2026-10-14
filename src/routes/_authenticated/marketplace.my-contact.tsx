@@ -1,3 +1,4 @@
+import { HatMark } from "@/components/messages/hat-mark";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -28,7 +29,8 @@ const handle = (l: string | null) => (l ? "/in/" + l.replace(/^https?:\/\/(www\.
 const liUrl = (l: string) => (l.startsWith("http") ? l : `https://linkedin.com/in/${l.replace(/^\/?in\//, "")}`);
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—");
 
-function Avatar({ name, size }: { name: string; size: number }) {
+function Avatar({ name, size, team }: { name: string; size: number; team?: boolean }) {
+  if (team) return <div style={{ width: size, height: size }} className="grid flex-none place-items-center rounded-full bg-[#F3F4F6] dark:bg-[#2A3142]"><HatMark width={Math.round(size * 0.55)} /></div>;
   return (
     <div style={{ width: size, height: size }} className={`grid flex-none place-items-center rounded-[10px] text-sm font-bold text-white ${tile(name)}`}>
       {initials(name)}
@@ -138,7 +140,7 @@ function Row({ c, active, onOpen }: { c: ContactPerson; active: boolean; onOpen:
     >
       {active && <span className="absolute inset-y-0 left-0 w-[3px] bg-amber-500" />}
       <div className="flex min-w-0 items-center gap-3">
-        <Avatar name={c.name} size={38} />
+        <Avatar name={c.name} size={38} team={c.team} />
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold" title={c.name}>{c.name}</div>
           <div className="truncate text-[12.5px] text-muted-foreground" title={c.role ?? ""}>{c.role}</div>
@@ -176,7 +178,7 @@ function InfoBox({ c, onClose }: { c: ContactPerson; onClose: () => void }) {
     <div className="fixed inset-0 z-50 grid place-items-center p-4" style={{ background: "rgba(17,24,39,.45)" }} onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label={c.name} onClick={(e) => e.stopPropagation()} className="w-[480px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-2xl bg-card" style={{ maxHeight: "calc(100vh - 64px)", boxShadow: "0 30px 70px rgba(16,24,40,.28)" }}>
         <div className="flex items-start gap-3 p-5">
-          <Avatar name={c.name} size={52} />
+          <Avatar name={c.name} size={52} team={c.team} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-base font-semibold">{c.name}</div>
             <div className="truncate text-[12.5px] text-muted-foreground">{[c.role, c.company].filter(Boolean).join(" · ")}</div>

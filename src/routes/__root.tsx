@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { ManagedTipHost } from "@/components/common/managed-badge";
 import { ViewModeProvider } from "@/context/view-mode-context";
 import { LanguageProvider } from "@/i18n/language";
 
@@ -138,6 +139,7 @@ function RootComponent() {
         <ViewModeProvider>
           <Outlet />
         </ViewModeProvider>
+        <ManagedTipHost />
       </LanguageProvider>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>

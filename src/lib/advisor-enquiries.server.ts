@@ -101,6 +101,9 @@ export async function statesFor(sb: any, side: ClientSide, orgId: string, firmId
     sb.from("advisor_enquiry_events").select("enquiry_id, kind, created_at").in("enquiry_id", ids).in("kind", ["proposal_declined", "proposal_expired"]).order("created_at", { ascending: false }),
   ]);
   const ppl = await people(sb, (props ?? []).map((p: any) => p.sent_by));
+  // Admins answering for a managed firm show as "PitchSnack team" to the client.
+  const team = await (await import("./managed.server")).adminUserIds(sb, Object.keys(ppl));
+  for (const id of team) ppl[id] = { name: "PitchSnack team", first: "PitchSnack team", title: null, email: null, phone: null };
   const out: Record<string, EnquiryState> = {};
   for (const e of fresh ?? []) {
     const ps = (props ?? []).filter((p: any) => p.enquiry_id === e.id);
