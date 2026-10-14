@@ -23,10 +23,11 @@ import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/components/advisor/advisor-firm-card";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import {
-  ADVISOR_SERVICES, SERVICE_COLS, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, setupProgress, advisorSkipsFor,
+  ADVISOR_SERVICES, SERVICE_COLS, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, setupProgress, advisorSkipsFor,
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
+import { tr } from "@/i18n/language";
 import { CompanyMenu } from "@/components/common/company-menu";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { FirmNotice } from "@/components/advisor/advisor-verification";
@@ -278,12 +279,12 @@ function ChecklistPill({ f, onItem }: { f: AdvisorFirm; onItem: (s: EditSection)
 
 /* -------------------------------- Panel ----------------------------------- */
 
-function Box({ title, action, onAction, children }: { title: string; action: string; onAction: () => void; children: React.ReactNode }) {
+function Box({ title, action, onAction, children }: { title: string; action?: string; onAction?: () => void; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] border border-[#E5E7EB] bg-card p-4 dark:border-border">
       <div className="mb-2 flex items-center justify-between">
         <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{title}</div>
-        <button type="button" onClick={onAction} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{action}</button>
+        {action && <button type="button" onClick={onAction} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{action}</button>}
       </div>
       {children}
     </div>
@@ -312,7 +313,10 @@ function RowTile({ icon, title, sub, right }: { icon: React.ReactNode; title: st
   );
 }
 
-export function FirmPanel({ f }: { f: AdvisorFirm }) {
+/** A seller's or buyer's view of the panel (Browse advisors): no owner parts. */
+export type ClientView = { headerRight: React.ReactNode; top?: React.ReactNode; tileAction: (service: string) => React.ReactNode };
+
+export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: ClientView; views?: number }) {
   const qc = useQueryClient();
   const openEdit = useOpenEdit();
   const setStatusFn = useServerFn(setAdvisorFirmStatus);
@@ -350,23 +354,23 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
         <FirmLogo f={f} ring={false} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 text-[10.5px] font-bold uppercase tracking-[.06em] text-[#0F766E]">Open to sellers and buyers</span>
-            {f.verifiedAt && <VerifiedAdvisorChip small />}
+            {!client && <span className="inline-flex h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 text-[10.5px] font-bold uppercase tracking-[.06em] text-[#0F766E]">Open to sellers and buyers</span>}
+            {f.verifiedAt ? <VerifiedAdvisorChip small /> : client && <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}
           </div>
           <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name || "New firm profile"}</h2>
           <div className="text-[13px] text-[#6A7181]">{[f.refNo, f.firmType, f.city].filter(Boolean).join(" · ")}</div>
         </div>
-        <div className="flex items-center">
+        {client ? <div className="flex items-center">{client.headerRight}</div> : <div className="flex items-center">
           {!inSetup && <ChecklistPill f={f} onItem={edit} />}
           <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}>
             {!inSetup && (f.status === "live"
               ? <DropdownMenuItem onClick={() => changeStatus("paused")}>Pause listing</DropdownMenuItem>
               : <DropdownMenuItem disabled={!complete || declined || busy} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>)}
           </CompanyMenu>
-        </div>
+        </div>}
       </div>
 
-      {inSetup ? (
+      {inSetup && !client ? (
         <div className="space-y-5 p-5">
           <SetupBanner f={f} onOpen={openSetup} />
           <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted/50">
@@ -380,6 +384,10 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
       ) : <>
 
       <div className="space-y-5 p-5">
+        {client?.top}
+        {client && f.description && <section><div className="mb-1.5 text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{tr("About")}</div><p className="whitespace-pre-line text-[14px] leading-relaxed">{f.description}</p></section>}
+        {client && <ClientFacts f={f} />}
+        {!client && <>
         {f.verification?.state === "more_info" && <FirmNotice state="more_info" note={f.verification.note} fields={f.verification.fields} />}
         {f.verification?.state === "declined" && <FirmNotice state="declined" note={f.verification.declineNote} fields={[]} reason={f.verification.reason} />}
         <div className="flex gap-2.5 rounded-[12px] bg-[#F3F4F6] p-3.5 text-[13.5px] dark:bg-muted">
@@ -404,12 +412,13 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
             </>
           ) : "PitchSnack hasn't verified your firm yet. Admin checks your licences and documents."}
         </p>
+        </>}
 
         {/* Services and fees */}
         <section>
           <div className="mb-2.5 flex items-center justify-between">
             <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">Services and fees · {f.services.length}</div>
-            <Button ref={svcBtn} variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setSvcOpen(true)}><Pencil className="h-3.5 w-3.5" /> Edit services</Button>
+            {!client && <Button ref={svcBtn} variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setSvcOpen(true)}><Pencil className="h-3.5 w-3.5" /> Edit services</Button>}
           </div>
           {f.services.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">No services yet.</p>
@@ -426,9 +435,10 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
                     <div className="mt-auto pt-2.5">
                       <div className="border-t border-[#D3ECE7] pt-2">
                         <div className="text-[10.5px] font-bold uppercase text-[#6A7181]">Fee</div>
-                        {fee ? <div className="text-[13px] font-semibold text-[#111827] dark:text-foreground">{fee}</div> : (
+                        {fee ? <div className="text-[13px] font-semibold text-[#111827] dark:text-foreground">{fee}</div> : client ? <div className="text-[13px] text-[#6F7B88]">{tr("Request a Price Quote")}</div> : (
                           <div className="text-[13px]"><span className="text-[#6F7B88]">Not set yet</span> · <button type="button" onClick={() => edit("services")} className="font-semibold text-[#0F766E] hover:underline">Add a fee</button></div>
                         )}
+                        {client && <div className="mt-1.5 text-[12.5px]">{client.tileAction(s)}</div>}
                       </div>
                     </div>
                   </div>
@@ -439,7 +449,7 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
         </section>
 
         <div className="grid gap-3.5 md:grid-cols-2">
-          <Box title="Company" action="Edit" onAction={() => edit("company")}>
+          <Box title="Company" action={client ? undefined : "Edit"} onAction={() => edit("company")}>
             <Fact label="Founded">{f.yearFounded ? String(f.yearFounded) : null}</Fact>
             <Fact label="Legal name">{f.legalName}</Fact>
             <Fact label="Thai name">{f.thaiName}</Fact>
@@ -455,14 +465,14 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
             <Fact label="Email">{f.email}</Fact>
             <Fact label="Phone">{f.phone}</Fact>
           </Box>
-          <Box title={`Team · ${f.team.length}`} action="Edit" onAction={() => edit("team")}>
+          <Box title={`Team · ${f.team.length}`} action={client ? undefined : "Edit"} onAction={() => edit("team")}>
             {f.team.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No one added yet.</p> : f.team.map((t, i) => (
               <RowTile key={t.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E0F5F2] text-[12px] font-bold text-[#0F766E]">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>}
                 title={t.name} sub={[t.role, t.email].filter(Boolean).join(" · ")} />
             ))}
           </Box>
-          <Box title="Licences and credentials" action="Edit" onAction={() => edit("credentials")}>
+          <Box title="Licences and credentials" action={client ? undefined : "Edit"} onAction={() => edit("credentials")}>
             {f.credentials.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No licences or credentials yet. Admin checks each one you add.</p> : f.credentials.map((c, i) => (
               <RowTile key={c.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[#F3F4F6] text-muted-foreground"><ShieldCheck className="h-4 w-4" /></span>}
@@ -473,13 +483,18 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
                   : <span className="shrink-0 rounded-full border border-[#F3D9A6] bg-[#FFF4E0] px-2 py-0.5 text-[11.5px] font-semibold text-[#8A5A06]">Pending check</span>} />
             ))}
           </Box>
-          <Box title="Documents" action="Upload" onAction={() => edit("documents")}>
+          <Box title="Documents" action={client ? undefined : "Upload"} onAction={() => edit("documents")}>
             {f.documents.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No documents yet. Upload your company certificate and licences.</p> : f.documents.map((d, i) => (
               <RowTile key={d.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[#F3F4F6] text-muted-foreground"><FileText className="h-4 w-4" /></span>}
                 title={d.name}
                 sub={[d.type, d.checkedAt ? `checked ${fmtDate(d.checkedAt)}` : d.validUntil ? `valid until ${fmtMonth(d.validUntil)}` : null].filter(Boolean).join(" · ")}
-                right={d.checkedAt ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Checked</span> : undefined} />
+                right={client ? (
+                  <span className="flex shrink-0 items-center gap-2">
+                    {d.checkedAt ? <span className="rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ {tr("Checked")}</span> : <span className="text-[11.5px] text-muted-foreground">{tr("Not checked yet")}</span>}
+                    {d.url && <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[12.5px] font-semibold text-[#2563EB] hover:underline">{tr("View")}</a>}
+                  </span>
+                ) : d.checkedAt ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Checked</span> : undefined} />
             ))}
           </Box>
         </div>
@@ -490,14 +505,20 @@ export function FirmPanel({ f }: { f: AdvisorFirm }) {
 
       {/* Footer */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/30 px-5 py-3.5 text-[13.5px]">
-        {inSetup ? (
+        {client ? (
+          <>
+            {f.verifiedAt ? <span className="inline-flex items-center gap-1.5 font-semibold text-[#15803D]"><ShieldCheck className="h-4 w-4" />{tr("Verified by PitchSnack on {date}").replace("{date}", fmtDate(f.verifiedAt))}</span>
+              : <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Info className="h-4 w-4" />{tr("PitchSnack hasn't verified this firm yet.")}</span>}
+            <span className="text-muted-foreground">{tr("On PitchSnack since {date}").replace("{date}", fmtDate(f.liveSince))}</span>
+          </>
+        ) : inSetup ? (
           <>
             <span>Draft · not visible in Browse advisors</span>
             <Button size="sm" onClick={openSetup} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Finish setup to publish</Button>
           </>
         ) : f.status === "live" ? (
           <>
-            <span>Live in Browse advisors since {fmtDate(f.liveSince)}</span>
+            <span>Live in Browse advisors since {fmtDate(f.liveSince)}{views != null && ` · ${views} profile ${views === 1 ? "view" : "views"} this week`}</span>
             <Button variant="outline" size="sm" disabled={busy} onClick={() => changeStatus("paused")}>Pause listing</Button>
           </>
         ) : f.status === "draft" ? (
@@ -646,6 +667,25 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
 }
 
 /* ---------------------------- Client feedback ----------------------------- */
+
+function ClientFacts({ f }: { f: AdvisorFirm }) {
+  const band = dealBandLabels(f.dealBand);
+  const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : f.sectors;
+  const cell = (label: string, v: React.ReactNode) => (
+    <div className="min-w-0 border-[#E9EBF0] p-3 dark:border-border max-[640px]:border-b [&:not(:last-child)]:min-[641px]:border-r">
+      <div className="text-[11.5px] text-[#6B7280]">{tr(label)}</div>
+      <div className="mt-0.5 text-[13.5px] font-semibold">{v || "—"}</div>
+    </div>
+  );
+  return (
+    <div className="grid overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border min-[641px]:grid-cols-4">
+      {cell("Typical deal size", band ? <>{band.usd}<div className="text-[12px] font-normal text-muted-foreground">({band.thb})</div></> : null)}
+      {cell("Team size", f.teamSize ? `${f.teamSize} ${tr("people")}` : null)}
+      {cell("Languages", f.languages.join(", "))}
+      {cell("Sectors", sectors.length > 2 ? `${sectors.slice(0, 2).join(", ")} +${sectors.length - 2}` : sectors.join(", "))}
+    </div>
+  );
+}
 
 function ClientFeedback({ f }: { f: AdvisorFirm }) {
   const [all, setAll] = useState(false);
