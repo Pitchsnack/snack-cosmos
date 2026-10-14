@@ -110,7 +110,7 @@ export function MessagesPage() {
       out.push({
         key: s.key, kind: "e", enq: e, meta: null, p: null, adv: null,
         name: firm ? e.clientCompany : e.firm.name, person: null, sub: firm ? "" : e.firm.sub, codeName: null,
-        who: { label: [firm ? (e.clientSide === "seller" ? "Seller" : "Buyer") : tr("Advisor"), enqStatusLabel(e.status, firm, e.isNew), firm ? e.service : tr(e.service)].join(" · "), dot: firm ? DOT[e.clientSide] : DOT.advisor },
+        who: { label: [firm ? (e.clientSide === "seller" ? "Seller" : "Buyer") : tr("Advisor"), enqStatusLabel(e.status, firm, e.isNew), firm ? e.service : tr(e.service), ...(firm && e.toFirm ? [tr("to {firm}").replace("{firm}", e.toFirm)] : [])].join(" · "), dot: firm ? DOT[e.clientSide] : DOT.advisor },
         unread: s.key === sel ? 0 : s.unread, last: s.last, startAt: null,
       });
     }
@@ -379,7 +379,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
       {others.length > 3 && <span className="text-[#9CA3AF]"> +{others.length - 3}</span>}
       {!others.length && (c.person ?? "")}
       {isC && meta && <> · {relation(meta, as)}</>}
-      {isE && c.enq ? <> · {enqStatusLabel(c.enq.status, c.enq.isFirm, c.enq.isNew)} · {c.enq.isFirm ? c.enq.service : tr(c.enq.service)}</> : step < 7 ? <> · {STEPS[step]}</> : <> · Completed</>}
+      {isE && c.enq ? <> · {enqStatusLabel(c.enq.status, c.enq.isFirm, c.enq.isNew)} · {c.enq.isFirm ? c.enq.service : tr(c.enq.service)}{c.enq.isFirm && c.enq.toFirm ? <> · {tr("to {firm}").replace("{firm}", c.enq.toFirm)}</> : null}</> : step < 7 ? <> · {STEPS[step]}</> : <> · Completed</>}
     </>
   );
 

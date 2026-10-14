@@ -19,7 +19,7 @@ export type ThreadEvent = { id: string; at: string; text: string; link: string |
 
 export type EnqMeta = {
   key: string; firm: { id: string; name: string; sub: string }; clientCompany: string; clientSide: Side;
-  status: string; service: string; isNew: boolean; isFirm: boolean;
+  status: string; service: string; isNew: boolean; isFirm: boolean; toFirm?: string | null;
 };
 
 /** Advisor-enquiry conversations ('e:<advisor_conversations id>') the caller is in. */
@@ -42,6 +42,7 @@ export async function enqThreads(sb: any, userId: string, as: As): Promise<EnqMe
     sb.from("advisor_enquiries").select("conversation_id, status, service_key, read_at, created_at").in("conversation_id", convs.map((c) => c.id)).order("created_at", { ascending: false }),
   ]);
   const fm = Object.fromEntries((firms ?? []).map((f: any) => [f.id, f]));
+  const multi = as === "advisor" && (await myFirmIds(sb, userId)).length > 1;
   const out: EnqMeta[] = [];
   for (const c of convs) {
     const last = (es ?? []).find((e: any) => e.conversation_id === c.id);
@@ -52,6 +53,8 @@ export async function enqThreads(sb: any, userId: string, as: As): Promise<EnqMe
       key: `e:${c.id}`, firm: { id: c.firm_profile_id, name: f.name ?? "Advisor", sub: [f.firm_type, f.city].filter(Boolean).join(" · ") },
       clientCompany: org.name, clientSide: c.client_side, status: last.status, service: last.service_key,
       isNew: as === "advisor" && last.status === "enquiry" && !last.read_at, isFirm: as === "advisor",
+      // An account with several firms sees which one was asked.
+      toFirm: as === "advisor" && multi ? f.name ?? null : null,
     });
   }
   return out;
