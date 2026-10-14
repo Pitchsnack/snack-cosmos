@@ -127,4 +127,13 @@ export const TH_ADVISORS: Record<string, string> = {
   "e.g. Restructure a target's debt after we buy it.": "เช่น ปรับโครงสร้างหนี้ของบริษัทเป้าหมายหลังซื้อกิจการ",
   "e.g. An ESG review a buyer asked for.": "เช่น การประเมิน ESG ที่ผู้ซื้อขอ",
   "e.g. An ESG review of a target before we sign.": "เช่น การประเมิน ESG ของบริษัทเป้าหมายก่อนลงนาม",
+  // Managed by PitchSnack
+  "Managed by": "ดูแลโดย",
+  "Managed by PitchSnack": "ดูแลโดย PitchSnack",
+  "A PitchSnack private client. PitchSnack set up this profile for them and manages it. NDAs and messages go through the PitchSnack team.": "ลูกค้าส่วนตัวของ PitchSnack ซึ่ง PitchSnack จัดทำโปรไฟล์และดูแลแทน การทำ NDA และการส่งข้อความจะผ่านทีมงาน PitchSnack",
+  "PitchSnack team": "ทีมงาน PitchSnack",
+  "From PitchSnack team": "จาก ทีมงาน PitchSnack",
+  "to {firm}": "ถึง {firm}",
+  "Managed by PitchSnack.": "ดูแลโดย PitchSnack",
+  "The PitchSnack team reads and answers enquiries for {firm}.": "ทีมงาน PitchSnack อ่านและตอบคำสอบถามแทน {firm}",
 };
