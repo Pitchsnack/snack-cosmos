@@ -172,6 +172,7 @@ const Patch = z.object({
   revenue_min_band: z.enum(REV_KEYS).nullable().optional(),
   aum_exact_usd: z.number().min(0).max(1e13).nullable().optional(),
   registration_no: txt(50),
+  address_line1: txt(120), address_line2: txt(120), address_city_district: txt(80), address_province_state: txt(80), postal_code: txt(12),
   description: z.string().trim().max(140).optional(),
   deal_types: arr(12),
   acts_for_types: arr(7),
@@ -207,6 +208,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       min_ticket_size: n(data.min_ticket_size), max_ticket_size: n(data.max_ticket_size), short_description: n(data.short_description),
       updated_by: context.userId, updated_at: new Date().toISOString(),
     };
+    for (const k of ["address_line1", "address_line2", "address_city_district", "address_province_state", "postal_code"] as const) if (data[k] !== undefined) inv[k] = data[k] || null;
     if (data.revenue_min_m !== undefined) inv.revenue_min_m = data.revenue_min_m;
     if (data.revenue_max_m !== undefined) inv.revenue_max_m = data.revenue_max_m;
     if (data.keywords) inv.keywords = data.keywords;

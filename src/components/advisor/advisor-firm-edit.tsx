@@ -1,4 +1,5 @@
 import { tr } from "@/i18n/language";
+import { usePermissions } from "@/hooks/use-session-context";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { EditInfoFooter, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState } from "react";
@@ -111,6 +112,7 @@ const sel = "flex h-[42px] w-full rounded-md border border-input bg-background p
 const errB = "border-[#B42318]";
 
 export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void }) {
+  const asAdmin = usePermissions().isControl;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveAdvisorFirm);
@@ -318,7 +320,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
           <F label="Phone" req tag={src.phone} err={show("phone")} htmlFor="fe-phone"><Input id="fe-phone" aria-required className={cn(inp, show("phone") && errB)} maxLength={30} placeholder="+66 2 123 4567" value={f.phone} onBlur={blur("phone")} onChange={(e) => set("phone", e.target.value)} /></F>
         </div>
         <div>
-          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={asAdmin ? "Sellers see the country and province, never the full address, until they approve this firm's NDA." : tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
             country={f.country} onCountry={changeCountry}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}

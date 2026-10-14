@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { REGION_OPTIONS, regionForCountry } from "@/lib/country-region";
 import { CountryCombobox } from "@/components/ui/country-combobox";
+import { AddressBox, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -167,6 +168,7 @@ export interface InvestorEditModel {
   firm_name: string | null;
   email: string | null;
   business_address: string | null;
+  address_line1?: string | null; address_line2?: string | null; address_city_district?: string | null; address_province_state?: string | null; postal_code?: string | null;
   year_founded: number | null;
   website_url: string | null;
   linkedin_url: string | null;
@@ -332,6 +334,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
   const [region, setRegion] = useState<string>(() => regionForCountry(investor?.country ?? "") || "");
   const [city, setCity] = useState("");
   const [businessAddress, setBusinessAddress] = useState(investor?.business_address ?? "");
+  const [addr, setAddrS] = useState<Addr>({ street: investor?.address_line1 ?? "", unit: investor?.address_line2 ?? "", district: investor?.address_city_district ?? "", province: investor?.address_province_state ?? "", postal: investor?.postal_code ?? "" });
+  const setAddr = (p: Partial<Addr>) => setAddrS((o) => ({ ...o, ...p }));
   const [companyUrl, setCompanyUrl] = useState(investor?.website_url ?? "");
   const [linkedinUrl, setLinkedinUrl] = useState(investor?.linkedin_url ?? "");
   const [yearFounded, setYearFounded] = useState<string>(investor?.year_founded?.toString() ?? "");
@@ -530,7 +534,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
       aumExactUsd: aumExact.trim() && Number.isFinite(ex) ? ex : null,
       firmName: firmName || null,
       email: email || null,
-      businessAddress: businessAddress || null,
+      businessAddress: [addr.unit, addr.street, addr.district, [addr.province, addr.postal].filter(Boolean).join(" "), headquarters].map((x) => x.trim()).filter(Boolean).join(", ") || businessAddress || null,
+      address: addr,
       yearFounded: yearFounded ? Number(yearFounded) : null,
       companySizeBand: companySize || null,
       aum: aum || null,
@@ -1103,26 +1108,8 @@ export function InvestorForm({ investor, controlReturn }: Props) {
           error={actsFor.length ? null : "Pick at least one investor type this representative acts for."} />
       )}
 
-      {/* Row 2: Headquarters | Region | City */}
+      {/* Row 2: Region (Country lives in the address box) */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-1.5">
-          <div className="flex h-6 items-center">
-            <Label className="whitespace-pre">Country{"\n"}</Label>
-          </div>
-          <CountryCombobox
-            value={headquarters}
-            onChange={(v) => {
-              setHeadquarters(v);
-              if (!v) {
-                setRegion("");
-              } else if (!region) {
-                const suggested = regionForCountry(v);
-                if (suggested) setRegion(suggested);
-              }
-            }}
-            placeholder="Select country..."
-          />
-        </div>
         <div className="space-y-1.5">
           <div className="flex h-6 items-center gap-1.5">
             <Label>Region</Label>
@@ -1185,12 +1172,6 @@ export function InvestorForm({ investor, controlReturn }: Props) {
             </Select>
           </TooltipProvider>
         </div>
-        <div className="space-y-1.5">
-          <div className="flex h-6 items-center">
-            <Label>City</Label>
-          </div>
-          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
-        </div>
       </div>
 
       {/* Row 3: Email | Company URL | LinkedIn URL */}
@@ -1220,19 +1201,19 @@ export function InvestorForm({ investor, controlReturn }: Props) {
       </div>
 
 
-      {/* Row 3: Firm Name | Business Address */}
+      {/* Row 3: Firm Name, then the address box */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>Firm Name</Label>
           <Input value={firmName} onChange={(e) => setFirmName(e.target.value)}
             placeholder="e.g. Sequoia Capital" maxLength={100} />
         </div>
-        <div className="space-y-1.5">
-          <Label>Business Address</Label>
-          <Input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)}
-            placeholder="123 Main St, City, Country" maxLength={500} />
-        </div>
       </div>
+      <AddressBox compact a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+        title={investor?.buyer_relation === "individual" ? "Address" : "Business address"} stars={false}
+        note="Sellers see the country and province, never the full address, until they approve this buyer's NDA."
+        country={headquarters} onCountry={(c) => { setHeadquarters(c); setRegion(regionForCountry(c) || ""); setAddrS({ street: "", unit: "", district: "", province: "", postal: "" }); }}
+        show={() => null} onBlur={() => {}} />
 
       {/* Fund & ticket — US$ bands (same as Buyer › Edit profile) */}
       {yearFounded && yearError(yearFounded) && <p className="text-[12.5px] text-[#B42318]">{yearError(yearFounded)}</p>}

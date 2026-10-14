@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/language";
 import { CompanyTypeField, companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
@@ -22,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CountryCombobox } from "@/components/ui/country-combobox";
+import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
 import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
 import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
@@ -169,6 +170,16 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
   });
+  const [addr, setAddrS] = useState<Addr>({ street: inv.address_line1 ?? "", unit: inv.address_line2 ?? "", district: inv.address_city_district ?? "", province: inv.address_province_state ?? "", postal: inv.postal_code ?? "" });
+  const [addrDirty, setAddrDirty] = useState(false);
+  const [addrShow, setAddrShow] = useState(false);
+  const thaiAddr = (f.country || "Thailand") === "Thailand";
+  const setAddr = (p: Partial<Addr>) => { setAddrS((o) => ({ ...o, ...p })); setAddrDirty(true); };
+  const changeCountry = (c: string) => {
+    setF((o) => ({ ...o, country: c, registration_no: "", region: !c ? "" : regionForCountry(c) || o.region }));
+    setAddrS({ street: "", unit: "", district: "", province: "", postal: "" }); setAddrDirty(true);
+  };
+  const addrErr = addrDirty ? addrErrors(addr, thaiAddr, addr.district) : null;
   const agent = rel === "agent";
   const [actsFor, setActsFor] = useState<string[]>(() => sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []));
   const typeOf = agent ? actsFor[0] ?? "" : f.investor_type;
@@ -246,6 +257,8 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       ["registration_no", individual ? null : regError(f.registration_no, f.country)],
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
     ];
+    const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
+    if (aBad) { setAddrShow(true); setErrs({ address: aBad }); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
     const bad = checks.find(([, m]) => m);
     if (bad) {
       setErrs({ [bad[0]]: bad[1]! });
@@ -266,8 +279,10 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       await save({ data: {
         investor_name: f.investor_name.trim(), investor_type: t(typeOf), ...(agent ? { acts_for_types: actsFor } : {}), year_founded: yr && Number.isFinite(yr) ? yr : null,
         company_size_band: individual ? null : ((f.company_size_band || null) as "1-10" | null),
-        country: t(f.country), city: t(f.city), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
-        firm_name: t(f.firm_name), business_address: t(f.business_address),
+        country: t(f.country), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
+        firm_name: t(f.firm_name),
+        business_address: [addr.unit, addr.street, addr.district, [addr.province, addr.postal].filter(Boolean).join(" "), f.country].map((x) => x.trim()).filter(Boolean).join(", ") || null,
+        address_line1: t(addr.street), address_line2: t(addr.unit), address_city_district: t(addr.district), address_province_state: t(addr.province), postal_code: t(addr.postal),
         short_description: t(f.short_description),
         aum_band: individual || rel === "agent" ? null : (f.aum_band || null) as never,
         ticket_band: (f.ticket_band || null) as never,
@@ -374,21 +389,8 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
           </div>
         )}
 
-        {/* Row 2: Country | Region | City */}
+        {/* Row 2: Region (Country lives in the address box) */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
-            {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
-            <div className="flex h-6 items-center"><Label>Country</Label></div>
-            <CountryCombobox
-              value={f.country}
-              onChange={(v) => setF((o) => ({
-                ...o,
-                country: v,
-                region: !v ? "" : o.region || regionForCountry(v) || "",
-              }))}
-              placeholder="Select country..."
-            />
-          </div>
           <div className="space-y-1.5">
             <div className="flex h-6 items-center gap-1.5">
               <Label>Region</Label>
@@ -429,10 +431,6 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <div className="flex h-6 items-center"><Label>City</Label></div>
-            <Input value={f.city} onChange={set("city")} placeholder="City" />
-          </div>
         </div>
 
         {/* Row 3: Email | Company URL | LinkedIn URL */}
@@ -459,16 +457,20 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
           />
         </div>
 
-        {/* Row 4: Firm Name | Business Address */}
+        {/* Row 4: Firm Name, then the address box */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Firm Name</Label>
             <Input value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
           </div>
-          <div className="space-y-1.5">
-            <Label>Business Address</Label>
-            <Input value={f.business_address} onChange={set("business_address")} placeholder="123 Main St, City, Country" maxLength={500} />
-          </div>
+        </div>
+        <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
+          {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
+          <AddressBox compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+            title={individual ? tr("Address") : tr("Business address")}
+            note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+            country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
+            show={(k) => (addrShow && addrErr ? (addrErr as Record<string, string | null>)[k] ?? null : null)} onBlur={() => {}} />
         </div>
 
         {/* Fund & ticket — US$ bands */}
