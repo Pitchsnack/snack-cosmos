@@ -89,7 +89,7 @@ function InviteAdvisorDialog({ dealId, onClose, onDone }: { dealId: string; onCl
               <span>You haven't engaged an advisor yet. <Link to="/marketplace/advisors" className="font-semibold text-[#2563EB] hover:underline" onClick={onClose}>Find one in Browse advisors</Link>, or search all firms below.</span></div>
           ) : (
             <div role="radiogroup" className="space-y-2">
-              {(yours.data ?? []).map((f) => {
+              {(yours.data ?? []).map((f: any) => {
                 const off = !!otherFirm && otherFirm === f.name;
                 const on = pick?.id === f.id;
                 return (
