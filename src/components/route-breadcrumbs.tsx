@@ -54,6 +54,7 @@ const PATH_LABELS: Record<string, string> = {
   "/marketplace/browse": "Browse listings",
   "/marketplace/favourites": "Favourites",
   "/marketplace/invitations": "Invitations",
+  "/marketplace/advisors": "Browse advisors",
   "/marketplace/pipeline": "Pipeline",
   "/advisor/pipeline": "My Pipeline",
   "/advisor/messages": "Messages",
