@@ -26,3 +26,4 @@
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email read live from owner (withOwnerEmails).
+- Listing names: only Admin writes hidden_profiles.code_name (trigger zz_listing_name_admin_only, which also copies it into the live version); empty = NULL and every display falls back to ref_no.
