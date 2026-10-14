@@ -134,7 +134,7 @@ export function SendEnquiryDialog({ firm, me, service, onClose, onOpenMessages }
         {sent ? (
           <>
             <span className="inline-flex h-7 w-fit items-center gap-1.5 rounded-full border border-[#BBE8CA] bg-[#E9F6EE] px-3 text-[13px] font-semibold text-[#15803D] dark:border-green-900 dark:bg-green-950/50 dark:text-green-300"><Check className="h-3.5 w-3.5" />{tf("Enquiry sent to {firm}", { firm: firm.name })}</span>
-            <DialogTitle className="font-display text-[21px] font-bold">{tr("What's next")}</DialogTitle>
+            <DialogTitle className="font-heading text-[21px] font-bold">{tr("What's next")}</DialogTitle>
             <DialogDescription className="sr-only">{tr("What's next")}</DialogDescription>
             <ol className="space-y-0">
               {[
@@ -159,7 +159,7 @@ export function SendEnquiryDialog({ firm, me, service, onClose, onOpenMessages }
           </>
         ) : (
           <>
-            <DialogTitle className="font-display text-[21px] font-bold leading-tight">{tf("Send an enquiry to {firm}", { firm: firm.name })}</DialogTitle>
+            <DialogTitle className="font-heading text-[21px] font-bold leading-tight">{tf("Send an enquiry to {firm}", { firm: firm.name })}</DialogTitle>
             <DialogDescription className="text-[14px] text-[#434A5C] dark:text-muted-foreground">{tf("Tell {firm} what you need. They reply in Messages, and can send you a proposal with the scope, the fee and the timing.", { firm: firm.name })}</DialogDescription>
             <div className="space-y-4">
               <div>
@@ -227,7 +227,7 @@ export function AcceptProposalDialog({ firm, p, me, onClose }: { firm: string; p
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[calc(100vh-32px)] w-[calc(100vw-32px)] max-w-[640px] overflow-y-auto rounded-[16px]">
-        <DialogTitle className="font-display text-[21px] font-bold">{tf("Engage {firm} for {service}?", { firm, service: tr(p.service) })}</DialogTitle>
+        <DialogTitle className="font-heading text-[21px] font-bold">{tf("Engage {firm} for {service}?", { firm, service: tr(p.service) })}</DialogTitle>
         <DialogDescription>{tf("Accepting this proposal makes {firm} your advisor. They're told at once.", { firm })}</DialogDescription>
         <ProposalRows p={p} />
         <ul className="space-y-1.5">
@@ -268,7 +268,7 @@ export function DeclineProposalDialog({ firm, p, onClose }: { firm: string; p: P
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[calc(100vw-32px)] max-w-[540px] rounded-[16px]">
-        <DialogTitle className="font-display text-[20px] font-bold">{tf("Decline the proposal from {firm}?", { firm })}</DialogTitle>
+        <DialogTitle className="font-heading text-[20px] font-bold">{tf("Decline the proposal from {firm}?", { firm })}</DialogTitle>
         <DialogDescription>{tf("{firm} is told. You can still message them, and they can send you a new proposal.", { firm })}</DialogDescription>
         <div><Label opt>{tr("Tell them why")}</Label>
           <textarea rows={3} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} className={box}
@@ -305,7 +305,7 @@ export function RateDialog({ firm, enquiryId, service, side, detail, onClose }: 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[calc(100vw-32px)] max-w-[640px] rounded-[16px]">
-        <DialogTitle className="font-display text-[21px] font-bold">{tf("How was {firm}?", { firm })}</DialogTitle>
+        <DialogTitle className="font-heading text-[21px] font-bold">{tf("How was {firm}?", { firm })}</DialogTitle>
         <DialogDescription>{tf("Mark the work on {service} as done and rate it. Your review shows your role and sector, never your name, and {firm} can't edit it.", { firm, service: tr(service) })}</DialogDescription>
         <div>
           <Label req>{tr("Your rating")}</Label>
@@ -401,7 +401,7 @@ export function SendProposalDialog({ enquiryId, client, clientName, clientFirst,
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[calc(100vh-32px)] w-[calc(100vw-32px)] max-w-[700px] overflow-y-auto rounded-[16px]">
-        <DialogTitle className="font-display text-[21px] font-bold">Send a proposal to {client}</DialogTitle>
+        <DialogTitle className="font-heading text-[21px] font-bold">Send a proposal to {client}</DialogTitle>
         <DialogDescription>{clientName} sees it in Messages and can accept it for {client}. Once accepted, you're their advisor.</DialogDescription>
         <div className="space-y-4">
           <div><Label req>Service</Label>
@@ -455,7 +455,7 @@ export function DeclineEnquiryDialog({ enquiryId, client, clientName, clientFirs
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[calc(100vw-32px)] max-w-[540px] rounded-[16px]">
-        <DialogTitle className="font-display text-[20px] font-bold">Decline the enquiry from {client}?</DialogTitle>
+        <DialogTitle className="font-heading text-[20px] font-bold">Decline the enquiry from {client}?</DialogTitle>
         <DialogDescription>{clientName} is told, with your reason, and can enquire with another firm.</DialogDescription>
         <div><Label req>Reason</Label>
           <div role="radiogroup" className="space-y-2">
