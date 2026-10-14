@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -436,7 +437,7 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="grid h-10 w-[60px] shrink-0 place-items-center overflow-hidden rounded-md border border-border bg-white">{f.logoUrl ? <img src={f.logoUrl} alt="" className="max-h-8 max-w-[52px] object-contain" /> : <FirmLogo f={f} size={40} radius={6} ring={false} />}</span>
                       <div className="min-w-0"><div className="truncate text-[14px] font-semibold">{f.name}</div><div className="truncate text-[12px] text-muted-foreground">{[f.refNo, f.firmType, f.city].filter(Boolean).join(" · ")}</div>
-                        {f.verifiedAt && <span className="mt-0.5 inline-flex h-5 items-center gap-1 rounded-full border border-[#BBE8CA] bg-[#E9F6EE] px-2 text-[11px] font-semibold text-[#15803D]">✓ {tr("Verified")}</span>}</div>
+                        {(f.verifiedAt || f.managed) && <div className="mt-0.5 flex flex-wrap items-center gap-1.5">{f.verifiedAt && <span className="inline-flex h-5 items-center gap-1 rounded-full border border-[#BBE8CA] bg-[#E9F6EE] px-2 text-[11px] font-semibold text-[#15803D]">✓ {tr("Verified")}</span>}{f.managed && <ManagedBadge size="xs" shadow align="left" />}</div>}</div>
                     </div>
                     <div className="flex flex-wrap gap-1">{f.services.slice(0, 3).map((s) => <ServiceChip key={s} name={s} />)}{f.services.length > 3 && <span className="text-[12px] text-muted-foreground">+{f.services.length - 3}</span>}</div>
                     <div className="text-[13px]">{st.n ? <><div className="font-semibold"><span className="text-[#F59E0B]">★</span> {st.avg.toFixed(1)}</div><div className="text-[12px] text-muted-foreground">{st.n} {tr(st.n === 1 ? "review" : "reviews")}</div></> : <span className="text-[12px] text-muted-foreground">{tr("No reviews yet")}</span>}</div>

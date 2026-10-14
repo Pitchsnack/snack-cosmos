@@ -1,3 +1,4 @@
+import { HatMark } from "@/components/messages/hat-mark";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -161,6 +162,12 @@ export function SendEnquiryDialog({ firm, me, service, onClose, onOpenMessages }
           <>
             <DialogTitle className="font-heading text-[21px] font-bold leading-tight">{tf("Send an enquiry to {firm}", { firm: firm.name })}</DialogTitle>
             <DialogDescription className="text-[14px] text-[#434A5C] dark:text-muted-foreground">{tf("Tell {firm} what you need. They reply in Messages, and can send you a proposal with the scope, the fee and the timing.", { firm: firm.name })}</DialogDescription>
+            {firm.managed && (
+              <div className="flex items-start gap-2 rounded-[10px] border border-[#E7E9EE] bg-[#F6F7F9] px-3 py-2.5 text-[13px] leading-[1.5] text-[#374151] dark:border-border dark:bg-muted dark:text-muted-foreground">
+                <span className="mt-[3px] shrink-0"><HatMark width={16} /></span>
+                <span><strong className="font-semibold">{tr("Managed by PitchSnack.")}</strong> {tf("The PitchSnack team reads and answers enquiries for {firm}.", { firm: firm.name })}</span>
+              </div>
+            )}
             <div className="space-y-4">
               <div>
                 <Label req>{tr("Which service do you need?")}</Label>
