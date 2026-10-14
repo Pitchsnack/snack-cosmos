@@ -8,9 +8,9 @@ export const Route = createFileRoute("/_authenticated/marketplace/invitations")(
   head: () => ({
     meta: [
       { title: "Invitations — PitchSnack" },
-      { name: "description", content: "Sellers who invited you to view their anonymous listing. Open one to see the details and request an NDA." },
+      { name: "description", content: "Your invitations on PitchSnack: see who invited you or whom you invited, and answer NDA requests." },
       { property: "og:title", content: "Invitations — PitchSnack" },
-      { property: "og:description", content: "Sellers who invited you to view their anonymous listing. Open one to see the details and request an NDA." },
+      { property: "og:description", content: "Your invitations on PitchSnack: see who invited you or whom you invited, and answer NDA requests." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
