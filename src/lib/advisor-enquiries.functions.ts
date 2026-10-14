@@ -132,7 +132,7 @@ export const sendAdvisorEnquiry = createServerFn({ method: "POST" })
     const org = await orgInfo(sb, w.side, w.orgId);
     const me = (await people(sb, [context.userId]))[context.userId];
     const key = `e:${conv.id}`;
-    const link = `/marketplace/messages?thread=${encodeURIComponent(key)}`;
+    const link = `/advisor/messages?thread=${encodeURIComponent(key)}`;
     await bell(sb, [firm.owner_user_id], `New enquiry from a ${w.side}`, `${me?.name ?? "Someone"} at ${org.name} asked ${firm.name} about ${data.service}.`, link);
     const { sendAlert } = await import("@/lib/email-alerts.server");
     await sendAlert({
@@ -171,7 +171,7 @@ export const acceptAdvisorProposal = createServerFn({ method: "POST" })
     if (!up.data?.length) return { ok: false as const, error: "This proposal can't be accepted any more." };
     await sb.from("advisor_enquiries").update({ status: "engaged", engaged_at: now }).eq("id", e.id);
     await sb.from("advisor_enquiry_events").insert({ conversation_id: e.conversation_id, enquiry_id: e.id, kind: "accepted", ref_id: p.id, actor_user_id: context.userId, data: { consent, by: me?.name ?? null } });
-    const link = `/marketplace/messages?thread=${encodeURIComponent(`e:${e.conversation_id}`)}`;
+    const link = `/advisor/messages?thread=${encodeURIComponent(`e:${e.conversation_id}`)}`;
     await bell(sb, [firm.owner_user_id], "Your proposal was accepted", `${org.name} accepted your proposal for ${p.service_key}. You're now their advisor.`, link);
     const { sendAlert } = await import("@/lib/email-alerts.server");
     await sendAlert({
@@ -199,7 +199,7 @@ export const declineAdvisorProposal = createServerFn({ method: "POST" })
     const key = `e:${e.conversation_id}`;
     if (data.note) await sb.from("marketplace_messages").insert({ thread_key: key, sender_id: context.userId, body: data.note, created_at: new Date(Date.now() + 5).toISOString() });
     const org = await orgInfo(sb, w.side, w.orgId);
-    await bell(sb, [firm.owner_user_id], "Proposal declined", `${org.name} declined your proposal for ${p.service_key}.`, `/marketplace/messages?thread=${encodeURIComponent(key)}`);
+    await bell(sb, [firm.owner_user_id], "Proposal declined", `${org.name} declined your proposal for ${p.service_key}.`, `/advisor/messages?thread=${encodeURIComponent(key)}`);
     return { ok: true as const, firm: firm.name };
   });
 
@@ -220,7 +220,7 @@ export const completeAdvisorWork = createServerFn({ method: "POST" })
     });
     if (r.error) throw new Error(r.error.code === "23505" ? "This engagement already has a review." : r.error.message);
     await sb.from("advisor_enquiry_events").insert({ conversation_id: e.conversation_id, enquiry_id: e.id, kind: "done", actor_user_id: context.userId, data: { stars: data.stars } });
-    await bell(sb, [firm.owner_user_id], "New client review", `${org.name} rated your work ${data.stars} ★.`, "/marketplace/my-company?section=feedback");
+    await bell(sb, [firm.owner_user_id], "New client review", `${org.name} rated your work ${data.stars} ★.`, "/marketplace/my-company");
     return { ok: true as const, firm: firm.name };
   });
 
