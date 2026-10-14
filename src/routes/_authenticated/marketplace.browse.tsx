@@ -1,7 +1,7 @@
 import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Clock, LockOpen, Search, Star, Store, X } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +16,8 @@ import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useHasSession } from "@/hooks/use-has-session";
 import { listMarketplaceTeasers } from "@/lib/hidden-profiles.functions";
 import { myNdaRequestDates } from "@/lib/pipeline.functions";
+import { markListingViewed } from "@/lib/invitations.functions";
+import { InvitedYouChip, NdaSentDialog, useInvitedListings } from "@/components/marketplace/buyer-invitations";
 import { ListingDetail, NdaApprovedBadge, NdaButton, NdaRequestedBadge, SaveButton, useNdaStatuses, useSavedListings, type Teaser } from "@/components/marketplace/listing-panel";
 import { InvestorBrowse } from "@/components/marketplace/investor-browse";
 import { AdvisorBrowse } from "@/components/marketplace/advisor-marketplace";
@@ -80,13 +82,14 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
     return v === "requested" ? "requested" : v === "approved" || v === "exchanged" ? "approved" : null;
   };
   // After Request NDA the listing stays in Browse, marked NDA requested.
+  const [sentName, setSentName] = useState<string | null>(null);
   const onRequested = (id: string) => {
     const item = all.find((x) => x.id === id);
-    const codeName = item?.listing.codeName || item?.listing.refNo || t("This listing");
-    toast.success(`${t("NDA requested.")} ${codeName} ${t("is in your Favourites.")}`);
+    setSentName(item?.listing.codeName || item?.listing.refNo || t("This listing"));
   };
+  const invited = useInvitedListings();
   const star = (id: string) => <SaveButton square nda={!!ndaOf(id)} saved={savedIds.has(id)} onClick={() => toggleSave(id)} />;
-  const badgeOf = (id: string) => { const n = ndaOf(id); return n === "approved" ? <NdaApprovedBadge /> : n === "requested" ? <NdaRequestedBadge /> : undefined; };
+  const badgeOf = (id: string) => { const n = ndaOf(id); return n === "approved" ? <NdaApprovedBadge /> : n === "requested" ? <NdaRequestedBadge /> : buyer && invited.has(id) ? <InvitedYouChip /> : undefined; };
   const raw = (data ?? []) as Array<Teaser | ClosedTeaser>;
   const closedItems = buyer ? (raw.filter((x) => "closed" in x) as ClosedTeaser[]) : [];
   const all = raw.filter((x) => !("closed" in x)) as Teaser[];
@@ -204,7 +207,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
               {current ? (
-                <BrowsePanel match={buyer ? matches[current.id] : undefined} t={current} ownOnly={!!ownOnly} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
+                <BrowsePanel match={buyer ? matches[current.id] : undefined} t={current} ownOnly={!!ownOnly} invited={buyer && invited.has(current.id)} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
               ) : (
                 <p className="py-16 text-center text-sm text-muted-foreground">{t("Select a listing to see the details.")}</p>
               )}
@@ -241,7 +244,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
         <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-[820px]">
           {modal && (
             <div className="-m-6 flex flex-col">
-              <BrowsePanel match={buyer ? matches[modal.id] : undefined} t={modal} ownOnly={!!ownOnly} nda={ndaOf(modal.id)} saved={savedIds.has(modal.id)} onToggleSave={() => toggleSave(modal.id)} onRequested={onRequested} />
+              <BrowsePanel match={buyer ? matches[modal.id] : undefined} t={modal} ownOnly={!!ownOnly} invited={buyer && invited.has(modal.id)} nda={ndaOf(modal.id)} saved={savedIds.has(modal.id)} onToggleSave={() => toggleSave(modal.id)} onRequested={onRequested} />
             </div>
           )}
         </DialogContent>
@@ -250,13 +253,17 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   );
 }
 
-function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested, match }: {
-  match?: string[]; t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string) => void;
+function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested, match, invited }: {
+  invited?: boolean; match?: string[]; t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string) => void;
 }) {
   const { t: tr } = useTranslation();
   const datesFn = useServerFn(myNdaRequestDates);
   const { data: dates } = useQuery({ queryKey: ["pipeline", "nda-dates"], queryFn: () => datesFn(), enabled: nda === "requested" });
   const d = dates?.[t.id];
+  const viewFn = useServerFn(markListingViewed);
+  const qc = useQueryClient();
+  // Opening the listing counts as viewing its invitation.
+  useEffect(() => { if (invited && !ownOnly) viewFn({ data: { listingId: t.id } }).then(() => qc.invalidateQueries({ queryKey: ["invitations"] })); }, [t.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const when = d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : null;
   return (
     <>
@@ -265,6 +272,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested, match 
           <span className="min-w-0 truncate text-sm font-semibold">{[t.listing.codeName, t.listing.refNo].filter(Boolean).join(" · ")}</span>
           {nda === "requested" && <NdaRequestedBadge />}
           {nda === "approved" && <NdaApprovedBadge />}
+          {!nda && invited && <InvitedYouChip />}
         </div>
         {ownOnly ? (
           <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{tr("Buyer preview")}</span>
