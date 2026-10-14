@@ -9,6 +9,7 @@ import { myConnectStates, sendInvitation, type ConnectState } from "@/lib/invita
 import { requestLock, usePlanStrip, LOCK_STYLE } from "@/components/marketplace/plan-strip";
 import { GlossaryTerm } from "@/components/marketplace/browse-header";
 import { useTr } from "@/components/common/edit-info-popup";
+import { ReviewInvestorDialog } from "@/components/marketplace/seller-invitations";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 
@@ -66,9 +67,16 @@ export function ConnectButton({ investorId, investorRef, big }: { investorId: st
     return (
       <span className="flex shrink-0 items-center gap-2">
         <Chip big={big} tone={approved ? "green" : "blue"} icon={approved ? Check : Inbox}>{approved ? tr("NDA approved", "อนุมัติ NDA แล้ว") : tr("They requested an NDA", "ขอ NDA กับท่านแล้ว")}</Chip>
-        <Link to="/marketplace/pipeline" onClick={(e) => e.stopPropagation()} className={cn("inline-flex items-center rounded-[10px] font-semibold", h, NAVY)}>
-          {approved ? tr("Open in Pipeline", "เปิดใน Pipeline") : tr("Review investor", "ตรวจสอบนักลงทุน")}
-        </Link>
+        {approved || !s.pipelineId ? (
+          <Link to="/marketplace/pipeline" onClick={(e) => e.stopPropagation()} className={cn("inline-flex items-center rounded-[10px] font-semibold", h, NAVY)}>
+            {approved ? tr("Open in Pipeline", "เปิดใน Pipeline") : tr("Review investor", "ตรวจสอบนักลงทุน")}
+          </Link>
+        ) : (
+          <button type="button" aria-haspopup="dialog" onClick={(e) => { e.stopPropagation(); setOpen(true); }} className={cn("inline-flex items-center rounded-[10px] font-semibold", h, NAVY)}>
+            {tr("Review investor", "ตรวจสอบนักลงทุน")}
+          </button>
+        )}
+        {open && s.pipelineId && <ReviewInvestorDialog pipelineId={s.pipelineId} onClose={() => setOpen(false)} />}
       </span>
     );
   }
