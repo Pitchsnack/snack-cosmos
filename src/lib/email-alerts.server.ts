@@ -25,7 +25,7 @@ export function buildAlert(alert: string, role: AlertRole, lang: AlertLang, ov: 
   return {
     role, lang,
     subject: fill(t.subject, vars), title: fill(t.title, vars), body: fill(t.body, vars),
-    button: t.button, place: ver.place, url: SITE + ver.path, color: def.color,
+    button: t.button, place: ver.place, url: SITE + fill(ver.path, Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, encodeURIComponent(String(v))]))), color: def.color,
     details, quote: quote ? quote.slice(0, 300) : undefined,
   };
 }

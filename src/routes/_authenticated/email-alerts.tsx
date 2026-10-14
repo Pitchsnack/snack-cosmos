@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, ChevronDown, ChevronRight, FileText, Handshake, Info, Lock, LockOpen, MessageSquare, PenLine, Pencil, Send, Target, UserCheck, UserX, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, FileText, Handshake, Inbox, Info, Lock, LockOpen, MessageSquare, PenLine, Pencil, Send, Target, UserCheck, UserX, X } from "lucide-react";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -42,7 +42,10 @@ function tileOf(key: string, role: AlertRole) {
     case "criteria_match": return { bg: "#E0F5F2", fg: "#0F766E", Icon: Target };
     case "advisor_invitation": return { bg: "#E0F5F2", fg: "#0F766E", Icon: Handshake };
     case "advisor_joined": case "advisor_joined_other": return { ...G, Icon: UserCheck };
-    case "advisor_declined": return { ...R, Icon: UserX };
+    case "advisor_declined": case "advisor_enquiry_declined": return { ...R, Icon: UserX };
+    case "advisor_new_enquiry": return { bg: "#E0F5F2", fg: "#0F766E", Icon: Inbox };
+    case "advisor_proposal": return { ...B, Icon: FileText };
+    case "advisor_proposal_accepted": return { ...G, Icon: UserCheck };
     default: return { ...B, Icon: MessageSquare };
   }
 }

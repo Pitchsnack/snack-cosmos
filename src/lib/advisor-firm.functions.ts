@@ -99,23 +99,24 @@ export const listMyAdvisorFirms = createServerFn({ method: "GET" })
   });
 
 /** Firm cards by id with the service client (callers check access first). Private files and documents are left out. */
-export async function loadFirmCards(sb: any, ids: string[], fullAddressFor: Set<string> = new Set()): Promise<AdvisorFirm[]> {
+export async function loadFirmCards(sb: any, ids: string[], fullAddressFor: Set<string> = new Set(), opts: { docs?: boolean } = {}): Promise<AdvisorFirm[]> {
   if (!ids.length) return [];
   const { data: rows } = await sb.from("advisor_firms").select("*").in("id", ids);
   if (!rows?.length) return [];
-  const [fees, team, creds, reviews] = await Promise.all([
+  const [fees, team, creds, reviews, docs] = await Promise.all([
     sb.from("advisor_firm_fees").select("*").in("firm_id", ids),
     sb.from("advisor_firm_team").select("*").in("firm_id", ids),
     sb.from("advisor_firm_credentials").select("*").in("firm_id", ids),
     sb.from("advisor_firm_reviews").select("*").in("firm_id", ids),
+    opts.docs ? sb.from("advisor_firm_documents").select("*").in("firm_id", ids).order("created_at") : Promise.resolve({ data: [] }),
   ]);
-  const paths = rows.map((r: any) => r.logo_path).filter(Boolean) as string[];
+  const paths = [...rows.map((r: any) => r.logo_path), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
   const urls = new Map<string, string>();
   if (paths.length) {
     const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
   }
-  const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: (creds.data ?? []).filter((c: any) => c.status !== "rejected"), docs: [], reviews: reviews.data ?? [] };
+  const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: (creds.data ?? []).filter((c: any) => c.status !== "rejected"), docs: docs.data ?? [], reviews: reviews.data ?? [] };
   // The full address only for firms named in fullAddressFor; others show "{place}, {country}".
   return (await withOwnerEmails(rows)).map((r: any) => toFirm(fullAddressFor.has(r.id) ? r : {
     ...r, addr_street: null, addr_unit: null, addr_subdistrict: null, addr_district: null, addr_postal: null, registration_no: null,
