@@ -67,7 +67,7 @@ function Cover({ f, wide, noStatus }: { f: AdvisorFirm; wide?: boolean; noStatus
   const pills = (
     <>
       {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
-      {!noStatus && <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>}
+      {!noStatus && <div className="absolute right-3 top-3 flex items-center gap-1.5">{f.managed && <ManagedBadge size="sm" />}<StatusPill status={f.status} /></div>}
       {noStatus && f.managed && <div className="absolute right-3 top-3"><ManagedBadge size="sm" shadow /></div>}
     </>
   );

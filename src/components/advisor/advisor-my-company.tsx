@@ -1,3 +1,4 @@
+import { useManagedIds } from "@/hooks/use-managed-ids";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
@@ -88,7 +89,8 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
   const [savedOnly, setSavedOnly] = useState(false);
   const [openId, setOpenId] = useState<string | null>(initialOpen ?? null);
 
-  const firms = data ?? [];
+  const managedIds = useManagedIds("firm", (data ?? []).map((f) => f.id));
+  const firms = useMemo(() => (data ?? []).map((f) => ({ ...f, managed: managedIds.has(f.id) })), [data, managedIds.size]);
   const sectors = useMemo(() => [...new Set(firms.flatMap((f) => f.sectors))].sort(), [firms]);
   const hqs = useMemo(() => [...new Set(firms.map((f) => f.city).filter(Boolean) as string[])].sort(), [firms]);
   const list = useMemo(() => {
