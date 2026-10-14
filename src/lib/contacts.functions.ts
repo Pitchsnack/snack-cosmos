@@ -87,6 +87,7 @@ export const listContacts = createServerFn({ method: "GET" })
 
     const seen = new Set<string>();
     const contacts: ContactPerson[] = [];
+    const pidOf = new Map<ContactPerson, string>();
     for (const r of rows) {
       const pid = data.as === "seller" ? r.buyer_user_id : ownerOf[r.startup_id];
       if (!pid || seen.has(pid)) continue;
@@ -112,6 +113,7 @@ export const listContacts = createServerFn({ method: "GET" })
         connectedAt: r.nda_approved_at,
         pipelineStep: step(r),
       });
+      pidOf.set(contacts[contacts.length - 1], pid);
     }
 
     const me = users[context.userId];
@@ -151,6 +153,7 @@ export const listContacts = createServerFn({ method: "GET" })
           bestTime: null, companyType: f.firm_type ?? null, location: [f.city, f.country].filter(Boolean).join(", ") || null,
           website: f.website ?? null, connectedAt: a.joined_at, pipelineStep: step(rowById[a.deal_id] ?? {}),
         });
+        pidOf.set(contacts[contacts.length - 1], a.advisor_user_id);
       }
     }
     // Firms this company engaged through Browse advisors: the person who sent the accepted proposal.
@@ -175,9 +178,18 @@ export const listContacts = createServerFn({ method: "GET" })
               bestTime: null, companyType: f.firm_type ?? null, location: [f.city, f.country].filter(Boolean).join(", ") || null,
               website: f.website ?? null, connectedAt: e.engaged_at, pipelineStep: `Engaged · ${e.service_key}`,
             });
+            if (pid) pidOf.set(contacts[contacts.length - 1], pid);
           }
         }
       }
     }
-    return { my, contacts, visibleTo: contacts.length };
+    // Admins of a managed company: one "PitchSnack team" row, never their own details.
+    const team = await (await import("@/lib/managed.server")).adminUserIds(sb, [...pidOf.values()]);
+    for (const c of contacts) {
+      if (!team.has(pidOf.get(c) ?? "")) continue;
+      Object.assign(c, { name: "PitchSnack team", role: null, email: "support@pitchsnack.com", phone: null, linkedin: null, team: true });
+    }
+    const seenTeam = new Set<string>();
+    const out = contacts.filter((c) => !(c as { team?: boolean }).team || (!seenTeam.has(`${c.group}|${c.company}`) && !!seenTeam.add(`${c.group}|${c.company}`)));
+    return { my, contacts: out, visibleTo: out.length };
   });
