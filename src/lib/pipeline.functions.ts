@@ -388,7 +388,7 @@ const Id = z.object({ id: z.string().uuid() });
 
 export const decideNda = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => Id.extend({ approve: z.boolean(), shareReport: z.boolean().optional() }).parse(d))
+  .inputValidator((d) => Id.extend({ approve: z.boolean(), shareReport: z.boolean().optional(), consent: z.string().max(500).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const p = await loadOpen(data.id);
     await assertSeller(context, p.startup_id);
@@ -399,7 +399,7 @@ export const decideNda = createServerFn({ method: "POST" })
       return { ok: true };
     }
     await update(p.id, { nda_approved_at: now, nda_expires_at: new Date(Date.now() + 730 * 86_400_000).toISOString() });
-    await log(p.id, "nda_approved", context.userId);
+    await log(p.id, "nda_approved", context.userId, data.consent ? `Consent: ${data.consent}` : undefined);
     if (data.shareReport) {
       const { saveShare } = await import("./report-shares.server");
       try {
