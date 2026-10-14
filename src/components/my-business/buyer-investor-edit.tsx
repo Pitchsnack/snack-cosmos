@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/language";
 import { CompanyTypeField, companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
@@ -456,7 +457,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
           />
         </div>
 
-        {/* Row 4: Firm Name | Business Address */}
+        {/* Row 4: Firm Name, then the address box */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Firm Name</Label>
