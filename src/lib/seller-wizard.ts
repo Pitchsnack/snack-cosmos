@@ -136,6 +136,7 @@ export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<stri
   if (f.has("web") && d.web.trim()) s.add("web");
   if (f.has("year") && /^\d{4}$/.test(d.year)) s.add("year");
   if (f.has("size") && d.size) s.add("size");
+  if (f.has("sector") && d.sector) s.add("sector");
   if (d.noUpload) s.add("photos");
   return s;
 }

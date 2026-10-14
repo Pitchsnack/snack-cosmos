@@ -32,7 +32,7 @@ export function wizardProgress(rel: BuyerRelation | null, answered: string[] | u
 }
 
 /** Values the skip rules look at. */
-export type BuyerSkipVals = { role: BuyerRelation | null; type: string; web: string; year: string; name: string; actsFor?: string[] };
+export type BuyerSkipVals = { role: BuyerRelation | null; type: string; web: string; year: string; name: string; actsFor?: string[]; sectors?: string[] };
 
 /**
  * Questions sign-up fully answered (skipped by Continue, Back and the counts).
@@ -45,6 +45,7 @@ export function buyerSkips(fromSignup: string[] | undefined, v: BuyerSkipVals): 
   if (f.has("role") && v.role) s.add("role");
   if (f.has("type") && (v.role === "agent" ? (v.actsFor ?? []).length > 0 : !!v.type && v.type !== "Individual Investor")) s.add("type");
   if (f.has("web") && v.web.trim()) s.add("web");
+  if (f.has("sectors") && (v.sectors ?? []).length > 0) s.add("sectors");
   if (v.role === "individual" && f.has("name") && v.name.trim().length >= 2) s.add("name");
   return s;
 }
@@ -72,12 +73,12 @@ export function buyerProgress(rel: BuyerRelation | null, answered: string[] | un
 
 /** Banner progress straight from the investor record. */
 export function buyerProgressFor(rel: BuyerRelation | null, iv: {
-  investor_type?: string | null; acts_for_types?: string[] | null; website_url?: string | null; year_founded?: number | null; investor_name?: string | null;
+  investor_type?: string | null; acts_for_types?: string[] | null; website_url?: string | null; year_founded?: number | null; investor_name?: string | null; preferred_industries?: string[] | null;
   wizard?: { answered?: string[]; from_signup?: string[] } | null;
 } | null | undefined) {
   const skip = buyerSkips(iv?.wizard?.from_signup, {
     role: rel, type: iv?.investor_type ?? "", web: iv?.website_url ?? "", year: iv?.year_founded ? String(iv.year_founded) : "", name: iv?.investor_name ?? "",
-    actsFor: iv?.acts_for_types ?? [],
+    actsFor: iv?.acts_for_types ?? [], sectors: iv?.preferred_industries ?? [],
   });
   return buyerProgress(rel, iv?.wizard?.answered, skip);
 }
