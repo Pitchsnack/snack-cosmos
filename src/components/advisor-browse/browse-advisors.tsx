@@ -199,7 +199,7 @@ function RelationBox({ f, s, me, side, detail, onMessages, onEnquire }: {
   return (
     <div className={cn("space-y-2.5 rounded-[12px] border px-4 py-3.5", c.box)}>
       <div className="flex gap-3">
-        <span className={cn("grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px]", c.tile)}>{s.status === "done" ? <Stars value={s.review?.stars ?? 0} size={0} /> && <Icon className="h-4 w-4" /> : <Icon className="h-4 w-4" />}</span>
+        <span className={cn("grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px]", c.tile)}><Icon className="h-4 w-4" /></span>
         <div className="min-w-0">
           <div className={cn("text-[10.5px] font-bold uppercase tracking-[.07em]", c.eb)}>{eb}</div>
           <div className="flex flex-wrap items-center gap-2 text-[14.5px] font-bold">{title}{s.status === "done" && s.review && <Stars value={s.review.stars} size={15} />}</div>
@@ -211,7 +211,6 @@ function RelationBox({ f, s, me, side, detail, onMessages, onEnquire }: {
       {dlg === "accept" && s.proposal && me && <AcceptProposalDialog firm={firm} p={s.proposal} me={me} onClose={() => setDlg(null)} />}
       {dlg === "decline" && s.proposal && <DeclineProposalDialog firm={firm} p={s.proposal} onClose={() => setDlg(null)} />}
       {dlg === "rate" && <RateDialog firm={firm} enquiryId={s.enquiryId} service={s.service} side={side} detail={detail} onClose={() => setDlg(null)} />}
-      {void onEnquire}
     </div>
   );
 }
