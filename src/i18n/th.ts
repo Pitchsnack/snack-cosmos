@@ -1,4 +1,5 @@
 import { TH_WIZARDS } from "./th-wizards";
+import { TH_ADVISORS } from "./th-advisors";
 
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
@@ -375,7 +376,7 @@ const TH_BASE: Record<string, string> = {
 
 
 // Existing app wording wins where both define a line.
-export const TH: Record<string, string> = { ...TH_WIZARDS, ...TH_BASE,
+export const TH: Record<string, string> = { ...TH_ADVISORS, ...TH_WIZARDS, ...TH_BASE,
   "Help desk": "ฝ่ายช่วยเหลือ",
   "PitchSnack Help desk": "ฝ่ายช่วยเหลือ PitchSnack",
   "new message": "ข้อความใหม่",
