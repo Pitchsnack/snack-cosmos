@@ -75,7 +75,7 @@ export function ManagedBadge({ size = "sm", border = true, shadow = false, align
 
 /** The single explanation, mounted once (root). */
 export function ManagedTipHost() {
-  const { t, lang } = useTranslation() as { t: (s: string) => string; lang?: string };
+  const { t, language: lang } = useTranslation();
   const open = useOpen();
   const tip = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number; arrow: number; above: boolean } | null>(null);
