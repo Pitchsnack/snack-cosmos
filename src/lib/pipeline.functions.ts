@@ -135,7 +135,7 @@ function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: numbe
 /** Buyer: request the NDA for a live listing. Requires buyer verification. */
 export const requestNda = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ listingId: z.string().uuid(), message: z.string().max(1000).optional() }).parse(d))
+  .inputValidator((d) => z.object({ listingId: z.string().uuid(), message: z.string().max(1000).optional(), consent: z.string().max(500).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await admin();
     const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, approval_status, live").eq("id", data.listingId).maybeSingle();
@@ -146,15 +146,26 @@ export const requestNda = createServerFn({ method: "POST" })
     if (!uv && bv?.status !== "verified") throw new Error("Verify your buyer profile first");
     const { requireRole, planAccess, valueCap, spendRequest } = await import("./plan-access.server");
     await requireRole(context.userId, ["buyer"]);
-    const cap = valueCap(await planAccess(context.userId));
-    const ask = thbOf(hp.live as never);
-    if (cap !== null && ask != null && ask / 1_000_000 > cap) throw new Error("This listing is above your plan's price range");
-    await spendRequest(context.userId, "nda", hp.id);
+    // An invitation still New or Viewed opens the listing on any plan and uses no request.
+    const { orgInvitations } = await import("./invitations.server");
+    const invRow = (await orgInvitations(context.userId, [hp.id])).rows.find((r) => r.status === "new" || r.status === "viewed" || r.status === "not_interested") ?? null;
+    if (!invRow) {
+      const cap = valueCap(await planAccess(context.userId));
+      const ask = thbOf(hp.live as never);
+      if (cap !== null && ask != null && ask / 1_000_000 > cap) throw new Error("This listing is above your plan's price range");
+      await spendRequest(context.userId, "nda", hp.id);
+    }
+    const linkInvitation = async (pipelineId: string | null | undefined) => {
+      if (!invRow || !pipelineId) return;
+      const now = new Date().toISOString();
+      await sb.from("listing_invitations").update({ pipeline_id: pipelineId, buyer_choice: "open", viewed_at: invRow.inv.viewed_at ?? now }).eq("id", invRow.inv.id);
+    };
     // A withdrawn or declined request can be made again: reopen the same row.
     const { data: prev } = await sb.from("deal_pipelines").select("id, status").eq("hidden_profile_id", hp.id).eq("buyer_user_id", context.userId).maybeSingle();
     if (prev && ["withdrawn", "declined"].includes(prev.status)) {
       await update(prev.id, { status: "active", nda_requested_at: new Date().toISOString(), nda_approved_at: null, buyer_message: data.message ?? null });
-      await log(prev.id, "nda_requested", context.userId);
+      await log(prev.id, "nda_requested", context.userId, data.consent);
+      await linkInvitation(prev.id);
       return { ok: true };
     }
     const { data: row, error } = await sb
@@ -166,7 +177,8 @@ export const requestNda = createServerFn({ method: "POST" })
       .select("id")
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (row?.id) await log(row.id, "nda_requested", context.userId);
+    if (row?.id) await log(row.id, "nda_requested", context.userId, data.consent);
+    await linkInvitation(row?.id);
     return { ok: true };
   });
 
