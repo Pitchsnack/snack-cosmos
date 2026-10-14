@@ -1,3 +1,4 @@
+import { ManagedBadge, useCoverFit } from "@/components/common/managed-badge";
 import { fmtThb } from "@/lib/asking-price";
 import { MissingText } from "@/components/my-business/missing-info";
 import { cloneElement, isValidElement, useEffect, useState } from "react";
@@ -100,8 +101,12 @@ function PartEdit({ k, on }: { k: ListingPart; on?: (k: ListingPart) => void }) 
 }
 
 export function PublicListingCard({
-  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta, editable, tag,
+  l, seller = false, className, deal, expanded = true, onToggleExpand, selected, onSelect, topRight, badge, priv, wrapMeta, editable, tag, showManaged, panelBadge,
 }: {
+  /** Browse pages and Favourites only: the "Managed by" badge. */
+  showManaged?: boolean;
+  /** Split panel placement (top right, 10px). */
+  panelBadge?: boolean;
   /** Optional tag at the top of the card body (e.g. "Matches your mandate"). */
   tag?: React.ReactNode;
   /** Seller's own Public view preview only: an Edit link on each card part. Off by default. */
@@ -128,6 +133,8 @@ export function PublicListingCard({
   const meta = [l.sector, l.subSector, l.location?.replace(/, Thailand$/, ""), emp].filter(Boolean).join(" · ");
   const dl = dealLine(deal, t);
   const interactive = !!onSelect;
+  const managed = !!showManaged && !seller && !priv && !!l.managed;
+  const fit = useCoverFit(managed, 2);
   return (
     <div
       role={interactive ? "button" : undefined}
@@ -144,11 +151,12 @@ export function PublicListingCard({
       style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
     >
       <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[112px] w-full shrink-0" tile={priv ? <PrivLogo name={priv.name} path={priv.logoPath} /> : undefined}>
-        {badge ? <span className="absolute left-2.5 top-2.5">{isValidElement(badge) ? cloneElement(badge as React.ReactElement<{ newDays?: number | null; compact?: boolean }>, { newDays: l.newDays }) : badge}</span> : !seller ? <span className="absolute left-2.5 top-2.5"><ListingPill kind="hidden" newDays={l.newDays} /></span> : <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+        <div ref={fit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
+        {badge ? <span ref={fit.left as React.RefObject<HTMLSpanElement>} className="absolute left-2.5 top-2.5">{isValidElement(badge) ? cloneElement(badge as React.ReactElement<{ newDays?: number | null; compact?: boolean }>, { newDays: l.newDays, ...(managed && fit.level >= 1 ? { compact: true } : {}) }) : badge}</span> : !seller ? <span ref={fit.left as React.RefObject<HTMLSpanElement>} className="absolute left-2.5 top-2.5 inline-flex"><ListingPill kind="hidden" newDays={l.newDays} compact={managed && fit.level >= 1} /></span> : <span className={cn("absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold",
           seller ? (l.live ? "bg-[#E8F6EE] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]") : "bg-background/95 text-foreground")}>
           {badgeLabel}
         </span>}
-        {topRight && <div className="absolute right-2.5 top-2.5">{topRight}</div>}
+        {(topRight || managed) && <div ref={fit.right} className="absolute right-2.5 top-2.5 flex items-center gap-1.5">{managed && <ManagedBadge size="sm" hatOnly={fit.level >= 2} />}{topRight}</div>}
       </SectorArt>
       <div className="flex flex-1 flex-col p-3.5">
         {tag && <div className="mb-1.5">{tag}</div>}
