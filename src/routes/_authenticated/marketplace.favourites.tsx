@@ -243,7 +243,7 @@ function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<str
         <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
         <div className="flex shrink-0 gap-2">
           <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
-          <NdaButton listingId={f.id} onRequested={() => toast.success(t("NDA requested."))} />
+          <NdaButton listingId={f.id} onRequested={() => setSentName(f.listing?.codeName || f.listing?.refNo || t("This listing"))} />
         </div>
       </div>
       <div className="overflow-y-auto p-5"><ListingDetail t={f} /></div>

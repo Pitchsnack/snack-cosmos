@@ -249,6 +249,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           )}
         </DialogContent>
       </Dialog>
+      {sentName && <NdaSentDialog name={sentName} onClose={() => setSentName(null)} />}
     </div>
   );
 }
