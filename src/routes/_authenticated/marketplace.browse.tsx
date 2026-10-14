@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -229,9 +230,10 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
                     {[l.verified && t("Verified company"), l.hasFinancials && t("Verified financials"), l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
                   {tagOf(item.id)}
                   {(() => { const n = ndaOf(item.id); return <ListingPill kind={n ?? "hidden"} newDays={l.newDays} />; })()}
+                  {l.managed && <ManagedBadge size="sm" />}
                   {star(item.id)}
                 </div>
               </div>

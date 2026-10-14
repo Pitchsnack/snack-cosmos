@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import { ConnectButton } from "@/components/marketplace/connect-invite";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -324,8 +325,11 @@ export function InvestorBrowse() {
                 </div>
               </div>
               {tagOf(i.id)}
-              {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
-              <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />
+              <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
+                {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
+                {i.managed && <ManagedBadge size="sm" />}
+                <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />
+              </div>
             </div>
           ))}
         </div>
