@@ -239,9 +239,9 @@ function InvitationPanel({ r, index, total, onPrev, onNext, onClose }: { r: Buye
                 )}
                 {l?.description && <p className="text-[14px] text-[#434A5C] dark:text-muted-foreground">{l.description}</p>}
                 {figures.length > 0 && (
-                  <div className="grid grid-cols-3 overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
-                    {figures.map(([k, v], i) => (
-                      <div key={k} className={cn("border-[#E9EBF0] px-[14px] py-[11px] dark:border-border", i % 3 !== 2 && "border-r", i >= 3 || figures.length > 3 ? (i < Math.floor((figures.length - 1) / 3) * 3 ? "border-b" : "") : "")}>
+                  <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[12px] border border-[#E9EBF0] bg-[#E9EBF0] dark:border-border dark:bg-border">
+                    {figures.map(([k, v]) => (
+                      <div key={k} className="bg-card px-[14px] py-[11px]">
                         <div className="text-[12px] text-[#6B7280]">{k}</div>
                         <div className="text-[14.5px] font-bold">{v}</div>
                       </div>
