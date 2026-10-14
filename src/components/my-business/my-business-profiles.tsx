@@ -28,6 +28,8 @@ import { useAdminReview } from "@/components/my-business/admin-review-context";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { ManagedBadge } from "@/components/common/managed-badge";
+import { useManagedIds } from "@/hooks/use-managed-ids";
 import { SellerSetupBanner, useSellerSetup } from "@/components/my-business/signup-welcome";
 import { ReportOffers, ReportHeaderAction, reportPrice } from "@/components/my-business/report-offers";
 
@@ -245,6 +247,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   const adminReview = useAdminReview();
   const cover = adminReview ? adminReview.pendingCover : row?.live ? row?.cover_image_url ?? null : null;
   const ap = approvalOf(row);
+  const managed = useManagedIds("startup", [s.id]);
   const badge = (
     <span className={cn("absolute left-2.5 top-2.5 z-10 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-bold", row ? APPROVAL_TONE[ap] : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
       {row ? (ap === "live_edits_pending" ? "Live · edits pending" : APPROVAL_LABEL[ap]) : "Preview"}
@@ -254,6 +257,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
     <>
       <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} sector={s.sector} imageId={(row as { public_image_id?: string | null } | null)?.public_image_id ?? null} className="h-[120px] w-full rounded-none">
         {badge}
+        {managed.has(s.id) && <div className="absolute right-2.5 top-2.5 z-10"><ManagedBadge size="card" border={false} shadow /></div>}
       </SectorArt>
       <div className="px-3 pb-3">
         <div className="pt-2.5">
