@@ -17,6 +17,46 @@ export type DaMeta = {
 };
 export type ThreadEvent = { id: string; at: string; text: string; link: string | null; nda: { dealId: string; side: Side } | null };
 
+export type EnqMeta = {
+  key: string; firm: { id: string; name: string; sub: string }; clientCompany: string; clientSide: Side;
+  status: string; service: string; isNew: boolean; isFirm: boolean;
+};
+
+/** Advisor-enquiry conversations ('e:<advisor_conversations id>') the caller is in. */
+export async function enqThreads(sb: any, userId: string, as: As): Promise<EnqMeta[]> {
+  const E = await import("./advisor-enquiries.server");
+  let convs: any[] = [];
+  if (as === "advisor") {
+    const f = await myFirmIds(sb, userId);
+    if (!f.length) return [];
+    convs = (await sb.from("advisor_conversations").select("*").in("firm_profile_id", f)).data ?? [];
+  } else {
+    const org = await E.clientOrg(sb, userId, as);
+    if (!org) return [];
+    convs = (await sb.from("advisor_conversations").select("*").eq("client_side", as).eq("client_org_id", org)).data ?? [];
+  }
+  if (!convs.length) return [];
+  await E.sweepExpired(sb);
+  const [{ data: firms }, { data: es }] = await Promise.all([
+    sb.from("advisor_firms").select("id, name, firm_type, city").in("id", [...new Set(convs.map((c) => c.firm_profile_id))]),
+    sb.from("advisor_enquiries").select("conversation_id, status, service_key, read_at, created_at").in("conversation_id", convs.map((c) => c.id)).order("created_at", { ascending: false }),
+  ]);
+  const fm = Object.fromEntries((firms ?? []).map((f: any) => [f.id, f]));
+  const out: EnqMeta[] = [];
+  for (const c of convs) {
+    const last = (es ?? []).find((e: any) => e.conversation_id === c.id);
+    if (!last) continue;
+    const f = fm[c.firm_profile_id] ?? {};
+    const org = await E.orgInfo(sb, c.client_side, c.client_org_id);
+    out.push({
+      key: `e:${c.id}`, firm: { id: c.firm_profile_id, name: f.name ?? "Advisor", sub: [f.firm_type, f.city].filter(Boolean).join(" · ") },
+      clientCompany: org.name, clientSide: c.client_side, status: last.status, service: last.service_key,
+      isNew: as === "advisor" && last.status === "enquiry" && !last.read_at, isFirm: as === "advisor",
+    });
+  }
+  return out;
+}
+
 export const parseC = (key: string) => {
   const [, id, side] = key.split(":");
   return { daId: id, side: side as Side };
@@ -95,6 +135,22 @@ export async function daMember(sb: any, userId: string, key: string) {
 /** Everyone in a conversation, with each side's main contact. */
 export async function threadMembers(sb: any, key: string): Promise<Member[]> {
   if (key.startsWith("a:")) return [];
+  if (key.startsWith("e:")) {
+    const E = await import("./advisor-enquiries.server");
+    const { data: c } = await sb.from("advisor_conversations").select("*").eq("id", key.slice(2)).maybeSingle();
+    if (!c) return [];
+    const { data: firm } = await sb.from("advisor_firms").select("owner_user_id, name").eq("id", c.firm_profile_id).maybeSingle();
+    const org = await E.orgInfo(sb, c.client_side, c.client_org_id);
+    const ids = await E.orgUsers(sb, c.client_side, c.client_org_id);
+    const ents = [
+      { id: firm?.owner_user_id, role: "advisor" as Role, org: firm?.name ?? "Advisor", main: true },
+      ...ids.map((id, i) => ({ id, role: c.client_side as Role, org: org.name, main: i === 0 })),
+    ].filter((e) => e.id) as { id: string; role: Role; org: string; main: boolean }[];
+    const names = await userNames(sb, ents.map((e) => e.id));
+    const { data: us } = await sb.from("users").select("id, first_name").in("id", ents.map((e) => e.id));
+    const first = Object.fromEntries((us ?? []).map((u: any) => [u.id, u.first_name]));
+    return ents.map((e) => ({ ...e, name: names[e.id]?.name ?? "Someone", title: names[e.id]?.title ?? null, first: first[e.id] || (names[e.id]?.name ?? "Someone").split(" ")[0] }));
+  }
   let deal: any, entries: { id: string; role: Role; org: string; main: boolean }[] = [];
   if (key.startsWith("p:")) {
     ({ data: deal } = await sb.from("deal_pipelines").select("*").eq("id", key.slice(2)).single());
@@ -128,7 +184,7 @@ const STEP_EV: Record<string, string> = { legal_shared: "Deal moved to Offer & S
 
 /** Events shown in a conversation, worded for the reader; read from the deal's records. */
 export async function threadEvents(sb: any, userId: string, key: string): Promise<ThreadEvent[]> {
-  if (key.startsWith("a:")) return [];
+  if (key.startsWith("a:") || key.startsWith("e:")) return [];
   if (key.startsWith("c:")) {
     const m = await daMember(sb, userId, key);
     if (!m) return [];
