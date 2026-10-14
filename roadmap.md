@@ -35,3 +35,9 @@
 - [x] Phase 2: access page, ribbon, welcome note, sign-up invitation box and claim, feedback topic
 - [x] Phase 3: invitation/reminder/end emails, 14-day bar, free-term end, daily job, Admin Users free-plan line
 - [ ] Live check of Phase 3 with a real free-plan account; daily job reaches the site only after publishing
+
+## Connect & Invitations (brief lovable-connect-and-invitations_1)
+- [x] Stage 1: invitation records, Connect button + pop-up, old contact requests migrated/removed, Admin Invitations tab
+- [ ] Stage 2: Buyer › Invitations page, Invited you chip, Not interested/Reconsider, NDA-sent pop-up
+- [ ] Stage 3: Seller › Invitations page, New NDA request pop-up, Review investor, Congratulations cards
+- [ ] Stage 4: Invitation email, bell items, Connect requests plan wording, closing rules
