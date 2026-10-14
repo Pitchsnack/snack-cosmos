@@ -9,7 +9,10 @@ import {
   Info, Lock, LogIn, LogOut, Mail, MailCheck, Rocket, Ticket, Scale, Search, ShieldCheck, Sprout, Store, Tag, User, Users, type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { finishSignup, getSignupState, saveSignupAnswers } from "@/lib/signup.functions";
+import { finishSignup, getSignupState, saveSignupAnswers, saveSignupSector } from "@/lib/signup.functions";
+import { SellerTypeQuestion, ManyTypeQuestion, buyerWords, advisorWords, manyError } from "@/components/common/business-type-question";
+import { EMPTY_PICKS, type SectorPick, type SectorPicks } from "@/lib/business-types";
+import { useTranslation } from "@/i18n/language";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import streetSvg from "@/components/login/street.svg?raw";
 import { L } from "@/components/login/login-copy";
@@ -26,7 +29,7 @@ const FONT_URL = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Lo
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const WEB_RE = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i;
 type Lang = "th" | "en";
-type Step = 1 | 2 | 3 | 4 | 5 | 6;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type T = { th: string; en: string };
 
 const ICONS: Record<string, LucideIcon> = {
@@ -87,6 +90,8 @@ function SignupInner() {
   const fetchState = useServerFn(getSignupState);
   const saveAnswers = useServerFn(saveSignupAnswers);
   const finish = useServerFn(finishSignup);
+  const saveSector = useServerFn(saveSignupSector);
+  const { setLanguage: setAppLang } = useTranslation();
 
   const [lang, setLangState] = useState<Lang>("th");
   const t = (x: T) => x[lang];
@@ -114,6 +119,10 @@ function SignupInner() {
   const [provider, setProvider] = useState<string | null>(null);
   const [coName, setCoName] = useState(""); const [year, setYear] = useState(""); const [size, setSize] = useState(""); const [web, setWeb] = useState("");
   const [err5, setErr5] = useState<Record<string, boolean>>({});
+  // step 7: the sector question
+  const [sPick, setSPick] = useState<SectorPick | null>(null); const [sSector, setSSector] = useState<string | null>(null);
+  const [picks, setPicks] = useState<SectorPicks>(EMPTY_PICKS); const [agnostic, setAgnostic] = useState(false);
+  const [err7, setErr7] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -124,6 +133,8 @@ function SignupInner() {
     html.lang = lang; html.style.fontSize = lang === "th" ? "17.5px" : "16px"; document.title = S.title[lang];
     return () => { html.lang = prev.lang || "en"; html.style.fontSize = prev.size; };
   }, [lang]);
+  // The sector question reads the app's language; keep it in step with sign-up's switch.
+  useEffect(() => { setAppLang(lang); }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem(LANG_KEY, l); } catch { /* noop */ } };
 
   // Resume: a signed-in visitor lands on the right step, or where they land today.
@@ -149,7 +160,14 @@ function SignupInner() {
         writePending(null);
         if (!s.answers?.done_at && !(await claimOk())) return;
         if (!s.answers) { navigate({ to: "/tenants" }); return; }
-        if (s.answers.done_at) { setPersona(uid, s.answers.role); navigate({ to: myCompanyPath(s.answers.role) }); return; }
+        if (s.answers.done_at && s.signupDone) { setPersona(uid, s.answers.role); navigate({ to: myCompanyPath(s.answers.role) }); return; }
+        if (s.answers.done_at) {
+          // Draft made, sector question not answered yet: open the last step.
+          const co = s.answers.company;
+          if (co) { setCoName(co.name ?? ""); setYear(co.year ?? ""); setSize(co.size ?? ""); setWeb(co.website ?? ""); }
+          setRole(s.answers.role); setAnswers((a) => ({ ...a, [s.answers!.role]: s.answers!.first_answer })); restoreTypes(s.answers.first_answer, s.answers.investor_types); setEmail(s.email);
+          setStep(7); setReady(true); return;
+        }
         setRole(s.answers.role); setAnswers((a) => ({ ...a, [s.answers!.role]: s.answers!.first_answer })); restoreTypes(s.answers.first_answer, s.answers.investor_types); setEmail(s.email);
         setProvider(s.provider && s.provider !== "email" ? s.provider : null);
         setStep(s.confirmed ? 5 : 4);
@@ -193,8 +211,10 @@ function SignupInner() {
     ? (individual ? S.chipRel.individual : agent ? S.chipRel.agent : corpType ? typeOpt(corpType)?.t : undefined)
     : opts.find((o) => o.v === answer)?.t;
   // Buyers: six steps (five once they pick Individual Investor). Others: five.
-  const order: Step[] = buyer && !individual ? [1, 2, 6, 3, 4, 5] : [1, 2, 3, 4, 5];
-  const NAMES: Record<Step, { th: string; en: string }> = { 1: S.stepRole, 2: role ? S.step2[role] : S.step2.seller, 6: S.stepType, 3: S.stepAcc, 4: S.stepCode, 5: S.stepCo };
+  const order: Step[] = buyer && !individual ? [1, 2, 6, 3, 4, 5, 7] : [1, 2, 3, 4, 5, 7];
+  const NAMES: Record<Step, { th: string; en: string }> = { 1: S.stepRole, 2: role ? S.step2[role] : S.step2.seller, 6: S.stepType, 3: S.stepAcc, 4: S.stepCode, 5: S.stepCo, 7: S.stepSec[role ?? "seller"] };
+  const Lx = (en: string, th: string) => (lang === "th" ? th : en);
+  const err7Text = !err7 || !role ? null : role === "seller" ? (sSector ? null : t(S.eSeller)) : manyError(picks, agnostic, Lx);
   const shownN = Math.max(1, order.indexOf(step) + 1);
   const afterAbout: Step = buyer && !individual ? 6 : 3;
   function restoreTypes(ans: string, list?: string[] | null) {
@@ -334,6 +354,22 @@ function SignupInner() {
         name: coName.trim(), year: individual ? null : year, size: individual ? null : size,
         website: web.trim() ? web.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "") : null,
       } });
+      void res;
+      setBusy(false); setFail(false); go(7);
+    } catch { setBusy(false); setFail(true); }
+  }
+
+  async function finishAll() {
+    if (busy || !role) return;
+    const bad = role === "seller" ? !sSector : !!manyError(picks, agnostic, Lx);
+    if (bad) {
+      setErr7(true);
+      setTimeout(() => document.querySelector<HTMLElement>(".su-sector [role=radio], .su-sector button")?.focus(), 0);
+      return;
+    }
+    setBusy(true); setFail(false);
+    try {
+      const res = await saveSector({ data: role === "seller" ? { sector: sSector, pick: sPick as never } : { picks: agnostic ? null : (picks as never), agnostic } });
       const { data } = await supabase.auth.getSession();
       if (data.session) setPersona(data.session.user.id, res.role);
       await qc.invalidateQueries();
@@ -405,7 +441,7 @@ function SignupInner() {
           <Switch />
         </div>
         <div className="lg-mid">
-          <div className="lg-col su-col">
+          <div className={`lg-col su-col${step === 7 ? " su-wide" : ""}`}>
             <div className="lg-card su-card">
               {inv && (step <= 3 || step === 6) && (() => {
                 const plan = role ? inv.plans?.[role] : null;
@@ -437,7 +473,7 @@ function SignupInner() {
               ) : <>
               <div className="su-prog">
                 <div className="su-prow"><b>{t(NAMES[step])}</b><span>{t(S.progress).replace("{n}", String(shownN)).replace("{N}", String(order.length))}</span></div>
-                <div className="su-bars">{order.map((n, k) => <i key={n} className={k < shownN ? "on" : ""} />)}</div>
+                <div className="su-bars" style={{ gridTemplateColumns: `repeat(${order.length},1fr)` }}>{order.map((n, k) => <i key={n} className={k < shownN ? "on" : ""} />)}</div>
               </div>
               {!ready ? <div className="su-load"><LoaderCircle className="lg-spin" /></div> : (
                 <div className="su-step" key={step}>
@@ -646,8 +682,24 @@ function SignupInner() {
                       </div>
                       <div className="su-info">{role === "seller" ? <Lock size={16} /> : role === "buyer" ? <EyeOff size={16} /> : <Eye size={16} />}<span>{t(agent ? S.privacyAgent : S.privacy5[role])}</span></div>
                       {fail && <Err text={S.other} />}
-                      <div className="su-actions"><Primary type="submit" label={S.go} busyLabel={S.going} /></div>
+                      <div className="su-actions"><Primary type="submit" label={S.cont} busyLabel={S.saving} /></div>
                     </form>
+                  </>}
+
+                  {step === 7 && role && <>
+                    <h1 ref={titleRef} tabIndex={-1}>{t(S.s7[role][0])}</h1>
+                    <p className="lg-cline su-line">{t(S.s7[role][1])}</p>
+                    <div className="su-sector" key={lang}>
+                      {role === "seller" ? (
+                        <SellerTypeQuestion pick={sPick} sector={sSector} onChange={(p, sec) => { setSPick(p); setSSector(sec); if (sec) setErr7(false); }} />
+                      ) : (
+                        <ManyTypeQuestion picks={picks} agnostic={agnostic} words={role === "buyer" ? buyerWords(Lx) : advisorWords(Lx)}
+                          onChange={(p, ag) => { setPicks(p); setAgnostic(ag); if (!manyError(p, ag, Lx)) setErr7(false); }} />
+                      )}
+                    </div>
+                    {err7Text && <div role="alert"><Err text={err7Text} /></div>}
+                    {fail && <Err text={S.other} />}
+                    <div className="su-actions"><BackBtn to={5} /><Primary label={S.go} busyLabel={S.going} onClick={() => void finishAll()} /></div>
                   </>}
                 </div>
               )}

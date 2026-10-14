@@ -140,3 +140,14 @@
 .su-tick { flex: none; width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--field-edge); display: grid; place-items: center; color: var(--paper); }
 .su-choice.on .su-tick { background: var(--pick); border-color: var(--pick); }
 .su-step h1 { text-wrap: balance; }
+
+/* Last step: the sector question in sign-up's look */
+.su-col.su-wide { max-width: 560px; }
+.su-sector { margin-top: 18px; }
+.su-sector button[aria-pressed="true"], .su-sector button[aria-checked="true"] {
+  border: 1.5px solid var(--pick-edge) !important; background: var(--pick-bg) !important; box-shadow: 0 0 0 3px var(--pick-ring); color: var(--text) !important;
+}
+.su-sector button[aria-pressed="true"] svg, .su-sector button[aria-checked="true"] svg { color: var(--pick); }
+.su-sector button[aria-pressed="false"]:hover, .su-sector button[aria-checked="false"]:hover { background: var(--hover-bg) !important; border-color: var(--hover-edge) !important; }
+.su-sector [role="radiogroup"] > button, .su-sector [role="group"] > button { border-width: 1.5px; min-height: 82px; }
+.su[data-lang="th"] .su-sector [role="radiogroup"] > button span, .su[data-lang="th"] .su-sector [role="group"] > button span { font-size: .76rem; }
