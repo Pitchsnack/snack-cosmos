@@ -689,7 +689,7 @@ function SignupInner() {
                   {step === 7 && role && <>
                     <h1 ref={titleRef} tabIndex={-1}>{t(S.s7[role][0])}</h1>
                     <p className="lg-cline su-line">{t(S.s7[role][1])}</p>
-                    <div className="su-sector" key={lang}>
+                    <div className="su-sector">
                       {role === "seller" ? (
                         <SellerTypeQuestion pick={sPick} sector={sSector} onChange={(p, sec) => { setSPick(p); setSSector(sec); if (sec) setErr7(false); }} />
                       ) : (
