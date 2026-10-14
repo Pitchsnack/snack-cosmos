@@ -139,9 +139,9 @@ function RootComponent() {
         <ViewModeProvider>
           <Outlet />
         </ViewModeProvider>
+        <ManagedTipHost />
       </LanguageProvider>
       <Toaster richColors position="top-right" />
-      <ManagedTipHost />
     </QueryClientProvider>
   );
 }
