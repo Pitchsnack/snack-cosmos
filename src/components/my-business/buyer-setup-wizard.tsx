@@ -203,6 +203,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   // ---- validation ----
   const thai = a.country === "Thailand";
   const individual = a.role === "individual";
+  /** After sign-up an Individual Investor's firm question asks only for the address. */
+  const addrOnly = individual && nameShort;
   const leaks = descriptionLeaks(a.desc, a.name, a.web);
   const descErr = a.desc.trim() ? descriptionError(a.desc) : null;
   const agent = a.role === "agent";
@@ -374,11 +376,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         body: <><TypeTicks value={a.acts} onChange={(v) => set({ acts: v, type: v[0] ?? "" }, { acts_for_types: v })} /><Err m={forced.type && errors.type} /></> }
       : { req: true, t: tr("What type of investor is your firm?"), h: tr("Sellers see this, and it sets the artwork on your card."),
         body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
-    name: { req: true, t: nameShort && !individual ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
-      h: nameShort && !individual ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : `Sellers see "${tName}" instead of your name until they approve your NDA.`,
+    name: { req: true, t: addrOnly ? tr("What is your address?") : nameShort ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
+      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : `Sellers see "${tName}" instead of your name until they approve your NDA.`,
       body: (
-        <div className="space-y-4">
-          <div>
+        <div className={addrOnly ? "pt-[6px]" : "space-y-4"}>
+          {!addrOnly && (<div>
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="flex-1">
                 <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
@@ -397,7 +399,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             </div>
             <Err m={show("name")} />
             <Err m={show("year")} />
-          </div>
+          </div>)}
           {!individual && (
             <div>
               <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
