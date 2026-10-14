@@ -179,7 +179,7 @@ export const threadMessages = createServerFn({ method: "GET" })
       const firstTeam = members.find((m) => teamIds.has(m.id))!;
       const kept = members.filter((m) => !teamIds.has(m.id));
       members.length = 0;
-      members.push({ id: TEAM, name: "PitchSnack team", first: "PitchSnack team", title: null, org: firstTeam.org, role: firstTeam.role, main: firstTeam.main || true, team: true } as typeof firstTeam & { team: boolean }, ...kept);
+      members.push({ id: TEAM, name: "PitchSnack team", first: "PitchSnack team", title: null, org: firstTeam.org, role: firstTeam.role, main: firstTeam.main || true, team: true }, ...kept);
     }
     // Seen = someone in the other organisation opened it (PitchSnack Help: anyone else).
     const otherRead = (reads ?? []).filter((r: any) => !members.length || otherIds.has(r.user_id)).map((r: any) => r.read_at as string).sort().pop() ?? null;

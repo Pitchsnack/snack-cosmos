@@ -9,7 +9,7 @@ import { sideUsers, userNames, dealParties, type Side } from "./advisor-pipeline
 
 export type As = "seller" | "buyer" | "advisor";
 export type Role = "seller" | "buyer" | "advisor";
-export type Member = { id: string; name: string; first: string; title: string | null; org: string; role: Role; main: boolean };
+export type Member = { id: string; name: string; first: string; title: string | null; org: string; role: Role; main: boolean; team?: boolean };
 export type DaMeta = {
   key: string; dealId: string; daId: string; clientSide: Side; withSide: Side;
   firm: { id: string; name: string; sub: string }; other: string; codeName: string | null; ref: string;
