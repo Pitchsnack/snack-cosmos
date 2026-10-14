@@ -106,7 +106,7 @@ export const sendInvitation = createServerFn({ method: "POST" })
       user_id: inv.userId, notification_type: "deal",
       title: `${name} invited you to view their business`,
       message: "Browse their listed profile. If you're interested, request an NDA to see the company's name and details.",
-      link_url: "/marketplace/browse",
+      link_url: `/marketplace/invitations?open=${row.id}`,
     });
     const a = await planAccess(context.userId);
     return { id: row.id as string, sentAt: row.sent_at as string, investorRef: inv.refNo, listingRef: hp.ref_no as string | null, left: requestsLeft(a, "contact"), termMonths: (a.plan?.term_months as number | undefined) ?? null };
