@@ -1,3 +1,4 @@
+import { ManagedBadge } from "@/components/common/managed-badge";
 import type React from "react";
 import { useState } from "react";
 import { BadgeCheck, Building2, ChevronDown, ChevronUp } from "lucide-react";
@@ -67,6 +68,7 @@ function Cover({ f, wide, noStatus }: { f: AdvisorFirm; wide?: boolean; noStatus
     <>
       {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
       {!noStatus && <div className="absolute right-3 top-3"><StatusPill status={f.status} /></div>}
+      {noStatus && f.managed && <div className="absolute right-3 top-3"><ManagedBadge size="sm" shadow /></div>}
     </>
   );
   if (f.logoUrl) {

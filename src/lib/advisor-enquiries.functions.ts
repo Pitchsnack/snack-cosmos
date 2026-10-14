@@ -49,7 +49,9 @@ export const browseAdvisors = createServerFn({ method: "GET" })
     const { data: live } = await sb.from("advisor_firms").select("id").eq("status", "live");
     const ids = (live ?? []).map((r: any) => r.id);
     const { loadFirmCards } = await import("@/lib/advisor-firm.functions");
-    const firms = (await loadFirmCards(sb, ids, new Set(), { docs: true })).map(publicFirm);
+    const { data: owners } = ids.length ? await sb.from("advisor_firms").select("id, owner_user_id").in("id", ids) : { data: [] };
+    const managed = await (await import("@/lib/managed.server")).managedFirmIds(sb, owners ?? []);
+    const firms = (await loadFirmCards(sb, ids, new Set(), { docs: true })).map(publicFirm).map((f) => ({ ...f, managed: managed.has(f.id) }));
     const states: Record<string, EnquiryState> = w.orgId ? await statesFor(sb, w.side, w.orgId) : {};
     // Your advisors also lists firms no longer live when engaged? Only live firms show on this page.
     const p = (await people(sb, [context.userId]))[context.userId];
