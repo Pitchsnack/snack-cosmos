@@ -1,3 +1,4 @@
+import { useManagedIds } from "@/hooks/use-managed-ids";
 import { useEffect, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -331,6 +332,7 @@ function useOwnCard(p: BuyerProfile, org: BuyerOrg) {
 function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
   const shell = "overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card";
   const { props } = useOwnCard(p, org);
+  const managedIds = useManagedIds("investor", [p.investor_id]);
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
@@ -338,7 +340,7 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
         <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open tone="green" onClick={() => onView("private")} />
       </div>
       {view === "public" ? (
-        <BuyerBrowseCard {...props} onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
+        <BuyerBrowseCard {...props} managed={managedIds.has(p.investor_id ?? "")} onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
       ) : (
         <div className={shell}>{privateBody}</div>
       )}
@@ -471,7 +473,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill} />
         {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
-          <BuyerBrowseCard {...props} expanded editable={(k) => openProfileEdit({ section: PART_SEC[k], from: "public" })} cardFooter={
+          <BuyerBrowseCard {...props} managed={managedIds.has(p.investor_id ?? "")} expanded editable={(k) => openProfileEdit({ section: PART_SEC[k], from: "public" })} cardFooter={
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
               <span className="truncate">{title} · {p.ref_no}</span><span className="shrink-0">{since}</span>
             </div>

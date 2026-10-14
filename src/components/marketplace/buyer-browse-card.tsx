@@ -222,7 +222,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
         <span ref={fit.left as React.RefObject<HTMLSpanElement>} className={cn("absolute left-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground", panel && managed ? "top-3" : "top-2.5")}>
           <EyeOff className="h-3 w-3" />Name hidden
         </span>
-        {(topRight || status || managed) && <div ref={fit.right} className={cn("absolute flex items-center gap-1.5", panel && managed ? "right-3 top-3" : "right-2.5 top-2.5")}>{status && <StatusPill status={status} />}{managed && <ManagedBadge size={panel ? "panel" : "card"} border={false} shadow hatOnly={fit.level >= 1} />}{topRight}</div>}
+        {(topRight || status || managed) && <div ref={fit.right} className={cn("absolute flex items-center gap-1.5", panel && managed ? "right-3 top-3" : "right-2.5 top-2.5")}>{managed && <ManagedBadge size={status ? "sm" : panel ? "panel" : "card"} border={!!status} shadow={!status} hatOnly={fit.level >= 1} />}{status && <StatusPill status={status} />}{topRight}</div>}
       </BuyerCover>
       <div className="p-4">
         {tag && <div className="mb-1.5">{tag}</div>}
@@ -234,17 +234,17 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
 }
 
 /** Buyer's own "How sellers see it" preview — same card. */
-export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands, relation = null, empty, status, expanded, cardFooter, editable }: {
-  b: PublicBuyer; onClick?: () => void; className?: string; revLabel?: string | null;
+export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands, relation = null, empty, status, expanded, cardFooter, editable, managed }: {
+  b: PublicBuyer; managed?: boolean; onClick?: () => void; className?: string; revLabel?: string | null;
   bands?: { aum?: string | null; ticket?: string | null; rev?: string | null };
   relation?: CardInvestor["relation"]; empty?: string; status?: ListingStatus; expanded?: boolean; cardFooter?: React.ReactNode; editable?: (k: CardPart) => void;
 }) {
   return (
-    <PublicInvestorCard onClick={onClick} className={className} empty={empty} status={status} expanded={expanded} cardFooter={cardFooter} editable={editable} i={{
+    <PublicInvestorCard showManaged={managed} onClick={onClick} className={className} empty={empty} status={status} expanded={expanded} cardFooter={cardFooter} editable={editable} i={{
       refNo: b.refNo, codeName: b.codeName, name: null, type: b.type, city: b.city, country: b.country,
       description: b.description, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: (b as PublicBuyer & { geography?: string | null }).geography ?? null,
       verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revLabel,
-      aumBand: bands?.aum, ticketBand: bands?.ticket, revBand: bands?.rev, relation,
-    }} />
+      aumBand: bands?.aum, ticketBand: bands?.ticket, revBand: bands?.rev, relation, managed,
+    } as CardInvestor} />
   );
 }
