@@ -358,7 +358,15 @@ export const dealAdvisorProfile = createServerFn({ method: "GET" })
     const { data: da } = await sb.from("deal_advisors").select("*").eq("deal_id", deal.id).eq("side", data.side).maybeSingle();
     if (!da) throw new Error("No advisor on this side of the deal");
     const { loadFirmCards } = await import("./advisor-firm.functions");
-    const [firm] = await loadFirmCards(sb, [da.firm_profile_id]);
+    // Full address: Admin, the firm's owner, or a seller holding a valid NDA with this firm.
+    const { data: own } = await sb.from("advisor_firms").select("owner_user_id").eq("id", da.firm_profile_id).maybeSingle();
+    const { data: adm } = await context.supabase.rpc("is_account_admin", { _uid: context.userId });
+    let full = !!adm || own?.owner_user_id === context.userId;
+    if (!full && (await S.callerSide(context.supabase, context.userId, deal)) === "seller") {
+      const { data: nda } = await sb.from("advisor_ndas").select("id").eq("firm_profile_id", da.firm_profile_id).eq("client_side", "seller").eq("seller_org_id", deal.startup_id).gt("expires_at", new Date().toISOString()).limit(1);
+      full = !!nda?.length;
+    }
+    const [firm] = await loadFirmCards(sb, [da.firm_profile_id], full ? new Set([da.firm_profile_id]) : new Set());
     const signer = (await S.userNames(sb, [da.advisor_user_id]))[da.advisor_user_id];
     const parties = (await S.dealParties(sb, [deal]))[deal.id]!;
     return { firm: firm!, client: parties[data.side as Side].name, signer: signer ?? null };

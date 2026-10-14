@@ -99,7 +99,7 @@ export const listMyAdvisorFirms = createServerFn({ method: "GET" })
   });
 
 /** Firm cards by id with the service client (callers check access first). Private files and documents are left out. */
-export async function loadFirmCards(sb: any, ids: string[]): Promise<AdvisorFirm[]> {
+export async function loadFirmCards(sb: any, ids: string[], fullAddressFor: Set<string> = new Set()): Promise<AdvisorFirm[]> {
   if (!ids.length) return [];
   const { data: rows } = await sb.from("advisor_firms").select("*").in("id", ids);
   if (!rows?.length) return [];
@@ -116,7 +116,10 @@ export async function loadFirmCards(sb: any, ids: string[]): Promise<AdvisorFirm
     for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
   }
   const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: (creds.data ?? []).filter((c: any) => c.status !== "rejected"), docs: [], reviews: reviews.data ?? [] };
-  return (await withOwnerEmails(rows)).map((r: any) => toFirm(r, kids, urls));
+  // The full address only for firms named in fullAddressFor; others show "{place}, {country}".
+  return (await withOwnerEmails(rows)).map((r: any) => toFirm(fullAddressFor.has(r.id) ? r : {
+    ...r, addr_street: null, addr_unit: null, addr_subdistrict: null, addr_district: null, addr_postal: null, registration_no: null,
+  }, kids, urls));
 }
 
 /** Admin: one firm in the advisor's own shape, for Edit in Advisors Directory. */

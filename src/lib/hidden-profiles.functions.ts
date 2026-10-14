@@ -317,6 +317,6 @@ export const checkListingName = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin.from("hidden_profiles").select("startup_id, code_name").ilike("code_name", name.replace(/[\\%_]/g, (c) => `\\${c}`));
     if (error) throw new Error(error.message);
-    const taken = (rows ?? []).some((r) => r.startup_id !== data.startupId && r.code_name.trim().toLowerCase() === name.toLowerCase());
+    const taken = (rows ?? []).some((r) => r.startup_id !== data.startupId && (r.code_name ?? "").trim().toLowerCase() === name.toLowerCase());
     return { available: !taken };
   });

@@ -2653,7 +2653,7 @@ export type Database = {
           asking_price_band: string | null
           asking_price_thb: number | null
           assignee_id: string | null
-          code_name: string
+          code_name: string | null
           cover_art: string | null
           cover_image_url: string | null
           created_at: string
@@ -2710,7 +2710,7 @@ export type Database = {
           asking_price_band?: string | null
           asking_price_thb?: number | null
           assignee_id?: string | null
-          code_name: string
+          code_name?: string | null
           cover_art?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -2767,7 +2767,7 @@ export type Database = {
           asking_price_band?: string | null
           asking_price_thb?: number | null
           assignee_id?: string | null
-          code_name?: string
+          code_name?: string | null
           cover_art?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -5821,6 +5821,7 @@ export type Database = {
           last_name: string | null
           primary_role_id: string | null
           primary_tenant_id: string | null
+          signup_done_at: string | null
           status: Database["public"]["Enums"]["user_status"]
           updated_at: string
           updated_by: string | null
@@ -5841,6 +5842,7 @@ export type Database = {
           last_name?: string | null
           primary_role_id?: string | null
           primary_tenant_id?: string | null
+          signup_done_at?: string | null
           status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
           updated_by?: string | null
@@ -5861,6 +5863,7 @@ export type Database = {
           last_name?: string | null
           primary_role_id?: string | null
           primary_tenant_id?: string | null
+          signup_done_at?: string | null
           status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
           updated_by?: string | null
@@ -6128,6 +6131,10 @@ export type Database = {
     Functions: {
       account_role_of: { Args: { _uid: string }; Returns: string }
       active_tenant_id: { Args: { _user_id: string }; Returns: string }
+      address_place: {
+        Args: { _country: string; _district: string; _province: string }
+        Returns: string
+      }
       advisor_child_move: {
         Args: { _fid: string; _field: string }
         Returns: undefined
@@ -6200,6 +6207,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_sector_answer: {
+        Args: { _agnostic: boolean; _picks: Json }
         Returns: boolean
       }
       is_account_admin: { Args: { _uid: string }; Returns: boolean }

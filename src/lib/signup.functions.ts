@@ -160,6 +160,8 @@ export const finishSignup = createServerFn({ method: "POST" })
       profile_id: profileId, done_at: new Date().toISOString(), updated_at: new Date().toISOString(),
     }).eq("user_id", uid);
     if (error) throw new Error(error.message);
+    // Until sign-up's sector step ships, Your company finishes sign-up.
+    await sb.from("users").update({ status: "Active", signup_done_at: new Date().toISOString() }).eq("id", uid).is("signup_done_at", null);
     await sb.from("users").update({ status: "Active" }).eq("id", uid);
     return { role: a.role as SignupRole, profileId };
   });
