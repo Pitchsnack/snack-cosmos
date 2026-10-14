@@ -19,7 +19,7 @@
 - Sector picking uses one SetSectorPicker (components/common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic —.
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts,.
 - Roles/plans: account_role checked in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
-- Contact requests: contact_requests table, writes only via contact-requests.functions.ts; Accept opens the pipeline at the approved-NDA step so both flows share one deal row.
+- Seller Connect: listing_invitations (one open per listing+investor), writes only via invitations.functions.ts; status derived server-side from the invitation + latest NDA pipeline row. contact_requests is deprecated (old rows migrated).
 - Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows.
 - Contact enquiries: sendContactEnquiry (rate-limited); email-identity.ts drives replies and Sending rules.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
