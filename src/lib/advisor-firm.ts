@@ -125,6 +125,8 @@ export type FirmDocument = { id?: string; path: string; name: string; type: stri
 export type FirmReview = { id: string; role: "seller" | "buyer"; detail: string | null; service: string | null; stars: number; comment: string | null; at: string };
 
 export type AdvisorFirm = {
+  /** Browse advisors only: a PitchSnack private client. */
+  managed?: boolean;
   id: string; refNo: string; name: string; firmType: string; logoPath: string | null; logoUrl: string | null; logoSource: "upload" | "enrich" | null;
   description: string | null; yearFounded: number | null; city: string | null; country: string | null;
   services: string[]; fees: Record<string, string>; feeDetails: Record<string, FeeDetail>;
