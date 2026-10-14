@@ -145,6 +145,7 @@ export type EnquiryThread = {
   status: string; service: string; enquiryId: string | null; isFirm: boolean;
   enquiries: EnquiryCard[]; proposals: (ProposalDTO & { enquiryId: string })[];
   closedLine: string | null;
+  firmServices: string[]; firmFees: Record<string, any>;
 };
 
 /** Cards, events and header facts of one enquiry conversation, worded for the reader. */
@@ -191,8 +192,17 @@ export async function enquiryThread(sb: any, userId: string, m: NonNullable<Awai
     firm: { id: firm?.id, name: firmName, sub: [firm?.firm_type, firm?.city].filter(Boolean).join(" · ") },
     client: { company: org.name, side: conv.client_side, name: sender?.name ?? "", first: sender?.first ?? "" },
     status: last?.status ?? "enquiry", service: last?.service_key ?? "", enquiryId: last?.id ?? null, isFirm,
-    enquiries, proposals, closedLine,
+    enquiries, proposals, closedLine, firmServices: [], firmFees: {},
   };
+  if (isFirm) {
+    const { rowToFee } = await import("@/lib/advisor-firm.functions");
+    const [{ data: fr }, { data: fees }] = await Promise.all([
+      sb.from("advisor_firms").select("services").eq("id", conv.firm_profile_id).maybeSingle(),
+      sb.from("advisor_firm_fees").select("*").eq("firm_id", conv.firm_profile_id),
+    ]);
+    thread.firmServices = fr?.services ?? [];
+    thread.firmFees = Object.fromEntries((fees ?? []).map((f: any) => [f.service, rowToFee(f)]));
+  }
   return { thread, events };
 }
 

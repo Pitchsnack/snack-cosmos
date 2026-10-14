@@ -21,7 +21,7 @@ async function requireAdvisor(sb: any, userId: string) {
   if (!data?.advisor_view) throw new Error("The Advisor view is not turned on for your account.");
 }
 
-function rowToFee(f: any): FeeDetail {
+export function rowToFee(f: any): FeeDetail {
   const pct = f.pct_min != null ? (f.pct_max != null ? `${Number(f.pct_min)}–${Number(f.pct_max)}` : `${Number(f.pct_min)}`) : "";
   return { type: (f.fee_type ?? "other") as FeeType, amount: f.amount_thb != null ? String(f.amount_thb) : "", pct, words: f.own_words ?? "" };
 }
