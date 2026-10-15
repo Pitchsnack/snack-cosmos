@@ -2914,6 +2914,24 @@ export type Database = {
         }
         Relationships: []
       }
+      help_thread_status: {
+        Row: {
+          done_at: string
+          done_by: string
+          thread_key: string
+        }
+        Insert: {
+          done_at?: string
+          done_by: string
+          thread_key: string
+        }
+        Update: {
+          done_at?: string
+          done_by?: string
+          thread_key?: string
+        }
+        Relationships: []
+      }
       hidden_profiles: {
         Row: {
           approval_status: string
