@@ -62,13 +62,42 @@ export async function ensureLinked(userId: string) {
   return { sb, p: { ...p, investor_id: inv.id }, investorId: inv.id as string };
 }
 
-export const getMyBuyerInvestor = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { sb, p, investorId } = await ensureLinked(context.userId);
+type Resolved = { sb: any; p: any; investorId: string; extra: boolean };
+
+/**
+ * The investor profile to work on: the caller's own linked one (no id, or its id),
+ * or, for Admin only, one of the extra investor profiles Admin made with + Add Investor Profile.
+ * Anyone else's profile throws "This profile isn't yours.".
+ */
+export async function resolveBuyer(userId: string, investorId?: string | null): Promise<Resolved> {
+  if (!investorId) return { ...(await ensureLinked(userId)), extra: false };
+  const sb = await admin();
+  const { data: bp } = await sb.from("buyer_profiles").select("*").eq("user_id", userId).maybeSingle();
+  if (bp?.investor_id === investorId) return { sb, p: bp, investorId, extra: false };
+  const { roleOf } = await import("./plan-access.server");
+  const [{ data: inv }, { data: linked }, role] = await Promise.all([
+    sb.from("investors").select("id, created_by, wizard").eq("id", investorId).maybeSingle(),
+    sb.from("buyer_profiles").select("user_id").eq("investor_id", investorId).maybeSingle(),
+    roleOf(userId),
+  ]);
+  if (!inv || linked || role !== "admin" || inv.created_by !== userId || !(inv.wizard as any)?.admin_profile) throw new Error("This profile isn't yours.");
+  const w = ((inv.wizard as any)?.bp ?? {}) as Record<string, unknown>;
+  return { sb, p: { status: "draft", ...w }, investorId, extra: true };
+}
+
+/** Buyer-side fields: the account's buyer profile, or (Admin's extra profiles) kept on the investor record. */
+async function writeBp(r: Resolved, userId: string, bp: Record<string, unknown>) {
+  if (!r.extra) return r.sb.from("buyer_profiles").update(bp).eq("user_id", userId);
+  const { data: cur } = await r.sb.from("investors").select("wizard").eq("id", r.investorId).single();
+  const w = (cur?.wizard ?? {}) as Record<string, any>;
+  return r.sb.from("investors").update({ wizard: { ...w, bp: { ...(w.bp ?? {}), ...bp } } }).eq("id", r.investorId);
+}
+
+async function loadBuyerData(context: { userId: string }, r: Resolved) {
+    const { sb, p, investorId } = r;
     const [{ data: inv }, { data: bv }, { data: links }, { data: up }, { data: au }] = await Promise.all([
       sb.from("investors").select("*").eq("id", investorId).single(),
-      sb.from("buyer_verifications").select("status, decision_note, submitted_at").eq("user_id", context.userId).maybeSingle(),
+      r.extra ? Promise.resolve({ data: null }) : sb.from("buyer_verifications").select("status, decision_note, submitted_at").eq("user_id", context.userId).maybeSingle(),
       sb.from("startup_investors").select("startups(id, startup_name)").eq("investor_id", investorId),
       sb.from("user_profiles").select("title").eq("user_id", context.userId).maybeSingle(),
       sb.auth.admin.getUserById(context.userId),
@@ -150,7 +179,70 @@ export const getMyBuyerInvestor = createServerFn({ method: "GET" })
         status: (bv?.status ?? "none") as "none" | "pending" | "verified" | "more_info" | "declined",
         note: bv?.decision_note as string | null,
       },
+      extra: r.extra,
     };
+}
+
+export const getMyBuyerInvestor = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => loadBuyerData(context, { ...(await ensureLinked(context.userId)), extra: false }));
+
+/** The buyer wizard and Buyer › My Company: one investor profile by id, owner checked here. */
+export const getBuyerInvestorById = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    try { return { ok: true as const, data: await loadBuyerData(context, await resolveBuyer(context.userId, data.id)) }; }
+    catch (e) { if ((e as Error).message === "This profile isn't yours.") return { ok: false as const, data: null }; throw e; }
+  });
+
+/** Ids of the investor profiles this account holds: its own, plus Admin's extra ones (newest first). */
+export const listMyInvestorProfileIds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await admin();
+    const { roleOf } = await import("./plan-access.server");
+    const [{ data: bp }, role] = await Promise.all([sb.from("buyer_profiles").select("investor_id").eq("user_id", context.userId).maybeSingle(), roleOf(context.userId)]);
+    const ids: string[] = [];
+    if (role === "admin") {
+      const { data } = await sb.from("investors").select("id").eq("created_by", context.userId).eq("wizard->>admin_profile", "true").order("created_at", { ascending: false });
+      for (const x of data ?? []) ids.push(x.id);
+    }
+    if (bp?.investor_id) ids.push(bp.investor_id);
+    return { ids, admin: role === "admin" };
+  });
+
+/**
+ * + Add Investor Profile: a new Draft investor profile made at once (setup not done).
+ * Admin: no limit, each one owned by Admin. Buyer accounts: only while they have none.
+ */
+export const addInvestorProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await admin();
+    const { roleOf, ONE_COMPANY_MSG } = await import("./plan-access.server");
+    const role = await roleOf(context.userId);
+    const { data: bp } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", context.userId).maybeSingle();
+    if (role !== "admin") {
+      if (bp?.investor_id) throw new Error(ONE_COMPANY_MSG);
+      const r = await ensureLinked(context.userId);
+      return { id: r.investorId };
+    }
+    // Admin's first buyer-side profile is its own linked one; later ones are extra profiles.
+    if (!bp?.investor_id) { const r = await ensureLinked(context.userId); return { id: r.investorId }; }
+    const [{ data: tenant }, { data: ref }, { data: me }] = await Promise.all([
+      sb.from("tenants").select("id").eq("tenant_code", "control").maybeSingle(),
+      sb.rpc("next_inv_ref"),
+      sb.from("users").select("email").eq("id", context.userId).maybeSingle(),
+    ]);
+    if (!tenant) throw new Error("Control workspace not found.");
+    const { data: inv, error } = await sb.from("investors").insert({
+      tenant_id: tenant.id, investor_name: "", email: me?.email ?? null, logo_url: null, media: [],
+      wizard: { admin_profile: true, answered: [], bp: { ref_no: ref, status: "draft" } },
+      created_by: context.userId, updated_by: context.userId,
+    }).select("id").single();
+    if (error) throw new Error(error.message);
+    return { id: inv.id as string };
   });
 
 const txt = (n: number) => z.string().trim().max(n).nullable().optional();
@@ -185,10 +277,11 @@ async function relationOf(sb: any, userId: string) {
 
 export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => Patch.parse(d))
+  .inputValidator((d) => Patch.extend({ investor_id: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { sb, investorId } = await ensureLinked(context.userId);
-    const relation = await relationOf(sb, context.userId);
+    const r = await resolveBuyer(context.userId, data.investor_id);
+    const { sb, investorId } = r;
+    const relation = r.extra ? ((r.p.buyer_relation ?? null) as string | null) : await relationOf(sb, context.userId);
     // Same checks as Review & complete (section 5); the buyer can't save past them.
     const problem =
       (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
@@ -253,7 +346,8 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     if (data.deal_types) bp.deal_types = data.deal_types;
     if (data.investment_focus) bp.geography = data.investment_focus.join(", ") || null;
     if (data.ticket_band !== undefined) { const b = bandOf(data.ticket_band); bp.ticket_min = b ? b.lo * 1e6 : null; bp.ticket_max = b?.hi != null ? b.hi * 1e6 : null; }
-    const { error: e2 } = await sb.from("buyer_profiles").update(bp).eq("user_id", context.userId);
+    if (data.logo_path !== undefined && !r.extra) bp.logo_url = data.logo_path || null;
+    const { error: e2 } = await writeBp(r, context.userId, bp);
     if (e2) throw new Error(e2.message);
     await sb.from("investor_activity").insert({ investor_id: investorId, tenant_id: (await sb.from("investors").select("tenant_id").eq("id", investorId).single()).data.tenant_id, activity_type: "buyer_profile_updated", activity_details: {}, created_by: context.userId });
     return { ok: true };
@@ -261,9 +355,9 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
 
 export const createMyBuyerUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["logo", "slot-1", "slot-2", "slot-3"]), ext: z.string().regex(/^[a-z0-9]{2,5}$/i) }).parse(d))
+  .inputValidator((d) => z.object({ kind: z.enum(["logo", "slot-1", "slot-2", "slot-3"]), ext: z.string().regex(/^[a-z0-9]{2,5}$/i), investor_id: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { sb, investorId } = await ensureLinked(context.userId);
+    const { sb, investorId } = await resolveBuyer(context.userId, data.investor_id);
     const { data: inv } = await sb.from("investors").select("tenant_id").eq("id", investorId).single();
     const file = `${data.kind}-${Date.now()}.${data.ext.toLowerCase()}`;
     const path = `${inv.tenant_id}/${investorId}/${file}`;
@@ -323,8 +417,8 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Wizard.parse(d))
   .handler(async ({ data, context }) => {
-    const { sb, p, investorId } = await ensureLinked(context.userId);
-    if (data.investor_id !== investorId) throw new Error("Not your profile.");
+    const r = await resolveBuyer(context.userId, data.investor_id);
+    const { sb, p, investorId } = r;
     const { data: cur } = await sb.from("investors").select("investor_name, website_url, wizard").eq("id", investorId).single();
     if (data.description && p.status === "live") {
       const bad = descriptionError(data.description) || descriptionLeaks(data.description, data.investor_name ?? cur.investor_name ?? "", data.website_url ?? cur.website_url ?? "").length;
@@ -369,7 +463,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     }
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
     if (error) throw new Error(error.message);
-    const { error: e2 } = await sb.from("buyer_profiles").update(bp).eq("user_id", context.userId);
+    const { error: e2 } = await writeBp(r, context.userId, bp);
     if (e2) throw new Error(e2.message);
     return { ok: true };
   });
