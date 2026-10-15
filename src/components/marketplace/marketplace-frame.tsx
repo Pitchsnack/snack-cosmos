@@ -17,6 +17,7 @@ import { useIsMarketplace, usePersona, lastAdminPath, type Persona } from "@/hoo
 import logoWhite from "@/assets/pitchsnack-white.png";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslation } from "@/i18n/language";
+import { TakeTourButton } from "@/components/welcome-tour/welcome-tour";
 
 export function useUserIdentity() {
   const { data } = useSessionContext();
@@ -138,6 +139,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
         ) : (
           <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
         )}
+        {showMenu && <TakeTourButton tone="dark" />}
         <LanguageSwitcher tone="dark" />
         <ThemeToggle />
       </div>

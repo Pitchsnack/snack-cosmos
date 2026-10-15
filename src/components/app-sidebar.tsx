@@ -31,6 +31,7 @@ import { KeyRound,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { WelcomeTourHost } from "@/components/welcome-tour/welcome-tour";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 import { UserMenu } from "@/components/user-menu";
@@ -536,6 +537,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
         <GlobalBar showMenu onMenu={() => setMobileOpen(true)} />
+        <WelcomeTourHost />
         <Sheet open={mobileOpen} modal={!tourMenu} onOpenChange={(o) => { if (!tourMenu) setMobileOpen(o); }}>
           <SheetContent
             side="left"
@@ -580,6 +582,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
     <GlobalBar showMenu={false} onLogo={toggle} />
+    <WelcomeTourHost />
     <div
       className="grid min-h-0 w-full flex-1 overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
       style={
