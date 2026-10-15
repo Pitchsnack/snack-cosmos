@@ -41,7 +41,7 @@ async function loadFacts(sb: Sb, startupId: string): Promise<EntryFacts & { tena
   if (!s) throw new Error("Entry not found");
   const { data: f } = await sb.from("startup_founders").select("full_name").eq("startup_id", startupId);
   return {
-    ...s,
+    ...s, startup_name: s.startup_name ?? "",
     people: ((f ?? []) as { full_name: string | null }[]).map((x) => x.full_name ?? "").filter(Boolean),
     customers: [],
   };

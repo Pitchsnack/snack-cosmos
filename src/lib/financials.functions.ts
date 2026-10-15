@@ -150,7 +150,7 @@ export const getStartupFinancials = createServerFn({ method: "GET" })
 
     return {
       startupId,
-      startupName: startup.startup_name,
+      startupName: startup.startup_name ?? "",
       registeredName: startup.registered_name ?? null,
       // The DBD record is authoritative for the registered names. Without one,
       // the card falls back to the startup's own Registered Name / Company Name.
