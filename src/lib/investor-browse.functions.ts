@@ -115,7 +115,7 @@ export const listSellerFavourites = createServerFn({ method: "GET" })
       sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId),
       sb.from("startup_users").select("startup_id").eq("user_id", context.userId),
     ]);
-    const stIds = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
+    const stIds = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
     const { data: pipes } = stIds.length
       ? await sb.from("deal_pipelines").select("buyer_user_id, hidden_profile_id, status, nda_requested_at, nda_approved_at, nda_expires_at").in("startup_id", stIds)
       : { data: [] };

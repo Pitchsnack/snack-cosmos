@@ -265,6 +265,11 @@ export const listStartups = createServerFn({ method: "GET" })
     if (data.productTag) q = q.contains("product_tags", [data.productTag]);
     if (data.marketTag) q = q.contains("market_tags", [data.marketTag]);
     if (data.ids?.length) q = q.in("id", data.ids);
+    if (data.scope === "workspace") {
+      const { activeWorkspaceId } = await import("@/lib/workspace-scope.server");
+      const ws = await activeWorkspaceId(context.userId);
+      if (ws) q = q.eq("tenant_id", ws);
+    }
 
     switch (data.sort) {
       case "created_desc": q = q.order("created_at", { ascending: false }); break;

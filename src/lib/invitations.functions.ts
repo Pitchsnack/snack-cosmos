@@ -19,7 +19,7 @@ async function myLiveListing(userId: string) {
     sb.from("startup_users").select("startup_id").eq("user_id", userId),
     sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", userId),
   ]);
-  const ids = [...new Set([...(su ?? []), ...(own ?? [])].map((x: any) => x.startup_id))];
+  const ids = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(userId, [...new Set([...(su ?? []), ...(own ?? [])].map((x: any) => x.startup_id as string))]);
   if (!ids.length) return null;
   const { isBuyerVisible } = await import("@/lib/hidden-profile");
   const { data: hps } = await sb.from("hidden_profiles").select("id, startup_id, ref_no, code_name, approval_status, live").in("startup_id", ids);
@@ -283,7 +283,7 @@ async function sellerStartupIds(userId: string) {
     sb.from("startup_users").select("startup_id").eq("user_id", userId),
     sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", userId),
   ]);
-  return [...new Set([...(su ?? []), ...(own ?? [])].map((x: any) => x.startup_id as string))];
+  return (await import("@/lib/workspace-scope.server")).scopeStartupIds(userId, [...new Set([...(su ?? []), ...(own ?? [])].map((x: any) => x.startup_id as string))]);
 }
 
 async function sellerRows(userId: string): Promise<SellerInvitation[]> {

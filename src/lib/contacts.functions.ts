@@ -62,7 +62,7 @@ export const listContacts = createServerFn({ method: "GET" })
     } else {
       const { data: own } = await sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId);
       const { data: su } = await sb.from("startup_users").select("startup_id").eq("user_id", context.userId);
-      const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
+      const ids = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
       if (ids.length) {
         const r = await sb.from("deal_pipelines").select("*").in("startup_id", ids).not("nda_approved_at", "is", null).neq("status", "declined");
         rows = r.data ?? [];
