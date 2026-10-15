@@ -471,7 +471,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         <ManyTypeQuestion picks={a.picks} agnostic={a.sectors.includes(SECTOR_AGNOSTIC)} words={buyerWords(L)} error={forced.sectors ? errors.sectors : null}
           onChange={(p, ag) => { const v = ag ? [SECTOR_AGNOSTIC] : picksToSectors(p); set({ sectors: v, picks: p }, { preferred_industries: v, sector_picks: ag ? null : p }); }} />
       ) },
-    photos: { req: true, t: L("Add your logo and photos", "เพิ่มโลโก้และรูปภาพ"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
+    photos: { req: true, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
       body: (
         <LogoPhotosStep L={L} name={a.name || tr("Your firm")}
           sectorLine={[typeLabel(agent ? a.acts[0] ?? "" : a.type), [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
@@ -620,7 +620,8 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, on
           <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
             {rows.map(([k, v, id, kind, err, tag], i) => {
               const empty = !v;
-              const status = kind === "req" && (empty || err) ? <b className="font-semibold text-[#B42318]">{tr("Missing")}</b>
+              const status = id === "photos" && (empty || err) ? <b className="flex items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{tr("Not answered")}</b>
+                : kind === "req" && (empty || err) ? <b className="font-semibold text-[#B42318]">{tr("Missing")}</b>
                 : id === "desc" && err ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b>
                 : empty ? <span className="text-[#9CA3AF]">{tr("Not set")}</span> : null;
               return (
@@ -630,7 +631,7 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, on
                     {status ?? v}
                     {!status && tag && <span className={`ml-2 rounded px-1.5 py-0.5 text-[10.5px] font-semibold ${tag === "Range" ? "bg-[#EEF0FF] text-[#4338CA]" : "bg-muted text-muted-foreground"}`}>{tag}</span>}
                   </span>
-                  <button type="button" className="text-[13px] font-semibold text-[#2563EB] hover:underline" onClick={() => onEdit(id)}>{tr("Edit")}</button>
+                  <button type="button" className="text-[13px] font-semibold text-[#2563EB] hover:underline" onClick={() => onEdit(id)}>{id === "photos" && !v ? tr("Answer") : tr("Edit")}</button>
                 </div>
               );
             })}
