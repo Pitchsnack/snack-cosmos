@@ -87,9 +87,9 @@ export function listingTerms(s: ListingSource) {
 
 /** Revenue band exactly as chosen in the wizard; never the exact figure. */
 export function revenueBand(raw?: string | null): string | null {
-  const v = (raw ?? "").trim();
+  const v = (raw ?? "").trim().replace(/^ต่ำกว่า\s*/, "Below ");
   if (!v) return null;
-  if (/[–-]|under|over/i.test(v)) return v;
+  if (/[–-]|under|over|below|\+/i.test(v)) return v;
   return null;
 }
 
