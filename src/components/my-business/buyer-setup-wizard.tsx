@@ -507,7 +507,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         </div>
       ) },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
-      body: <Review a={a} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
+      body: <Review a={a} med={med} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
         onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[step.id];
