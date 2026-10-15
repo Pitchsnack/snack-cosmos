@@ -205,10 +205,10 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
                 <div className="mx-2 my-[5px] h-px bg-[#F0F1F4] dark:bg-white/10" />
               </div>
             ) : (
-              <Button variant="ghost"
+              <Button variant="unstyled" size="unstyled"
                 key={c.key}
                 onClick={() => { setSel(c.key); setMobileChat(true); if (!adminView) setPanel(false); }}
-                className={cn("block w-full rounded-[10px] py-[11px] pb-3 pl-[14px] pr-3 text-left", c.key === sel ? "bg-[#F2F3F6]" : "hover:bg-[#F7F8FA]")}
+                className={cn("block h-auto w-full rounded-[10px] py-[11px] pb-3 pl-[14px] pr-3 text-left", c.key === sel ? "bg-[#F2F3F6]" : "hover:bg-[#F7F8FA]")}
               >
                 <div className="flex items-center">
                   <span className={cn("min-w-0 truncate text-[14px] text-[#111827]", c.unread ? "font-bold" : "font-medium")}>{c.name}</span>
