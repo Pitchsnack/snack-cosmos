@@ -514,7 +514,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
 function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: () => void }) {
   const all = n >= N;
   return (
-    <div className="mb-4 flex flex-col gap-3 rounded-[14px] border border-[#CFD2FB] bg-[#EEF0FF] px-[18px] py-4 min-[860px]:flex-row min-[860px]:items-center dark:border-[#2E3570] dark:bg-[#1B2140]">
+    <div data-tour-banner data-tour-n={N} data-tour-m={3} className="mb-4 flex flex-col gap-3 rounded-[14px] border border-[#CFD2FB] bg-[#EEF0FF] px-[18px] py-4 min-[860px]:flex-row min-[860px]:items-center dark:border-[#2E3570] dark:bg-[#1B2140]">
       <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-card text-[#4338CA] min-[860px]:grid"><Flag className="h-5 w-5" /></div>
       <div className="min-w-0 flex-1">
         <div className="text-[14.5px] font-bold">{n === 0 ? "Set up your investor profile" : "Finish setting up your investor profile"}</div>
@@ -527,7 +527,7 @@ function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: () => voi
           <div className="h-1 w-32 overflow-hidden rounded-full bg-card"><div className="h-full bg-[#1E2A4A] dark:bg-[#818CF8]" style={{ width: `${(n / N) * 100}%` }} /></div>
         </div>
       </div>
-      <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={onOpen}>{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
+      <Button size="sm" data-tour-btn className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={onOpen}>{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
     </div>
   );
 }
