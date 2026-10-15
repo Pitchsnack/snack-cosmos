@@ -5,7 +5,7 @@ import { normPicks, picksToSectors, type SectorPicks } from "@/lib/business-type
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Circle, ExternalLink, Globe, Info, Landmark, Loader2, Newspaper, ShieldCheck, X } from "lucide-react";
+import { Check, Circle, ExternalLink, Eye, Globe, Info, Landmark, Loader2, Newspaper, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import logoBlack from "@/assets/pitchsnack-black.png";
