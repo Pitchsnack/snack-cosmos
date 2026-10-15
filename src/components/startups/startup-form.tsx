@@ -74,7 +74,7 @@ import type { EntryFacts, HiddenProfileRow } from "@/lib/hidden-profile";
 import type { ListingSource } from "@/lib/public-listing";
 import { Eye } from "lucide-react";
 import { StartupStepper } from "./startup-stepper";
-import { THB_REVENUE_BANDS, type SellerPrefill } from "@/lib/seller-wizard";
+import { THB_REVENUE_BANDS, normRevBand, type SellerPrefill } from "@/lib/seller-wizard";
 import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapshot";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
@@ -485,7 +485,7 @@ export function StartupForm({
   const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
   const [enriching, setEnriching] = useState(false);
   // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
-  const [lastYearRevenue, setLastYearRevenue] = useState(startup?.last_year_revenue ?? prefill?.lastYearRevenue ?? "");
+  const [lastYearRevenue, setLastYearRevenue] = useState(normRevBand(startup?.last_year_revenue ?? prefill?.lastYearRevenue ?? ""));
   const [companySize, setCompanySize] = useState(startup?.company_size ?? prefill?.companySize ?? "");
 
   const [owningAgentUserId, setOwningAgent] = useState("");
@@ -1077,7 +1077,7 @@ export function StartupForm({
                 <SelectContent>
                   <SelectItem value="none">— Select —</SelectItem>
                   {revenueOptions.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                    <SelectItem key={s} value={s}>{tr(s)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1374,7 +1374,7 @@ export function StartupForm({
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
               {revenueOptions.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s}>{tr(s)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1882,14 +1882,14 @@ export function StartupForm({
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{tr(s)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Visibility</Label>
             <Select value={visibility} onValueChange={setVisibility}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{VISIBILITIES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{VISIBILITIES.map((s) => <SelectItem key={s} value={s}>{tr(s)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>

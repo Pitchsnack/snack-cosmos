@@ -13,7 +13,7 @@ import { LISTING_KEYS } from "@/lib/seller-wizard";
 import { bandInText, bandOf, fmtThb } from "@/lib/asking-price";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
-  SELLER_RELATIONS, THB_REVENUE_BANDS, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
+  SELLER_RELATIONS, THB_REVENUE_BANDS, normRevBand, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
   isValidUrl, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
   sellerValid, STEP_SHORT, STEP_FULL, stepIdx, laterKey, isMissed, joinNames, type StepKey,
 } from "@/lib/seller-wizard";
@@ -296,7 +296,7 @@ export function SellerWizard({
         onChange={(e) => set({ year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={`e.g. ${THIS_YEAR - 10}`} />
         {d.year.length === 4 && !valid.year && <p className="mt-1.5 text-[13px] text-destructive">Enter a year between 1800 and {THIS_YEAR}.</p>}</div> },
     rev: { t: tr("What was your company's revenue last year?"), h: tr("An approximate band is enough. Exact figures stay private."),
-      body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={d.rev} onPick={(v) => pick({ rev: v })} /> },
+      body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={normRevBand(d.rev)} onPick={(v) => pick({ rev: v })} /> },
     size: { t: tr("What is the size of your company?"), h: tr("Number of employees."),
       body: <Radio grid list={WIZARD_SIZES} value={d.size} onPick={(v) => pick({ size: v })} /> },
     sector: { t: tr("What does your business do?"), h: tr("Pick the closest match. We'll put you in the right sector for buyers."),
@@ -351,7 +351,7 @@ export function SellerWizard({
             [tr("Business address"), addressLine(d.addr), 1],
             [tr("Website"), d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
             [tr("Year founded"), d.year, 3],
-            [tr("Revenue last year"), d.rev, 4],
+            [tr("Revenue last year"), d.rev ? tr(normRevBand(d.rev)) : d.rev, 4],
             [tr("Company size"), WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
             [tr("Sector"), d.sector, 6],
             [tr("Licences & standards"), [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],

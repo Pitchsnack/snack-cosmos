@@ -22,6 +22,11 @@ export const THB_REVENUE_BANDS: string[] = [
   "฿500M – 1B",
   "฿1B +",
 ];
+/** Older answers were saved with the Thai wording for the lowest band. */
+export const normRevBand = (v: string | null | undefined): string => {
+  const t = (v ?? "").trim();
+  return /^ต่ำกว่า/.test(t) ? "Below ฿50M" : t;
+};
 
 /** Values line up with the form's company-size options; last one is its own band. */
 export const WIZARD_SIZES: { value: string; label: string }[] = [
