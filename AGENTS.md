@@ -4,10 +4,10 @@
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
 - Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx (prefs: seller_report_prefs).
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
-- Messages: one page (messages-page.tsx); keys p:/a:/c:<deal_advisor>:<side>; c: threads derived in message-threads.server.ts, membership checked every call.
+- Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest admin receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles stay read-only for one edit surface.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - Loading overlay opt-in (meta.pageLoading); LOI note in config/loi-request.json.
-- Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked sector image → sector's oldest image → drawn default; files in private public-images bucket via server fns (public buckets are blocked).
+- Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked → oldest → drawn; private public-images bucket via server fns.
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only by Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
 - Email alerts: wording defaults in src/config/email-alerts.ts, Admin overrides/switches in email_alert_settings; every send goes through sendAlert (email-alerts.server.ts), which checks the user switch and logs to email_alert_log; pipeline emails fire from pipeline log() so steps and emails never drift.

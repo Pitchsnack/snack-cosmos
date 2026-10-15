@@ -1,3 +1,4 @@
+import { adminHelpCount } from "@/lib/admin-help.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
 import { messagesBadgeCount } from "@/lib/messages.functions";
@@ -97,4 +98,11 @@ export function InvitationsCountBadge({ collapsed = false }: { collapsed?: boole
   const tone = persona === "seller" ? "bg-[#F6A823] text-[#0E162F]" : "bg-[#4338CA] text-white";
   if (collapsed) return <span data-mkt-badge data-rail className={`absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full px-1 text-[9px] font-bold leading-none ${tone}`}>{label}</span>;
   return <span data-mkt-badge className={`ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11.5px] font-bold ${tone}`}>{label}</span>;
+}
+
+export function AdminMessagesBadge() {
+  const fn = useServerFn(adminHelpCount);
+  const { data = 0 } = useQuery({ queryKey: ["messages", "admin-count"], queryFn: () => fn(), refetchInterval: 5000 });
+  if (!data) return null;
+  return <span data-mkt-badge className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data > 9 ? "9+" : data}</span>;
 }

@@ -48,6 +48,11 @@
   --color-info-foreground: var(--info-foreground);
   --color-link: var(--link);
   --color-link-foreground: var(--link-foreground);
+  --color-help-seller: var(--plan-seller);
+  --color-help-buyer: var(--plan-buyer);
+  --color-help-advisor: var(--plan-advisor);
+  --color-help-soft: var(--help-soft);
+  --color-help-ink: var(--help-ink);
 
 
   --color-sidebar: var(--sidebar-background);
@@ -69,6 +74,8 @@
   --plan-seller: #F6A823;
   --plan-buyer: #4338CA;
   --plan-advisor: #0F766E;
+  --help-soft: #FEF3DE;
+  --help-ink: #3A2606;
   --radius: 0.625rem;
 
   --background: hsl(220 20% 97%);
@@ -341,3 +348,17 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .managed-badge .managed-hat { transition: transform .18s ease; }
 .managed-badge.is-open .managed-hat { transform: rotate(-10deg) translateY(-1px); }
 @media (prefers-reduced-motion: reduce) { .managed-badge .managed-hat { transition: none; } .managed-badge.is-open .managed-hat { transform: none; } }
+
+.help-initials { color: var(--card); }
+.help-seller { background: var(--plan-seller); }
+.help-buyer { background: var(--plan-buyer); }
+.help-advisor { background: var(--plan-advisor); }
+.admin-messages { background: var(--card); color: var(--card-foreground); border-color: var(--border); }
+.admin-messages [class*="bg-white"] { background-color: var(--card); }
+.admin-messages [class*="text-[#111827]"], .admin-messages [class*="text-[#374151]"] { color: var(--card-foreground); }
+.admin-messages [class*="text-[#6B7280]"], .admin-messages [class*="text-[#9CA3AF]"] { color: var(--muted-foreground); }
+.admin-messages [class*="border-[#"] { border-color: var(--border); }
+.admin-messages [class*="bg-[#F3F4F6]"], .admin-messages [class*="bg-[#F2F3F6]"] { background: var(--secondary); color: var(--secondary-foreground); }
+.admin-messages [class*="bg-[#FEF3DE]"] { background: var(--help-soft); color: var(--help-ink); }
+.admin-messages [class*="bg-[#F6A823]"] { background: var(--plan-seller); color: var(--accent-foreground); }
+.dark { --help-soft: #3A2B15; --help-ink: #FEF3DE; }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { ArrowUp, ChevronLeft, FileText, GitBranch, Lock, Paperclip, Search, Users, X } from "lucide-react";
+import { ArrowUp, ChevronLeft, Copy, FileText, GitBranch, Lock, Paperclip, Search, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePersona } from "@/hooks/use-marketplace";
 import { listPipeline, type PipelineRow } from "@/lib/pipeline.functions";
@@ -16,7 +16,9 @@ import { NdaDialog, LoiDialog, ReportViewer, InvestorProfile, SellerProfile } fr
 import { AdvisorNdaDialog, AdvisorProfileDialog } from "@/components/pipeline/advisor-bits";
 import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
-import { tr } from "@/i18n/language";
+import { tr, useTranslation } from "@/i18n/language";
+import { Button } from "@/components/ui/button";
+import { adminHelpSummaries, type HelpProfile } from "@/lib/admin-help.functions";
 import { HatMark } from "./hat-mark";
 import { tf } from "@/components/advisor-browse/enquiry-dialogs";
 import { EnquiryCardView, EnquiryHeaderActions, ProposalCardView, enqStatusLabel } from "@/components/advisor-browse/enquiry-chat";
@@ -29,7 +31,7 @@ import type { EnqMeta, EnquiryThread } from "@/lib/messages.functions";
  */
 type Side = "seller" | "buyer";
 type Conv = {
-  key: string; kind: "p" | "a" | "c" | "e"; enq?: EnqMeta | null; name: string; person: string | null; sub: string; codeName: string | null;
+  profile?: HelpProfile; key: string; kind: "p" | "a" | "c" | "e"; enq?: EnqMeta | null; name: string; person: string | null; sub: string; codeName: string | null;
   p: PipelineRow | null; adv: AdvDeal | null; meta: DaMeta | null;
   who: { label: string; dot: string } | null;
   unread: number; last: { body: string; mine: boolean; at: string; from: string | null } | null; startAt: string | null;
@@ -76,18 +78,22 @@ function advDates(d: AdvDeal) {
   return [d.ndaAt, d.reportAt, d.loiAt, d.joinedAt, d.legalAt, d.spaAt, d.paymentAt];
 }
 
-export function MessagesPage() {
+export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
+  const { language } = useTranslation();
   const { persona } = usePersona();
   const as = persona as Role;
   const pFn = useServerFn(listPipeline);
   const aFn = useServerFn(listAdvisorPipeline);
   const tFn = useServerFn(threadSummaries);
-  const { data: rows = [] } = useQuery({ queryKey: ["pipeline", persona], queryFn: () => pFn({ data: { as: persona as Side } }), enabled: as !== "advisor" });
-  const { data: advData } = useQuery({ queryKey: ["advisor-pipeline"], queryFn: () => aFn(), enabled: as === "advisor" });
-  const { data: sums = [] } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => tFn({ data: { as } }), refetchInterval: 2500, refetchIntervalInBackground: true });
+  const hFn = useServerFn(adminHelpSummaries);
+  const { data: helpSums = [], error: helpError, isPending: helpPending } = useQuery({ queryKey: ["messages", "admin-help"], queryFn: () => hFn(), enabled: adminView, refetchInterval: 5000 });
+  const { data: rows = [] } = useQuery({ queryKey: ["pipeline", persona], queryFn: () => pFn({ data: { as: persona as Side } }), enabled: !adminView && as !== "advisor" });
+  const { data: advData } = useQuery({ queryKey: ["advisor-pipeline"], queryFn: () => aFn(), enabled: !adminView && as === "advisor" });
+  const { data: sums = [] } = useQuery({ queryKey: ["messages", "threads", persona], queryFn: () => tFn({ data: { as } }), enabled: !adminView, refetchInterval: 2500, refetchIntervalInBackground: true });
 
   const [sel, setSel] = useState<string | null>(null);
   const convs: Conv[] = useMemo(() => {
+    if (adminView) return helpSums.map((s): Conv => ({ key: s.key, kind: "a", profile: s.profile, p: null, adv: null, meta: null, name: s.profile.name, person: null, sub: s.profile.company, codeName: null, who: { label: `${tr(cap(s.profile.role))} · ${s.profile.company}`, dot: DOT[s.profile.role] }, unread: s.unread, last: s.last, startAt: null }));
     const sm = Object.fromEntries(sums.map((s) => [s.key, s]));
     const out: Conv[] = [];
     if (as !== "advisor") {
@@ -132,7 +138,7 @@ export function MessagesPage() {
     const help = sums.find((s) => s.key.startsWith("a:"));
     if (help) out.unshift({ key: help.key, kind: "a", p: null, adv: null, meta: null, who: null, name: tr("Help desk"), person: null, sub: "", codeName: null, unread: help.key === sel ? 0 : help.unread, last: help.last, startAt: null });
     return out;
-  }, [rows, advData, sums, as, sel]);
+  }, [rows, advData, sums, as, sel, adminView, helpSums, language]);
 
   const [q, setQ] = useState("");
   const [mobileChat, setMobileChat] = useState(false);
@@ -147,7 +153,7 @@ export function MessagesPage() {
   const shown = convs.filter((c) => {
     const s = q.trim().toLowerCase();
     if (!s) return true;
-    return [c.name, c.person, c.codeName, c.who?.label, c.last?.body].some((x) => x?.toLowerCase().includes(s));
+    return [c.name, c.sub, c.person, c.codeName, c.who?.label, c.last?.body].some((x) => x?.toLowerCase().includes(s));
   });
   const current = convs.find((c) => c.key === sel) ?? null;
 
@@ -175,19 +181,20 @@ export function MessagesPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-6 pt-6 md:px-8">
-      <h1 className="text-[30px] font-bold leading-tight">Messages</h1>
-      <div ref={card} style={{ height: cardH ?? undefined }} className="relative mt-5 flex h-[calc(100vh-260px)] min-h-[520px] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white">
+      <h1 className="text-[30px] font-bold leading-tight">{adminView ? tr("Messages") : "Messages"}</h1>
+      {adminView && helpError && <p role="alert" className="text-destructive">{tr("Unable to open Help desk messages.")}</p>}
+      <div ref={card} style={{ height: cardH ?? undefined }} className={cn(adminView && "admin-messages", "relative mt-5 flex h-[calc(100vh-260px)] min-h-[520px] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white")}>
         <div className={cn("flex w-full shrink-0 flex-col border-r border-[#F0F1F4] min-[760px]:w-[300px]", mobileChat && "max-[759px]:hidden")}>
           <label className="flex h-14 shrink-0 items-center gap-2 border-b border-[#F0F1F4] px-5">
             <Search className="h-4 w-4 text-[#9CA3AF]" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search conversations" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-[#9CA3AF]" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={adminView ? tr("Search name, company or message") : "Search"} aria-label="Search conversations" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-[#9CA3AF]" />
           </label>
           <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
-            {shown.length === 0 && <div className="py-8 text-center text-[13px] text-[#9CA3AF]">{convs.length ? "No conversations match." : "No conversations yet."}</div>}
-            {shown.map((c) => c.kind === "a" ? (
+            {shown.length === 0 && <div className="py-8 text-center text-[13px] text-[#9CA3AF]">{adminView ? (helpPending ? tr("Loading…") : tr(convs.length ? "No conversations match." : "No messages yet.")) : convs.length ? "No conversations match." : "No conversations yet."}</div>}
+            {shown.map((c) => c.kind === "a" && !adminView ? (
               <div key={c.key}>
-                <button
-                  onClick={() => { setSel(c.key); setMobileChat(true); setPanel(false); }}
+                <Button variant="unstyled" size="unstyled"
+                  onClick={() => { setSel(c.key); setMobileChat(true); if (!adminView) setPanel(false); }}
                   aria-label={c.last ? (c.unread ? `${tr("Help desk")}, ${tr("new message")}, ${listTime(c.last.at)}` : `${tr("Help desk")}, ${listTime(c.last.at)}`) : tr("Help desk")}
                   className={cn("flex h-11 w-full items-center rounded-[10px] pl-[14px] pr-3 text-left hover:bg-[#F2F3F6] dark:hover:bg-white/5", c.key === sel && "bg-[#F2F3F6] dark:bg-white/5")}
                 >
@@ -195,14 +202,14 @@ export function MessagesPage() {
                   <span className="ml-2 whitespace-nowrap text-[14px] font-medium text-[#374151] dark:text-[#E5E7EB]">{tr("Help desk")}</span>
                   {c.unread > 0 && <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />}
                   <span className={cn("shrink-0 text-[12px] text-[#9CA3AF]", c.unread > 0 ? "ml-2" : "ml-auto pl-2")}>{c.last ? listTime(c.last.at) : ""}</span>
-                </button>
+                </Button>
                 <div className="mx-2 my-[5px] h-px bg-[#F0F1F4] dark:bg-white/10" />
               </div>
             ) : (
-              <button
+              <Button variant="unstyled" size="unstyled"
                 key={c.key}
-                onClick={() => { setSel(c.key); setMobileChat(true); setPanel(false); }}
-                className={cn("block w-full rounded-[10px] py-[11px] pb-3 pl-[14px] pr-3 text-left", c.key === sel ? "bg-[#F2F3F6]" : "hover:bg-[#F7F8FA]")}
+                onClick={() => { setSel(c.key); setMobileChat(true); if (!adminView) setPanel(false); }}
+                className={cn("block h-auto w-full rounded-[10px] py-[11px] pb-3 pl-[14px] pr-3 text-left", adminView ? c.key === sel ? "bg-secondary text-secondary-foreground" : "hover:bg-secondary" : c.key === sel ? "bg-[#F2F3F6]" : "hover:bg-[#F7F8FA]")}
               >
                 <div className="flex items-center">
                   <span className={cn("min-w-0 truncate text-[14px] text-[#111827]", c.unread ? "font-bold" : "font-medium")}>{c.name}</span>
@@ -211,17 +218,17 @@ export function MessagesPage() {
                 </div>
                 {c.who && (
                   <div className="my-[3px] flex items-center gap-1.5 text-[12px] leading-4 text-[#6B7280]">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: c.who.dot }} />
+                    <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", adminView && c.profile && `help-${c.profile.role}`)} style={adminView ? undefined : { background: c.who.dot }} />
                     <span className="truncate">{[c.who.label, c.codeName].filter(Boolean).join(" · ")}</span>
                   </div>
                 )}
                 <div className={cn("mt-0.5 truncate text-[13px]", c.unread ? "text-[#374151]" : "text-[#6B7280]")}>{preview(c)}</div>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
         {current ? (
-          <Chat key={current.key} c={current} as={as} panel={panel && (!!current.p || !!current.adv || current.kind === "c")} setPanel={setPanel} onBack={() => setMobileChat(false)} hiddenMobile={!mobileChat} />
+          <Chat key={current.key} c={current} as={adminView ? "seller" : as} adminView={adminView} panel={panel && (adminView || !!current.p || !!current.adv || current.kind === "c")} setPanel={setPanel} onBack={() => setMobileChat(false)} hiddenMobile={!mobileChat} />
         ) : (
           <div className="hidden flex-1 place-items-center text-[13px] text-[#9CA3AF] min-[760px]:grid">Select a conversation</div>
         )}
@@ -236,14 +243,15 @@ type Item =
   | { kind: "group"; id: string; sender: string; mine: boolean; msgs: ThreadMessage[] }
   | { kind: "card"; id: string; card: { t: "q"; x: EnquiryThread["enquiries"][number] } | { t: "r"; x: EnquiryThread["proposals"][number] } };
 
-function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: Role; panel: boolean; setPanel: (b: boolean) => void; onBack: () => void; hiddenMobile: boolean }) {
+function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: Role; adminView?: boolean; panel: boolean; setPanel: (b: boolean) => void; onBack: () => void; hiddenMobile: boolean }) {
   const qc = useQueryClient();
   const mFn = useServerFn(threadMessages);
   const readFn = useServerFn(markThreadRead);
   const sendFn = useServerFn(sendMessage);
   const upFn = useServerFn(messageUploadUrl);
   const urlFn = useServerFn(messageFileUrl);
-  const { data } = useQuery({ queryKey: ["messages", "thread", c.key], queryFn: () => mFn({ data: { key: c.key } }), refetchInterval: 2500 });
+  const { data } = useQuery({ queryKey: ["messages", "thread", c.key], queryFn: () => mFn({ data: { key: c.key } }), refetchInterval: adminView ? 5000 : 2500 });
+  const profile = adminView ? ((data as any)?.adminProfile as HelpProfile | null) ?? c.profile : null;
   const [dialog, setDialog] = useState<Dialog>(null);
   const [people, setPeople] = useState(false);
   const pipeBtn = useRef<HTMLButtonElement>(null);
@@ -268,7 +276,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
     if (!data) return;
     const key = ["messages", "threads"];
     qc.setQueriesData({ queryKey: key }, (old: any) => Array.isArray(old) ? old.map((t: any) => (t.key === c.key ? { ...t, unread: 0 } : t)) : old);
-    readFn({ data: { key: c.key } }).then(() => qc.invalidateQueries({ queryKey: key }));
+    readFn({ data: { key: c.key } }).then(() => qc.invalidateQueries({ queryKey: ["messages"] })).catch((e) => toast.error((e as Error).message));
   }, [c.key, lastIn, !!data]);
 
   const items = useMemo(() => {
@@ -359,14 +367,14 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
   const p = c.p, adv = c.adv, meta = c.meta;
   const dates = adv ? advDates(adv) : p ? stepDates(p) : null;
   const step = dates ? (() => { const i = dates.findIndex((x) => !x); return i === -1 ? 7 : i; })() : p ? currentStep(p) : 0;
-  const otherRole: Role | null = c.kind === "a" ? null : isE ? (c.enq?.isFirm ? c.enq.clientSide : "advisor") : isC ? (as === "advisor" ? meta!.withSide : "advisor") : seller ? "buyer" : "seller";
-  const placeholder = c.kind === "a" ? `${tr("Message")} ${tr("Help desk")}` : others.length >= 2 ? `Message ${c.name}` : `Message ${others[0]?.name ?? c.person ?? c.name}`;
+  const otherRole: Role | null = c.kind === "a" ? null : isE ? (c.enq?.isFirm ? c.enq.clientSide : "advisor") : isC ? (as === "advisor" ? meta?.withSide ?? "advisor" : "advisor") : seller ? "buyer" : "seller";
+  const placeholder = adminView && profile ? tr("Reply to {first name}").replace("{first name}", profile.first) : c.kind === "a" ? `${tr("Message")} ${tr("Help desk")}` : others.length >= 2 ? `Message ${c.name}` : `Message ${others[0]?.name ?? c.person ?? c.name}`;
   const files = msgs.flatMap((m) => m.files.map((f) => ({ ...f, at: m.at }))).reverse();
-  const hasPanel = c.kind !== "a" && !isE;
+  const hasPanel = adminView || (c.kind !== "a" && !isE);
   const pipeHref = as === "advisor" ? `/advisor/pipeline?deal=${meta?.dealId}` : `/marketplace/pipeline?deal=${meta?.dealId ?? p?.id}`;
   const shownNames = others.slice(0, 3);
 
-  const line2 = c.kind === "a" ? (
+  const line2 = adminView && profile ? <span>{tr(cap(profile.role))} · {profile.company}</span> : c.kind === "a" ? (
     <span>{tr("PitchSnack team · we usually reply within 1 business day")}</span>
   ) : (
     <>
@@ -400,17 +408,17 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
     <div className={cn("relative flex min-w-0 flex-1", hiddenMobile && "max-[759px]:hidden")}>
       <div className="relative flex min-w-0 flex-1 flex-col">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-[#F0F1F4] px-7">
-          <button onClick={onBack} className="-ml-2 flex items-center text-[13px] font-medium text-[#2563EB] min-[760px]:hidden"><ChevronLeft className="h-4 w-4" />Messages</button>
+          <Button variant="unstyled" size="unstyled" onClick={onBack} className="-ml-2 flex items-center text-[13px] font-medium text-[#2563EB] min-[760px]:hidden"><ChevronLeft className="h-4 w-4" />Messages</Button>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              {c.kind === "a" && <HatMark width={20} />}
+              {c.kind === "a" && !adminView && <HatMark width={20} />}
               <span className="truncate text-[15px] font-semibold text-[#111827]">{c.name}</span>
               {otherRole && <RoleTag role={otherRole} />}
             </div>
             <div className="truncate text-[12.5px] text-[#6B7280]">{line2}</div>
           </div>
-          {c.kind !== "a" && (
-            <button
+          {c.kind !== "a" && !adminView && (
+            <Button variant="unstyled" size="unstyled"
               ref={peopleBtn}
               aria-expanded={people}
               aria-controls="people-in-chat"
@@ -418,18 +426,18 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
               className={cn("inline-flex h-[30px] items-center gap-1.5 rounded-lg px-[9px] text-[13px] font-medium", people ? "bg-[#F2F3F6] text-[#111827]" : "text-[#6B7280] hover:bg-[#F7F8FA] hover:text-[#111827]")}
             >
               <Users className="h-[15px] w-[15px]" /> {members.length}<span className="max-[759px]:hidden"> {members.length === 1 ? "person" : "people"}</span>
-            </button>
+            </Button>
           )}
           {isE && enq && <EnquiryHeaderActions t={enq} />}
           {hasPanel && (
-            <button
+            <Button variant="unstyled" size="unstyled"
               ref={pipeBtn}
               aria-expanded={panel}
               onClick={() => setPanel(!panel)}
               className={cn("inline-flex h-[30px] items-center gap-1.5 rounded-lg px-[9px] text-[13px] font-medium", panel ? "bg-[#F2F3F6] text-[#111827]" : "text-[#6B7280] hover:bg-[#F7F8FA] hover:text-[#111827]")}
             >
-              <GitBranch className="h-[15px] w-[15px]" /> Pipeline
-            </button>
+              {adminView ? <Users className="h-[15px] w-[15px]" /> : <GitBranch className="h-[15px] w-[15px]" />} {adminView ? tr("Profile") : "Pipeline"}
+            </Button>
           )}
         </div>
         {people && (
@@ -456,7 +464,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
             if (it.kind === "event")
               return (
                 <div key={it.id} className="py-1.5 text-center text-[12px] text-[#9CA3AF]">
-                  {it.text}{it.link && <> · <button onClick={() => setDialog(it.open)} className="font-medium text-[#2563EB] hover:underline">{it.link}</button></>}
+                  {it.text}{it.link && <> · <Button variant="unstyled" size="unstyled" onClick={() => setDialog(it.open)} className="font-medium text-[#2563EB] hover:underline">{it.link}</Button></>}
                 </div>
               );
             const last = it.msgs[it.msgs.length - 1];
@@ -468,15 +476,15 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
                 <div key={it.id} className="my-2 flex flex-col items-end gap-1">
                   {!it.mine && who && <div className="px-1 text-[12px] leading-[18px] text-[#6B7280]"><span className="font-semibold text-[#111827]">{who.name}</span>{who.title && ` · ${who.title}`}</div>}
                   {it.msgs.map((m) => <Bubble key={m.id} m={m} cls={BUBBLE[as]} onFile={openFile} />)}
-                  <div className="text-[11px] text-[#9CA3AF]">{hm(last.at)}{status}</div>
+                  <div className="flex flex-wrap items-center gap-1 text-[11px] text-[#9CA3AF]">{adminView && <>{profile?.advisor ? profile.advisor : <><HatMark width={13} />{tr("Help desk")}</>} · </>}{hm(last.at)}{adminView && <> · {(data as any)?.adminNames?.[last.senderId] || "—"}</>}{adminView ? status.replace("Seen", tr("Seen")).replace("Sent", tr("Sent")) : status}</div>
                 </div>
               );
-            const help = c.kind === "a";
+            const help = c.kind === "a" && !adminView;
             const team = !help && !!who?.team;
-            const name = help ? tr("Help desk") : team ? tr("PitchSnack team") : who?.name ?? c.name;
+            const name = help ? (data as any)?.helpAdvisor || tr("Help desk") : team ? tr("PitchSnack team") : who?.name ?? c.name;
             return (
               <div key={it.id} className="my-2 flex max-w-[70%] gap-2.5">
-                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", help || team ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{help || team ? <HatMark width={16} /> : initials(name)}</span>
+                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", adminView && profile ? `help-initials help-${profile.role}` : help || team ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{(help && !(data as any)?.helpAdvisor) || team ? <HatMark width={16} /> : initials(name)}</span>
                 <div className="flex min-w-0 flex-col items-start gap-1">
                   <div className="flex flex-wrap items-center gap-x-1.5 px-1 text-[12px] leading-[18px]">
                     <span className="font-semibold text-[#111827]">{name}</span>
@@ -495,11 +503,15 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
         ) : data?.closed ? (
           <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{data.endedNote ? tr("This conversation is closed because {organisation} withdrew from the deal on {date}.").replace("{organisation}", data.endedNote.org).replace("{date}", data.endedNote.date) : isC ? "This conversation is closed because the advisor NDA ended." : "This conversation is closed because the NDA ended."}</div>
         ) : (
-          <Composer placeholder={placeholder} as={as} onSend={send} />
+          <>
+            {adminView && profile && <div className="px-6 pt-2 text-[12px] text-muted-foreground">{profile.advisor ? tr("Replying as {advisor}, {first name}’s advisor").replace("{advisor}", profile.advisor).replace("{first name}", profile.first) : <span className="inline-flex flex-wrap items-center gap-1">{tr("Replying as")} <HatMark width={13} /><b>{tr("Help desk")}</b> · {tr("{first name} won’t see your name").replace("{first name}", profile.first)}</span>}</div>}
+            <Composer placeholder={placeholder} as={as} onSend={send} />
+          </>
         )}
       </div>
 
-      {hasPanel && (
+      {adminView && profile && panel && <HelpProfilePanel profile={profile} files={files} onFile={openFile} onClose={() => { setPanel(false); pipeBtn.current?.focus(); }} />}
+      {hasPanel && !adminView && (
         <aside
           aria-label="Deal panel"
           className={cn(
@@ -527,7 +539,7 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
                   p?.counterparty.verified && <span className="mt-1.5 inline-flex rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">✓ {seller ? "Verified buyer" : "Verified seller"}</span>
                 )}
               </div>
-              <button aria-label="Close deal panel" onClick={() => { setPanel(false); pipeBtn.current?.focus(); }} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"><X className="h-4 w-4" /></button>
+              <Button variant="unstyled" size="unstyled" aria-label="Close deal panel" onClick={() => { setPanel(false); pipeBtn.current?.focus(); }} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"><X className="h-4 w-4" /></Button>
             </div>
 
             <Cap>Deal</Cap>
@@ -562,13 +574,13 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12.5px] font-semibold text-[#2563EB]">
               {isC && meta ? (
                 <>
-                  {as !== "advisor" && <button onClick={() => setDialog("advProfile")} className="hover:underline">Advisor profile</button>}
-                  <button onClick={() => setDialog({ advNda: { dealId: meta.dealId, side: meta.clientSide } })} className="hover:underline">{as === "advisor" ? "View your NDA" : "View advisor NDA"}</button>
+                  {as !== "advisor" && <Button variant="unstyled" size="unstyled" onClick={() => setDialog("advProfile")} className="hover:underline">Advisor profile</Button>}
+                  <Button variant="unstyled" size="unstyled" onClick={() => setDialog({ advNda: { dealId: meta.dealId, side: meta.clientSide } })} className="hover:underline">{as === "advisor" ? "View your NDA" : "View advisor NDA"}</Button>
                 </>
               ) : (
                 <>
-                  <button onClick={() => setDialog("profile")} className="hover:underline">{seller ? "Investor profile" : "Seller profile"}</button>
-                  <button onClick={() => setDialog("nda")} className="hover:underline">View NDA</button>
+                  <Button variant="unstyled" size="unstyled" onClick={() => setDialog("profile")} className="hover:underline">{seller ? "Investor profile" : "Seller profile"}</Button>
+                  <Button variant="unstyled" size="unstyled" onClick={() => setDialog("nda")} className="hover:underline">View NDA</Button>
                 </>
               )}
               <a href={pipeHref} className="hover:underline">Open in Pipeline</a>
@@ -586,13 +598,13 @@ function Chat({ c, as, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: R
                   const e = ext(f.name);
                   const tone = e === "PDF" ? "bg-[#FEE2E2] text-[#B91C1C]" : /XLS|CSV/.test(e) ? "bg-[#DCFCE7] text-[#15803D]" : "bg-[#F3F4F6] text-[#6B7280]";
                   return (
-                    <button key={f.path} onClick={() => openFile(f)} className="flex w-full items-center gap-2.5 rounded-lg py-1.5 text-left hover:bg-[#F7F8FA]">
+                    <Button variant="unstyled" size="unstyled" key={f.path} onClick={() => openFile(f)} className="flex w-full items-center gap-2.5 rounded-lg py-1.5 text-left hover:bg-[#F7F8FA]">
                       <span className={cn("grid h-[30px] w-[30px] shrink-0 place-items-center rounded-md text-[9px] font-bold", tone)}>{e.slice(0, 4)}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[12.5px] font-medium text-[#111827]">{f.name}</span>
                         <span className="block text-[11.5px] text-[#6B7280]">{e} · {kb(f.size)} · {listTime(f.at)}</span>
                       </span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -624,11 +636,11 @@ function Bubble({ m, cls, onFile }: { m: ThreadMessage; cls: string; onFile: (f:
     <div className={cn("max-w-full whitespace-pre-wrap break-words rounded-[18px] px-3.5 py-[9px] text-[13.5px] leading-[1.5]", cls)}>
       {m.body}
       {m.files.map((f) => (
-        <button key={f.path} onClick={() => onFile(f)} className={cn("flex w-full min-w-[200px] items-center gap-2 rounded-xl bg-white px-[11px] py-2 text-left", m.body && "mt-1.5")}>
+        <Button variant="unstyled" size="unstyled" key={f.path} onClick={() => onFile(f)} className={cn("flex w-full min-w-[200px] items-center gap-2 rounded-xl bg-white px-[11px] py-2 text-left", m.body && "mt-1.5")}>
           <FileText className="h-4 w-4 shrink-0 text-[#6B7280]" />
           <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-[#1F2937]">{f.name}</span>
           <span className="shrink-0 text-[11.5px] text-[#9CA3AF]">{kb(f.size)}</span>
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -703,13 +715,13 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
             {files.map((f, i) => (
               <span key={i} className="inline-flex max-w-[240px] items-center gap-1 rounded-lg bg-[#F3F4F6] px-2 py-1 text-[12px]">
                 <FileText className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{f.name}</span>
-                <button aria-label={`Remove ${f.name}`} onClick={() => setFiles(files.filter((_, j) => j !== i))}><X className="h-3 w-3" /></button>
+                <Button variant="unstyled" size="unstyled" aria-label={`Remove ${f.name}`} onClick={() => setFiles(files.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
               </span>
             ))}
           </div>
         )}
         <div className="flex items-end gap-1">
-          <button aria-label="Attach file" onClick={() => picker.current?.click()} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9CA3AF] hover:bg-[#F3F4F6]"><Paperclip className="h-4 w-4" /></button>
+          <Button variant="unstyled" size="unstyled" aria-label="Attach file" onClick={() => picker.current?.click()} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9CA3AF] hover:bg-[#F3F4F6]"><Paperclip className="h-4 w-4" /></Button>
           <input
             ref={picker}
             type="file"
@@ -738,14 +750,14 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
             placeholder={placeholder}
             className="max-h-[120px] min-h-8 flex-1 resize-none bg-transparent py-1.5 text-[13.5px] outline-none placeholder:text-[#9CA3AF]"
           />
-          <button
+          <Button variant="unstyled" size="unstyled"
             aria-label="Send"
             disabled={empty || busy}
             onClick={submit}
             className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", empty ? "bg-[#E5E7EB] text-white" : SEND[as])}
           >
             <ArrowUp className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -756,4 +768,23 @@ function RowCount({ n }: { n: number }) {
   const bump = useBump(n);
   if (!n) return null;
   return <span key={bump} className={cn("ml-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-[#F6A823] px-1.5 text-[10.5px] font-bold text-[#0E162F]", bump && "mkt-bump")}>{n > 9 ? "9+" : n}</span>;
+}
+
+function HelpProfilePanel({ profile: p, files, onFile, onClose }: { profile: HelpProfile; files: (MsgFile & { at: string })[]; onFile: (f: MsgFile) => void; onClose: () => void }) {
+  const copy = async (value: string) => { try { await navigator.clipboard.writeText(value); toast.success(tr("Copied")); } catch { toast.error(tr("Could not copy")); } };
+  return <aside aria-label="User profile panel" className="w-[288px] max-w-full shrink-0 overflow-y-auto border-l border-border bg-card max-[1099px]:absolute max-[1099px]:inset-y-0 max-[1099px]:right-0 max-[1099px]:z-10 max-[1099px]:shadow-xl">
+    <div className="flex min-h-full flex-col p-5">
+      <div className="flex items-start gap-3">
+        <span className={cn("help-initials grid h-11 w-11 shrink-0 place-items-center rounded-lg text-[15px] font-bold", `help-${p.role}`)}>{initials(p.name)}</span>
+        <div className="min-w-0 flex-1"><div className="break-words text-[15px] font-bold">{p.name}</div><div className="mt-0.5 break-words text-[12px] text-muted-foreground">{tr(cap(p.role))} · {p.company}</div></div>
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={tr("Close profile panel")} onClick={onClose}><X /></Button>
+      </div>
+      {([ ["Email", p.email], ["Phone", p.phone] ] as const).map(([label, value]) => <div key={label} className="mt-5"><div className="text-[11px] text-muted-foreground">{tr(label)}</div><div className="flex items-center gap-2"><span className="min-w-0 flex-1 break-all text-[12.5px]">{value || "—"}</span>{value && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title={tr("Copy") + " " + tr(label)} aria-label={tr("Copy") + " " + tr(label)} onClick={() => copy(value)}><Copy /></Button>}</div></div>)}
+      <div className="mt-4 text-[12.5px]"><div className="text-[11px] text-muted-foreground">{tr("Joined")}</div>{new Date(p.joined).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+      <Cap>{tr("PitchSnack status")}</Cap><div className="space-y-2">{p.statuses.map((s, i) => <div key={i} className="text-[12.5px]"><span className="block break-words text-muted-foreground">{tr(s.label)}</span><span>{tr(s.value)}</span></div>)}</div>
+      <Cap>{tr("Shared files")}</Cap>{files.length ? files.map((f) => <Button variant="ghost" key={f.path} className="h-auto w-full justify-start px-0 py-2 text-left" onClick={() => onFile(f)}><FileText /><span className="min-w-0"><span className="block truncate text-[12.5px]">{f.name}</span><span className="block text-[11px] text-muted-foreground">{kb(f.size)} · {listTime(f.at)}</span></span></Button>) : <p className="text-[12.5px] text-muted-foreground">{tr("No files yet.")}</p>}
+      <div className="mt-6 flex gap-2 border-t border-border pt-4 text-[11.5px] text-muted-foreground"><Lock className="h-3.5 w-3.5 shrink-0" /><span>{tr("Only PitchSnack admins see this conversation. {first name} sees your replies as Help desk.").replace("{first name}", p.first)}</span></div>
+      <Button variant="link" asChild className="mt-auto justify-start px-0 pt-5 text-[12.5px] font-semibold text-link"><Link to="/users" search={{ edit: p.id }}>{tr("Open in Users")}</Link></Button>
+    </div>
+  </aside>;
 }

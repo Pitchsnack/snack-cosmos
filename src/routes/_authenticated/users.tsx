@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Users, UserPlus, Mail } from "lucide-react";
 
@@ -44,7 +44,15 @@ import { PlanBadge } from "@/components/plan-badge";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/users")({
-  head: () => ({ meta: [{ title: "Users — PitchSnack" }] }),
+  validateSearch: (search: Record<string, unknown>): { edit?: string } => ({ edit: typeof search.edit === "string" && /^[0-9a-f-]{36}$/i.test(search.edit) ? search.edit : undefined }),
+  head: () => ({ meta: [
+    { title: "Users — PitchSnack" },
+    { name: "description", content: "Manage PitchSnack user accounts, roles and plans." },
+    { property: "og:title", content: "Users — PitchSnack" },
+    { property: "og:description", content: "Manage PitchSnack user accounts, roles and plans." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: UsersPage,
 });
 
@@ -270,11 +278,13 @@ function UsersPage() {
 }
 
 function UsersPageInner() {
+  const { edit: editId } = Route.useSearch();
+  const openedEdit = useRef<string | null>(null);
   const { has, isControl } = usePermissions();
   const canEditStatus = isControl || has("users.suspend");
   const { data: session } = useSessionContext();
   const fetchUsers = useServerFn(listUsers);
-  const tenantId = session?.activeWorkspace.tenantId ?? null;
+  const tenantId = editId && isControl ? null : session?.activeWorkspace.tenantId ?? null;
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["users", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId } }),
@@ -285,6 +295,11 @@ function UsersPageInner() {
   const [filter, setFilter] = useState("all");
   const [editing, setEditing] = useState<any | null>(null);
   const all = (data ?? []) as any[];
+  useEffect(() => {
+    if (!isControl || !editId || openedEdit.current === editId) return;
+    const user = (data ?? []).find((u: any) => u.id === editId);
+    if (user) { openedEdit.current = editId; setEditing(user); }
+  }, [data, editId, isControl]);
   const live = all.filter((u) => u.status !== "Deleted");
   const needsPlan = (u: any) => (u.account_role === "buyer" || u.account_role === "advisor") && !u.subscription;
   const counts: Record<string, number> = {

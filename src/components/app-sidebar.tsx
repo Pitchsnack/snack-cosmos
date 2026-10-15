@@ -40,7 +40,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useEffectivePermissions } from "@/hooks/use-effective-permissions";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
-import { ApprovalsBadge } from "@/components/menu-count-badge";
+import { ApprovalsBadge, AdminMessagesBadge } from "@/components/menu-count-badge";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { useIsMarketplace, usePersona, rememberAdminPath } from "@/hooks/use-marketplace";
@@ -77,7 +77,8 @@ type NavPath =
   | "/entity-control"
   | "/industry-map"
   | "/ai-agents"
-  | "/approvals";
+  | "/approvals"
+  | "/admin/messages";
 
 
 type NavItem = {
@@ -128,6 +129,7 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
       "Browse Global Catalogue",
       "Startups Directory",
       "Approvals",
+      "Messages",
       "Investors Directory",
       "Advisors Directory",
       "Industry Map",
@@ -158,6 +160,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Tenants", icon: Building2, path: "/tenants", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
   { label: "Approvals", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
+  { label: "Messages", icon: MessagesSquare, path: "/admin/messages", exact: false, controlOnly: true },
   { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
 
 
@@ -378,6 +381,7 @@ function SidebarBody({
                 <item.icon className="h-4 w-4 shrink-0" />
                 {showLabels && <span className="whitespace-pre">{t(item.label)}{item.label === "Investors Directory" ? "\n" : ""}</span>}
                 {showLabels && item.label === "Approvals" && <ApprovalsBadge />}
+                {showLabels && item.path === "/admin/messages" && <AdminMessagesBadge />}
               </Link>
             );
           };
