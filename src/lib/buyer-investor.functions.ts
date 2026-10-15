@@ -467,3 +467,20 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     if (e2) throw new Error(e2.message);
     return { ok: true };
   });
+
+/** Wizard Logo and photos: saves the investor record's Logo and Media as each upload finishes. */
+export const saveBuyerMedia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    investor_id: z.string().uuid(), logo_path: z.string().max(1000).nullable(),
+    media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(1000) })).max(3),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const r = await resolveBuyer(context.userId, data.investor_id);
+    const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${r.investorId}/`);
+    if (!own(data.logo_path) || data.media.some((m) => !own(m.image_path))) throw new Error("Invalid file.");
+    const { error } = await r.sb.from("investors").update({ logo_url: data.logo_path, media: data.media, updated_by: context.userId, updated_at: new Date().toISOString() }).eq("id", r.investorId);
+    if (error) throw new Error(error.message);
+    if (!r.extra) await r.sb.from("buyer_profiles").update({ logo_url: data.logo_path }).eq("user_id", context.userId);
+    return { ok: true };
+  });
