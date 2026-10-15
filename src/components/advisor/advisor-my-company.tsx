@@ -1,3 +1,4 @@
+import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -419,6 +420,8 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
           ) : "PitchSnack hasn't verified your firm yet. Admin checks your licences and documents."}
         </p>
         </>}
+
+        <FirmPhotosBox photos={f.media} canEdit={!client} onEdit={() => edit("firm")} />
 
         {/* Services and fees */}
         <section>

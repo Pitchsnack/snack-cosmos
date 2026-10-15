@@ -29,7 +29,7 @@ void FIELDS_TH;
 
 export type AdminFirm = {
   id: string; ref: string; name: string; firmType: string; city: string | null; country: string | null; description: string | null;
-  logoUrl: string | null; status: string; services: string[]; sectors: string[]; sectorAgnostic: boolean; languages: string[];
+  logoUrl: string | null; media: { slot: number; url: string | null }[]; status: string; services: string[]; sectors: string[]; sectorAgnostic: boolean; languages: string[];
   yearFounded: number | null; teamSize: number | null; dealBand: string | null; website: string | null; email: string | null; phone: string | null;
   legalName: string | null; thaiName: string | null; registrationNo: string | null; address: string;
   ownerId: string | null; ownerName: string | null; ownerEmail: string | null;
@@ -68,7 +68,7 @@ async function loadFirms(sb: any, ids?: string[]): Promise<{ firms: AdminFirm[];
   const { data: us } = people.length ? await sb.from("users").select("id, first_name, last_name, email").in("id", people) : { data: [] };
   const uMap = Object.fromEntries((us ?? []).map((u: any) => [u.id, u]));
   const names = Object.fromEntries((us ?? []).map((u: any) => [u.id, fullName(u)]));
-  const paths = [...(rows ?? []).map((r: any) => r.logo_path), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean);
+  const paths = [...(rows ?? []).map((r: any) => r.logo_path), ...(rows ?? []).flatMap((r: any) => (Array.isArray(r.media) ? r.media : []).map((m: any) => m.image_path)), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean);
   const urls: Record<string, string> = {};
   if (paths.length) {
     const { data: s } = await sb.storage.from("startup-media").createSignedUrls(paths, 3600);
@@ -77,7 +77,7 @@ async function loadFirms(sb: any, ids?: string[]): Promise<{ firms: AdminFirm[];
   const of = (list: any[], id: string) => list.filter((x) => x.firm_id === id);
   const firms = (rows ?? []).map((r: any): AdminFirm => ({
     id: r.id, ref: r.ref_no, name: r.name || "Untitled firm", firmType: r.firm_type ?? "", city: r.city, country: r.country, description: r.description,
-    logoUrl: r.logo_path ? urls[r.logo_path] ?? null : null, status: r.status, services: r.services ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic,
+    logoUrl: r.logo_path ? urls[r.logo_path] ?? null : null, media: (Array.isArray(r.media) ? r.media : []).map((m: any) => ({ slot: m.slot, url: urls[m.image_path] ?? null })), status: r.status, services: r.services ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic,
     languages: r.languages ?? [], yearFounded: r.year_founded, teamSize: r.team_size, dealBand: r.deal_size_band, website: r.website, email: r.email, phone: r.phone,
     legalName: r.legal_name, thaiName: r.thai_name, registrationNo: r.registration_no, address: addr(r),
     ownerId: r.owner_user_id ?? null, ownerName: fullName(uMap[r.owner_user_id]), ownerEmail: uMap[r.owner_user_id]?.email ?? null,

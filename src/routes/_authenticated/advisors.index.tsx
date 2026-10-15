@@ -1,3 +1,4 @@
+import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -310,6 +311,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
         {facts.filter(([, t]) => t).map(([I, t]) => <span key={t} className="inline-flex items-center gap-1.5"><I className="h-3.5 w-3.5" />{t}</span>)}
         {f.website && <a href={/^https?:/.test(f.website) ? f.website : `https://${f.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[#2563EB]"><Globe className="h-3.5 w-3.5" />Website →</a>}
       </div>
+      <FirmPhotosBox photos={f.media} canEdit onEdit={onEdit} />
       <Sec icon={Tag} title="Services and fees">
         {f.services.length ? <div className="divide-y divide-border rounded-md border border-border text-[13px]">{f.services.map((sv) => <div key={sv} className="flex justify-between gap-3 px-3 py-2"><span>{sv}</span><span className="text-muted-foreground">{f.fees.find((x) => x.service === sv)?.fee || "—"}</span></div>)}</div> : <p className="text-[13px] text-muted-foreground">None yet.</p>}
       </Sec>
