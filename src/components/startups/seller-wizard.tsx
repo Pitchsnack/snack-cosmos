@@ -14,7 +14,7 @@ import { bandInText, bandOf, fmtThb } from "@/lib/asking-price";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
   SELLER_RELATIONS, THB_REVENUE_BANDS, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
-  isValidUrl, saveDraft, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
+  isValidUrl, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
   sellerValid, STEP_SHORT, STEP_FULL, stepIdx, laterKey, isMissed, joinNames, type StepKey,
 } from "@/lib/seller-wizard";
 
@@ -121,7 +121,7 @@ export function SellerWizard({
   const firstRun = useRef(true);
   const step = Math.min(d.step, STEPS.length - 1);
   const cur = STEPS[step]!;
-  const store = (x: SellerDraft) => (persist ? persist(x) : saveDraft(userId, x));
+  const store = (x: SellerDraft) => persist?.(x);
   const shownOf = (x: SellerDraft, keep: number | null) => {
     const s = new Set(sellerShown(x, fromSignup));
     if (keep != null) s.add(keep);

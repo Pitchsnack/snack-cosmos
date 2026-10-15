@@ -378,7 +378,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
           )}
           {pill}
           {!adminReview && (
-            <CompanyMenu name={row?.code_name || s.startup_name} onEdit={() => void create()}>
+            <CompanyMenu name={row?.code_name || s.startup_name || "New business"} onEdit={() => void create()}>
               <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
             </CompanyMenu>
           )}
@@ -386,7 +386,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
       </div>
       {!adminReview && <PublicMediaAlert id={s.id} onAdd={() => openEdit(s.id, "private", "images", "media")} />}
       <HiddenProfileTab
-        name={s.startup_name}
+        name={s.startup_name || "New business"}
         companyType={s.company_type}
         row={row}
         facts={facts}
@@ -421,7 +421,7 @@ function sectionTab(k: string): ["public" | "private", string] {
   return ["private", "about"];
 }
 
-export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem[] }) {
+export function MyBusinessProfiles({ items: allItems, openId }: { items: StartupListItem[]; openId?: string }) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [gone, setGone] = useState<string[]>([]);
@@ -432,7 +432,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
 
   useEffect(() => {
     if (!items.length) { if (sel) setSel(null); return; }
-    if (!sel || !items.some((i) => i.id === sel.id)) setSel({ id: items[0].id, view: "public" });
+    if (!sel || !items.some((i) => i.id === sel.id)) setSel({ id: openId && items.some((i) => i.id === openId) ? openId : items[0].id, view: "public" });
   }, [items, sel]);
 
   const current = items.find((i) => i.id === sel?.id) ?? null;
@@ -456,7 +456,7 @@ export function MyBusinessProfiles({ items: allItems }: { items: StartupListItem
   const draftSetup = currentSetup.data && !currentSetup.data.setupDoneAt ? currentSetup.data : null;
 
   const right = current && draftSetup ? (
-    <DraftCompanyPanel role="seller" name={current.startup_name} banner={<SellerSetupBanner setup={draftSetup} />}
+    <DraftCompanyPanel role="seller" name={current.startup_name || tr("New business")} banner={<SellerSetupBanner setup={draftSetup} />}
       onEdit={() => openEdit(current.id, "private", "images")}
       onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })} />
   ) : current && sel ? (
@@ -561,7 +561,7 @@ function SellerCardSlot({ s, view, onView, skipDraft }: { s: StartupListItem; vi
   if (data && !data.setupDoneAt) {
     return (
       <div role="button" tabIndex={0} onClick={() => onView("public")} onKeyDown={(e) => { if (e.key === "Enter") onView("public"); }} className="cursor-pointer">
-        <DraftCompanyCard role="seller" name={s.startup_name} founded={data.year || null} size={data.size} website={data.web || null} selected={view != null} />
+        <DraftCompanyCard role="seller" name={s.startup_name || tr("New business")} founded={data.year || null} size={data.size} website={data.web || null} selected={view != null} />
       </div>
     );
   }
