@@ -192,7 +192,7 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
             {shown.length === 0 && <div className="py-8 text-center text-[13px] text-[#9CA3AF]">{adminView ? (helpPending ? tr("Loading…") : tr(convs.length ? "No conversations match." : "No messages yet.")) : convs.length ? "No conversations match." : "No conversations yet."}</div>}
             {shown.map((c) => c.kind === "a" && !adminView ? (
               <div key={c.key}>
-                <Button variant="ghost"
+                <Button variant="unstyled" size="unstyled"
                   onClick={() => { setSel(c.key); setMobileChat(true); if (!adminView) setPanel(false); }}
                   aria-label={c.last ? (c.unread ? `${tr("Help desk")}, ${tr("new message")}, ${listTime(c.last.at)}` : `${tr("Help desk")}, ${listTime(c.last.at)}`) : tr("Help desk")}
                   className={cn("flex h-11 w-full items-center rounded-[10px] pl-[14px] pr-3 text-left hover:bg-[#F2F3F6] dark:hover:bg-white/5", c.key === sel && "bg-[#F2F3F6] dark:bg-white/5")}
@@ -217,7 +217,7 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
                 </div>
                 {c.who && (
                   <div className="my-[3px] flex items-center gap-1.5 text-[12px] leading-4 text-[#6B7280]">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: c.who.dot }} />
+                    <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", adminView && c.profile && `help-${c.profile.role}`)} style={adminView ? undefined : { background: c.who.dot }} />
                     <span className="truncate">{[c.who.label, c.codeName].filter(Boolean).join(" · ")}</span>
                   </div>
                 )}
@@ -407,7 +407,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
     <div className={cn("relative flex min-w-0 flex-1", hiddenMobile && "max-[759px]:hidden")}>
       <div className="relative flex min-w-0 flex-1 flex-col">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-[#F0F1F4] px-7">
-          <Button variant="ghost" onClick={onBack} className="-ml-2 flex items-center text-[13px] font-medium text-[#2563EB] min-[760px]:hidden"><ChevronLeft className="h-4 w-4" />Messages</Button>
+          <Button variant="unstyled" size="unstyled" onClick={onBack} className="-ml-2 flex items-center text-[13px] font-medium text-[#2563EB] min-[760px]:hidden"><ChevronLeft className="h-4 w-4" />Messages</Button>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               {c.kind === "a" && !adminView && <HatMark width={20} />}
@@ -417,7 +417,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
             <div className="truncate text-[12.5px] text-[#6B7280]">{line2}</div>
           </div>
           {c.kind !== "a" && !adminView && (
-            <Button variant="ghost"
+            <Button variant="unstyled" size="unstyled"
               ref={peopleBtn}
               aria-expanded={people}
               aria-controls="people-in-chat"
@@ -429,7 +429,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
           )}
           {isE && enq && <EnquiryHeaderActions t={enq} />}
           {hasPanel && (
-            <Button variant="ghost"
+            <Button variant="unstyled" size="unstyled"
               ref={pipeBtn}
               aria-expanded={panel}
               onClick={() => setPanel(!panel)}
@@ -463,7 +463,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
             if (it.kind === "event")
               return (
                 <div key={it.id} className="py-1.5 text-center text-[12px] text-[#9CA3AF]">
-                  {it.text}{it.link && <> · <Button variant="ghost" onClick={() => setDialog(it.open)} className="font-medium text-[#2563EB] hover:underline">{it.link}</Button></>}
+                  {it.text}{it.link && <> · <Button variant="unstyled" size="unstyled" onClick={() => setDialog(it.open)} className="font-medium text-[#2563EB] hover:underline">{it.link}</Button></>}
                 </div>
               );
             const last = it.msgs[it.msgs.length - 1];
@@ -538,7 +538,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
                   p?.counterparty.verified && <span className="mt-1.5 inline-flex rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">✓ {seller ? "Verified buyer" : "Verified seller"}</span>
                 )}
               </div>
-              <Button variant="ghost" aria-label="Close deal panel" onClick={() => { setPanel(false); pipeBtn.current?.focus(); }} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"><X className="h-4 w-4" /></Button>
+              <Button variant="unstyled" size="unstyled" aria-label="Close deal panel" onClick={() => { setPanel(false); pipeBtn.current?.focus(); }} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"><X className="h-4 w-4" /></Button>
             </div>
 
             <Cap>Deal</Cap>
@@ -573,13 +573,13 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12.5px] font-semibold text-[#2563EB]">
               {isC && meta ? (
                 <>
-                  {as !== "advisor" && <Button variant="ghost" onClick={() => setDialog("advProfile")} className="hover:underline">Advisor profile</Button>}
-                  <Button variant="ghost" onClick={() => setDialog({ advNda: { dealId: meta.dealId, side: meta.clientSide } })} className="hover:underline">{as === "advisor" ? "View your NDA" : "View advisor NDA"}</Button>
+                  {as !== "advisor" && <Button variant="unstyled" size="unstyled" onClick={() => setDialog("advProfile")} className="hover:underline">Advisor profile</Button>}
+                  <Button variant="unstyled" size="unstyled" onClick={() => setDialog({ advNda: { dealId: meta.dealId, side: meta.clientSide } })} className="hover:underline">{as === "advisor" ? "View your NDA" : "View advisor NDA"}</Button>
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" onClick={() => setDialog("profile")} className="hover:underline">{seller ? "Investor profile" : "Seller profile"}</Button>
-                  <Button variant="ghost" onClick={() => setDialog("nda")} className="hover:underline">View NDA</Button>
+                  <Button variant="unstyled" size="unstyled" onClick={() => setDialog("profile")} className="hover:underline">{seller ? "Investor profile" : "Seller profile"}</Button>
+                  <Button variant="unstyled" size="unstyled" onClick={() => setDialog("nda")} className="hover:underline">View NDA</Button>
                 </>
               )}
               <a href={pipeHref} className="hover:underline">Open in Pipeline</a>
@@ -597,7 +597,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
                   const e = ext(f.name);
                   const tone = e === "PDF" ? "bg-[#FEE2E2] text-[#B91C1C]" : /XLS|CSV/.test(e) ? "bg-[#DCFCE7] text-[#15803D]" : "bg-[#F3F4F6] text-[#6B7280]";
                   return (
-                    <Button variant="ghost" key={f.path} onClick={() => openFile(f)} className="flex w-full items-center gap-2.5 rounded-lg py-1.5 text-left hover:bg-[#F7F8FA]">
+                    <Button variant="unstyled" size="unstyled" key={f.path} onClick={() => openFile(f)} className="flex w-full items-center gap-2.5 rounded-lg py-1.5 text-left hover:bg-[#F7F8FA]">
                       <span className={cn("grid h-[30px] w-[30px] shrink-0 place-items-center rounded-md text-[9px] font-bold", tone)}>{e.slice(0, 4)}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[12.5px] font-medium text-[#111827]">{f.name}</span>
@@ -635,7 +635,7 @@ function Bubble({ m, cls, onFile }: { m: ThreadMessage; cls: string; onFile: (f:
     <div className={cn("max-w-full whitespace-pre-wrap break-words rounded-[18px] px-3.5 py-[9px] text-[13.5px] leading-[1.5]", cls)}>
       {m.body}
       {m.files.map((f) => (
-        <Button variant="ghost" key={f.path} onClick={() => onFile(f)} className={cn("flex w-full min-w-[200px] items-center gap-2 rounded-xl bg-white px-[11px] py-2 text-left", m.body && "mt-1.5")}>
+        <Button variant="unstyled" size="unstyled" key={f.path} onClick={() => onFile(f)} className={cn("flex w-full min-w-[200px] items-center gap-2 rounded-xl bg-white px-[11px] py-2 text-left", m.body && "mt-1.5")}>
           <FileText className="h-4 w-4 shrink-0 text-[#6B7280]" />
           <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-[#1F2937]">{f.name}</span>
           <span className="shrink-0 text-[11.5px] text-[#9CA3AF]">{kb(f.size)}</span>
@@ -714,13 +714,13 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
             {files.map((f, i) => (
               <span key={i} className="inline-flex max-w-[240px] items-center gap-1 rounded-lg bg-[#F3F4F6] px-2 py-1 text-[12px]">
                 <FileText className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{f.name}</span>
-                <Button variant="ghost" aria-label={`Remove ${f.name}`} onClick={() => setFiles(files.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
+                <Button variant="unstyled" size="unstyled" aria-label={`Remove ${f.name}`} onClick={() => setFiles(files.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
               </span>
             ))}
           </div>
         )}
         <div className="flex items-end gap-1">
-          <Button variant="ghost" aria-label="Attach file" onClick={() => picker.current?.click()} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9CA3AF] hover:bg-[#F3F4F6]"><Paperclip className="h-4 w-4" /></Button>
+          <Button variant="unstyled" size="unstyled" aria-label="Attach file" onClick={() => picker.current?.click()} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9CA3AF] hover:bg-[#F3F4F6]"><Paperclip className="h-4 w-4" /></Button>
           <input
             ref={picker}
             type="file"
@@ -749,7 +749,7 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
             placeholder={placeholder}
             className="max-h-[120px] min-h-8 flex-1 resize-none bg-transparent py-1.5 text-[13.5px] outline-none placeholder:text-[#9CA3AF]"
           />
-          <Button variant="ghost"
+          <Button variant="unstyled" size="unstyled"
             aria-label="Send"
             disabled={empty || busy}
             onClick={submit}
