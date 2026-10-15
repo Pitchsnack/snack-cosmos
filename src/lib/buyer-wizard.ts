@@ -1,6 +1,6 @@
 /** Buyer investor-profile setup wizard: question order, visibility by role, progress. */
 export type BuyerRelation = "individual" | "corporate" | "agent";
-export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "desc" | "review";
+export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "photos" | "desc" | "review";
 
 export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "role", sec: "About you" },
@@ -12,13 +12,15 @@ export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "rev", sec: "Buying Requirement" },
   { id: "deals", sec: "Buying Requirement" },
   { id: "sectors", sec: "Buying Requirement" },
+  { id: "photos", sec: "Firm images" },
   { id: "desc", sec: "Public profile" },
   { id: "review", sec: "Review" },
 ];
 
 export function stepsFor(rel: BuyerRelation | null) {
   // Question 2 (type) asks a Corporate Enterprise one type and a representative one or more; AUM is corporate only.
-  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : true));
+  // Logo and photos: firm buyers only (never an Individual Investor).
+  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : s.id === "photos" ? rel !== "individual" : true));
 }
 
 /** Banner / checklist progress: answered questions out of N (Review not counted). */

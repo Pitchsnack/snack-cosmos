@@ -62,7 +62,7 @@ function Page() {
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => { saveFn({ data: payload(d) }).catch((e: Error) => toast.error(e.message)); }, 400);
   };
-  const leave = () => { void qc.invalidateQueries(); navigate({ to: "/my-startups" }); };
+  const leave = () => { void qc.invalidateQueries(); navigate({ to: "/my-startups", search: { open: id } as never }); };
 
   if (error) return <p className="p-8 text-sm text-muted-foreground">{(error as Error).message}</p>;
   if (!data || !initial || !session?.user?.id) return null;

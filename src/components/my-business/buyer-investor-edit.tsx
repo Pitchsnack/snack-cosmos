@@ -32,10 +32,12 @@ import {
   type EntityMediaState, type SlotState,
 } from "@/components/media/entity-media-editor";
 import { supabase } from "@/integrations/supabase/client";
-import { createMyBuyerUploadUrl, getMyBuyerInvestor, saveMyBuyerInvestor } from "@/lib/buyer-investor.functions";
+import { createMyBuyerUploadUrl, getBuyerInvestorById, getMyBuyerInvestor, saveMyBuyerInvestor } from "@/lib/buyer-investor.functions";
 import { REGION_OPTIONS, regionForCountry } from "@/lib/country-region";
 
 export const BUYER_INVESTOR_KEY = ["buyer-investor", "me"];
+/** One investor profile by id (the wizard, Buyer › My Company with several profiles). */
+export const buyerInvestorKey = (id: string) => ["buyer-investor", "id", id];
 
 // Same taxonomies as Investors Directory › Edit investor.
 export const INVESTOR_CLASSIFICATIONS = [INDIVIDUAL_TYPE, "Angel", "Venture Capital", "Private Equity", "Corporate VC", "Family Office", "Corporate Enterprise", "Sovereign Fund", "Incubator/Accelerator"];
@@ -113,9 +115,14 @@ function S({ id, cur, className, children }: { id: string; cur?: string; classNa
   return <EditSec id={id} tone="buyer" active={cur === id} className={className}>{children}</EditSec>;
 }
 
-export function BuyerInvestorEdit({ section, add }: { section?: string; add?: boolean } = {}) {
+export function BuyerInvestorEdit({ section, add, id }: { section?: string; add?: boolean; id?: string } = {}) {
   const fetchMe = useServerFn(getMyBuyerInvestor);
-  const { data, isLoading, error } = useQuery({ queryKey: BUYER_INVESTOR_KEY, queryFn: () => fetchMe(), meta: { pageLoading: true } });
+  const fetchById = useServerFn(getBuyerInvestorById);
+  const { data, isLoading, error } = useQuery({
+    queryKey: id ? buyerInvestorKey(id) : BUYER_INVESTOR_KEY,
+    queryFn: async () => { if (!id) return fetchMe(); const r = await fetchById({ data: { id } }); if (!r.ok) throw new Error("This profile isn't yours."); return r.data as Data; },
+    meta: { pageLoading: true },
+  });
   if (isLoading) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
   return <Form data={data} section={section} add={add} />;
@@ -272,7 +279,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       const t = (v: string) => v.trim() || null;
       const { logoPath, media: resolvedMedia } = await uploadPending(
         media,
-        ({ kind, ext }) => getUrl({ data: { kind, ext } }),
+        ({ kind, ext }) => getUrl({ data: { kind, ext, investor_id: inv.id } }),
         supabase.storage.from("startup-media"),
       );
       const exact = Number(f.aum_exact.replace(/[^\d.]/g, ""));
@@ -293,8 +300,9 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, portfolio_extra: portfolio,
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
+        investor_id: inv.id,
       } });
-      await qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
+      await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
       await qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
       const live = data.buyer.status === "live";
       const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(typeOf, agent ? actsFor : null) || stages.length > 0);

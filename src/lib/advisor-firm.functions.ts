@@ -55,6 +55,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
   return {
     id: r.id, refNo: r.ref_no, name: r.name ?? "", firmType: r.firm_type ?? "", logoPath: r.logo_path, logoUrl: r.logo_path ? urls.get(r.logo_path) ?? null : null,
     logoSource: r.logo_source ?? null,
+    media: (Array.isArray(r.media) ? r.media : []).map((m: any) => ({ slot: m.slot, path: m.image_path, url: urls.get(m.image_path) ?? null })),
     description: r.description, yearFounded: r.year_founded, city: r.city, country: r.country,
     services: r.services ?? [], fees, feeDetails, dealBand: r.deal_size_band ?? null,
     teamSize: r.team_size, languages: r.languages ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic, sectorPicks: r.sector_picks ?? null,
@@ -87,7 +88,7 @@ export const listMyAdvisorFirms = createServerFn({ method: "GET" })
       sb.from("advisor_firm_documents").select("*").in("firm_id", ids).order("created_at"),
       sb.from("advisor_firm_reviews").select("*").in("firm_id", ids),
     ]);
-    const paths = [...rows.map((r: any) => r.logo_path), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
+    const paths = [...rows.map((r: any) => r.logo_path), ...rows.flatMap((r: any) => (Array.isArray(r.media) ? r.media : []).map((m: any) => m.image_path)), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
     const urls = new Map<string, string>();
     if (paths.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -110,7 +111,7 @@ export async function loadFirmCards(sb: any, ids: string[], fullAddressFor: Set<
     sb.from("advisor_firm_reviews").select("*").in("firm_id", ids),
     opts.docs ? sb.from("advisor_firm_documents").select("*").in("firm_id", ids).order("created_at") : Promise.resolve({ data: [] }),
   ]);
-  const paths = [...rows.map((r: any) => r.logo_path), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
+  const paths = [...rows.map((r: any) => r.logo_path), ...rows.flatMap((r: any) => (Array.isArray(r.media) ? r.media : []).map((m: any) => m.image_path)), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
   const urls = new Map<string, string>();
   if (paths.length) {
     const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(paths, 3600);
@@ -139,7 +140,7 @@ export const getAdvisorFirmForAdmin = createServerFn({ method: "GET" })
       sb.from("advisor_firm_documents").select("*").eq("firm_id", data.id),
       sb.from("advisor_firm_reviews").select("*").eq("firm_id", data.id),
     ]);
-    const paths = [r.logo_path, ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
+    const paths = [r.logo_path, ...(Array.isArray(r.media) ? r.media : []).map((m: any) => m.image_path), ...(docs.data ?? []).map((d: any) => d.file_path)].filter(Boolean) as string[];
     const urls = new Map<string, string>();
     if (paths.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -180,6 +181,7 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
       registration_no: nz(50), addr_street: nz(120), addr_unit: nz(120), addr_district: nz(80), addr_province: nz(80), addr_postal: nz(12),
       website: nz(200), services: z.array(z.string().max(60)).max(10), deal_size_band: z.enum(BAND_KEYS).nullable(), team_size: z.number().int().min(1).max(99999).nullable(),
       languages: z.array(z.string().max(40)).max(20), sectors: z.array(z.string().max(80)).max(60), sector_agnostic: z.boolean(), sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable(), email: nz(120), phone: nz(30), logo_path: nz(300), logo_source: z.enum(["upload", "enrich"]).nullable(),
+      media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3),
       description: nz(300), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.object({ fromSignup: z.array(z.string().max(20)).max(10).optional(), feeVisited: z.boolean().optional(), enrichSig: z.string().optional(), enrich: z.any().optional() }),
     }).partial(),
     fees: z.record(z.string().max(60), FeeIn).optional(),
@@ -188,6 +190,7 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
     const sb = context.supabase as any;
     const own = `advisor/${context.userId}/`;
     if (data.patch.logo_path && !data.patch.logo_path.startsWith(own)) throw new Error("Invalid logo file.");
+    if (data.patch.media?.some((m) => !m.image_path.startsWith(own))) throw new Error("Invalid photo file.");
     if (Object.keys(data.patch).length) {
       const { error } = await sb.from("advisor_firms").update(data.patch).eq("id", data.id).eq("owner_user_id", context.userId);
       if (error) throw new Error(error.message);
@@ -334,17 +337,17 @@ export const setAdvisorFirmStatus = createServerFn({ method: "POST" })
 
 export const createAdvisorUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["logo", "doc"]), ext: z.string().regex(/^[a-z0-9]{2,5}$/i) }).parse(d))
+  .inputValidator((d) => z.object({ kind: z.enum(["logo", "doc", "slot-1", "slot-2", "slot-3"]), ext: z.string().regex(/^[a-z0-9]{2,5}$/i) }).parse(d))
   .handler(async ({ data, context }) => {
     await requireAdvisor(context.supabase, context.userId);
     const ext = data.ext.toLowerCase();
-    const allowed = data.kind === "logo" ? ["png", "jpg", "jpeg", "webp", "svg"] : ["pdf", "docx", "doc", "png", "jpg", "jpeg", "webp"];
+    const allowed = data.kind === "logo" ? ["png", "jpg", "jpeg", "webp", "svg"] : data.kind.startsWith("slot") ? ["png", "jpg", "jpeg", "webp", "gif"] : ["pdf", "docx", "doc", "png", "jpg", "jpeg", "webp"];
     if (!allowed.includes(ext)) throw new Error("This file type isn't allowed.");
     const path = `advisor/${context.userId}/${data.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: s2, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUploadUrl(path);
     if (error) throw new Error(error.message);
-    return { path, url: s2.signedUrl as string };
+    return { path, url: s2.signedUrl as string, token: s2.token as string };
   });
 
 /** Signed URL for a freshly uploaded file, so the wizard can show it. */

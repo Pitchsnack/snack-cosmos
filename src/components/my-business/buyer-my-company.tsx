@@ -30,6 +30,7 @@ import { bandText, descriptionLeaks, typeName } from "@/lib/investor-bands";
 import { buyerProgressFor, type BuyerRelation } from "@/lib/buyer-wizard";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { BuyerPrivateCardBody, BuyerPrivatePanel, useBuyerInvestor } from "@/components/my-business/buyer-private-view";
+import { AddInvestorProfileButton, AdminInvestorProfiles, useAddInvestorProfile, useMyInvestorProfileIds } from "@/components/my-business/admin-investor-profiles";
 
 type View = "public" | "private";
 type Section = "public" | "company" | "fund" | "people" | "mandate" | "portfolio";
@@ -157,6 +158,13 @@ export function BuyerMyCompany() {
   const { data: session } = useSessionContext();
   const role = session?.user?.accountRole ?? null;
   const oneCompany = role === "seller" || role === "buyer" || role === "advisor";
+  const isAdmin = role === "admin";
+  const idsQ = useMyInvestorProfileIds(isAdmin);
+  const addProfile = useAddInvestorProfile();
+  const openId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("open") ?? undefined : undefined;
+  const extraIds = (idsQ.data?.ids ?? []).filter((x) => x !== inv.data?.investor.id);
+  const extras = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={openId} /> : null;
+  const total = 1 + extraIds.length;
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your investor profile. Please refresh.</p>;
@@ -195,7 +203,14 @@ export function BuyerMyCompany() {
     return (
       <div className="space-y-6">
         {!oneCompany && <SignupWelcome role="buyer" setupDone={false} />}
-        <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
+            {isAdmin && <p className="mt-1 text-sm text-muted-foreground">{total} investor profile{total === 1 ? "" : "s"} you own or manage</p>}
+          </div>
+          {isAdmin && <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />}
+        </div>
+        {extras}
         <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
           <DraftCompanyCard role="buyer" name={nm} typeLine={org.type ? typeName(org.type) : null} typeClass={tone.fg}
             founded={individual ? null : (iv as any).year_founded} size={individual ? null : (iv as any).company_size_band} website={iv.website_url} />
@@ -225,7 +240,7 @@ export function BuyerMyCompany() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
-          <p className="mt-1 text-sm text-muted-foreground">1 investor profile you own or manage</p>
+          <p className="mt-1 text-sm text-muted-foreground">{total} investor profile{total === 1 ? "" : "s"} you own or manage</p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" role="switch" aria-checked={favOnly} aria-label={favOnly ? "Show all my investor profiles" : "Show only favorites"}
@@ -238,9 +253,9 @@ export function BuyerMyCompany() {
           </button>
           <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>Profiles</Button>
           <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={(l) => { setLayout(l); if (l === "split") setView("private"); }} />
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => (setup ? openWizard() : setNewOpen(true))}>
-            <Plus className="mr-2 h-4 w-4" /> Add Investor Profile
-          </Button>
+          {isAdmin
+            ? <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />
+            : <AddInvestorProfileButton onClick={() => (setup ? openWizard() : setNewOpen(true))} />}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -274,6 +289,7 @@ export function BuyerMyCompany() {
           <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
         </Button>
       </div>
+      {extras}
       {!matches ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No companies match your filters</div>
       ) : layout === "profiles" ? (
@@ -511,7 +527,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   );
 }
 
-function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: () => void }) {
+export function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: () => void }) {
   const all = n >= N;
   return (
     <div data-tour-banner data-tour-n={N} data-tour-m={3} className="mb-4 flex flex-col gap-3 rounded-[14px] border border-[#CFD2FB] bg-[#EEF0FF] px-[18px] py-4 min-[860px]:flex-row min-[860px]:items-center dark:border-[#2E3570] dark:bg-[#1B2140]">

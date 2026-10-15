@@ -624,6 +624,20 @@
       "when": 1792031114030,
       "tag": "0088_welcome_tour_seen",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1792054124740,
+      "tag": "0089_wizard_drafts_and_firm_media",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1792054422643,
+      "tag": "0090_buyer_one_profile_and_inv_ref",
+      "breakpoints": true
     }
   ]
 }

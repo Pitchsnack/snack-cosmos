@@ -12,10 +12,11 @@ import { normPicks, picksToSectors, type SectorPicks } from "@/lib/business-type
 import { PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { typeTone } from "@/lib/buyer-profile";
 import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
-import { saveBuyerWizard } from "@/lib/buyer-investor.functions";
+import { createMyBuyerUploadUrl, saveBuyerMedia, saveBuyerWizard } from "@/lib/buyer-investor.functions";
+import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
-import { BUYER_INVESTOR_KEY, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
+import { buyerInvestorKey, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
   TICKET_BANDS, WIZARD_TYPES, ALL_TYPES, sortActsFor, typeLabel, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
@@ -151,6 +152,10 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [a, setA] = useState<A>(() => fromData(data));
   const [answered, setAnswered] = useState<string[]>(data.investor.wizard?.answered ?? []);
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
+  // Logo and photos: saved to the investor record as each upload finishes.
+  const [med, setMed] = useState({ logo: !!data.investor.logo_path, photos: data.investor.media.length });
+  const upUrl = useServerFn(createMyBuyerUploadUrl);
+  const saveMedia = useServerFn(saveBuyerMedia);
   const fromSignup = data.investor.wizard?.from_signup;
   const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name, actsFor: x.acts, sectors: x.sectors });
   const skipSet = skipOf(a);
@@ -226,12 +231,13 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     stages: !stagesShown || a.stages.length ? null : tr("Pick at least one stage."),
     sectors: manyError(a.picks, a.sectors.includes(SECTOR_AGNOSTIC), L),
     desc: descErr || (leaks.length ? "leak" : null),
+    photos: med.logo && med.photos > 0 ? null : tr("Both are needed to continue."),
   };  const qRef = useRef<HTMLDivElement>(null);
   useFocusNeeded(qRef, `${phase}:${cur}`);
 
   const fieldsOf: Record<QId, string[]> = {
     role: ["role"], type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web"], aum: ["aum"], ticket: ["ticket"],
-    rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], desc: ["desc"], review: [],
+    rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], photos: ["photos"], desc: ["desc"], review: [],
   };
   const qValid = (id: QId) => fieldsOf[id].every((k) => !errors[k]);
   const show = (k: string) => (touched[k] || forced[k]) && errors[k] && errors[k] !== "leak" ? errors[k] : null;
@@ -323,12 +329,12 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     // Never let a slow or failed save trap the user on this screen.
     const cap = <T,>(p: Promise<T>) => Promise.race([p, new Promise<void>((r) => window.setTimeout(r, 2500))]);
     try { await cap(flush()); } catch { /* flush already toasts */ }
-    void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
+    void qc.invalidateQueries({ queryKey: ["buyer-investor"] });
     void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
     toast.success(live ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
-    const fallback = window.setTimeout(() => { window.location.href = "/marketplace/my-company"; }, 1500);
-    try { await navigate({ to: "/marketplace/my-company" }); window.clearTimeout(fallback); }
-    catch { window.location.href = "/marketplace/my-company"; }
+    const fallback = window.setTimeout(() => { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }, 1500);
+    try { await navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); window.clearTimeout(fallback); }
+    catch { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }
   };
 
   const requiredQs = stepsAll.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
@@ -465,6 +471,17 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         <ManyTypeQuestion picks={a.picks} agnostic={a.sectors.includes(SECTOR_AGNOSTIC)} words={buyerWords(L)} error={forced.sectors ? errors.sectors : null}
           onChange={(p, ag) => { const v = ag ? [SECTOR_AGNOSTIC] : picksToSectors(p); set({ sectors: v, picks: p }, { preferred_industries: v, sector_picks: ag ? null : p }); }} />
       ) },
+    photos: { req: true, t: L("Add your logo and photos", "เพิ่มโลโก้และรูปภาพ"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
+      body: (
+        <LogoPhotosStep L={L} name={a.name || tr("Your firm")}
+          sectorLine={[typeLabel(agent ? a.acts[0] ?? "" : a.type), [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+          initial={{ logoPath: data.investor.logo_path, logoUrl: data.investor.logo_signed_url, slots: data.investor.media.map((m) => ({ slot: m.slot, path: m.image_path, url: m.url })) }}
+          getUrl={({ kind, ext }) => upUrl({ data: { kind, ext, investor_id: data.investor.id } })}
+          persist={(logo_path, media) => saveMedia({ data: { investor_id: data.investor.id, logo_path, media } })}
+          onCount={(logo, photos) => setMed({ logo, photos })}
+          note={<><Lock className="mt-[2px] h-[14px] w-[14px] flex-none" />{tr("Before an NDA, sellers see your investor type's cover, never your logo or photos.")}</>}
+          why={[tr("Help sellers understand and remember your firm once they approve your NDA."), L("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดีกว่า"), tr("Help sellers trust you. Sellers who share their details want to see who they're dealing with.")]} />
+      ) },
     desc: { req: false, t: tr("How would you describe your firm to sellers?"), h: tr("In one line. Sellers read it before any NDA, so leave out names, websites and contact details."),
       body: (
         <div>
@@ -490,7 +507,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         </div>
       ) },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
-      body: <Review a={a} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
+      body: <Review a={a} med={med} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
         onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[step.id];
@@ -546,24 +563,24 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               </div>
             </div>
           </div>
-          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{tr("Your firm's name, website and exact figures stay private until a seller approves your NDA.")}</p>
+          <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{individual ? tr("Your firm's name, website and exact figures stay private until a seller approves your NDA.") : tr("Your firm's name, website, logo, photos and exact figures stay private until a seller approves your NDA.")}</p>
         </div>
       )}
       {phase === "enrich" && (
         <Enrich a={a} header={header} card={card} btnO={btnO} btnP={btnP} onBack={() => { setPhase("q"); goTo("review"); }} onExit={saveExit}
-          onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY }).then(() => setPhase("complete")); }} />
+          onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }).then(() => setPhase("complete")); }} />
       )}
       {phase === "complete" && (
-        <Complete header={header} enrich={enrichRes} answered={a}
+        <Complete invId={data.investor.id} header={header} enrich={enrichRes} answered={a}
           onBack={() => { setPhase("q"); goTo(fromProfile ? "desc" : "review"); }}
-          onSaved={(msg) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] }); void navigate({ to: "/marketplace/my-company" }); }} />
+          onSaved={(msg) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] }); void navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); }} />
       )}
     </div>
   );
 }
 
-function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit }: {
-  a: A; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; onEdit: (id: QId) => void;
+function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, onEdit }: {
+  a: A; med: { logo: boolean; photos: number }; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; onEdit: (id: QId) => void;
 }) {
   const shown = new Set(steps.map((s) => s.id));
   type Row = [string, React.ReactNode, QId, "req" | "opt", string | null, string?];
@@ -591,6 +608,7 @@ function Review({ a, steps, errors, individual, thai, stagesShown, corp, onEdit 
       ...(stagesShown ? [[tr("Preferred stages"), a.stages.join(", "), "deals", "req", errors.stages] as Row] : []),
       [tr("Geography"), a.geo.join(", "), "deals", "opt", null],
       [tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors],
+      ...(shown.has("photos") ? [[tr("Logo and photos"), med.logo && med.photos > 0 ? (med.photos === 1 ? tr("Logo and 1 photo") : tr("Logo and {n} photos").replace("{n}", String(med.photos))) : "", "photos", "req", errors.photos, "🔒 After NDA"] as Row] : []),
     ]],
     [tr("Public profile"), [[tr("Description"), a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]],
   ];
@@ -688,11 +706,11 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   );
 }
 
-function Complete({ header, enrich, answered, onBack, onSaved }: {
-  header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string) => void;
+function Complete({ invId, header, enrich, answered, onBack, onSaved }: {
+  invId: string; header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string) => void;
 }) {
   const qc = useQueryClient();
-  const data = qc.getQueryData<Data>(BUYER_INVESTOR_KEY);
+  const data = qc.getQueryData<{ ok: boolean; data: Data | null }>(buyerInvestorKey(invId))?.data ?? null;
   if (!data) return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-[#6B7280]" /></div>;
   const ans: SourceTag = "Your answer";
   const sources: Record<string, SourceTag> = {

@@ -558,6 +558,7 @@ export type Database = {
           live_since: string | null
           logo_path: string | null
           logo_source: string | null
+          media: Json
           more_info_at: string | null
           more_info_by: string | null
           more_info_fields: string[]
@@ -621,6 +622,7 @@ export type Database = {
           live_since?: string | null
           logo_path?: string | null
           logo_source?: string | null
+          media?: Json
           more_info_at?: string | null
           more_info_by?: string | null
           more_info_fields?: string[]
@@ -684,6 +686,7 @@ export type Database = {
           live_since?: string | null
           logo_path?: string | null
           logo_source?: string | null
+          media?: Json
           more_info_at?: string | null
           more_info_by?: string | null
           more_info_fields?: string[]
@@ -5504,7 +5507,7 @@ export type Database = {
           setup_reached: string | null
           short_description: string | null
           source_global_id: string | null
-          startup_name: string
+          startup_name: string | null
           status: string
           tenant_id: string
           updated_at: string
@@ -5560,7 +5563,7 @@ export type Database = {
           setup_reached?: string | null
           short_description?: string | null
           source_global_id?: string | null
-          startup_name: string
+          startup_name?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
@@ -5616,7 +5619,7 @@ export type Database = {
           setup_reached?: string | null
           short_description?: string | null
           source_global_id?: string | null
-          startup_name?: string
+          startup_name?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
@@ -6520,6 +6523,7 @@ export type Database = {
         Returns: boolean
       }
       mark_welcome_tour_seen: { Args: never; Returns: string }
+      next_inv_ref: { Args: never; Returns: string }
       normalize_url_key: { Args: { _url: string }; Returns: string }
       record_report_open: {
         Args: { _ref: string; _report_key: string; _uid: string }

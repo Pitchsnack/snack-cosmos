@@ -256,31 +256,6 @@ export const emptyDraft = (): SellerDraft => ({
   rev: null, size: null, sector: null, licences: [], iso: [], addr: emptyAddr(), reached: null, savedAt: new Date().toISOString(),
 });
 
-const key = (userId: string) => `ps.sellerDraft.${userId}`;
-
-export function loadDraft(userId: string | undefined): SellerDraft | null {
-  if (!userId || typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(key(userId));
-    if (!raw) return null;
-    const x = JSON.parse(raw);
-    // Older drafts had a separate location question; its province fills the address.
-    const addr = { ...emptyAddr(), ...(x.addr ?? {}) };
-    if (!addr.province && x.city) addr.province = x.city;
-    const step = typeof x.step === "number" && x.step >= 5 && !x.addr ? x.step - 1 : x.step;
-    return { ...emptyDraft(), ...x, addr, step } as SellerDraft;
-  } catch {
-    return null;
-  }
-}
-export function saveDraft(userId: string, d: SellerDraft) {
-  localStorage.setItem(key(userId), JSON.stringify({ ...d, savedAt: new Date().toISOString() }));
-  window.dispatchEvent(new Event("ps-seller-draft"));
-}
-export function clearDraft(userId: string) {
-  localStorage.removeItem(key(userId));
-  window.dispatchEvent(new Event("ps-seller-draft"));
-}
 
 export const isValidUrl = (raw: string) => {
   const v = raw.trim();

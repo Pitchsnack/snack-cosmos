@@ -128,6 +128,8 @@ export type AdvisorFirm = {
   /** Browse advisors only: a PitchSnack private client. */
   managed?: boolean;
   id: string; refNo: string; name: string; firmType: string; logoPath: string | null; logoUrl: string | null; logoSource: "upload" | "enrich" | null;
+  /** Up to 3 photos (slot 1–3), shown after the NDA-free card. */
+  media?: { slot: number; path: string; url: string | null }[];
   description: string | null; yearFounded: number | null; city: string | null; country: string | null;
   services: string[]; fees: Record<string, string>; feeDetails: Record<string, FeeDetail>;
   dealBand: string | null; teamSize: number | null;

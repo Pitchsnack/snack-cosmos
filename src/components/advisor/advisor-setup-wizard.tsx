@@ -7,13 +7,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Circle, ExternalLink, Globe, Info, Landmark, Loader2, Newspaper, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
+import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { FirmCard } from "@/components/advisor/advisor-firm-card";
 import { ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { AddressBox, Err, FeeControl, LogoDrop, Opt, Req, addrErrors, logoFileError, nowrapPct, useLogoUpload, type Addr, type LogoState } from "@/components/advisor/advisor-firm-fields";
 import { FirmEditForm, type FirmForm, type SourceTag } from "@/components/advisor/advisor-firm-edit";
-import { enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "@/lib/advisor-firm.functions";
+import { createAdvisorUploadUrl, enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "@/lib/advisor-firm.functions";
 import {
   ADVISOR_SERVICES, DEAL_BANDS, FIRM_TYPE_OPTIONS, LANGUAGES, WIZARD_QS, cityError, dealBandLabels, descError, emailError, feeWords,
   fullAddress, nameError, newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type FeeDetail, type WizardQ,
@@ -26,7 +27,7 @@ import { cn } from "@/lib/utils";
 type A = {
   type: string; country: string; city: string; name: string; year: string; reg: string; addr: Addr; web: string;
   services: string[]; fees: Record<string, FeeDetail>; deal: string; team: string; langs: string[]; sectors: string[]; picks: SectorPicks; agnostic: boolean; email: string; phone: string;
-  logo: LogoState; desc: string;
+  logo: LogoState; photos: number; desc: string;
 };
 const SECTION: Record<WizardQ, string> = {
   type: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
@@ -42,7 +43,7 @@ function fromFirm(f: AdvisorFirm): A {
     addr: { street: f.addrStreet ?? "", unit: f.addrUnit ?? "", district: thai ? f.addrDistrict ?? "" : "", province: f.addrProvince ?? (thai ? f.city ?? "" : ""), postal: f.addrPostal ?? "" },
     web: f.website ?? "", services: f.services, fees: { ...f.feeDetails }, deal: f.dealBand ?? "",
     team: f.teamSize ? String(f.teamSize) : "", langs: f.languages, sectors: f.sectors, picks: normPicks(f.sectorPicks), agnostic: !!f.sectorAgnostic, email: f.email ?? "", phone: f.phone ?? "",
-    logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, desc: f.description ?? "",
+    logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, photos: f.media?.length ?? 0, desc: f.description ?? "",
   };
 }
 const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a");
@@ -54,6 +55,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const qc = useQueryClient();
   const saveFn = useServerFn(saveAdvisorWizard);
   const uploadLogo = useLogoUpload();
+  const advUpUrl = useServerFn(createAdvisorUploadUrl);
   const setupDone = !!firm.setupDoneAt;
   const [a, setA] = useState<A>(() => fromFirm(firm));
   const [answered, setAnswered] = useState<string[]>(firm.setupAnswered);
@@ -101,7 +103,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     sectors: manyError(a.picks, a.agnostic, L),
     email: emailError(a.email),
     phone: phoneError(a.phone),
-    logo: a.logo.path ? null : "hint",
+    logo: a.logo.path && a.photos > 0 ? null : "hint",
     desc: descError(a.desc),
   };
   const fieldsOf: Record<WizardQ, string[]> = {
@@ -110,8 +112,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const qValid = (id: WizardQ) => fieldsOf[id].every((k) => !errors[k]);
   const show = (k: string) => ((touched[k] || forced[k]) && errors[k] && errors[k] !== "fee" && errors[k] !== "hint" ? errors[k] : null);
-  const isAnswered = useCallback((id: string) => answered.includes(id) && (id === "deal" || id === "logo" || qValid(id as WizardQ)), [answered, a]); // eslint-disable-line react-hooks/exhaustive-deps
-  const requiredOk = WIZARD_QS.filter((q) => q !== "deal" && q !== "logo").every((q) => qValid(q));
+  const isAnswered = useCallback((id: string) => answered.includes(id) && (id === "deal" || qValid(id as WizardQ)), [answered, a]); // eslint-disable-line react-hooks/exhaustive-deps
+  const requiredOk = WIZARD_QS.filter((q) => q !== "deal").every((q) => qValid(q));
 
   const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team, sectors: x.sectors, agnostic: x.agnostic });
   const skipSet = skipOf(a);
@@ -218,7 +220,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const tryContinue = () => {
     if (cur === "review") { if (requiredOk) void flush().then(() => setPhase("enrich")); return; }
     if (cur === "deal" && !a.deal) { setHint(tr("Choose a range to continue, or Skip this question.")); return; }
-    if (cur === "logo" && !a.logo.path) { setHint(tr("Choose a file to continue, or Skip this question.")); return; }
+    if (cur === "logo" && !qValid("logo")) { setHint(tr("Both are needed to continue.")); return; }
     if (!qValid(cur)) {
       setForced(Object.fromEntries(fieldsOf[cur].map((k) => [k, true])));
       if (cur === "services") setTouched((t) => ({ ...t, ...Object.fromEntries(a.services.map((s) => [`fee-${s}`, true])) }));
@@ -506,11 +508,20 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    logo: { req: false, t: tr("Attach your company's logo"), h: tr("Sellers and buyers see it on your card. A square PNG, JPG or SVG works best, up to 2 MB."),
+    logo: { req: true, t: L("Add your logo and photos", "เพิ่มโลโก้และรูปภาพ"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
       body: (
         <div>
-          <LogoDrop logo={a.logo} busy={logoBusy} error={logoErr} onFile={onLogo}
-            onRemove={() => set({ logo: { path: null, url: null, name: null, sizeKb: null, source: null } }, { logo_path: null, logo_source: null })} />
+          <LogoPhotosStep L={L} name={a.name || tr("Your firm")} sectorLine={[a.type, [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+            initial={{ logoPath: firm.logoPath, logoUrl: firm.logoUrl, slots: firm.media ?? [] }}
+            getUrl={({ kind, ext }) => advUpUrl({ data: { kind, ext } })}
+            persist={async (logo_path, media) => {
+              if (logo_path !== a.logo.path) set({ logo: { path: logo_path, url: null, name: null, sizeKb: null, source: logo_path ? "upload" : null } }, { logo_path, logo_source: logo_path ? "upload" : null });
+              set({ photos: media.length }, { media });
+              await flush();
+            }}
+            onCount={() => setHint(null)}
+            note={<>{tr("Sellers and buyers see your logo on your card, and your photos on your profile.")}</>}
+            why={[tr("Help sellers and buyers recognise and remember your firm."), L("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดีกว่า"), tr("Help clients trust you. They want to see who they're working with.")]} />
           {hint && <p className="mt-2 text-[13px] text-[#6B7280]">{hint}</p>}
           {previewBox}
         </div>
@@ -535,7 +546,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const q = Q[cur];
   const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "services" ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
   const continueOk = cur === "review" ? requiredOk : qValid(cur);
-  const optional = cur === "deal" || cur === "logo";
+  const optional = cur === "deal";
 
   // ---------------- layout ----------------
   const topBar = (
@@ -678,7 +689,8 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
     ]],
     [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
     [tr("Your card"), [
-      [tr("Logo"), a.logo.url ? <span className="inline-flex items-center gap-2"><img src={a.logo.url} alt="" className="h-7 w-7 rounded border border-[#E3E6EB] bg-white object-contain" />{a.logo.source === "enrich" ? "Found on your website" : a.logo.name ?? tr("Your logo")}</span> : notSet, "logo"],
+      [tr("Logo"), a.logo.url ? <span className="inline-flex items-center gap-2"><img src={a.logo.url} alt="" className="h-7 w-7 rounded border border-[#E3E6EB] bg-white object-contain" />{a.logo.source === "enrich" ? "Found on your website" : a.logo.name ?? tr("Your logo")}</span> : miss, "logo"],
+      [tr("Photos"), a.photos ? (a.photos === 1 ? tr("1 photo") : tr("{n} photos").replace("{n}", String(a.photos))) : miss, "logo"],
       [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{tr(a.desc)}</span>, "desc"],
     ]],
   ];

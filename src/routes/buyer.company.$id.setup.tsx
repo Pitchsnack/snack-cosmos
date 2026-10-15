@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyBuyerInvestor } from "@/lib/buyer-investor.functions";
-import { BUYER_INVESTOR_KEY } from "@/components/my-business/buyer-investor-edit";
+import { getBuyerInvestorById } from "@/lib/buyer-investor.functions";
+import { buyerInvestorKey, type Data } from "@/components/my-business/buyer-investor-edit";
 import { BuyerSetupWizard } from "@/components/my-business/buyer-setup-wizard";
 
 export const Route = createFileRoute("/buyer/company/$id/setup")({
@@ -30,10 +30,11 @@ export const Route = createFileRoute("/buyer/company/$id/setup")({
 function SetupPage() {
   const { id } = Route.useParams();
   const { q } = Route.useSearch();
-  const fetchMe = useServerFn(getMyBuyerInvestor);
-  const { data, error } = useQuery({ queryKey: BUYER_INVESTOR_KEY, queryFn: () => fetchMe() });
+  const fetchById = useServerFn(getBuyerInvestorById);
+  // The profile in the address, owner checked on the server: anyone else's sends no data.
+  const { data: r, error } = useQuery({ queryKey: buyerInvestorKey(id), queryFn: async () => { const x = await fetchById({ data: { id } }); return x.ok ? { ok: true as const, data: x.data as Data } : { ok: false as const, data: null }; } });
   if (error) return <p className="p-8 text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
-  if (!data) return <div className="min-h-screen bg-[#F6F7F9] dark:bg-background" />;
-  if (data.investor.id !== id) return <p className="p-8 text-sm text-muted-foreground">This profile isn't yours.</p>;
-  return <BuyerSetupWizard data={data} startAt={q} />;
+  if (!r) return <div className="min-h-screen bg-[#F6F7F9] dark:bg-background" />;
+  if (!r.ok) return <p className="p-8 text-sm text-muted-foreground">This profile isn't yours.</p>;
+  return <BuyerSetupWizard key={id} data={r.data} startAt={q} />;
 }
