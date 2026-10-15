@@ -3425,6 +3425,77 @@ export type Database = {
           },
         ]
       }
+      investor_profile_verifications: {
+        Row: {
+          assignee_id: string | null
+          buyer_type: string | null
+          company_name: string | null
+          created_at: string
+          decided_at: string | null
+          decision_note: string | null
+          documents: string[]
+          email_domain_match: boolean | null
+          id: string
+          investor_id: string
+          linkedin: string | null
+          registration_no: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+          work_email: string | null
+        }
+        Insert: {
+          assignee_id?: string | null
+          buyer_type?: string | null
+          company_name?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
+          documents?: string[]
+          email_domain_match?: boolean | null
+          id?: string
+          investor_id: string
+          linkedin?: string | null
+          registration_no?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+          work_email?: string | null
+        }
+        Update: {
+          assignee_id?: string | null
+          buyer_type?: string | null
+          company_name?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
+          documents?: string[]
+          email_domain_match?: boolean | null
+          id?: string
+          investor_id?: string
+          linkedin?: string | null
+          registration_no?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          work_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_profile_verifications_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: true
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_tags: {
         Row: {
           id: string
@@ -6507,6 +6578,13 @@ export type Database = {
       has_sector_answer: {
         Args: { _agnostic: boolean; _picks: Json }
         Returns: boolean
+      }
+      investor_is_verified: {
+        Args: { _ids: string[] }
+        Returns: {
+          investor_id: string
+          verified: boolean
+        }[]
       }
       is_account_admin: { Args: { _uid: string }; Returns: boolean }
       is_control: { Args: { _user_id: string }; Returns: boolean }

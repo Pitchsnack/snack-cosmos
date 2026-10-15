@@ -83,7 +83,7 @@ export const listContacts = createServerFn({ method: "GET" })
     const personIds = rows.map((r) => (data.as === "seller" ? r.buyer_user_id : ownerOf[r.startup_id])).filter(Boolean);
     const { users, profs } = await people(sb, [...new Set([...personIds, context.userId])]);
     const { data: bvs } = data.as === "seller" && personIds.length
-      ? await sb.from("buyer_verifications").select("user_id, company_name, buyer_type").in("user_id", personIds)
+      ? await (await import("./profile-verification.server")).verificationsByUsers(sb, personIds, "user_id, company_name, buyer_type").then((mp: Map<string, any>) => ({ data: [...mp.values()] }))
       : { data: [] };
     const bvMap = Object.fromEntries((bvs ?? []).map((b: any) => [b.user_id, b]));
 

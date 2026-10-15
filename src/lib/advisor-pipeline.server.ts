@@ -35,7 +35,7 @@ export async function dealParties(sb: any, deals: any[]) {
   const [{ data: hps }, { data: sts }, { data: bvs }, { data: bps }, { data: ups }] = await Promise.all([
     hpIds.length ? sb.from("hidden_profiles").select("id, code_name, ref_no, region").in("id", hpIds) : e,
     stIds.length ? sb.from("startups").select("id, startup_name, industry, city").in("id", stIds) : e,
-    bIds.length ? sb.from("buyer_verifications").select("user_id, company_name, buyer_type").in("user_id", bIds) : e,
+    bIds.length ? (await import("./profile-verification.server")).verificationsByUsers(sb, bIds, "user_id, company_name, buyer_type").then((mp: Map<string, any>) => ({ data: [...mp.values()] })) : e,
     bIds.length ? sb.from("buyer_profiles").select("user_id, investor_id").in("user_id", bIds) : e,
     bIds.length ? sb.from("user_profiles").select("user_id, city, organisation").in("user_id", bIds) : e,
   ]);

@@ -142,7 +142,7 @@ export const listApprovals = createServerFn({ method: "GET" })
       .select("id, startup_id, ref_no, code_name, cover_art, public_image_id, live, approval_status, version, submitted_at, submitted_by, assignee_id, decided_at, startups!inner(startup_name, sector, last_year_revenue, company_type)")
       .in("approval_status", ["in_review", "changes_requested"])
       .order("submitted_at", { ascending: true });
-    const { data: buyers } = await sb.from("buyer_verifications").select("*").in("status", ["pending", "more_info"]).order("submitted_at", { ascending: true });
+    const { data: buyers } = await sb.from("investor_profile_verifications").select("*").in("status", ["pending", "more_info"]).order("submitted_at", { ascending: true });
     const { data: history } = await sb.from("approval_events").select("*").order("created_at", { ascending: false }).limit(500);
     const userIds = new Set<string>();
     for (const l of listings ?? []) { if (l.submitted_by) userIds.add(l.submitted_by); if (l.assignee_id) userIds.add(l.assignee_id); }
@@ -159,7 +159,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     const bids = (history ?? []).filter((h: any) => h.item_type !== "listing").map((h: any) => h.item_id);
     const buyerInfo: Record<string, any> = {};
     if (bids.length) {
-      const { data: bv } = await sb.from("buyer_verifications").select("id, user_id, company_name, buyer_type").in("id", bids);
+      const { data: bv } = await sb.from("investor_profile_verifications").select("id, user_id, company_name, buyer_type").in("id", bids);
       for (const b of bv ?? []) buyerInfo[b.id] = b;
       Object.assign(names, await userNames(sb, (bv ?? []).map((b: any) => b.user_id)));
     }
@@ -175,7 +175,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     const invById = new Map((invs ?? []).map((i: any) => [i.id, i]));
     const profUids = (profRows ?? []).map((r: any) => r.user_id);
     Object.assign(names, await userNames(sb, profUids));
-    const { data: profBv } = profUids.length ? await sb.from("buyer_verifications").select("user_id, status, decided_at").in("user_id", profUids) : { data: [] };
+    const { data: profBv } = profUids.length ? await (await import("./profile-verification.server")).verificationsByUsers(sb, profUids, "status, decided_at").then((mp: Map<string, any>) => ({ data: [...mp.values()] })) : { data: [] };
     const bvByUser = new Map((profBv ?? []).map((b: any) => [b.user_id, b]));
     const profiles = (profRows ?? []).map((r: any) => {
       const inv: any = invById.get(r.investor_id);
@@ -222,7 +222,7 @@ export const pendingApprovalsCount = createServerFn({ method: "GET" })
     if (!isAdmin) return 0;
     const sb = await admin();
     const { count: a } = await sb.from("hidden_profiles").select("id", { count: "exact", head: true }).eq("approval_status", "in_review");
-    const { count: b } = await sb.from("buyer_verifications").select("id", { count: "exact", head: true }).eq("status", "pending");
+    const { count: b } = await sb.from("investor_profile_verifications").select("id", { count: "exact", head: true }).eq("status", "pending");
     const { count: c } = await sb.from("report_orders").select("id", { count: "exact", head: true }).in("status", ["paid", "generated"]);
     const { count: d } = await sb.from("buyer_profiles").select("user_id", { count: "exact", head: true }).eq("approval_status", "in_review");
     const { count: e } = await sb.from("advisor_firms").select("id", { count: "exact", head: true }).eq("advisor_verification", "pending");
@@ -263,7 +263,7 @@ export const assignApproval = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
     const sb = await admin();
-    const table = data.kind === "listing" ? "hidden_profiles" : "buyer_verifications";
+    const table = data.kind === "listing" ? "hidden_profiles" : "investor_profile_verifications";
     const { error } = await sb.from(table).update({ assignee_id: context.userId }).eq("id", data.id);
     if (error) throw new Error(error.message);
     await logEvent({ item_type: data.kind, item_id: data.id, action: "assign", actor_id: context.userId });
@@ -349,7 +349,7 @@ export const getMyVerification = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = context.supabase as any;
-    const { data } = await sb.from("buyer_verifications").select("*").eq("user_id", context.userId).maybeSingle();
+    const data = await (await import("./profile-verification.server")).verificationByUser(sb, context.userId);
     const { data: uv } = await sb.from("user_verifications").select("user_id").eq("user_id", context.userId).maybeSingle();
     return { request: data ?? null, verified: !!uv || data?.status === "verified" };
   });
@@ -373,15 +373,16 @@ export const submitVerification = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const sb = context.supabase as any;
+    const sb = await admin();
     const match = data.website ? domainOf(data.work_email) === domainOf(data.website) : null;
     const row = { ...data, user_id: context.userId, status: "pending", email_domain_match: match, submitted_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-    const { data: existing } = await sb.from("buyer_verifications").select("id").eq("user_id", context.userId).maybeSingle();
-    const res = existing
-      ? await sb.from("buyer_verifications").update(row).eq("id", existing.id).select("*").single()
-      : await sb.from("buyer_verifications").insert(row).select("*").single();
+    const pv = (await import("./profile-verification.server"));
+    const investorId = (await pv.linkedInvestorIds(sb, [context.userId])).get(context.userId);
+    if (!investorId) throw new Error("Set up your investor profile first");
+    const existing = await pv.verificationByInvestor(sb, investorId, "id, submitted_at");
+    const res = await sb.from("investor_profile_verifications").upsert({ ...row, investor_id: investorId }, { onConflict: "investor_id" }).select("*").single();
     if (res.error) throw new Error(res.error.message);
-    await logEvent({ item_type: "buyer", item_id: res.data.id, subject_user_id: context.userId, action: existing ? "resubmit" : "submit", actor_id: context.userId });
+    await logEvent({ item_type: "buyer", item_id: res.data.id, subject_user_id: context.userId, action: existing?.submitted_at ? "resubmit" : "submit", actor_id: context.userId });
     await notify(context.userId, null, "Submitted for verification", "Admin usually reviews within 1 business day.");
     return res.data;
   });
@@ -392,7 +393,7 @@ export const getBuyerReview = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
     const sb = await admin();
-    const { data: bv } = await sb.from("buyer_verifications").select("*").eq("id", data.id).maybeSingle();
+    const { data: bv } = await sb.from("investor_profile_verifications").select("*").eq("id", data.id).maybeSingle();
     if (!bv) throw new Error("Buyer not found");
     const { data: profile } = await sb.from("user_profiles").select("*").eq("user_id", bv.user_id).maybeSingle();
     const { data: user } = await sb.from("users").select("first_name, last_name, email").eq("id", bv.user_id).maybeSingle();
@@ -409,7 +410,7 @@ export const decideBuyer = createServerFn({ method: "POST" })
     if (data.action !== "verify" && !data.note?.trim()) throw new Error("Add a note for the buyer");
     const sb = await admin();
     const status = { verify: "verified", more_info: "more_info", decline: "declined" }[data.action];
-    const { data: bv, error } = await sb.from("buyer_verifications")
+    const { data: bv, error } = await sb.from("investor_profile_verifications")
       .update({ status, decision_note: data.note ?? null, decided_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq("id", data.id).select("*").single();
     if (error) throw new Error(error.message);

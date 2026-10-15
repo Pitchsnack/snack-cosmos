@@ -645,6 +645,13 @@
       "when": 1792055391826,
       "tag": "0091_advisor_media_max_three",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1792061358891,
+      "tag": "0092_investor_profile_verifications",
+      "breakpoints": true
     }
   ]
 }

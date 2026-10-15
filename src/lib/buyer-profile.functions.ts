@@ -5,7 +5,7 @@ import { aumRange, ticketRange, type BuyerOrg, type BuyerProfile, type PublicBuy
 
 /**
  * Buyer investor profile (My Company in the Buyer view). Private data lives in
- * buyer_profiles (+ buyer_verifications for the firm); the public record is
+ * buyer_profiles (+ the profile's investor_profile_verifications entry); the public record is
  * derived here and is the only shape ever sent to sellers.
  */
 
@@ -37,7 +37,7 @@ export const getMyBuyerProfile = createServerFn({ method: "GET" })
     const profile = await ensure(context.userId);
     const invId = (profile as any).investor_id as string | null;
     const [{ data: bv }, { data: deals }, { data: inv }] = await Promise.all([
-      sb.from("buyer_verifications").select("company_name, buyer_type, website, registration_no, status, work_email").eq("user_id", context.userId).maybeSingle(),
+      (await import("./profile-verification.server")).verificationByUser(sb, context.userId, "company_name, buyer_type, website, registration_no, status, work_email").then((data: any) => ({ data })),
       sb.from("deal_pipelines").select("nda_approved_at, loi_sent_at").eq("buyer_user_id", context.userId),
       invId ? sb.from("investors").select("investor_name, investor_type, website_url, registration_no").eq("id", invId).maybeSingle() : Promise.resolve({ data: null }),
     ]);
@@ -153,7 +153,7 @@ export const listPublicBuyers = createServerFn({ method: "GET" })
     const { data: rows } = await sb.from("buyer_profiles").select("*").eq("status", "live").order("live_since", { ascending: false }).limit(200);
     const ids = (rows ?? []).map((r: any) => r.user_id);
     const { data: bvs } = ids.length
-      ? await sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", ids)
+      ? await (await import("./profile-verification.server")).verificationsByUsers(sb, ids, "user_id, company_name, buyer_type, status").then((mp: Map<string, any>) => ({ data: [...mp.values()] }))
       : { data: [] };
     const byId = new Map((bvs ?? []).map((b: any) => [b.user_id, b]));
     const invIds = (rows ?? []).map((r: any) => r.investor_id).filter(Boolean);

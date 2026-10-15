@@ -141,7 +141,7 @@ export const requestNda = createServerFn({ method: "POST" })
     const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, approval_status, live").eq("id", data.listingId).maybeSingle();
     // Approval is the only source of truth for what a buyer may reach.
     if (!isBuyerVisible(hp)) throw new Error("This listing isn't available");
-    const { data: bv } = await sb.from("buyer_verifications").select("status").eq("user_id", context.userId).maybeSingle();
+    const { data: bv } = await (await import("./profile-verification.server")).verificationByUser(sb, context.userId, "status").then((data: any) => ({ data }));
     const { data: uv } = await sb.from("user_verifications").select("user_id").eq("user_id", context.userId).maybeSingle();
     if (!uv && bv?.status !== "verified") throw new Error("Verify your buyer profile first");
     const { requireRole, planAccess, valueCap, spendRequest } = await import("./plan-access.server");
@@ -251,7 +251,7 @@ export const listPipeline = createServerFn({ method: "GET" })
       hpIds.length ? sb.from("hidden_profiles").select("id, code_name, region, asking_price, asking_price_thb, startup_id").in("id", hpIds) : empty,
       stIds.length ? sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : empty,
       stIds.length ? sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds) : empty,
-      buyerIds.length ? sb.from("buyer_verifications").select("user_id, company_name, buyer_type, status").in("user_id", buyerIds) : empty,
+      buyerIds.length ? (await import("./profile-verification.server")).verificationsByUsers(sb, buyerIds, "user_id, company_name, buyer_type, status").then((mp: Map<string, any>) => ({ data: [...mp.values()] })) : empty,
       pipeIds.length ? sb.from("report_shares").select("*").in("pipeline_id", pipeIds).order("shared_at", { ascending: false }) : empty,
       Promise.all(stIds.map((id) => deliveredKinds(sb, id))),
     ]);
@@ -462,7 +462,7 @@ export const loiParties = createServerFn({ method: "GET" })
       sb.from("startups").select("startup_name, registered_name, registered_number").eq("id", p.startup_id).maybeSingle(),
       sb.from("hidden_profiles").select("ref_no").eq("id", p.hidden_profile_id).maybeSingle(),
       sb.from("buyer_profiles").select("legal_name, investor_id").eq("user_id", buyerId).maybeSingle(),
-      sb.from("buyer_verifications").select("company_name, registration_no").eq("user_id", buyerId).maybeSingle(),
+      (await import("./profile-verification.server")).verificationByUser(sb, buyerId, "company_name, registration_no").then((data: any) => ({ data })),
       sb.from("user_profiles").select("organisation").eq("user_id", buyerId).maybeSingle(),
     ]);
     const { data: inv } = bp?.investor_id
@@ -727,7 +727,7 @@ export const investorProfile = createServerFn({ method: "GET" })
     await assertSeller(context, p.startup_id);
     const sb = await admin();
     const [{ data: bv }, { data: up }, { data: u }] = await Promise.all([
-      sb.from("buyer_verifications").select("company_name, buyer_type, status").eq("user_id", p.buyer_user_id).maybeSingle(),
+      (await import("./profile-verification.server")).verificationByUser(sb, p.buyer_user_id, "company_name, buyer_type, status").then((data: any) => ({ data })),
       sb.from("user_profiles").select("title, organisation, bio, city, country, industry_focus, buyer_type, experience").eq("user_id", p.buyer_user_id).maybeSingle(),
       sb.from("users").select("first_name, last_name, email").eq("id", p.buyer_user_id).maybeSingle(),
     ]);
