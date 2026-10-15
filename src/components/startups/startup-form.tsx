@@ -1,4 +1,3 @@
-import { tr } from "@/i18n/language";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
@@ -1078,7 +1077,7 @@ export function StartupForm({
                 <SelectContent>
                   <SelectItem value="none">— Select —</SelectItem>
                   {revenueOptions.map((s) => (
-                    <SelectItem key={s} value={s}>{tr(s)}</SelectItem>
+                    <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1375,7 +1374,7 @@ export function StartupForm({
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
               {revenueOptions.map((s) => (
-                <SelectItem key={s} value={s}>{tr(s)}</SelectItem>
+                <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1883,14 +1882,14 @@ export function StartupForm({
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{tr(s)}</SelectItem>)}</SelectContent>
+              <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Visibility</Label>
             <Select value={visibility} onValueChange={setVisibility}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{VISIBILITIES.map((s) => <SelectItem key={s} value={s}>{tr(s)}</SelectItem>)}</SelectContent>
+              <SelectContent>{VISIBILITIES.map((s) => <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>
