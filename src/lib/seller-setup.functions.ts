@@ -239,3 +239,46 @@ export const applySellerEnrich = createServerFn({ method: "POST" })
     }
     return { found };
   });
+
+/**
+ * + Add My Business: makes an empty Draft business on the server (no name, setup not done,
+ * no sign-up answers) and returns its id; the caller then opens the seller wizard on it.
+ * Seller accounts: their own business (one-company rule). Admin: in the active workspace, owned by Admin.
+ */
+export const addDraftBusiness = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ tenantId: z.string().uuid().nullable().optional() }).parse(d ?? {}))
+  .handler(async ({ data, context }) => {
+    const sb = await admin();
+    const { roleOf } = await import("./plan-access.server");
+    const role = await roleOf(context.userId);
+    if (role !== "admin") {
+      const { createSellerBusiness, sellerTenant } = await import("./seller-setup.server");
+      if (!(await sellerTenant(sb, context.userId))) throw new Error("Only seller accounts can add a business here.");
+      const id = await createSellerBusiness(sb, context.userId, { name: "", relation: null, fromSignup: [], setupDone: false });
+      return { id };
+    }
+    // Admin: the active workspace (else its primary one), checked as the caller.
+    let tenantId = data.tenantId ?? null;
+    if (!tenantId) { const { data: u } = await sb.from("users").select("primary_tenant_id").eq("id", context.userId).maybeSingle(); tenantId = u?.primary_tenant_id ?? null; }
+    if (!tenantId) throw new Error("Choose a workspace first.");
+    const { data: ok } = await context.supabase.rpc("can_manage_startup", { _user_id: context.userId, _tenant_id: tenantId });
+    if (!ok) throw new Error("You can't add a business in this workspace.");
+    const { data: cfg } = await sb.from("default_intake_settings").select("default_startup_intake_ai_agent_id").eq("tenant_id", tenantId).maybeSingle();
+    let ai = cfg?.default_startup_intake_ai_agent_id as string | undefined;
+    if (!ai) { const { data: a } = await sb.from("ai_agents").select("id").eq("tenant_id", tenantId).limit(1).maybeSingle(); ai = a?.id; }
+    const { data: me } = await sb.from("users").select("email").eq("id", context.userId).maybeSingle();
+    const { data: st, error } = await sb.from("startups").insert({
+      tenant_id: tenantId, startup_name: null, status: "Draft", visibility: "Tenant", company_type: "SME", email: me?.email || null,
+      headquarters: "Thailand", regulatory_licenses: [], iso_standards: [], setup_from_signup: [], setup_done_at: null,
+      created_by: context.userId, updated_by: context.userId,
+    }).select("id").single();
+    if (error) throw new Error(error.message);
+    const id = st.id as string;
+    const undo = async (msg: string) => { await sb.from("startups").delete().eq("id", id); throw new Error(msg); };
+    const r1 = await sb.from("startup_ownership").insert({ startup_id: id, tenant_id: tenantId, owning_agent_user_id: context.userId, seller_relation: null });
+    if (r1.error) await undo(r1.error.message);
+    if (ai) { const r2 = await sb.from("startup_ai_ownership").insert({ startup_id: id, tenant_id: tenantId, owning_ai_agent_id: ai }); if (r2.error) await undo(r2.error.message); }
+    await sb.from("startup_activity").insert({ startup_id: id, tenant_id: tenantId, activity_type: "STARTUP_CREATED", activity_details: { name: null, by: "admin" }, created_by: context.userId });
+    return { id };
+  });
