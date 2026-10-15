@@ -14,7 +14,7 @@ import { ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { AddressBox, Err, FeeControl, LogoDrop, Opt, Req, addrErrors, logoFileError, nowrapPct, useLogoUpload, type Addr, type LogoState } from "@/components/advisor/advisor-firm-fields";
 import { FirmEditForm, type FirmForm, type SourceTag } from "@/components/advisor/advisor-firm-edit";
-import { enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "@/lib/advisor-firm.functions";
+import { createAdvisorUploadUrl, enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "@/lib/advisor-firm.functions";
 import {
   ADVISOR_SERVICES, DEAL_BANDS, FIRM_TYPE_OPTIONS, LANGUAGES, WIZARD_QS, cityError, dealBandLabels, descError, emailError, feeWords,
   fullAddress, nameError, newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type FeeDetail, type WizardQ,
