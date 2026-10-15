@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Image as ImageIcon, Plus, Upload } from "lucide-react";
 import { createAdvisorUploadUrl, signAdvisorFile } from "@/lib/advisor-firm.functions";
+import { toWebp } from "@/lib/media/to-webp";
 import { COUNTRIES as COUNTRY_LIST, THAI_PROVINCES_77 } from "@/lib/investor-bands";
 import {
   FEE_TYPES, feeError, feeWords, fmtAmount, serviceOf, type FeeDetail, type FeeType,
@@ -224,10 +225,11 @@ export function useLogoUpload() {
   const upload = useServerFn(createAdvisorUploadUrl);
   const sign = useServerFn(signAdvisorFile);
   return async (file: File): Promise<{ path: string; url: string }> => {
-    const ext = file.type === "image/svg+xml" ? "svg" : file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-    const body = ext === "svg" ? await cleanSvg(file) : file;
+    const conv = file.type === "image/svg+xml" ? file : await toWebp(file, "logo");
+    const ext = conv.type === "image/svg+xml" ? "svg" : conv.type === "image/png" ? "png" : conv.type === "image/webp" ? "webp" : "jpg";
+    const body = ext === "svg" ? await cleanSvg(conv) : conv;
     const { path, url } = await upload({ data: { kind: "logo", ext } });
-    const res = await fetch(url, { method: "PUT", body, headers: { "Content-Type": file.type, "x-upsert": "false" } });
+    const res = await fetch(url, { method: "PUT", body, headers: { "Content-Type": conv.type, "x-upsert": "false" } });
     if (!res.ok) throw new Error("Upload failed.");
     const signed = await sign({ data: { path } });
     return { path, url: signed.url ?? URL.createObjectURL(body) };

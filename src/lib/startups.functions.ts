@@ -905,11 +905,25 @@ export const createStartupMediaUploadUrl = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ context, data }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    const sb = supabase as any;
+    // Sellers are business members, not tenant admins: check access here, then sign with the service client.
+    const { data: canManage } = await sb.rpc("can_manage_startup", { _user_id: userId, _tenant_id: data.tenantId });
+    let allowed = !!canManage;
+    if (!allowed && data.startupId) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const [{ data: member }, { data: row }] = await Promise.all([
+        sb.rpc("is_startup_member", { _user_id: userId, _startup_id: data.startupId }),
+        (supabaseAdmin as any).from("startups").select("tenant_id").eq("id", data.startupId).maybeSingle(),
+      ]);
+      allowed = !!member && row?.tenant_id === data.tenantId;
+    }
+    if (!allowed) throw new Error("You can't add pictures to this business.");
     const startupSegment = data.startupId ?? "draft-" + crypto.randomUUID();
     const filename = `${data.kind}-${Date.now()}.${data.ext.toLowerCase()}`;
     const path = `${data.tenantId}/${startupSegment}/${filename}`;
-    const { data: signed, error } = await supabase.storage
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed, error } = await supabaseAdmin.storage
       .from(BUCKET)
       .createSignedUploadUrl(path);
     if (error) throw new Error(error.message);
