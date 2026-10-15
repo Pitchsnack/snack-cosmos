@@ -25,7 +25,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
   const { data: buyers } = await bq.limit(500);
   const userIds = (buyers ?? []).map((b: any) => b.user_id as string);
   if (!userIds.length) return [];
-    // Admin approval (status "live") is what publishes; verification only adds the badge.
+  // Admin approval (status "live") is what publishes; verification only adds the badge.
   const buyerByInv = new Map<string, any>((buyers ?? []).map((b: any) => [b.investor_id, b]));
   const ids = [...buyerByInv.keys()];
   if (!ids.length) return [];
@@ -34,12 +34,14 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
     .select("id, investor_name, investor_type, country, aum, min_ticket_size, max_ticket_size, short_description, preferred_stages, preferred_industries, revenue_min_m, revenue_max_m, aum_band, ticket_band, revenue_min_band, investment_focus, acts_for_types, created_at")
     .in("id", ids).order("created_at", { ascending: false });
 
+  // Sellers get only "verified or not" for published profiles (DB function), never the entry itself.
+  const { data: vrows } = await sb.rpc("investor_is_verified", { _ids: ids });
+  const verifiedIds = new Set(((vrows ?? []) as any[]).filter((v) => v.verified).map((v) => v.investor_id));
   const managed = await (await import("@/lib/managed.server")).managedInvestorIds(sb, (rows ?? []).map((r: any) => r.id));
   return (rows ?? []).map((r: any) => {
     const bp = buyerByInv.get(r.id);
-    const bv = bp ? bvByUser.get(bp.user_id) : null;
     const h = hash(r.id);
-    const type = r.investor_type ?? bv?.buyer_type ?? null;
+    const type = r.investor_type ?? null;
     // No code names: before an NDA sellers see the investor type.
     const actsFor = bp?.buyer_relation === "agent" ? sortActsFor(r.acts_for_types) : [];
     const codeName = typeName(type, actsFor);
@@ -65,7 +67,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       stages: (r.preferred_stages ?? bp?.stages ?? []) as string[],
       dealTypes: (bp?.deal_types ?? []) as string[],
       geography: bp?.geography || ((r.investment_focus ?? []) as string[]).join(", ") || null,
-      verified: bv?.status === "verified",
+      verified: verifiedIds.has(r.id),
       proofOfFunds: !!bp?.pof_verified_at,
       aumBand: aum?.key ?? null,
       ticketBand: tkt?.key ?? null,
