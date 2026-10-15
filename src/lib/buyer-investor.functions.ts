@@ -97,7 +97,7 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
     const { sb, p, investorId } = r;
     const [{ data: inv }, { data: bv }, { data: links }, { data: up }, { data: au }] = await Promise.all([
       sb.from("investors").select("*").eq("id", investorId).single(),
-      r.extra ? Promise.resolve({ data: null }) : (await import("./profile-verification.server")).verificationByUser(sb, context.userId, "status, decision_note, submitted_at").then((data: any) => ({ data })),
+      (await import("./profile-verification.server")).verificationByInvestor(sb, investorId, "status, decision_note, submitted_at").then((data: any) => ({ data })),
       sb.from("startup_investors").select("startups(id, startup_name)").eq("investor_id", investorId),
       sb.from("user_profiles").select("title").eq("user_id", context.userId).maybeSingle(),
       sb.auth.admin.getUserById(context.userId),
@@ -376,7 +376,7 @@ export const submitMyBuyerForVerification = createServerFn({ method: "POST" })
       !inv.ticket_band && !inv.min_ticket_size && !inv.max_ticket_size && "Average investment",
     ].filter(Boolean);
     if (missing.length) throw new Error(`Add ${missing.join(", ")} first.`);
-    const { data: existing } = await (await import("./profile-verification.server")).verificationByUser(sb, context.userId, "id, status, work_email").then((data: any) => ({ data }));
+    const { data: existing } = await (await import("./profile-verification.server")).verificationByInvestor(sb, investorId, "id, status, work_email").then((data: any) => ({ data }));
     if (existing?.status === "verified" || existing?.status === "pending") return { ok: true };
     const email = existing?.work_email || inv.email || (context.claims as any)?.email || "";
     const domain = email.split("@")[1]?.toLowerCase();
@@ -386,9 +386,7 @@ export const submitMyBuyerForVerification = createServerFn({ method: "POST" })
       linkedin: inv.linkedin_url, work_email: email, status: "pending", email_domain_match: !!domain && !!site && domain === site,
       submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(), decision_note: null,
     };
-    const { error } = existing
-      ? await sb.from("buyer_verifications").update(row).eq("id", existing.id)
-      : await sb.from("buyer_verifications").insert(row);
+    const { error } = await sb.from("investor_profile_verifications").upsert({ ...row, investor_id: investorId }, { onConflict: "investor_id" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
