@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
@@ -161,14 +162,14 @@ export function StartupCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-1.5">
               {(
-                <Truncate text={s.startup_name} className="min-w-0">
+                <Truncate text={bizName(s.startup_name)} className="min-w-0">
                   <h3 className="truncate text-sm font-semibold leading-tight text-foreground group-hover:text-accent">
-                    {s.startup_name}
+                    {bizName(s.startup_name)}
                   </h3>
                 </Truncate>
               )}
               <div className="flex shrink-0 gap-1">
-                <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
+                <PreviewNeedsReassignmentBadge name={bizName(s.startup_name)} domain="startup" size="xs" />
                 {s.investment_stage && (
                   <Badge variant="secondary" className="rounded-full px-1.5 py-0 text-[10px]">
                     {s.investment_stage}

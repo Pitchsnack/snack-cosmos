@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -111,7 +112,7 @@ function StartupInvestorsPage() {
         </Link>
         <span>›</span>
         <Link to="/startups/$id" params={{ id }} className="hover:text-foreground">
-          {s.startup_name}
+          {bizName(s.startup_name)}
         </Link>
         <span>›</span>
         <span className="font-medium text-foreground">Investors</span>
@@ -119,9 +120,9 @@ function StartupInvestorsPage() {
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <EntityLogo name={s.startup_name} logoUrl={s.logo_signed_url} className="h-14 w-14" />
+          <EntityLogo name={bizName(s.startup_name)} logoUrl={s.logo_signed_url} className="h-14 w-14" />
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{s.startup_name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{bizName(s.startup_name)}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
               {s.country && <span>{s.country}</span>}
               {s.country && s.investment_stage && <span aria-hidden>·</span>}

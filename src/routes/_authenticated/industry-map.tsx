@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
@@ -363,7 +364,7 @@ function ClusterList({
                   onClick={() => onSelect(m.id)}
                   className="flex w-full items-center justify-between gap-3 py-1.5 text-left text-sm hover:text-accent"
                 >
-                  <span className="truncate font-medium">{m.startup_name}</span>
+                  <span className="truncate font-medium">{bizName(m.startup_name)}</span>
                   <span className="truncate text-xs text-muted-foreground">
                     {[m.investment_stage, m.headquarters].filter(Boolean).join(" · ")}
                   </span>
@@ -408,7 +409,7 @@ function TableView({
                 selectedId === r.id && "bg-accent/10",
               )}
             >
-              <td className="px-3 py-2 font-medium">{r.startup_name}</td>
+              <td className="px-3 py-2 font-medium">{bizName(r.startup_name)}</td>
               <td className="px-3 py-2 text-muted-foreground">{(r.industry ?? []).join(", ") || "—"}</td>
               <td className="px-3 py-2 text-muted-foreground">{(r.product_tags ?? []).join(", ") || "—"}</td>
               <td className="px-3 py-2 text-muted-foreground">{(r.market_tags ?? []).join(", ") || "—"}</td>

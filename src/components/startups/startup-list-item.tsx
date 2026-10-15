@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useState, type CSSProperties } from "react";
 import { MapPin, Users, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -90,11 +91,11 @@ export function StartupListItem({
           <div className="flex items-start justify-between gap-2">
             {(
               <h3 className="truncate text-left text-sm font-semibold leading-tight group-hover:text-accent">
-                {s.startup_name}
+                {bizName(s.startup_name)}
               </h3>
             )}
             <div className="flex shrink-0 items-center gap-1">
-              <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
+              <PreviewNeedsReassignmentBadge name={bizName(s.startup_name)} domain="startup" size="xs" />
               {s.investment_stage && (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
                   {s.investment_stage}

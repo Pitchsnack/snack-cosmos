@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -478,7 +479,7 @@ export function SimilarityCanvas({
                   opacity={anchor && !isSelected && !isNeighbour ? 0.52 : 1}
                   onPointerUp={(event) => { event.stopPropagation(); const wasDrag = moved.current; drag.current = null; if (!wasDrag) onSelect(node.id); }}
                 >
-                  <title>{node.startup.startup_name}</title>
+                  <title>{bizName(node.startup.startup_name)}</title>
                   <circle
                     cx={node.x}
                     cy={node.y}

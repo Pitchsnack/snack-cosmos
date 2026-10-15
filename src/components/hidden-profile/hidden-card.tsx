@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { bandOf, thbOf } from "@/lib/asking-price";
 import { EyeOff, Plus, TrendingUp, Wallet, Users } from "lucide-react";
 import type { StartupListItem } from "@/lib/startups.functions";
@@ -54,7 +55,7 @@ export function HiddenCard({
       <div className={cn("flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-card/50 p-4 text-center", h, selected && "border-accent")}>
         <EyeOff className="h-6 w-6 text-muted-foreground" />
         <div className="text-sm font-medium text-foreground">{startup ? "Not for startups" : "No hidden card yet"}</div>
-        <div className="text-xs text-muted-foreground">{s.startup_name}</div>
+        <div className="text-xs text-muted-foreground">{bizName(s.startup_name)}</div>
         {!startup && onCreate && (
           <button type="button" onClick={onCreate} className="inline-flex h-8 items-center gap-1.5 rounded-md bg-accent px-3 text-xs font-medium text-accent-foreground hover:bg-accent/90">
             <Plus className="h-3.5 w-3.5" /> Create hidden profile
@@ -119,7 +120,7 @@ export function HiddenCard({
           <div className="flex items-center gap-2 border-t border-dashed border-border pt-2 text-[11px] text-muted-foreground" title="Admin only — buyers never see this row">
             <span className="shrink-0">Full profile:</span>
             {s.logo_signed_url && <img src={s.logo_signed_url} alt="" className="h-4 w-4 shrink-0 rounded object-contain" />}
-            <span className="truncate font-medium text-foreground">{s.startup_name}</span>
+            <span className="truncate font-medium text-foreground">{bizName(s.startup_name)}</span>
             <span className={cn("ml-auto shrink-0 rounded-full px-1.5", status === "draft" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400")}>{statusText}</span>
           </div>
           <div className="flex items-center gap-2 text-xs">

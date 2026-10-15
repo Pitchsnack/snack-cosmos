@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -91,7 +92,7 @@ function SharedDealDetailInner() {
           </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">{r.deals.deal_name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {r.deals.startups.startup_name} <span>↔</span> {r.deals.investors.investor_name}
+            {bizName(r.deals.startups.startup_name)} <span>↔</span> {r.deals.investors.investor_name}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -156,7 +157,7 @@ function SharedDealDetailInner() {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Card title="Startup">
-              <div className="text-sm font-medium">{r.deals.startups.startup_name}</div>
+              <div className="text-sm font-medium">{bizName(r.deals.startups.startup_name)}</div>
               <div className="text-xs text-muted-foreground">{[r.deals.startups.industry, r.deals.startups.country].filter(Boolean).join(" · ")}</div>
               {r.deals.startups.short_description && <p className="mt-2 text-sm text-muted-foreground">{r.deals.startups.short_description}</p>}
             </Card>

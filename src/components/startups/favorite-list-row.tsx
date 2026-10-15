@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { cn } from "@/lib/utils";
@@ -61,7 +62,7 @@ export function FavoriteListRow({
           )}
         </div>
         <div className="min-w-0">
-          <div className="truncate text-[12px] font-semibold leading-tight">{s.startup_name}</div>
+          <div className="truncate text-[12px] font-semibold leading-tight">{bizName(s.startup_name)}</div>
           {s.year_founded && (
             <div className="truncate text-[10px] text-muted-foreground">Est. {s.year_founded}</div>
           )}

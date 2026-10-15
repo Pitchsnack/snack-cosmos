@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useMemo, useState } from "react";
 import { Check, Eye, Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -83,7 +84,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
 
   const picker = mine.length > 1 && (
     <select value={company?.id} onChange={(e) => setPicked(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm">
-      {mine.map((m) => <option key={m.id} value={m.id}>{m.startup_name}</option>)}
+      {mine.map((m) => <option key={m.id} value={m.id}>{bizName(m.startup_name)}</option>)}
     </select>
   );
 

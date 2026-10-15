@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -78,7 +79,7 @@ function DealDetailPage() {
           <div className="text-xs uppercase tracking-wider text-muted-foreground">{d.tenants.tenant_name}</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">{d.deal_name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <Link to="/startups/$id" params={{ id: d.startups.id }} className="hover:underline">{d.startups.startup_name}</Link>
+            <Link to="/startups/$id" params={{ id: d.startups.id }} className="hover:underline">{bizName(d.startups.startup_name)}</Link>
             <span>↔</span>
             <Link to="/investors/$id" params={{ id: d.investors.id }} className="hover:underline">{d.investors.investor_name}</Link>
           </div>

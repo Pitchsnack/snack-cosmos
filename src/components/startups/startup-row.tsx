@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useState, type CSSProperties } from "react";
 import { MapPin, Users, Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -64,10 +65,10 @@ export function StartupRow({
         <div className="flex flex-wrap items-center gap-1.5">
           {(
             <h3 className="truncate text-sm font-semibold leading-tight group-hover:text-accent">
-              {s.startup_name}
+              {bizName(s.startup_name)}
             </h3>
           )}
-          <PreviewNeedsReassignmentBadge name={s.startup_name} domain="startup" size="xs" />
+          <PreviewNeedsReassignmentBadge name={bizName(s.startup_name)} domain="startup" size="xs" />
           {s.investment_stage && (
             <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
               {s.investment_stage}
