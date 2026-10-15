@@ -1,91 +1,19 @@
-import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { StartupForm } from "@/components/startups/startup-form";
-import { SellerWizard } from "@/components/startups/seller-wizard";
-import { SellerAutoFill } from "@/components/startups/seller-auto-fill";
-import { PermissionGuard } from "@/components/permission-guard";
-import { useSessionContext, usePermissions } from "@/hooks/use-session-context";
-import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
-import { createMyBusiness } from "@/lib/seller-setup.functions";
-import { useStartups } from "@/hooks/use-startups";
-import { selectMyStartups } from "@/lib/publication/my-startups-membership";
-import {
-  clearDraft, draftToPrefill, emptyDraft, loadDraft, firstOpenStep, listingPayload, type SellerDraft, type SellerPrefill,
-} from "@/lib/seller-wizard";
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
+/** Old links: + Add My Business now makes a Draft and opens its wizard. This page never creates a business. */
 export const Route = createFileRoute("/_authenticated/my-startups/new")({
   head: () => ({
     meta: [
       { title: "Add My Business — PitchSnack" },
-      { name: "description", content: "Answer a few questions to create your business profile." },
+      { name: "description", content: "Add a business from My Company." },
     ],
   }),
-  component: NewMyStartupPage,
+  component: Redirect,
 });
 
-function NewMyStartupPage() {
+function Redirect() {
   const navigate = useNavigate();
-  const { data } = useSessionContext();
-  const userId = data?.user?.id as string | undefined;
-  const [initial, setInitial] = useState<SellerDraft | null>(null);
-  const [fill, setFill] = useState<{ id: string; web: string } | null>(null);
-  const [prefill, setPrefill] = useState<SellerPrefill | null>(null);
-  const { roles, has } = usePermissions();
-  // Seller accounts own their businesses directly (no workspace owner pickers).
-  const sellerAccount = roles.includes("STARTUP_USER") && !has("users.read");
-  const createMine = useServerFn(createMyBusiness);
-  const accountRole = data?.user?.accountRole ?? null;
-  const oneCompany = accountRole === "seller" || accountRole === "buyer" || accountRole === "advisor";
-  const { data: list } = useStartups({ page: 1, pageSize: 100, sort: "updated_desc" } as never);
-  const mine = selectMyStartups(list && "items" in list ? list.items : [], userId ?? null, roles.includes("STARTUP_USER"));
-  useEffect(() => {
-    if (oneCompany && mine.length > 0) {
-      toast("Your account has one company. Ask PitchSnack if you need another.");
-      void navigate({ to: "/my-startups", replace: true });
-    }
-  }, [oneCompany, mine.length, navigate]);
-  const finish = async (d: SellerDraft) => {
-    if (!sellerAccount) { setPrefill(draftToPrefill(d)); return; }
-    try {
-      const { id } = await createMine({ data: { role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size, sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr, listing: listingPayload(d) } });
-      if (userId) clearDraft(userId);
-      if (d.web.trim()) { setFill({ id, web: d.web }); return; }
-      navigate({ to: "/my-startups/$id/edit", params: { id } });
-    } catch (e) { toast.error((e as Error).message); }
-  };
-
-  useEffect(() => {
-    if (userId && !initial) { const saved = loadDraft(userId); const base = saved ? { ...saved, noUpload: true } : { ...emptyDraft(), noUpload: true }; setInitial({ ...base, step: firstOpenStep(base) }); }
-  }, [userId, initial]);
-
-  return (
-    <PermissionGuard permission="startups.write" message="You don't have permission to create startups.">
-      {fill ? (
-        <SellerAutoFill id={fill.id} web={fill.web} onDone={() => navigate({ to: "/my-startups/$id/edit", params: { id: fill.id } })} />
-      ) : prefill ? (
-        <div className="mx-auto max-w-4xl space-y-6">
-          <Link to="/my-startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Back to My Business
-          </Link>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Add my business</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              We've filled in your answers. Review, complete and save your business profile.
-            </p>
-          </div>
-          <StartupForm redirectAfterCreate="my-startups" prefill={prefill} onCreated={() => userId && clearDraft(userId)} />
-        </div>
-      ) : userId && initial ? (
-        <SellerWizard
-          userId={userId}
-          initial={initial}
-          onExit={() => navigate({ to: "/my-startups" })}
-          onCancel={() => { if (window.history.length > 1) window.history.back(); else navigate({ to: "/my-startups" }); }}
-          onFinish={finish}
-        />
-      ) : null}
-    </PermissionGuard>
-  );
+  useEffect(() => { void navigate({ to: "/my-startups", replace: true }); }, [navigate]);
+  return null;
 }
