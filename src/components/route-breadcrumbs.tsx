@@ -44,6 +44,7 @@ const PATH_LABELS: Record<string, string> = {
   "/intake-queue": "Default Intake Queue",
   "/users": "Users",
   "/admin/plans": "Plans",
+  "/admin/messages": "Messages",
   "/admin/access-codes": "Access codes",
   "/access-management": "Access Management",
   "/audit": "Audit Logs",
@@ -96,7 +97,7 @@ export function RouteBreadcrumbs({ className, placement }: { className?: string;
   const { data: session } = useSessionContext();
   const isControl = (session?.roles ?? []).includes("CONTROL");
   const workspaceLabel =
-    session?.activeWorkspace.tenantName ?? (isControl ? "Control" : null);
+    matches.some((m) => getPathTemplate(m.routeId) === "/admin/messages") ? "Control" : session?.activeWorkspace.tenantName ?? (isControl ? "Control" : null);
 
   const items = useMemo(() => {
     if (isMarketplace) {
