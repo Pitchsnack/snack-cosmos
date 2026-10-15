@@ -1,5 +1,10 @@
 # Current work
 
+## Admin Messages
+- [ ] Reuse shared Messages UI for Control-only Help desk conversations and replies.
+- [ ] Add read-only, conversation-following Profile panel and Open in Users link.
+- [ ] Add shared unread count, navigation, EN/TH copy and end-to-end verification.
+
 ## Privacy, email identity and public wording
 - [x] Remove country placeholders, set today's notice date and update EN/TH fine print.
 - [x] Enforce the shared email identity and verify Admin Sending rules; EN/TH public checks and 3 email tests passed.
