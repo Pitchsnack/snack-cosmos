@@ -8,7 +8,7 @@ import { ConfirmWebsiteDialog } from "@/components/startups/confirm-website-dial
 import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
-import { DealQ, HandoverQ, NameQ, PhotosQ, PriceQ, type WizardMedia } from "@/components/startups/seller-listing-questions";
+import { DealQ, HandoverQ, PhotosQ, PriceQ, type WizardMedia } from "@/components/startups/seller-listing-questions";
 import { LISTING_KEYS } from "@/lib/seller-wizard";
 import { bandInText, bandOf, fmtThb } from "@/lib/asking-price";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
