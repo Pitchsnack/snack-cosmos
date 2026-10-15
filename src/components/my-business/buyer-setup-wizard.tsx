@@ -554,7 +554,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }).then(() => setPhase("complete")); }} />
       )}
       {phase === "complete" && (
-        <Complete header={header} enrich={enrichRes} answered={a}
+        <Complete invId={data.investor.id} header={header} enrich={enrichRes} answered={a}
           onBack={() => { setPhase("q"); goTo(fromProfile ? "desc" : "review"); }}
           onSaved={(msg) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] }); void navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); }} />
       )}
