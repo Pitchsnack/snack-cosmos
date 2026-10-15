@@ -16,7 +16,7 @@ import { NdaDialog, LoiDialog, ReportViewer, InvestorProfile, SellerProfile } fr
 import { AdvisorNdaDialog, AdvisorProfileDialog } from "@/components/pipeline/advisor-bits";
 import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
-import { tr } from "@/i18n/language";
+import { tr, useTranslation } from "@/i18n/language";
 import { Button } from "@/components/ui/button";
 import { adminHelpSummaries, type HelpProfile } from "@/lib/admin-help.functions";
 import { HatMark } from "./hat-mark";
@@ -79,6 +79,7 @@ function advDates(d: AdvDeal) {
 }
 
 export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
+  const { language } = useTranslation();
   const { persona } = usePersona();
   const as = persona as Role;
   const pFn = useServerFn(listPipeline);
@@ -137,7 +138,7 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
     const help = sums.find((s) => s.key.startsWith("a:"));
     if (help) out.unshift({ key: help.key, kind: "a", p: null, adv: null, meta: null, who: null, name: tr("Help desk"), person: null, sub: "", codeName: null, unread: help.key === sel ? 0 : help.unread, last: help.last, startAt: null });
     return out;
-  }, [rows, advData, sums, as, sel, adminView, helpSums]);
+  }, [rows, advData, sums, as, sel, adminView, helpSums, language]);
 
   const [q, setQ] = useState("");
   const [mobileChat, setMobileChat] = useState(false);
