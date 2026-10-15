@@ -234,7 +234,7 @@ export const listPipeline = createServerFn({ method: "GET" })
       // Only businesses the caller owns (not every business an Admin can see).
       const { data: own } = await sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId);
       const { data: su } = await sb.from("startup_users").select("startup_id").eq("user_id", context.userId);
-      const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
+      const ids = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
       if (ids.length) {
         const r = await sb.from("deal_pipelines").select("*").in("startup_id", ids).not("status", "in", "(declined,withdrawn)").order("updated_at", { ascending: false });
         rows = r.data ?? [];
@@ -351,7 +351,7 @@ export const pipelineBadgeCount = createServerFn({ method: "GET" })
         sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId),
         sb.from("startup_users").select("startup_id").eq("user_id", context.userId),
       ]);
-      const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id))];
+      const ids = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
       if (ids.length) rows = (await sb.from("deal_pipelines").select(cols).in("startup_id", ids).not("status", "in", "(declined,withdrawn,ended)")).data ?? [];
     }
     const seller = data.as === "seller";

@@ -260,7 +260,16 @@ export const addDraftBusiness = createServerFn({ method: "POST" })
     }
     // Admin: the active workspace (else its primary one), checked as the caller.
     let tenantId = data.tenantId ?? null;
-    if (!tenantId) { const { data: u } = await sb.from("users").select("primary_tenant_id").eq("id", context.userId).maybeSingle(); tenantId = u?.primary_tenant_id ?? null; }
+    const CONTROL = "9df87a29-e8ef-4dbc-9c63-28410d45b985";
+    if (!tenantId || tenantId === CONTROL) {
+      // Control view: default to the primary workspace, else the default/first real one.
+      const { data: u } = await sb.from("users").select("primary_tenant_id").eq("id", context.userId).maybeSingle();
+      tenantId = u?.primary_tenant_id && u.primary_tenant_id !== CONTROL ? u.primary_tenant_id : null;
+      if (!tenantId) {
+        const { data: ts } = await sb.from("user_tenants").select("tenant_id, is_default").eq("user_id", context.userId).neq("tenant_id", CONTROL).order("is_default", { ascending: false }).limit(1);
+        tenantId = ts?.[0]?.tenant_id ?? null;
+      }
+    }
     if (!tenantId) throw new Error("Choose a workspace first.");
     const { data: ok } = await context.supabase.rpc("can_manage_startup", { _user_id: context.userId, _tenant_id: tenantId });
     if (!ok) throw new Error("You can't add a business in this workspace.");

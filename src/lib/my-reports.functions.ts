@@ -41,7 +41,7 @@ export const getMyReportsState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = await admin();
-    const ids = await myCompanyIds(sb, context.userId);
+    const ids = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, await myCompanyIds(sb, context.userId));
     const { data: sts } = ids.length
       ? await sb.from("startups").select("id, startup_name, logo_url, created_at").in("id", ids).order("created_at", { ascending: true })
       : { data: [] };
