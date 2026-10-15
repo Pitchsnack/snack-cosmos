@@ -86,7 +86,7 @@ export function answeredFlags(d: SellerDraft): boolean[] {
 }
 export const answeredCount = (d: SellerDraft) => answeredFlags(d).filter(Boolean).length;
 /** The wizard's questions in order (index = step number; REVIEW_STEP = review). */
-export const REVIEW_STEP = 13;
+export const REVIEW_STEP = 12;
 export const SELLER_STEPS = [
   { id: "role", sec: "About you" },
   { id: "name", sec: "About the company" },
@@ -100,10 +100,9 @@ export const SELLER_STEPS = [
   { id: "deal", sec: "Your listing" },
   { id: "handover", sec: "Your listing" },
   { id: "price", sec: "Your listing" },
-  { id: "lname", sec: "Your listing" },
 ] as const;
-/** The five listing questions (all required, no Skip). */
-export const LISTING_KEYS = ["photos", "deal", "handover", "price", "lname"] as const;
+/** The four listing questions (all required, no Skip). Only Admin names a listing, outside the wizard. */
+export const LISTING_KEYS = ["photos", "deal", "handover", "price"] as const;
 export const DEAL_HINTS: Record<string, [string, string]> = {
   "Full acquisition": ["Sell the whole company", "ขายกิจการทั้งหมด"],
   "Majority stake (above 51%)": ["Sell control and keep a share", "ขายอำนาจควบคุมและถือหุ้นส่วนหนึ่งไว้"],
@@ -138,7 +137,6 @@ export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<stri
   if (f.has("size") && d.size) s.add("size");
   if (f.has("sector") && d.sector) s.add("sector");
   if (d.noUpload) s.add("photos");
-  s.add("lname"); // Only Admin names a listing.
   return s;
 }
 /** Indexes of the questions that show. */
@@ -163,12 +161,12 @@ export function firstOpenStep(d: SellerDraft, fromSignup: string[] = []): number
 }
 
 /* ── Step bar: answered = the saved answer is valid (Skip leaves it unanswered) ── */
-export const STEP_KEYS = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "lname", "review"] as const;
+export const STEP_KEYS = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "review"] as const;
 export type StepKey = (typeof STEP_KEYS)[number];
 export const STEP_SHORT: Record<StepKey, [string, string]> = {
   role: ["Role", "บทบาท"], name: ["Company", "บริษัท"], web: ["Website", "เว็บไซต์"], year: ["Founded", "ปีก่อตั้ง"],
   rev: ["Revenue", "รายได้"], size: ["Size", "ขนาด"], sector: ["Sector", "กลุ่มอุตสาหกรรม"], lic: ["Licences", "ใบอนุญาต"],
-  photos: ["Photos", "รูปภาพ"], deal: ["Deal type", "รูปแบบดีล"], handover: ["Handover", "ส่งมอบ"], price: ["Price", "ราคา"], lname: ["Name", "ชื่อ"],
+  photos: ["Photos", "รูปภาพ"], deal: ["Deal type", "รูปแบบดีล"], handover: ["Handover", "ส่งมอบ"], price: ["Price", "ราคา"],
   review: ["Review", "ตรวจสอบ"],
 };
 export const STEP_FULL: Record<StepKey, [string, string]> = {
@@ -176,7 +174,7 @@ export const STEP_FULL: Record<StepKey, [string, string]> = {
   web: ["Company website", "เว็บไซต์บริษัท"], year: ["Year founded", "ปีที่ก่อตั้ง"], rev: ["Revenue last year", "รายได้ปีที่แล้ว"],
   size: ["Company size", "ขนาดบริษัท"], sector: ["Business sector", "กลุ่มอุตสาหกรรม"], lic: ["Licences and certifications", "ใบอนุญาตและมาตรฐาน"],
   photos: ["Logo and photos", "โลโก้และรูปภาพ"], deal: ["Deal type", "รูปแบบดีล"], handover: ["Owner handover", "การส่งมอบงานของเจ้าของ"],
-  price: ["Asking price (Estimate)", "ราคาที่ต้องการ (ประมาณการ)"], lname: ["Listing name", "ชื่อประกาศ"],
+  price: ["Asking price (Estimate)", "ราคาที่ต้องการ (ประมาณการ)"],
   review: ["Review your answers", "ตรวจสอบข้อมูล"],
 };
 const YEAR_NOW = new Date().getFullYear();
@@ -195,7 +193,6 @@ export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
     deal: !!d.deal,
     handover: d.stays === "yes" || d.stays === "no",
     price: (d.price ?? 0) > 0,
-    lname: true,
     review: false,
   };
 }
@@ -335,6 +332,6 @@ export function draftToPrefill(d: SellerDraft): SellerPrefill {
 export function listingPayload(d: SellerDraft) {
   return {
     deal: (d.deal ?? null) as never, stays: d.stays ?? null, months: (d.stays === "yes" ? d.months ?? 6 : null) as never,
-    price: d.price && d.price > 0 ? d.price : null, name: d.listingName?.trim() && d.nameOk === true ? d.listingName.trim() : null,
+    price: d.price && d.price > 0 ? d.price : null, name: null,
   };
 }

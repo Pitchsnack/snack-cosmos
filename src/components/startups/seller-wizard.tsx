@@ -32,7 +32,6 @@ const STEPS = [
   { id: "deal", sec: 6 },
   { id: "handover", sec: 6 },
   { id: "price", sec: 6 },
-  { id: "lname", sec: 6 },
   { id: "review", sec: 4 },
 ] as const;
 const THIS_YEAR = new Date().getFullYear();
@@ -340,8 +339,6 @@ export function SellerWizard({
       body: <HandoverQ d={d} set={set} L={L} /> },
     price: { t: L("What is your estimated asking price?", "ราคาที่ท่านต้องการโดยประมาณคือเท่าใด"), h: L("An estimate is fine. You can change it later.", "ประมาณการได้ ท่านเปลี่ยนได้ภายหลัง"),
       body: <PriceQ d={d} set={set} L={L} th={th} /> },
-    lname: { t: L("Choose your listing name", "เลือกชื่อประกาศของท่าน"), h: L("Buyers see this name instead of your real company name. It must be unique in the Marketplace.", "ผู้ซื้อจะเห็นชื่อนี้แทนชื่อบริษัทจริงของท่าน และต้องไม่ซ้ำกับประกาศอื่นในตลาด"),
-      body: <NameQ d={d} set={set} L={L} startupId={media?.startupId ?? null} companyName={d.name} website={d.web} /> },
     review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div>

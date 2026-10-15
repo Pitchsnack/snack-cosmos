@@ -112,7 +112,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
     done: z.boolean().optional(),
-    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "lname", "review"]).nullable().optional(),
+    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "review"]).nullable().optional(),
     listing: ListingInput.optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
@@ -130,7 +130,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if (data.done) patch.setup_done_at = new Date().toISOString();
     if (data.reached) {
       // Never moves back.
-      const order = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "lname", "review"];
+      const order = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "review"];
       const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
       if (order.indexOf(data.reached) > order.indexOf(cur?.setup_reached ?? "")) patch.setup_reached = data.reached;
     }
