@@ -209,7 +209,7 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
               <Button variant="unstyled" size="unstyled"
                 key={c.key}
                 onClick={() => { setSel(c.key); setMobileChat(true); if (!adminView) setPanel(false); }}
-                className={cn("block h-auto w-full rounded-[10px] py-[11px] pb-3 pl-[14px] pr-3 text-left", c.key === sel ? "bg-[#F2F3F6]" : "hover:bg-[#F7F8FA]")}
+                className={cn("block h-auto w-full rounded-[10px] py-[11px] pb-3 pl-[14px] pr-3 text-left", adminView ? c.key === sel ? "bg-secondary text-secondary-foreground" : "hover:bg-secondary" : c.key === sel ? "bg-[#F2F3F6]" : "hover:bg-[#F7F8FA]")}
               >
                 <div className="flex items-center">
                   <span className={cn("min-w-0 truncate text-[14px] text-[#111827]", c.unread ? "font-bold" : "font-medium")}>{c.name}</span>
@@ -484,7 +484,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
             const name = help ? (data as any)?.helpAdvisor || tr("Help desk") : team ? tr("PitchSnack team") : who?.name ?? c.name;
             return (
               <div key={it.id} className="my-2 flex max-w-[70%] gap-2.5">
-                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", help || team ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{(help && !(data as any)?.helpAdvisor) || team ? <HatMark width={16} /> : initials(name)}</span>
+                <span className={cn("mt-0 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10.5px] font-bold", adminView && profile ? `help-initials help-${profile.role}` : help || team ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : who ? TAG[who.role] : "bg-[#F3F4F6] text-[#374151]")}>{(help && !(data as any)?.helpAdvisor) || team ? <HatMark width={16} /> : initials(name)}</span>
                 <div className="flex min-w-0 flex-col items-start gap-1">
                   <div className="flex flex-wrap items-center gap-x-1.5 px-1 text-[12px] leading-[18px]">
                     <span className="font-semibold text-[#111827]">{name}</span>
