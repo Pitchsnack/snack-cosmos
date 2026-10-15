@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/i18n/language";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { SellerDraftCard } from "@/components/my-business/seller-draft-card";
+import { AddBusinessButton } from "@/components/my-business/add-business-button";
 import { Plus, Search, Rocket, RefreshCw, X, Star } from "lucide-react";
 import { z } from "zod";
 
@@ -52,6 +52,8 @@ const searchSchema = z.object({
   panel: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
+  /** Business to open (after its setup wizard). */
+  open: z.string().uuid().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/_authenticated/my-startups/")({
@@ -151,11 +153,9 @@ function MyStartupsPageInner() {
         {isLoading && items.length === 0 ? (
           <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[320px]" /><Skeleton className="h-[420px]" /></div>
         ) : items.length === 0 ? (
-          <Button onClick={() => navigate({ to: "/my-startups/new" })} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Plus className="mr-2 h-4 w-4" /> Add My Business
-          </Button>
+          <AddBusinessButton />
         ) : (
-          <MyBusinessProfiles items={items} />
+          <MyBusinessProfiles items={items} openId={s.open} />
         )}
       </div>
     );
@@ -214,13 +214,7 @@ function MyStartupsPageInner() {
             onChange={(v) => navigate({ search: (p: typeof s) => ({ ...p, view: v }) })}
           />
           {has("startups.write") && (
-            <Button
-              onClick={() => navigate({ to: "/my-startups/new" })}
-
-              className="bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add My Business
-            </Button>
+            <AddBusinessButton />
           )}
         </div>
       </div>
@@ -258,7 +252,6 @@ function MyStartupsPageInner() {
         </Button>
       </div>
 
-      <SellerDraftCard />
       {isLoading && items.length === 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -279,17 +272,11 @@ function MyStartupsPageInner() {
           <Rocket className="mx-auto mb-2 h-8 w-8 opacity-50" />
           <p className="mb-3">You don't own or manage any startups yet.</p>
           {has("startups.write") && (
-            <Button
-              size="sm"
-              onClick={() => navigate({ to: "/my-startups/new" })}
-              className="bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add my business
-            </Button>
+            <AddBusinessButton size="sm" label="Add my business" />
           )}
         </div>
       ) : view === "profiles" ? (
-        <MyBusinessProfiles items={items} />
+        <MyBusinessProfiles items={items} openId={s.open} />
       ) : view === "grid" ? (
         <div
           className={cn(
