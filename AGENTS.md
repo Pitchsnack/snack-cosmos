@@ -28,4 +28,4 @@
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner (withOwnerEmails).
 - Listing names: Admin-only (trigger zz_listing_name_admin_only, syncs live); NULL = show ref_no.
 - Buyer verification is per investor profile (investor_profile_verifications, one entry per investor, created by DB triggers); read it only via profile-verification.server.ts, and sellers get only investor_is_verified(). Why: Control holds many profiles.
-- Workspace scoping: seller lists (My Company, Pipeline, Contacts, Messages, Invitations, Favourites, Tools) narrow startup ids via workspace-scope.server.ts; Control view = no narrowing. Why: one rule, every area agrees.
+- Workspace scoping: seller lists narrow startup ids via workspace-scope.server.ts; Control = all. Why: one rule.
