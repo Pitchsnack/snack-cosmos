@@ -51,6 +51,10 @@ async function endedNote(sb: any, dealId: string) {
 
 /** Throws unless the caller belongs to the thread. Returns whether it is closed. */
 async function assertMember(ctx: { supabase: any; userId: string }, key: string) {
+  if (key.startsWith("a:")) {
+    if (key !== `a:${ctx.userId}`) await (await import("./admin-help.server")).requireHelpAdmin(ctx);
+    return { closed: false };
+  }
   if (key.startsWith("e:")) {
     const E = await import("./advisor-enquiries.server");
     const m = await E.enquiryMember(await admin(), ctx.userId, key);
@@ -154,6 +158,36 @@ export const threadMessages = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { closed, endedNote } = await assertMember(context, data.key) as { closed: boolean; endedNote?: { org: string; date: string } | null };
     const sb = await admin();
+    if (data.key.startsWith("a:")) {
+      const H = await import("./admin-help.server");
+      const isAdminView = data.key !== `a:${context.userId}`;
+      const userId = data.key.slice(2);
+      const adminIds = await H.helpAdminIds(sb);
+      const allMsgs: any[] = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data: page, error } = await sb.from("marketplace_messages").select("*").eq("thread_key", data.key).order("created_at", { ascending: true }).range(offset, offset + 999);
+        if (error) throw new Error(error.message);
+        allMsgs.push(...(page ?? []));
+        if ((page ?? []).length < 1000) break;
+      }
+      const { data: receipts, error } = await sb.from("marketplace_message_reads").select("user_id, read_at").eq("thread_key", data.key);
+      if (error) throw new Error(error.message);
+      const { data: adminNames } = isAdminView && adminIds.length ? await sb.from("users").select("id, first_name").in("id", adminIds) : { data: [] };
+      const names = Object.fromEntries((adminNames ?? []).map((u: any) => [u.id, u.first_name]));
+      const { data: assigned } = await sb.from("subscriptions").select("manager_user_id").eq("user_id", userId).maybeSingle();
+      const { data: advisor } = assigned?.manager_user_id ? await sb.from("users").select("first_name, last_name").eq("id", assigned.manager_user_id).maybeSingle() : { data: null };
+      const advisorName = advisor ? [advisor.first_name, advisor.last_name].filter(Boolean).join(" ") || null : null;
+      const visibleReads = (receipts ?? []).filter((r: any) => isAdminView ? r.user_id === userId : adminIds.includes(r.user_id));
+      return {
+        closed: false, endedNote: null, meId: context.userId, members: [] as Member[], myRole: null as Role | null,
+        events: [] as ThreadEvent[], enquiry: null as EnquiryThread | null,
+        otherReadAt: visibleReads.map((r: any) => r.read_at as string).sort().pop() ?? null,
+        me: { name: "", role: null, company: null }, helpAdvisor: advisorName,
+        adminProfile: isAdminView ? await H.helpProfile(sb, userId) : null,
+        adminNames: names,
+        messages: allMsgs.map((m): ThreadMessage => ({ id: m.id, senderId: isAdminView ? m.sender_id : m.sender_id === userId ? userId : "help-desk", mine: isAdminView ? m.sender_id !== userId : m.sender_id === userId, body: m.body, files: m.files ?? [], at: m.created_at })),
+      };
+    }
     const [{ data: msgs }, { data: reads }, { data: me }, { data: prof }] = await Promise.all([
       sb.from("marketplace_messages").select("*").eq("thread_key", data.key).order("created_at", { ascending: true }).limit(2000),
       sb.from("marketplace_message_reads").select("user_id, read_at").eq("thread_key", data.key).neq("user_id", context.userId),
@@ -175,8 +209,8 @@ export const threadMessages = createServerFn({ method: "GET" })
     const { adminUserIds } = await import("./managed.server");
     const teamIds = await adminUserIds(sb, [...otherIds]);
     const TEAM = "pitchsnack-team";
-    if (teamIds.size) {
-      const firstTeam = members.find((m) => teamIds.has(m.id))!;
+    const firstTeam = members.find((m) => teamIds.has(m.id));
+    if (firstTeam) {
       const kept = members.filter((m) => !teamIds.has(m.id));
       members.length = 0;
       members.push({ id: TEAM, name: "PitchSnack team", first: "PitchSnack team", title: null, org: firstTeam.org, role: firstTeam.role, main: firstTeam.main || true, team: true }, ...kept);
@@ -209,7 +243,8 @@ export const markThreadRead = createServerFn({ method: "POST" })
       const { data: f } = c ? await sb.from("advisor_firms").select("owner_user_id").eq("id", c.firm_profile_id).maybeSingle() : { data: null };
       if (f?.owner_user_id === context.userId) await sb.from("advisor_enquiries").update({ read_at: new Date().toISOString() }).eq("conversation_id", data.key.slice(2)).is("read_at", null);
     }
-    await sb.from("marketplace_message_reads").upsert({ thread_key: data.key, user_id: context.userId, read_at: new Date().toISOString() });
+    const { error } = await sb.from("marketplace_message_reads").upsert({ thread_key: data.key, user_id: context.userId, read_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 

@@ -34,9 +34,9 @@ export async function helpProfile(sb: any, id: string): Promise<HelpProfile | nu
   const ids = [...new Set([...(memberships ?? []), ...(owned ?? [])].map((r: any) => r.startup_id))];
   let listings: any[] = [];
   if (u.account_role === "seller") {
-    const { data: created, error: e } = await sb.from("startups").select("id, name, publication_status").eq("created_by", id);
+    const { data: created, error: e } = await sb.from("startups").select("id, startup_name").eq("created_by", id);
     if (e) throw new Error(e.message);
-    const { data: linked, error: e2 } = ids.length ? await sb.from("startups").select("id, name, publication_status").in("id", ids) : { data: [], error: null };
+    const { data: linked, error: e2 } = ids.length ? await sb.from("startups").select("id, startup_name").in("id", ids) : { data: [], error: null };
     if (e2) throw new Error(e2.message);
     listings = [...new Map([...(created ?? []), ...(linked ?? [])].map((s: any) => [s.id, s])).values()];
   }
@@ -46,13 +46,18 @@ export async function helpProfile(sb: any, id: string): Promise<HelpProfile | nu
     advisor = a ? [a.first_name, a.last_name].filter(Boolean).join(" ") || null : null;
   }
   const statuses: HelpProfile["statuses"] = [];
-  if (u.account_role === "seller") for (const s of listings) statuses.push({ label: s.name || "Listing", value: s.publication_status || "Draft" });
+  if (u.account_role === "seller" && listings.length) {
+    const { data: hidden, error: e } = await sb.from("hidden_profiles").select("startup_id, approval_status").in("startup_id", listings.map((s) => s.id));
+    if (e) throw new Error(e.message);
+    const state = Object.fromEntries((hidden ?? []).map((s: any) => [s.startup_id, s.approval_status]));
+    for (const s of listings) statuses.push({ label: s.startup_name || "Listing", value: state[s.id] || "Draft" });
+  }
   if (u.account_role === "seller" && !listings.length) statuses.push({ label: "Listing", value: "No listing" });
   if (u.account_role === "buyer") statuses.push({ label: "Buyer verification", value: buyer?.[0]?.pof_verified_at ? "Verified" : buyer?.[0]?.approval_status || "Not verified" });
   if (u.account_role === "advisor") for (const f of firms ?? []) statuses.push({ label: f.name || "Firm", value: f.status });
   statuses.push({ label: "Plan", value: sub?.plans?.name ? `${sub.plans.name} · ${sub.status}` : "No plan" });
   return { id, name: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email, first: u.first_name || u.email, role: u.account_role,
-    company: p?.organisation || (u.account_role === "buyer" ? buyer?.[0]?.legal_name : u.account_role === "advisor" ? firms?.[0]?.name : listings[0]?.name) || "—",
+    company: p?.organisation || (u.account_role === "buyer" ? buyer?.[0]?.legal_name : u.account_role === "advisor" ? firms?.[0]?.name : listings[0]?.startup_name) || "—",
     email: u.email, phone: p?.phone || null, joined: u.created_at, statuses, advisor };
 }
 
