@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/language";
 import { useStartup } from "@/hooks/use-startup";
 import { LogoPhotoAlert } from "@/components/my-business/missing-info";
 import { useEffect, useRef, useState } from "react";
@@ -378,7 +379,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
           )}
           {pill}
           {!adminReview && (
-            <CompanyMenu name={row?.code_name || s.startup_name || "New business"} onEdit={() => void create()}>
+            <CompanyMenu name={row?.code_name || s.startup_name || tr("New business")} onEdit={() => void create()}>
               <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
             </CompanyMenu>
           )}
@@ -386,7 +387,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
       </div>
       {!adminReview && <PublicMediaAlert id={s.id} onAdd={() => openEdit(s.id, "private", "images", "media")} />}
       <HiddenProfileTab
-        name={s.startup_name || "New business"}
+        name={s.startup_name || tr("New business")}
         companyType={s.company_type}
         row={row}
         facts={facts}
