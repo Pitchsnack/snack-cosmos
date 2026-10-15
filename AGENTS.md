@@ -4,7 +4,7 @@
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
 - Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx (prefs: seller_report_prefs).
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
-- Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest admin receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles stay read-only for one edit surface.
+- Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest admin receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - Loading overlay opt-in (meta.pageLoading); LOI note in config/loi-request.json. Welcome tour (welcome-tour.tsx) reads marketplaceMenu + data-tour* marks; seen date only via mark_welcome_tour_seen().
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked → oldest → drawn; private public-images bucket via server fns.
@@ -16,11 +16,11 @@
 - Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields (startups.setup_from_signup, investors.wizard.from_signup, advisor_firms.wizard_state.fromSignup) so wizards skip them while set (rules in seller-wizard.ts, buyer-wizard.ts, advisor-firm.ts).
 - Sellers edit only their own businesses: is_startup_member policies, a guard trigger keeps tenant/visibility; listings go live only by Admin approval.
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types (list order, Investor Classification = first, empty for non-agents) and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts. Sign-up stores the relation and types in signup_answers (buyer_relation, investor_types).
-- Sector picking uses one SetSectorPicker (components/common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic —.
+- One SetSectorPicker (common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries, advisors in advisor_firms.sector_agnostic —.
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts,.
 - Roles/plans: account_role checked in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Seller Connect: listing_invitations (one open per listing+investor) via invitations.functions.ts only; status derived server-side; contact_requests deprecated.
-- Admin Plans publishes through an atomic database function; public cards share one renderer and read live plan rows.
+- Admin Plans publish via one atomic DB function; public cards share one renderer of live plan rows.
 - Contact enquiries: sendContactEnquiry (rate-limited); email-identity.ts drives replies and Sending rules.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
