@@ -14,6 +14,7 @@ import { buyerProgressFor, type BuyerRelation } from "@/lib/buyer-wizard";
 import { typeName } from "@/lib/investor-bands";
 import { tr } from "@/i18n/language";
 import { cn } from "@/lib/utils";
+import { SetupBanner } from "@/components/my-business/buyer-my-company";
 
 export const INVESTOR_IDS_KEY = ["buyer-investor", "ids"];
 
@@ -76,7 +77,7 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
       <DraftCompanyCard role="buyer" name={nm} typeLine={iv.investor_type ? typeName(iv.investor_type) : null}
         founded={individual ? null : iv.year_founded} size={individual ? null : iv.company_size_band} website={iv.website_url} />
       {!iv.setup_done_at ? (
-        <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBannerLite n={prog.n} N={prog.N} onOpen={openWizard} />}
+        <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={openWizard} />}
           onEdit={() => setEditing(true)} onFinish={openWizard} />
       ) : (
         <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm">
@@ -93,15 +94,6 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
           <BuyerInvestorEdit id={id} />
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function SetupBannerLite({ n, N, onOpen }: { n: number; N: number; onOpen: () => void }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-border bg-muted/40 px-4 py-3">
-      <span className="text-sm">{n === 0 ? `Answer ${N} short questions` : `${n} of ${N} answered`}</span>
-      <Button size="sm" onClick={onOpen}>{n === 0 ? tr("Start setup") : tr("Continue setup")} →</Button>
     </div>
   );
 }
