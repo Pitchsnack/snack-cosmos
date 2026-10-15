@@ -15,7 +15,7 @@ import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
 import { saveBuyerWizard } from "@/lib/buyer-investor.functions";
 import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
-import { BUYER_INVESTOR_KEY, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
+import { buyerInvestorKey, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
   TICKET_BANDS, WIZARD_TYPES, ALL_TYPES, sortActsFor, typeLabel, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
@@ -323,12 +323,12 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     // Never let a slow or failed save trap the user on this screen.
     const cap = <T,>(p: Promise<T>) => Promise.race([p, new Promise<void>((r) => window.setTimeout(r, 2500))]);
     try { await cap(flush()); } catch { /* flush already toasts */ }
-    void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY });
+    void qc.invalidateQueries({ queryKey: ["buyer-investor"] });
     void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
     toast.success(live ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
-    const fallback = window.setTimeout(() => { window.location.href = "/marketplace/my-company"; }, 1500);
-    try { await navigate({ to: "/marketplace/my-company" }); window.clearTimeout(fallback); }
-    catch { window.location.href = "/marketplace/my-company"; }
+    const fallback = window.setTimeout(() => { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }, 1500);
+    try { await navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); window.clearTimeout(fallback); }
+    catch { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }
   };
 
   const requiredQs = stepsAll.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
@@ -551,12 +551,12 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       )}
       {phase === "enrich" && (
         <Enrich a={a} header={header} card={card} btnO={btnO} btnP={btnP} onBack={() => { setPhase("q"); goTo("review"); }} onExit={saveExit}
-          onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY }).then(() => setPhase("complete")); }} />
+          onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }).then(() => setPhase("complete")); }} />
       )}
       {phase === "complete" && (
         <Complete header={header} enrich={enrichRes} answered={a}
           onBack={() => { setPhase("q"); goTo(fromProfile ? "desc" : "review"); }}
-          onSaved={(msg) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] }); void navigate({ to: "/marketplace/my-company" }); }} />
+          onSaved={(msg) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] }); void navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); }} />
       )}
     </div>
   );
@@ -688,11 +688,11 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   );
 }
 
-function Complete({ header, enrich, answered, onBack, onSaved }: {
-  header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string) => void;
+function Complete({ invId, header, enrich, answered, onBack, onSaved }: {
+  invId: string; header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string) => void;
 }) {
   const qc = useQueryClient();
-  const data = qc.getQueryData<Data>(BUYER_INVESTOR_KEY);
+  const data = qc.getQueryData<{ ok: boolean; data: Data | null }>(buyerInvestorKey(invId))?.data ?? null;
   if (!data) return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-[#6B7280]" /></div>;
   const ans: SourceTag = "Your answer";
   const sources: Record<string, SourceTag> = {
