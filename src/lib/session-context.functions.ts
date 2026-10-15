@@ -32,6 +32,8 @@ export interface SessionContextDTO {
     advisorView: boolean;
     accountRole: "seller" | "buyer" | "advisor" | "admin" | null;
     planInfo: { id: string; key: string; name: string; badgeStyle: string; ended: boolean; termEnd: string | null } | null;
+    /** Set once the first-visit welcome/tour is done; empty = show it. */
+    welcomeTourSeenAt: string | null;
   } | null;
   roles: AppRole[];
   tenants: Array<{
@@ -145,6 +147,7 @@ export const getSessionContext = createServerFn({ method: "GET" })
             advisorView: Boolean((userRow as { advisor_view?: boolean }).advisor_view),
             accountRole: ((userRow as { account_role?: string }).account_role ?? null) as any,
             planInfo,
+            welcomeTourSeenAt: (prof as { welcome_tour_seen_at?: string | null } | null)?.welcome_tour_seen_at ?? null,
           }
         : null,
       roles,
@@ -215,4 +218,13 @@ export const switchWorkspace = createServerFn({ method: "POST" })
     });
 
     return { ok: true };
+  });
+
+/** Marks the caller's own first-visit welcome as seen (only when empty). */
+export const markWelcomeTourSeen = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await (context.supabase as any).rpc("mark_welcome_tour_seen");
+    if (error) throw new Error("Couldn't save");
+    return { at: (data as string | null) ?? new Date().toISOString() };
   });

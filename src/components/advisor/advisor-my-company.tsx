@@ -549,7 +549,7 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
 function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
   const { n, N } = setupProgress(f.setupAnswered, advisorSkipsFor(f));
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#B9E6DF] bg-[#EFFAF8] px-[18px] py-4 dark:border-[#1F5A52] dark:bg-[#10302C]">
+    <div data-tour-banner data-tour-n={N} data-tour-m={4} className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#B9E6DF] bg-[#EFFAF8] px-[18px] py-4 dark:border-[#1F5A52] dark:bg-[#10302C]">
       <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-[11px] bg-white text-[#0F766E] min-[860px]:grid dark:bg-background dark:text-[#5EEAD4]"><Flag className="h-5 w-5" /></span>
       <div className="min-w-0 flex-1">
         <div className="text-[14.5px] font-bold text-[#151A28] dark:text-foreground">{n === 0 ? "Set up your firm profile" : "Finish setting up your firm profile"}</div>
@@ -561,7 +561,7 @@ function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
           <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{n} of {N} answered</span>
         </div>
       </div>
-      <Button onClick={onOpen} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90 max-[860px]:w-full">{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
+      <Button data-tour-btn onClick={onOpen} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90 max-[860px]:w-full">{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
     </div>
   );
 }

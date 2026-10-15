@@ -31,6 +31,7 @@ import { KeyRound,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { WelcomeTourHost } from "@/components/welcome-tour/welcome-tour";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 import { UserMenu } from "@/components/user-menu";
@@ -447,6 +448,17 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   const [intent, setIntent] = useState<SidebarIntent>("auto");
   const [autoCollapsed, setAutoCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // The welcome tour opens the menu (drawer or folded rail) while it runs, without saving that choice.
+  const [tourMenu, setTourMenu] = useState<null | { open: boolean }>(null);
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<{ active: boolean; open: boolean }>).detail;
+      setTourMenu(d.active ? { open: d.open } : null);
+      if (window.matchMedia("(max-width: 960px)").matches) setMobileOpen(d.active && d.open);
+    };
+    window.addEventListener("ps-tour-menu", on);
+    return () => window.removeEventListener("ps-tour-menu", on);
+  }, []);
   const { data: prefs, update: updatePrefs } = usePreferences();
 
   const sidebarRef = useRef<HTMLElement | null>(null);
@@ -485,7 +497,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   };
 
   const collapsedByIntent = intent === "open" ? false : intent === "closed" ? true : autoCollapsed;
-  const effectiveCollapsed = !isMobile && !isAdminRoute ? collapsedByIntent : false;
+  const effectiveCollapsed = !isMobile && !isAdminRoute && !tourMenu ? collapsedByIntent : false;
 
   const toggle = () => persistIntent(effectiveCollapsed ? "open" : "closed");
 
@@ -525,11 +537,13 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
         <GlobalBar showMenu onMenu={() => setMobileOpen(true)} />
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <WelcomeTourHost />
+        <Sheet open={mobileOpen} modal={!tourMenu} onOpenChange={(o) => { if (!tourMenu) setMobileOpen(o); }}>
           <SheetContent
             side="left"
+            data-tour-drawer={tourMenu ? "" : undefined}
             data-mkt-view={isMarket ? persona : undefined}
-            className="w-72 border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className={cn("w-72 border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden", tourMenu && "!animate-none !duration-0")}
           >
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <div className="flex h-full flex-col">
@@ -568,6 +582,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
     <GlobalBar showMenu={false} onLogo={toggle} />
+    <WelcomeTourHost />
     <div
       className="grid min-h-0 w-full flex-1 overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
       style={

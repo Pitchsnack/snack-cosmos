@@ -5,6 +5,7 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { Badge } from "@/components/ui/badge";
 import { ViewAsSwitcher } from "@/components/view-switcher/view-as-switcher";
 import { RouteBreadcrumbs } from "@/components/route-breadcrumbs";
+import { TakeTourButton } from "@/components/welcome-tour/welcome-tour";
 import { ViewModeBadge } from "@/components/view-switcher/view-mode-badge";
 
 
@@ -61,6 +62,7 @@ export function WorkspaceHeader() {
         <ViewModeBadge />
         <ViewAsSwitcher />
         <GlobalSearch />
+        <TakeTourButton />
         <NotificationCenter />
       </div>
     </header>

@@ -5902,6 +5902,7 @@ export type Database = {
           updated_at: string
           user_id: string
           website: string | null
+          welcome_tour_seen_at: string | null
         }
         Insert: {
           bio?: string | null
@@ -5919,6 +5920,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           website?: string | null
+          welcome_tour_seen_at?: string | null
         }
         Update: {
           bio?: string | null
@@ -5936,6 +5938,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website?: string | null
+          welcome_tour_seen_at?: string | null
         }
         Relationships: [
           {
@@ -6516,6 +6519,7 @@ export type Database = {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean
       }
+      mark_welcome_tour_seen: { Args: never; Returns: string }
       normalize_url_key: { Args: { _url: string }; Returns: string }
       record_report_open: {
         Args: { _ref: string; _report_key: string; _uid: string }

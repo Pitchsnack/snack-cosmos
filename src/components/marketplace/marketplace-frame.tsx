@@ -17,6 +17,7 @@ import { useIsMarketplace, usePersona, lastAdminPath, type Persona } from "@/hoo
 import logoWhite from "@/assets/pitchsnack-white.png";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslation } from "@/i18n/language";
+import { TakeTourButton } from "@/components/welcome-tour/welcome-tour";
 
 export function useUserIdentity() {
   const { data } = useSessionContext();
@@ -138,6 +139,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
         ) : (
           <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
         )}
+        {showMenu && <TakeTourButton tone="dark" />}
         <LanguageSwitcher tone="dark" />
         <ThemeToggle />
       </div>
@@ -252,7 +254,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
     );
   }
   return (
-    <div className="space-y-3 border-b border-sidebar-border p-3" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div data-tour="account" className="space-y-3 border-b border-sidebar-border p-3" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div
         className={cn(
           "rounded-[14px] border p-4",
@@ -372,15 +374,14 @@ const MENU_LINK_INACTIVE = {
   className: `${MENU_LINK_BASE} text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground`,
 };
 
-type MenuItem = { to: string; label: string; icon: typeof LayoutGrid; exact?: boolean; lock?: "financials" | "valuation" | "risk" };
+export type MenuItem = { to: string; label: string; icon: typeof LayoutGrid; exact?: boolean; lock?: "financials" | "valuation" | "risk" };
 
 function RailDivider() {
   return <div aria-hidden className="mx-auto my-3 h-px w-7 bg-sidebar-border" />;
 }
 
-export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolean }) {
-  const { persona } = usePersona();
-  const { t } = useTranslation();
+/** The role's menu, section by section. The tour reads the same list, so it follows menu changes. */
+export function marketplaceMenu(persona: Persona) {
   const advisor = persona === "advisor";
   const discover: MenuItem[] =
     advisor
@@ -421,6 +422,14 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   const account: MenuItem[] = advisor
     ? [{ to: "/my-page", label: "My Profile", icon: UserCircle }]
     : [{ to: "/my-page", label: "My Profile", icon: UserCircle }, { to: "/marketplace/notifications", label: "Notifications", icon: BellRing }];
+
+  return { discover, workspace, tools, account };
+}
+
+export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolean }) {
+  const { persona } = usePersona();
+  const { t } = useTranslation();
+  const { discover, workspace, tools, account } = marketplaceMenu(persona);
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
@@ -493,10 +502,10 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   );
   return (
     <div className="space-y-4">
-      <div className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
-      {workspace.length > 0 && <div className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>}
-      {tools.length > 0 && <div className="space-y-1">{title("Tools")}{tools.map(fullItem)}</div>}
-      <div className="space-y-1">{title("Account")}{account.map(fullItem)}</div>
+      <div data-tour-sec="discover" className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
+      {workspace.length > 0 && <div data-tour-sec="workspace" className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>}
+      {tools.length > 0 && <div data-tour-sec="tools" className="space-y-1">{title("Tools")}{tools.map(fullItem)}</div>}
+      <div data-tour-sec="account" className="space-y-1">{title("Account")}{account.map(fullItem)}</div>
     </div>
   );
 }

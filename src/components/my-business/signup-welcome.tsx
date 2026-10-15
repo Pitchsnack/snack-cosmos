@@ -176,7 +176,7 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
   const names = joinNames(missed.map((k) => L(...STEP_SHORT[k])), th);
   const next = firstUnanswered(draft, setup.fromSignup);
   return (
-    <div className="flex flex-wrap items-start gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A]">
+    <div data-tour-banner data-tour-n={sellerN} data-tour-m={3} className="flex flex-wrap items-start gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A]">
       <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
       <div className="min-w-[240px] flex-1">
         <p className="text-[14.5px] font-bold">{sellerDone ? "Finish setting up your business profile" : "Set up your business profile"}</p>
@@ -193,7 +193,7 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
         </p>
       </div>
       <div className="flex flex-col items-end gap-1.5 max-[599px]:w-full">
-        <button type="button" onClick={() => open(next)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
+        <button type="button" data-tour-btn onClick={() => open(next)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
           {sellerDone ? "Continue setup" : "Start setup"} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
