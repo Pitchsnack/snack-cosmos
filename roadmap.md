@@ -6,3 +6,8 @@
 - [x] Advisor media max 3 check; "New business" on screens; Submit refuses no name
 - [ ] Control extra investor profiles: own Review & complete / verification / publish / Approvals (needs Dan's OK on data change)
 - [ ] On-screen tests (seller, buyer, advisor, Control) + screenshots + delete test data
+- [x] Fix 3: verification per investor profile + switch-over
+- [ ] Empty business name fallback in emails/notifications
+- [ ] Admin add/remove advisor photos (check storage rules)
+- [ ] On-screen tests seller/buyer/advisor/Control + screenshots + delete test data
+- [ ] Confirm buyer profile save on screen
