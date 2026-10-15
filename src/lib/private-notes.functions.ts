@@ -98,7 +98,7 @@ async function build(sb: any, p: any, direction: NoteDirection) {
     };
   }
   const [{ data: bv }, { data: up }, { data: u }] = await Promise.all([
-    sb.from("buyer_verifications").select("company_name, buyer_type, status, website").eq("user_id", p.buyer_user_id).maybeSingle(),
+    (await import("./profile-verification.server")).verificationByUser(sb, p.buyer_user_id, "company_name, buyer_type, status, website").then((data: any) => ({ data })),
     sb.from("user_profiles").select("title, organisation, bio, city, country, industry_focus, buyer_type, experience, website").eq("user_id", p.buyer_user_id).maybeSingle(),
     sb.from("users").select("first_name, last_name, email").eq("id", p.buyer_user_id).maybeSingle(),
   ]);

@@ -25,8 +25,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
   const { data: buyers } = await bq.limit(500);
   const userIds = (buyers ?? []).map((b: any) => b.user_id as string);
   if (!userIds.length) return [];
-  const { data: bvs } = await sb.from("buyer_verifications")
-    .select("user_id, company_name, buyer_type, status").in("user_id", userIds).eq("status", "verified");
+  const { data: bvs } = await (await import("./profile-verification.server")).verificationsByUsers(sb, userIds, "user_id, company_name, buyer_type, status").then((mp: Map<string, any>) => ({ data: [...mp.values()].filter((r: any) => r.status === "verified") }));
   const bvByUser = new Map<string, any>((bvs ?? []).map((b: any) => [b.user_id, b]));
   // Admin approval (status "live") is what publishes; verification only adds the badge.
   const buyerByInv = new Map<string, any>((buyers ?? []).map((b: any) => [b.investor_id, b]));
