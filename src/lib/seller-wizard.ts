@@ -189,7 +189,8 @@ export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
     web: isValidUrl(d.web),
     year: /^\d{4}$/.test(d.year) && y >= 1800 && y <= YEAR_NOW,
     rev: !!d.rev, size: !!d.size, sector: !!d.sector,
-    lic: d.licences.length + d.iso.length > 0,
+    // Optional: answered once it has an entry or the seller has moved past it.
+    lic: d.licences.length + d.iso.length > 0 || STEP_KEYS.indexOf(d.reached as StepKey) > STEP_KEYS.indexOf("lic"),
     photos: !!d.hasLogo && (d.photos ?? 0) > 0,
     deal: !!d.deal,
     handover: d.stays === "yes" || d.stays === "no",
