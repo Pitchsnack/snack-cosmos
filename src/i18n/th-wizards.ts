@@ -314,5 +314,5 @@ export const TH_WIZARDS: Record<string, string> = {
   "{n} photos": "รูปภาพ {n} รูป",
   "Your firm": "บริษัทของท่าน",
   "Help sellers and buyers recognise and remember your firm.": "ช่วยให้ผู้ขายและผู้ซื้อจดจำบริษัทของท่านได้",
-  "Help clients trust you. They want to see who they"re working with.": "ช่วยให้ลูกค้าไว้วางใจท่าน ลูกค้าต้องการเห็นว่ากำลังทำงานกับใคร",
+  "Help clients trust you. They want to see who they're working with.": "ช่วยให้ลูกค้าไว้วางใจท่าน ลูกค้าต้องการเห็นว่ากำลังทำงานกับใคร",
 };
