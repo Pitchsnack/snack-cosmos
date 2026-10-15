@@ -289,6 +289,7 @@ export function BuyerMyCompany() {
           <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
         </Button>
       </div>
+      {extras}
       {!matches ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No companies match your filters</div>
       ) : layout === "profiles" ? (
