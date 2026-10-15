@@ -44,7 +44,7 @@ import { PlanBadge } from "@/components/plan-badge";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/users")({
-  validateSearch: (search: Record<string, unknown>) => ({ edit: typeof search.edit === "string" && /^[0-9a-f-]{36}$/i.test(search.edit) ? search.edit : undefined }),
+  validateSearch: (search: Record<string, unknown>): { edit?: string } => ({ edit: typeof search.edit === "string" && /^[0-9a-f-]{36}$/i.test(search.edit) ? search.edit : undefined }),
   head: () => ({ meta: [
     { title: "Users — PitchSnack" },
     { name: "description", content: "Manage PitchSnack user accounts, roles and plans." },
