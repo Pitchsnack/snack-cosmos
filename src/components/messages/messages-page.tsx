@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { ArrowUp, ChevronLeft, Copy, FileText, GitBranch, Lock, Paperclip, Search, Users, X } from "lucide-react";
+import { ArrowUp, Check, ChevronLeft, Copy, FileText, GitBranch, Lock, Paperclip, Search, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePersona } from "@/hooks/use-marketplace";
 import { listPipeline, type PipelineRow } from "@/lib/pipeline.functions";
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { useBump } from "@/hooks/use-bump";
 import { tr, useTranslation } from "@/i18n/language";
 import { Button } from "@/components/ui/button";
-import { adminHelpSummaries, type HelpProfile } from "@/lib/admin-help.functions";
+import { adminHelpSummaries, setHelpDone, type HelpProfile } from "@/lib/admin-help.functions";
 import { HatMark } from "./hat-mark";
 import { tf } from "@/components/advisor-browse/enquiry-dialogs";
 import { EnquiryCardView, EnquiryHeaderActions, ProposalCardView, enqStatusLabel } from "@/components/advisor-browse/enquiry-chat";
@@ -31,7 +31,7 @@ import type { EnqMeta, EnquiryThread } from "@/lib/messages.functions";
  */
 type Side = "seller" | "buyer";
 type Conv = {
-  profile?: HelpProfile; key: string; kind: "p" | "a" | "c" | "e"; enq?: EnqMeta | null; name: string; person: string | null; sub: string; codeName: string | null;
+  profile?: HelpProfile; done?: { by: string; at: string } | null; key: string; kind: "p" | "a" | "c" | "e"; enq?: EnqMeta | null; name: string; person: string | null; sub: string; codeName: string | null;
   p: PipelineRow | null; adv: AdvDeal | null; meta: DaMeta | null;
   who: { label: string; dot: string } | null;
   unread: number; last: { body: string; mine: boolean; at: string; from: string | null } | null; startAt: string | null;
@@ -93,7 +93,7 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
 
   const [sel, setSel] = useState<string | null>(null);
   const convs: Conv[] = useMemo(() => {
-    if (adminView) return helpSums.map((s): Conv => ({ key: s.key, kind: "a", profile: s.profile, p: null, adv: null, meta: null, name: s.profile.name, person: null, sub: s.profile.company, codeName: null, who: { label: `${tr(cap(s.profile.role))} · ${s.profile.company}`, dot: DOT[s.profile.role] }, unread: s.unread, last: s.last, startAt: null }));
+    if (adminView) return helpSums.map((s): Conv => ({ key: s.key, kind: "a", profile: s.profile, done: s.done, p: null, adv: null, meta: null, name: s.profile.name, person: null, sub: s.profile.company, codeName: null, who: { label: `${tr(cap(s.profile.role))} · ${s.profile.company}`, dot: DOT[s.profile.role] }, unread: s.unread, last: s.last, startAt: null }));
     const sm = Object.fromEntries(sums.map((s) => [s.key, s]));
     const out: Conv[] = [];
     if (as !== "advisor") {
@@ -150,7 +150,10 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
     if (!sel && convs.length && !wanted) setSel(convs[0].key);
   }, [convs, sel, wanted]);
 
+  const [tab, setTab] = useState<"open" | "done">("open");
+  const doneN = adminView ? convs.filter((c) => c.done).length : 0;
   const shown = convs.filter((c) => {
+    if (adminView && (tab === "done") !== !!c.done) return false;
     const s = q.trim().toLowerCase();
     if (!s) return true;
     return [c.name, c.sub, c.person, c.codeName, c.who?.label, c.last?.body].some((x) => x?.toLowerCase().includes(s));
@@ -189,6 +192,16 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
             <Search className="h-4 w-4 text-[#9CA3AF]" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={adminView ? tr("Search name, company or message") : "Search"} aria-label="Search conversations" className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-[#9CA3AF]" />
           </label>
+          {adminView && (
+            <div role="tablist" className="flex shrink-0 gap-5 border-b border-[#F0F1F4] px-5">
+              {(["open", "done"] as const).map((t) => (
+                <Button key={t} variant="unstyled" size="unstyled" role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
+                  className={cn("-mb-px border-b-2 py-2.5 text-[13px]", tab === t ? "border-[#F6A823] font-semibold text-[#111827] dark:text-foreground" : "border-transparent text-[#6B7280]")}>
+                  {t === "open" ? tr("Open") : language === "th" ? tr("Done conversations") : "Done"} {t === "open" ? convs.length - doneN : doneN}
+                </Button>
+              ))}
+            </div>
+          )}
           <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
             {shown.length === 0 && <div className="py-8 text-center text-[13px] text-[#9CA3AF]">{adminView ? (helpPending ? tr("Loading…") : tr(convs.length ? "No conversations match." : "No messages yet.")) : convs.length ? "No conversations match." : "No conversations yet."}</div>}
             {shown.map((c) => c.kind === "a" && !adminView ? (
@@ -429,6 +442,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
             </Button>
           )}
           {isE && enq && <EnquiryHeaderActions t={enq} />}
+          {adminView && profile && <DoneButton c={c} first={profile.first} />}
           {hasPanel && (
             <Button variant="unstyled" size="unstyled"
               ref={pipeBtn}
@@ -497,6 +511,11 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
               </div>
             );
           })}
+          {adminView && c.done && (
+            <div className="py-2 text-center">
+              <span className="inline-block rounded-full border border-[#D1FADF] bg-[#F6FEF9] px-3 py-1 text-[11.5px] text-[#15803D]">✓ {tr("Marked as done by {admin} · {time}").replace("{admin}", c.done.by).replace("{time}", `${new Date(c.done.at).toLocaleDateString(undefined, { weekday: "short" })} ${hm(c.done.at)}`)}</span>
+            </div>
+          )}
         </div>
         {data?.closed && isE ? (
           <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{enq?.closedTpl ? tf(enq.closedTpl, enq.closedVars) : ""}</div>
@@ -787,4 +806,26 @@ function HelpProfilePanel({ profile: p, files, onFile, onClose }: { profile: Hel
       <Button variant="link" asChild className="mt-auto justify-start px-0 pt-5 text-[12.5px] font-semibold text-link"><Link to="/users" search={{ edit: p.id }}>{tr("Open in Users")}</Link></Button>
     </div>
   </aside>;
+}
+
+function DoneButton({ c, first }: { c: Conv; first: string }) {
+  const qc = useQueryClient();
+  const fn = useServerFn(setHelpDone);
+  const [busy, setBusy] = useState(false);
+  const done = !!c.done;
+  const go = async () => {
+    setBusy(true);
+    try {
+      await fn({ data: { key: c.key, done: !done } });
+      await qc.invalidateQueries({ queryKey: ["messages", "admin-help"] });
+      if (!done) toast.success(tr("Marked as done. It opens again if {first name} writes back.").replace("{first name}", first));
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  const label = done ? tr("Reopen") : tr("Mark as done");
+  return (
+    <Button variant="unstyled" size="unstyled" disabled={busy} onClick={go} title={label} aria-label={label}
+      className="inline-flex h-[30px] items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-2.5 text-[13px] font-medium text-[#374151] hover:border-[#BBF7D0] hover:bg-[#F6FEF9] hover:text-[#15803D] dark:bg-transparent dark:text-foreground">
+      {done ? label : <><Check className="h-[15px] w-[15px]" /><span className="max-[759px]:hidden">{label}</span></>}
+    </Button>
+  );
 }

@@ -610,6 +610,13 @@
       "when": 1791973142871,
       "tag": "0086_browse_advisors_enquiries",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1792029376763,
+      "tag": "0087_migration",
+      "breakpoints": true
     }
   ]
 }

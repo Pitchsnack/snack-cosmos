@@ -78,11 +78,15 @@ export async function helpSummaries(sb: any, meId: string): Promise<HelpSummary[
   for (const r of reads ?? []) if (!readAt[r.thread_key] || r.read_at > readAt[r.thread_key]) readAt[r.thread_key] = r.read_at;
   const { data: admins } = adminIds.length ? await sb.from("users").select("id, first_name").in("id", adminIds) : { data: [] };
   const names = Object.fromEntries((admins ?? []).map((u: any) => [u.id, u.first_name]));
+  const { data: doneRows, error: de } = await sb.from("help_thread_status").select("thread_key, done_by, done_at");
+  if (de) throw new Error(de.message);
+  const doneBy: Record<string, any> = Object.fromEntries((doneRows ?? []).map((d: any) => [d.thread_key, d]));
   const out = await Promise.all(keys.map(async (key): Promise<HelpSummary | null> => {
     const profile = await helpProfile(sb, key.slice(2));
     if (!profile) return null;
     const list = msgs.filter((m) => m.thread_key === key), last = list[0];
-    return { key, profile, unread: list.filter((m) => m.sender_id === profile.id && (!readAt[key] || m.created_at > readAt[key])).length,
+    const d = doneBy[key];
+    return { key, profile, done: d ? { by: names[d.done_by] || "Admin", at: d.done_at } : null, unread: list.filter((m) => m.sender_id === profile.id && (!readAt[key] || m.created_at > readAt[key])).length,
       last: last ? { body: last.body || last.files?.[0]?.name || "", at: last.created_at, mine: last.sender_id === meId, from: last.sender_id === profile.id ? null : names[last.sender_id] || null } : null };
   }));
   return out.filter((x): x is HelpSummary => x !== null).sort((a, b) => (b.last?.at || "").localeCompare(a.last?.at || ""));
