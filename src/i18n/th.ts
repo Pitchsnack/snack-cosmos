@@ -26,7 +26,7 @@ const TH_BASE: Record<string, string> = {
   "Mark as done": "ปิดเรื่อง",
   "Reopen": "เปิดอีกครั้ง",
   "Open": "เปิดอยู่",
-  "Done": "เสร็จแล้ว",
+  "Done conversations": "เสร็จแล้ว",
   "Marked as done by {admin} · {time}": "{admin} ปิดเรื่องแล้ว · {time}",
   "Marked as done. It opens again if {first name} writes back.": "ปิดเรื่องแล้ว จะเปิดอีกครั้งเมื่อคุณ{first name} ตอบกลับ",
   "Copy": "คัดลอก",

@@ -197,7 +197,7 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
               {(["open", "done"] as const).map((t) => (
                 <Button key={t} variant="unstyled" size="unstyled" role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
                   className={cn("-mb-px border-b-2 py-2.5 text-[13px]", tab === t ? "border-[#F6A823] font-semibold text-[#111827] dark:text-foreground" : "border-transparent text-[#6B7280]")}>
-                  {tr(t === "open" ? "Open" : "Done")} {t === "open" ? convs.length - doneN : doneN}
+                  {t === "open" ? tr("Open") : language === "th" ? tr("Done conversations") : "Done"} {t === "open" ? convs.length - doneN : doneN}
                 </Button>
               ))}
             </div>
