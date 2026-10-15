@@ -1,0 +1,1 @@
+ALTER TABLE public.advisor_firms ADD CONSTRAINT advisor_firms_media_max3 CHECK (media IS NULL OR (jsonb_typeof(media) = 'array' AND jsonb_array_length(media) <= 3));

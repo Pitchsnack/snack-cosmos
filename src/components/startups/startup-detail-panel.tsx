@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
@@ -478,7 +479,7 @@ export function StartupDetailPanel({
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-semibold tracking-tight leading-tight">
-              {s.startup_name}
+              {bizName(s.startup_name)}
               {connectionState === "connected" && (
                 <span
                   className="ml-2 inline-flex items-center align-middle text-emerald-600 dark:text-emerald-400"
@@ -489,7 +490,7 @@ export function StartupDetailPanel({
                 </span>
               )}
               <PreviewNeedsReassignmentBadge
-                name={s.startup_name}
+                name={bizName(s.startup_name)}
                 domain="startup"
                 className="ml-2 align-middle"
               />
@@ -533,7 +534,7 @@ export function StartupDetailPanel({
                 id={id}
                 isMyWorkspace={isMyWorkspace}
                 onClose={onClose}
-                startupName={s.startup_name}
+                startupName={bizName(s.startup_name)}
                 registeredName={(s as unknown as { registered_name?: string | null }).registered_name}
                 registeredNumber={
                   (s as unknown as { registered_number?: string | null }).registered_number

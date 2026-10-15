@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
@@ -251,7 +252,7 @@ export function StartupCoverPage({
                   className="text-[30px] font-bold leading-[1.1] tracking-tight sm:text-[40px]"
                   style={{ color: NAVY }}
                 >
-                  {s.startup_name}
+                  {bizName(s.startup_name)}
                 </h1>
                 {s.short_description && (
                   <p className="mt-1.5 max-w-[58ch] text-[15px] leading-[1.5] text-[#42536B]">
@@ -296,7 +297,7 @@ export function StartupCoverPage({
             {/* About — existing Product Overview only */}
             {s.long_description && (
               <section className="mt-5 border-t border-[#EDF1F7] pt-4">
-                <SectionHeading icon={Building2}>About {s.startup_name}</SectionHeading>
+                <SectionHeading icon={Building2}>About {bizName(s.startup_name)}</SectionHeading>
                 <p
                   className={cn(
                     "whitespace-pre-line text-[15px] leading-[1.6] text-[#42536B]",

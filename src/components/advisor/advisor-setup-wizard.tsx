@@ -5,7 +5,7 @@ import { normPicks, picksToSectors, type SectorPicks } from "@/lib/business-type
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Circle, ExternalLink, Globe, Info, Landmark, Loader2, Newspaper, ShieldCheck, X } from "lucide-react";
+import { Check, Circle, ExternalLink, Eye, Globe, Info, Landmark, Loader2, Newspaper, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import logoBlack from "@/assets/pitchsnack-black.png";
@@ -508,7 +508,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    logo: { req: true, t: L("Add your logo and photos", "เพิ่มโลโก้และรูปภาพ"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
+    logo: { req: true, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
       body: (
         <div>
           <LogoPhotosStep L={L} name={a.name || tr("Your firm")} sectorLine={[a.type, [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
@@ -520,10 +520,9 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               await flush();
             }}
             onCount={() => setHint(null)}
-            note={<>{tr("Sellers and buyers see your logo on your card, and your photos on your profile.")}</>}
-            why={[tr("Help sellers and buyers recognise and remember your firm."), L("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดีกว่า"), tr("Help clients trust you. They want to see who they're working with.")]} />
+            note={<><Eye className="mt-[2px] h-[14px] w-[14px] flex-none" />{tr("Sellers and buyers see your logo on your card, and your photos on your profile.")}</>}
+            why={[tr("Help sellers and buyers understand and remember your firm."), L("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดีกว่า"), tr("Help sellers and buyers trust you. People choosing an adviser want to see who they'll work with.")]} />
           {hint && <p className="mt-2 text-[13px] text-[#6B7280]">{hint}</p>}
-          {previewBox}
         </div>
       ) },
     desc: { req: true, t: tr("How would you describe your firm?"), h: tr("Sellers and buyers read it on your card, which shows the first 3 lines."),
@@ -667,7 +666,7 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
   const addrOk = !errors["a-street"] && !errors["a-district"] && !errors["a-province"] && !errors["a-postal"];
   const addrLine = fullAddress({ addrStreet: a.addr.street, addrUnit: a.addr.unit, addrDistrict: thai ? a.addr.district : a.city, addrProvince: a.addr.province, addrPostal: a.addr.postal, country: a.country, city: a.city });
   const deal = dealBandLabels(a.deal);
-  type Row = [string, React.ReactNode, WizardQ];
+  type Row = [string, React.ReactNode, WizardQ, boolean?];
   const groups: [string, Row[]][] = [
     [tr("About the firm"), [
       [tr("Firm type"), a.type || miss, "type"],
@@ -689,8 +688,7 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
     ]],
     [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
     [tr("Your card"), [
-      [tr("Logo"), a.logo.url ? <span className="inline-flex items-center gap-2"><img src={a.logo.url} alt="" className="h-7 w-7 rounded border border-[#E3E6EB] bg-white object-contain" />{a.logo.source === "enrich" ? "Found on your website" : a.logo.name ?? tr("Your logo")}</span> : miss, "logo"],
-      [tr("Photos"), a.photos ? (a.photos === 1 ? tr("1 photo") : tr("{n} photos").replace("{n}", String(a.photos))) : miss, "logo"],
+      [tr("Logo and photos"), a.logo.path && a.photos ? (a.photos === 1 ? tr("Logo and 1 photo") : tr("Logo and {n} photos").replace("{n}", String(a.photos))) : null, "logo", !(a.logo.path && a.photos)],
       [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{tr(a.desc)}</span>, "desc"],
     ]],
   ];
@@ -700,11 +698,12 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
         <div key={g}>
           <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[.07em] text-[#151A28] dark:text-foreground">{g}</div>
           <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
-            {rows.map(([l, v, id], i) => (
-              <div key={`${l}-${i}`} className="flex items-start gap-3 border-b border-[#F0F1F4] px-4 py-2.5 text-[14px] last:border-0 dark:border-border">
+            {rows.map(([l, v, id, red], i) => (
+              <div key={`${l}-${i}`} className={`flex items-start gap-3 border-b border-[#F0F1F4] px-4 py-2.5 text-[14px] last:border-0 dark:border-border ${red ? "bg-[#FEF2F2] dark:bg-[#3A1D1D]" : ""}`}>
                 <span className="w-[170px] shrink-0 text-[#6B7280] max-sm:w-[110px]">{l}</span>
-                <span className="min-w-0 flex-1 break-words">{v}</span>
-                <button type="button" onClick={() => onEdit(id)} className="shrink-0 font-semibold text-[#1E2A4A] hover:underline dark:text-foreground">{tr("Edit")}</button>
+                {red ? <b className="flex min-w-0 flex-1 items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{tr("Not answered")}</b>
+                  : <span className="min-w-0 flex-1 break-words">{v}</span>}
+                <button type="button" onClick={() => onEdit(id)} className={`shrink-0 hover:underline ${red ? "font-bold text-[#B91C1C]" : "font-semibold text-[#1E2A4A] dark:text-foreground"}`}>{red ? tr("Answer") : tr("Edit")}</button>
               </div>
             ))}
           </div>

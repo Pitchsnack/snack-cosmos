@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -96,7 +97,7 @@ function ListingReview() {
         <div className="min-w-0">
           <div className="flex items-center gap-2"><h1 className="truncate text-xl font-bold">{hp.code_name}</h1><Pill s={statusLabel} /></div>
           <p className="text-[13px] text-muted-foreground">
-            {v.startup_name} · {hp.ref_no} · v{hp.version} · submitted {fmt(hp.submitted_at)} by {names[hp.submitted_by] ?? "seller"}
+            {bizName(v.startup_name)} · {hp.ref_no} · v{hp.version} · submitted {fmt(hp.submitted_at)} by {names[hp.submitted_by] ?? "seller"}
             {changed.length > 0 && <> · changed since last version: <b>{changed.join(", ")}</b></>}
           </p>
         </div>

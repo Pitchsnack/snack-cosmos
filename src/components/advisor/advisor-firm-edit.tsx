@@ -1,4 +1,7 @@
 import { tr } from "@/i18n/language";
+import { supabase } from "@/integrations/supabase/client";
+import { AttachmentCard } from "@/components/startups/attachment-card";
+import { EMPTY_SLOT, uploadPending, type EntityMediaState } from "@/components/media/entity-media-editor";
 import { usePermissions } from "@/hooks/use-session-context";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { EditInfoFooter, useEditInfo } from "@/components/common/edit-info-popup";
@@ -27,7 +30,7 @@ import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { cn } from "@/lib/utils";
 
 export type FirmForm = {
-  name: string; firmType: string; logo: LogoState; description: string; yearFounded: string;
+  name: string; firmType: string; logo: LogoState; media: EntityMediaState; description: string; yearFounded: string;
   city: string; country: string; services: string[]; fees: Record<string, FeeDetail>;
   dealBand: string; teamSize: string; languages: string[]; sectors: string[]; sectorAgnostic: boolean;
   legalName: string; thaiName: string; registrationNo: string; addr: Addr;
@@ -48,6 +51,10 @@ export type SetupMode = {
 export const toFirmForm = (f: AdvisorFirm | null): FirmForm => ({
   name: f?.name ?? "", firmType: f?.firmType ?? "",
   logo: { path: f?.logoPath ?? null, url: f?.logoUrl ?? null, name: null, sizeKb: null, source: f?.logoSource ?? null },
+  media: {
+    logo: { ...EMPTY_SLOT, persistedPath: f?.logoPath ?? null, signedUrl: f?.logoUrl ?? null },
+    slots: [1, 2, 3].map((n) => { const m = f?.media?.find((x) => x.slot === n); return { ...EMPTY_SLOT, persistedPath: m?.path ?? null, signedUrl: m?.url ?? null }; }) as EntityMediaState["slots"],
+  },
   description: f?.description ?? "", yearFounded: f?.yearFounded ? String(f.yearFounded) : "",
   city: f?.city ?? "", country: f?.country ?? "Thailand", services: f?.services ?? [],
   fees: Object.fromEntries((f?.services ?? []).map((s) => [s, f?.feeDetails[s] ?? newFee()])),
@@ -116,6 +123,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveAdvisorFirm);
+  const upUrl = useServerFn(createAdvisorUploadUrl);
   const upload = useServerFn(createAdvisorUploadUrl);
   const uploadLogo = useLogoUpload();
   const base = useRef(toFirmForm(firm));
@@ -189,9 +197,11 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
     setBusy(true);
     try {
       const nul = (v: string) => (v.trim() ? v.trim() : null);
+      const up = await uploadPending(f.media, ({ kind, ext }) => upUrl({ data: { kind, ext } }), supabase.storage.from("startup-media"));
+      const logoChanged = up.logoPath !== f.logo.path;
       await save({
         data: {
-          id: firm?.id ?? null, name: f.name.trim(), firmType: f.firmType || "Other", logoPath: f.logo.path, logoSource: f.logo.source,
+          id: firm?.id ?? null, name: f.name.trim(), firmType: f.firmType || "Other", logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
           description: f.description.trim(), yearFounded: Number(f.yearFounded), city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: Number(f.teamSize), languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
@@ -236,8 +246,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       )}
 
       <Section id="firm" active={false} title="Firm" setup={!!setup}>
-        <F label="Logo" opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
-          <LogoRow logo={f.logo} busy={uploading} error={logoErr} onFile={onLogo} onRemove={() => set("logo", { path: null, url: null, name: null, sizeKb: null, source: null })} />
+        <F label={tr("Logo and photos")} opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
+          <AttachmentCard value={f.media} onChange={(m) => set("media", m)} name={f.name || tr("Your firm")} sectorLine={[f.firmType, [f.city || f.addr.province, f.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")} />
         </F>
         <div className="grid gap-4 sm:grid-cols-2">
           <F label="Firm name" req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>

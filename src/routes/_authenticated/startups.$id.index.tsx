@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { RegistrationVerifiedSwitch } from "@/components/startups/registration-verified-switch";
 import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink, Mail, MapPin, Calendar, Pencil, Linkedin, Trash2 } from "lucide-react";
@@ -94,7 +95,7 @@ function StartupDetailPage() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.tenant_name}</div>
-            <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">{s.startup_name}</h1>
+            <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">{bizName(s.startup_name)}</h1>
             {s.company_type && <div className="text-sm text-muted-foreground">{s.company_type}</div>}
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               {s.headquarters && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{s.headquarters}</span>}

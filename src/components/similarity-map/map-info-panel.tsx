@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MapPin, ExternalLink, Share2, X, MoreVertical, Copy } from "lucide-react";
@@ -91,7 +92,7 @@ export function MapInfoPanel({
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-lg font-semibold leading-tight">{startup.startup_name}</h2>
+          <h2 className="truncate text-lg font-semibold leading-tight">{bizName(startup.startup_name)}</h2>
           <p className="truncate text-xs text-muted-foreground">
             {[startup.industry?.[0], startup.investment_stage].filter(Boolean).join(" · ") || "—"}
           </p>
@@ -193,7 +194,7 @@ export function MapInfoPanel({
                         )}
                       </span>
                       <span className="line-clamp-2 text-[10px] font-medium leading-tight">
-                        {s.startup_name}
+                        {bizName(s.startup_name)}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
                         {Math.round(score * 100)}%

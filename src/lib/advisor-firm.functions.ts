@@ -210,6 +210,7 @@ const FirmInput = z.object({
   firmType: z.string().trim().min(1).max(60),
   logoPath: s(300),
   logoSource: z.enum(["upload", "enrich"]).nullable(),
+  media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3).optional(),
   description: z.string().trim().min(30).max(300),
   yearFounded: z.number().int().min(1800).max(new Date().getFullYear()),
   city: z.string().trim().min(2).max(100),
@@ -240,8 +241,10 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     await requireAdvisor(sb, context.userId);
     const own = `advisor/${context.userId}/`;
     if (data.logoPath && !data.logoPath.startsWith(own)) throw new Error("Invalid logo file.");
+    if (data.media?.some((m) => !m.image_path.startsWith(own))) throw new Error("Invalid photo file.");
     const thai = data.country === "Thailand";
     const row = {
+      ...(data.media ? { media: data.media } : {}),
       name: data.name, firm_type: data.firmType, logo_path: data.logoPath, logo_source: data.logoPath ? data.logoSource ?? "upload" : null,
       description: data.description, year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
       deal_size_band: data.dealBand, team_size: data.teamSize,

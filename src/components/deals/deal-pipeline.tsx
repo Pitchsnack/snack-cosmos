@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { Link } from "@tanstack/react-router";
 import { DEAL_STAGES, type DealListItem } from "@/lib/deals.functions";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,7 @@ export function DealPipeline({ rows }: { rows: DealListItem[] }) {
                       className="block rounded-md border border-border bg-card p-3 shadow-card hover:border-accent hover:shadow-md"
                     >
                       <div className="text-sm font-medium truncate">{d.deal_name}</div>
-                      <div className="mt-1 truncate text-xs text-muted-foreground">{d.startup_name} → {d.investor_name}</div>
+                      <div className="mt-1 truncate text-xs text-muted-foreground">{bizName(d.startup_name)} → {d.investor_name}</div>
                       <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
                         <span>{d.probability != null ? `${d.probability}%` : "—"}</span>
                         <span>{d.expected_close_date ? new Date(d.expected_close_date).toLocaleDateString() : ""}</span>

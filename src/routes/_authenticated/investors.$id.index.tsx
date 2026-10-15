@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowLeft, Pencil } from "lucide-react";
@@ -165,7 +166,7 @@ function InvestorDetailPage() {
                     key={p.id}
                     to="/startups/$id"
                     id={p.id}
-                    name={p.startup_name}
+                    name={bizName(p.startup_name)}
                     logoUrl={p.logo_signed_url}
                   />
                 ))}

@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -52,7 +53,7 @@ export function StartupTable({ rows, isLoading }: { rows: StartupListItem[]; isL
               <TableRow key={s.id} className="hover:bg-muted/30">
                 <TableCell className="font-medium">
                   <Link to="/startups/$id" params={{ id: s.id }} className="hover:underline">
-                    {s.startup_name}
+                    {bizName(s.startup_name)}
                   </Link>
                   <div className="text-xs text-muted-foreground">{s.tenant_name}</div>
                 </TableCell>

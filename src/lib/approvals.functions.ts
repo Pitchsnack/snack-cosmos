@@ -64,6 +64,8 @@ export const submitListing = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!hp) throw new Error("Create the Public view first");
     if (hp.approval_status === "in_review") throw new Error("Already in review");
+    const { data: st } = await sb.from("startups").select("startup_name").eq("id", data.startupId).maybeSingle();
+    if (!st?.startup_name?.trim()) throw new Error("Add the company name before you submit.");
     const snapshot = await buildSnapshot(sb, data.startupId, hp);
     if (snapshot.identity_flags.length) throw new Error("Identity check isn't clean yet");
     const version = (hp.version ?? 0) + 1;

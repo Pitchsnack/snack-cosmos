@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { bandText, usd } from "@/lib/investor-bands";
@@ -543,7 +544,7 @@ export function InvestorDetailPanel({
                     key={s.id}
                     to="/startups/$id"
                     id={s.id}
-                    name={s.startup_name}
+                    name={bizName(s.startup_name)}
                     logoUrl={s.logo_signed_url}
                     onSelect={onSelectStartup}
                   />

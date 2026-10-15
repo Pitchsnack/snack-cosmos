@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -316,7 +317,7 @@ export function DealForm() {
           <Select value={startupId} onValueChange={setStartupId} disabled={depsDisabled || noStartups}>
             <SelectTrigger><SelectValue placeholder={startupsQ.isLoading ? "Loading…" : noStartups ? "No startups in this tenant" : "Select a startup"} /></SelectTrigger>
             <SelectContent>
-              {startupOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.startup_name}</SelectItem>)}
+              {startupOptions.map((s) => <SelectItem key={s.id} value={s.id}>{bizName(s.startup_name)}</SelectItem>)}
             </SelectContent>
           </Select>
           {noStartups && <p className="text-xs text-destructive">Create a startup in this tenant first.</p>}

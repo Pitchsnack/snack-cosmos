@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -142,7 +143,7 @@ export function PaidReports({ orders }: { orders: ReportOrder[] }) {
     <div className="space-y-3">
       {overdue.map((o) => (
         <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-[#FCD34D] bg-[#FFFBEB] px-4 py-2.5 text-sm">
-          <span className="flex-1">⚠ <b>{o.startups?.startup_name}</b> paid on {dayMonth(o.paid_at)} and still can't see the report · {overdueBy(o)} day{overdueBy(o) === 1 ? "" : "s"} overdue</span>
+          <span className="flex-1">⚠ <b>{bizName(o.startups?.startup_name)}</b> paid on {dayMonth(o.paid_at)} and still can't see the report · {overdueBy(o)} day{overdueBy(o) === 1 ? "" : "s"} overdue</span>
           {action(o)}
         </div>
       ))}
@@ -206,7 +207,7 @@ function ReportViewerDialog({ order, onClose }: { order: ReportOrder; onClose: (
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-[min(1100px,calc(100vw-32px))] p-0">
-        <DialogTitle className="px-5 pt-4 text-base">{order.startups?.startup_name} · {kindLabel(order.kind)}</DialogTitle>
+        <DialogTitle className="px-5 pt-4 text-base">{bizName(order.startups?.startup_name)} · {kindLabel(order.kind)}</DialogTitle>
         <div className="max-h-[80vh] overflow-y-auto p-4">
           <StartupFinancialsPage id={order.startup_id} workspace="startups" initialTab={order.kind === "valuation" ? "valuation" : undefined} />
         </div>

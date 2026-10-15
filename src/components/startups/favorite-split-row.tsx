@@ -1,3 +1,4 @@
+import { bizName } from "@/lib/biz-name";
 import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.functions";
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export function FavoriteSplitRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13px] font-semibold leading-tight group-hover:text-accent">
-          {s.startup_name}
+          {bizName(s.startup_name)}
         </div>
         <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
           {[s.investment_stage, s.company_type, s.headquarters].filter(Boolean).join(" · ")}
