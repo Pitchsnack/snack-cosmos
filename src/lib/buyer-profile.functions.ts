@@ -5,7 +5,7 @@ import { aumRange, ticketRange, type BuyerOrg, type BuyerProfile, type PublicBuy
 
 /**
  * Buyer investor profile (My Company in the Buyer view). Private data lives in
- * buyer_profiles (+ buyer_verifications for the firm); the public record is
+ * buyer_profiles (+ the profile's investor_profile_verifications entry); the public record is
  * derived here and is the only shape ever sent to sellers.
  */
 
