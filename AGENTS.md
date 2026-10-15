@@ -13,7 +13,7 @@
 - Email alerts: wording defaults in src/config/email-alerts.ts, Admin overrides/switches in email_alert_settings; every send goes through sendAlert (email-alerts.server.ts), which checks the user switch and logs to email_alert_log; pipeline emails fire from pipeline log() so steps and emails never drift.
 - Advisor view: users.advisor_view gates it; advisor stars live in advisor_favourites (view='advisor'), separate from buyer/seller saves; advisor-marketplace.tsx reuses existing cards/panels and only public loaders (listAdvisorMarketplace).
 - Edit-at-section: My Company Edit/Add links pass ?section=; forms use EditSec + useOpenAtSection (edit-section.tsx).
-- Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields (startups.setup_from_signup, investors.wizard.from_signup, advisor_firms.wizard_state.fromSignup) so wizards skip them while set.
+- Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields so wizards skip them while set.
 - Sellers edit only their own businesses: is_startup_member policies, a guard trigger keeps tenant/visibility; listings go live only by Admin approval.
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts.
 - One SetSectorPicker (common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries (advisors: sector_agnostic).
