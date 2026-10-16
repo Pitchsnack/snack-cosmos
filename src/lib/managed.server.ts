@@ -22,12 +22,11 @@ export async function adminUserIds(sb: Sb, userIds: (string | null | undefined)[
   return new Set((data ?? []).filter((u: any) => u.account_role === "admin").map((u: any) => u.id as string));
 }
 
-/** Businesses (startup ids) managed by PitchSnack. */
+/** Businesses (startup ids) managed by PitchSnack: only Admin accounts own them, in any workspace. */
 export async function managedStartupIds(sb: Sb, startupIds: string[]): Promise<Set<string>> {
   const ids = [...new Set(startupIds)];
-  const ctl = await controlTenantId(sb);
-  if (!ids.length || !ctl) return new Set();
-  const { data: sts } = await sb.from("startups").select("id, created_by").in("id", ids).eq("tenant_id", ctl);
+  if (!ids.length) return new Set();
+  const { data: sts } = await sb.from("startups").select("id, created_by").in("id", ids);
   if (!sts?.length) return new Set();
   const inCtl = sts.map((s: any) => s.id as string);
   const [{ data: su }, { data: own }] = await Promise.all([
