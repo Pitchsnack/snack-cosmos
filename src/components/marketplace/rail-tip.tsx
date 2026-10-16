@@ -41,7 +41,7 @@ let showing = 0;
  */
 export function RailTip({ label, side = "right", disabled, children }: { label: string; side?: "right" | "bottom"; disabled?: boolean; children: ReactNode }) {
   const wrap = useRef<HTMLSpanElement>(null);
-  const timer = useRef<number>();
+  const timer = useRef<number | undefined>(undefined);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [count, setCount] = useState<string | null>(null);
   const { fresh } = useRailCopy();
