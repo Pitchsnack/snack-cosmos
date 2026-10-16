@@ -134,9 +134,9 @@ export const PLANS = {
   buyersH: c("Buyers and investors", "ผู้ซื้อและนักลงทุน (Investor)"),
   buyersLine: c("For strategic buyers, investors, and institutions searching for verified opportunities.", "สำหรับผู้ซื้อเชิงกลยุทธ์ นักลงทุน และสถาบัน ที่มองหาโอกาสที่ผ่านการตรวจสอบแล้ว"),
   buyers: [
-    { id: "basic", name: "Basic", badge: c("Explore", "สำรวจตลาด"), price: "19,000", unit: c("THB / 6 mo", "บาท / 6 เดือน"), intent: c("You want to see the market.", "ท่านอยากเห็นภาพรวมตลาดก่อน"),
+    { id: "basic", name: "Basic", badge: c("Explore", "สำรวจตลาด"), price: "45,000", unit: c("THB / 6 mo", "บาท / 6 เดือน"), intent: c("You want to see the market.", "ท่านอยากเห็นภาพรวมตลาดก่อน"),
       points: [c("View businesses selling for under THB 50m", "ดูกิจการที่ราคาขายต่ำกว่า 50 ล้านบาท"), c("Verified search and receive", "ค้นหาและรับคำขอ หลังยืนยันตัวตน"), c("Contact requests bought in bundles", "ซื้อสิทธิ์ส่งคำขอติดต่อเป็นแพ็กเกจ")], limit: below50 },
-    { id: "investor", name: "Investor", badge: c("Active buyer", "ผู้ซื้อที่พร้อมลงมือ"), price: "45,000", unit: c("THB / yr", "บาท / ปี"), intent: c("You have criteria and authority to act.", "ท่านมีเกณฑ์การซื้อและอำนาจตัดสินใจ"),
+    { id: "investor", name: "Investor", badge: c("Active buyer", "ผู้ซื้อที่พร้อมลงมือ"), price: onReq, unit: c("THB / yr", "บาท / ปี"), intent: c("You have criteria and authority to act.", "ท่านมีเกณฑ์การซื้อและอำนาจตัดสินใจ"),
       points: [c("View businesses under THB 200m", "ดูกิจการมูลค่าต่ำกว่า 200 ล้านบาท"), c("Matched shortlists", "รายชื่อกิจการที่จับคู่ให้"), c("Screening reports", "รายงานคัดกรอง"), c("30 requests a year", "คำขอติดต่อ 30 ครั้งต่อปี")], limit: below200 },
     { id: "inst", name: "Institutional", badge: c("Multi-mandate", "หลายเกณฑ์การซื้อ"), price: onReq, intent: c("You buy more than once a year.", "ท่านซื้อกิจการมากกว่าปีละครั้ง"),
       points: [c("View every business, at any value", "ดูกิจการได้ทุกมูลค่า"), c("Several mandates on one account", "หลายเกณฑ์การซื้อในบัญชีเดียว"), c("Multiple users", "ผู้ใช้หลายคน")], limit: anyValue },
