@@ -151,3 +151,13 @@
 .su-sector button[aria-pressed="false"]:hover, .su-sector button[aria-checked="false"]:hover { background: var(--hover-bg) !important; border-color: var(--hover-edge) !important; }
 .su-sector [role="radiogroup"] > button, .su-sector [role="group"] > button { border-width: 1.5px; min-height: 82px; }
 .su[data-lang="th"] .su-sector [role="radiogroup"] > button span, .su[data-lang="th"] .su-sector [role="group"] > button span { font-size: .76rem; }
+
+/* Sector result box: sign-up look (the wizard look lives in the component) */
+.su-sector .btq-box { background: var(--info-bg); border-color: var(--info-edge); }
+.su-sector .btq-ok { background: var(--ok); }
+.su-sector .btq-title { font-size: .82rem; font-weight: 600; color: var(--text-2); }
+.su-sector .btq-sector { font-size: .92rem; font-weight: 700; color: var(--text); }
+.su-sector .btq-row { background: var(--paper); border-top-color: var(--info-edge); color: var(--blue); font-size: .84rem; font-weight: 600; }
+.su-sector .btq-row svg { color: var(--blue); }
+.su-sector .btq-row:hover { background: var(--hover-bg); }
+.su-sector .btq-row:focus-visible { outline-color: var(--sage); }
