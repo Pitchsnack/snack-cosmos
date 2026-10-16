@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect, isRedirect, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -25,7 +25,11 @@ export const Route = createFileRoute("/login")({
   beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: search.redirect || "/tenants" });
+    if (!data.user) return;
+    // Signed in (incl. coming back from Google/Microsoft): unfinished sign-ups go back to the steps.
+    try { const st = await getSignupState(); if (st.answers && (!st.answers.done_at || !st.signupDone)) throw redirect({ to: "/signup" }); }
+    catch (e) { if (isRedirect(e)) throw e; }
+    throw redirect({ to: search.redirect || "/tenants" });
   },
   head: () => ({
     meta: [
@@ -135,16 +139,20 @@ function LoginPage() {
     if (busy) return;
     setPwErr(null);
     setBusy(true);
+    // Return to /login (public); its check then sends the user into the app.
+    const back = `${window.location.origin}/login${search.redirect?.startsWith("/") && !search.redirect.startsWith("//") ? `?redirect=${encodeURIComponent(search.redirect)}` : ""}`;
     try {
       if (provider === "google") {
         const { lovable } = await import("@/integrations/lovable/index");
-        const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+        const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: back });
         if (r.error) { setPwErr("other"); setBusy(false); return; }
         if (r.redirected) return;
+        await qc.invalidateQueries();
+        try { const st = await getState(); if (st.answers && (!st.answers.done_at || !st.signupDone)) { navigate({ to: "/signup" }); return; } } catch { /* normal landing */ }
         navigate({ to: search.redirect || "/tenants" });
         return;
       }
-      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } });
+      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: back } });
       if (error) { setPwErr("other"); setBusy(false); }
     } catch { setPwErr("other"); setBusy(false); }
   }

@@ -119,7 +119,8 @@ export function BuyerInvestorEdit({ section, add, id }: { section?: string; add?
   const fetchMe = useServerFn(getMyBuyerInvestor);
   const fetchById = useServerFn(getBuyerInvestorById);
   const { data, isLoading, error } = useQuery({
-    queryKey: id ? buyerInvestorKey(id) : BUYER_INVESTOR_KEY,
+    // Own key: the card and setup page cache an { ok, data } wrapper under buyerInvestorKey(id).
+    queryKey: id ? [...buyerInvestorKey(id), "edit"] : BUYER_INVESTOR_KEY,
     queryFn: async () => { if (!id) return fetchMe(); const r = await fetchById({ data: { id } }); if (!r.ok) throw new Error("This profile isn't yours."); return r.data as Data; },
     meta: { pageLoading: true },
   });
