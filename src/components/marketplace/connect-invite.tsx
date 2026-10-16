@@ -59,7 +59,12 @@ export function ConnectButton({ investorId, investorRef, big }: { investorId: st
   const s: ConnectState | undefined = st?.by[investorId];
   const h = big ? "h-10 px-4 text-[14.5px]" : "h-[34px] px-3 text-[13.5px]";
 
-  if (s?.kind === "invited") return <Chip big={big} tone="green" icon={Check}>{tr(`Invited · ${day(s.at)}`, `เชิญแล้ว · ${day(s.at)}`)}</Chip>;
+  if (s?.kind === "invited") return (
+    <>
+      <Chip big={big} tone="green" icon={Check}>{tr(`Invited · ${day(s.at)}`, `เชิญแล้ว · ${day(s.at)}`)}</Chip>
+      {open && <ConnectDialog investorId={investorId} investorRef={investorRef} listingRef={st?.listingRef ?? ""} onClose={() => setOpen(false)} />}
+    </>
+  );
   if (s?.kind === "not_interested") return <Chip big={big} tone="grey" icon={CircleSlash}>{tr(`Not interested · ${day(s.at)}`, `ไม่สนใจ · ${day(s.at)}`)}</Chip>;
   if (s?.kind === "declined") return <Chip big={big} tone="grey" icon={CircleSlash}>{tr(`You declined · ${day(s.at)}`, `ท่านปฏิเสธ · ${day(s.at)}`)}</Chip>;
   if (s?.kind === "nda_requested" || s?.kind === "approved") {
@@ -120,6 +125,8 @@ function ConnectDialog({ investorId, investorRef, listingRef, onClose }: { inves
   const counter = sent ? counterText(tr, sent.left, total, sent.termMonths) : counterText(tr, strip?.left, total, strip?.plan?.termMonths);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["connect-states"] }); qc.invalidateQueries({ queryKey: ["plan-strip"] }); };
 
+  const close = () => { if (sent) refresh(); onClose(); };
+
   const onSend = async () => {
     setBusy(true);
     try {
@@ -135,7 +142,8 @@ function ConnectDialog({ investorId, investorRef, listingRef, onClose }: { inves
         "This investor has just asked you for an NDA. Review it now.": "นักลงทุนรายนี้เพิ่งขอ NDA กับท่าน โปรดตรวจสอบตอนนี้",
       };
       toast.error(tr(m, th[m] ?? m));
-    } finally { setBusy(false); refresh(); }
+      refresh();
+    } finally { setBusy(false); }
   };
 
   const btn = "inline-flex h-11 items-center justify-center rounded-[10px] px-[18px] text-[14.5px] font-semibold";
