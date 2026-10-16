@@ -3,7 +3,7 @@
  * group's sectors on the right. Seller = one sector (radios); buyer and advisor
  * = up to `max` sectors (tick boxes) with an optional "Sector agnostic" card.
  */
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AlertCircle, AlertTriangle, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { SECTOR_GROUPS, sectorGroupOf } from "@/lib/sectors";
@@ -29,6 +29,8 @@ export function SetSectorPicker({
   limitMsg,
   agnostic,
   error,
+  /** Move keyboard focus to the open group (current sector if there is one) when the picker appears. */
+  focusOnMount,
 }: {
   mode: "single" | "multi";
   value: string[];
