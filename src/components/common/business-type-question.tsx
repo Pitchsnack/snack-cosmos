@@ -6,7 +6,7 @@
 import { useRef, useState, type KeyboardEvent } from "react";
 import {
   Bed, Briefcase, Building2, Car, Check, CircleAlert, CircleEllipsis, CookingPot, Factory, GraduationCap, HardHat,
-  Laptop, Package, ShoppingBag, Sprout, Stethoscope, TriangleAlert, Truck, Utensils, type LucideIcon,
+  ChevronRight, Laptop, Package, ShoppingBag, Sprout, Stethoscope, TriangleAlert, Truck, Utensils, type LucideIcon,
 } from "lucide-react";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { useTranslation, tr } from "@/i18n/language";
@@ -126,21 +126,28 @@ export function SellerTypeQuestion({ pick, sector, onChange, error }: {
               </button>
             )}
           </div>
-          <SetSectorPicker mode="single" value={sector ? [sector] : []} onChange={(v) => onChange(effPick, v[0] ?? null)} />
+          <SetSectorPicker mode="single" focusOnMount value={sector ? [sector] : []} onChange={(v) => onChange(effPick, v[0] ?? null)} />
         </div>
       )}
 
       {sector && (
-        <div role="status" className={cn(boxCls, "flex items-center gap-3 max-[599px]:flex-col max-[599px]:items-start")}>
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            <span className="grid h-6 w-6 flex-none place-items-center rounded-full bg-[#15803D] text-white"><Check className="h-[14px] w-[14px]" strokeWidth={3} /></span>
+        <div role="status" className="btq-box mt-[22px] overflow-hidden rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] dark:border-[#2B4763] dark:bg-[#16283A]">
+          <div className="flex items-start gap-3 px-4 py-[14px]">
+            <span className="btq-ok grid h-5 w-5 flex-none place-items-center rounded-full bg-[#15803D] text-white"><Check className="h-3 w-3" strokeWidth={3.2} /></span>
             <div className="min-w-0 space-y-1">
-              <div className="text-[13px] font-semibold text-[#434A5C] dark:text-muted-foreground">{L("Your sector for buyers", "กลุ่มอุตสาหกรรมของท่านสำหรับผู้ซื้อ")}</div>
-              <div className="text-[16px] font-bold text-[#151A28] dark:text-foreground">{tr(sectorGroupOf(sector) ?? "")} › {tr(sector)}</div>
-              <div className="text-[13px] text-[#6B7280] dark:text-muted-foreground">{L("Buyers find listings by these sectors, from the Stock Exchange of Thailand's list.", "ผู้ซื้อค้นหารายการตามกลุ่มอุตสาหกรรมเหล่านี้ ตามรายชื่อของตลาดหลักทรัพย์แห่งประเทศไทย")}</div>
+              <div className="btq-title text-[13px] font-semibold text-[#434A5C] dark:text-muted-foreground">{L("Industry Sector", "ธุรกิจของท่านอยู่ในกลุ่มอุตสาหกรรม")}</div>
+              <div className="btq-sector text-[14px] font-bold text-[#151A28] dark:text-foreground">
+                {tr(sectorGroupOf(sector) ?? "")} <span className="inline-block">({tr(sector)})</span>
+              </div>
             </div>
           </div>
-          {!all && <button type="button" className={cn(linkCls, "shrink-0 max-[599px]:ml-9")} onClick={() => setAll(true)}>{L("Not right? Pick from all sectors", "ไม่ถูกต้อง? เลือกจากทุกกลุ่มอุตสาหกรรม")}</button>}
+          {!all && (
+            <button type="button" onClick={() => setAll(true)}
+              className="btq-row flex min-h-[46px] w-full items-center justify-between gap-3 rounded-b-[11px] border-t border-[#D6E7FC] bg-white px-4 text-left text-[13.5px] font-semibold text-[#1E2A4A] outline-none hover:bg-[#F6F7F9] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#2563EB] dark:border-[#2B4763] dark:bg-card dark:text-[#C9D5F0] dark:hover:bg-muted">
+              {L("Not right? Pick from all sectors", "ไม่ตรง? เลือกจากทุกกลุ่มอุตสาหกรรม")}
+              <ChevronRight aria-hidden className="h-[18px] w-[18px] flex-none" />
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -150,7 +157,7 @@ export function SellerTypeQuestion({ pick, sector, onChange, error }: {
 /* ============================ Buyer / advisor ============================ */
 
 export type ManyWords = {
-  agnosticLine: string; note?: string; above: string; kindsNone: string; boxTitle: string; boxLast: string;
+  agnosticLine: string; note?: string; above: string; kindsNone: string; boxTitle: string;
 };
 
 export function buyerWords(L: (en: string, th: string) => string): ManyWords {
@@ -161,7 +168,6 @@ export function buyerWords(L: (en: string, th: string) => string): ManyWords {
     above: L("Or pick the types of business you invest in", "หรือเลือกประเภทธุรกิจที่ท่านลงทุน"),
     kindsNone: L("Optional. With none picked, we match you with every kind.", "ไม่บังคับ หากไม่เลือก เราจะจับคู่ท่านกับทุกประเภท"),
     boxTitle: L("Sectors we'll match you with", "กลุ่มอุตสาหกรรมที่เราจะจับคู่ให้ท่าน"),
-    boxLast: L("From the Stock Exchange of Thailand's list. Sellers in these sectors see you as a match.", "ตามรายชื่อของตลาดหลักทรัพย์แห่งประเทศไทย ผู้ขายในกลุ่มเหล่านี้จะเห็นท่านเป็นคู่ที่เหมาะสม"),
   };
 }
 export function advisorWords(L: (en: string, th: string) => string): ManyWords {
@@ -170,7 +176,6 @@ export function advisorWords(L: (en: string, th: string) => string): ManyWords {
     above: L("Or pick the types of business you know best", "หรือเลือกประเภทธุรกิจที่ท่านเชี่ยวชาญ"),
     kindsNone: L("Optional. With none picked, your card shows every kind.", "ไม่บังคับ หากไม่เลือก การ์ดของท่านจะแสดงทุกประเภท"),
     boxTitle: L("Sectors on your card", "กลุ่มอุตสาหกรรมบนการ์ดของท่าน"),
-    boxLast: L("From the Stock Exchange of Thailand's list, the same sectors sellers pick for their business.", "ตามรายชื่อของตลาดหลักทรัพย์แห่งประเทศไทย เป็นกลุ่มเดียวกับที่ผู้ขายเลือกให้ธุรกิจของตน"),
   };
 }
 export { useL };
@@ -275,7 +280,6 @@ export function ManyTypeQuestion({ picks, agnostic, onChange, words, error, max 
               ))}
             </div>
           )}
-          {!agnostic && <p className="mt-2 text-[13px] text-[#6B7280] dark:text-muted-foreground">{words.boxLast}</p>}
         </div>
       )}
     </div>

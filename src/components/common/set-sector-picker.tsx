@@ -3,7 +3,7 @@
  * group's sectors on the right. Seller = one sector (radios); buyer and advisor
  * = up to `max` sectors (tick boxes) with an optional "Sector agnostic" card.
  */
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AlertCircle, AlertTriangle, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { SECTOR_GROUPS, sectorGroupOf } from "@/lib/sectors";
@@ -29,6 +29,8 @@ export function SetSectorPicker({
   limitMsg,
   agnostic,
   error,
+  /** Move keyboard focus to the open group (current sector if there is one) when the picker appears. */
+  focusOnMount,
 }: {
   mode: "single" | "multi";
   value: string[];
@@ -37,6 +39,7 @@ export function SetSectorPicker({
   limitMsg?: string;
   agnostic?: Agnostic;
   error?: string | null;
+  focusOnMount?: boolean;
 }) {
   useTranslation();
   const [group, setGroup] = useState(() => sectorGroupOf(value[0]) ?? SECTOR_GROUPS[0]!.group);
@@ -45,6 +48,17 @@ export function SetSectorPicker({
   const open = SECTOR_GROUPS.find((g) => g.group === group) ?? SECTOR_GROUPS[0]!;
   const off = !!agnostic?.on;
   const single = mode === "single";
+
+  useEffect(() => {
+    if (!focusOnMount) return;
+    const t = window.setTimeout(() => {
+      const el = radiosRef.current?.querySelector<HTMLElement>("[role=radio][aria-checked=true]")
+        ?? tabsRef.current?.querySelector<HTMLElement>("[role=tab][aria-selected=true]");
+      el?.focus();
+    }, 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const tabKeys = (e: KeyboardEvent, i: number) => {
     const d = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
