@@ -23,7 +23,7 @@ function CountPill({ count, collapsed }: { count: number; collapsed?: boolean })
       <span
         data-mkt-badge
         data-rail
-        title={`${count}`}
+        data-count={label}
         className={cn(
           "absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-accent px-1",
           "text-[9px] font-bold leading-none text-accent-foreground",

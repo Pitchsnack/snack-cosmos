@@ -362,3 +362,13 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .admin-messages [class*="bg-[#FEF3DE]"] { background: var(--help-soft); color: var(--help-ink); }
 .admin-messages [class*="bg-[#F6A823]"] { background: var(--plan-seller); color: var(--accent-foreground); }
 .dark { --help-soft: #3A2B15; --help-ink: #FEF3DE; }
+
+/* Folded-menu hint: the logo blinks while the hint shows. */
+@keyframes ps-logo-blink {
+  0%, 100% { box-shadow: 0 0 0 2px #F6A823, 0 0 16px 3px rgba(246,168,35,.55); }
+  50% { box-shadow: 0 0 0 2px rgba(246,168,35,0), 0 0 0 0 rgba(246,168,35,0); }
+}
+.logo-hint { animation: ps-logo-blink 1.2s ease-in-out infinite; border-radius: 9px; }
+@media (prefers-reduced-motion: reduce) {
+  .logo-hint { animation: none; box-shadow: 0 0 0 2px #F6A823; }
+}
