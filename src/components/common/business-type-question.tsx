@@ -6,7 +6,7 @@
 import { useRef, useState, type KeyboardEvent } from "react";
 import {
   Bed, Briefcase, Building2, Car, Check, CircleAlert, CircleEllipsis, CookingPot, Factory, GraduationCap, HardHat,
-  Laptop, Package, ShoppingBag, Sprout, Stethoscope, TriangleAlert, Truck, Utensils, type LucideIcon,
+  ChevronRight, Laptop, Package, ShoppingBag, Sprout, Stethoscope, TriangleAlert, Truck, Utensils, type LucideIcon,
 } from "lucide-react";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { useTranslation, tr } from "@/i18n/language";
@@ -157,7 +157,7 @@ export function SellerTypeQuestion({ pick, sector, onChange, error }: {
 /* ============================ Buyer / advisor ============================ */
 
 export type ManyWords = {
-  agnosticLine: string; note?: string; above: string; kindsNone: string; boxTitle: string; boxLast: string;
+  agnosticLine: string; note?: string; above: string; kindsNone: string; boxTitle: string;
 };
 
 export function buyerWords(L: (en: string, th: string) => string): ManyWords {
@@ -168,7 +168,6 @@ export function buyerWords(L: (en: string, th: string) => string): ManyWords {
     above: L("Or pick the types of business you invest in", "หรือเลือกประเภทธุรกิจที่ท่านลงทุน"),
     kindsNone: L("Optional. With none picked, we match you with every kind.", "ไม่บังคับ หากไม่เลือก เราจะจับคู่ท่านกับทุกประเภท"),
     boxTitle: L("Sectors we'll match you with", "กลุ่มอุตสาหกรรมที่เราจะจับคู่ให้ท่าน"),
-    boxLast: L("From the Stock Exchange of Thailand's list. Sellers in these sectors see you as a match.", "ตามรายชื่อของตลาดหลักทรัพย์แห่งประเทศไทย ผู้ขายในกลุ่มเหล่านี้จะเห็นท่านเป็นคู่ที่เหมาะสม"),
   };
 }
 export function advisorWords(L: (en: string, th: string) => string): ManyWords {
@@ -177,7 +176,6 @@ export function advisorWords(L: (en: string, th: string) => string): ManyWords {
     above: L("Or pick the types of business you know best", "หรือเลือกประเภทธุรกิจที่ท่านเชี่ยวชาญ"),
     kindsNone: L("Optional. With none picked, your card shows every kind.", "ไม่บังคับ หากไม่เลือก การ์ดของท่านจะแสดงทุกประเภท"),
     boxTitle: L("Sectors on your card", "กลุ่มอุตสาหกรรมบนการ์ดของท่าน"),
-    boxLast: L("From the Stock Exchange of Thailand's list, the same sectors sellers pick for their business.", "ตามรายชื่อของตลาดหลักทรัพย์แห่งประเทศไทย เป็นกลุ่มเดียวกับที่ผู้ขายเลือกให้ธุรกิจของตน"),
   };
 }
 export { useL };
@@ -282,7 +280,6 @@ export function ManyTypeQuestion({ picks, agnostic, onChange, words, error, max 
               ))}
             </div>
           )}
-          {!agnostic && <p className="mt-2 text-[13px] text-[#6B7280] dark:text-muted-foreground">{words.boxLast}</p>}
         </div>
       )}
     </div>
