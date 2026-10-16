@@ -82,7 +82,8 @@ import { useDeleteControlRecords } from "@/hooks/use-entity-control";
 
 
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)

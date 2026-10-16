@@ -35,7 +35,8 @@ import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 
 const NAVY = "#0B2D63";
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)

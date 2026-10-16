@@ -42,7 +42,8 @@ import { CompanyEntityPill } from "@/components/relationships/company-entity-pil
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 import { PairedSection } from "@/components/shared/paired-section";
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)

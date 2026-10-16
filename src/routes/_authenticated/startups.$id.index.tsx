@@ -34,7 +34,8 @@ export const Route = createFileRoute("/_authenticated/startups/$id/")({
 const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited","Inactive","Archived"];
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
