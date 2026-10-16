@@ -18,6 +18,7 @@ import logoWhite from "@/assets/pitchsnack-white.png";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslation } from "@/i18n/language";
 import { TakeTourButton } from "@/components/welcome-tour/welcome-tour";
+import { RailTip, FoldedMenuHint, useRailCopy } from "@/components/marketplace/rail-tip";
 
 export function useUserIdentity() {
   const { data } = useSessionContext();
@@ -90,7 +91,9 @@ export function MarketplaceAdminSwitch() {
   );
 }
 
-export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; showMenu: boolean; onLogo?: () => void }) {
+export function GlobalBar({ onMenu, showMenu, onLogo, collapsed, hint, onHintClose }: { onMenu?: () => void; showMenu: boolean; onLogo?: () => void; collapsed?: boolean; hint?: boolean; onHintClose?: () => void }) {
+  const { c } = useRailCopy();
+  const logoTip = c(collapsed ? "Open the menu" : "Fold the menu");
   const isMarket = useIsMarketplace();
   const { t } = useTranslation();
   const { persona } = usePersona();
@@ -110,16 +113,27 @@ export function GlobalBar({ onMenu, showMenu, onLogo }: { onMenu?: () => void; s
           <Menu className="h-5 w-5" />
         </button>
       )}
-      <button
-        type="button"
-        onClick={onLogo ?? onMenu}
-        aria-label="Expand or collapse the menu"
-        data-keep-sidebar
-        title="Click the logo to expand or collapse the menu"
-        className="hidden shrink-0 bg-transparent p-0 sm:block"
-      >
-        <img src={logoWhite} alt="PitchSnack" className="h-8 w-auto" />
-      </button>
+      {showMenu ? (
+        <button type="button" onClick={onMenu} aria-label="PitchSnack" className="hidden shrink-0 bg-transparent p-0 sm:block">
+          <img src={logoWhite} alt="PitchSnack" className="h-8 w-auto" />
+        </button>
+      ) : (
+        <RailTip label={`PitchSnack · ${logoTip}`} side="bottom" disabled={hint}>
+          <button
+            type="button"
+            onClick={onLogo}
+            data-ps-logo
+            data-keep-sidebar
+            aria-expanded={!collapsed}
+            aria-controls="app-sidebar-nav"
+            className="relative hidden shrink-0 rounded-[9px] bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F6A823] sm:block"
+          >
+            <span aria-hidden className={cn("pointer-events-none absolute -inset-x-[10px] -inset-y-[8px] rounded-[9px]", hint && "logo-hint")} />
+            <img src={logoWhite} alt="" className="relative h-8 w-auto" />
+          </button>
+        </RailTip>
+      )}
+      {hint && onHintClose && <FoldedMenuHint onClose={onHintClose} />}
       <MarketplaceAdminSwitch />
       <div className="ml-auto flex items-center gap-2">
         {isMarket ? (
@@ -187,6 +201,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
   const advisor = persona === "advisor";
   const avatar = advisor ? "bg-gradient-to-br from-[#2BB3A3] to-[#0F766E]" : "bg-gradient-to-br from-[#fb923c] to-[#ea580c]";
   const { t } = useTranslation();
+  const rc = useRailCopy();
   const u = data?.user;
   const workspace = data?.activeWorkspace?.tenantName ?? data?.tenants?.[0]?.tenantName ?? null;
   const firms = useMyAdvisorFirms();
@@ -209,12 +224,12 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
     );
   }
   if (collapsed) {
-    const tip = `${name} · ${persona === "seller" ? "Seller" : advisor ? "Advisor" : "Buyer"}`;
+    const tip = [name, org ?? workspace].filter(Boolean).join(" · ");
     return (
       <div className="flex flex-col items-center px-2 pt-3">
+        <RailTip label={tip}>
         <div
           tabIndex={0}
-          title={tip}
           aria-label={tip}
           className={cn("relative grid h-9 w-9 place-items-center rounded-[10px] text-[13px]", avatar, " font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring")}
         >
@@ -225,19 +240,22 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
             </span>
           )}
         </div>
+        </RailTip>
         <div role="tablist" aria-label="Persona" className="mt-3 flex flex-col gap-1 rounded-[10px] bg-[var(--mkt-tray)] p-1">
           {parts.map((p) => {
             const Icon = p === "seller" ? Building2 : p === "advisor" ? Handshake : Briefcase;
             const on = persona === p;
             const label = t(p === "seller" ? "I'm Seller" : p === "advisor" ? "I'm Advisor" : "I'm Buyer");
+            const view = rc.c(p === "seller" ? "Seller view" : p === "advisor" ? "Advisor view" : "Buyer view");
+            const railTip = lockedTab(p) ? `${view} · ${rc.c("not on your account")}` : view;
             return (
+              <RailTip key={p} label={railTip}>
               <button
                 key={p}
                 role="tab"
                 aria-selected={on}
                 aria-label={label}
                 aria-disabled={lockedTab(p) || undefined}
-                title={lockedTab(p) ? lockTip(p) : label}
                 onClick={() => pick(p)}
                 className={cn(
                   "relative grid h-[30px] w-[34px] place-items-center rounded-[7px] transition-colors",
@@ -246,6 +264,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
               >
                 {lockedTab(p) ? <Lock className="h-[13px] w-[13px]" /> : <Icon className="h-[15px] w-[15px]" />}
               </button>
+              </RailTip>
             );
           })}
         </div>
@@ -430,17 +449,17 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   const { persona } = usePersona();
   const { t } = useTranslation();
   const { discover, workspace, tools, account } = marketplaceMenu(persona);
+  const rc = useRailCopy();
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
       const locked = it.lock ? !isReportOrdered(it.lock) : false;
-      const tip = locked ? `${t(it.label)} · locked` : t(it.label);
+      const tip = locked ? `${t(it.label)} · ${rc.c("locked")}` : t(it.label);
       return (
+        <RailTip key={it.to} label={tip}>
         <Link
-          key={it.to}
           to={it.to}
           activeOptions={it.exact === false ? { exact: false } : undefined}
-          title={tip}
           aria-label={tip}
           activeProps={{ className: "bg-[var(--role-accent)] text-[var(--role-on)] font-medium" }}
           inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" }}
@@ -457,6 +476,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
             </span>
           )}
         </Link>
+        </RailTip>
       );
     };
     return (

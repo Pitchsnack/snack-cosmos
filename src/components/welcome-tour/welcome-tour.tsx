@@ -22,6 +22,8 @@ let state: Open | null = null;
 const subs = new Set<() => void>();
 const set = (s: Open | null) => { state = s; subs.forEach((f) => f()); };
 const useOpen = () => useSyncExternalStore((f) => { subs.add(f); return () => subs.delete(f); }, () => state, () => null);
+/** True while the welcome or the tour is open. */
+export const useTourIsOpen = () => !!useOpen();
 /** The ? button: the tour from step 1, on this page, without the welcome. */
 export function startTour(returnTo: HTMLElement | null) { set({ mode: "tour", fromWelcome: false, returnTo, step: 0 }); }
 export function useTourEligible() {

@@ -31,7 +31,8 @@ import { KeyRound,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { WelcomeTourHost } from "@/components/welcome-tour/welcome-tour";
+import { WelcomeTourHost, useTourIsOpen, useTourEligible } from "@/components/welcome-tour/welcome-tour";
+import { menuHintDone, markMenuHintDone } from "@/components/marketplace/rail-tip";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 import { UserMenu } from "@/components/user-menu";
@@ -499,7 +500,13 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   const collapsedByIntent = intent === "open" ? false : intent === "closed" ? true : autoCollapsed;
   const effectiveCollapsed = !isMobile && !isAdminRoute && !tourMenu ? collapsedByIntent : false;
 
-  const toggle = () => persistIntent(effectiveCollapsed ? "open" : "closed");
+  const tourOpen = useTourIsOpen();
+  const marketRole = useTourEligible();
+  const [hintDone, setHintDone] = useState(true);
+  useEffect(() => { setHintDone(menuHintDone()); }, []);
+  const showHint = !isMobile && !isAdminRoute && !!marketRole && effectiveCollapsed && !tourOpen && !tourMenu && !hintDone;
+  const closeHint = () => { markMenuHintDone(); setHintDone(true); };
+  const toggle = () => { if (showHint) closeHint(); persistIntent(effectiveCollapsed ? "open" : "closed"); };
 
   // Re-expand on route change for 'auto' users; close mobile drawer.
   useEffect(() => {
@@ -581,7 +588,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
-    <GlobalBar showMenu={false} onLogo={toggle} />
+    <GlobalBar showMenu={false} onLogo={toggle} collapsed={effectiveCollapsed} hint={showHint} onHintClose={closeHint} />
     <WelcomeTourHost />
     <div
       className="grid min-h-0 w-full flex-1 overflow-hidden bg-background transition-[grid-template-columns] duration-300 motion-reduce:transition-none"
