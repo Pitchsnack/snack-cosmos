@@ -126,21 +126,28 @@ export function SellerTypeQuestion({ pick, sector, onChange, error }: {
               </button>
             )}
           </div>
-          <SetSectorPicker mode="single" value={sector ? [sector] : []} onChange={(v) => onChange(effPick, v[0] ?? null)} />
+          <SetSectorPicker mode="single" focusOnMount value={sector ? [sector] : []} onChange={(v) => onChange(effPick, v[0] ?? null)} />
         </div>
       )}
 
       {sector && (
-        <div role="status" className={cn(boxCls, "flex items-center gap-3 max-[599px]:flex-col max-[599px]:items-start")}>
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            <span className="grid h-6 w-6 flex-none place-items-center rounded-full bg-[#15803D] text-white"><Check className="h-[14px] w-[14px]" strokeWidth={3} /></span>
+        <div role="status" className="btq-box mt-[22px] overflow-hidden rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] dark:border-[#2B4763] dark:bg-[#16283A]">
+          <div className="flex items-start gap-3 px-4 py-[14px]">
+            <span className="btq-ok grid h-5 w-5 flex-none place-items-center rounded-full bg-[#15803D] text-white"><Check className="h-3 w-3" strokeWidth={3.2} /></span>
             <div className="min-w-0 space-y-1">
-              <div className="text-[13px] font-semibold text-[#434A5C] dark:text-muted-foreground">{L("Your sector for buyers", "กลุ่มอุตสาหกรรมของท่านสำหรับผู้ซื้อ")}</div>
-              <div className="text-[16px] font-bold text-[#151A28] dark:text-foreground">{tr(sectorGroupOf(sector) ?? "")} › {tr(sector)}</div>
-              <div className="text-[13px] text-[#6B7280] dark:text-muted-foreground">{L("Buyers find listings by these sectors, from the Stock Exchange of Thailand's list.", "ผู้ซื้อค้นหารายการตามกลุ่มอุตสาหกรรมเหล่านี้ ตามรายชื่อของตลาดหลักทรัพย์แห่งประเทศไทย")}</div>
+              <div className="btq-title text-[13px] font-semibold text-[#434A5C] dark:text-muted-foreground">{L("Industry Sector", "ธุรกิจของท่านอยู่ในกลุ่มอุตสาหกรรม")}</div>
+              <div className="btq-sector text-[14px] font-bold text-[#151A28] dark:text-foreground">
+                {tr(sectorGroupOf(sector) ?? "")} <span className="inline-block">({tr(sector)})</span>
+              </div>
             </div>
           </div>
-          {!all && <button type="button" className={cn(linkCls, "shrink-0 max-[599px]:ml-9")} onClick={() => setAll(true)}>{L("Not right? Pick from all sectors", "ไม่ถูกต้อง? เลือกจากทุกกลุ่มอุตสาหกรรม")}</button>}
+          {!all && (
+            <button type="button" onClick={() => setAll(true)}
+              className="btq-row flex min-h-[46px] w-full items-center justify-between gap-3 rounded-b-[11px] border-t border-[#D6E7FC] bg-white px-4 text-left text-[13.5px] font-semibold text-[#1E2A4A] outline-none hover:bg-[#F6F7F9] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#2563EB] dark:border-[#2B4763] dark:bg-card dark:text-[#C9D5F0] dark:hover:bg-muted">
+              {L("Not right? Pick from all sectors", "ไม่ตรง? เลือกจากทุกกลุ่มอุตสาหกรรม")}
+              <ChevronRight aria-hidden className="h-[18px] w-[18px] flex-none" />
+            </button>
+          )}
         </div>
       )}
     </div>
