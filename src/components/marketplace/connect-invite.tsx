@@ -148,7 +148,7 @@ function ConnectDialog({ investorId, investorRef, listingRef, onClose }: { inves
 
   const btn = "inline-flex h-11 items-center justify-center rounded-[10px] px-[18px] text-[14.5px] font-semibold";
   return (
-    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog open onOpenChange={(o) => { if (!o) close(); }}>
       <DialogContent onClick={(e) => e.stopPropagation()} className={cn("max-h-[calc(100vh-32px)] max-w-[calc(100vw-32px)] overflow-y-auto rounded-2xl p-6", sent ? "sm:max-w-[660px]" : "sm:max-w-[540px]")}>
         {!sent ? (
           <>
@@ -191,7 +191,7 @@ function ConnectDialog({ investorId, investorRef, listingRef, onClose }: { inves
             </div>
             <div className="mt-[22px] flex flex-wrap items-center justify-between gap-3">
               <span className="text-[12.5px] text-[#6B7280]">{counter}</span>
-              <button type="button" onClick={onClose} className={cn(btn, NAVY)}>{tr("Done", "เสร็จสิ้น")}</button>
+              <button type="button" onClick={close} className={cn(btn, NAVY)}>{tr("Done", "เสร็จสิ้น")}</button>
             </div>
           </>
         )}
