@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { useIsMarketplace, usePersona } from "@/hooks/use-marketplace";
+import { RailTip, useRailCopy } from "@/components/marketplace/rail-tip";
 
 export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const navigate = useNavigate();
@@ -32,7 +33,9 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const isMarket = useIsMarketplace();
   const { persona } = usePersona();
   const baseRole = data?.roles[0] ? ROLE_LABELS[data.roles[0]] : "—";
-  const roleLabel = isMarket ? (persona === "buyer" ? "Buyer" : "Seller") : baseRole;
+  const roleLabel = isMarket ? (persona === "buyer" ? "Buyer" : persona === "advisor" ? "Advisor" : "Seller") : baseRole;
+  const { c } = useRailCopy();
+  const railTip = `${name} · ${isMarket ? c(roleLabel) : roleLabel}`;
 
   async function signOut() {
     try { await onLogout(); } catch { /* best effort */ }
@@ -44,11 +47,11 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
 
   return (
     <DropdownMenu>
+      <RailTip label={railTip} disabled={!collapsed || !isMarket}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          title={collapsed ? `${name} · ${roleLabel}` : undefined}
-          aria-label={collapsed ? `${name} · ${roleLabel}` : undefined}
+          aria-label={collapsed ? railTip : undefined}
           className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent ${collapsed ? "justify-center" : ""}`}
         >
           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sidebar-primary/20 text-xs font-semibold text-sidebar-primary">
@@ -62,6 +65,7 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
           )}
         </button>
       </DropdownMenuTrigger>
+      </RailTip>
       <DropdownMenuContent align="end" side="top" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <div className="text-sm font-medium">{name}</div>
