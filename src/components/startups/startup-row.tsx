@@ -9,7 +9,8 @@ import { PreviewNeedsReassignmentBadge } from "@/components/intake/needs-reassig
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)

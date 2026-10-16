@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { ChevronDown, ExternalLink, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function monogram(name: string) {
+export function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)

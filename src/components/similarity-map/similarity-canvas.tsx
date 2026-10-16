@@ -18,7 +18,8 @@ const HERO_WIDTH = 300;
 const HERO_HEIGHT = 92;
 const HERO_HALO = 48;
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)

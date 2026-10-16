@@ -3,7 +3,8 @@ import type { StartupListItem as StartupListItemDTO } from "@/lib/startups.funct
 import { FavoriteToggle } from "@/components/startups/favorite-toggle";
 import { cn } from "@/lib/utils";
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)

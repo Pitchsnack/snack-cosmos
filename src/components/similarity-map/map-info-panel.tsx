@@ -16,7 +16,8 @@ import type { StartupListItem } from "@/lib/startups.functions";
 import { type SimilarityMode, similarTo } from "@/lib/similarity-map/similarity";
 import { cn } from "@/lib/utils";
 
-function monogram(name: string) {
+function monogram(name: string | null | undefined) {
+  if (!name) return "";
   return name
     .split(/\s+/)
     .slice(0, 2)
