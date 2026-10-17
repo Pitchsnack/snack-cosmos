@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, CircleAlert, Globe, KeyRound, LoaderCircle, Mail, MessageSquare, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { accessEnter, accessStatus, claimAccessSeat, type ClaimResult, type GateDetails } from "@/lib/access-gate.functions";
+import { accessEnter, accessStatus, enterShareInvitation, claimAccessSeat, type ClaimResult, type GateDetails } from "@/lib/access-gate.functions";
 import { HatMark } from "@/components/ui/PitchSnackLoader";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import hatWhite from "@/assets/pitchsnack-hat-white-icon.png";
@@ -58,14 +58,14 @@ function takeFlash(): Flash | null {
 }
 
 /* ---------- context ---------- */
-type GateValue = { gateOn: boolean; details: GateDetails | null; signedIn: boolean };
+type GateValue = { gateOn: boolean; details: GateDetails | null; signedIn: boolean; invitationEmail?: string };
 const Ctx = createContext<GateValue>({ gateOn: false, details: null, signedIn: false });
 export const useGate = () => useContext(Ctx);
 
-let cache: { at: number; gateOn: boolean; details: GateDetails | null } | null = null;
+let cache: { at: number; gateOn: boolean; details: GateDetails | null; invitationEmail?: string } | null = null;
 let signedInKnown = false;
 
-/** Runs the seat claim for a signed-in new account. On failure the account is gone: sign out and return the reason. */
+/** Runs the access claim; rejected passes sign out without deleting the account. */
 export function useClaimSeat() {
   const claim = useServerFn(claimAccessSeat);
   return async (): Promise<{ result: ClaimResult; code?: string }> => {
@@ -77,7 +77,7 @@ export function useClaimSeat() {
         if (r.result === "no_pass") { cache = null; setFlash({ kind: "no_pass" }); }
       }
       return r;
-    } catch { return { result: "works" }; }
+    } catch { return { result: "no_pass" }; }
   };
 }
 
@@ -87,25 +87,36 @@ export function useClaimSeat() {
  */
 export function AccessGate({ children, claimInBackground = true, onLang }: { children: ReactNode; claimInBackground?: boolean; onLang?: (l: Lang) => void }) {
   const status = useServerFn(accessStatus);
+  const enterInvitation = useServerFn(enterShareInvitation);
   const claim = useClaimSeat();
   // On in-app navigation the last answer is already known: start open, no loading frame.
-  const known = signedInKnown || (cache && Date.now() - cache.at < FRESH && (!cache.gateOn || cache.details));
+  const known = signedInKnown || (cache && Date.now() - cache.at < FRESH && (!cache.gateOn || cache.details || cache.invitationEmail));
   const [state, setState] = useState<"loading" | "open" | "gate">(known ? "open" : "loading");
   const [val, setVal] = useState<GateValue>(
     signedInKnown ? { gateOn: false, details: null, signedIn: true }
-      : known && cache ? { gateOn: cache.gateOn, details: cache.details, signedIn: false }
+      : known && cache ? { gateOn: cache.gateOn, details: cache.details, invitationEmail: cache.invitationEmail, signedIn: false }
       : { gateOn: false, details: null, signedIn: false });
   const [flash, setFl] = useState<Flash | null>(null);
   const [welcome, setWelcome] = useState<string | null>(null);
 
   const decide = async () => {
+    const join = new URL(window.location.href).searchParams.get('join');
+    let invitationEmail: string | undefined;
+    if (join) {
+      try {
+        const invitation = await enterInvitation({ data: { token: join, deviceId: deviceId() } });
+        if (invitation.works && invitation.pass && invitation.email) {
+          writePass(invitation.pass, '', true); invitationEmail = invitation.email; cache = null;
+        } else { clearPass(); cache = null; }
+      } catch { clearPass(); cache = null; }
+    }
     const { data } = await supabase.auth.getSession();
     signedInKnown = !!data.session;
     if (data.session) {
       setVal({ gateOn: false, details: null, signedIn: true }); setState("open");
       if (claimInBackground) {
         const k = `ps-claim-${data.session.user.id}`;
-        if (!sessionStorage.getItem(k)) {
+        if (join || !sessionStorage.getItem(k)) {
           const r = await claim();
           if (r.result === "works") sessionStorage.setItem(k, "1");
           else { setVal({ gateOn: true, details: null, signedIn: false }); setFl(takeFlash()); setState("gate"); }
@@ -115,8 +126,8 @@ export function AccessGate({ children, claimInBackground = true, onLang }: { chi
     }
     const f = takeFlash();
     if (cache && Date.now() - cache.at < FRESH && !f) {
-      setVal({ gateOn: cache.gateOn, details: cache.details, signedIn: false });
-      setState(!cache.gateOn || cache.details ? "open" : "gate"); return;
+      setVal({ gateOn: cache.gateOn, details: cache.details, invitationEmail: cache.invitationEmail, signedIn: false });
+      setState(!cache.gateOn || cache.details || cache.invitationEmail ? "open" : "gate"); return;
     }
     const stored = readPass();
     try {
@@ -124,7 +135,8 @@ export function AccessGate({ children, claimInBackground = true, onLang }: { chi
         status({ data: { pass: stored?.pass ?? null, deviceId: stored ? deviceId() : null } }),
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
       ]);
-      if (!r.gateOn) { cache = { at: Date.now(), gateOn: false, details: null }; setVal({ gateOn: false, details: null, signedIn: false }); setState("open"); return; }
+      if (!r.gateOn) { cache = { at: Date.now(), gateOn: false, details: null, invitationEmail }; setVal({ gateOn: false, details: null, invitationEmail, signedIn: false }); setState("open"); return; }
+      if (r.works && r.invitationEmail) { cache = { at: Date.now(), gateOn: true, details: null, invitationEmail: r.invitationEmail }; setVal({ gateOn: true, details: null, invitationEmail: r.invitationEmail, signedIn: false }); setState('open'); return; }
       if (r.works && r.details) { cache = { at: Date.now(), gateOn: true, details: r.details }; setVal({ gateOn: true, details: r.details, signedIn: false }); setState("open"); return; }
       if (r.inactive && stored) { clearPass(); setFl({ kind: "inactive", code: stored.code }); }
       else setFl(f);

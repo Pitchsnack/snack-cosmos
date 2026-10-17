@@ -11,7 +11,7 @@ export type GateDetails = {
   code: string; client: string; role: CodeRole; left: number; max: number; months: number;
   plans: { seller: string | null; buyer: string | null; advisor: string | null } | null;
 };
-export type GateStatus = { gateOn: boolean; works: boolean; inactive?: boolean; details?: GateDetails };
+export type GateStatus = { gateOn: boolean; works: boolean; inactive?: boolean; details?: GateDetails; invitationEmail?: string };
 
 const ROLES = ["seller", "buyer", "advisor"] as const;
 const DAY = 86400000;
@@ -29,11 +29,11 @@ async function hmac(msg: string) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("ps-access-pass:" + secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return b64u(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg))));
 }
-async function signPass(p: { d: string; c: string; e: number }) {
+async function signPass(p: { d: string; c: string; e: number; kind?: 'share' }) {
   const body = b64u(new TextEncoder().encode(JSON.stringify(p)));
   return `${body}.${await hmac(body)}`;
 }
-async function readPass(pass: string | null | undefined): Promise<{ d: string; c: string; e: number } | null> {
+async function readPass(pass: string | null | undefined): Promise<{ d: string; c: string; e: number; kind?: 'share' } | null> {
   if (!pass) return null;
   const [body, sig] = pass.split(".");
   if (!body || !sig || (await hmac(body)) !== sig) return null;
@@ -80,6 +80,15 @@ async function visit(sb: any, deviceId: string, codeId: string) {
 
 const deviceRe = z.string().regex(/^[A-Za-z0-9-]{8,64}$/);
 
+export const enterShareInvitation = createServerFn({ method: 'POST' })
+  .inputValidator(d => z.object({ token: z.string().max(128), deviceId: deviceRe }).parse(d))
+  .handler(async ({ data }) => {
+    const sb = await sbAdmin();
+    const { data: inv } = await sb.from('share_invitations').select('id,email').eq('token', data.token).is('joined_at', null).maybeSingle();
+    if (!inv) return { works: false, pass: null, email: null };
+    return { works: true, email: inv.email as string, pass: await signPass({ d: data.deviceId, c: inv.id, kind: 'share', e: Date.now() + 30 * DAY }) };
+  });
+
 export const accessStatus = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ pass: z.string().max(600).nullable(), deviceId: deviceRe.nullable() }).parse(d))
   .handler(async ({ data }): Promise<GateStatus> => {
@@ -88,6 +97,10 @@ export const accessStatus = createServerFn({ method: "POST" })
     if (!s?.gate_on) return { gateOn: false, works: true };
     const p = await readPass(data.pass);
     if (!p || (data.deviceId && p.d !== data.deviceId)) return { gateOn: true, works: false };
+    if (p.kind === 'share') {
+      const { data: inv } = await sb.from('share_invitations').select('email').eq('id', p.c).is('joined_at', null).maybeSingle();
+      return inv ? { gateOn: true, works: true, invitationEmail: inv.email } : { gateOn: true, works: false };
+    }
     const { data: c } = await sb.from("access_codes").select("*").eq("id", p.c).maybeSingle();
     if (!c) return { gateOn: true, works: false };
     if (!isActive(c)) return { gateOn: true, works: false, inactive: true };
@@ -141,7 +154,7 @@ export const accessEnter = createServerFn({ method: "POST" })
 
 export type ClaimResult = "works" | "full" | "inactive" | "no_pass";
 
-/** Links a brand-new account to its code, sets its role and starts the free plan. Removes the account if it can't. */
+/** Claims access; rejected passes leave accounts recoverable and unprivileged. */
 export const claimAccessSeat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ pass: z.string().max(600).nullable() }).parse(d))
@@ -158,9 +171,15 @@ export const claimAccessSeat = createServerFn({ method: "POST" })
     const created = Date.parse(au?.user?.created_at ?? "");
     // Only a new account: no role, no code, no Draft profile, made while the gate is on.
     const isNew = !u?.account_role && !u?.access_code_id && !a?.done_at && created >= Date.parse(s.changed_at);
+    const p = await readPass(data.pass);
+    if (p?.kind === 'share') {
+      const { data: claimed, error } = await sb.rpc('claim_share_invitation', { _uid: uid, _invitation_id: p.c, _email: au?.user?.email ?? '', _role: u?.account_role ?? a?.role ?? '' });
+      if (error) throw new Error('Invitation claim failed');
+      // Invitation failures are recoverable; never delete an account or its answers.
+      return { result: claimed || !isNew ? 'works' : 'no_pass' };
+    }
     if (!isNew) return { result: "works" };
 
-    const p = await readPass(data.pass);
     let result: ClaimResult = "no_pass";
     let codeText: string | undefined;
     let code: any = null;
@@ -174,13 +193,10 @@ export const claimAccessSeat = createServerFn({ method: "POST" })
       }
     }
     if (result !== "works") {
-      await sb.from("signup_answers").delete().eq("user_id", uid);
-      await sb.from("users").delete().eq("id", uid);
-      await sb.auth.admin.deleteUser(uid);
       return { result, code: codeText };
     }
     // Free plan: one active subscription; it takes the place of a seller's Entry.
-    if (code.free_plan && a?.role && ROLES.includes(a.role)) {
+    if (code?.free_plan && a?.role && ROLES.includes(a.role)) {
       const plan = await planFor(sb, code, a.role, s);
       if (plan) {
         const day = bkkToday();

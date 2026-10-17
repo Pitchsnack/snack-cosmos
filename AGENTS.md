@@ -1,12 +1,12 @@
 # Decisions
 
-- Only Admin approval publishes a listing (DB trigger). Sellers pick the sector picture (setMyListingImage); covers use it only while it matches the sector.
+- Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
 - Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx (prefs: seller_report_prefs).
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest admin receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
-- Loading: meta.pageLoading. LOI: config/loi-request.json. Tour: marketplaceMenu/data-tour; seen via mark_welcome_tour_seen().
+- Loading: meta.pageLoading; LOI: config/loi-request.json; tour: marketplaceMenu/data-tour + mark_welcome_tour_seen().
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked → oldest → drawn; private public-images bucket via server fns.
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
 - Buyer investor profiles go live only by Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
@@ -14,7 +14,7 @@
 - Advisor view: users.advisor_view gates it; advisor stars live in advisor_favourites (view='advisor'), separate from buyer/seller saves; advisor-marketplace.tsx reuses existing cards/panels and only public loaders (listAdvisorMarketplace).
 - Edit-at-section: My Company Edit/Add links pass ?section=; forms use EditSec + useOpenAtSection (edit-section.tsx).
 - Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields so wizards skip them while set.
-- Sellers edit only their own businesses: is_startup_member policies, a guard trigger keeps tenant/visibility; listings go live only by Admin approval.
+- Sellers edit only own businesses via is_startup_member policies; a guard trigger preserves tenant/visibility.
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts.
 - One SetSectorPicker (common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries (advisors: sector_agnostic).
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts,.
@@ -27,5 +27,7 @@
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner (withOwnerEmails).
 - Listing names: Admin-only (trigger zz_listing_name_admin_only, syncs live); NULL = show ref_no.
-- Buyer verification is per investor profile (investor_profile_verifications, one entry per investor, created by DB triggers); read it only via profile-verification.server.ts, and sellers get only investor_is_verified(). Why: Control holds many profiles.
-- workspace-scope.server.ts scopes sellers; Control sees all. Analytics: Admin metadata readers, shared counts, DB-deduplicated sign-ins.
+- Buyer verification: one investor_profile_verifications row per investor via triggers; readers use profile-verification.server.ts; sellers get only investor_is_verified(). Control holds many profiles.
+- workspace-scope.server.ts scopes sellers; Control sees all. Analytics: Admin readers, DB sign-ins.
+
+- Sidebar sharing: email-bound, retry-safe claims without deletion; no code seats/free plans. Requests post only to Help Desk.

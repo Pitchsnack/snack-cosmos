@@ -1,4 +1,8 @@
 # Roadmap — Control setup wizards (brief 2)
+- [x] Sidebar Share and hover upgrade cards; bilingual plan request dialog
+- [x] Share invitation email, protected sending and email-bound signup access
+- [x] Sidebar sharing rules tests; seller live invitation/Help desk request checks
+- [ ] New-recipient delivery and full invited signup: needs a recipient approved for live email testing
 - [x] Admin Analytics: real-data readers, sign-in days and retention
 - [x] Admin Analytics: Overview, People, Activity, person panel and CSV
 - [x] Admin Analytics: rules tests and signed-in screen checks
