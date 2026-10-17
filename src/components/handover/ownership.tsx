@@ -424,7 +424,16 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function InviteDialog({ kind, id, name, managed, prefill, onBack, onClose, onSent }: {
   kind: HandoverKind; id: string; name: string; managed: boolean; prefill: Partial<InviteForm> | null; onBack: () => void; onClose: () => void; onSent: () => void;
 }) {
-  const [f, setF] = useState<InviteForm>({ firstName: "", lastName: "", email: "", relation: "", language: "th", sentBy: DEFAULT_TEAM, note: "", ...prefill });
+  const noteDefault = (lang: "th" | "en") => DEFAULT_NOTE[kind][lang];
+  const [f, setF] = useState<InviteForm>({ firstName: "", lastName: "", email: "", relation: "", language: "th", sentBy: DEFAULT_TEAM, note: "", ...prefill, note: prefill?.note ?? DEFAULT_NOTE[kind].th });
+  // Switching the email language swaps the note only while it is still untouched (empty or the other default).
+  const setLang = (lang: "th" | "en") =>
+    setF((x) => {
+      if (x.language === lang) return x;
+      const other = lang === "th" ? "en" : "th";
+      const note = x.note.trim() === "" || x.note === noteDefault(other) ? noteDefault(lang) : x.note;
+      return { ...x, language: lang, note };
+    });
   const set = <K extends keyof InviteForm>(k: K, v: InviteForm[K]) => setF((x) => ({ ...x, [k]: v }));
   const email = useDebounced(f.email.trim(), 500);
   const check = useServerFn(checkInviteEmail);
