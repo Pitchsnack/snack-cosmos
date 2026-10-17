@@ -51,6 +51,7 @@ import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_auth
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
 import { Route as AuthenticatedTenantsRouteImport } from './routes/_authenticated/tenants'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as HandoverTokenRouteImport } from './routes/handover.$token'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedAdminAccessCodesRouteImport } from './routes/_authenticated/admin/access-codes'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
@@ -339,6 +340,11 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
   path: '/users',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const HandoverTokenRoute = HandoverTokenRouteImport.update({
+  id: '/handover/$token',
+  path: '/handover/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const Sp2GatewayIndexRoute = Sp2GatewayIndexRouteImport.update({
   id: '/sp2-gateway/',
@@ -762,6 +768,7 @@ export interface FileRoutesByFullPath {
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -864,6 +871,7 @@ export interface FileRoutesByTo {
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -969,6 +977,7 @@ export interface FileRoutesById {
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/tenants': typeof AuthenticatedTenantsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/_authenticated/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -1079,6 +1088,7 @@ export interface FileRouteTypes {
     | '/startups'
     | '/tenants'
     | '/users'
+    | '/handover/$token'
     | '/sp2-gateway/'
     | '/admin/access-codes'
     | '/admin/analytics'
@@ -1181,6 +1191,7 @@ export interface FileRouteTypes {
     | '/startup-activity'
     | '/tenants'
     | '/users'
+    | '/handover/$token'
     | '/sp2-gateway'
     | '/admin/access-codes'
     | '/admin/analytics'
@@ -1285,6 +1296,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups'
     | '/_authenticated/tenants'
     | '/_authenticated/users'
+    | '/handover/$token'
     | '/sp2-gateway/'
     | '/_authenticated/admin/access-codes'
     | '/_authenticated/admin/analytics'
@@ -1369,6 +1381,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellersRoute: typeof SellersRoute
   SignupRoute: typeof SignupRoute
+  HandoverTokenRoute: typeof HandoverTokenRoute
   Sp2GatewayIndexRoute: typeof Sp2GatewayIndexRoute
   ApiPublicFreePlanJobRoute: typeof ApiPublicFreePlanJobRoute
   AdvisorCompanyIdSetupRoute: typeof AdvisorCompanyIdSetupRoute
@@ -1673,6 +1686,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/users'
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/handover/$token': {
+      id: '/handover/$token'
+      path: '/handover/$token'
+      fullPath: '/handover/$token'
+      preLoaderRoute: typeof HandoverTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/sp2-gateway/': {
       id: '/sp2-gateway/'
@@ -2469,6 +2489,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SellersRoute: SellersRoute,
   SignupRoute: SignupRoute,
+  HandoverTokenRoute: HandoverTokenRoute,
   Sp2GatewayIndexRoute: Sp2GatewayIndexRoute,
   ApiPublicFreePlanJobRoute: ApiPublicFreePlanJobRoute,
   AdvisorCompanyIdSetupRoute: AdvisorCompanyIdSetupRoute,
