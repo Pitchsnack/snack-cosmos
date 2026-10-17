@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { HandoverKind } from "@/lib/handover-parts";
-import logo from "@/assets/pitchsnack-logo.png";
+import logoAsset from "@/assets/pitchsnack-logo.png.asset.json";
+const logo = (logoAsset as { url: string }).url;
 
 export const Route = createFileRoute("/handover/$token")({
   head: () => ({
