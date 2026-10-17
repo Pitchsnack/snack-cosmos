@@ -1,3 +1,4 @@
+import { HandoverReviewBox } from "@/components/handover/ownership";
 import { bandOf, fmtThb, thbOf } from "@/lib/asking-price";
 import { useEffect, useMemo, useState } from "react";
 import { handoverLine } from "@/lib/hidden-profile";
@@ -284,6 +285,7 @@ function Panel({ x }: { x: Item }) {
         <Link to={x.dirTo as any} params={x.dirParams as any} className="inline-flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-2.5 text-xs font-semibold text-[#1D4ED8]">Open in {x.dirLabel}<ExternalLink className="h-3 w-3" /></Link>
       </div>
       <div className="space-y-[18px] px-[18px] pb-[18px] pt-4">
+        {x.handover?.id && <HandoverReviewBox kind={x.handover.kind} id={x.handover.id} />}
         <Sec title="Checks">
           <div className="grid gap-2 sm:grid-cols-3">
             {x.checks.map(([ok, t, d]) => (
