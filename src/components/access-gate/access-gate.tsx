@@ -65,7 +65,7 @@ export const useGate = () => useContext(Ctx);
 let cache: { at: number; gateOn: boolean; details: GateDetails | null; invitationEmail?: string } | null = null;
 let signedInKnown = false;
 
-/** Runs the seat claim for a signed-in new account. On failure the account is gone: sign out and return the reason. */
+/** Runs the access claim; rejected passes sign out without deleting the account. */
 export function useClaimSeat() {
   const claim = useServerFn(claimAccessSeat);
   return async (): Promise<{ result: ClaimResult; code?: string }> => {

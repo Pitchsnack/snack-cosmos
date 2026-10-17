@@ -154,7 +154,7 @@ export const accessEnter = createServerFn({ method: "POST" })
 
 export type ClaimResult = "works" | "full" | "inactive" | "no_pass";
 
-/** Links a brand-new account to its code, sets its role and starts the free plan. Removes the account if it can't. */
+/** Claims access; rejected passes leave accounts recoverable and unprivileged. */
 export const claimAccessSeat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ pass: z.string().max(600).nullable() }).parse(d))
@@ -193,9 +193,6 @@ export const claimAccessSeat = createServerFn({ method: "POST" })
       }
     }
     if (result !== "works") {
-      await sb.from("signup_answers").delete().eq("user_id", uid);
-      await sb.from("users").delete().eq("id", uid);
-      await sb.auth.admin.deleteUser(uid);
       return { result, code: codeText };
     }
     // Free plan: one active subscription; it takes the place of a seller's Entry.

@@ -27,7 +27,7 @@
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner (withOwnerEmails).
 - Listing names: Admin-only (trigger zz_listing_name_admin_only, syncs live); NULL = show ref_no.
-- Buyer verification is per investor profile (investor_profile_verifications, one entry per investor, created by DB triggers); read it only via profile-verification.server.ts, and sellers get only investor_is_verified(). Why: Control holds many profiles.
+- Buyer verification: one investor_profile_verifications row per investor via triggers; readers use profile-verification.server.ts; sellers get only investor_is_verified(). Control holds many profiles.
 - workspace-scope.server.ts scopes sellers; Control sees all. Analytics: Admin readers, DB sign-ins.
 
-- Sidebar sharing: signed email-bound passes, no code seats/free plans; plan requests post only to Help Desk.
+- Sidebar sharing: email-bound, retry-safe claims without deletion; no code seats/free plans. Requests post only to Help Desk.
