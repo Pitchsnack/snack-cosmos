@@ -569,7 +569,6 @@ export function StartupDetailPanel({
                       <DropdownMenuSeparator className="bg-[#EEF0F3] dark:bg-border" />
                     </>
                   )}
-                  <OwnershipMenuItem id={s.id} />
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
@@ -607,6 +606,7 @@ export function StartupDetailPanel({
                     </DropdownMenuItem>
                   )}
                   {extraMenuItems}
+                  <OwnershipMenuItem id={s.id} />
                   <DropdownMenuItem disabled>
                     <Activity className="mr-2 h-4 w-4" /> View Activity / Audit
                     <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>

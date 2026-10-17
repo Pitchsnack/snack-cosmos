@@ -271,7 +271,6 @@ export function InvestorDetailPanel({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  <OwnershipMenuItem id={i.id} />
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
@@ -286,6 +285,7 @@ export function InvestorDetailPanel({
                       <Pencil className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
                   )}
+                  <OwnershipMenuItem id={i.id} />
                   <DropdownMenuItem disabled>
                     <Activity className="mr-2 h-4 w-4" /> View Activity / Audit
                     <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>

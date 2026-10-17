@@ -306,9 +306,9 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button type="button" aria-label="More" className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted"><MoreVertical className="h-4 w-4" /></button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <OwnershipMenuItem id={f.id} />
               {f.v.state === "unverified" && <DropdownMenuItem onSelect={() => act("send")}>Send to verification</DropdownMenuItem>}
               {f.v.state === "declined" && <DropdownMenuItem onSelect={() => act("reopen")}>Reopen verification</DropdownMenuItem>}
+              <OwnershipMenuItem id={f.id} />
               {f.ownerId && <DropdownMenuItem asChild><Link to="/users" search={{ selected: f.ownerId } as never}>Open the owner in Users</Link></DropdownMenuItem>}
               <DropdownMenuItem onSelect={() => { void navigator.clipboard.writeText(f.ref); toast.success(`Copied ${f.ref}`); }}>Copy {f.ref}</DropdownMenuItem>
             </DropdownMenuContent>
