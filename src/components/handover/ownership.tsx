@@ -306,7 +306,10 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
             </div>
           </>
         )}
-        {who}
+        <div className="ho-who">
+          <div className="ho-label">{kind === "firm" ? "THE CLIENT'S JOB TITLE" : "WHO THE CLIENT IS"}</div>
+          <div>{clientRel ?? <span className="ho-muted">Not set yet · add it in Edit details</span>} {clientRel && <span className="ho-muted">· set when PitchSnack took it on</span>}</div>
+        </div>
       </>
     );
   }
