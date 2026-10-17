@@ -1,6 +1,6 @@
 # Decisions
 
-- Only Admin approval publishes a listing (DB trigger). Sellers pick the sector picture (setMyListingImage); covers use it only while it matches the sector.
+- Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
 - Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx (prefs: seller_report_prefs).
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
@@ -14,7 +14,7 @@
 - Advisor view: users.advisor_view gates it; advisor stars live in advisor_favourites (view='advisor'), separate from buyer/seller saves; advisor-marketplace.tsx reuses existing cards/panels and only public loaders (listAdvisorMarketplace).
 - Edit-at-section: My Company Edit/Add links pass ?section=; forms use EditSec + useOpenAtSection (edit-section.tsx).
 - Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields so wizards skip them while set.
-- Sellers edit only their own businesses: is_startup_member policies, a guard trigger keeps tenant/visibility; listings go live only by Admin approval.
+- Sellers edit only own businesses via is_startup_member policies; a guard trigger preserves tenant/visibility.
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts.
 - One SetSectorPicker (common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries (advisors: sector_agnostic).
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts,.
