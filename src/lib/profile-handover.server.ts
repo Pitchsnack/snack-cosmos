@@ -33,7 +33,7 @@ export async function profileHeads(sb: Sb, kind: HandoverKind, ids: string[]): P
     const h = new Map<string, any>((hp ?? []).map((r: any) => [r.startup_id, r]));
     for (const r of s ?? []) {
       const x = h.get(r.id);
-      out.set(r.id, { id: r.id, name: r.startup_name || x?.ref_no || "New business", ref: x?.ref_no ?? "PS-—", runBy: r.run_by, preparedBy: r.prepared_by, preparedAt: r.prepared_at, ownerRelation: r.owner_relation, status: x?.approval_status === "live" ? "live" : "draft", liveSince: x?.published_at ?? null, createdAt: r.created_at });
+      out.set(r.id, { id: r.id, name: r.startup_name || x?.ref_no || "New business", ref: x?.ref_no ?? `PS-${r.id.replace(/-/g, "").slice(0, 4).toUpperCase()}`, runBy: r.run_by, preparedBy: r.prepared_by, preparedAt: r.prepared_at, ownerRelation: r.owner_relation, status: x?.approval_status === "live" ? "live" : "draft", liveSince: x?.published_at ?? null, createdAt: r.created_at });
     }
   } else if (kind === "investor") {
     const [{ data: s }, { data: bp }] = await Promise.all([
@@ -47,7 +47,7 @@ export async function profileHeads(sb: Sb, kind: HandoverKind, ids: string[]): P
     }
   } else {
     const { data: s } = await sb.from("advisor_firms").select("id, name, ref_no, run_by, prepared_by, prepared_at, owner_relation, status, live_since, created_at").in("id", ids);
-    for (const r of s ?? []) out.set(r.id, { id: r.id, name: r.name || "Advisor firm", ref: r.ref_no ?? "ADV-—", runBy: r.run_by, preparedBy: r.prepared_by, preparedAt: r.prepared_at, ownerRelation: r.owner_relation, status: r.status === "live" ? "live" : "draft", liveSince: r.live_since, createdAt: r.created_at });
+    for (const r of s ?? []) out.set(r.id, { id: r.id, name: r.name || "Advisor firm", ref: r.ref_no ?? `ADV-${r.id.replace(/-/g, "").slice(0, 4).toUpperCase()}`, runBy: r.run_by, preparedBy: r.prepared_by, preparedAt: r.prepared_at, ownerRelation: r.owner_relation, status: r.status === "live" ? "live" : "draft", liveSince: r.live_since, createdAt: r.created_at });
   }
   return out;
 }
