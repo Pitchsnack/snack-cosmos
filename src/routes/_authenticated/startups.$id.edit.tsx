@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { StartupForm } from "@/components/startups/startup-form";
 import { PermissionGuard } from "@/components/permission-guard";
-import { PrivateInformationTab } from "@/components/startups/private-information-tab";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStartup } from "@/hooks/use-startup";
 import type { StartupDetail } from "@/lib/startups.functions";
 import { isUuid } from "@/lib/uuid";
@@ -78,36 +76,14 @@ function EditStartupPage() {
         {!isLoading && (error || !data) && <StartupNotFound reason="missing" />}
 
         {data && (
-          <Tabs defaultValue="edit" className="w-full">
-            <TabsList className="bg-transparent p-0 h-auto border-b border-border/60 rounded-none w-full justify-start gap-6">
-              <TabsTrigger
-                value="edit"
-                className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
-              >
-                Edit Startup
-              </TabsTrigger>
-              <TabsTrigger
-                value="private"
-                className="rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-0 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none gap-1.5"
-              >
-                Private Information <Lock className="h-3.5 w-3.5" />
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="edit" className="mt-6">
-              <div className="mx-auto max-w-4xl">
-                <StartupForm
-                  startup={data as unknown as StartupDetail}
-                  directoryReturnSearch={listSearch}
-                  controlReturn={fromControl ? { tab: search.tab ?? "startups" } : undefined}
-                  valuationReturn={search.returnTo === "valuation"}
-                />
-
-              </div>
-            </TabsContent>
-            <TabsContent value="private" className="mt-6">
-              <PrivateInformationTab startup={data as unknown as StartupDetail} />
-            </TabsContent>
-          </Tabs>
+          <div className="mx-auto max-w-4xl">
+            <StartupForm
+              startup={data as unknown as StartupDetail}
+              directoryReturnSearch={listSearch}
+              controlReturn={fromControl ? { tab: search.tab ?? "startups" } : undefined}
+              valuationReturn={search.returnTo === "valuation"}
+            />
+          </div>
         )}
       </div>
     </PermissionGuard>
