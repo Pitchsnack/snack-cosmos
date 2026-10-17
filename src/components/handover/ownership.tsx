@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Check, Lock, X } from "lucide-react";
+import { Check, Eye, Lock, UserCheck, UserPlus, X } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -114,11 +114,12 @@ function Shell({ open, onClose, title, sub, children, footer }: {
         <DialogPrimitive.Overlay className="ho-backdrop" />
         <DialogPrimitive.Content className="ho-dialog" aria-describedby={undefined}>
           <div className="ho-head">
-            <div className="min-w-0">
+            <span className="ho-dlg-ico"><UserCheck size={20} /></span>
+            <div className="min-w-0 flex-1">
               <DialogPrimitive.Title className="ho-title">{title}</DialogPrimitive.Title>
               {sub && <div className="ho-sub">{sub}</div>}
             </div>
-            <DialogPrimitive.Close className="ho-x" title="Close" aria-label="Close"><X size={16} /></DialogPrimitive.Close>
+            <DialogPrimitive.Close className="ho-x" title="Close" aria-label="Close"><X size={18} /></DialogPrimitive.Close>
           </div>
           <div className="ho-body">{children}</div>
           {footer && <div className="ho-foot">{footer}</div>}
@@ -136,7 +137,19 @@ const TEAM_DOES = {
   investor: ["edits, publishing, NDA requests and seller messages", "Sends NDA requests and answers sellers", "send NDA requests and answer sellers' messages"],
   firm: ["edits, publishing, and seller and buyer messages", "Answers sellers and buyers", "answer sellers' and buyers' messages"],
 } as const;
-const WHO = { startup: "WHO THE SELLER IS", investor: "WHO THE BUYER IS", firm: "THE OWNER'S JOB TITLE" } as const;
+const WHO = { startup: "Who the seller is", investor: "Who the buyer is", firm: "The owner's job title" } as const;
+const relationHint = (kind: HandoverKind, v: string | null | undefined) =>
+  kind === "firm" || !v ? null : RELATIONS[kind].find((r) => r.value === v)?.hint ?? null;
+
+/** Grey note at the bottom of the pop-up (reference look). */
+function AdminNote({ managed }: { managed: boolean }) {
+  return (
+    <div className="ho-note">
+      {managed ? <Lock size={16} /> : <Eye size={16} />}
+      <span>{managed ? <b>Only Admin sees this box.</b> : <><b>Only Admin sees this.</b> Sellers and buyers see the profile like any other.</>}</span>
+    </div>
+  );
+}
 
 /** ⋮ › Ownership and the badge button open this. */
 export function OwnershipDialog({ kind, id, open, onClose }: { kind: HandoverKind; id: string; open: boolean; onClose: () => void }) {
@@ -156,7 +169,6 @@ export function OwnershipDialog({ kind, id, open, onClose }: { kind: HandoverKin
         <OwnershipBody kind={kind} id={id} d={d}
           onInvite={(p) => { setPrefill(p ?? null); setStep("invite"); }} onManage={() => setStep("manage")} />
       )}
-      <p className="ho-lock"><Lock size={13} /> {d?.head.runBy === "pitchsnack" ? "Only Admin sees this box." : "Only Admin sees this. Sellers and buyers see the profile like any other."}</p>
     </Shell>
   );
 }
@@ -176,8 +188,11 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
   const rel = relationLabel(kind, d.head.ownerRelation ?? inv?.owner_relation);
   const who = (
     <div className="ho-who">
-      <div className="ho-label">{WHO[kind]}</div>
-      <div>{rel ?? <span className="ho-muted">Not set yet</span>} <span className="ho-muted">· set in the invitation; the owner can change it</span></div>
+      <div className="ho-who-r">
+        <span className="ho-label ho-label-grey">{WHO[kind]}</span>
+        <span className="ho-who-v">{rel ?? <span className="ho-muted">Not set yet</span>}</span>
+      </div>
+      <p>{relationHint(kind, d.head.ownerRelation ?? inv?.owner_relation) ? `“${relationHint(kind, d.head.ownerRelation ?? inv?.owner_relation)}” · ` : ""}set in the invitation; the owner can change it</p>
     </div>
   );
   const fromInv = inv ? { firstName: inv.first_name, lastName: inv.last_name, email: inv.email, relation: inv.owner_relation ?? "", language: inv.language as "th" | "en", sentBy: inv.sent_by } : undefined;
@@ -188,17 +203,19 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
     const nm = o ? [o.first_name, o.last_name].filter(Boolean).join(" ") || o.email : "Owner";
     return (
       <>
-        <div className="ho-label">OWNER</div>
+        <div className="ho-label">Handover to the owner · done</div>
+        {inv?.submitted_at && <Steps d={d} />}
         <div className="ho-person">
           <span className="ho-ini">{initials(nm)}</span>
           <div className="min-w-0 flex-1">
             <div className="font-semibold">{nm}</div>
-            <div className="ho-muted">Owner since {fmtDate(inv?.accepted_at ?? o?.created_at)} · {rel ?? "—"}</div>
+            <div className="ho-muted">Owner since {fmtDate(inv?.accepted_at ?? o?.created_at)} · {o?.email ? `${o.email} · ` : ""}{rel ?? "—"}</div>
           </div>
-          {o && <Link to="/users" search={{ selected: o.id } as never} className="ho-link">Open in Users ↗</Link>}
+          {o && <Link to="/users" search={{ selected: o.id } as never} className="ho-btn">Open in Users ↗</Link>}
         </div>
-        {inv?.submitted_at && <Steps d={d} />}
+        <div className="ho-hr" />
         {who}
+        <AdminNote managed={false} />
       </>
     );
   }
@@ -208,7 +225,7 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
     const accepted = !!inv.accepted_at;
     return (
       <>
-        <div className="ho-label">HANDOVER TO THE OWNER</div>
+        <div className="ho-label">Handover to the owner</div>
         <Steps d={d} />
         {accepted ? (
           <>
@@ -218,7 +235,7 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
                 <div className="font-semibold">{inv.first_name} {inv.last_name}</div>
                 <div className="ho-muted">Owner since {fmtDate(inv.accepted_at)} · {inv.email} · {rel ?? "—"}</div>
               </div>
-              {d.owner && <Link to="/users" search={{ selected: d.owner.id } as never} className="ho-link">Open in Users ↗</Link>}
+              {d.owner && <Link to="/users" search={{ selected: d.owner.id } as never} className="ho-btn">Open in Users ↗</Link>}
             </div>
             <p className="ho-p">The owner is checking the profile. It comes to Approvals when they submit it.</p>
           </>
@@ -235,11 +252,11 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
             <div className="ho-person">
               <span className="ho-ini">{initials(`${inv.first_name} ${inv.last_name}`)}</span>
               <div className="min-w-0 flex-1">
-                <div className="font-semibold">{inv.first_name} {inv.last_name} <span className="ho-muted font-normal">· Invited · {inv.hasAccount ? "signs in to accept" : "not signed up yet"}</span></div>
+                <div className="font-semibold">{inv.first_name} {inv.last_name} <span className="ho-tag">Invited · {inv.hasAccount ? "signs in to accept" : "not signed up yet"}</span></div>
                 <div className="ho-muted">{inv.email}</div>
               </div>
             </div>
-            <p className="ho-p">Sent on {fmtDate(inv.sent_at)} by {inv.createdByName ?? "Admin"}, sent by {inv.sent_by} · email in {inv.language === "th" ? "Thai" : "English"} · the link works once and expires on {fmtDate(inv.expires_at)}. During the soft launch it also lets them past the access page.{d.head.runBy === "pitchsnack" ? " PitchSnack keeps managing it until they accept." : ""}</p>
+            <p className="ho-p ho-muted" style={{ fontSize: 13 }}>Sent on {fmtDate(inv.sent_at)} by {inv.createdByName ?? "Admin"}, sent by {inv.sent_by} · email in {inv.language === "th" ? "Thai" : "English"} · the link works once and expires on {fmtDate(inv.expires_at)}. During the soft launch it also lets them past the access page.{d.head.runBy === "pitchsnack" ? " PitchSnack keeps managing it until they accept." : ""}</p>
             <div className="ho-btns">
               <button className="ho-btn" disabled={m.isPending} onClick={() => fromInv && m.mutate(() => resend({ data: { kind, id, ...fromInv, note: inv.note ?? undefined } }).then(() => toast.success(`Invitation sent to ${inv.email}.`)))}>Resend</button>
               <button className="ho-btn" onClick={() => onInvite(fromInv)}>Change email</button>
@@ -247,7 +264,9 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
             </div>
           </>
         )}
+        <div className="ho-hr" />
         {who}
+        <AdminNote managed={false} />
       </>
     );
   }
@@ -263,11 +282,11 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
     const clientRel = relationLabel(kind, c?.owner_relation);
     return (
       <>
-        <div className="ho-label">MANAGED BY PITCHSNACK</div>
+        <div className="ho-label ho-label-mg">Managed by PitchSnack</div>
         <div className="ho-person">
           <span className="ho-ini">{initials(noDetails ? "CN" : cn2)}</span>
           <div className="min-w-0 flex-1">
-            <div className="font-semibold">{cn2} <span className="ho-chip">Client · doesn't sign in</span></div>
+            <div className="font-semibold">{cn2} <span className="ho-tag">Client · doesn't sign in</span></div>
             <div className="ho-muted">{noDetails ? "Add the client's name and email or phone." : [c?.email, c?.phone, clientRel].filter(Boolean).join(" · ") || "No contact details yet"}</div>
           </div>
           <button className={cn("ho-btn", noDetails && "ho-btn-navy")} onClick={onManage}>Edit details</button>
@@ -275,7 +294,7 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
         <div className="ho-person">
           <span className="ho-ini ho-ini-navy">{initials(team)}</span>
           <div className="min-w-0 flex-1">
-            <div className="font-semibold">{team} <span className="ho-chip ho-chip-navy"><HatIcon width={13} fill="#fff" /> Runs it for PitchSnack</span></div>
+            <div className="font-semibold">{team} <span className="ho-tag ho-tag-navy"><HatIcon width={14} fill="#fff" /> Runs it for PitchSnack</span></div>
             <div className="ho-muted" style={agreed ? undefined : { color: "#B45309" }}>Since {fmtDate(c?.since ?? d.head.preparedAt)} · {agreed ? "the client agreed in writing" : "written agreement not confirmed yet"}</div>
           </div>
         </div>
@@ -306,10 +325,15 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
             </div>
           </>
         )}
+        <div className="ho-hr" />
         <div className="ho-who">
-          <div className="ho-label">{kind === "firm" ? "THE CLIENT'S JOB TITLE" : "WHO THE CLIENT IS"}</div>
-          <div>{clientRel ?? <span className="ho-muted">Not set yet · add it in Edit details</span>} {clientRel && <span className="ho-muted">· set when PitchSnack took it on</span>}</div>
+          <div className="ho-who-r">
+            <span className="ho-label ho-label-grey">{kind === "firm" ? "The client's job title" : "Who the client is"}</span>
+            <span className="ho-who-v">{clientRel ?? <span className="ho-muted" style={{ fontSize: 13, fontWeight: 400 }}>Not set yet · add it in Edit details</span>}</span>
+          </div>
+          {clientRel && <p>{relationHint(kind, c?.owner_relation) ? `“${relationHint(kind, c?.owner_relation)}” · ` : ""}set when PitchSnack took it on</p>}
         </div>
+        <AdminNote managed />
       </>
     );
   }
@@ -319,44 +343,50 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
   const views = [...new Set(parts.map((p) => p.view))];
   return (
     <>
-      <div className="ho-label">TRANSFER OF OWNERSHIP</div>
+      <div className="ho-label">Transfer of ownership</div>
       <div className="ho-options">
         <div className="ho-option" onClick={() => onInvite()}>
-          <div className="ho-opt-title">Invite the owner</div>
+          <div className="ho-opt-title"><span className="ho-opt-tile"><UserPlus size={18} /></span> Invite the owner</div>
           <p>The transferee receives an email, accepts the invitation, reviews the profile, and manages it from their own account.</p>
-          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onInvite(); }}>Invite owner</button>
+          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onInvite(); }}><UserPlus size={16} /> Invite owner</button>
         </div>
-        <div className="ho-option" onClick={onManage}>
-          <div className="ho-opt-title"><span className="ho-hat-tile"><HatIcon width={16} fill="#fff" /></span> Managed by PitchSnack</div>
+        <div className="ho-option mg" onClick={onManage}>
+          <div className="ho-opt-title"><span className="ho-hat-tile"><HatIcon width={20} fill="#fff" /></span> Managed by PitchSnack</div>
           <p>PitchSnack manages the profile on the client's behalf, including {TEAM_DOES[kind][0]}. The account can be transferred to the client later.</p>
-          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onManage(); }}>Manage for the client</button>
+          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onManage(); }}><HatIcon width={18} /> Manage for the client</button>
         </div>
       </div>
-      <p className="ho-p">No owner yet. Prepared by {d.preparedByName ?? "PitchSnack"} on {fmtDate(d.head.preparedAt ?? d.head.createdAt)}. Only Admin can see it.</p>
+      <p className="ho-p"><b>No owner yet.</b> Prepared by {d.preparedByName ?? "PitchSnack"} on {fmtDate(d.head.preparedAt ?? d.head.createdAt)}. Only Admin can see it.</p>
       {views.map((v) => (
         <div key={v} className="ho-partrow">
-          <span className="ho-muted">{v === "public" ? "Public view" : v === "private" ? "Private view" : "Open to sellers and buyers"}</span>
-          {parts.filter((p) => p.view === v).map((p) => <span key={p.key} className="ho-chip ho-chip-green">✓ {p.en}</span>)}
+          <span className={cn("ho-vl", v === "public" ? "ho-vl-pub" : "ho-vl-priv")}>{v === "public" ? "Public view" : v === "private" ? "Private view" : "Open to sellers and buyers"}</span>
+          <div className="ho-chips">{parts.filter((p) => p.view === v).map((p) => <span key={p.key} className="ho-partchip">✓ {p.en}</span>)}</div>
         </div>
       ))}
       {who}
+      <AdminNote managed={false} />
     </>
   );
 }
 
 function Steps({ d }: { d: Detail }) {
   const inv = d.invitation;
-  const n = d.parts.length;
-  const items: { label: string; done: boolean; warn?: boolean }[] = [
-    { label: `Prepared ${fmtDate(d.head.preparedAt ?? d.head.createdAt)}`, done: true },
-    { label: `Invited ${fmtDate(inv?.sent_at)}`, done: !!inv },
-    inv?.expired && !inv.accepted_at ? { label: `! Invite expired ${fmtDate(inv.expires_at)}`, done: false, warn: true } : { label: `Accepted ${inv?.accepted_at ? fmtDate(inv.accepted_at) : "Not yet"}`, done: !!inv?.accepted_at },
-    { label: `Submitted ${inv?.submitted_at ? fmtDate(inv.submitted_at) : "Not yet"}`, done: !!inv?.submitted_at },
+  const items: { label: string; date: string; done: boolean }[] = [
+    { label: "Prepared", date: fmtDate(d.head.preparedAt ?? d.head.createdAt), done: true },
+    { label: "Invited", date: inv ? fmtDate(inv.sent_at) : "Not yet", done: !!inv },
+    inv?.expired && !inv.accepted_at
+      ? { label: "Invite expired", date: fmtDate(inv.expires_at), done: false }
+      : { label: "Accepted", date: inv?.accepted_at ? fmtDate(inv.accepted_at) : "Not yet", done: !!inv?.accepted_at },
+    { label: "Submitted", date: inv?.submitted_at ? fmtDate(inv.submitted_at) : "Not yet", done: !!inv?.submitted_at },
   ];
-  void n;
   return (
     <ol className="ho-steps">
-      {items.map((s, k) => <li key={k} className={cn(s.done && "done", s.warn && "warn")}>{s.done ? "✓ " : ""}{s.label}</li>)}
+      {items.map((s, k) => (
+        <li key={k} className={cn("ho-st", s.done && "done")}>
+          <i>{s.done ? "✓" : k + 1}</i>
+          <span>{s.label}<small>{s.date}</small></span>
+        </li>
+      ))}
     </ol>
   );
 }
