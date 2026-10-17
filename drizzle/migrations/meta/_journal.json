@@ -652,6 +652,13 @@
       "when": 1792061358891,
       "tag": "0092_investor_profile_verifications",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1792220333239,
+      "tag": "0093_analytics_sign_in_days",
+      "breakpoints": true
     }
   ]
 }
