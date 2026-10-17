@@ -72,3 +72,6 @@
 @media (max-width:640px){.ho-owner .ho-row{grid-template-columns:24px minmax(0,1fr)}.ho-owner .ho-acts{grid-column:2;justify-content:flex-start}}
 .dark .ho-owner,.dark .ho-panelbox,.dark .ho-review{background:#0f1b33;border-color:#1e3a8a;color:#e5e7eb}
 .dark .ho-dialog{background:#111827;color:#e5e7eb}.dark .ho-btn,.dark .ho-field input,.dark .ho-field textarea,.dark .ho-relopt,.dark .ho-seg button:not(.on){background:#1f2937;color:#e5e7eb;border-color:#374151}
+
+.ho-owner { margin: 0 0 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--muted); padding: 1rem; }
+.ho-owner--sent { font-size: 13px; color: var(--muted-foreground); }

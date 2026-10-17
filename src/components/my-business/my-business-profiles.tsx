@@ -1,4 +1,5 @@
 import { tr } from "@/i18n/language";
+import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useStartup } from "@/hooks/use-startup";
 import { LogoPhotoAlert } from "@/components/my-business/missing-info";
 import { useEffect, useRef, useState } from "react";
@@ -385,6 +386,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
           )}
         </div>
       </div>
+      {!adminReview && <OwnerHandoverBox kind="startup" id={s.id} onEdit={(p) => openEdit(s.id, p.edit.view ?? "public", p.edit.tab ?? "identity", p.edit.section)} />}
       {!adminReview && <PublicMediaAlert id={s.id} onAdd={() => openEdit(s.id, "private", "images", "media")} />}
       <HiddenProfileTab
         name={s.startup_name || tr("New business")}

@@ -79,7 +79,7 @@ function HandoverAccept() {
     if (d?.state === "open") setF((x) => ({ ...x, first: x.first || d.firstName || "", last: x.last || d.lastName || "" }));
   }, [d]);
 
-  const goHome = async () => { await qc.invalidateQueries(); toast.success(T.done[lang]); navigate({ to: "/marketplace/my-company" }); };
+  const goHome = async (kind: HandoverKind) => { await qc.invalidateQueries(); toast.success(T.done[lang]); navigate({ to: kind === "startup" ? "/my-startups" : "/marketplace/my-company" }); };
 
   const doCreate = async (e: React.FormEvent) => {
     e.preventDefault(); if (d?.state !== "open") return;
@@ -88,12 +88,12 @@ function HandoverAccept() {
       const r = await createAcc({ data: { token, password: f.pw, firstName: f.first, lastName: f.last, news: f.news } });
       const { error } = await supabase.auth.signInWithPassword({ email: r.email, password: f.pw });
       if (error) throw error;
-      await goHome();
+      await goHome(d.kind);
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
   const doAccept = async () => {
     setBusy(true);
-    try { await accept({ data: { token } }); await goHome(); }
+    try { const r = await accept({ data: { token } }); await goHome(r.kind); }
     catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
 

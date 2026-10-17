@@ -1,4 +1,5 @@
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
+import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -356,6 +357,7 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-card">
+      <div className="px-5 pt-5 empty:hidden"><OwnerHandoverBox kind="firm" id={f.id} onEdit={(x) => edit((x.edit.section ?? "firm") as EditSection)} /></div>
       {/* Header */}
       <div className="flex flex-wrap items-start gap-4 border-b border-border p-5">
         <FirmLogo f={f} ring={false} />
