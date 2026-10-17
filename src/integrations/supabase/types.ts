@@ -564,11 +564,15 @@ export type Database = {
           more_info_fields: string[]
           more_info_note: string | null
           name: string
+          owner_relation: string | null
           owner_user_id: string
           phone: string | null
+          prepared_at: string | null
+          prepared_by: string | null
           ref_no: string
           registration_no: string | null
           review_checklist: string[]
+          run_by: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic: boolean
           sector_picks: Json | null
           sectors: string[]
@@ -628,11 +632,15 @@ export type Database = {
           more_info_fields?: string[]
           more_info_note?: string | null
           name?: string
+          owner_relation?: string | null
           owner_user_id: string
           phone?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
+          run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic?: boolean
           sector_picks?: Json | null
           sectors?: string[]
@@ -692,11 +700,15 @@ export type Database = {
           more_info_fields?: string[]
           more_info_note?: string | null
           name?: string
+          owner_relation?: string | null
           owner_user_id?: string
           phone?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
+          run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic?: boolean
           sector_picks?: Json | null
           sectors?: string[]
@@ -3647,13 +3659,17 @@ export type Database = {
           max_ticket_size: string | null
           media: Json
           min_ticket_size: string | null
+          owner_relation: string | null
           postal_code: string | null
           preferred_industries: string[] | null
           preferred_stages: string[] | null
+          prepared_at: string | null
+          prepared_by: string | null
           registration_no: string | null
           revenue_max_m: number | null
           revenue_min_band: string | null
           revenue_min_m: number | null
+          run_by: Database["public"]["Enums"]["profile_run_by"]
           sector_picks: Json | null
           setup_done_at: string | null
           setup_reached: string | null
@@ -3703,13 +3719,17 @@ export type Database = {
           max_ticket_size?: string | null
           media?: Json
           min_ticket_size?: string | null
+          owner_relation?: string | null
           postal_code?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           registration_no?: string | null
           revenue_max_m?: number | null
           revenue_min_band?: string | null
           revenue_min_m?: number | null
+          run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_picks?: Json | null
           setup_done_at?: string | null
           setup_reached?: string | null
@@ -3759,13 +3779,17 @@ export type Database = {
           max_ticket_size?: string | null
           media?: Json
           min_ticket_size?: string | null
+          owner_relation?: string | null
           postal_code?: string | null
           preferred_industries?: string[] | null
           preferred_stages?: string[] | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           registration_no?: string | null
           revenue_max_m?: number | null
           revenue_min_band?: string | null
           revenue_min_m?: number | null
+          run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_picks?: Json | null
           setup_done_at?: string | null
           setup_reached?: string | null
@@ -4026,6 +4050,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      managed_clients: {
+        Row: {
+          agreed_in_writing: boolean
+          confirmed_by: string | null
+          email: string | null
+          ended_at: string | null
+          first_name: string
+          id: string
+          kind: string
+          last_name: string
+          managed_by: string
+          owner_relation: string | null
+          phone: string | null
+          profile_id: string
+          since: string
+        }
+        Insert: {
+          agreed_in_writing?: boolean
+          confirmed_by?: string | null
+          email?: string | null
+          ended_at?: string | null
+          first_name: string
+          id?: string
+          kind: string
+          last_name: string
+          managed_by?: string
+          owner_relation?: string | null
+          phone?: string | null
+          profile_id: string
+          since?: string
+        }
+        Update: {
+          agreed_in_writing?: boolean
+          confirmed_by?: string | null
+          email?: string | null
+          ended_at?: string | null
+          first_name?: string
+          id?: string
+          kind?: string
+          last_name?: string
+          managed_by?: string
+          owner_relation?: string | null
+          phone?: string | null
+          profile_id?: string
+          since?: string
+        }
+        Relationships: []
       }
       marketplace_message_reads: {
         Row: {
@@ -4581,6 +4653,162 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profile_field_changes: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          field: string
+          id: string
+          kind: string
+          new_value: string | null
+          old_value: string | null
+          part: string
+          profile_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          kind: string
+          new_value?: string | null
+          old_value?: string | null
+          part: string
+          profile_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          kind?: string
+          new_value?: string | null
+          old_value?: string | null
+          part?: string
+          profile_id?: string
+        }
+        Relationships: []
+      }
+      profile_handover_events: {
+        Row: {
+          actor: string | null
+          created_at: string
+          detail: string | null
+          event: string
+          id: string
+          kind: string
+          profile_id: string
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          detail?: string | null
+          event: string
+          id?: string
+          kind: string
+          profile_id: string
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          detail?: string | null
+          event?: string
+          id?: string
+          kind?: string
+          profile_id?: string
+        }
+        Relationships: []
+      }
+      profile_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          cancelled_at: string | null
+          created_by: string | null
+          email: string
+          expires_at: string
+          first_name: string
+          id: string
+          kind: string
+          language: string
+          last_name: string
+          note: string | null
+          opened_at: string | null
+          owner_relation: string | null
+          profile_id: string
+          sent_at: string
+          sent_by: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          cancelled_at?: string | null
+          created_by?: string | null
+          email: string
+          expires_at?: string
+          first_name: string
+          id?: string
+          kind: string
+          language?: string
+          last_name: string
+          note?: string | null
+          opened_at?: string | null
+          owner_relation?: string | null
+          profile_id: string
+          sent_at?: string
+          sent_by?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          cancelled_at?: string | null
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          first_name?: string
+          id?: string
+          kind?: string
+          language?: string
+          last_name?: string
+          note?: string | null
+          opened_at?: string | null
+          owner_relation?: string | null
+          profile_id?: string
+          sent_at?: string
+          sent_by?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      profile_part_checks: {
+        Row: {
+          changed: boolean
+          checked_at: string
+          checked_by: string | null
+          kind: string
+          part: string
+          profile_id: string
+        }
+        Insert: {
+          changed?: boolean
+          checked_at?: string
+          checked_by?: string | null
+          kind: string
+          part: string
+          profile_id: string
+        }
+        Update: {
+          changed?: boolean
+          checked_at?: string
+          checked_by?: string | null
+          kind?: string
+          part?: string
+          profile_id?: string
+        }
+        Relationships: []
       }
       report_order_events: {
         Row: {
@@ -5607,8 +5835,11 @@ export type Database = {
           logo_url: string | null
           long_description: string | null
           market_tags: string[]
+          owner_relation: string | null
           peer_basis: string
           postal_code: string | null
+          prepared_at: string | null
+          prepared_by: string | null
           product_tags: string[]
           region: string | null
           registered_capital: string | null
@@ -5619,6 +5850,7 @@ export type Database = {
           registered_type: string | null
           registration_verified_at: string | null
           regulatory_licenses: Json
+          run_by: Database["public"]["Enums"]["profile_run_by"]
           sector: string | null
           sector_pick: Json | null
           setup_done_at: string | null
@@ -5663,8 +5895,11 @@ export type Database = {
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
+          owner_relation?: string | null
           peer_basis?: string
           postal_code?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           product_tags?: string[]
           region?: string | null
           registered_capital?: string | null
@@ -5675,6 +5910,7 @@ export type Database = {
           registered_type?: string | null
           registration_verified_at?: string | null
           regulatory_licenses?: Json
+          run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector?: string | null
           sector_pick?: Json | null
           setup_done_at?: string | null
@@ -5719,8 +5955,11 @@ export type Database = {
           logo_url?: string | null
           long_description?: string | null
           market_tags?: string[]
+          owner_relation?: string | null
           peer_basis?: string
           postal_code?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           product_tags?: string[]
           region?: string | null
           registered_capital?: string | null
@@ -5731,6 +5970,7 @@ export type Database = {
           registered_type?: string | null
           registration_verified_at?: string | null
           regulatory_licenses?: Json
+          run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector?: string | null
           sector_pick?: Json | null
           setup_done_at?: string | null
@@ -6689,6 +6929,7 @@ export type Database = {
         | "STARTUP_USER"
         | "INVESTOR_USER"
       peer_market: "SET" | "mai"
+      profile_run_by: "none" | "owner" | "pitchsnack"
       security_event_type:
         | "LOGIN"
         | "LOGOUT"
@@ -6858,6 +7099,7 @@ export const Constants = {
         "INVESTOR_USER",
       ],
       peer_market: ["SET", "mai"],
+      profile_run_by: ["none", "owner", "pitchsnack"],
       security_event_type: [
         "LOGIN",
         "LOGOUT",
