@@ -176,6 +176,15 @@ export async function claimInvitation(sb: Sb, inv: any, user: { id: string; emai
   const { data: took } = await sb.from("profile_invitations").update({ accepted_at: now, accepted_user_id: user.id })
     .eq("id", inv.id).is("accepted_at", null).is("cancelled_at", null).gt("expires_at", now).select("id").maybeSingle();
   if (!took) throw new Error("This invitation can't be used any more.");
+  try { return await finishClaim(sb, inv, user, kind, now); }
+  catch (e) {
+    // Release the lock so the owner can simply try again; the account is kept.
+    await sb.from("profile_invitations").update({ accepted_at: null, accepted_user_id: null }).eq("id", inv.id);
+    throw e instanceof Error ? e : new Error("Couldn't finish. Try again.");
+  }
+}
+
+async function finishClaim(sb: Sb, inv: any, user: { id: string; email: string }, kind: HandoverKind, now: string) {
   const role = ROLE[kind];
   const { data: u } = await sb.from("users").select("account_role, first_name, last_name, signup_done_at").eq("id", user.id).maybeSingle();
   await sb.from("users").update({
@@ -194,7 +203,8 @@ export async function claimInvitation(sb: Sb, inv: any, user: { id: string; emai
     const { data: st } = await sb.from("startups").select("tenant_id").eq("id", inv.profile_id).maybeSingle();
     const { data: ut } = await sb.from("user_tenants").select("id").eq("user_id", user.id).eq("tenant_id", st.tenant_id).maybeSingle();
     if (!ut) await sb.from("user_tenants").insert({ user_id: user.id, tenant_id: st.tenant_id, is_default: true, workspace_type: "TENANT", created_by: user.id });
-    await sb.from("startup_users").insert({ startup_id: inv.profile_id, tenant_id: st.tenant_id, user_id: user.id, role: "Founder" });
+    const { data: su } = await sb.from("startup_users").select("id").eq("startup_id", inv.profile_id).eq("user_id", user.id).maybeSingle();
+    if (!su) { const { error } = await sb.from("startup_users").insert({ startup_id: inv.profile_id, tenant_id: st.tenant_id, user_id: user.id, role: "Founder" }); if (error) throw new Error(error.message); }
     // Admin preparers stop being members, so the profile is the owner's alone.
     const admins = ((await sb.from("users").select("id").eq("account_role", "admin")).data ?? []).map((r: any) => r.id);
     if (admins.length) await sb.from("startup_users").delete().eq("startup_id", inv.profile_id).in("user_id", admins);
