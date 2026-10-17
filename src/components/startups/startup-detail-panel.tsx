@@ -1,4 +1,5 @@
 import { bizName } from "@/lib/biz-name";
+import { OwnershipPanelSlot, OwnershipMenuItem } from "@/components/handover/ownership";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
@@ -479,6 +480,7 @@ export function StartupDetailPanel({
             )}
           </div>
           <div className="min-w-0 flex-1">
+            <OwnershipPanelSlot id={s.id} />
             <h2 className="text-2xl font-semibold tracking-tight leading-tight">
               {bizName(s.startup_name)}
               {connectionState === "connected" && (
@@ -567,6 +569,7 @@ export function StartupDetailPanel({
                       <DropdownMenuSeparator className="bg-[#EEF0F3] dark:bg-border" />
                     </>
                   )}
+                  <OwnershipMenuItem id={s.id} />
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>

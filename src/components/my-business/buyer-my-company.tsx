@@ -1,4 +1,5 @@
 import { useManagedIds } from "@/hooks/use-managed-ids";
+import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useEffect, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -488,6 +489,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         <PanelHead kind="public" title={title} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
           thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
           editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill} />
+        {iv && <div className="mt-4"><OwnerHandoverBox kind="investor" id={iv.id} onEdit={(x) => openProfileEdit({ section: x.edit.section as never, from: (x.edit.view ?? "public") as never })} /></div>}
         {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
           <BuyerBrowseCard {...props} managed={managedIds.has(iv?.id ?? "")} expanded editable={(k) => openProfileEdit({ section: PART_SEC[k], from: "public" })} cardFooter={

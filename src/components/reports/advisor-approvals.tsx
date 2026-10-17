@@ -1,3 +1,4 @@
+import { HandoverReviewBox } from "@/components/handover/ownership";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -167,6 +168,7 @@ function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack
           <span>The full profile is in Advisors Directory, with the card sellers and buyers see.</span>
           <Link to="/advisors" search={{ view: "split", selected: f.id }} className="inline-flex items-center gap-1 font-semibold text-[#1D4ED8]">Open in Advisors Directory<ExternalLink className="h-3.5 w-3.5" /></Link>
         </div>
+        <div className="mt-4"><HandoverReviewBox kind="firm" id={f.id} /></div>
         <div className="mt-4 grid gap-3.5 lg:grid-cols-[1fr_1.08fr]">
           <div className="space-y-3.5">
             <Box title="Firm"><KV rows={[["Firm type", f.firmType], ["City", f.city], ["Status", f.status[0]!.toUpperCase() + f.status.slice(1)], ["Website", f.website], ["Email", f.email], ["Phone", f.phone]]} /></Box>

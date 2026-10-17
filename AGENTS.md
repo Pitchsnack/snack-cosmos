@@ -26,7 +26,8 @@
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner (withOwnerEmails).
-- Listing names: Admin-only (trigger zz_listing_name_admin_only, syncs live); NULL = show ref_no.
+- Listing names Admin-only (zz trigger); NULL = ref_no.
+- Handover: run_by; profile-handover.functions.ts only.
 - Buyer verification: one investor_profile_verifications row per investor via triggers; readers use profile-verification.server.ts; sellers get only investor_is_verified(). Control holds many profiles.
 - workspace-scope.server.ts scopes sellers; Control sees all. Analytics: Admin readers, DB sign-ins.
 

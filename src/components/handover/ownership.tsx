@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -9,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
   ownershipList, ownershipCounts, ownershipDetail, checkInviteEmail, sendProfileInvite, cancelProfileInvite,
-  startManaging, stopManaging, publishManaged, type OwnershipRow,
+  startManaging, stopManaging, publishManaged, handoverReview, type OwnershipRow,
 } from "@/lib/profile-handover.functions";
 import { KIND_WORD, PARTS, RELATIONS, DEFAULT_TEAM, relationLabel, type HandoverKind, type RunBy } from "@/lib/handover-parts";
 import "@/styles/handover.css";
@@ -534,4 +535,78 @@ export function eventLabel(e: string) {
 /** ⋮ menu label with the small grey status on the right. */
 export function OwnershipMenuLabel({ row }: { row: OwnershipRow | undefined }) {
   return <span className="flex w-full items-center justify-between gap-4"><span>Ownership</span><span className="text-[11px] text-muted-foreground">{menuStatus(row)}</span></span>;
+}
+
+/* ------------------- directory context: cards, panels, menus ------------------- */
+
+type DirCtx = { kind: HandoverKind; map: Map<string, OwnershipRow>; open: (id: string) => void };
+const OwnershipDirCtx = createContext<DirCtx | null>(null);
+
+/** Wraps an Admin directory: cards, panels and ⋮ menus inside show ownership. */
+export function OwnershipProvider({ kind, ids, enabled, children }: { kind: HandoverKind; ids: string[]; enabled: boolean; children: ReactNode }) {
+  const map = useOwnershipMap(kind, ids, enabled);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const value = useMemo(() => ({ kind, map, open: setOpenId }), [kind, map]);
+  if (!enabled) return <>{children}</>;
+  return (
+    <OwnershipDirCtx.Provider value={value}>
+      {children}
+      {openId && <OwnershipDialog kind={kind} id={openId} open onClose={() => setOpenId(null)} />}
+    </OwnershipDirCtx.Provider>
+  );
+}
+export const useOwnershipDir = () => useContext(OwnershipDirCtx);
+
+export function OwnershipCardSlot({ id }: { id: string }) {
+  const c = useOwnershipDir();
+  const r = c?.map.get(id);
+  if (!r) return null;
+  return <span className="inline-flex items-center gap-1"><OwnershipChips row={r} /><OwnershipBadge runBy={r.runBy} /></span>;
+}
+
+export function OwnershipPanelSlot({ id }: { id: string }) {
+  const c = useOwnershipDir();
+  const r = c?.map.get(id);
+  if (!c || !r) return null;
+  const href = c.kind === "startup" ? "/approvals?tab=listings" : c.kind === "investor" ? "/approvals?tab=buyers" : `/approvals?tab=advisors&adv=${id}`;
+  return (
+    <>
+      {r.handedOver && <HandoverPanelBox kind={c.kind} id={id} approvalsHref={href} />}
+      <div className="mb-1.5 flex flex-wrap items-center gap-1.5"><OwnershipBadge runBy={r.runBy} onClick={() => c.open(id)} /><OwnershipChips row={r} /></div>
+    </>
+  );
+}
+
+export function OwnershipMenuItem({ id }: { id: string }) {
+  const c = useOwnershipDir();
+  if (!c) return null;
+  return <DropdownMenuItem onSelect={() => c.open(id)}><OwnershipMenuLabel row={c.map.get(id)} /></DropdownMenuItem>;
+}
+
+/* ------------------------- Approvals: handed-over box ------------------------- */
+
+
+/** Approvals review: shows who prepared it, who took it over and what the owner changed. Nothing for ordinary sign-ups. */
+export function HandoverReviewBox({ kind, id }: { kind: HandoverKind; id: string | null | undefined }) {
+  const fn = useServerFn(handoverReview);
+  const q = useQuery({ queryKey: ["handover-review", kind, id], queryFn: () => fn({ data: { kind, id: id! } }), enabled: !!id, retry: false, staleTime: 30_000 });
+  const d = q.data;
+  if (!d) return null;
+  const label = (k: string) => { const p = d.parts.find((x) => x.key === k); return p ? (p.view === "open" ? p.en : `${p.view === "public" ? "Public" : "Private"} view › ${p.en}`) : k; };
+  const unchanged = d.parts.length - new Set(d.changes.map((c: any) => c.part)).size;
+  return (
+    <div className="ho-panelbox mb-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="ho-chip">Handed over</span>
+        <span className="text-[13px]">Prepared by {d.preparedBy} · {fmtTime(d.preparedAt)}. {d.owner}{d.ownerRelation ? ` (${relationLabel(kind, d.ownerRelation)})` : ""} accepted {fmtTime(d.acceptedAt)}{d.submittedAt ? ` and submitted ${fmtTime(d.submittedAt)}` : ""}.</span>
+      </div>
+      <div className="ho-label mt-3">Changed by the owner before submitting</div>
+      <ul className="ho-changes">
+        {d.changes.map((c: any, k: number) => (
+          <li key={k}><span className="ho-muted">{label(c.part)}</span> <span>{c.field} <s>{c.old_value ?? "—"}</s> → <b>{c.new_value ?? "—"}</b></span></li>
+        ))}
+        <li><span className="ho-muted">The other {unchanged} parts</span> <span>Checked as PitchSnack prepared them</span></li>
+      </ul>
+    </div>
+  );
 }

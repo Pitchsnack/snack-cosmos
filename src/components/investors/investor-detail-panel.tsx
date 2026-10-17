@@ -1,4 +1,5 @@
 import { bizName } from "@/lib/biz-name";
+import { OwnershipPanelSlot, OwnershipMenuItem } from "@/components/handover/ownership";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { bandText, usd } from "@/lib/investor-bands";
@@ -201,6 +202,7 @@ export function InvestorDetailPanel({
             )}
           </div>
           <div className="min-w-0 flex-1">
+            <OwnershipPanelSlot id={i.id} />
             <h2 className="text-2xl font-semibold leading-tight tracking-tight">
               {i.investor_name}
               {connectionState === "connected" && (
@@ -269,6 +271,7 @@ export function InvestorDetailPanel({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
+                  <OwnershipMenuItem id={i.id} />
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
