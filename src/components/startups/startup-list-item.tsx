@@ -1,4 +1,5 @@
 import { bizName } from "@/lib/biz-name";
+import { OwnershipCardSlot } from "@/components/handover/ownership";
 import { useState, type CSSProperties } from "react";
 import { MapPin, Users, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -97,6 +98,7 @@ export function StartupListItem({
             )}
             <div className="flex shrink-0 items-center gap-1">
               <PreviewNeedsReassignmentBadge name={bizName(s.startup_name)} domain="startup" size="xs" />
+              <OwnershipCardSlot id={s.id} />
               {s.investment_stage && (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
                   {s.investment_stage}

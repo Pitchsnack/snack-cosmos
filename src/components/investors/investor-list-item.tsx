@@ -1,4 +1,5 @@
 import { typeLabel } from "@/lib/investor-bands";
+import { OwnershipCardSlot } from "@/components/handover/ownership";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { MapPin, Building2, Coins } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +101,7 @@ export function InvestorListItem({
             </h3>
             <div className="flex shrink-0 items-center gap-1">
               <PreviewNeedsReassignmentBadge name={i.investor_name} domain="investor" size="xs" />
+              <OwnershipCardSlot id={i.id} />
               {i.investor_type && (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
                   {i.acts_for_types?.length ? i.acts_for_types.map(typeLabel).join(", ") : i.investor_type}

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -534,4 +535,44 @@ export function eventLabel(e: string) {
 /** ⋮ menu label with the small grey status on the right. */
 export function OwnershipMenuLabel({ row }: { row: OwnershipRow | undefined }) {
   return <span className="flex w-full items-center justify-between gap-4"><span>Ownership</span><span className="text-[11px] text-muted-foreground">{menuStatus(row)}</span></span>;
+}
+
+/* ------------------- directory context: cards, panels, menus ------------------- */
+
+type DirCtx = { kind: HandoverKind; map: Map<string, OwnershipRow>; open: (id: string) => void };
+const OwnershipDirCtx = createContext<DirCtx | null>(null);
+
+/** Wraps an Admin directory: cards, panels and ⋮ menus inside show ownership. */
+export function OwnershipProvider({ kind, ids, enabled, children }: { kind: HandoverKind; ids: string[]; enabled: boolean; children: ReactNode }) {
+  const map = useOwnershipMap(kind, ids, enabled);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const value = useMemo(() => ({ kind, map, open: setOpenId }), [kind, map]);
+  if (!enabled) return <>{children}</>;
+  return (
+    <OwnershipDirCtx.Provider value={value}>
+      {children}
+      {openId && <OwnershipDialog kind={kind} id={openId} open onClose={() => setOpenId(null)} />}
+    </OwnershipDirCtx.Provider>
+  );
+}
+export const useOwnershipDir = () => useContext(OwnershipDirCtx);
+
+export function OwnershipCardSlot({ id }: { id: string }) {
+  const c = useOwnershipDir();
+  const r = c?.map.get(id);
+  if (!r) return null;
+  return <span className="inline-flex items-center gap-1"><OwnershipChips row={r} /><OwnershipBadge runBy={r.runBy} /></span>;
+}
+
+export function OwnershipPanelSlot({ id }: { id: string }) {
+  const c = useOwnershipDir();
+  const r = c?.map.get(id);
+  if (!c || !r) return null;
+  return <div className="mb-1.5 flex flex-wrap items-center gap-1.5"><OwnershipBadge runBy={r.runBy} onClick={() => c.open(id)} /><OwnershipChips row={r} /></div>;
+}
+
+export function OwnershipMenuItem({ id }: { id: string }) {
+  const c = useOwnershipDir();
+  if (!c) return null;
+  return <DropdownMenuItem onSelect={() => c.open(id)}><OwnershipMenuLabel row={c.map.get(id)} /></DropdownMenuItem>;
 }
