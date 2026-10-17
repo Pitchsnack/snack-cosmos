@@ -301,6 +301,7 @@ function SidebarBody({
     const filtered = showSkeleton
       ? NAV_ITEMS
       : NAV_ITEMS.filter((item) => {
+          if (item.path === "/admin/analytics") return isControl && sessionData?.user?.accountRole === "admin";
           if (item.controlOnly) return isControl;
           if (!item.perm) return true;
           return has(item.perm);
