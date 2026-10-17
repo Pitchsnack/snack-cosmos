@@ -568,7 +568,13 @@ export function OwnershipPanelSlot({ id }: { id: string }) {
   const c = useOwnershipDir();
   const r = c?.map.get(id);
   if (!c || !r) return null;
-  return <div className="mb-1.5 flex flex-wrap items-center gap-1.5"><OwnershipBadge runBy={r.runBy} onClick={() => c.open(id)} /><OwnershipChips row={r} /></div>;
+  const href = c.kind === "startup" ? "/approvals?tab=listings" : c.kind === "investor" ? "/approvals?tab=buyers" : `/approvals?tab=advisors&adv=${id}`;
+  return (
+    <>
+      {r.handedOver && <HandoverPanelBox kind={c.kind} id={id} approvalsHref={href} />}
+      <div className="mb-1.5 flex flex-wrap items-center gap-1.5"><OwnershipBadge runBy={r.runBy} onClick={() => c.open(id)} /><OwnershipChips row={r} /></div>
+    </>
+  );
 }
 
 export function OwnershipMenuItem({ id }: { id: string }) {

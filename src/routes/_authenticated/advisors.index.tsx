@@ -1,5 +1,5 @@
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
-import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, OwnershipCardSlot, OwnershipPanelSlot, OwnershipMenuItem, HandoverPanelBox, type RunByFilter } from "@/components/handover/ownership";
+import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, OwnershipCardSlot, OwnershipPanelSlot, OwnershipMenuItem, type RunByFilter } from "@/components/handover/ownership";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -290,7 +290,6 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
   ];
   return (
     <div className="space-y-5">
-      <HandoverPanelBox kind="firm" id={f.id} approvalsHref={`/approvals?tab=advisors&adv=${f.id}`} />
       <div className="flex flex-wrap items-start gap-3">
         <Logo f={f} size={52} />
         <div className="min-w-0 flex-1">
