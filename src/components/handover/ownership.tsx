@@ -169,7 +169,6 @@ export function OwnershipDialog({ kind, id, open, onClose }: { kind: HandoverKin
         <OwnershipBody kind={kind} id={id} d={d}
           onInvite={(p) => { setPrefill(p ?? null); setStep("invite"); }} onManage={() => setStep("manage")} />
       )}
-      <p className="ho-lock"><Lock size={13} /> {d?.head.runBy === "pitchsnack" ? "Only Admin sees this box." : "Only Admin sees this. Sellers and buyers see the profile like any other."}</p>
     </Shell>
   );
 }
@@ -189,8 +188,11 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
   const rel = relationLabel(kind, d.head.ownerRelation ?? inv?.owner_relation);
   const who = (
     <div className="ho-who">
-      <div className="ho-label">{WHO[kind]}</div>
-      <div>{rel ?? <span className="ho-muted">Not set yet</span>} <span className="ho-muted">· set in the invitation; the owner can change it</span></div>
+      <div className="ho-who-r">
+        <span className="ho-label ho-label-grey">{WHO[kind]}</span>
+        <span className="ho-who-v">{rel ?? <span className="ho-muted">Not set yet</span>}</span>
+      </div>
+      <p>{relationHint(kind, d.head.ownerRelation ?? inv?.owner_relation) ? `“${relationHint(kind, d.head.ownerRelation ?? inv?.owner_relation)}” · ` : ""}set in the invitation; the owner can change it</p>
     </div>
   );
   const fromInv = inv ? { firstName: inv.first_name, lastName: inv.last_name, email: inv.email, relation: inv.owner_relation ?? "", language: inv.language as "th" | "en", sentBy: inv.sent_by } : undefined;
