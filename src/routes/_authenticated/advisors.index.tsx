@@ -1,4 +1,5 @@
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
+import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, OwnershipCardSlot, OwnershipPanelSlot, OwnershipMenuItem, HandoverPanelBox, type RunByFilter } from "@/components/handover/ownership";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -56,6 +57,7 @@ function AdvisorsDirectory() {
   const view: ViewMode = s.view ?? "split";
   const set = (p: Partial<typeof s>) => navigate({ search: (prev: typeof s) => ({ ...prev, ...p }) });
   const [editing, setEditing] = useState<string | null>(null);
+  const [runBy, setRunBy] = useState<RunByFilter>("all");
   const favs = new Set(data?.favourites ?? []);
   const toggleFav = async (id: string) => {
     const { data: u } = await supabase.auth.getUser();
@@ -66,10 +68,12 @@ function AdvisorsDirectory() {
   };
 
   const all = data?.firms ?? [];
+  const ownMap = useOwnershipMap("firm", all.map((f) => f.id));
   const base = useMemo(() => {
     const q = (s.q ?? "").toLowerCase().trim();
     let l = all.filter((f) => {
       if (s.fav && !favs.has(f.id)) return false;
+      if (!runByMatches(runBy, ownMap.get(f.id))) return false;
       if (q && ![f.name, f.legalName, f.ref, f.city, f.ownerName, f.ownerEmail, ...f.team.flatMap((t) => [t.name, t.email])].some((x) => x?.toLowerCase().includes(q))) return false;
       if (s.service && !f.services.includes(s.service)) return false;
       if (s.type && f.firmType !== s.type) return false;
@@ -84,19 +88,21 @@ function AdvisorsDirectory() {
       : sort === "waiting" ? (a.v.state === "pending" ? +new Date(a.v.requestedAt ?? 0) : Infinity) - (b.v.state === "pending" ? +new Date(b.v.requestedAt ?? 0) : Infinity)
       : +new Date(b.updatedAt) - +new Date(a.updatedAt));
     return l;
-  }, [all, s, data?.favourites]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [all, s, data?.favourites, runBy, ownMap]); // eslint-disable-line react-hooks/exhaustive-deps
   const vCount = (k: (typeof VFILTER)[number]) => k === "all" ? base.length : k === "verified" ? base.filter((f) => !!f.v.verifiedAt).length : base.filter((f) => f.v.state === k).length;
   const items = s.v && s.v !== "all" ? base.filter((f) => (s.v === "verified" ? !!f.v.verifiedAt : f.v.state === s.v)) : base;
   const selected = items.find((f) => f.id === s.selected) ?? (view === "split" ? items[0] : undefined);
   const hasFilter = !!(s.q || s.service || s.type || s.status || s.sector || s.city);
 
   return (
+    <OwnershipProvider kind="firm" ids={all.map((f) => f.id)} enabled>
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><Briefcase className="h-3.5 w-3.5" /> Advisor Directory{s.fav ? " · Favorites" : ""}</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Advisors</h1>
           <p className="mt-1 text-sm text-muted-foreground">{all.length} advisor firm{all.length === 1 ? "" : "s"}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground"><HeaderCounts kind="firm" /></p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" role="switch" aria-checked={!!s.fav} title={s.fav ? "Show all firms" : "Show only favorites"} onClick={() => set({ fav: s.fav ? undefined : true })}
@@ -124,6 +130,7 @@ function AdvisorsDirectory() {
           </SelectContent>
         </Select>
         <Input value={s.city ?? ""} onChange={(e) => set({ city: e.target.value || undefined })} placeholder="City" className="h-9 w-32" />
+        <RunBySelect value={runBy} onChange={setRunBy} />
         <Select value={s.sort ?? "updated"} onValueChange={(v) => set({ sort: v as (typeof SORTS)[number] })}>
           <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -160,7 +167,7 @@ function AdvisorsDirectory() {
         <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>{["Firm", "Firm type", "Services", "Status", "Verification", "Owner", "Updated"].map((h) => <th key={h} className="p-3 font-semibold">{h}</th>)}</tr>
+              <tr>{["Firm", "Firm type", "Services", "Status", "Verification", "Run by", "Updated"].map((h) => <th key={h} className="p-3 font-semibold">{h}</th>)}</tr>
             </thead>
             <tbody>
               {items.map((f) => (
@@ -170,7 +177,7 @@ function AdvisorsDirectory() {
                   <td className="p-3 text-xs">{f.services.slice(0, 2).join(", ")}{f.services.length > 2 && ` +${f.services.length - 2}`}</td>
                   <td className="p-3"><FirmStatusPill status={f.status} /></td>
                   <td className="p-3"><VerificationChip v={f.v} /></td>
-                  <td className="p-3">{f.ownerName ?? <span className="text-[#9CA3AF]">No owner yet</span>}</td>
+                  <td className="p-3"><OwnershipCardSlot id={f.id} /></td>
                   <td className="p-3 text-xs text-muted-foreground">{new Date(f.updatedAt).toLocaleDateString()}</td>
                 </tr>
               ))}
@@ -189,6 +196,7 @@ function AdvisorsDirectory() {
       )}
       {editing && <EditDialog id={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); }} />}
     </div>
+    </OwnershipProvider>
   );
 }
 
@@ -282,13 +290,15 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
   ];
   return (
     <div className="space-y-5">
+      <HandoverPanelBox kind="firm" id={f.id} approvalsHref={`/approvals?tab=advisors&adv=${f.id}`} />
       <div className="flex flex-wrap items-start gap-3">
         <Logo f={f} size={52} />
         <div className="min-w-0 flex-1">
+          <OwnershipPanelSlot id={f.id} />
           <h2 className="text-xl font-semibold">{f.name}</h2>
           <div className="text-sm text-muted-foreground">{[f.ref, f.firmType, f.city].filter(Boolean).join(" · ")}</div>
           <div className="mt-1.5 flex flex-wrap gap-1.5"><FirmStatusPill status={f.status} /><VerificationChip v={f.v} /></div>
-          <div className="mt-1.5 text-[13px]">Owner {f.ownerId ? <Link to="/users" search={{ selected: f.ownerId } as never} className="font-semibold text-[#2563EB] hover:underline">{f.ownerName} ↗</Link> : <span className="text-[#9CA3AF]">No owner yet</span>}</div>
+          {f.ownerId && <div className="mt-1.5 text-[13px]">Owner <Link to="/users" search={{ selected: f.ownerId } as never} className="font-semibold text-[#2563EB] hover:underline">{f.ownerName} ↗</Link></div>}
         </div>
         <div className="flex items-center gap-1.5">
           {["pending", "more_info"].includes(f.v.state) && <Button size="sm" variant="outline" asChild><Link to="/approvals" search={{ tab: "advisors", adv: f.id } as never}>Review in Approvals</Link></Button>}
@@ -297,6 +307,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button type="button" aria-label="More" className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted"><MoreVertical className="h-4 w-4" /></button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <OwnershipMenuItem id={f.id} />
               {f.v.state === "unverified" && <DropdownMenuItem onSelect={() => act("send")}>Send to verification</DropdownMenuItem>}
               {f.v.state === "declined" && <DropdownMenuItem onSelect={() => act("reopen")}>Reopen verification</DropdownMenuItem>}
               {f.ownerId && <DropdownMenuItem asChild><Link to="/users" search={{ selected: f.ownerId } as never}>Open the owner in Users</Link></DropdownMenuItem>}
