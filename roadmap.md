@@ -1,4 +1,7 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Admin Analytics: real-data readers, sign-in days and retention
+- [ ] Admin Analytics: Overview, People, Activity, person panel and CSV
+- [ ] Admin Analytics: rules tests and signed-in screen checks
 - [x] Remove Listing name step from seller wizard (0 rows needed the reached update)
 - [x] + Add My Business: server Draft, open setup; /my-startups/new redirects
 - [x] Buyer + advisor Logo and photos steps; advisor single Review row; brief Thai
