@@ -235,7 +235,7 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
                 <div className="font-semibold">{inv.first_name} {inv.last_name}</div>
                 <div className="ho-muted">Owner since {fmtDate(inv.accepted_at)} · {inv.email} · {rel ?? "—"}</div>
               </div>
-              {d.owner && <Link to="/users" search={{ selected: d.owner.id } as never} className="ho-link">Open in Users ↗</Link>}
+              {d.owner && <Link to="/users" search={{ selected: d.owner.id } as never} className="ho-btn">Open in Users ↗</Link>}
             </div>
             <p className="ho-p">The owner is checking the profile. It comes to Approvals when they submit it.</p>
           </>
@@ -252,11 +252,11 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
             <div className="ho-person">
               <span className="ho-ini">{initials(`${inv.first_name} ${inv.last_name}`)}</span>
               <div className="min-w-0 flex-1">
-                <div className="font-semibold">{inv.first_name} {inv.last_name} <span className="ho-muted font-normal">· Invited · {inv.hasAccount ? "signs in to accept" : "not signed up yet"}</span></div>
+                <div className="font-semibold">{inv.first_name} {inv.last_name} <span className="ho-tag">Invited · {inv.hasAccount ? "signs in to accept" : "not signed up yet"}</span></div>
                 <div className="ho-muted">{inv.email}</div>
               </div>
             </div>
-            <p className="ho-p">Sent on {fmtDate(inv.sent_at)} by {inv.createdByName ?? "Admin"}, sent by {inv.sent_by} · email in {inv.language === "th" ? "Thai" : "English"} · the link works once and expires on {fmtDate(inv.expires_at)}. During the soft launch it also lets them past the access page.{d.head.runBy === "pitchsnack" ? " PitchSnack keeps managing it until they accept." : ""}</p>
+            <p className="ho-p ho-muted" style={{ fontSize: 13 }}>Sent on {fmtDate(inv.sent_at)} by {inv.createdByName ?? "Admin"}, sent by {inv.sent_by} · email in {inv.language === "th" ? "Thai" : "English"} · the link works once and expires on {fmtDate(inv.expires_at)}. During the soft launch it also lets them past the access page.{d.head.runBy === "pitchsnack" ? " PitchSnack keeps managing it until they accept." : ""}</p>
             <div className="ho-btns">
               <button className="ho-btn" disabled={m.isPending} onClick={() => fromInv && m.mutate(() => resend({ data: { kind, id, ...fromInv, note: inv.note ?? undefined } }).then(() => toast.success(`Invitation sent to ${inv.email}.`)))}>Resend</button>
               <button className="ho-btn" onClick={() => onInvite(fromInv)}>Change email</button>
@@ -264,7 +264,9 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
             </div>
           </>
         )}
+        <div className="ho-hr" />
         {who}
+        <AdminNote managed={false} />
       </>
     );
   }
