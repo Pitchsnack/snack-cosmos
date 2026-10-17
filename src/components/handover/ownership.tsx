@@ -343,44 +343,50 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
   const views = [...new Set(parts.map((p) => p.view))];
   return (
     <>
-      <div className="ho-label">TRANSFER OF OWNERSHIP</div>
+      <div className="ho-label">Transfer of ownership</div>
       <div className="ho-options">
         <div className="ho-option" onClick={() => onInvite()}>
-          <div className="ho-opt-title">Invite the owner</div>
+          <div className="ho-opt-title"><span className="ho-opt-tile"><UserPlus size={18} /></span> Invite the owner</div>
           <p>The transferee receives an email, accepts the invitation, reviews the profile, and manages it from their own account.</p>
-          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onInvite(); }}>Invite owner</button>
+          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onInvite(); }}><UserPlus size={16} /> Invite owner</button>
         </div>
-        <div className="ho-option" onClick={onManage}>
-          <div className="ho-opt-title"><span className="ho-hat-tile"><HatIcon width={16} fill="#fff" /></span> Managed by PitchSnack</div>
+        <div className="ho-option mg" onClick={onManage}>
+          <div className="ho-opt-title"><span className="ho-hat-tile"><HatIcon width={20} fill="#fff" /></span> Managed by PitchSnack</div>
           <p>PitchSnack manages the profile on the client's behalf, including {TEAM_DOES[kind][0]}. The account can be transferred to the client later.</p>
-          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onManage(); }}>Manage for the client</button>
+          <button className="ho-btn" onClick={(e) => { e.stopPropagation(); onManage(); }}><HatIcon width={18} /> Manage for the client</button>
         </div>
       </div>
-      <p className="ho-p">No owner yet. Prepared by {d.preparedByName ?? "PitchSnack"} on {fmtDate(d.head.preparedAt ?? d.head.createdAt)}. Only Admin can see it.</p>
+      <p className="ho-p"><b>No owner yet.</b> Prepared by {d.preparedByName ?? "PitchSnack"} on {fmtDate(d.head.preparedAt ?? d.head.createdAt)}. Only Admin can see it.</p>
       {views.map((v) => (
         <div key={v} className="ho-partrow">
-          <span className="ho-muted">{v === "public" ? "Public view" : v === "private" ? "Private view" : "Open to sellers and buyers"}</span>
-          {parts.filter((p) => p.view === v).map((p) => <span key={p.key} className="ho-chip ho-chip-green">✓ {p.en}</span>)}
+          <span className={cn("ho-vl", v === "public" ? "ho-vl-pub" : "ho-vl-priv")}>{v === "public" ? "Public view" : v === "private" ? "Private view" : "Open to sellers and buyers"}</span>
+          <div className="ho-chips">{parts.filter((p) => p.view === v).map((p) => <span key={p.key} className="ho-partchip">✓ {p.en}</span>)}</div>
         </div>
       ))}
       {who}
+      <AdminNote managed={false} />
     </>
   );
 }
 
 function Steps({ d }: { d: Detail }) {
   const inv = d.invitation;
-  const n = d.parts.length;
-  const items: { label: string; done: boolean; warn?: boolean }[] = [
-    { label: `Prepared ${fmtDate(d.head.preparedAt ?? d.head.createdAt)}`, done: true },
-    { label: `Invited ${fmtDate(inv?.sent_at)}`, done: !!inv },
-    inv?.expired && !inv.accepted_at ? { label: `! Invite expired ${fmtDate(inv.expires_at)}`, done: false, warn: true } : { label: `Accepted ${inv?.accepted_at ? fmtDate(inv.accepted_at) : "Not yet"}`, done: !!inv?.accepted_at },
-    { label: `Submitted ${inv?.submitted_at ? fmtDate(inv.submitted_at) : "Not yet"}`, done: !!inv?.submitted_at },
+  const items: { label: string; date: string; done: boolean }[] = [
+    { label: "Prepared", date: fmtDate(d.head.preparedAt ?? d.head.createdAt), done: true },
+    { label: "Invited", date: inv ? fmtDate(inv.sent_at) : "Not yet", done: !!inv },
+    inv?.expired && !inv.accepted_at
+      ? { label: "Invite expired", date: fmtDate(inv.expires_at), done: false }
+      : { label: "Accepted", date: inv?.accepted_at ? fmtDate(inv.accepted_at) : "Not yet", done: !!inv?.accepted_at },
+    { label: "Submitted", date: inv?.submitted_at ? fmtDate(inv.submitted_at) : "Not yet", done: !!inv?.submitted_at },
   ];
-  void n;
   return (
     <ol className="ho-steps">
-      {items.map((s, k) => <li key={k} className={cn(s.done && "done", s.warn && "warn")}>{s.done ? "✓ " : ""}{s.label}</li>)}
+      {items.map((s, k) => (
+        <li key={k} className={cn("ho-st", s.done && "done")}>
+          <i>{s.done ? "✓" : k + 1}</i>
+          <span>{s.label}<small>{s.date}</small></span>
+        </li>
+      ))}
     </ol>
   );
 }
