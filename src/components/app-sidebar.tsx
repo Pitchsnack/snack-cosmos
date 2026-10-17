@@ -16,6 +16,7 @@ import { KeyRound,
   Mail,
   FileText,
   BarChart3,
+  ChartLine,
   Settings,
   Sparkles,
   Share2,
@@ -81,12 +82,13 @@ type NavPath =
   | "/ai-agents"
   | "/approvals"
   | "/admin/messages";
+// Analytics has its own live Admin page.
 
 
 type NavItem = {
   label: string;
   icon: typeof Building2;
-  path: NavPath;
+  path: NavPath | "/admin/analytics";
   exact: boolean;
   perm?: Permission;
   controlOnly?: boolean;
@@ -138,13 +140,14 @@ const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
     ],
   },
   { title: "Communications", labels: ["Email alerts"] },
-  { title: "Coming Soon", labels: ["Documents", "Analytics"] },
+  { title: "Coming Soon", labels: ["Documents"] },
   {
     title: "Administration",
     labels: [
       "Default Intake Queue",
       "Tenants",
       "Users",
+      "Analytics",
       "Plans",
       "Access Management",
       "Peer Comparables",
@@ -224,11 +227,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Documents", icon: FileText, path: "/dashboard", exact: false, disabled: true },
   {
     label: "Analytics",
-    icon: BarChart3,
-    path: "/dashboard",
+    icon: ChartLine,
+    path: "/admin/analytics",
     exact: false,
     controlOnly: true,
-    disabled: true,
   },
   { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
   { label: "Plans", icon: Tag, path: "/admin/plans", exact: false, controlOnly: true, perm: "users.assign_role" },
