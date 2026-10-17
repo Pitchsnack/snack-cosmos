@@ -325,10 +325,15 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
             </div>
           </>
         )}
+        <div className="ho-hr" />
         <div className="ho-who">
-          <div className="ho-label">{kind === "firm" ? "THE CLIENT'S JOB TITLE" : "WHO THE CLIENT IS"}</div>
-          <div>{clientRel ?? <span className="ho-muted">Not set yet · add it in Edit details</span>} {clientRel && <span className="ho-muted">· set when PitchSnack took it on</span>}</div>
+          <div className="ho-who-r">
+            <span className="ho-label ho-label-grey">{kind === "firm" ? "The client's job title" : "Who the client is"}</span>
+            <span className="ho-who-v">{clientRel ?? <span className="ho-muted" style={{ fontSize: 13, fontWeight: 400 }}>Not set yet · add it in Edit details</span>}</span>
+          </div>
+          {clientRel && <p>{relationHint(kind, c?.owner_relation) ? `“${relationHint(kind, c?.owner_relation)}” · ` : ""}set when PitchSnack took it on</p>}
         </div>
+        <AdminNote managed />
       </>
     );
   }
