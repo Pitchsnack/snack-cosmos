@@ -203,17 +203,19 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
     const nm = o ? [o.first_name, o.last_name].filter(Boolean).join(" ") || o.email : "Owner";
     return (
       <>
-        <div className="ho-label">OWNER</div>
+        <div className="ho-label">Handover to the owner · done</div>
+        {inv?.submitted_at && <Steps d={d} />}
         <div className="ho-person">
           <span className="ho-ini">{initials(nm)}</span>
           <div className="min-w-0 flex-1">
             <div className="font-semibold">{nm}</div>
-            <div className="ho-muted">Owner since {fmtDate(inv?.accepted_at ?? o?.created_at)} · {rel ?? "—"}</div>
+            <div className="ho-muted">Owner since {fmtDate(inv?.accepted_at ?? o?.created_at)} · {o?.email ? `${o.email} · ` : ""}{rel ?? "—"}</div>
           </div>
-          {o && <Link to="/users" search={{ selected: o.id } as never} className="ho-link">Open in Users ↗</Link>}
+          {o && <Link to="/users" search={{ selected: o.id } as never} className="ho-btn">Open in Users ↗</Link>}
         </div>
-        {inv?.submitted_at && <Steps d={d} />}
+        <div className="ho-hr" />
         {who}
+        <AdminNote managed={false} />
       </>
     );
   }
@@ -223,7 +225,7 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
     const accepted = !!inv.accepted_at;
     return (
       <>
-        <div className="ho-label">HANDOVER TO THE OWNER</div>
+        <div className="ho-label">Handover to the owner</div>
         <Steps d={d} />
         {accepted ? (
           <>
