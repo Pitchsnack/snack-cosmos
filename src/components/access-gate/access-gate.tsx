@@ -116,7 +116,7 @@ export function AccessGate({ children, claimInBackground = true, onLang }: { chi
       setVal({ gateOn: false, details: null, signedIn: true }); setState("open");
       if (claimInBackground) {
         const k = `ps-claim-${data.session.user.id}`;
-        if (!sessionStorage.getItem(k)) {
+        if (join || !sessionStorage.getItem(k)) {
           const r = await claim();
           if (r.result === "works") sessionStorage.setItem(k, "1");
           else { setVal({ gateOn: true, details: null, signedIn: false }); setFl(takeFlash()); setState("gate"); }

@@ -171,17 +171,19 @@ export const claimAccessSeat = createServerFn({ method: "POST" })
     const created = Date.parse(au?.user?.created_at ?? "");
     // Only a new account: no role, no code, no Draft profile, made while the gate is on.
     const isNew = !u?.account_role && !u?.access_code_id && !a?.done_at && created >= Date.parse(s.changed_at);
+    const p = await readPass(data.pass);
+    if (p?.kind === 'share') {
+      const { data: claimed, error } = await sb.rpc('claim_share_invitation', { _uid: uid, _invitation_id: p.c, _email: au?.user?.email ?? '', _role: u?.account_role ?? a?.role ?? '' });
+      if (error) throw new Error('Invitation claim failed');
+      // Invitation failures are recoverable; never delete an account or its answers.
+      return { result: claimed || !isNew ? 'works' : 'no_pass' };
+    }
     if (!isNew) return { result: "works" };
 
-    const p = await readPass(data.pass);
     let result: ClaimResult = "no_pass";
     let codeText: string | undefined;
     let code: any = null;
-    if (p?.kind === 'share') {
-      const { data: claimed, error } = await sb.rpc('claim_share_invitation', { _uid: uid, _invitation_id: p.c, _email: au?.user?.email ?? '', _role: a?.role ?? '' });
-      if (error) throw new Error('Invitation claim failed');
-      result = claimed ? 'works' : 'no_pass';
-    } else if (p) {
+    if (p) {
       const { data: c } = await sb.from("access_codes").select("*").eq("id", p.c).maybeSingle();
       code = c; codeText = c?.code;
       if (c) {

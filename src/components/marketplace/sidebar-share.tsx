@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
+import { useQueryClient } from '@tanstack/react-query';
 import { Share2, Crown, Check, Minus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { useHasSession } from '@/hooks/use-has-session';
 import '@/styles/sidebar-share.css';
 
 export function SidebarShare() {
+ const qc=useQueryClient();
  const {language:lang}=useTranslation(); const plansFn=useServerFn(mySidebarPlans),send=useServerFn(sendShareInvite),request=useServerFn(requestPlanChange);const enabled=useHasSession();
  const {data}=useQuery({queryKey:['sidebar-plans'],queryFn:()=>plansFn(),enabled,staleTime:30000});
  const [panel,setPanel]=useState(false),[share,setShare]=useState(false),[plansOpen,setPlansOpen]=useState(false),[email,setEmail]=useState(''),[error,setError]=useState(''),[sent,setSent]=useState(''),[busy,setBusy]=useState(false),[chosen,setChosen]=useState<PlanRecord|null>(null);
@@ -26,7 +28,7 @@ export function SidebarShare() {
  const leave=()=>{timer.current=setTimeout(()=>setPanel(false),120)};
  const openShare=()=>{setEmail('');setSent('');setError('');setPanel(false);setShare(true)};
  const submit=async(e:React.FormEvent)=>{e.preventDefault();const value=email.trim();if(!value){setError(sc('empty',lang));return}if(!SHARE_EMAIL_RE.test(value)){setError(sc('invalid',lang));return}setBusy(true);setError('');setSent('');try{await send({data:{email:value,lang}});setSent(value);setEmail('');emailRef.current?.focus()}catch{setError(sc('sendFail',lang))}finally{setBusy(false)}};
- const choosePlan=async(p:PlanRecord)=>{setBusy(true);try{await request({data:{planId:p.id,lang}});setChosen(p)}catch{toast.error(sc('requestFail',lang))}finally{setBusy(false)}};
+ const choosePlan=async(p:PlanRecord)=>{setBusy(true);try{await request({data:{planId:p.id,lang}});await qc.invalidateQueries({queryKey:['messages']});setChosen(p)}catch{toast.error(sc('requestFail',lang))}finally{setBusy(false)}};
  const term=(p:PlanRecord)=>lang==='th'?(p.term_months===12?'ต่อปี':p.term_months===1?'ต่อเดือน':`ทุก ${p.term_months} เดือน`):(p.term_months===12?'a year':p.term_months===1?'a month':`every ${p.term_months} months`);
  return <>
  <div className="sidebar-share-foot" onMouseEnter={enter} onMouseLeave={leave} onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget))setPanel(false)}}>
