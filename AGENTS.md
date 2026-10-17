@@ -1,4 +1,4 @@
-# Project decisions
+# Decisions
 
 - Only Admin approval publishes a listing (DB trigger). Sellers pick the sector picture (setMyListingImage); covers use it only while it matches the sector.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
