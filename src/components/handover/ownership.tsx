@@ -255,25 +255,28 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
   // Managed
   if (d.head.runBy === "pitchsnack") {
     const c = d.managed;
-    const cn2 = c ? `${c.first_name} ${c.last_name}` : "Client";
+    const noDetails = !c || (!c.first_name.trim() && !c.last_name.trim() && !c.email && !c.phone);
+    const cn2 = noDetails ? "Client not added yet" : `${c!.first_name} ${c!.last_name}`;
     const team = c?.managed_by ?? DEFAULT_TEAM;
     const live = d.head.status === "live";
+    const agreed = !!c?.agreed_in_writing;
+    const clientRel = relationLabel(kind, c?.owner_relation);
     return (
       <>
         <div className="ho-label">MANAGED BY PITCHSNACK</div>
         <div className="ho-person">
-          <span className="ho-ini">{initials(cn2)}</span>
+          <span className="ho-ini">{initials(noDetails ? "CN" : cn2)}</span>
           <div className="min-w-0 flex-1">
             <div className="font-semibold">{cn2} <span className="ho-chip">Client · doesn't sign in</span></div>
-            <div className="ho-muted">{[c?.email, c?.phone, relationLabel(kind, c?.owner_relation)].filter(Boolean).join(" · ") || "No contact details yet"}</div>
+            <div className="ho-muted">{noDetails ? "Add the client's name and email or phone." : [c?.email, c?.phone, clientRel].filter(Boolean).join(" · ") || "No contact details yet"}</div>
           </div>
-          <button className="ho-btn" onClick={onManage}>Edit details</button>
+          <button className={cn("ho-btn", noDetails && "ho-btn-navy")} onClick={onManage}>Edit details</button>
         </div>
         <div className="ho-person">
           <span className="ho-ini ho-ini-navy">{initials(team)}</span>
           <div className="min-w-0 flex-1">
             <div className="font-semibold">{team} <span className="ho-chip ho-chip-navy"><HatIcon width={13} fill="#fff" /> Runs it for PitchSnack</span></div>
-            <div className="ho-muted">Since {fmtDate(c?.since ?? d.head.preparedAt)} · the client agreed in writing</div>
+            <div className="ho-muted" style={agreed ? undefined : { color: "#B45309" }}>Since {fmtDate(c?.since ?? d.head.preparedAt)} · {agreed ? "the client agreed in writing" : "written agreement not confirmed yet"}</div>
           </div>
         </div>
         <ul className="ho-ticks">
