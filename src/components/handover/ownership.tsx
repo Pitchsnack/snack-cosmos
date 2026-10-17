@@ -421,10 +421,35 @@ function RelationPicker({ kind, value, onChange, label }: { kind: HandoverKind; 
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Pre-filled personal note in the invite dialog; Admin can edit or clear it. */
+const DEFAULT_NOTE: Record<HandoverKind, Record<"th" | "en", string>> = {
+  startup: {
+    en: "As we discussed, here is your company profile. Please check it and tell me if anything needs changing.",
+    th: "ตามที่คุยกันไว้ นี่คือโปรไฟล์ธุรกิจของท่าน กรุณาตรวจสอบและบอกได้เลยหากมีส่วนใดต้องแก้ไข",
+  },
+  investor: {
+    en: "As we discussed, here is your investor profile. Please check it and tell me if anything needs changing.",
+    th: "ตามที่คุยกันไว้ นี่คือโปรไฟล์นักลงทุนของท่าน กรุณาตรวจสอบและบอกได้เลยหากมีส่วนใดต้องแก้ไข",
+  },
+  firm: {
+    en: "As we discussed, here is your firm profile. Please check it and tell me if anything needs changing.",
+    th: "ตามที่คุยกันไว้ นี่คือโปรไฟล์บริษัทของท่าน กรุณาตรวจสอบและบอกได้เลยหากมีส่วนใดต้องแก้ไข",
+  },
+};
+
 function InviteDialog({ kind, id, name, managed, prefill, onBack, onClose, onSent }: {
   kind: HandoverKind; id: string; name: string; managed: boolean; prefill: Partial<InviteForm> | null; onBack: () => void; onClose: () => void; onSent: () => void;
 }) {
-  const [f, setF] = useState<InviteForm>({ firstName: "", lastName: "", email: "", relation: "", language: "th", sentBy: DEFAULT_TEAM, note: "", ...prefill });
+  const noteDefault = (lang: "th" | "en") => DEFAULT_NOTE[kind][lang];
+  const [f, setF] = useState<InviteForm>({ firstName: "", lastName: "", email: "", relation: "", language: "th", sentBy: DEFAULT_TEAM, ...prefill, note: prefill?.note ?? DEFAULT_NOTE[kind].th });
+  // Switching the email language swaps the note only while it is still untouched (empty or the other default).
+  const setLang = (lang: "th" | "en") =>
+    setF((x) => {
+      if (x.language === lang) return x;
+      const other = lang === "th" ? "en" : "th";
+      const note = x.note.trim() === "" || x.note === noteDefault(other) ? noteDefault(lang) : x.note;
+      return { ...x, language: lang, note };
+    });
   const set = <K extends keyof InviteForm>(k: K, v: InviteForm[K]) => setF((x) => ({ ...x, [k]: v }));
   const email = useDebounced(f.email.trim(), 500);
   const check = useServerFn(checkInviteEmail);
@@ -468,8 +493,8 @@ function InviteDialog({ kind, id, name, managed, prefill, onBack, onClose, onSen
       <div className="ho-field">
         <span className="flex items-center justify-between gap-2">Email language <small className="!m-0">Choose sign-up language.</small></span>
         <div className="ho-seg">
-          <button type="button" className={cn(f.language === "th" && "on")} onClick={() => set("language", "th")}>ไทย</button>
-          <button type="button" className={cn(f.language === "en" && "on")} onClick={() => set("language", "en")}>English</button>
+          <button type="button" className={cn(f.language === "th" && "on")} onClick={() => setLang("th")}>ไทย</button>
+          <button type="button" className={cn(f.language === "en" && "on")} onClick={() => setLang("en")}>English</button>
         </div>
       </div>
       <label className="ho-field"><span>Sent by</span><input value={f.sentBy} onChange={(e) => set("sentBy", e.target.value)} maxLength={80} /></label>
