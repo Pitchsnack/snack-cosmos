@@ -103,7 +103,6 @@ function InvestorDetailPage() {
             />
           )}
           <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.tenants.tenant_name}</div>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight">{s.investor_name}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {s.country && <span>{s.country}</span>}

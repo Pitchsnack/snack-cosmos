@@ -497,10 +497,6 @@ export function StartupDetailPanel({
               />
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
-              {!compact && s.tenant_name && <span>{s.tenant_name}</span>}
-              {!compact && s.tenant_name && (s.headquarters || s.industry?.length) && (
-                <span aria-hidden>·</span>
-              )}
               {s.headquarters && <span>{s.headquarters}</span>}
               {s.headquarters && s.industry?.length ? <span aria-hidden>·</span> : null}
               {s.industry?.length ? <span>{s.industry.join(" · ")}</span> : null}
