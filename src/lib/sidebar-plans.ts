@@ -8,9 +8,9 @@ export function canRequestPlan(role:string|null, current:PlanRecord|null, plan:P
 export function upgradeLine(p:PlanRecord,lang:ShareLang,current:PlanRecord|null) {
  const th=lang==='th';const n=p.requests_n??'—',cap=p.value_cap_thb_m??'—';
  if(!current) return th?'เปิดดูประกาศขายและขอทำ NDA':'Open listings and request NDAs';
- if(p.role==='seller'&&p.key==='promo')return th?`ส่งคำขอติดต่อได้ และค่าธรรมเนียมลดลงเหลือ ${p.completion_fee_pct??'—'}%`:`Send contact requests, with a lower ${p.completion_fee_pct??'—'}% fee`;
+ if(p.role==='seller'&&['promo','promo_pro'].includes(p.key))return th?`ส่งคำขอติดต่อได้ และค่าธรรมเนียมลดลงเหลือ ${p.completion_fee_pct??'—'}%`:`Send contact requests, with a lower ${p.completion_fee_pct??'—'}% fee`;
  if(p.role==='seller'&&p.key==='pro')return th?`คำขอติดต่อ ${n} ครั้งต่อปี`:`${n} contact requests a year`;
- if(p.role==='seller'&&p.key==='exec')return th?'ผู้จัดการดูแลเฉพาะ และคำขอไม่จำกัด':'A dedicated manager and unlimited requests';
+ if(p.role==='seller'&&['exec','executive'].includes(p.key))return th?'ผู้จัดการดูแลเฉพาะ และคำขอไม่จำกัด':'A dedicated manager and unlimited requests';
  if(p.role==='buyer'&&p.key==='investor')return th?`กิจการมูลค่าไม่เกิน ${cap} ล้านบาท และคำขอ NDA ${n} ครั้งต่อปี`:`Businesses up to THB ${cap}m and ${n} NDA requests a year`;
  if(p.role==='buyer'&&['inst','institutional'].includes(p.key))return th?'กิจการทุกขนาด และคำขอไม่จำกัด':'Businesses of any size and unlimited requests';
  if(p.role==='advisor'&&p.key==='pro')return th?`กิจการทุกขนาด และดูแลลูกค้าได้สูงสุด ${p.clients_n??'—'} ราย`:`Businesses of any size and up to ${p.clients_n??'—'} clients`;
@@ -27,8 +27,8 @@ export function sidebarPlanFeatures(p:PlanRecord,lang:ShareLang):{text:string;on
  let rows:(string|{text:string;on:boolean})[]=[];
  if(p.role==='seller') {
  if(p.key==='entry')rows=[val(true,true),feeText,th?'รับคำขอติดต่อ':'Receive contact requests',{text:th?'ส่งคำขอติดต่อ':'Send contact requests',on:false},th?`ตรวจสอบบริษัท ${Number(p.verification_price_thb??0).toLocaleString('en-US')} บาท`:`Company verification ${Number(p.verification_price_thb??0).toLocaleString('en-US')} THB`];
- else if(['promo','pro'].includes(p.key))rows=[val(false,true),feeText,requests,room,verification];
- else if(p.key==='exec')rows=[any,feeText,th?'คำขอติดต่อไม่จำกัด':'Unlimited contact requests',th?'ผู้จัดการดูแลเฉพาะ':'Dedicated manager',th?'วิดีโอประเมินมูลค่าและการเยี่ยมชมกิจการ':'Valuation video and site visit'];
+ else if(['promo','promo_pro','pro'].includes(p.key))rows=[val(false,true),feeText,requests,room,verification];
+ else if(['exec','executive'].includes(p.key))rows=[any,feeText,th?'คำขอติดต่อไม่จำกัด':'Unlimited contact requests',th?'ผู้จัดการดูแลเฉพาะ':'Dedicated manager',th?'วิดีโอประเมินมูลค่าและการเยี่ยมชมกิจการ':'Valuation video and site visit'];
  } else if(p.role==='buyer') {
  const seats=th?`${p.mandates_n??'—'} mandate · ผู้ใช้ ${p.users_n??'—'} คน`:`${unit(p.mandates_n,'mandate')} · ${unit(p.users_n,'user')}`;
  if(p.key==='basic')rows=[val(true),th?'ค้นหาแบบ Verified':'Verified search',th?'ซื้อคำขอ NDA เป็นแพ็กเกจ':'NDA requests bought in bundles',seats];
