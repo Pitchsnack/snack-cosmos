@@ -595,7 +595,7 @@ export function eventLabel(e: string) {
 
 /** ⋮ menu label with the small grey status on the right. */
 export function OwnershipMenuLabel({ row }: { row: OwnershipRow | undefined }) {
-  return <span className="flex w-full items-center justify-between gap-4"><span>Ownership</span><span className="text-[11px] text-muted-foreground">{menuStatus(row)}</span></span>;
+  return <span className="flex w-full items-center justify-between gap-4"><span className="flex items-center"><UserCheck className="mr-2 h-4 w-4 shrink-0" />Ownership</span><span className="text-[11px] text-muted-foreground">{menuStatus(row)}</span></span>;
 }
 
 /* ------------------- directory context: cards, panels, menus ------------------- */
