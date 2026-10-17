@@ -93,7 +93,7 @@ export async function snapshot(sb: Sb, kind: HandoverKind, id: string): Promise<
       sb.from("startup_founders").select("full_name").eq("startup_id", id),
     ]);
     rows.s = s.data ?? {}; rows.hp = hp.data ?? {};
-    lists.media = (media.data ?? []).map((m: any) => m.title || m.caption || m.file_name || m.url || m.id).map(String);
+    lists.media = (media.data ?? []).map((m: any) => m.caption || m.storage_path || m.image_url || m.id).map(String);
     lists.founders = (founders.data ?? []).map((m: any) => m.full_name).filter(Boolean);
   } else if (kind === "investor") {
     const [i, bp] = await Promise.all([

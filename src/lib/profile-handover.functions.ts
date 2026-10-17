@@ -83,8 +83,8 @@ export const ownershipDetail = createServerFn({ method: "POST" })
         const { data: hp } = await sb.from("hidden_profiles").select("views, ndas_approved").eq("startup_id", data.id).maybeSingle();
         stats = { a: hp?.ndas_approved ?? 0, a2: 0, b: hp?.views ?? 0, b2: 0 };
       } else if (data.kind === "firm") {
-        const since = new Date(Date.now() - 7 * 86400000).toISOString();
-        const { count } = await sb.from("firm_profile_views").select("firm_id", { count: "exact", head: true }).eq("firm_id", data.id).gte("viewed_at", since);
+        const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        const { count } = await sb.from("firm_profile_views").select("user_id", { count: "exact", head: true }).eq("firm_profile_id", data.id).gte("day", since);
         stats = { a: count ?? 0, a2: 0, b: 0, b2: 0 };
       } else stats = { a: 0, a2: 0, b: 0, b2: 0 };
     }
@@ -132,7 +132,7 @@ export const sendProfileInvite = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await sb.from(h.TABLE[data.kind]).update({ owner_relation: data.relation }).eq("id", data.id);
     await h.logEvent(sb, data.kind, data.id, "invited", `Invitation sent to ${data.email} (by ${sentBy})`, context.userId);
-    const base = { user_id: null, alert_key: "Profile invitation", recipient: inv.email, subject: "Profile invitation" };
+    const base = { user_id: null, role: ({ startup: "seller", investor: "buyer", firm: "advisor" } as const)[data.kind], alert_key: "Profile invitation", email: inv.email, subject: "Profile invitation", ref_key: `profile-invitation:${inv.id}` };
     try {
       const { sendTemplateEmail } = await import("./email-templates/send-email");
       const r = await sendTemplateEmail("profile-invitation", inv.email, {
