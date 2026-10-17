@@ -229,7 +229,7 @@ function GridCard({ f, fav, onFav, onOpen }: { f: AdminFirm; fav: boolean; onFav
         <div className="absolute right-1 top-1"><Bookmark on={fav} onClick={onFav} /></div>
       </div>
       <div className="space-y-2 p-4">
-        <div className="flex items-center gap-2.5"><Logo f={f} size={36} /><div className="min-w-0"><div className="truncate font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{[f.firmType, f.city].filter(Boolean).join(" · ")}</div></div></div>
+        <div className="flex items-center gap-2.5"><Logo f={f} size={36} /><div className="min-w-0"><div className="truncate font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{[f.firmType, f.city].filter(Boolean).join(" · ")}</div></div><span className="ml-auto"><OwnershipCardSlot id={f.id} /></span></div>
         {f.description && <p className="line-clamp-2 text-sm text-muted-foreground">{f.description}</p>}
         <div className="flex flex-wrap gap-1">{f.services.slice(0, 4).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}</div>
         <div className="space-y-0.5 text-xs text-muted-foreground">
@@ -253,7 +253,7 @@ function SplitCard({ f, selected, fav, onFav, onSelect }: { f: AdminFirm; select
         <Bookmark on={fav} onClick={onFav} />
       </div>
       {f.description && <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{f.description}</p>}
-      <div className="mt-2 flex flex-wrap gap-1">{f.services.slice(0, 3).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}</div>
+      <div className="mt-2 flex flex-wrap items-center gap-1">{f.services.slice(0, 3).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}<span className="ml-auto"><OwnershipCardSlot id={f.id} /></span></div>
       <div className="mt-1.5 truncate text-xs text-muted-foreground">Sectors: {f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ") || "—"}</div>
       <div className="mt-1 text-right text-xs font-medium text-[#2563EB]">View details</div>
     </div>
