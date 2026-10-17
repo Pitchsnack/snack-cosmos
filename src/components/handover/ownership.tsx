@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
   ownershipList, ownershipCounts, ownershipDetail, checkInviteEmail, sendProfileInvite, cancelProfileInvite,
-  startManaging, stopManaging, publishManaged, type OwnershipRow,
+  startManaging, stopManaging, publishManaged, handoverReview, type OwnershipRow,
 } from "@/lib/profile-handover.functions";
 import { KIND_WORD, PARTS, RELATIONS, DEFAULT_TEAM, relationLabel, type HandoverKind, type RunBy } from "@/lib/handover-parts";
 import "@/styles/handover.css";
@@ -585,7 +585,6 @@ export function OwnershipMenuItem({ id }: { id: string }) {
 
 /* ------------------------- Approvals: handed-over box ------------------------- */
 
-import { handoverReview } from "@/lib/profile-handover.functions";
 
 /** Approvals review: shows who prepared it, who took it over and what the owner changed. Nothing for ordinary sign-ups. */
 export function HandoverReviewBox({ kind, id }: { kind: HandoverKind; id: string | null | undefined }) {
