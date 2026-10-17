@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ManagedTipHost } from "@/components/common/managed-badge";
 import { ViewModeProvider } from "@/context/view-mode-context";
 import { LanguageProvider } from "@/i18n/language";
+import { SignInDayRecorder } from '@/hooks/use-sign-in-day';
 
 function NotFoundComponent() {
   return (
@@ -135,6 +136,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthStateSync />
+      <SignInDayRecorder />
       <LanguageProvider>
         <ViewModeProvider>
           <Outlet />

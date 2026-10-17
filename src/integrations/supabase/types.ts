@@ -4984,6 +4984,24 @@ export type Database = {
           },
         ]
       }
+      sign_in_days: {
+        Row: {
+          day: string
+          first_at: string
+          user_id: string
+        }
+        Insert: {
+          day?: string
+          first_at?: string
+          user_id: string
+        }
+        Update: {
+          day?: string
+          first_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       signup_answers: {
         Row: {
           buyer_relation: string | null
@@ -6603,10 +6621,12 @@ export type Database = {
       mark_welcome_tour_seen: { Args: never; Returns: string }
       next_inv_ref: { Args: never; Returns: string }
       normalize_url_key: { Args: { _url: string }; Returns: string }
+      prune_sign_in_days: { Args: never; Returns: undefined }
       record_report_open: {
         Args: { _ref: string; _report_key: string; _uid: string }
         Returns: boolean
       }
+      record_sign_in_day: { Args: never; Returns: boolean }
       role_is: { Args: { _role: string; _uid: string }; Returns: boolean }
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }
