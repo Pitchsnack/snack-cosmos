@@ -4984,6 +4984,36 @@ export type Database = {
           },
         ]
       }
+      share_invitations: {
+        Row: {
+          email: string
+          id: string
+          joined_at: string | null
+          joined_user_id: string | null
+          sender_user_id: string
+          sent_at: string
+          token: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          joined_at?: string | null
+          joined_user_id?: string | null
+          sender_user_id: string
+          sent_at?: string
+          token: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          joined_at?: string | null
+          joined_user_id?: string | null
+          sender_user_id?: string
+          sent_at?: string
+          token?: string
+        }
+        Relationships: []
+      }
       sign_in_days: {
         Row: {
           day: string
@@ -6574,6 +6604,15 @@ export type Database = {
         Args: { _code_id: string; _role: string; _uid: string }
         Returns: string
       }
+      claim_share_invitation: {
+        Args: {
+          _email: string
+          _invitation_id: string
+          _role: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       company_type_for_relation: { Args: { _rel: string }; Returns: string }
       current_term_start: { Args: { _uid: string }; Returns: string }
       fn_import_global_startup: {
@@ -6628,6 +6667,7 @@ export type Database = {
       }
       record_sign_in_day: { Args: never; Returns: boolean }
       role_is: { Args: { _role: string; _uid: string }; Returns: boolean }
+      share_email_has_account: { Args: { _email: string }; Returns: boolean }
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean

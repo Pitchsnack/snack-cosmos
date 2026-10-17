@@ -22,6 +22,7 @@ import "@/styles/login-page.css";
 import "@/styles/signup-page.css";
 import { AccessGate, useClaimSeat, useGate } from "@/components/access-gate/access-gate";
 import { G, months as monthsText } from "@/components/access-gate/access-copy";
+import { sc } from '@/i18n/sidebar-share';
 
 const LANG_KEY = "ps-home-lang";
 const PENDING_KEY = "ps-signup-pending";
@@ -45,7 +46,7 @@ const SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
 
 export const Route = createFileRoute("/signup")({
   ssr: false,
-  validateSearch: z.object({ role: z.string().optional(), email: z.string().optional() }),
+  validateSearch: z.object({ role: z.string().optional(), email: z.string().optional(), join: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "PitchSnack · สมัครใช้งาน" },
@@ -109,6 +110,7 @@ function SignupInner() {
   // step 3
   const [first, setFirst] = useState(""); const [last, setLast] = useState("");
   const [email, setEmail] = useState(search.email ?? ""); const [pw, setPw] = useState("");
+  useEffect(() => { if (gate.invitationEmail) setEmail(gate.invitationEmail); }, [gate.invitationEmail]);
   const [showPw, setShowPw] = useState(false); const [terms, setTerms] = useState(false); const [news, setNews] = useState(false);
   const [err3, setErr3] = useState<Record<string, boolean>>({}); const [taken, setTaken] = useState(false); const [fail, setFail] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -567,8 +569,10 @@ function SignupInner() {
                         <label className="lg-label" htmlFor="su-email">{t(S.email)}</label>
                         <div className={`lg-field su-f ${err3.email || taken ? "bad" : ""}`}><Mail size={18} />
                           <input ref={emailRef} id="su-email" type="email" autoComplete="email" placeholder={t(S.emailPh)} value={email}
+                            readOnly={gate.gateOn && !!gate.invitationEmail}
                             onChange={(e) => { setEmail(e.target.value); setTaken(false); if (EMAIL_RE.test(e.target.value.trim())) setErr3((x) => ({ ...x, email: false })); }} /></div>
                         {err3.email && <Err text={S.eEmail} />}
+                        {gate.gateOn && gate.invitationEmail && <p className="su-hint">{sc('invitation', lang)}</p>}
                         {taken && <div className="lg-err"><CircleAlert size={15} />{t(S.taken)} <Link to="/login" search={{ email: email.trim() } as never} className="lg-link">{t(S.signIn)}</Link></div>}
                       </div>
                       <div className="lg-fg">

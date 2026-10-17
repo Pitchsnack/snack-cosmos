@@ -659,6 +659,20 @@
       "when": 1792220333239,
       "tag": "0093_analytics_sign_in_days",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1792224440509,
+      "tag": "0094_share_invitation_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1792224539513,
+      "tag": "0095_share_invitation_email_lookup",
+      "breakpoints": true
     }
   ]
 }

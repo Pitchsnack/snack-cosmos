@@ -48,6 +48,7 @@ import logoWhite from "@/assets/pitchsnack-white.png";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { useIsMarketplace, usePersona, rememberAdminPath } from "@/hooks/use-marketplace";
 import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marketplace/marketplace-frame";
+import { SidebarShare } from '@/components/marketplace/sidebar-share';
 import { GlobalRouteLoading } from "@/components/ui/global-loading";
 import { useTranslation } from "@/i18n/language";
 
@@ -324,7 +325,7 @@ function SidebarBody({
     <div data-mkt-view={isMarket ? persona : undefined} className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       {isMarket && <PersonaCard collapsed={!showLabels} />}
 
-      <nav className={cn("flex-1 overflow-y-auto px-2", isMarket && !showLabels ? "pb-4" : "py-4")}>
+      <nav className={cn("min-h-0 flex-1 overflow-y-auto px-2", isMarket && !showLabels ? "pb-4" : "py-4")}>
         {(() => {
           const renderItem = (item: NavItem, idx: number, hideSoonBadge = false) => {
             const isActive =
@@ -427,6 +428,7 @@ function SidebarBody({
           );
         })()}
       </nav>
+      {isMarket && showLabels && <SidebarShare />}
 
 
       <div className="border-t border-sidebar-border p-2">
