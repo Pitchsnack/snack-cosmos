@@ -282,11 +282,11 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
     const clientRel = relationLabel(kind, c?.owner_relation);
     return (
       <>
-        <div className="ho-label">MANAGED BY PITCHSNACK</div>
+        <div className="ho-label ho-label-mg">Managed by PitchSnack</div>
         <div className="ho-person">
           <span className="ho-ini">{initials(noDetails ? "CN" : cn2)}</span>
           <div className="min-w-0 flex-1">
-            <div className="font-semibold">{cn2} <span className="ho-chip">Client · doesn't sign in</span></div>
+            <div className="font-semibold">{cn2} <span className="ho-tag">Client · doesn't sign in</span></div>
             <div className="ho-muted">{noDetails ? "Add the client's name and email or phone." : [c?.email, c?.phone, clientRel].filter(Boolean).join(" · ") || "No contact details yet"}</div>
           </div>
           <button className={cn("ho-btn", noDetails && "ho-btn-navy")} onClick={onManage}>Edit details</button>
@@ -294,7 +294,7 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
         <div className="ho-person">
           <span className="ho-ini ho-ini-navy">{initials(team)}</span>
           <div className="min-w-0 flex-1">
-            <div className="font-semibold">{team} <span className="ho-chip ho-chip-navy"><HatIcon width={13} fill="#fff" /> Runs it for PitchSnack</span></div>
+            <div className="font-semibold">{team} <span className="ho-tag ho-tag-navy"><HatIcon width={14} fill="#fff" /> Runs it for PitchSnack</span></div>
             <div className="ho-muted" style={agreed ? undefined : { color: "#B45309" }}>Since {fmtDate(c?.since ?? d.head.preparedAt)} · {agreed ? "the client agreed in writing" : "written agreement not confirmed yet"}</div>
           </div>
         </div>
