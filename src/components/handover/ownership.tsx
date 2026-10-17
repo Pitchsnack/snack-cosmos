@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Check, Lock, X } from "lucide-react";
+import { Check, Eye, Lock, UserCheck, UserPlus, X } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -114,11 +114,12 @@ function Shell({ open, onClose, title, sub, children, footer }: {
         <DialogPrimitive.Overlay className="ho-backdrop" />
         <DialogPrimitive.Content className="ho-dialog" aria-describedby={undefined}>
           <div className="ho-head">
-            <div className="min-w-0">
+            <span className="ho-dlg-ico"><UserCheck size={20} /></span>
+            <div className="min-w-0 flex-1">
               <DialogPrimitive.Title className="ho-title">{title}</DialogPrimitive.Title>
               {sub && <div className="ho-sub">{sub}</div>}
             </div>
-            <DialogPrimitive.Close className="ho-x" title="Close" aria-label="Close"><X size={16} /></DialogPrimitive.Close>
+            <DialogPrimitive.Close className="ho-x" title="Close" aria-label="Close"><X size={18} /></DialogPrimitive.Close>
           </div>
           <div className="ho-body">{children}</div>
           {footer && <div className="ho-foot">{footer}</div>}
@@ -136,7 +137,19 @@ const TEAM_DOES = {
   investor: ["edits, publishing, NDA requests and seller messages", "Sends NDA requests and answers sellers", "send NDA requests and answer sellers' messages"],
   firm: ["edits, publishing, and seller and buyer messages", "Answers sellers and buyers", "answer sellers' and buyers' messages"],
 } as const;
-const WHO = { startup: "WHO THE SELLER IS", investor: "WHO THE BUYER IS", firm: "THE OWNER'S JOB TITLE" } as const;
+const WHO = { startup: "Who the seller is", investor: "Who the buyer is", firm: "The owner's job title" } as const;
+const relationHint = (kind: HandoverKind, v: string | null | undefined) =>
+  kind === "firm" || !v ? null : RELATIONS[kind].find((r) => r.value === v)?.hint ?? null;
+
+/** Grey note at the bottom of the pop-up (reference look). */
+function AdminNote({ managed }: { managed: boolean }) {
+  return (
+    <div className="ho-note">
+      {managed ? <Lock size={16} /> : <Eye size={16} />}
+      <span>{managed ? <b>Only Admin sees this box.</b> : <><b>Only Admin sees this.</b> Sellers and buyers see the profile like any other.</>}</span>
+    </div>
+  );
+}
 
 /** ⋮ › Ownership and the badge button open this. */
 export function OwnershipDialog({ kind, id, open, onClose }: { kind: HandoverKind; id: string; open: boolean; onClose: () => void }) {
