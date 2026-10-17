@@ -23,6 +23,8 @@ import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useInvestors } from "@/hooks/use-investors";
 import { useFavoriteInvestors } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
+import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, type RunByFilter } from "@/components/handover/ownership";
+
 import { PermissionGuard } from "@/components/permission-guard";
 import { InvestorImagesMenu } from "@/components/investors/investor-images-menu";
 import { cn } from "@/lib/utils";
@@ -79,7 +81,8 @@ function InvestorsPage() {
 }
 
 function InvestorsPageInner() {
-  const { has } = usePermissions();
+  const { has, isControl } = usePermissions();
+  const [runBy, setRunBy] = useState<RunByFilter>("all");
   const navigate = useNavigate({ from: "/investors" });
   const s = Route.useSearch();
   const page = s.page ?? 1;
@@ -118,8 +121,9 @@ function InvestorsPageInner() {
     return Array.from(set).sort();
   }, [rows]);
 
+  const ownMap = useOwnershipMap("investor", rows.map((r) => r.id), isControl);
   const sorted = useMemo(() => {
-    const list = favOnly ? rows.filter((r) => favIds.has(r.id)) : [...rows];
+    const list = (favOnly ? rows.filter((r) => favIds.has(r.id)) : [...rows]).filter((r) => runByMatches(runBy, ownMap.get(r.id)));
     const byName = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
     return [...list].sort((a, b) => {
       switch (sort) {
@@ -133,7 +137,7 @@ function InvestorsPageInner() {
           return (b.updated_at ?? "").localeCompare(a.updated_at ?? "");
       }
     });
-  }, [rows, favOnly, favIds, sort]);
+  }, [rows, favOnly, favIds, sort, runBy, ownMap]);
 
   const total = sorted.length;
   const pageCount = favOnly ? 1 : Math.max(1, Math.ceil(total / pageSize));
@@ -148,6 +152,7 @@ function InvestorsPageInner() {
   const hasFilter = !!(s.q || s.type || s.country);
 
   return (
+    <OwnershipProvider kind="investor" ids={rows.map((r) => r.id)} enabled={isControl}>
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -163,6 +168,7 @@ function InvestorsPageInner() {
                 ? `${total} investor${total === 1 ? "" : "s"}`
                 : "Browse and connect with investors."}
           </p>
+          {isControl && <p className="mt-0.5 text-xs text-muted-foreground"><HeaderCounts kind="investor" /></p>}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -316,7 +322,7 @@ function InvestorsPageInner() {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Briefcase className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p>No investors match your filters.</p>
+          <p>{runBy !== "all" ? "No investors are run this way." : "No investors match your filters."}</p>
         </div>
       ) : view === "grid" ? (
         <div

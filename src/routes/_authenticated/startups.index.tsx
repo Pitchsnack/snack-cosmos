@@ -29,6 +29,8 @@ import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
+import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, type RunByFilter } from "@/components/handover/ownership";
+
 import { PermissionGuard } from "@/components/permission-guard";
 import { isPublicationPreview, listPreviewPublishedRefs } from "@/lib/publication";
 import { usePreviewPublicationVersion } from "@/hooks/use-publication";
@@ -83,7 +85,8 @@ function StartupsPage() {
 }
 
 function StartupsPageInner() {
-  const { has } = usePermissions();
+  const { has, isControl } = usePermissions();
+  const [runBy, setRunBy] = useState<RunByFilter>("all");
   const navigate = useNavigate({ from: "/startups" });
   const s = Route.useSearch();
   const page = s.page ?? 1;
@@ -190,9 +193,10 @@ function StartupsPageInner() {
       return st === "none" || st === "na";
     });
   }, [rawItems, hpFilter, byStartup]);
+  const ownMap = useOwnershipMap("startup", rawItems.map((it) => it.id), isControl);
   const items = useMemo(
-    () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems),
-    [baseItems, favOnly, favIds],
+    () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems).filter((it) => runByMatches(runBy, ownMap.get(it.id))),
+    [baseItems, favOnly, favIds, runBy, ownMap],
   );
 
   const total = favOnly ? items.length : data && "total" in data ? data.total : 0;
@@ -204,6 +208,7 @@ function StartupsPageInner() {
   const hasFilter = !!(s.q || s.stage || s.industry || s.sector || s.bmodel || s.hq || s.ct || s.ptag || s.mtag);
 
   return (
+    <OwnershipProvider kind="startup" ids={rawItems.map((it) => it.id)} enabled={isControl}>
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -218,6 +223,7 @@ function StartupsPageInner() {
                 ? `${total} startup${total === 1 ? "" : "s"}`
                 : "Browse and manage your portfolio."}
           </p>
+          {isControl && <p className="mt-0.5 text-xs text-muted-foreground"><HeaderCounts kind="startup" /></p>}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -289,6 +295,7 @@ function StartupsPageInner() {
           onChange={(v) => update({ bmodel: v })}
         />
         <Input value={s.hq ?? ""} onChange={(e) => update({ hq: e.target.value || undefined })} placeholder="HQ" className="h-9 w-32" />
+        {isControl && <RunBySelect value={runBy} onChange={setRunBy} />}
         <Select value={sort} onValueChange={(v) => navigate({ search: (prev: typeof s) => ({ ...prev, sort: v as typeof SORT[number] }) })}>
           <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -367,7 +374,7 @@ function StartupsPageInner() {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Rocket className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p>No startups match your filters.</p>
+          <p>{runBy !== "all" ? "No startups are run this way." : "No startups match your filters."}</p>
         </div>
       ) : view === "grid" ? (
         <div
