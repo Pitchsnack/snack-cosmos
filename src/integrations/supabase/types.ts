@@ -4725,6 +4725,7 @@ export type Database = {
           accepted_at: string | null
           accepted_user_id: string | null
           cancelled_at: string | null
+          closed_at: string | null
           created_by: string | null
           email: string
           expires_at: string
@@ -4736,15 +4737,18 @@ export type Database = {
           note: string | null
           opened_at: string | null
           owner_relation: string | null
+          prepared_snapshot: Json | null
           profile_id: string
           sent_at: string
           sent_by: string
+          submitted_at: string | null
           token: string
         }
         Insert: {
           accepted_at?: string | null
           accepted_user_id?: string | null
           cancelled_at?: string | null
+          closed_at?: string | null
           created_by?: string | null
           email: string
           expires_at?: string
@@ -4756,15 +4760,18 @@ export type Database = {
           note?: string | null
           opened_at?: string | null
           owner_relation?: string | null
+          prepared_snapshot?: Json | null
           profile_id: string
           sent_at?: string
           sent_by?: string
+          submitted_at?: string | null
           token?: string
         }
         Update: {
           accepted_at?: string | null
           accepted_user_id?: string | null
           cancelled_at?: string | null
+          closed_at?: string | null
           created_by?: string | null
           email?: string
           expires_at?: string
@@ -4776,9 +4783,11 @@ export type Database = {
           note?: string | null
           opened_at?: string | null
           owner_relation?: string | null
+          prepared_snapshot?: Json | null
           profile_id?: string
           sent_at?: string
           sent_by?: string
+          submitted_at?: string | null
           token?: string
         }
         Relationships: []
