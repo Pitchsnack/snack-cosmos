@@ -27,7 +27,7 @@
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner (withOwnerEmails).
 - Listing names Admin-only (zz trigger); NULL = ref_no.
-- Handover: run_by on profiles; profile-handover.functions.ts only, service-only tables.
+- Handover: run_by; profile-handover.functions.ts only.
 - Buyer verification: one investor_profile_verifications row per investor via triggers; readers use profile-verification.server.ts; sellers get only investor_is_verified(). Control holds many profiles.
 - workspace-scope.server.ts scopes sellers; Control sees all. Analytics: Admin readers, DB sign-ins.
 
