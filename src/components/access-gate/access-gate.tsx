@@ -126,7 +126,7 @@ export function AccessGate({ children, claimInBackground = true, onLang }: { chi
     }
     const f = takeFlash();
     if (cache && Date.now() - cache.at < FRESH && !f) {
-      setVal({ gateOn: cache.gateOn, details: cache.details, signedIn: false });
+      setVal({ gateOn: cache.gateOn, details: cache.details, invitationEmail: cache.invitationEmail, signedIn: false });
       setState(!cache.gateOn || cache.details || cache.invitationEmail ? "open" : "gate"); return;
     }
     const stored = readPass();

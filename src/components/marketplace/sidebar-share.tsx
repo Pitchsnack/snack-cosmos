@@ -22,7 +22,7 @@ export function SidebarShare() {
  useEffect(()=>{if(chosen)doneRef.current?.focus()},[chosen]);
  if(!data||!canShare(data.role))return null;
  const {current,plans}=data,next=nextSidebarPlan(plans,current);const title=current?sc('upgrade',lang,{plan:next?.name??''}):sc('choose',lang),line=next?upgradeLine(next,lang,current):'';
- const enter=()=>{if(timer.current)clearTimeout(timer.current);if(next&&!share&&!plansOpen)setPanel(true)};
+ const enter=()=>{if(timer.current)clearTimeout(timer.current);if(next&&!share&&!plansOpen&&window.matchMedia('(hover: hover)').matches)setPanel(true)};
  const leave=()=>{timer.current=setTimeout(()=>setPanel(false),120)};
  const openShare=()=>{setEmail('');setSent('');setError('');setPanel(false);setShare(true)};
  const submit=async(e:React.FormEvent)=>{e.preventDefault();const value=email.trim();if(!value){setError(sc('empty',lang));return}if(!SHARE_EMAIL_RE.test(value)){setError(sc('invalid',lang));return}setBusy(true);setError('');setSent('');try{await send({data:{email:value,lang}});setSent(value);setEmail('');emailRef.current?.focus()}catch{setError(sc('sendFail',lang))}finally{setBusy(false)}};

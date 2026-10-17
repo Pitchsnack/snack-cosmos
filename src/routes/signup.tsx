@@ -254,7 +254,7 @@ function SignupInner() {
     writePending(pend);
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(), password: pw,
-      options: { emailRedirectTo: `${window.location.origin}/signup`, data: { first_name: first.trim(), last_name: last.trim() } },
+      options: { emailRedirectTo: `${window.location.origin}/signup${search.join ? `?join=${encodeURIComponent(search.join)}` : ''}`, data: { first_name: first.trim(), last_name: last.trim() } },
     });
     setBusy(false);
     if (error) {
@@ -284,13 +284,13 @@ function SignupInner() {
     writePending({ role, answer, types, terms: true, news, provider: p });
     if (p === "google") {
       const { lovable } = await import("@/integrations/lovable/index");
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/signup` });
+      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/signup${search.join ? `?join=${encodeURIComponent(search.join)}` : ''}` });
       if (r.error) { setBusy(false); setFail(true); return; }
       if (r.redirected) return;
       window.location.reload();
       return;
     }
-    const { error } = await supabase.auth.signInWithOAuth({ provider: p, options: { redirectTo: `${window.location.origin}/signup` } });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: p, options: { redirectTo: `${window.location.origin}/signup${search.join ? `?join=${encodeURIComponent(search.join)}` : ''}` } });
     if (error) { setBusy(false); setFail(true); }
   }
 
