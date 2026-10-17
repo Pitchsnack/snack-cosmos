@@ -530,6 +530,7 @@ function StartupsPageInner() {
       </Dialog>
 
     </div>
+    </OwnershipProvider>
   );
 }
 

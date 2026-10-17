@@ -241,6 +241,7 @@ function InvestorsPageInner() {
           options={countries}
           onChange={(v) => update({ country: v })}
         />
+        {isControl && <RunBySelect value={runBy} onChange={setRunBy} />}
         <Select
           value={sort}
           onValueChange={(v) =>
@@ -439,6 +440,7 @@ function InvestorsPageInner() {
         </DialogContent>
       </Dialog>
     </div>
+    </OwnershipProvider>
   );
 }
 
