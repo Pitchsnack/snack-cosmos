@@ -219,10 +219,6 @@ export function InvestorDetailPanel({
               />
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
-              {!buyer && !compact && i.tenants?.tenant_name && <span>{i.tenants.tenant_name}</span>}
-              {!buyer && !compact && i.tenants?.tenant_name && (i.country || i.investor_type) && (
-                <span aria-hidden>·</span>
-              )}
               {i.country && <span>{i.country}</span>}
               {i.country && i.investor_type ? <span aria-hidden>·</span> : null}
               {i.investor_type && <span>{i.investor_type}</span>}
