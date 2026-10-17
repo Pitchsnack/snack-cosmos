@@ -582,3 +582,32 @@ export function OwnershipMenuItem({ id }: { id: string }) {
   if (!c) return null;
   return <DropdownMenuItem onSelect={() => c.open(id)}><OwnershipMenuLabel row={c.map.get(id)} /></DropdownMenuItem>;
 }
+
+/* ------------------------- Approvals: handed-over box ------------------------- */
+
+import { handoverReview } from "@/lib/profile-handover.functions";
+
+/** Approvals review: shows who prepared it, who took it over and what the owner changed. Nothing for ordinary sign-ups. */
+export function HandoverReviewBox({ kind, id }: { kind: HandoverKind; id: string | null | undefined }) {
+  const fn = useServerFn(handoverReview);
+  const q = useQuery({ queryKey: ["handover-review", kind, id], queryFn: () => fn({ data: { kind, id: id! } }), enabled: !!id, retry: false, staleTime: 30_000 });
+  const d = q.data;
+  if (!d) return null;
+  const label = (k: string) => { const p = d.parts.find((x) => x.key === k); return p ? (p.view === "open" ? p.en : `${p.view === "public" ? "Public" : "Private"} view › ${p.en}`) : k; };
+  const unchanged = d.parts.length - new Set(d.changes.map((c: any) => c.part)).size;
+  return (
+    <div className="ho-panelbox mb-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="ho-chip">Handed over</span>
+        <span className="text-[13px]">Prepared by {d.preparedBy} · {fmtTime(d.preparedAt)}. {d.owner}{d.ownerRelation ? ` (${relationLabel(kind, d.ownerRelation)})` : ""} accepted {fmtTime(d.acceptedAt)}{d.submittedAt ? ` and submitted ${fmtTime(d.submittedAt)}` : ""}.</span>
+      </div>
+      <div className="ho-label mt-3">Changed by the owner before submitting</div>
+      <ul className="ho-changes">
+        {d.changes.map((c: any, k: number) => (
+          <li key={k}><span className="ho-muted">{label(c.part)}</span> <span>{c.field} <s>{c.old_value ?? "—"}</s> → <b>{c.new_value ?? "—"}</b></span></li>
+        ))}
+        <li><span className="ho-muted">The other {unchanged} parts</span> <span>Checked as PitchSnack prepared them</span></li>
+      </ul>
+    </div>
+  );
+}

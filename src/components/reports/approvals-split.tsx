@@ -28,7 +28,7 @@ type Field = [label: string, submitted: string, shown: string];
 type Item = {
   key: string; id: string; kind: Kind; name: string; ref: string; who: string; submittedAt: string | null; version: number;
   initials: string; dirLabel: string; dirTo: string; dirParams: Record<string, string>; reviewTo?: { to: string; params: Record<string, string> };
-  checks: Check3[]; changed?: [string, string, string][]; groups: [string, Field[]][]; preview?: React.ReactNode; art?: any;
+  checks: Check3[]; changed?: [string, string, string][]; groups: [string, Field[]][]; preview?: React.ReactNode; art?: any; handover?: { kind: "startup" | "investor"; id: string | null };
 };
 
 const KIND: Record<Kind, [string, string]> = {
@@ -67,7 +67,7 @@ export function listingItems(rows: any[], names: Record<string, string>, emails:
     return {
       key: `l:${l.id}`, id: l.id, kind: l.has_live ? "edit" : "new", name, ref: l.code_name ? `${l.ref_no ?? ""} · ${l.code_name}` : l.ref_no ?? "",
       who: emails[l.submitted_by] || names[l.submitted_by] || "—", submittedAt: l.submitted_at, version: l.version ?? 1,
-      initials: initials(name), art: l, dirLabel: "Startups Directory", dirTo: "/startups/$id", dirParams: { id: l.startup_id },
+      initials: initials(name), art: l, dirLabel: "Startups Directory", dirTo: "/startups/$id", dirParams: { id: l.startup_id }, handover: { kind: "startup", id: l.startup_id },
       reviewTo: { to: "/approvals/listings/$id", params: { id: l.id } },
       checks: [
         [!flags.length, "Identity check", flags.length ? `Mentions ${flags.slice(0, 3).join(", ")}` : "Passed · name hidden"],
@@ -113,7 +113,7 @@ export function profileItems(rows: any[], names: Record<string, string>): Item[]
     return {
       key: `p:${r.user_id}`, id: r.user_id, kind: "prof", name, ref: `${r.ref_no ?? ""} · ${type}`, who: names[r.user_id] ?? "—",
       submittedAt: r.submitted_at, version: 1, initials: initials(name),
-      dirLabel: "Investors Directory", dirTo: r.investor_id ? "/investors/$id" : "/investors", dirParams: (r.investor_id ? { id: r.investor_id } : {}) as Record<string, string>,
+      dirLabel: "Investors Directory", dirTo: r.investor_id ? "/investors/$id" : "/investors", dirParams: (r.investor_id ? { id: r.investor_id } : {}) as Record<string, string>, handover: { kind: "investor", id: r.investor_id ?? null },
       checks: [
         [!leaks.length, "Identity check", leaks.length ? leaks.join(", ") : "Passed · name hidden"],
         [verified, "Verified buyer", verified ? `Since ${day(r.verification?.decided_at)}` : "Not verified yet"],
@@ -159,7 +159,7 @@ export function verificationItems(rows: any[], names: Record<string, string>): I
     return {
       key: `v:${b.id}`, id: b.id, kind: "ver", name: person, ref: [b.company_name, b.buyer_type].filter(Boolean).join(" · "), who: person,
       submittedAt: b.submitted_at, version: 1, initials: initials(person),
-      dirLabel: "full review", dirTo: "/approvals/buyers/$id", dirParams: { id: b.id },
+      dirLabel: "full review", dirTo: "/approvals/buyers/$id", dirParams: { id: b.id }, handover: { kind: "investor", id: b.investor_id ?? null },
       checks: [
         [!!b.registration_no, "Company registration", b.registration_no ? `No. ${b.registration_no}` : "Not added"],
         [match !== false, "Work email", match == null ? "Not checked" : match ? "Matches company domain" : "Domain differs"],
