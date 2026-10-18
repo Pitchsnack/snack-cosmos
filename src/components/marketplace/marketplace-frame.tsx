@@ -1,4 +1,6 @@
-import { BellRing } from "lucide-react";
+import { BellRing, BadgeCheck } from "lucide-react";
+import { VerificationSidebarChip, VerificationMenuStatus, useVerificationSidebar } from '@/components/company-verification/sidebar';
+import { useVerificationCopy } from '@/components/company-verification/copy';
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert, Handshake, Send } from "lucide-react";
@@ -205,6 +207,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
   const u = data?.user;
   const workspace = data?.activeWorkspace?.tenantName ?? data?.tenants?.[0]?.tenantName ?? null;
   const firms = useMyAdvisorFirms();
+  const verification = useVerificationSidebar(persona === 'seller');
   const org = advisor ? (firms.data?.[0]?.name ?? u?.organisation ?? null) : (u?.organisation ?? workspace);
   const subtitle = [u?.title, org].filter(Boolean).join(" · ");
   const neutral = persona === "seller" ? workspace : advisor ? null : u?.buyerType ?? null;
@@ -319,6 +322,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
             {persona}
           </span>
           {u?.planInfo && role !== "admin" && <PlanBadge name={u.planInfo.name} style={u.planInfo.badgeStyle} ended={u.planInfo.ended} />}
+          {persona === 'seller' && <VerificationSidebarChip state={verification.data} />}
           {neutral && (
             <span
               className={cn(
@@ -433,6 +437,7 @@ export function marketplaceMenu(persona: Persona) {
   const tools: MenuItem[] =
     persona === "seller"
       ? [
+          { to: "/my-verification", label: "Company verification report", icon: BadgeCheck },
           { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
           { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
           { to: "/my-risk", label: "Company Risk", icon: ShieldAlert, lock: "risk" },
@@ -450,6 +455,8 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   const { t } = useTranslation();
   const { discover, workspace, tools, account } = marketplaceMenu(persona);
   const rc = useRailCopy();
+  const vc = useVerificationCopy();
+  const verification = useVerificationSidebar(persona === 'seller');
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
@@ -466,6 +473,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
           className="relative flex items-center justify-center rounded-lg px-2 py-2.5 transition-colors"
         >
           <it.icon className="h-4 w-4 shrink-0" />
+          {it.to === '/my-verification' && <VerificationMenuStatus state={verification.data} collapsed />}
           {it.to === "/marketplace/pipeline" && <PipelineCountBadge collapsed />}
           {it.to === "/marketplace/invitations" && <InvitationsCountBadge collapsed />}
           {(it.to === "/marketplace/messages" || it.to === "/advisor/messages") && <MessagesCountBadge collapsed />}
@@ -509,7 +517,8 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       inactiveProps={MENU_LINK_INACTIVE}
     >
       <it.icon className="h-4 w-4 shrink-0" />
-      <span>{t(it.label)}</span>
+      <span className="min-w-0">{it.to === '/my-verification' ? vc(it.label) : t(it.label)}</span>
+      {it.to === '/my-verification' && <VerificationMenuStatus state={verification.data} />}
       {it.to === "/marketplace/pipeline" && <PipelineCountBadge />}
       {it.to === "/marketplace/invitations" && <InvitationsCountBadge />}
       {(it.to === "/marketplace/messages" || it.to === "/advisor/messages") && <MessagesCountBadge />}

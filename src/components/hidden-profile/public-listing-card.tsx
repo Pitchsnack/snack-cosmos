@@ -9,6 +9,7 @@ import { useTranslation } from "@/i18n/language";
 import type { PublicListing } from "@/lib/public-listing";
 import { getStartupSignedUrl } from "@/lib/startups.functions";
 import { SectorArt } from "./bits";
+import { VerificationBadge } from '@/components/company-verification/verification-badge';
 
 /** Resolves a startup-media storage path to a signed URL. */
 export function useMediaUrl(path: string | null) {
@@ -161,7 +162,7 @@ export function PublicListingCard({
         {priv && <div className={cn("truncate text-[16px] font-bold text-[#111827] transition-colors", interactive && "group-hover:text-accent")} title={priv.name}>{priv.name}</div>}
         <h3 className={cn(priv ? "mt-0.5 line-clamp-2 text-[13.5px] font-medium leading-[1.35] text-[#374151]" : "line-clamp-2 text-[15px] font-bold leading-[1.3]", "transition-colors", interactive && !priv && "group-hover:text-accent")}>{l.headline || (editable ? <MissingText small>{t("Add a headline")}</MissingText> : <span className="text-muted-foreground">{t("Add a headline")}</span>)}</h3>
         <div className="mt-2 flex flex-wrap gap-1">
-          {l.certified && <Badge tone="green" icon={<ShieldCheck className="h-3 w-3" />}>{t("Certified")}</Badge>}
+          {l.certified && <VerificationBadge buyer={!seller} insideControl={!!interactive} />}
           {l.verified && <Badge tone="blue" icon={<BadgeCheck className="h-3 w-3" />}>{t("Verified company")}</Badge>}
           {l.hasFinancials ? <Badge tone="green" icon={<FileText className="h-3 w-3" />}>{t("Verified financials")}</Badge>
             : seller && <Badge tone="dashed" icon={<FileText className="h-3 w-3" />}>{t("Verified financials · optional")}</Badge>}

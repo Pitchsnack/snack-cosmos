@@ -29,7 +29,7 @@ import { FinIcon } from "@/components/financials/fin-icon";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS, fmtCapital } from "@/lib/financials";
 import { getStartupFinancials } from "@/lib/financials.functions";
 import { getCompanyInfoTh } from "@/lib/company-info.functions";
-import { CompanyInfoTab } from "@/components/financials/company-info-tab";
+import { VerificationPointer } from '@/components/company-verification/page';
 import type { StartupFinancials } from "@/lib/financials.functions";
 import {
   autoEnrichFinancials,
@@ -189,7 +189,7 @@ export function StartupFinancialsPage({
   // Statements with that statement selected.
   const STATEMENT_TABS = ["income", "position", "cash-flow"] as const;
   const legacy = STATEMENT_TABS.find((v) => v === initialTab || `${v}-statement` === initialTab);
-  const [tabState, setTab] = useState(legacy ? "statements" : (initialTab ?? "overview"));
+  const [tabState, setTab] = useState(legacy ? "statements" : (initialTab === 'company-info' ? 'overview' : initialTab ?? "overview"));
   const tab = section === "valuation" ? "valuation" : section === "financials" && tabState === "valuation" ? "overview" : tabState;
   const [statementTab, setStatementTab] = useState<string>(() => {
     if (legacy) return legacy;
@@ -386,6 +386,7 @@ export function StartupFinancialsPage({
       )}
 
 
+      {!editing && section !== 'valuation' && <VerificationPointer companyId={id} />}
       {editing ? (
         <FinancialsEdit
           startupId={id}
@@ -411,7 +412,6 @@ export function StartupFinancialsPage({
             onChange={setTab}
             tabs={[
               { value: "overview", label: "Overview", icon: "grid" },
-              { value: "company-info", label: "Company Info", icon: "building" },
               {
                 value: "statements",
                 label: "Financial Statements",
@@ -470,27 +470,6 @@ export function StartupFinancialsPage({
                   position={data.position}
                   ratios={data.ratios}
                 />
-              </div>
-            )}
-
-            {tab === "company-info" && (
-              <div className="pt-4">
-                {companyInfo ? (
-                  <CompanyInfoTab
-                    startupId={id}
-                    info={companyInfo}
-                    financials={data}
-                    workspace={workspace}
-                    canManage={canManage}
-                    onSaved={() =>
-                      queryClient.invalidateQueries({ queryKey: ["company-info-th", id] })
-                    }
-                  />
-                ) : (
-                  <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center text-sm text-muted-foreground">
-                    Loading company information…
-                  </div>
-                )}
               </div>
             )}
 
