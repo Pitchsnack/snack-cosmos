@@ -708,6 +708,13 @@
       "when": 1792354340376,
       "tag": "0100_company_verification_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1792354915610,
+      "tag": "0101_verification_validation_and_badge_guard",
+      "breakpoints": true
     }
   ]
 }

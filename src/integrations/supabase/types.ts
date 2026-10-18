@@ -7189,6 +7189,10 @@ export type Database = {
         Args: { _company: string; _uid: string }
         Returns: boolean
       }
+      verification_pipeline_valid: {
+        Args: { _company: string; _pipeline: string; _uid: string }
+        Returns: boolean
+      }
       verification_start_included: {
         Args: { _company: string }
         Returns: undefined
