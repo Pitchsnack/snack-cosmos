@@ -1,9 +1,9 @@
 import { useTranslation } from '@/i18n/language';
 import strings from './copy.json';
 export function useVerificationCopy() {
-  const {lang}=useTranslation();
+  const {language}=useTranslation();
   return (en:string,th?:string,vars:Record<string,string|number>={})=>{
-    let value=lang==='th'?(th??(strings as Record<string,string>)[en]??en):en;
+    let value=language==='th'?(th??(strings as Record<string,string>)[en]??en):en;
     for(const [k,v] of Object.entries(vars))value=value.replaceAll(`{${k}}`,String(v));
     return value;
   };

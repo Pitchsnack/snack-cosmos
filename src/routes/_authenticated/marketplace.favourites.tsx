@@ -361,7 +361,7 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
             {cell(t("Employees"), p.employees)}
           </div>
         </div>
-        <BuyerVerificationBox pipelineId={f.pipelineId} focusId={`verification-${f.id}`} />
+        <BuyerVerificationBox companyId={f.companyId} pipelineId={f.pipelineId} focusId={`verification-${f.id}`} />
       </div>
     </>
   );
