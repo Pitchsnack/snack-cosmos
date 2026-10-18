@@ -17,3 +17,4 @@ export const CHECK_WORDS = [
  ['You can act for the company','ท่านมีอำนาจดำเนินการแทนบริษัท'],
 ] as const;
 export function dateText(date:string|null,thai=false){return date?new Date(date).toLocaleDateString(thai?'th-TH':'en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Bangkok'}):'—';}
+export function useVerificationDate(){const {language}=useTranslation();return (date:string|null)=>dateText(date,language==='th');}
