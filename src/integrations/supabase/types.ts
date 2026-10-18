@@ -1576,6 +1576,97 @@ export type Database = {
           },
         ]
       }
+      company_verification_checks: {
+        Row: {
+          id: string
+          key: number
+          recorded_at: string
+          result: string
+          source_label: string | null
+          values: Json
+          verification_id: string
+        }
+        Insert: {
+          id?: string
+          key: number
+          recorded_at?: string
+          result: string
+          source_label?: string | null
+          values?: Json
+          verification_id: string
+        }
+        Update: {
+          id?: string
+          key?: number
+          recorded_at?: string
+          result?: string
+          source_label?: string | null
+          values?: Json
+          verification_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_verification_checks_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "company_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_verifications: {
+        Row: {
+          affidavit_issued_on: string | null
+          checked_at: string | null
+          company_id: string
+          created_at: string
+          id: string
+          included: boolean
+          order_id: string | null
+          ready_by: string | null
+          record_details: Json
+          requested_by: string | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          affidavit_issued_on?: string | null
+          checked_at?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          included?: boolean
+          order_id?: string | null
+          ready_by?: string | null
+          record_details?: Json
+          requested_by?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          affidavit_issued_on?: string | null
+          checked_at?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          included?: boolean
+          order_id?: string | null
+          ready_by?: string | null
+          record_details?: Json
+          requested_by?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_verifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_enquiries: {
         Row: {
           company: string | null
@@ -4527,8 +4618,11 @@ export type Database = {
           users_mode: string | null
           users_n: number | null
           value_cap_thb_m: number | null
+          verification_business_days: number
           verification_mode: string | null
           verification_price_thb: number | null
+          verification_recheck_business_days: number
+          verification_vat_pct: number
         }
         Insert: {
           badge_style: string
@@ -4560,8 +4654,11 @@ export type Database = {
           users_mode?: string | null
           users_n?: number | null
           value_cap_thb_m?: number | null
+          verification_business_days?: number
           verification_mode?: string | null
           verification_price_thb?: number | null
+          verification_recheck_business_days?: number
+          verification_vat_pct?: number
         }
         Update: {
           badge_style?: string
@@ -4593,8 +4690,11 @@ export type Database = {
           users_mode?: string | null
           users_n?: number | null
           value_cap_thb_m?: number | null
+          verification_business_days?: number
           verification_mode?: string | null
           verification_price_thb?: number | null
+          verification_recheck_business_days?: number
+          verification_vat_pct?: number
         }
         Relationships: []
       }
@@ -6662,6 +6762,154 @@ export type Database = {
           },
         ]
       }
+      verification_access: {
+        Row: {
+          buyer_account_id: string
+          company_id: string
+          id: string
+          open_until: string | null
+          opened_at: string | null
+          order_id: string | null
+          requested_at: string | null
+          via: string
+        }
+        Insert: {
+          buyer_account_id: string
+          company_id: string
+          id?: string
+          open_until?: string | null
+          opened_at?: string | null
+          order_id?: string | null
+          requested_at?: string | null
+          via: string
+        }
+        Update: {
+          buyer_account_id?: string
+          company_id?: string
+          id?: string
+          open_until?: string | null
+          opened_at?: string | null
+          order_id?: string | null
+          requested_at?: string | null
+          via?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_access_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "verification_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_orders: {
+        Row: {
+          amount: number
+          buyer_account_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          method: string
+          ordered_by: string
+          paid_at: string | null
+          receipt_no: string | null
+          ref: string
+          refund_requested_at: string | null
+          slip: string | null
+          status: string
+          tax_invoice_no: string | null
+          total: number
+          vat: number
+        }
+        Insert: {
+          amount: number
+          buyer_account_id?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          method: string
+          ordered_by: string
+          paid_at?: string | null
+          receipt_no?: string | null
+          ref?: string
+          refund_requested_at?: string | null
+          slip?: string | null
+          status?: string
+          tax_invoice_no?: string | null
+          total: number
+          vat: number
+        }
+        Update: {
+          amount?: number
+          buyer_account_id?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          method?: string
+          ordered_by?: string
+          paid_at?: string | null
+          receipt_no?: string | null
+          ref?: string
+          refund_requested_at?: string | null
+          slip?: string | null
+          status?: string
+          tax_invoice_no?: string | null
+          total?: number
+          vat?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_usage: {
+        Row: {
+          buyer_account_id: string
+          company_id: string
+          consumed_at: string
+          id: string
+          returned_at: string | null
+          term_start: string
+        }
+        Insert: {
+          buyer_account_id: string
+          company_id: string
+          consumed_at?: string
+          id?: string
+          returned_at?: string | null
+          term_start: string
+        }
+        Update: {
+          buyer_account_id?: string
+          company_id?: string
+          consumed_at?: string
+          id?: string
+          returned_at?: string | null
+          term_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_usage_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       withdrawal_feedback: {
         Row: {
           created_at: string
@@ -6920,6 +7168,30 @@ export type Database = {
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean
+      }
+      verification_business_due: {
+        Args: { _days: number; _from: string }
+        Returns: string
+      }
+      verification_can_read: {
+        Args: { _company: string; _uid: string }
+        Returns: boolean
+      }
+      verification_nda_valid: {
+        Args: { _company: string; _uid: string }
+        Returns: boolean
+      }
+      verification_open: {
+        Args: { _company: string; _uid: string }
+        Returns: Json
+      }
+      verification_owner: {
+        Args: { _company: string; _uid: string }
+        Returns: boolean
+      }
+      verification_start_included: {
+        Args: { _company: string }
+        Returns: undefined
       }
     }
     Enums: {
