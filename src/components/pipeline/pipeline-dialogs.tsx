@@ -124,7 +124,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
   const [tab, setTab] = useState<"fin" | "val">(initialTab);
   const [allRatios, setAllRatios] = useState(false);
   const [valTab, setValTab] = useState<"summary" | "methods" | "adjustments" | "peers">("summary");
-  const [finTab, setFinTab] = useState<"overview" | "info" | "statements" | "ratios">("overview");
+  const [finTab, setFinTab] = useState<"overview" | "statements" | "ratios">("overview");
 
   const company = sample ? sample.company : p.parties.sellerCompany;
   const cashOf = (y: number) => sample?.cash[y] ?? null;
@@ -184,7 +184,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
             <>
               <div className="sticky top-0 z-10 -mx-6 mb-1 border-b border-[#EAECEF] bg-white px-6 pb-[14px] pt-[10px]">
                 <div role="tablist" onKeyDown={tabArrowNav} className="inline-flex gap-0.5 rounded-[9px] border border-[#DCE3EF] bg-white p-[3px]">
-                  {([["overview", "Overview"], ["info", "Company Info"], ["statements", "Financial Statements"], ["ratios", "Financial Ratios"]] as const).map(([k, l]) => (
+                  {([["overview", "Overview"], ["statements", "Financial Statements"], ["ratios", "Financial Ratios"]] as const).map(([k, l]) => (
                     <button key={k} type="button" role="tab" aria-selected={finTab === k} tabIndex={finTab === k ? 0 : -1} onClick={() => setFinTab(k)}
                       className={cn("h-[30px] whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-medium", finTab === k ? "bg-[#F6A823] text-[#0E162F] shadow-[inset_0_0_0_1px_#DD971F]" : "text-[#5B6576] hover:bg-[#F1F4F9]")}>{l}</button>
                   ))}
@@ -223,13 +223,6 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                     <div className="text-[11.5px] text-[#6B7280]">{s}</div>
                   </div>
                 ))}
-              </div>
-              </>)}
-              {finTab === "info" && (<>
-              <Caption>Company info</Caption>
-              <div className="grid grid-cols-2 gap-x-6">
-                <Rows rows={[...(sample ? [["Company name", sample.legalName] as [string, string]] : []), ["Registration no.", data.info.registration], ["Registered capital", data.info.capital != null ? `฿${data.info.capital.toLocaleString()}` : null], ["Founded", data.info.founded]]} />
-                <Rows rows={[["Employees", data.info.employees], ["Directors", data.info.directors], ["Shareholders", data.info.shareholders]]} />
               </div>
               </>)}
               {(sample || !data.full) && finTab === "statements" && (<>

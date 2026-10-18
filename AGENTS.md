@@ -32,3 +32,5 @@
 - workspace-scope.server.ts scopes sellers; Control sees all. Analytics: Admin readers, DB sign-ins.
 
 - Sidebar sharing: email-bound, retry-safe claims without deletion; no code seats/free plans. Requests post only to Help Desk.
+
+- Company verification: shared report DTO whitelists company/director fields; buyer reads require the selected pipeline NDA plus live entitlement; atomic allowance writes and six-check certification are database-enforced.

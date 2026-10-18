@@ -1,4 +1,6 @@
 import { ManagedBadge } from "@/components/common/managed-badge";
+import { BuyerVerificationBox } from '@/components/company-verification/buyer-box';
+import { VerificationBadge } from '@/components/company-verification/verification-badge';
 import { AdvisorFavourites } from "@/components/marketplace/advisor-marketplace";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -315,6 +317,7 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate text-[16px] font-bold">{p.companyName}</span>
               <span className="inline-flex h-[22px] flex-none items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 text-[11.5px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />{t("NDA approved")}</span>
+              {f.listing.certified && <Button variant="ghost" size="sm" aria-label={t('Company verification report')} onClick={()=>{const box=document.getElementById(`verification-${f.id}`);box?.scrollIntoView({behavior:'smooth',block:'center'});box?.focus();}}><VerificationBadge buyer company={p.companyName} insideControl /></Button>}
             </div>
             <div className="truncate text-[12.5px] text-[#6A7181]">{code}</div>
           </div>
@@ -358,6 +361,7 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
             {cell(t("Employees"), p.employees)}
           </div>
         </div>
+        <BuyerVerificationBox companyId={f.companyId} pipelineId={f.pipelineId} focusId={`verification-${f.id}`} />
       </div>
     </>
   );
