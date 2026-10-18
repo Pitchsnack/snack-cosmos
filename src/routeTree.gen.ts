@@ -42,6 +42,7 @@ import { Route as AuthenticatedMyFinancialsRouteImport } from './routes/_authent
 import { Route as AuthenticatedMyPageRouteImport } from './routes/_authenticated/my-page'
 import { Route as AuthenticatedMyRiskRouteImport } from './routes/_authenticated/my-risk'
 import { Route as AuthenticatedMyValuationRouteImport } from './routes/_authenticated/my-valuation'
+import { Route as AuthenticatedMyVerificationRouteImport } from './routes/_authenticated/my-verification'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedPeerComparablesRouteImport } from './routes/_authenticated/peer-comparables'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
@@ -289,6 +290,12 @@ const AuthenticatedMyValuationRoute =
   AuthenticatedMyValuationRouteImport.update({
     id: '/my-valuation',
     path: '/my-valuation',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMyVerificationRoute =
+  AuthenticatedMyVerificationRouteImport.update({
+    id: '/my-verification',
+    path: '/my-verification',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedNotificationsRoute =
@@ -759,6 +766,7 @@ export interface FileRoutesByFullPath {
   '/my-page': typeof AuthenticatedMyPageRoute
   '/my-risk': typeof AuthenticatedMyRiskRoute
   '/my-valuation': typeof AuthenticatedMyValuationRoute
+  '/my-verification': typeof AuthenticatedMyVerificationRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
@@ -864,6 +872,7 @@ export interface FileRoutesByTo {
   '/my-page': typeof AuthenticatedMyPageRoute
   '/my-risk': typeof AuthenticatedMyRiskRoute
   '/my-valuation': typeof AuthenticatedMyValuationRoute
+  '/my-verification': typeof AuthenticatedMyVerificationRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/peer-comparables': typeof AuthenticatedPeerComparablesRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
@@ -968,6 +977,7 @@ export interface FileRoutesById {
   '/_authenticated/my-page': typeof AuthenticatedMyPageRoute
   '/_authenticated/my-risk': typeof AuthenticatedMyRiskRoute
   '/_authenticated/my-valuation': typeof AuthenticatedMyValuationRoute
+  '/_authenticated/my-verification': typeof AuthenticatedMyVerificationRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/peer-comparables': typeof AuthenticatedPeerComparablesRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
@@ -1079,6 +1089,7 @@ export interface FileRouteTypes {
     | '/my-page'
     | '/my-risk'
     | '/my-valuation'
+    | '/my-verification'
     | '/notifications'
     | '/peer-comparables'
     | '/preferences'
@@ -1184,6 +1195,7 @@ export interface FileRouteTypes {
     | '/my-page'
     | '/my-risk'
     | '/my-valuation'
+    | '/my-verification'
     | '/notifications'
     | '/peer-comparables'
     | '/preferences'
@@ -1287,6 +1299,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-page'
     | '/_authenticated/my-risk'
     | '/_authenticated/my-valuation'
+    | '/_authenticated/my-verification'
     | '/_authenticated/notifications'
     | '/_authenticated/peer-comparables'
     | '/_authenticated/preferences'
@@ -1622,6 +1635,13 @@ declare module '@tanstack/react-router' {
       path: '/my-valuation'
       fullPath: '/my-valuation'
       preLoaderRoute: typeof AuthenticatedMyValuationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-verification': {
+      id: '/_authenticated/my-verification'
+      path: '/my-verification'
+      fullPath: '/my-verification'
+      preLoaderRoute: typeof AuthenticatedMyVerificationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/notifications': {
@@ -2390,6 +2410,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMyPageRoute: typeof AuthenticatedMyPageRoute
   AuthenticatedMyRiskRoute: typeof AuthenticatedMyRiskRoute
   AuthenticatedMyValuationRoute: typeof AuthenticatedMyValuationRoute
+  AuthenticatedMyVerificationRoute: typeof AuthenticatedMyVerificationRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPeerComparablesRoute: typeof AuthenticatedPeerComparablesRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
@@ -2437,6 +2458,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMyPageRoute: AuthenticatedMyPageRoute,
   AuthenticatedMyRiskRoute: AuthenticatedMyRiskRoute,
   AuthenticatedMyValuationRoute: AuthenticatedMyValuationRoute,
+  AuthenticatedMyVerificationRoute: AuthenticatedMyVerificationRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPeerComparablesRoute: AuthenticatedPeerComparablesRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
