@@ -1,18 +1,19 @@
 import { verificationNdaValid, type VerificationRecord, type VerificationState } from './company-verification';
 import { planAccess } from './plan-access.server';
 
-export async function verificationScope(sb: any, userId: string, companyId: string) {
+export async function verificationScope(sb: any, userId: string, companyId: string, pipelineId?:string) {
   const { data: owner, error } = await sb.rpc('verification_owner', { _uid: userId, _company: companyId });
   if (error) throw new Error('Company access could not be checked');
   if (owner) return { buyer: false };
-  const { data: p, error: e } = await sb.from('deal_pipelines').select('status,nda_approved_at,nda_expires_at').eq('buyer_user_id',userId).eq('startup_id',companyId).order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(!pipelineId)throw new Error('An approved, valid NDA is required');
+  const { data: p, error: e } = await sb.from('deal_pipelines').select('status,nda_approved_at,nda_expires_at').eq('id',pipelineId).eq('buyer_user_id',userId).eq('startup_id',companyId).maybeSingle();
   if (e || !verificationNdaValid(p)) throw new Error('An approved, valid NDA is required');
   return { buyer: true };
 }
 
 const text = (x: unknown): string | null => typeof x === 'string' && x.trim() ? x : typeof x === 'number' ? String(x) : null;
-export async function verificationState(sb: any, userId: string, companyId: string): Promise<VerificationState> {
-  const { buyer } = await verificationScope(sb,userId,companyId);
+export async function verificationState(sb: any, userId: string, companyId: string,pipelineId?:string): Promise<VerificationState> {
+  const { buyer } = await verificationScope(sb,userId,companyId,pipelineId);
   const plan = await planAccess(userId);
   if (!buyer && plan.plan?.verification_mode === 'included' && !plan.ended) {
     const { error } = await sb.rpc('verification_start_included',{ _company:companyId });
