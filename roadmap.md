@@ -1,4 +1,8 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Company verification: data/access and atomic buyer allowances
+- [ ] Company verification: shared report, sample, badges, seller and buyer screens, Thai
+- [ ] Company verification: My Financials link and remove Company Info
+- [ ] Company verification: rules tests and 1440/1024/390 English/Thai checks
 - [x] Sidebar Share and hover upgrade cards; bilingual plan request dialog
 - [x] Share invitation email, protected sending and email-bound signup access
 - [x] Sidebar sharing rules tests; seller live invitation/Help desk request checks
