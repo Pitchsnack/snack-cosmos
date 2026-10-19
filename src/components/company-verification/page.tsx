@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {Link,useNavigate} from '@tanstack/react-router';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useServerFn} from '@tanstack/react-start';
-import {BadgeCheck,Check,Clock,Crown,Eye,Lock,Pencil,ChevronDown} from 'lucide-react';
+import {ArrowLeft,BadgeCheck,Check,Clock,Crown,Eye,Lock,Pencil,ChevronDown} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {HatSkeleton} from '@/components/ui/PitchSnackLoader';
 import {getMyReportsState,saveMyReportsPrefs} from '@/lib/my-reports.functions';

@@ -3,7 +3,7 @@
 .cv-page,.cv-report,.cv-window,.cv-checkout{color:var(--cv-ink);font-family:var(--font-body);font-size:14px;line-height:1.5;letter-spacing:0}
 .cv-page{padding:26px 28px;background:var(--cv-page);min-height:calc(100vh - 80px)}
 .cv-page-header,.cv-report-title,.cv-section-heading,.cv-group-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.cv-page-header{align-items:flex-end;margin-bottom:20px}.cv-page h1{font-size:26px;font-weight:700;line-height:1.25}.cv-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--cv-muted)}
+.cv-page-header{align-items:flex-end;margin-bottom:20px}.cv-page h1{font-size:26px;font-weight:700;line-height:1.25}.cv-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--cv-muted)}.cv-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--cv-muted);margin-bottom:12px}.cv-back svg{flex:none}.cv-back:hover{color:var(--cv-blue)}
 .cv-page p,.cv-report p{margin:5px 0 0}.cv-page-header p{color:var(--cv-muted);font-size:13.5px}.cv-company-select{display:flex;align-items:center;gap:10px;max-width:100%;border:1px solid var(--cv-line);border-radius:8px;background:var(--cv-paper);padding:8px 10px}.cv-company-select select{background:transparent;font-size:13px;max-width:240px;min-width:80px}
 .cv-report-title{margin:0 0 18px}.cv-report-title h2{font-size:22px;color:var(--cv-navy);font-weight:700}.dark .cv-report-title h2{color:var(--cv-ink)}.cv-report-title p{font-size:12.5px;color:var(--cv-muted)}
 .cv-report button,.cv-page button,.cv-window button,.cv-checkout button{letter-spacing:0;gap:7px;font-size:13px}.cv-report button[data-slot=button],.cv-page button[data-slot=button]{height:36px}
