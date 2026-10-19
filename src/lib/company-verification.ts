@@ -17,7 +17,7 @@ export type VerificationState = {
   price: number | null; vatPct: number; businessDays: number; recheckDays: number;
   access: { via: string; openedAt: string | null; requestedAt: string | null; until: string | null } | null;
   payment: { status: string; total: number; ref: string; at: string | null } | null;
-  email: string | null; viewer: string; firm: string; record: VerificationRecord | null; checks: VerificationCheck[];
+  email: string | null; viewer: string; firm: string; record: VerificationRecord | null; checks: VerificationCheck[]; adminView?: boolean;
 };
 export function verificationNdaValid(p: { status: string; nda_approved_at: string | null; nda_expires_at?: string | null } | null, now = Date.now()) {
   if (!p?.nda_approved_at || ['declined','withdrawn','revoked','ended'].includes(p.status)) return false;
