@@ -3,8 +3,8 @@ import { useRouter } from '@tanstack/react-router';
 import type { RouterHistory } from '@tanstack/history';
 import { createOfferHistory } from '@/lib/tools-offer-history';
 const histories = new WeakMap<RouterHistory, ReturnType<typeof createOfferHistory>>();
-export function trackToolsOfferHistory(history: RouterHistory) {
-  if (histories.has(history)) return;
+export function trackToolsOfferHistory(history: RouterHistory | undefined) {
+  if (!history || histories.has(history)) return;
   const tracker = createOfferHistory({ pathname: history.location.pathname, index: history.location.state.__TSR_index });
   histories.set(history, tracker);
   history.subscribe(({ location, action }) => tracker.record({ pathname: location.pathname, index: location.state.__TSR_index }, action.type));
