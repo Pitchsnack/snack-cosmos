@@ -8,7 +8,9 @@ export const getCompanyVerification=createServerFn({method:'GET'}).middleware([r
   if(!owner&&!nda) throw new Error('An approved, valid NDA is required');
   const {supabaseAdmin}=await import('@/integrations/supabase/client.server');
   const {verificationState}=await import('./company-verification.server');
-  return verificationState(supabaseAdmin,context.userId,data.companyId,data.pipelineId);
+  const state=await verificationState(supabaseAdmin,context.userId,data.companyId,data.pipelineId);
+  const {data:admin}=await context.supabase.rpc('is_account_admin',{_uid:context.userId});
+  return {...state,adminView:admin===true};
 });
 export const openCompanyVerification=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(d=>input.parse(d)).handler(async({context,data})=>{
   if(!data.pipelineId)throw new Error('An approved, valid NDA is required');
