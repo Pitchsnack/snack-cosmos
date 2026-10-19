@@ -15,7 +15,9 @@ const text = (x: unknown): string | null => typeof x === 'string' && x.trim() ? 
 export async function verificationState(sb: any, userId: string, companyId: string,pipelineId?:string): Promise<VerificationState> {
   const { buyer } = await verificationScope(sb,userId,companyId,pipelineId);
   const plan = await planAccess(userId);
-  if (!buyer && plan.plan?.verification_mode === 'included' && !plan.ended) {
+  const {data:me}=await sb.from('users').select('account_role').eq('id',userId).maybeSingle();
+  const isAdmin=me?.account_role==='admin';
+  if (!buyer && !isAdmin && plan.plan?.verification_mode === 'included' && !plan.ended) {
     const { error } = await sb.rpc('verification_start_included',{ _company:companyId });
     if (error) throw new Error('The included check could not be started');
   }
