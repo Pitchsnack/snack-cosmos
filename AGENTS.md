@@ -2,10 +2,10 @@
 
 - Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
-- Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx.
+- Other report prices in report-catalog.json; orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
-- Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
+- Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts); sellers get toPublic() only until NDA.
 - Loading: meta.pageLoading; LOI: config/loi-request.json; tour: marketplaceMenu/data-tour + mark_welcome_tour_seen().
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked → oldest → drawn; private public-images bucket via server fns.
 - Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
@@ -23,9 +23,9 @@
 - Admin Plans publish via one atomic DB function; public cards share one renderer of live plan rows.
 - Contact enquiries: sendContactEnquiry (rate-limited); email-identity.ts drives replies and Sending rules.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
-- Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches so both sides match alike. Buyer Company Type follows buyer_relation (trigger).
+- Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
-- Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner (withOwnerEmails).
+- Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner.
 - Listing names Admin-only (zz trigger); NULL = ref_no.
 - Handover: run_by; profile-handover.functions.ts only.
 - Buyer verification: one investor_profile_verifications row per investor via triggers; readers use profile-verification.server.ts; sellers get only investor_is_verified(). Control holds many profiles.

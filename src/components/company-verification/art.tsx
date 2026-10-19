@@ -1,3 +1,4 @@
+import {useVerificationCopy} from './copy';
 import type { VerificationCheck } from '@/lib/company-verification';
 export function VerificationSeal({fix=false}:{fix?:boolean}){
  const points=Array.from({length:44},(_,i)=>{const r=i%2?40:44,t=(i*180/22-90)*Math.PI/180;return `${48+r*Math.cos(t)},${46+r*Math.sin(t)}`;}).join(' ');
@@ -8,8 +9,8 @@ export function VerificationSeal({fix=false}:{fix?:boolean}){
  </svg>;
 }
 export function VerificationRing({checks}:{checks:VerificationCheck[]}){
- const pt=(a:number)=>{const t=(a-90)*Math.PI/180;return `${42+34*Math.cos(t)} ${42+34*Math.sin(t)}`;};
- return <div className="cv-ring-wrap"><svg viewBox="0 0 84 84" aria-hidden="true">{Array.from({length:6},(_,i)=><path key={i} className={checks.find(c=>c.key===i+1)?.result==='match'?'cv-arc-ok':'cv-arc-fix'} d={`M${pt(i*60+3)} A34 34 0 0 1 ${pt((i+1)*60-3)}`}/>)}</svg><div><b>{checks.filter(c=>c.result==='match').length}/6</b><small>match</small></div></div>;
+ const c=useVerificationCopy();const pt=(a:number)=>{const t=(a-90)*Math.PI/180;return `${42+34*Math.cos(t)} ${42+34*Math.sin(t)}`;};
+ return <div className="cv-ring-wrap"><svg viewBox="0 0 84 84" aria-hidden="true">{Array.from({length:6},(_,i)=><path key={i} className={checks.find(c=>c.key===i+1)?.result==='match'?'cv-arc-ok':'cv-arc-fix'} d={`M${pt(i*60+3)} A34 34 0 0 1 ${pt((i+1)*60-3)}`}/>)}</svg><div><b>{checks.filter(c=>c.result==='match').length}/6</b><small>{c('match')}</small></div></div>;
 }
 export function VerificationLines(){return <svg className="cv-result-lines" viewBox="0 0 240 240" aria-hidden="true"><g>{Array.from({length:12},(_,k)=><ellipse key={k} cx="120" cy="120" rx="104" ry="38" transform={`rotate(${k*15} 120 120)`}/>)}<circle cx="120" cy="120" r="30"/><circle cx="120" cy="120" r="112"/></g></svg>;}
 export function VerificationPicture({report=false,fix=false}:{report?:boolean;fix?:boolean}){return <svg className="cv-picture" viewBox="0 0 140 100" aria-hidden="true">{report?<><rect className="cv-paper-back" x="46" y="14" width="58" height="76" rx="7"/><rect className="cv-paper" x="36" y="8" width="58" height="76" rx="7"/>{[35,44,53,62].map((y,i)=><rect className="cv-paper-line" key={y} x="44" y={y} width={42-i*3} height="4" rx="2"/>)}<circle className="cv-private-disc" cx="96" cy="74" r="17"/><g className="cv-private-lock"><rect x="88" y="73" width="16" height="12" rx="2"/><path d="M91 73v-5a5 5 0 0 1 10 0v5"/></g></>:<><rect className="cv-paper" x="10" y="8" width="120" height="86" rx="12"/><path className="cv-cover" d="M10 20a12 12 0 0 1 12-12h96a12 12 0 0 1 12 12v14H10Z"/><rect className="cv-paper-line" x="18" y="44" width="70" height="8" rx="4"/><rect className="cv-paper-line" x="18" y="57" width="48" height="6" rx="3"/><rect className="cv-badge-outline" x="15" y="68" width="66" height="20" rx="10"/><text className="cv-picture-caption" x="23" y="81">{fix?'No badge yet':'✓ Certified'}</text></>}</svg>;}
