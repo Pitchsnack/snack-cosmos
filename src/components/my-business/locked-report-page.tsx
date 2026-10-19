@@ -17,6 +17,8 @@ import { useHasFinancials } from "@/hooks/use-has-financials";
 import catalog from "@/config/report-catalog.json";
 import { ReportViewer } from "@/components/pipeline/pipeline-dialogs";
 import { makeSampleReport } from "@/lib/sample-report";
+import { ToolsOfferClose } from "@/components/common/tools-offer-close";
+import { useToolsOfferClose } from "@/hooks/use-tools-offer-close";
 
 type Kind = "financials" | "valuation" | "risk";
 
@@ -69,6 +71,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
   const orderFor = (k: Kind) => orders.find((o) => o.kind === k || (o.kind === "bundle" && k !== "risk"));
   const order = orderFor(kind);
   const delivered = order?.status === "delivered";
+  const closeOffer = useToolsOfferClose(!(company && delivered && hasData), !!sample);
   const needsFinancials = kind !== "financials" && orderFor("financials")?.status !== "delivered";
   const qc = useQueryClient();
   const payFn = useServerFn(createMyReportOrder);
@@ -134,9 +137,10 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
 
       <div className={embedded ? "relative min-h-[640px]" : "relative mt-4 min-h-[640px]"}>
         <SampleBehind />
-        <div className="absolute inset-0 flex items-start justify-center bg-gradient-to-b from-background/20 to-background/90 px-2 pt-14">
-          <div className="w-full max-w-[640px] rounded-2xl border border-profile-line bg-card p-7 shadow-2xl">
-            <div className="mb-1.5 flex items-center gap-3.5">
+        <div onClick={closeOffer} className="absolute inset-0 flex items-start justify-center bg-gradient-to-b from-background/20 to-background/90 px-2 pt-14">
+          <div onClick={e => e.stopPropagation()} className="tools-offer-card w-full max-w-[640px] rounded-2xl border border-profile-line bg-card p-7 shadow-2xl">
+            <ToolsOfferClose onClose={closeOffer} />
+            <div className="tools-offer-heading mb-1.5 flex items-center gap-3.5">
               <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 text-primary-foreground shadow-lg shadow-violet-500/30"><Lock className="h-6 w-6" /></div>
               <div>
                 <span className="inline-block rounded-full bg-profile-soft px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-profile">{t.tag} · {reportPrice(kind)} one-time</span>
