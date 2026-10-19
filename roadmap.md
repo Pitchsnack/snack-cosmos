@@ -1,4 +1,6 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Tools offers: shared close button, backdrop/Escape return and financials/valuation history grouping
+- [ ] Tools offers: navigation tests and English/Thai light/dark screen checks at 1440/1024/390
 - [x] Company verification: data/access and atomic buyer allowances
 - [x] Company verification: shared report, sample, badges, seller and buyer screens, Thai
 - [ ] Company verification payments and transfer submission: no payment provider/bank setup
