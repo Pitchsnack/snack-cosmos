@@ -15,7 +15,7 @@ export const openCompanyVerification=createServerFn({method:'POST'}).middleware(
   const {data:nda,error}=await context.supabase.rpc('verification_pipeline_valid',{_uid:context.userId,_company:data.companyId,_pipeline:data.pipelineId});
   if(error||!nda)throw new Error('An approved, valid NDA is required');
   const {supabaseAdmin}=await import('@/integrations/supabase/client.server');
-  const {error:e}=await supabaseAdmin.rpc('verification_open',{_uid:context.userId,_company:data.companyId});
+  const {error:e}=await supabaseAdmin.rpc('verification_open_pipeline',{_uid:context.userId,_company:data.companyId,_pipeline:data.pipelineId});
   if(e)throw new Error(e.message);
   const {verificationState}=await import('./company-verification.server');
   return verificationState(supabaseAdmin,context.userId,data.companyId,data.pipelineId);

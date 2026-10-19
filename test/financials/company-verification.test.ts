@@ -10,4 +10,6 @@ describe('Company verification business rules',()=>{
  it('accepts an approved, unexpired NDA',()=>{expect(verificationNdaValid({status:'active',nda_approved_at:'2026-10-01',nda_expires_at:'2027-10-01'},Date.parse('2026-10-18'))).toBe(true);});
  it('certifies only all six matching checks',()=>{const checks:VerificationCheck[]=Array.from({length:6},(_,i)=>({key:i+1,result:'match',detail:null,source:null}));expect(verificationResult(checks)).toBe('certified');expect(verificationResult(checks.slice(0,5))).toBe('checking');});
  it('one mismatch needs a fix',()=>{const checks:VerificationCheck[]=Array.from({length:6},(_,i)=>({key:i+1,result:i===1?'mismatch':'match',detail:null,source:null}));expect(verificationResult(checks)).toBe('needs_fix');});
+ it('duplicate checks cannot certify a company',()=>{const checks:VerificationCheck[]=Array.from({length:6},()=>({key:1,result:'match',detail:null,source:null}));expect(verificationResult(checks)).toBe('checking');});
+ it('withdrawn NDA cannot expose the report',()=>{expect(verificationNdaValid({status:'withdrawn',nda_approved_at:'2026-10-01',nda_expires_at:'2027-10-01'},Date.parse('2026-10-18'))).toBe(false);});
 });
