@@ -7185,6 +7185,10 @@ export type Database = {
         Args: { _company: string; _uid: string }
         Returns: Json
       }
+      verification_open_pipeline: {
+        Args: { _company: string; _pipeline: string; _uid: string }
+        Returns: Json
+      }
       verification_owner: {
         Args: { _company: string; _uid: string }
         Returns: boolean
