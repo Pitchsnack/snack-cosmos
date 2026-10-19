@@ -715,6 +715,13 @@
       "when": 1792354915610,
       "tag": "0101_verification_validation_and_badge_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1792383992962,
+      "tag": "0102_verification_selected_deal_open",
+      "breakpoints": true
     }
   ]
 }
