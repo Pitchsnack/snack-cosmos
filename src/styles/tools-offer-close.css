@@ -1,0 +1,31 @@
+ :root {
+  --offer-close-icon: #6B7280;
+  --offer-close-hover: #EEF4FF;
+  --offer-close-line: #BFDBFE;
+  --offer-close-hover-icon: #1D4ED8;
+  --offer-close-pressed: #DBEAFE;
+  --offer-close-focus: #2563EB;
+}
+.dark {
+  --offer-close-icon: var(--muted-foreground);
+  --offer-close-hover: var(--accent);
+  --offer-close-line: var(--border);
+  --offer-close-hover-icon: var(--accent-foreground);
+  --offer-close-pressed: var(--muted);
+  --offer-close-focus: var(--ring);
+}
+.tools-offer-card { position: relative; }
+.tools-offer-heading { padding-right: 34px; min-width: 0; }
+.tools-offer-heading > div:last-child { min-width: 0; }
+.tools-offer-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  display: grid; place-items: center; width: 34px; height: 34px;
+  padding: 0; border: 0; border-radius: 8px; background: transparent;
+  color: var(--offer-close-icon); transition: background-color .12s, color .12s;
+}
+.tools-offer-close svg { width: 18px; height: 18px; }
+.tools-offer-close:hover { background: var(--offer-close-hover); color: var(--offer-close-hover-icon); box-shadow: inset 0 0 0 1px var(--offer-close-line); }
+.tools-offer-close:active { background: var(--offer-close-pressed); }
+.tools-offer-close:focus-visible { outline: 2px solid var(--offer-close-focus); outline-offset: 2px; box-shadow: none; }
+@media(max-width:600px) { .tools-offer-close { top: 8px; right: 8px; } }
+@media(prefers-reduced-motion:reduce) { .tools-offer-close { transition: none; } }
