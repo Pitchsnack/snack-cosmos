@@ -2,9 +2,9 @@
 
 - Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
-- Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx (prefs: seller_report_prefs).
+- Report prices in report-catalog.json; paid orders in report_orders; My Financials unlocks only on delivered orders; Financials/Valuation share my-reports-page.tsx.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
-- Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest admin receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
+- Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts, service client scoped to caller); sellers get toPublic() only until NDA.
 - Loading: meta.pageLoading; LOI: config/loi-request.json; tour: marketplaceMenu/data-tour + mark_welcome_tour_seen().
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked → oldest → drawn; private public-images bucket via server fns.
@@ -33,4 +33,4 @@
 
 - Sidebar sharing: email-bound, retry-safe claims without deletion; no code seats/free plans. Requests post only to Help Desk.
 
-- Company verification: shared report DTO whitelists company/director fields; buyer reads require the selected pipeline NDA plus live entitlement; atomic allowance writes and six-check certification are database-enforced.
+- Company verification: whitelisted DTOs; selected-deal NDA + entitlement on buyer reads; DB-enforced quotas and six-check badge.
