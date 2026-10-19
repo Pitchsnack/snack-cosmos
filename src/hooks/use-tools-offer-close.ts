@@ -9,6 +9,11 @@ export function trackToolsOfferHistory(history: RouterHistory | undefined) {
   histories.set(history, tracker);
   history.subscribe(({ location, action }) => tracker.record({ pathname: location.pathname, index: location.state.__TSR_index }, action.type));
 }
+export function ToolsOfferHistoryTracker() {
+  const router = useRouter();
+  useEffect(() => { trackToolsOfferHistory(router.history); }, [router]);
+  return null;
+}
 export function useToolsOfferClose(visible: boolean, windowOpen = false) {
   const router = useRouter();
   const close = useCallback(() => {
