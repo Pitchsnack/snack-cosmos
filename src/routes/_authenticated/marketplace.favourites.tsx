@@ -239,52 +239,56 @@ function FavouritesPage() {
   );
 }
 
-function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void }) {
+function FavPanel({ f, view, savedIds, toggleSave }: { f: Favourite; view: FavView; savedIds: Set<string>; toggleSave: (id: string) => void }) {
   const { t } = useTranslation();
   const code = [f.listing.codeName, f.listing.refNo].filter(Boolean).join(" · ");
   const [sentName, setSentName] = useState<string | null>(null);
   if (sentName) return <NdaSentDialog name={sentName} onClose={() => setSentName(null)} />;
-  if (f.status === "approved" && f.priv) return <PrivatePanel f={f} code={code} />;
-  if (f.status === "requested") return <RequestedPanel f={f} code={code} savedIds={savedIds} />;
-  return (
-    <>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
-        <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
-        <div className="flex shrink-0 gap-2">
-          <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
-          <NdaButton listingId={f.id} onRequested={() => setSentName(f.listing?.codeName || f.listing?.refNo || t("This listing"))} />
-        </div>
-      </div>
-      <div className="overflow-y-auto p-5"><ListingDetail t={f} /></div>
-    </>
-  );
+  if (view === "private" && f.priv) return <PrivatePanel f={f} code={code} />;
+  return <PublicPanel f={f} savedIds={savedIds} toggleSave={toggleSave} onSent={setSentName} />;
 }
 
-function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; savedIds: Set<string> }) {
+function PublicPanel({ f, savedIds, toggleSave, onSent }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void; onSent: (name: string) => void }) {
   const { t } = useTranslation();
   const withdraw = useServerFn(withdrawNdaRequest);
   const invalidate = useInvalidateListings();
   const [busy, setBusy] = useState(false);
+  const l = f.listing;
+  const name = l.codeName || l.refNo || t("This listing");
+  const chip = f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <StarredBadge />;
+  const actions = f.status === "approved" ? (
+    <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">{t("Open full profile")}</Link></Button>
+  ) : f.status === "requested" ? (
+    <Button variant="outline" size="sm" disabled={busy} onClick={async () => {
+      setBusy(true);
+      try { await withdraw({ data: { id: f.id } });
+        toast.success(savedIds.has(f.id) ? `${t("Request withdrawn.")} ${name} ${t("stays in Favourites as starred.")}` : `${t("Request withdrawn.")} ${name} ${t("has left Favourites.")}`); invalidate(); }
+      catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    }}>{t("Withdraw request")}</Button>
+  ) : (
+    <div className="flex shrink-0 gap-2">
+      <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
+      <NdaButton listingId={f.id} onRequested={() => onSent(name)} />
+    </div>
+  );
   return (
     <>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
-          <NdaRequestedBadge />
+        <div className="flex min-w-0 items-center gap-3">
+          <SectorArt art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[46px] w-[46px] flex-none rounded-[10px]" />
+          <div className="min-w-0">
+            <div className="truncate text-[18px] font-bold leading-tight">{l.codeName || l.headline || l.refNo}</div>
+            <div className="mt-1 flex min-w-0 items-center gap-2">
+              {chip}
+              <span className="truncate text-[12.5px] text-[#6A7181]">{[l.refNo, l.sector].filter(Boolean).join(" · ")}</span>
+            </div>
+          </div>
         </div>
-        <Button variant="outline" size="sm" disabled={busy} onClick={async () => {
-          setBusy(true);
-          try { await withdraw({ data: { id: f.id } }); const name = f.listing.codeName || f.listing.refNo || t("This listing");
-            toast.success(savedIds.has(f.id) ? `${t("Request withdrawn.")} ${name} ${t("stays in Favourites as starred.")}` : `${t("Request withdrawn.")} ${name} ${t("has left Favourites.")}`); invalidate(); }
-          catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-        }}>{t("Withdraw request")}</Button>
+        {actions}
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
-        <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
-          <Clock className="mt-0.5 h-4 w-4 flex-none" />
-          <span>{t("You requested the NDA on")} {fmtDate(f.ndaRequestedAt)}. {t("The seller usually replies within 2 days, and the private view opens here once they approve.")}</span>
-        </div>
-        <ListingDetail t={f} requested />
+        <FavViewLine view="public">{t("What every buyer sees in Browse listings.")} {publicStatusSentence(t, f.status, "company", fmtDate(f.ndaRequestedAt))}</FavViewLine>
+        <ListingDetail t={f} requested={f.status === "requested"} approved={f.status === "approved"} />
       </div>
     </>
   );
