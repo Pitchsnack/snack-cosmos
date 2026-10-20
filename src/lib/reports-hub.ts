@@ -1,14 +1,15 @@
 import type { StartupFinancials } from './financials.functions';
 import type { VerificationState } from './company-verification';
 
-export const REPORT_KEYS = ['verification','shareholders','statements','pnl','risk','credit'] as const;
+export const REPORT_KEYS = ['verification','shareholders','statements','valuation','pnl','risk','credit'] as const;
 export type HubKey = typeof REPORT_KEYS[number];
 export type HubMode = 'buyer' | 'seller' | 'admin';
 export type HubState = 'shared' | 'yours' | 'plan' | 'buy' | 'on_order' | 'asked';
 export const HUB_LAUNCH = '2026-10-20T01:02:00Z';
 export const hubIsNew = (now = Date.now()) => now >= Date.parse(HUB_LAUNCH) && now < Date.parse(HUB_LAUNCH) + 30 * 86400000;
-export const HUB_NAMES: Record<HubKey,string> = {verification:'Company verification',shareholders:'Shareholders',statements:'Financial statements',pnl:'P&L analysis',risk:'Company risk',credit:'Credit risk'};
-export const HUB_THAI: Record<HubKey,string> = {verification:'ตรวจสอบบริษัท',shareholders:'ผู้ถือหุ้น',statements:'งบการเงิน',pnl:'วิเคราะห์กำไรขาดทุน',risk:'ความเสี่ยงบริษัท',credit:'ความเสี่ยงเครดิต'};
+export const HUB_NAMES: Record<HubKey,string> = {verification:'Company verification',shareholders:'Shareholders',statements:'Financial statements',valuation:'Company valuation',pnl:'P&L analysis',risk:'Company risk',credit:'Credit risk'};
+export const HUB_THAI: Record<HubKey,string> = {verification:'ตรวจสอบบริษัท',shareholders:'ผู้ถือหุ้น',statements:'งบการเงิน',valuation:'มูลค่าบริษัท',pnl:'วิเคราะห์กำไรขาดทุน',risk:'ความเสี่ยงบริษัท',credit:'ความเสี่ยงเครดิต'};
+export function sellerHubRoleAllowed(role:string|null){return role==='seller'||role==='admin';}
 export function buyerReportState(o: {shared:boolean;yours:boolean;asked:boolean;ready:boolean;inPlan:boolean}): HubState {
   if(o.shared)return 'shared'; if(o.yours)return 'yours'; if(o.asked)return 'asked'; if(!o.ready)return 'on_order'; return o.inPlan?'plan':'buy';
 }

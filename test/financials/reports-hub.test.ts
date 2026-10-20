@@ -1,8 +1,10 @@
 import {describe,it,expect} from 'vitest';
-import {REPORT_KEYS,buyerReportState,accessibleCount,hubNdaActive,hubIsNew,HUB_LAUNCH,type HubState} from '../../src/lib/reports-hub';
+import {REPORT_KEYS,buyerReportState,accessibleCount,hubNdaActive,hubIsNew,HUB_LAUNCH,sellerHubRoleAllowed,type HubState} from '../../src/lib/reports-hub';
 import catalog from '../../src/config/report-catalog.json';
-describe('Six-report hub rules',()=>{
- it('has the six required report types',()=>expect(REPORT_KEYS).toEqual(['verification','shareholders','statements','pnl','risk','credit']));
+describe('Seven-report hub rules',()=>{
+ it('has the seven required report types in order',()=>expect(REPORT_KEYS).toEqual(['verification','shareholders','statements','valuation','pnl','risk','credit']));
+ it('allows Control Admin to read seller reports',()=>expect(sellerHubRoleAllowed('admin')).toBe(true));
+ it('allows sellers but not buyers or advisors in the seller report view',()=>{expect(sellerHubRoleAllowed('seller')).toBe(true);expect(sellerHubRoleAllowed('buyer')).toBe(false);expect(sellerHubRoleAllowed('advisor')).toBe(false);});
  it('prices Shareholders at THB 1500',()=>expect(catalog.prices.shareholders).toBe(1500));
  it('free sharing precedes plan and purchased access',()=>expect(buyerReportState({shared:true,yours:true,asked:false,ready:true,inPlan:true})).toBe('shared'));
  it('counts Shared, Yours and In plan only',()=>{const states:HubState[]=['shared','yours','plan','buy','on_order','asked'];expect(accessibleCount(states.map(buyerState=>({buyerState})))).toBe(3);});

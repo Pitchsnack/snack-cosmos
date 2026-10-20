@@ -1,4 +1,4 @@
-import { accessibleCount,buyerReportState,hubNdaActive,HUB_NAMES,REPORT_KEYS,type HubData,type HubKey,type HubMode,type HubRow,type Audience,type HubContent,type ShareholderContent } from './reports-hub';
+import { accessibleCount,buyerReportState,hubNdaActive,HUB_NAMES,REPORT_KEYS,sellerHubRoleAllowed,type HubData,type HubKey,type HubMode,type HubRow,type Audience,type HubContent,type ShareholderContent } from './reports-hub';
 import {typeName} from './investor-bands';
 import { currentStep,STEPS } from './pipeline-state';
 import { planAccess,requireRole } from './plan-access.server';
@@ -9,7 +9,7 @@ export async function hubScope(ctx:any, mode:HubMode, companyId?:string,pipeline
   if(!companyId)throw new Error('Choose a company');
   if(mode==='admin') {const {data}=await ctx.supabase.rpc('is_control',{_user_id:ctx.userId});if(!data)throw new Error('Control Admin only');}
   else if(mode==='buyer'){await requireRole(ctx.userId,['buyer']);if(!p||p.buyer_user_id!==ctx.userId||!hubNdaActive(p))throw new Error('An approved active NDA is required');}
-  else {if(await requireRole(ctx.userId,['seller'])==='admin')throw new Error('Use the Admin report view');const {data}=await ctx.supabase.rpc('verification_owner',{_uid:ctx.userId,_company:companyId});if(!data)throw new Error('Not your company');const {scopeStartupIds}=await import('./workspace-scope.server');if(!(await scopeStartupIds(ctx.userId,[companyId])).includes(companyId))throw new Error('Not in your workspace');}
+  else {if(!sellerHubRoleAllowed(await requireRole(ctx.userId,['seller'])))throw new Error('Seller view unavailable');const {data}=await ctx.supabase.rpc('verification_owner',{_uid:ctx.userId,_company:companyId});if(!data)throw new Error('Not your company');const {scopeStartupIds}=await import('./workspace-scope.server');if(!(await scopeStartupIds(ctx.userId,[companyId])).includes(companyId))throw new Error('Not in your workspace');}
   const {supabaseAdmin}=await import('@/integrations/supabase/client.server');return {sb:supabaseAdmin as any,companyId,p};
 }
 const getRows=async(q:any)=>{const {data,error}=await q;if(error){console.error('[reports-hub] query failed',error.message);throw new Error('Report data could not be loaded');}return data??[];};
@@ -54,7 +54,7 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
   const yearCount=new Set(fs.map((r:any)=>r.fiscal_year)).size;const years=yearCount>=5?5:yearCount>=3?3:1;
   const rows:HubRow[]=REPORT_KEYS.map(key=>{
     const r=records.find((r:any)=>r.report_key===key);const kind=key==='statements'?'financials':key;
-    const o=orders.find((o:any)=>o.kind===kind||(key==='statements'&&o.kind==='bundle'));
+    const o=orders.find((o:any)=>o.kind===kind||(['statements','valuation'].includes(key)&&o.kind==='bundle'));
     let authorisedAt=r?.authorised_at??o?.delivered_at??null;
     let generatedAt=r?.generated_at??o?.generated_at??null;
     let readyBy=r?.ready_by??o?.due_at??null;
@@ -65,7 +65,7 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
     // Persisted grant metadata is distinct from report readiness: ordering never fabricates content.
     const planKey=key==='statements'?`fs${years}`:key;const pr=planRows.find((r:any)=>r.report_key===planKey);const total=pr?.mode==='number'?pr.per_term:null;const used=key==='verification'?verificationUses.length:uses.filter((u:any)=>u.kind===`report:${planKey}`).length;const left=total==null?null:Math.max(0,total-used);const inPlan=!!pr&&pr.mode!=='none'&&(pr.mode!=='number'||(left??0)>0);
     const audience:Audience[]=[];
-    for(const d of ps){if(!hubNdaActive(d))continue;const b=buyerFor(d.buyer_user_id);const sh=shares.find((s:any)=>s.pipeline_id===d.id);const keys=sh?.report_keys??[];const shared=!!sh&&(keys.includes(key)||(key==='statements'&&sh.financials));const own=access.find((x:any)=>x.buyer_id===d.buyer_user_id&&x.report_key===key)??(key==='verification'?va.find((x:any)=>x.buyer_account_id===d.buyer_user_id&&(x.via==='paid'||x.via==='contract'||x.open_until&&Date.parse(x.open_until)>Date.now())):null);const req=requests.find((x:any)=>x.buyer_id===d.buyer_user_id&&x.report_key===key&&x.status==='open');
+    for(const d of ps){if(!hubNdaActive(d))continue;const b=buyerFor(d.buyer_user_id);const sh=shares.find((s:any)=>s.pipeline_id===d.id);const keys=sh?.report_keys??[];const shared=!!sh&&(keys.includes(key)||(key==='statements'&&sh.financials)||(key==='valuation'&&sh.valuation));const own=access.find((x:any)=>x.buyer_id===d.buyer_user_id&&x.report_key===key)??(key==='verification'?va.find((x:any)=>x.buyer_account_id===d.buyer_user_id&&(x.via==='paid'||x.via==='contract'||x.open_until&&Date.parse(x.open_until)>Date.now())):null);const req=requests.find((x:any)=>x.buyer_id===d.buyer_user_id&&x.report_key===key&&x.status==='open');
       if(shared&&status==='ready')audience.push({pipelineId:d.id,buyerId:b.id,name:b.name,sub:b.sub,ref:b.ref,contact:b.contact,state:'shared',at:sh.shared_at,openedAt:sh.report_opened_at?.[key]??(key==='statements'?d.report_viewed_at:null),allowDownload:!!sh.allow_download});
       else if(own)audience.push({pipelineId:d.id,buyerId:b.id,name:b.name,sub:b.sub,ref:b.ref,contact:b.contact,state:'yours',at:own.opened_at,openedAt:own.last_opened_at??own.opened_at,allowDownload:true});
       if(req&&!shared)audience.push({pipelineId:d.id,buyerId:b.id,name:b.name,sub:b.sub,ref:b.ref,contact:b.contact,state:'asked',at:req.requested_at,openedAt:null,allowDownload:false});

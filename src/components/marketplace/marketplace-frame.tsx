@@ -440,10 +440,6 @@ export function marketplaceMenu(persona: Persona) {
     persona === "seller"
       ? [
           { to: "/my-reports", label: "My reports", icon: FileText },
-          { to: "/my-verification", label: "Company verification report", icon: BadgeCheck },
-          { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
-          { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
-          { to: "/my-risk", label: "Company Risk", icon: ShieldAlert, lock: "risk" },
         ]
       : [];
   const account: MenuItem[] = advisor
