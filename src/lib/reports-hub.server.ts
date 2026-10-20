@@ -11,7 +11,7 @@ export async function hubScope(ctx:any, mode:HubMode, companyId?:string,pipeline
   else {await requireRole(ctx.userId,['seller']);const {data}=await ctx.supabase.rpc('verification_owner',{_uid:ctx.userId,_company:companyId});if(!data)throw new Error('Not your company');const {scopeStartupIds}=await import('./workspace-scope.server');if(!(await scopeStartupIds(ctx.userId,[companyId])).includes(companyId))throw new Error('Not in your workspace');}
   const {supabaseAdmin}=await import('@/integrations/supabase/client.server');return {sb:supabaseAdmin as any,companyId,p};
 }
-const getRows=async(q:any)=>{const {data,error}=await q;if(error)throw new Error('Report data could not be loaded');return data??[];};
+const getRows=async(q:any)=>{const {data,error}=await q;if(error){console.error('[reports-hub] query failed',error.message);throw new Error('Report data could not be loaded');}return data??[];};
 const text=(x:any):string|null=>typeof x==='string'&&x.trim()?x:null;
 const num=(x:any):number|null=>typeof x==='number'&&Number.isFinite(x)?x:null;
 
