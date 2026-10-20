@@ -37,3 +37,4 @@
 - [ ] Admin add/remove advisor photos (check storage rules)
 - [ ] On-screen tests seller/buyer/advisor/Control + screenshots + delete test data
 - [ ] Confirm buyer profile save on screen
+- [ ] Test new-seller sign-up + wizard buttons (code given by Dan)
