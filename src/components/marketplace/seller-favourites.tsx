@@ -94,7 +94,7 @@ export function SellerFavourites() {
   const card = (f: SellerFavourite, open: boolean, onOpen: (v: FavView) => void, onView: (v: FavView) => void, reserve?: boolean) => (
     <FavViewCard key={f.id} side="seller" name={f.priv?.investor_name ?? f.codeName} hasPrivate={!!f.priv} view={viewOf(f)} open={open}
       onView={onView} reserveTabs={reserve}
-      privateBody={f.priv ? <InvestorListItem i={toListItem(f)} selected={false} onSelect={() => onOpen("private")} badge={<StatusBadge s="approved" />} /> : undefined}
+      privateBody={f.priv ? <InvestorListItem i={toListItem(f)} selected={false} onSelect={() => onOpen("private")} wideBadge badge={<StatusBadge s="approved" />} /> : undefined}
       publicBody={<PublicInvestorCard showManaged i={f} coverBadge={coverBadge(f)} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => onOpen("public")} topRight={star(f)} />} />
   );
   const panel = (f: SellerFavourite) => {

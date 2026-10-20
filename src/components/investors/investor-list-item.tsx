@@ -35,7 +35,10 @@ export function InvestorListItem({
   selected,
   onSelect,
   badge,
+  wideBadge,
 }: {
+  /** Favourites: room for the wider "NDA approved" badge. */
+  wideBadge?: boolean;
   i: InvestorListItemDTO;
   selected: boolean;
   onSelect: () => void;
@@ -84,7 +87,7 @@ export function InvestorListItem({
         <FavoriteToggle id={i.id} entity="investors" size="md" className="absolute right-3 top-3" />
       )}
 
-      <div className={cn("flex w-full items-start gap-3", badge ? "pr-14" : "pr-8")}>
+      <div className={cn("flex w-full items-start gap-3", badge ? (wideBadge ? "pr-28" : "pr-14") : "pr-8")}>
         <div className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {i.logo_signed_url ? (
             <img src={i.logo_signed_url} alt="" className="h-full w-full object-contain" />
