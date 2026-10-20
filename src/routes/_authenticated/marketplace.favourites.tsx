@@ -308,26 +308,22 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
     <>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-[34px] w-[34px] flex-none place-items-center overflow-hidden rounded-[9px] border border-border bg-card text-[12px] font-bold">
+          <div className="grid h-[46px] w-[46px] flex-none place-items-center overflow-hidden rounded-[10px] border border-border bg-card text-[13px] font-bold">
             {logo ? <img src={logo} alt="" className="h-full w-full object-contain" /> : ini}
           </div>
           <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-[16px] font-bold">{p.companyName}</span>
+            <div className="truncate text-[18px] font-bold leading-tight">{p.companyName}</div>
+            <div className="mt-1 flex min-w-0 items-center gap-2">
               <span className="inline-flex h-[22px] flex-none items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 text-[11.5px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />{t("NDA approved")}</span>
+              <span className="truncate text-[12.5px] text-[#6A7181]">{code}</span>
               {f.listing.certified && <Button variant="ghost" size="sm" aria-label={t('Company verification report')} onClick={()=>{const box=document.getElementById(`verification-${f.id}`);box?.scrollIntoView({behavior:'smooth',block:'center'});box?.focus();}}><VerificationBadge buyer company={p.companyName} insideControl /></Button>}
             </div>
-            <div className="truncate text-[12.5px] text-[#6A7181]">{code}</div>
           </div>
         </div>
         <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">{t("Open full profile")}</Link></Button>
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
-        <div className="flex flex-wrap items-start gap-2 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-[14px] py-[11px] text-[13.5px] text-[#166534]">
-          <LockOpen className="mt-0.5 h-4 w-4 flex-none" />
-          <span className="rounded-[6px] bg-[#E8F6EE] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide">{t("Private view")}</span>
-          <span className="min-w-0 flex-1">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</span>
-        </div>
+        <FavViewLine view="private">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>
         <PublicListingCard l={f.listing} deal={f} wrapMeta badge={<ApprovedBadge />}
           priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
         {p.description && (
