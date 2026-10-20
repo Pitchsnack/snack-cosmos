@@ -1,0 +1,3 @@
+import {useTranslation} from '@/i18n/language';
+import {HUB_NAMES,HUB_THAI,type HubKey} from '@/lib/reports-hub';
+export function useHubCopy(admin=false){const {language}=useTranslation();const th=!admin&&language==='th';return {th,c:(en:string,thai:string)=>th?thai:en,name:(key:HubKey)=>th?HUB_THAI[key]:HUB_NAMES[key],date:(at:string|null)=>at?new Date(at).toLocaleDateString(th?'th-TH':'en-GB',{day:'numeric',month:'short',timeZone:'Asia/Bangkok'}):'—',year:(y:number)=>th?`ปี ${y<2400?y+543:y}`:`FY${y>2400?y-543:y}`};}

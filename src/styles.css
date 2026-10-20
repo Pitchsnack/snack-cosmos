@@ -9,6 +9,7 @@
 @import "./styles/public-contact.css";
 @import "./styles/company-verification.css";
 @import "./styles/tools-offer-close.css";
+@import "./styles/reports-hub.css";
 @source "../src";
 @import "tw-animate-css";
 
@@ -72,6 +73,20 @@
 }
 
 :root {
+  --hub-buyer: #4338CA;
+  --hub-buyer-soft: #EEF0FF;
+  --hub-teal: #0E5E6F;
+  --hub-success: #15803D;
+  --hub-success-soft: #ECFDF3;
+  --hub-warning: #B45309;
+  --hub-warning-soft: #FEF3C7;
+  --hub-surface: #F6F7F9;
+  --hub-ink: #151A28;
+  --hub-white: #FFFFFF;
+  --hub-overlay: rgba(17,24,39,.45);
+  --hub-shadow: 0 30px 70px rgba(16,24,40,.28);
+  --hub-hover: #EEF4FF;
+  --hub-hover-line: #BFDBFE;
   --request-track: #EEF0F4;
   --request-caption: #6A7181;
   --plan-seller: #F6A823;
