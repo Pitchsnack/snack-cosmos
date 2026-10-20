@@ -199,7 +199,7 @@ export function ValuationTab({
     queryKey: ["peer-set", appliedSector, appliedModel],
     enabled: !reportData && !!appliedSector,
     queryFn: () =>
-      fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
+      {if(!appliedSector)throw new Error("Choose a sector");return fetchPeerSet({ data: { sector: appliedSector, businessModel: appliedModel } });},
   });
 
   const peerSet=reportData?.peerSet??peerQuery.data;
@@ -249,7 +249,7 @@ export function ValuationTab({
   const adjustmentQuery = useQuery({
     queryKey: adjKey,
     enabled: !reportData && !!year,
-    queryFn: () => fetchAdjustments({ data: { startupId, fiscalYear: year! } }),
+    queryFn: () => {if(!year)throw new Error("Choose a fiscal year");return fetchAdjustments({ data: { startupId, fiscalYear: year } });},
   });
   const adjData=reportData?.adjustments??adjustmentQuery.data;
   const adjustments = adjData?.adjustments ?? [];
@@ -258,8 +258,7 @@ export function ValuationTab({
   // The one peer chosen for the Benchmark, kept per startup and fiscal year.
   const persistSettings = useServerFn(saveValuationSettings);
   const choosePeer = useMutation({
-    mutationFn: (benchmarkPeerId: string | null) =>
-      persistSettings({ data: { startupId, fiscalYear: year!, benchmarkPeerId } }),
+    mutationFn: (benchmarkPeerId: string | null) => {if(!year)throw new Error("Choose a fiscal year");return persistSettings({ data: { startupId, fiscalYear: year, benchmarkPeerId } });},
     onSuccess: () => queryClient.invalidateQueries({ queryKey: adjKey }),
     onError: (e: Error) => toast.error(e.message || "Could not save the peer"),
   });

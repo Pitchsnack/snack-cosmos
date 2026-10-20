@@ -1,14 +1,14 @@
 # Decisions
 
 - Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
-- Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
+- Admin review uses MyBusinessProfiles in AdminReviewCtx; StartupCard serves My Business/Directory; private_notes stay server-only.
 - Reports: reports-hub scopes company/deal reads; report_shares gates buyer DTOs. Private company_report_records hold analyst content. Sellers unlock on delivery; one seven-report hub reuses viewers and legacy redirects. Valuation generation needs usable peer-based inputs, not import alone.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts); sellers get toPublic() only until NDA.
 - Loading: meta.pageLoading; LOI: config/loi-request.json; tour: marketplaceMenu/data-tour + mark_welcome_tour_seen().
 - Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked → oldest → drawn; private public-images bucket via server fns.
-- Seller Browse investors reads only listBrowseInvestors (investor-browse.functions.ts): code names, ranges and revenue minimum; filters match public ranges only (investor-browse.ts), never exact figures.
+- Seller Browse uses listBrowseInvestors: code names, ranges, revenue minimum; investor-browse.ts filters public ranges, never exact figures.
 - Buyer investor profiles go live only by Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
 - Email alerts: wording defaults in src/config/email-alerts.ts, Admin overrides/switches in email_alert_settings; every send goes through sendAlert (email-alerts.server.ts), which checks the user switch and logs to email_alert_log; pipeline emails fire from pipeline log() so steps and emails never drift.
 - Advisor view: users.advisor_view gates it; advisor stars live in advisor_favourites (view='advisor'), separate from buyer/seller saves; advisor-marketplace.tsx reuses existing cards/panels and only public loaders (listAdvisorMarketplace).
