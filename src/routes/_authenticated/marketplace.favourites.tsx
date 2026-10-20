@@ -145,6 +145,11 @@ function FavouritesPage() {
   const current = items.find((f) => f.id === selected) ?? items[0] ?? null;
   const modal = all.find((f) => f.id === modalId) ?? null;
   const open = (id: string) => (view === "split" && wide ? setSelected(id) : setModalId(id));
+  // Each card keeps its front tab while on the page; Private view first.
+  const [views, setViews] = useState<Record<string, FavView>>({});
+  const viewOf = (f: Favourite): FavView => (f.priv ? views[f.id] ?? "private" : "public");
+  const setView = (id: string, v: FavView) => setViews((m) => ({ ...m, [id]: v }));
+  const anyTabs = items.some((f) => !!f.priv);
 
   return (
     <div className="space-y-6">
@@ -188,20 +193,22 @@ function FavouritesPage() {
         </div>
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((f) => <FavCard key={f.id} f={f} onSelect={() => setModalId(f.id)} expanded={false} savedIds={savedIds} toggleSave={toggleSave} />)}
+          {items.map((f) => <FavCard key={f.id} f={f} view={viewOf(f)} open={false} onView={(v) => setView(f.id, v)}
+            onOpen={(v) => { setView(f.id, v); setModalId(f.id); }} expanded={false} savedIds={savedIds} toggleSave={toggleSave} reserveTabs={anyTabs} />)}
         </div>
       ) : view === "split" ? (
         <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
-          <div className="space-y-3">
+          <div className="space-y-5">
             {items.map((f) => (
-              <FavCard key={f.id} f={f} selected={wide && current?.id === f.id} onSelect={() => open(f.id)}
+              <FavCard key={f.id} f={f} view={viewOf(f)} open={wide && current?.id === f.id}
+                onView={(v) => { setView(f.id, v); open(f.id); }} onOpen={(v) => { setView(f.id, v); open(f.id); }}
                 expanded={expandedId === f.id} onToggleExpand={() => setExpandedId((e) => (e === f.id ? null : f.id))}
                 savedIds={savedIds} toggleSave={toggleSave} />
             ))}
           </div>
           {wide && current && (
             <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
-              <FavPanel f={current} savedIds={savedIds} toggleSave={toggleSave} />
+              <FavPanel key={`${current.id}:${viewOf(current)}`} f={current} view={viewOf(current)} savedIds={savedIds} toggleSave={toggleSave} />
             </div>
           )}
         </div>
