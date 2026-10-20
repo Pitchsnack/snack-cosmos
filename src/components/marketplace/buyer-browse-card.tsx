@@ -188,7 +188,9 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
 }
 
 /** The one public investor card (Browse investors, Favourites, My Company). Only public fields reach it. */
-export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel, editable, tag, showManaged }: {
+export function PublicInvestorCard({ i, className, onClick, selected, topRight, empty = "Not stated", status, cardFooter, panel, editable, tag, showManaged, coverBadge }: {
+  /** Replaces the "Name hidden" cover badge (Favourites status). */
+  coverBadge?: React.ReactNode;
   /** Browse pages and Favourites only: the "Managed by" badge on PitchSnack's private clients. */
   showManaged?: boolean;
   /** Optional tag at the top of the card body (e.g. "Looking for companies like yours"). */
@@ -220,7 +222,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
       <BuyerCover type={i.type} src={(i as { coverUrl?: string | null }).coverUrl} className="h-[110px]">
         <div ref={fit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
         <span ref={fit.left as React.RefObject<HTMLSpanElement>} className={cn("absolute left-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground", panel && managed ? "top-3" : "top-2.5")}>
-          <EyeOff className="h-3 w-3" />Name hidden
+          {coverBadge ?? <><EyeOff className="h-3 w-3" />Name hidden</>}
         </span>
         {(topRight || status || managed) && <div ref={fit.right} className={cn("absolute flex items-center gap-1.5", panel && managed ? "right-3 top-3" : "right-2.5 top-2.5")}>{managed && <ManagedBadge size={status ? "sm" : panel ? "panel" : "card"} border={!!status} shadow={!status} hatOnly={fit.level >= 1} />}{status && <StatusPill status={status} />}{topRight}</div>}
       </BuyerCover>

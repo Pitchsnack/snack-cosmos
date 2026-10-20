@@ -116,7 +116,11 @@ export function FilterMenu({ label, heading, hint, foot, options, value, onChang
   );
 }
 
-export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, match }: {
+export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, match, header, lead }: {
+  /** Favourites: replaces the header row. */
+  header?: React.ReactNode;
+  /** Favourites: first line of the body (the view line); also drops the locked box. */
+  lead?: React.ReactNode;
   i: PublicInvestor; saved: boolean; onSave: () => void; ndaApproved?: boolean;
   /** Criteria this investor's mandate matched (seller view). */
   match?: string[];
@@ -142,15 +146,16 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, m
   ];
   return (
     <>
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
+      {header ?? <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {pill}
           <span className="min-w-0 truncate text-sm font-semibold">{i.codeName} · {i.refNo}</span>
           {!ndaApproved && !i.name && <NameAfterNdaPill />}
         </div>
         {actions ?? <StarBtn saved={saved} onClick={onSave} />}
-      </div>
+      </div>}
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+        {lead}
         {match && <MatchBox side="seller" criteria={match} />}
         <PublicInvestorCard showManaged i={i} panel />
         <div>
@@ -162,7 +167,7 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, m
             </div>
           ))}
         </div>
-        <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-3.5 dark:border-amber-800 dark:bg-amber-950/30">
+        {!lead && <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-3.5 dark:border-amber-800 dark:bg-amber-950/30">
           <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
             <Lock className="h-3.5 w-3.5" />Shown after the NDA is approved
           </div>
@@ -171,7 +176,7 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, m
               <span key={c} className="rounded-full border border-amber-200 bg-background px-2 py-0.5 text-[11.5px] text-amber-800 dark:border-amber-800 dark:text-amber-300">{c}</span>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
     </>
   );
