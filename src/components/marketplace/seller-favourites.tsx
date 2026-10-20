@@ -17,6 +17,12 @@ import { InvestorDetail, StarBtn, useSavedInvestors } from "@/components/marketp
 import { listSellerFavourites, type SellerFavourite, type SellerFavStatus } from "@/lib/investor-browse.functions";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
+import { InvestorListItem } from "@/components/investors/investor-list-item";
+import { InvestorDetailPanel, Section, type InvestorDetail as InvestorDetailDTO } from "@/components/investors/investor-detail-panel";
+import type { InvestorListItem as InvestorListItemDTO } from "@/lib/investors.functions";
+import { typeName } from "@/lib/investor-bands";
+import { FavViewCard, FavViewLine, publicStatusSentence, type FavView } from "@/components/marketplace/fav-view-card";
+import { Users } from "lucide-react";
 import { BrowseHeader, MatchTag, NdaInfoStrip, PlanEndedBar, useBrowseMatches } from "@/components/marketplace/browse-header";
 
 type Filter = "all" | SellerFavStatus;
@@ -78,28 +84,79 @@ export function SellerFavourites() {
 
   const current = items.find((f) => f.id === selected) ?? items[0] ?? null;
   const modal = all.find((f) => f.id === modalId) ?? null;
+  const [views, setViews] = useState<Record<string, FavView>>({});
+  const viewOf = (f: SellerFavourite): FavView => (f.priv ? views[f.id] ?? "private" : "public");
+  const setView = (id: string, v: FavView) => setViews((m) => ({ ...m, [id]: v }));
+  const anyTabs = items.some((f) => !!f.priv);
   const star = (f: SellerFavourite) => (f.status === "saved" ? <StarBtn saved={savedIds.has(f.id)} onClick={() => toggle(f.id)} /> : <NdaStar />);
-  const badgeRow = (f: SellerFavourite) => (
-    <div className="flex flex-wrap items-center gap-2 px-1 pb-1 text-[11.5px] text-muted-foreground">
-      <StatusBadge s={f.status} />
-      {f.status !== "saved" && <span>{f.listingCode ? `${f.listingCode} · ` : ""}{fmtDate(f.at)}</span>}
-    </div>
+  const coverBadge = (f: SellerFavourite) => f.status === "approved" ? <><LockOpen className="h-3 w-3 text-[#15803D]" />{t("NDA approved")}</>
+    : f.status === "requested" ? <><Clock className="h-3 w-3 text-[#B45309]" />{t("NDA requested")}</> : undefined;
+  const card = (f: SellerFavourite, open: boolean, onOpen: (v: FavView) => void, onView: (v: FavView) => void, reserve?: boolean) => (
+    <FavViewCard key={f.id} side="seller" name={f.priv?.investor_name ?? f.codeName} hasPrivate={!!f.priv} view={viewOf(f)} open={open}
+      onView={onView} reserveTabs={reserve}
+      privateBody={f.priv ? <InvestorListItem i={toListItem(f)} selected={false} onSelect={() => onOpen("private")} wideBadge badge={<StatusBadge s="approved" />} /> : undefined}
+      publicBody={<PublicInvestorCard showManaged i={f} coverBadge={coverBadge(f)} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => onOpen("public")} topRight={star(f)} />} />
   );
-  const panel = (f: SellerFavourite) => (
-    <>
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-5 py-2.5">
-        <StatusBadge s={f.status} />
-        {f.status === "approved" && (
-          <Link to="/marketplace/pipeline" className="ml-auto text-[12.5px] font-semibold text-[#2563EB] hover:underline">{t("Open in Pipeline")}</Link>
-        )}
-        {f.status === "requested" && (
-          <Link to="/marketplace/pipeline" className="ml-auto text-[12.5px] font-semibold text-[#2563EB] hover:underline">{t("Review NDA request")}</Link>
-        )}
-        {f.status === "saved" && <span className="ml-auto"><ConnectButton investorId={f.id} investorRef={f.refNo} /></span>}
+  const panel = (f: SellerFavourite) => {
+    const v = viewOf(f);
+    const actions = f.status === "approved" ? <Link to="/marketplace/pipeline" className="text-[12.5px] font-semibold text-[#2563EB] hover:underline">{t("Open in Pipeline")}</Link>
+      : f.status === "requested" ? <Link to="/marketplace/pipeline" className="text-[12.5px] font-semibold text-[#2563EB] hover:underline">{t("Review NDA request")}</Link>
+      : <ConnectButton investorId={f.id} investorRef={f.refNo} />;
+    const p = f.priv;
+    if (v === "private" && p) {
+      const header = (
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-[46px] w-[46px] flex-none place-items-center overflow-hidden rounded-[10px] border border-border bg-card text-[13px] font-bold">
+              {p.logo_signed_url ? <img src={p.logo_signed_url} alt="" className="h-full w-full object-contain" /> : p.investor_name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-[18px] font-bold leading-tight">{p.investor_name}</div>
+              <div className="mt-1 flex min-w-0 items-center gap-2"><StatusBadge s="approved" /><span className="truncate text-[12.5px] text-muted-foreground">{[typeName(p.investor_type, f.actsFor ?? []), f.refNo].filter(Boolean).join(" · ")}</span></div>
+            </div>
+          </div>
+          <span className="shrink-0">{actions}</span>
+        </div>
+      );
+      return (
+        <>
+          {header}
+          <div className="min-h-0 flex-1 overflow-y-auto p-5">
+            <InvestorDetailPanel id={f.id} showEdit={false} onSelectStartup={() => {}} buyer={{
+              data: toDetail(f),
+              intro: <FavViewLine view="private">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>,
+              afterPortfolio: p.people.length ? (
+                <Section icon={Users} title={t("Decision makers")}>
+                  <div className="space-y-2">{p.people.map((m, k) => (
+                    <div key={k} className="flex items-center gap-3 text-[13px]">
+                      <div className="min-w-0 flex-1"><div className="truncate">{m.name}</div><div className="truncate text-[12px] text-muted-foreground">{m.role}</div></div>
+                      <div className="shrink-0 text-right text-[12px] text-muted-foreground"><div>{m.email}</div><div>{m.phone}</div></div>
+                    </div>
+                  ))}</div>
+                </Section>
+              ) : undefined,
+            }} />
+          </div>
+        </>
+      );
+    }
+    const header = (
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[10px] border border-border bg-muted"><TypeIcon type={f.type} className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="min-w-0">
+            <div className="truncate text-[18px] font-bold leading-tight">{f.codeName}</div>
+            <div className="mt-1 flex min-w-0 items-center gap-2"><StatusBadge s={f.status} /><span className="truncate text-[12.5px] text-muted-foreground">{[f.refNo, f.city || f.country].filter(Boolean).join(" · ")}</span></div>
+          </div>
+        </div>
+        <span className="flex shrink-0 items-center gap-2">{actions}{star(f)}</span>
       </div>
-      <InvestorDetail i={f} ndaApproved={f.status === "approved"} saved={savedIds.has(f.id) || f.status !== "saved"} onSave={() => f.status === "saved" && toggle(f.id)} />
-    </>
-  );
+    );
+    return (
+      <InvestorDetail i={f} header={header} ndaApproved={f.status === "approved"} saved={savedIds.has(f.id) || f.status !== "saved"} onSave={() => f.status === "saved" && toggle(f.id)}
+        lead={<FavViewLine view="public">{t("What every seller sees in Browse investors.")} {publicStatusSentence(t, f.status, "investor", fmtDate(f.ndaRequestedAt))}</FavViewLine>} />
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -141,26 +198,19 @@ export function SellerFavourites() {
         </div>
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((f) => (
-            <div key={f.id}>{badgeRow(f)}<PublicInvestorCard showManaged i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => setModalId(f.id)} topRight={star(f)} /></div>
-          ))}
+          {items.map((f) => card(f, false, (v) => { setView(f.id, v); setModalId(f.id); }, (v) => setView(f.id, v), anyTabs))}
         </div>
       ) : view === "split" ? (
         <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
-          <div className="space-y-3">
-            {items.map((f) => (
-              <div key={f.id}>
-                {badgeRow(f)}
-                <PublicInvestorCard showManaged i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} selected={wide && current?.id === f.id}
-                  onClick={() => (wide ? setSelected(f.id) : setModalId(f.id))}
-                  expanded={expandedId === f.id} onToggleExpand={() => setExpandedId((e) => (e === f.id ? null : f.id))}
-                  topRight={star(f)} />
-              </div>
-            ))}
+          <div className="space-y-5">
+            {items.map((f) => {
+              const go = (v: FavView) => { setView(f.id, v); if (wide) setSelected(f.id); else setModalId(f.id); };
+              return card(f, wide && current?.id === f.id, go, go);
+            })}
           </div>
           {wide && current && (
             <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
-              {panel(current)}
+              <div key={`${current.id}:${viewOf(current)}`} className="contents">{panel(current)}</div>
             </div>
           )}
         </div>
@@ -195,4 +245,14 @@ export function SellerFavourites() {
       </Dialog>
     </div>
   );
+}
+
+function toListItem(f: SellerFavourite) {
+  const p = f.priv!;
+  return { id: f.id, ...p, ticket_size: null, related_startups: [] } as unknown as InvestorListItemDTO;
+}
+
+function toDetail(f: SellerFavourite): InvestorDetailDTO {
+  const p = f.priv!;
+  return { id: f.id, ...p, ticket_size: null, status: null, visibility: null, media: [], linked_startups: [], portfolio_investors: [] } as unknown as InvestorDetailDTO;
 }

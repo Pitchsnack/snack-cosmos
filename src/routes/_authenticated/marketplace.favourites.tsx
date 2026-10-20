@@ -27,6 +27,7 @@ import { usePersona } from "@/hooks/use-marketplace";
 import { SellerFavourites } from "@/components/marketplace/seller-favourites";
 import { NdaSentDialog } from "@/components/marketplace/buyer-invitations";
 import { cn } from "@/lib/utils";
+import { FavViewCard, FavViewLine, publicStatusSentence, type FavView } from "@/components/marketplace/fav-view-card";
 import { BrowseHeader, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
 
 export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
@@ -74,25 +75,23 @@ function StarredBadge() {
   );
 }
 
-function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, toggleSave, wrapMeta }: {
-  f: Favourite; selected?: boolean; onSelect?: () => void; expanded?: boolean; onToggleExpand?: () => void;
-  savedIds: Set<string>; toggleSave: (id: string) => void; wrapMeta?: boolean;
+function FavCard({ f, view, open, onView, onOpen, expanded, onToggleExpand, savedIds, toggleSave, reserveTabs }: {
+  f: Favourite; view: FavView; open: boolean; onView: (v: FavView) => void; onOpen: (v: FavView) => void;
+  expanded?: boolean; onToggleExpand?: () => void; savedIds: Set<string>; toggleSave: (id: string) => void; reserveTabs?: boolean;
 }) {
   const p = f.priv;
+  const star = <SaveButton square saved={savedIds.has(f.id)} nda={f.status !== "saved"} onClick={() => toggleSave(f.id)} />;
+  const publicBody = (
+    <PublicListingCard showManaged l={f.listing} deal={f} onSelect={() => onOpen("public")} expanded={expanded} onToggleExpand={onToggleExpand}
+      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : undefined} topRight={star} />
+  );
+  const privateBody = p ? (
+    <PublicListingCard l={f.listing} deal={f} onSelect={() => onOpen("private")} expanded={expanded} onToggleExpand={onToggleExpand} badge={<ApprovedBadge />}
+      priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
+  ) : undefined;
   return (
-    <PublicListingCard
-      showManaged
-      l={f.listing}
-      deal={f}
-      selected={selected}
-      onSelect={onSelect}
-      expanded={expanded}
-      onToggleExpand={onToggleExpand}
-      wrapMeta={wrapMeta}
-      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <StarredBadge />}
-      priv={p ? { name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees } : undefined}
-      topRight={f.status === "saved" ? <SaveButton square saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} /> : undefined}
-    />
+    <FavViewCard side="buyer" name={p?.companyName ?? f.listing.codeName ?? f.listing.refNo ?? ""} hasPrivate={!!p} view={view} open={open}
+      onView={onView} privateBody={privateBody} publicBody={publicBody} reserveTabs={reserveTabs} />
   );
 }
 
@@ -147,6 +146,11 @@ function FavouritesPage() {
   const current = items.find((f) => f.id === selected) ?? items[0] ?? null;
   const modal = all.find((f) => f.id === modalId) ?? null;
   const open = (id: string) => (view === "split" && wide ? setSelected(id) : setModalId(id));
+  // Each card keeps its front tab while on the page; Private view first.
+  const [views, setViews] = useState<Record<string, FavView>>({});
+  const viewOf = (f: Favourite): FavView => (f.priv ? views[f.id] ?? "private" : "public");
+  const setView = (id: string, v: FavView) => setViews((m) => ({ ...m, [id]: v }));
+  const anyTabs = items.some((f) => !!f.priv);
 
   return (
     <div className="space-y-6">
@@ -190,20 +194,22 @@ function FavouritesPage() {
         </div>
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((f) => <FavCard key={f.id} f={f} onSelect={() => setModalId(f.id)} expanded={false} savedIds={savedIds} toggleSave={toggleSave} />)}
+          {items.map((f) => <FavCard key={f.id} f={f} view={viewOf(f)} open={false} onView={(v) => setView(f.id, v)}
+            onOpen={(v) => { setView(f.id, v); setModalId(f.id); }} expanded={false} savedIds={savedIds} toggleSave={toggleSave} reserveTabs={anyTabs} />)}
         </div>
       ) : view === "split" ? (
         <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
-          <div className="space-y-3">
+          <div className="space-y-5">
             {items.map((f) => (
-              <FavCard key={f.id} f={f} selected={wide && current?.id === f.id} onSelect={() => open(f.id)}
+              <FavCard key={f.id} f={f} view={viewOf(f)} open={wide && current?.id === f.id}
+                onView={(v) => { setView(f.id, v); open(f.id); }} onOpen={(v) => { setView(f.id, v); open(f.id); }}
                 expanded={expandedId === f.id} onToggleExpand={() => setExpandedId((e) => (e === f.id ? null : f.id))}
                 savedIds={savedIds} toggleSave={toggleSave} />
             ))}
           </div>
           {wide && current && (
             <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
-              <FavPanel f={current} savedIds={savedIds} toggleSave={toggleSave} />
+              <FavPanel key={`${current.id}:${viewOf(current)}`} f={current} view={viewOf(current)} savedIds={savedIds} toggleSave={toggleSave} />
             </div>
           )}
         </div>
@@ -234,59 +240,63 @@ function FavouritesPage() {
 
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent className="max-h-[88vh] overflow-hidden p-0 sm:max-w-[860px]">
-          {modal && <div className="flex max-h-[88vh] flex-col"><FavPanel f={modal} savedIds={savedIds} toggleSave={toggleSave} /></div>}
+          {modal && <div className="flex max-h-[88vh] flex-col"><FavPanel key={`${modal.id}:${viewOf(modal)}`} f={modal} view={viewOf(modal)} savedIds={savedIds} toggleSave={toggleSave} /></div>}
         </DialogContent>
       </Dialog>
     </div>
   );
 }
 
-function FavPanel({ f, savedIds, toggleSave }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void }) {
+function FavPanel({ f, view, savedIds, toggleSave }: { f: Favourite; view: FavView; savedIds: Set<string>; toggleSave: (id: string) => void }) {
   const { t } = useTranslation();
   const code = [f.listing.codeName, f.listing.refNo].filter(Boolean).join(" · ");
   const [sentName, setSentName] = useState<string | null>(null);
   if (sentName) return <NdaSentDialog name={sentName} onClose={() => setSentName(null)} />;
-  if (f.status === "approved" && f.priv) return <PrivatePanel f={f} code={code} />;
-  if (f.status === "requested") return <RequestedPanel f={f} code={code} savedIds={savedIds} />;
-  return (
-    <>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
-        <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
-        <div className="flex shrink-0 gap-2">
-          <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
-          <NdaButton listingId={f.id} onRequested={() => setSentName(f.listing?.codeName || f.listing?.refNo || t("This listing"))} />
-        </div>
-      </div>
-      <div className="overflow-y-auto p-5"><ListingDetail t={f} /></div>
-    </>
-  );
+  if (view === "private" && f.priv) return <PrivatePanel f={f} code={code} />;
+  return <PublicPanel f={f} savedIds={savedIds} toggleSave={toggleSave} onSent={setSentName} />;
 }
 
-function RequestedPanel({ f, code, savedIds }: { f: Favourite; code: string; savedIds: Set<string> }) {
+function PublicPanel({ f, savedIds, toggleSave, onSent }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void; onSent: (name: string) => void }) {
   const { t } = useTranslation();
   const withdraw = useServerFn(withdrawNdaRequest);
   const invalidate = useInvalidateListings();
   const [busy, setBusy] = useState(false);
+  const l = f.listing;
+  const name = l.codeName || l.refNo || t("This listing");
+  const chip = f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <StarredBadge />;
+  const actions = f.status === "approved" ? (
+    <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">{t("Open full profile")}</Link></Button>
+  ) : f.status === "requested" ? (
+    <Button variant="outline" size="sm" disabled={busy} onClick={async () => {
+      setBusy(true);
+      try { await withdraw({ data: { id: f.id } });
+        toast.success(savedIds.has(f.id) ? `${t("Request withdrawn.")} ${name} ${t("stays in Favourites as starred.")}` : `${t("Request withdrawn.")} ${name} ${t("has left Favourites.")}`); invalidate(); }
+      catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    }}>{t("Withdraw request")}</Button>
+  ) : (
+    <div className="flex shrink-0 gap-2">
+      <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
+      <NdaButton listingId={f.id} onRequested={() => onSent(name)} />
+    </div>
+  );
   return (
     <>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 truncate text-sm font-semibold">{code}</span>
-          <NdaRequestedBadge />
+        <div className="flex min-w-0 items-center gap-3">
+          <SectorArt art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[46px] w-[46px] flex-none rounded-[10px]" />
+          <div className="min-w-0">
+            <div className="truncate text-[18px] font-bold leading-tight">{l.codeName || l.headline || l.refNo}</div>
+            <div className="mt-1 flex min-w-0 items-center gap-2">
+              {chip}
+              <span className="truncate text-[12.5px] text-[#6A7181]">{[l.refNo, l.sector].filter(Boolean).join(" · ")}</span>
+            </div>
+          </div>
         </div>
-        <Button variant="outline" size="sm" disabled={busy} onClick={async () => {
-          setBusy(true);
-          try { await withdraw({ data: { id: f.id } }); const name = f.listing.codeName || f.listing.refNo || t("This listing");
-            toast.success(savedIds.has(f.id) ? `${t("Request withdrawn.")} ${name} ${t("stays in Favourites as starred.")}` : `${t("Request withdrawn.")} ${name} ${t("has left Favourites.")}`); invalidate(); }
-          catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-        }}>{t("Withdraw request")}</Button>
+        {actions}
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
-        <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
-          <Clock className="mt-0.5 h-4 w-4 flex-none" />
-          <span>{t("You requested the NDA on")} {fmtDate(f.ndaRequestedAt)}. {t("The seller usually replies within 2 days, and the private view opens here once they approve.")}</span>
-        </div>
-        <ListingDetail t={f} requested />
+        <FavViewLine view="public">{t("What every buyer sees in Browse listings.")} {publicStatusSentence(t, f.status, "company", fmtDate(f.ndaRequestedAt))}</FavViewLine>
+        <ListingDetail t={f} requested={f.status === "requested"} approved={f.status === "approved"} />
       </div>
     </>
   );
@@ -310,26 +320,22 @@ function PrivatePanel({ f, code }: { f: Favourite; code: string }) {
     <>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-[34px] w-[34px] flex-none place-items-center overflow-hidden rounded-[9px] border border-border bg-card text-[12px] font-bold">
+          <div className="grid h-[46px] w-[46px] flex-none place-items-center overflow-hidden rounded-[10px] border border-border bg-card text-[13px] font-bold">
             {logo ? <img src={logo} alt="" className="h-full w-full object-contain" /> : ini}
           </div>
           <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-[16px] font-bold">{p.companyName}</span>
+            <div className="truncate text-[18px] font-bold leading-tight">{p.companyName}</div>
+            <div className="mt-1 flex min-w-0 items-center gap-2">
               <span className="inline-flex h-[22px] flex-none items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 text-[11.5px] font-semibold text-[#15803D]"><BadgeCheck className="h-3.5 w-3.5" />{t("NDA approved")}</span>
+              <span className="truncate text-[12.5px] text-[#6A7181]">{code}</span>
               {f.listing.certified && <Button variant="ghost" size="sm" aria-label={t('Company verification report')} onClick={()=>{const box=document.getElementById(`verification-${f.id}`);box?.scrollIntoView({behavior:'smooth',block:'center'});box?.focus();}}><VerificationBadge buyer company={p.companyName} insideControl /></Button>}
             </div>
-            <div className="truncate text-[12.5px] text-[#6A7181]">{code}</div>
           </div>
         </div>
         <Button asChild size="sm" className="flex-none"><Link to="/marketplace/pipeline">{t("Open full profile")}</Link></Button>
       </div>
       <div className="space-y-5 overflow-y-auto p-5">
-        <div className="flex flex-wrap items-start gap-2 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-[14px] py-[11px] text-[13.5px] text-[#166534]">
-          <LockOpen className="mt-0.5 h-4 w-4 flex-none" />
-          <span className="rounded-[6px] bg-[#E8F6EE] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide">{t("Private view")}</span>
-          <span className="min-w-0 flex-1">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</span>
-        </div>
+        <FavViewLine view="private">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>
         <PublicListingCard l={f.listing} deal={f} wrapMeta badge={<ApprovedBadge />}
           priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
         {p.description && (
