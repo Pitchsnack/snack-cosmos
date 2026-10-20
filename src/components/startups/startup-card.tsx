@@ -1,3 +1,4 @@
+import {REPORT_KEYS} from '@/lib/reports-hub';
 import { bizName } from "@/lib/biz-name";
 import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
@@ -195,7 +196,7 @@ export function StartupCard({
         </div>
 
         {/* Short description */}
-        {reportCount !== undefined && <span className="hub-pill mb-2 self-start">Reports · {reportCount} of 6 ready</span>}
+        {reportCount !== undefined && <span className="hub-pill mb-2 self-start">Reports · {reportCount} of {REPORT_KEYS.length} ready</span>}
         {s.short_description && (
           <p className={descClass}>
             {s.short_description}

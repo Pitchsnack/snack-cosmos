@@ -149,6 +149,7 @@ export const authoriseSeller = createServerFn({ method: "POST" })
     if(prev?.status==='delivered')return {prevStatus:'delivered'};
     if(!prev||!['paid','generated'].includes(prev.status))throw new Error('Active paid order required');
     if(!prev.generated_at)throw new Error('Generate and review the report before authorising');
+    if(['valuation','bundle'].includes(prev.kind)){const {hubContent}=await import('./reports-hub.server');const {valuationCanGenerate}=await import('./reports-hub');if(!valuationCanGenerate(await hubContent(context,'admin',prev.startup_id,undefined,'valuation',true)))throw new Error('Valuation needs usable peer-based inputs before authorisation');}
     if(['shareholders','credit'].includes(prev.kind)){const {data:r}=await sb.from('company_report_records').select('generated_at,content').eq('company_id',prev.startup_id).eq('report_key',prev.kind).maybeSingle();if(!r?.generated_at||!r?.content)throw new Error('The real analyst report must be recorded first');}
     const now = new Date().toISOString();
     const { data: o, error } = await sb.from("report_orders").update({ status: "delivered", delivered_at: now, delivered_by: ctx.userId,
@@ -197,13 +198,15 @@ export const markReportGenerated = createServerFn({ method: "POST" })
     const ctx = context as Ctx;
     await assertAdmin(ctx);
     const sb = await admin();
-    const { data: base } = await sb.from("report_orders").select("startup_id").eq("id", data.orderId).single();
+    const { data: base } = await sb.from("report_orders").select("startup_id,kind").eq("id", data.orderId).single();
     if (!base) throw new Error("Order not found");
-    // One generation per company: every still-open (paid) order of that company
-    // becomes ready. Delivered, cancelled and refunded orders are left alone.
+    // Financial imports generate financial-derived reports; valuation additionally needs usable peer inputs.
+    const {hubContent}=await import("./reports-hub.server");const {valuationCanGenerate}=await import("./reports-hub");
+    const valuationReady=valuationCanGenerate(await hubContent(context,"admin",base.startup_id,undefined,"valuation",true));
+    if(["valuation","bundle"].includes(base.kind)&&!valuationReady)throw new Error("Valuation needs matched peers and sufficient financial inputs");
     const { data: rows, error } = await sb.from("report_orders")
       .update({ status: "generated", generated_at: new Date().toISOString(), analyst_id: ctx.userId })
-      .eq("startup_id", base.startup_id).eq("status", "paid").in("kind",["financials","valuation","bundle","pnl","risk"]).select("*");
+      .eq("startup_id", base.startup_id).eq("status", "paid").in("kind",valuationReady?["financials","valuation","bundle","pnl","risk"]:["financials","pnl","risk"]).select("*");
     if (error) throw new Error(error.message);
     await sb.from("financial_statements").update({ verified_status: "draft" }).eq("startup_id", base.startup_id);
     const yrs = (data.years ?? []).slice().sort();
@@ -223,6 +226,7 @@ export const publishReport = createServerFn({ method: "POST" })
     if(prev?.status==='delivered')return prev;
     if(!prev||!['paid','generated'].includes(prev.status))throw new Error('Active paid order required');
     if(!prev.generated_at)throw new Error('Generate and review the report before authorising');
+    if(['valuation','bundle'].includes(prev.kind)){const {hubContent}=await import('./reports-hub.server');const {valuationCanGenerate}=await import('./reports-hub');if(!valuationCanGenerate(await hubContent(context,'admin',prev.startup_id,undefined,'valuation',true)))throw new Error('Valuation needs usable peer-based inputs before authorisation');}
     if(['shareholders','credit'].includes(prev.kind)){const {data:r}=await sb.from('company_report_records').select('generated_at,content').eq('company_id',prev.startup_id).eq('report_key',prev.kind).maybeSingle();if(!r?.generated_at||!r?.content)throw new Error('The real analyst report must be recorded first');}
     const now = new Date().toISOString();
     const { data: o, error } = await sb.from("report_orders").update({ status: "delivered", delivered_at: now, delivered_by: ctx.userId,
@@ -260,12 +264,11 @@ export async function countOpenOrders() {
 async function notifyReady(sb: any, o: any) {
   const { data: st } = await sb.from("startups").select("startup_name").eq("id", o.startup_id).maybeSingle();
   const company = st?.startup_name ?? "your company";
-  const val = o.kind === "valuation";
   const key=o.kind==='financials'||o.kind==='bundle'?'statements':o.kind;
   const {HUB_NAMES}=await import('./reports-hub');
   const report=HUB_NAMES[key as keyof typeof HUB_NAMES]??'estimated valuation';
   await sb.from("notifications").insert({ user_id: o.ordered_by, notification_type: "approval", title: "Your report is ready",
     message: `Your ${report} for ${company} is ready. View it and share it with buyers whose NDA you approved.`,
-    link_url: val?`/my-valuation?company=${o.startup_id}&from=notification`:`/my-reports?company=${o.startup_id}&report=${key}` });
-  if(!val){const {sendAlert}=await import('./email-alerts.server');await sendAlert({alert:'report_ready',role:'seller',userIds:[o.ordered_by],vars:{company,report,companyId:o.startup_id,key},refKey:o.id});}
+    link_url: `/my-reports?company=${o.startup_id}&report=${key}` });
+  {const {sendAlert}=await import('./email-alerts.server');await sendAlert({alert:'report_ready',role:'seller',userIds:[o.ordered_by],vars:{company,report,companyId:o.startup_id,key},refKey:o.id});}
 }

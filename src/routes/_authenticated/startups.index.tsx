@@ -1,3 +1,4 @@
+import {REPORT_KEYS} from '@/lib/reports-hub';
 import { useEffect, useMemo, useRef, useState } from "react";
 import {useHubSummaries} from '@/components/reports/reports-hub';
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -425,7 +426,7 @@ function StartupsPageInner() {
           <div className="space-y-2">
             {items.map((it) => (
               <div key={it.id} className="flex items-center gap-3">
-                <div className="min-w-0 flex-1"><StartupRow s={it} onSelect={() => openStartup(it.id, { tab: "full" })} />{isControl&&<span className="hub-pill mt-1">Reports · {reportSummaries.data?.[it.id]?.ready??0} of 6 ready</span>}</div>
+                <div className="min-w-0 flex-1"><StartupRow s={it} onSelect={() => openStartup(it.id, { tab: "full" })} />{isControl&&<span className="hub-pill mt-1">Reports · {reportSummaries.data?.[it.id]?.ready??0} of {REPORT_KEYS.length} ready</span>}</div>
                 <div className="w-44 shrink-0">
                   <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Hidden profile</div>
                   <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
@@ -473,7 +474,7 @@ function StartupsPageInner() {
                   ) : (
                     <div key={it.id}>
                       <StartupListItem s={it} selected={selected === it.id} onSelect={pick} />
-                      {isControl&&<span className="hub-pill my-1">Reports · {reportSummaries.data?.[it.id]?.ready??0} of 6 ready</span>}
+                      {isControl&&<span className="hub-pill my-1">Reports · {reportSummaries.data?.[it.id]?.ready??0} of {REPORT_KEYS.length} ready</span>}
                       <div className="flex items-center gap-2 px-2 pt-1 text-[11px] text-muted-foreground">
                         Hidden profile: <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
                       </div>

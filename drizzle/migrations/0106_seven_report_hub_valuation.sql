@@ -1,0 +1,10 @@
+ALTER TABLE public.plan_reports DROP CONSTRAINT plan_reports_report_key_check;
+ALTER TABLE public.plan_reports ADD CONSTRAINT plan_reports_report_key_check CHECK (report_key IN ('fs5','fs3','fs1','verification','shareholders','valuation','pnl','risk','credit'));
+ALTER TABLE public.company_report_records DROP CONSTRAINT company_report_records_report_key_check;
+ALTER TABLE public.company_report_records ADD CONSTRAINT company_report_records_report_key_check CHECK (report_key IN ('verification','shareholders','statements','valuation','pnl','risk','credit'));
+ALTER TABLE public.buyer_report_access DROP CONSTRAINT buyer_report_access_report_key_check;
+ALTER TABLE public.buyer_report_access ADD CONSTRAINT buyer_report_access_report_key_check CHECK (report_key IN ('verification','shareholders','statements','valuation','pnl','risk','credit'));
+ALTER TABLE public.report_share_requests DROP CONSTRAINT report_share_requests_report_key_check;
+ALTER TABLE public.report_share_requests ADD CONSTRAINT report_share_requests_report_key_check CHECK (report_key IN ('verification','shareholders','statements','valuation','pnl','risk','credit'));
+DO $$ DECLARE definition text; BEGIN SELECT pg_get_functiondef('public.reports_open_plan(uuid,uuid,text,text)'::regprocedure) INTO definition; definition := replace(definition,'''verification'',''shareholders'',''statements'',''pnl'',''risk'',''credit''','''verification'',''shareholders'',''statements'',''valuation'',''pnl'',''risk'',''credit'''); EXECUTE definition; END $$;
+COMMENT ON TABLE public.company_report_records IS 'Seven-report hub including valuation; private analyst records, existing viewers remain canonical.';

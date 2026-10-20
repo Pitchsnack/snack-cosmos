@@ -59,7 +59,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
   const picked = companyId ?? pickedState;
   const [sample, setSample] = useState<Kind | null>(null);
   const [sampleData, setSampleData] = useState<ReturnType<typeof makeSampleReport> | null>(null);
-  const company = mine.find((m) => m.id === picked) ?? mine[0];
+  const company = companyId ? mine.find((m) => m.id === companyId) ?? {id:companyId,startup_name:"Your company"} : mine.find((m) => m.id === picked) ?? mine[0];
   const name = company?.startup_name ?? "Your company";
   const cfg = catalog.locked[kind];
   const fill = (t: string) => t.replace("{days}", String(cfg.deliveryDays)).replace("{valuationPrice}", reportPrice("valuation"));
@@ -71,21 +71,23 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
   const orderFor = (k: Kind) => orders.find((o) => o.kind === k || (o.kind === "bundle" && k !== "risk"));
   const order = orderFor(kind);
   const delivered = order?.status === "delivered";
-  const closeOffer = useToolsOfferClose(!(company && delivered && hasData), !!sample);
+  const closePage = useToolsOfferClose(!embedded && !(company && delivered && hasData), !!sample);
+  const closeOffer = embedded ? () => undefined : closePage;
   const needsFinancials = kind !== "financials" && orderFor("financials")?.status !== "delivered";
   const qc = useQueryClient();
   const payFn = useServerFn(createMyReportOrder);
   const pay = useMutation({
-    mutationFn: () => payFn({ data: { startupId: company!.id, kind } }),
+    mutationFn: () => { if (!company) throw new Error("Choose a company"); return payFn({ data: { startupId: company.id, kind } }); },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["report-orders"] });
+      qc.invalidateQueries({ queryKey: ["reports-hub"] });
       toast.success("Order received — PitchSnack analysts will prepare your report.");
     },
     onError: (e) => toast.error((e as Error).message),
   });
   const handlePay = () => { if (company) pay.mutate(); };
 
-  const picker = mine.length > 1 && (
+  const picker = !embedded && mine.length > 1 && (
     <select value={company?.id} onChange={(e) => setPicked(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm">
       {mine.map((m) => <option key={m.id} value={m.id}>{bizName(m.startup_name)}</option>)}
     </select>
@@ -139,7 +141,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
         <SampleBehind />
         <div onClick={closeOffer} className="absolute inset-0 flex items-start justify-center bg-gradient-to-b from-background/20 to-background/90 px-2 pt-14">
           <div onClick={e => e.stopPropagation()} className="tools-offer-card w-full max-w-[640px] rounded-2xl border border-profile-line bg-card p-7 shadow-2xl">
-            <ToolsOfferClose onClose={closeOffer} />
+            {!embedded && <ToolsOfferClose onClose={closeOffer} />}
             <div className="tools-offer-heading mb-1.5 flex items-center gap-3.5">
               <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 text-primary-foreground shadow-lg shadow-violet-500/30"><Lock className="h-6 w-6" /></div>
               <div>
