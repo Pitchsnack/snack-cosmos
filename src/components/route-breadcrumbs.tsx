@@ -127,6 +127,8 @@ export function RouteBreadcrumbs({ className, placement }: { className?: string;
           : path === "/my-financials" ? "My Financials"
           : path === "/my-valuation" ? "Company Valuation"
           : path === "/my-risk" ? "Company Risk"
+          : path === "/my-reports" ? "Tools › My reports"
+          : path === "/my-reports/buyer/$pipelineId" ? "My Pipeline › Buyer reports"
           : resolveLabel(path),
         to: path,
         params: (match.params ?? {}) as Record<string, string>,

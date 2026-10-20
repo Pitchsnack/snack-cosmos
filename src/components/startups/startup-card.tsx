@@ -67,10 +67,12 @@ export function StartupCard({
   s,
   onClick,
   compact = false,
+  reportCount,
 }: {
   s: StartupListItem;
   onClick?: () => void;
   compact?: boolean;
+  reportCount?: number;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const { isFavorite } = useFavoriteStartups();
@@ -193,6 +195,7 @@ export function StartupCard({
         </div>
 
         {/* Short description */}
+        {reportCount !== undefined && <span className="hub-pill mb-2 self-start">Reports · {reportCount} of 6 ready</span>}
         {s.short_description && (
           <p className={descClass}>
             {s.short_description}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import {useHubSummaries} from '@/components/reports/reports-hub';
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Rocket, RefreshCw, X, Star, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
@@ -71,7 +72,7 @@ const searchSchema = z.object({
 
 
 export const Route = createFileRoute("/_authenticated/startups/")({
-  head: () => ({ meta: [{ title: "Startups — SnackPortal2" }] }),
+  head: () => ({ meta: [{ title: "Startups Directory — PitchSnack" },{name:'description',content:'Review companies, ownership, listings and authorised company reports.'},{property:'og:title',content:'Startups Directory — PitchSnack'},{property:'og:description',content:'Company profiles and reports for PitchSnack Control.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}] }),
   validateSearch: searchSchema,
   component: StartupsPage,
 });
@@ -194,6 +195,7 @@ function StartupsPageInner() {
     });
   }, [rawItems, hpFilter, byStartup]);
   const ownMap = useOwnershipMap("startup", rawItems.map((it) => it.id), isControl);
+  const reportSummaries=useHubSummaries(rawItems.map(it=>it.id),isControl);
   const items = useMemo(
     () => (favOnly ? baseItems.filter((it) => favIds.has(it.id)) : baseItems).filter((it) => runByMatches(runBy, ownMap.get(it.id))),
     [baseItems, favOnly, favIds, runBy, ownMap],
@@ -398,7 +400,7 @@ function StartupsPageInner() {
               />
             ) : (
               <div key={it.id} className="space-y-1.5">
-                <StartupCard s={it} onClick={() => openStartup(it.id, { tab: "full" })} compact={favOnly} />
+                <StartupCard s={it} onClick={() => openStartup(it.id, { tab: "full" })} compact={favOnly} reportCount={isControl?(reportSummaries.data?.[it.id]?.ready??0):undefined} />
                 {orderByStartup.get(it.id) && (
                   <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><ReportChip o={orderByStartup.get(it.id)!} /></div>
                 )}

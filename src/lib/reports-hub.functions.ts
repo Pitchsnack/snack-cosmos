@@ -8,6 +8,9 @@ const keyed=scope.extend({key:z.enum(REPORT_KEYS)});
 export const getReportsHub=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).inputValidator(d=>scope.parse(d)).handler(async({data,context})=>{
   const {hubData}=await import('./reports-hub.server');return hubData(context,data.mode,data.companyId,data.pipelineId);
 });
+export const getSellerHubBuyers=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({companyId:z.string().uuid()}).parse(d)).handler(async({data,context}):Promise<import('./reports-hub').Audience[]>=>{
+  const {hubScope}=await import('./reports-hub.server');const {sb}=await hubScope(context,'seller',data.companyId);const {data:ps,error}=await sb.from('deal_pipelines').select('*').eq('startup_id',data.companyId);if(error)throw new Error('Buyers unavailable');const live=(ps??[]).filter((p:any)=>hubNdaActive(p));const ids=live.map((p:any)=>p.buyer_user_id);const {data:bps}=ids.length?await sb.from('buyer_profiles').select('user_id,investors(investor_name,legal_name,investor_type)').in('user_id',ids):{data:[]};return live.map((p:any)=>{const bp=bps?.find((b:any)=>b.user_id===p.buyer_user_id);return {pipelineId:p.id,buyerId:p.buyer_user_id,name:bp?.investors?.legal_name??bp?.investors?.investor_name??'Buyer',sub:bp?.investors?.investor_type??'',ref:null,contact:null,state:'asked' as const,at:p.nda_approved_at,openedAt:null,allowDownload:false};});
+});
 export const getHubReport=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(d=>keyed.parse(d)).handler(async({data,context})=>{
   const {hubContent,hubScope,hubData}=await import('./reports-hub.server');const {sb,companyId,p}=await hubScope(context,data.mode,data.companyId,data.pipelineId);
   const result=await hubContent(context,data.mode,companyId,data.pipelineId,data.key);
