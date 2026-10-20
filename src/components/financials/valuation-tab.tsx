@@ -163,6 +163,7 @@ export function ValuationTab({
   position = [],
   cashFlow = [],
   readOnly = false,
+  reportData,
 }: {
   startupId: string;
   startupName: string;
@@ -174,6 +175,7 @@ export function ValuationTab({
   cashFlow?: StatementItem[];
   /** Seller view: show the numbers, hide every editing control. */
   readOnly?: boolean;
+  reportData?: import("@/lib/reports-hub").HubValuation;
 }) {
   const { has, isControl: isControlRaw } = usePermissions();
   const isControl = readOnly ? false : isControlRaw;
@@ -184,30 +186,35 @@ export function ValuationTab({
   const saveStartup = useServerFn(updateStartup);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const matchQuery = useQuery({
     queryKey: ["peer-match", startupId],
+    enabled: !reportData,
     queryFn: () => fetchMatch({ data: { startupId } }),
   });
 
+  const data=reportData?.match??matchQuery.data;const isLoading=!reportData&&matchQuery.isLoading;
   const appliedSector = data?.applied?.sector ?? null;
   const appliedModel = data?.applied?.businessModel ?? null;
-  const { data: peerSet } = useQuery({
+  const peerQuery = useQuery({
     queryKey: ["peer-set", appliedSector, appliedModel],
-    enabled: !!appliedSector,
+    enabled: !reportData && !!appliedSector,
     queryFn: () =>
       fetchPeerSet({ data: { sector: appliedSector!, businessModel: appliedModel } }),
   });
 
+  const peerSet=reportData?.peerSet??peerQuery.data;
   // Peers from — the sector set, or companies chosen for this startup alone.
   const fetchSelection = useServerFn(getStartupPeers);
   const fetchCandidates = useServerFn(listPeerCandidates);
   const persistSelection = useServerFn(saveStartupPeers);
   const persistBasis = useServerFn(setStartupPeerBasis);
   const selectionKey = ["startup-peers", startupId] as const;
-  const { data: selection } = useQuery({
+  const selectionQuery = useQuery({
     queryKey: selectionKey,
+    enabled: !reportData,
     queryFn: () => fetchSelection({ data: { startupId } }),
   });
+  const selection=reportData?.selection??selectionQuery.data;
   const [pickerOpen, setPickerOpen] = useState(false);
   const { data: candidates } = useQuery({
     queryKey: ["peer-candidates"],
@@ -239,11 +246,12 @@ export function ValuationTab({
   // Earnings adjustments live per startup and fiscal year.
   const fetchAdjustments = useServerFn(getValuationAdjustments);
   const adjKey = ["valuation-adjustments", startupId, year ?? 0] as const;
-  const { data: adjData } = useQuery({
+  const adjustmentQuery = useQuery({
     queryKey: adjKey,
-    enabled: !!year,
+    enabled: !reportData && !!year,
     queryFn: () => fetchAdjustments({ data: { startupId, fiscalYear: year! } }),
   });
+  const adjData=reportData?.adjustments??adjustmentQuery.data;
   const adjustments = adjData?.adjustments ?? [];
   const settings = adjData?.settings ?? DEFAULT_VALUATION_SETTINGS;
 

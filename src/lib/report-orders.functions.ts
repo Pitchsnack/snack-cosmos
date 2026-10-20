@@ -260,12 +260,11 @@ export async function countOpenOrders() {
 async function notifyReady(sb: any, o: any) {
   const { data: st } = await sb.from("startups").select("startup_name").eq("id", o.startup_id).maybeSingle();
   const company = st?.startup_name ?? "your company";
-  const val = o.kind === "valuation";
   const key=o.kind==='financials'||o.kind==='bundle'?'statements':o.kind;
   const {HUB_NAMES}=await import('./reports-hub');
   const report=HUB_NAMES[key as keyof typeof HUB_NAMES]??'estimated valuation';
   await sb.from("notifications").insert({ user_id: o.ordered_by, notification_type: "approval", title: "Your report is ready",
     message: `Your ${report} for ${company} is ready. View it and share it with buyers whose NDA you approved.`,
-    link_url: val?`/my-valuation?company=${o.startup_id}&from=notification`:`/my-reports?company=${o.startup_id}&report=${key}` });
-  if(!val){const {sendAlert}=await import('./email-alerts.server');await sendAlert({alert:'report_ready',role:'seller',userIds:[o.ordered_by],vars:{company,report,companyId:o.startup_id,key},refKey:o.id});}
+    link_url: `/my-reports?company=${o.startup_id}&report=${key}` });
+  {const {sendAlert}=await import('./email-alerts.server');await sendAlert({alert:'report_ready',role:'seller',userIds:[o.ordered_by],vars:{company,report,companyId:o.startup_id,key},refKey:o.id});}
 }
