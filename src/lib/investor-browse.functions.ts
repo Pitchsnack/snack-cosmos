@@ -100,7 +100,18 @@ export const listBrowseInvestors = createServerFn({ method: "GET" })
   });
 
 export type SellerFavStatus = "approved" | "requested" | "saved";
-export type SellerFavourite = PublicInvestor & { status: SellerFavStatus; saved: boolean; at: string; listingCode: string | null };
+/** Private investor fields: sent only for this seller's approved, still-valid NDA with the buyer. */
+export type SellerFavPrivate = {
+  investor_name: string; investor_type: string | null; acts_for_types: string[]; country: string | null; city: string | null;
+  website_url: string | null; linkedin_url: string | null; email: string | null; year_founded: number | null;
+  aum: string | null; min_ticket_size: string | null; max_ticket_size: string | null; revenue_min_m: number | null; revenue_max_m: number | null;
+  short_description: string | null; long_description: string | null; keywords: string[]; investment_focus: string[];
+  preferred_stages: string[]; preferred_industries: string[]; logo_signed_url: string | null;
+  aum_band: string | null; ticket_band: string | null; revenue_min_band: string | null;
+  people: { name: string; role: string; email: string; phone: string }[];
+  ndaApprovedAt: string; ndaValidUntil: string;
+};
+export type SellerFavourite = PublicInvestor & { status: SellerFavStatus; saved: boolean; at: string; listingCode: string | null; ndaRequestedAt: string | null; priv: SellerFavPrivate | null };
 
 /** Seller Favourites: starred investors plus buyers with an NDA requested/approved on the seller's listings. */
 export const listSellerFavourites = createServerFn({ method: "GET" })
@@ -138,12 +149,50 @@ export const listSellerFavourites = createServerFn({ method: "GET" })
     const hpIds = [...new Set([...pipeByUser.values()].map((p) => p.hidden_profile_id))];
     const { data: hps } = hpIds.length ? await sb.from("hidden_profiles").select("id, ref_no").in("id", hpIds) : { data: [] };
     const refBy = new Map<string, string>((hps ?? []).map((h: any) => [h.id, h.ref_no]));
+    // Private fields only for approved, still-valid NDAs (ndaState already drops expired/closed ones).
+    const approvedInv = list.filter((i) => pipeByUser.get(i.userId)?._st === "approved");
+    const privBy = new Map<string, SellerFavPrivate>();
+    if (approvedInv.length) {
+      const invIds = approvedInv.map((i) => i.id);
+      const [{ data: invs }, { data: bps }] = await Promise.all([
+        sb.from("investors").select("*").in("id", invIds),
+        sb.from("buyer_profiles").select("investor_id, city, description, people").in("investor_id", invIds),
+      ]);
+      const bpBy = new Map<string, any>((bps ?? []).map((b: any) => [b.investor_id, b]));
+      const paths = (invs ?? []).map((r: any) => r.logo_url).filter((x: any): x is string => !!x && !/^https?:/.test(x));
+      const signed: Record<string, string> = {};
+      if (paths.length) {
+        const { data: su } = await sb.storage.from("startup-media").createSignedUrls(paths, 3600);
+        for (const d of su ?? []) if (d.path && d.signedUrl) signed[d.path] = d.signedUrl;
+      }
+      const TWO_YEARS = 730 * 86_400_000;
+      for (const r of invs ?? []) {
+        const inv = approvedInv.find((x) => x.id === r.id)!;
+        const p = pipeByUser.get(inv.userId);
+        const bp = bpBy.get(r.id) ?? {};
+        privBy.set(r.id, {
+          investor_name: r.investor_name ?? inv.codeName, investor_type: r.investor_type ?? null, acts_for_types: r.acts_for_types ?? [],
+          country: r.country ?? null, city: bp.city ?? null, website_url: r.website_url ?? null, linkedin_url: r.linkedin_url ?? null,
+          email: r.email ?? null, year_founded: r.year_founded ?? null, aum: r.aum ?? null,
+          min_ticket_size: r.min_ticket_size ?? null, max_ticket_size: r.max_ticket_size ?? null,
+          revenue_min_m: r.revenue_min_m == null ? null : Number(r.revenue_min_m), revenue_max_m: r.revenue_max_m == null ? null : Number(r.revenue_max_m),
+          short_description: r.short_description ?? null, long_description: bp.description || r.long_description || null,
+          keywords: r.keywords ?? [], investment_focus: r.investment_focus ?? [], preferred_stages: r.preferred_stages ?? [], preferred_industries: r.preferred_industries ?? [],
+          logo_signed_url: !r.logo_url ? null : /^https?:/.test(r.logo_url) ? r.logo_url : signed[r.logo_url] ?? null,
+          aum_band: r.aum_band ?? null, ticket_band: r.ticket_band ?? null, revenue_min_band: r.revenue_min_band ?? null,
+          people: Array.isArray(bp.people) ? bp.people : [],
+          ndaApprovedAt: p.nda_approved_at,
+          ndaValidUntil: p.nda_expires_at ?? new Date(new Date(p.nda_approved_at).getTime() + TWO_YEARS).toISOString(),
+        });
+      }
+    }
     const out: SellerFavourite[] = list.flatMap(({ userId, ...i }) => {
       const p = pipeByUser.get(userId);
       const status: SellerFavStatus = p?._st ?? "saved";
       if (status === "saved" && !savedAt.has(i.id)) return [];
       const at = status === "approved" ? p.nda_approved_at : status === "requested" ? p.nda_requested_at : savedAt.get(i.id)!;
-      return [{ ...(i as PublicInvestor), status, saved: savedAt.has(i.id), at, listingCode: p ? refBy.get(p.hidden_profile_id) ?? null : null }];
+      return [{ ...(i as PublicInvestor), status, saved: savedAt.has(i.id), at, listingCode: p ? refBy.get(p.hidden_profile_id) ?? null : null,
+        ndaRequestedAt: p?.nda_requested_at ?? null, priv: status === "approved" ? privBy.get(i.id) ?? null : null }];
     });
     const rank = { approved: 0, requested: 1, saved: 2 } as const;
     out.sort((a, b) => rank[a.status] - rank[b.status] || (b.at ?? "").localeCompare(a.at ?? ""));
