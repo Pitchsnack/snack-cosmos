@@ -26,7 +26,7 @@ import { Users } from "lucide-react";
 import { BrowseHeader, MatchTag, NdaInfoStrip, PlanEndedBar, useBrowseMatches } from "@/components/marketplace/browse-header";
 
 type Filter = "all" | SellerFavStatus;
-const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Starred"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
+const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Favourites"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
 
 function StatusBadge({ s }: { s: SellerFavStatus }) {
