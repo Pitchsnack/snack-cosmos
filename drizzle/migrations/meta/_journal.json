@@ -743,6 +743,13 @@
       "when": 1792459750201,
       "tag": "0105_serialize_report_entitlements_and_verification_usage",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1792460906256,
+      "tag": "0106_seven_report_hub_valuation",
+      "breakpoints": true
     }
   ]
 }
