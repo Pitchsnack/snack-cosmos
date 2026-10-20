@@ -1,3 +1,5 @@
+import {computeValuation,readFilingInputs,DEFAULT_DISCOUNTS} from './valuation';
+import {normalise} from './valuation-adjustments';
 import type { StartupFinancials } from './financials.functions';
 import type { VerificationState } from './company-verification';
 
@@ -23,3 +25,12 @@ export type HubData = {mode:HubMode;companyId:string;pipelineId:string|null;comp
 export type ShareholderContent = {capital:number|null;shares:number|null;par:number|null;fullyPaid:boolean|null;thaiPct:number|null;ultimateOwner:string|null;ultimatePct:number|null;holders:{name:string;registration:string|null;role:string|null;type:string;nationality:string;shares:number|null;pct:number}[];chains:{description:string;effective:string}[];notes:{title:string;text:string}[];sources:string[];filedOn:string|null;checkedOn:string|null};
 export type HubContent = {financials?:StartupFinancials;valuation?:HubValuation;verification?:VerificationState;shareholders?:ShareholderContent;credit?:{title:string;text:string}[]};
 export type HubValuation = {match:import('./peer-comparables').PeerMatchResult;peerSet:import('./peer-comparables').PeerSetDetail;selection:import('./startup-peers.functions').StartupPeerSelection;adjustments:import('./valuation-adjustments.functions').ValuationAdjustmentsPayload};
+
+export function valuationCanGenerate(content:HubContent):boolean {
+ const f=content.financials,v=content.valuation;if(!f||!v||!f.years.length)return false;
+ const peers=v.selection.basis==='chosen'&&v.selection.peers.length?v.selection.peers:v.peerSet.peers;
+ const inputs=readFilingInputs(f.years.at(-1),f.income,f.position,f.cashFlow,f.ratios);
+ const n=normalise(v.adjustments.adjustments,v.adjustments.settings,inputs.netProfit,inputs.revenue);
+ const result=computeValuation(inputs,peers,DEFAULT_DISCOUNTS,n.applied?{netProfit:n.normalisedNetProfit,revenue:n.normalisedRevenue,applied:true}:undefined);
+ return result.methods.some(m=>m.status==='usable'||m.status==='low confidence');
+}

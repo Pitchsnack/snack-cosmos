@@ -72,7 +72,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
   const order = orderFor(kind);
   const delivered = order?.status === "delivered";
   const closePage = useToolsOfferClose(!embedded && !(company && delivered && hasData), !!sample);
-  const closeOffer = embedded ? () => onGoFinancials?.() : closePage;
+  const closeOffer = embedded ? () => undefined : closePage;
   const needsFinancials = kind !== "financials" && orderFor("financials")?.status !== "delivered";
   const qc = useQueryClient();
   const payFn = useServerFn(createMyReportOrder);
@@ -87,7 +87,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
   });
   const handlePay = () => { if (company) pay.mutate(); };
 
-  const picker = mine.length > 1 && (
+  const picker = !embedded && mine.length > 1 && (
     <select value={company?.id} onChange={(e) => setPicked(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm">
       {mine.map((m) => <option key={m.id} value={m.id}>{bizName(m.startup_name)}</option>)}
     </select>

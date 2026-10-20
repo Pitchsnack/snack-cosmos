@@ -80,10 +80,10 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
   return {mode,companyId:cid,pipelineId:p?.id??null,company:ci?.legal_name_en??s.registered_name??ci?.legal_name_th??s.startup_name??hp?.ref_no??'Company',companyTh:ci?.legal_name_th??null,code:hp?.code_name??null,ref:hp?.ref_no??null,registration:ci?.registration_number??s.registered_number??null,sector:s.industry?.join(' · ')??null,province:s.address_province_state??null,companyStatus:s.status??null,fiscalYear:fs.length?Math.max(...fs.map((x:any)=>x.fiscal_year)):null,owner,runBy:s.run_by??null,buyer:p?buyerFor(p.buyer_user_id):null,ndaAt:p?.nda_approved_at??null,step,stepName:STEPS[step]??'NDA',rows,count:mode==='buyer'?accessibleCount(rows):rows.filter(r=>r.status==='ready').length,waiting:rows.filter(r=>r.orderId&&r.status!=='ready').length,fresh:rows.some(r=>r.status==='ready'&&['shared','yours','plan'].includes(r.buyerState)&&(!r.openedAt||!!r.generatedAt&&r.generatedAt>r.openedAt))};
 }
 
-export async function hubContent(ctx:any,mode:HubMode,cid:string,pipelineId:string|undefined,key:HubKey):Promise<HubContent>{
+export async function hubContent(ctx:any,mode:HubMode,cid:string,pipelineId:string|undefined,key:HubKey,allowUngenerated=false):Promise<HubContent>{
   const data=await hubData(ctx,mode,cid,pipelineId);const row=data.rows.find(r=>r.key===key);if(!row)throw new Error('Report unavailable');
   if(mode!=='admin'&&(row.status!=='ready'||(mode==='buyer'&&!['shared','yours'].includes(row.buyerState))))throw new Error('Open or order this report first');
-  if(mode==='admin'&&!row.generatedAt)throw new Error('No report has been generated yet');
+  if(mode==='admin'&&!allowUngenerated&&!row.generatedAt)throw new Error('No report has been generated yet');
   const {sb}=await hubScope(ctx,mode,cid,pipelineId);
   if(key==='verification'){
     const {verificationState}=await import('./company-verification.server');const state=await verificationState(sb,ctx.userId,cid,pipelineId,mode==='buyer'&&['shared','yours'].includes(row.buyerState));
