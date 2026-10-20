@@ -59,8 +59,8 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
     let readyBy=r?.ready_by??o?.due_at??null;
     let status:HubRow['status']=authorisedAt?'ready':o||r?.status==='in_progress'?'in_progress':'not_ordered';
     if(key==='verification'){authorisedAt=['certified','needs_fix'].includes(v?.status)?v.checked_at:null;generatedAt=authorisedAt;readyBy=v?.ready_by??null;status=authorisedAt?'ready':v&&v.status!=='not_ordered'?'in_progress':'not_ordered';}
-    if((key==='statements'||key==='pnl'||key==='risk')&&fs.length&&!generatedAt)generatedAt=fs.map((f:any)=>f.retrieved_at??f.created_at).filter(Boolean).sort().at(-1)??null;
-    if(key==='pnl'&&!o&&!r){const f=orders.find((o:any)=>['financials','bundle'].includes(o.kind));authorisedAt=f?.delivered_at??null;status=authorisedAt?'ready':f?'in_progress':'not_ordered';}
+    if(key==='statements'&&fs.length&&!generatedAt)generatedAt=fs.map((f:any)=>f.retrieved_at??f.created_at).filter(Boolean).sort().at(-1)??null;
+    if(key==='pnl'&&!o&&!r){const f=orders.find((o:any)=>['financials','bundle'].includes(o.kind));authorisedAt=f?.delivered_at??null;generatedAt=f?.generated_at??null;status=authorisedAt?'ready':f?'in_progress':'not_ordered';}
     // Persisted grant metadata is distinct from report readiness: ordering never fabricates content.
     const planKey=key==='statements'?`fs${years}`:key;const pr=planRows.find((r:any)=>r.report_key===planKey);const total=pr?.mode==='number'?pr.per_term:null;const used=key==='verification'?verificationUses.length:uses.filter((u:any)=>u.kind===`report:${planKey}`).length;const left=total==null?null:Math.max(0,total-used);const inPlan=!!pr&&pr.mode!=='none'&&(pr.mode!=='number'||(left??0)>0);
     const audience:Audience[]=[];
