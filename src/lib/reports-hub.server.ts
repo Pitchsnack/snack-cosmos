@@ -83,7 +83,7 @@ export async function hubContent(ctx:any,mode:HubMode,cid:string,pipelineId:stri
   if(mode==='admin'&&!row.generatedAt)throw new Error('No report has been generated yet');
   const {sb}=await hubScope(ctx,mode,cid,pipelineId);
   if(key==='verification'){
-    const {verificationState}=await import('./company-verification.server');const state=await verificationState(sb,mode==='buyer'?ctx.userId:ctx.userId,cid,pipelineId);
+    const {verificationState}=await import('./company-verification.server');const state=await verificationState(sb,ctx.userId,cid,pipelineId,mode==='buyer'&&['shared','yours'].includes(row.buyerState));
     // Shared verification is authorised by the hub, but the canonical private reader is still enforced.
     if(mode==='buyer'&&!state.record)throw new Error('Company verification access unavailable');
     return {verification:state};

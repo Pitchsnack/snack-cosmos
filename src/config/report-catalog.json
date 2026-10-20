@@ -3,7 +3,8 @@
     "financials": 10000,
     "valuation": 15000,
     "bundle": 22000,
-    "risk": 12000
+    "risk": 12000,
+    "shareholders": 1500
   },
   "currency": "THB",
   "sample": {
