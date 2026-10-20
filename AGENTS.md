@@ -31,6 +31,6 @@
 - Buyer verification: one investor_profile_verifications row per investor via triggers; readers use profile-verification.server.ts; sellers get only investor_is_verified(). Control holds many profiles.
 - workspace-scope.server.ts scopes sellers; Control sees all. Analytics: Admin readers, DB sign-ins.
 
-- Sidebar sharing: email-bound, retry-safe claims without deletion; no code seats/free plans. Requests post only to Help Desk.
+- Sidebar sharing: email-bound retry-safe claims, no deletion or code seats/free plans; requests only to Help Desk.
 
 - Company verification: whitelisted DTOs; selected-deal NDA + entitlement on buyer reads; DB-enforced quotas and six-check badge.
