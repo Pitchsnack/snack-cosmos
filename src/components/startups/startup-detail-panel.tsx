@@ -1,4 +1,5 @@
 import { bizName } from "@/lib/biz-name";
+import {AdminReportsControls,ReportsHubWindow} from '@/components/reports/reports-hub';
 import { OwnershipPanelSlot, OwnershipMenuItem } from "@/components/handover/ownership";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -421,6 +422,7 @@ export function StartupDetailPanel({
   const qc = useQueryClient();
   const [shareOpen, setShareOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [reportsOpen,setReportsOpen]=useState(false);
 
 
 
@@ -529,7 +531,7 @@ export function StartupDetailPanel({
               ) : (
                 <ConnectionAction startupRef={id} onShare={() => setShareOpen(true)} />
               )}
-               {financialsHeaderAction ?? <FinancialsAction
+               {isControl && !isMyWorkspace ? <AdminReportsControls companyId={id}/> : financialsHeaderAction ?? <FinancialsAction
                 id={id}
                 isMyWorkspace={isMyWorkspace}
                 onClose={onClose}
@@ -572,7 +574,7 @@ export function StartupDetailPanel({
                   <DropdownMenuItem onSelect={handleCopyLink}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Link
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  {isControl && !isMyWorkspace ? <DropdownMenuItem onSelect={()=>setReportsOpen(true)}><BarChart3 className="mr-2 h-4 w-4"/>Financials</DropdownMenuItem> : <DropdownMenuItem asChild>
 
                     {isMyWorkspace ? (
                       <Link to="/my-startups/$id/financials" params={{ id }} onClick={() => onClose?.()}>
@@ -583,7 +585,7 @@ export function StartupDetailPanel({
                         <BarChart3 className="mr-2 h-4 w-4" /> Financials
                       </Link>
                     )}
-                  </DropdownMenuItem>
+                  </DropdownMenuItem>}
 
 
 
@@ -639,6 +641,8 @@ export function StartupDetailPanel({
 
       {ownerMedia && <LogoPhotoAlert className="mt-[18px]" hasLogo={!!s.logo_signed_url} hasPhoto={mediaSlots.length > 0} onAdd={ownerMedia} />}
       {belowHeader}
+      {isControl && !isMyWorkspace && <AdminReportsControls companyId={id} strip/>}
+      {reportsOpen && <ReportsHubWindow mode="admin" companyId={id} initialReport="statements" onClose={()=>setReportsOpen(false)}/>}
 
       {showPublication && !replaceBody && (
         <PublicationActions

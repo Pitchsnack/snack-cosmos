@@ -54,7 +54,7 @@ export async function saveShare(sb: any, p: any, actor: string, o: { financials:
     await sb.from("report_share_events").insert({ share_id: id, event: "changed", actor_id: actor, detail: detail(fin, val, o.allowDownload) });
   } else {
     const { data, error } = await sb.from("report_shares").insert({
-      business_id: p.startup_id, buyer_id: p.buyer_user_id, pipeline_id: p.id, financials: fin, valuation: val,
+      business_id: p.startup_id, buyer_id: p.buyer_user_id, pipeline_id: p.id, financials: fin, valuation: val,report_keys:fin?['statements','pnl']:[],
       allow_download: o.allowDownload, shared_at: now, shared_by: actor,
     }).select("id").single();
     if (error) throw new Error(error.message);

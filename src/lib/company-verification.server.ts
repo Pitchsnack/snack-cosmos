@@ -39,7 +39,9 @@ export async function verificationState(sb: any, userId: string, companyId: stri
   const status = v?.status ?? 'not_ordered';
   let record: VerificationRecord | null = null;
   let checks: VerificationState['checks'] = [];
-  if ((!buyer || canRead || hubShared) && ['certified','needs_fix'].includes(status)) {
+  let hubAllowed=false;
+  if(buyer&&hubShared&&pipelineId){const [{data:grant},{data:share}]=await Promise.all([sb.from('buyer_report_access').select('id').eq('company_id',companyId).eq('buyer_id',userId).eq('report_key','verification').maybeSingle(),sb.from('report_shares').select('report_keys').eq('pipeline_id',pipelineId).eq('buyer_id',userId).is('revoked_at',null).maybeSingle()]);hubAllowed=!!grant||share?.report_keys?.includes('verification')===true;}
+  if ((!buyer || canRead || hubAllowed) && ['certified','needs_fix'].includes(status)) {
     const [{data:ci,error:ciError},{data:ds,error:dsError},{data:business},{data:cs,error:csError}] = await Promise.all([
       sb.from('company_info_th').select('id,legal_name_th,legal_name_en,registration_number,legal_entity_type_th,legal_entity_status_th,registration_date_th_raw,registered_capital_th_raw,business_size,head_office_address_th,authorized_signatory_th').eq('startup_id',companyId).maybeSingle(),
       sb.from('company_director_th').select('director_name_th,display_order').eq('startup_id',companyId).eq('is_active',true).order('display_order'),

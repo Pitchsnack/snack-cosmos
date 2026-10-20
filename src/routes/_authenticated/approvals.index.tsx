@@ -23,9 +23,13 @@ export const Route = createFileRoute("/_authenticated/approvals/")({
     meta: [
       { title: "Approvals — Pitchsnack Admin" },
       { name: "description", content: "Review seller listings and buyer verifications waiting for Admin approval." },
+      {property:'og:title',content:'Approvals — PitchSnack Admin'},
+      {property:'og:description',content:'Review listings, buyer verifications and paid reports.'},
+      {property:'og:type',content:'website'},
+      {name:'twitter:card',content:'summary'},
     ],
   }),
-  validateSearch: z.object({ tab: z.enum(["listings", "buyers", "advisors", "reports", "invitations", "contacts", "history"]).optional(), adv: z.string().optional() }),
+  validateSearch: z.object({ tab: z.enum(["listings", "buyers", "advisors", "reports", "invitations", "contacts", "history"]).optional(), adv: z.string().optional(),company:z.string().uuid().optional() }),
   component: ApprovalsPage,
 });
 
@@ -134,7 +138,7 @@ function ApprovalsPage() {
       ) : tab === "advisors" ? (
         <AdvisorApprovals openId={s.adv} onOpen={(id) => navigate({ search: { tab: "advisors", adv: id } })} />
       ) : tab === "reports" ? (
-        <PaidReports orders={orders} />
+        <PaidReports orders={s.company?orders.filter(o=>o.startup_id===s.company):orders} />
       ) : (tab === "invitations" || tab === "contacts") ? (
         <InvitationsTab />
       ) : (

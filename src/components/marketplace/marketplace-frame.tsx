@@ -1,4 +1,6 @@
 import { BellRing, BadgeCheck } from "lucide-react";
+import {FileText} from 'lucide-react';
+import {hubIsNew} from '@/lib/reports-hub';
 import { VerificationSidebarChip, VerificationMenuStatus, useVerificationSidebar } from '@/components/company-verification/sidebar';
 import { useVerificationCopy } from '@/components/company-verification/copy';
 import { useEffect, useState } from "react";
@@ -437,6 +439,7 @@ export function marketplaceMenu(persona: Persona) {
   const tools: MenuItem[] =
     persona === "seller"
       ? [
+          { to: "/my-reports", label: "My reports", icon: FileText },
           { to: "/my-verification", label: "Company verification report", icon: BadgeCheck },
           { to: "/my-financials", label: "My Financials", icon: FileBarChart, lock: "financials" },
           { to: "/my-valuation", label: "Company Valuation", icon: Calculator, lock: "valuation" },
@@ -517,7 +520,8 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       inactiveProps={MENU_LINK_INACTIVE}
     >
       <it.icon className="h-4 w-4 shrink-0" />
-      <span className="min-w-0">{it.to === '/my-verification' ? vc(it.label) : t(it.label)}</span>
+      <span className="min-w-0">{it.to === '/my-reports' ? vc('My reports','รายงานของฉัน') : it.to === '/my-verification' ? vc(it.label) : t(it.label)}</span>
+      {it.to === '/my-reports' && hubIsNew() && <span className="hub-new">NEW</span>}
       {it.to === '/my-verification' && <VerificationMenuStatus state={verification.data} />}
       {it.to === "/marketplace/pipeline" && <PipelineCountBadge />}
       {it.to === "/marketplace/invitations" && <InvitationsCountBadge />}

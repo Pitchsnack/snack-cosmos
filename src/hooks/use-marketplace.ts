@@ -21,6 +21,9 @@ export function useIsMarketplace() {
     pathname === "/my-financials" ||
     pathname === "/my-valuation" ||
     pathname === "/my-risk" ||
+    pathname === "/my-verification" ||
+    pathname === "/my-reports" ||
+    pathname.startsWith("/my-reports/") ||
     pathname === "/advisor/pipeline" ||
     pathname === "/advisor/messages"
   );

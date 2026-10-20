@@ -9,7 +9,7 @@ import catalog from "@/config/report-catalog.json";
  */
 
 type Ctx = { supabase: any; userId: string };
-const Kind = z.enum(["financials", "valuation", "bundle", "risk"]);
+const Kind = z.enum(["financials", "valuation", "bundle", "risk", "shareholders", "pnl", "credit"]);
 export const DUE_BUSINESS_DAYS = 2;
 
 async function admin() {
@@ -59,7 +59,8 @@ export const createMyReportOrder = createServerFn({ method: "POST" })
     if (existing) return existing;
     const paid = new Date();
     const due = addBusinessDays(paid, DUE_BUSINESS_DAYS);
-    const amount = (catalog.prices as Record<string, number>)[data.kind] ?? 0;
+    const amount = (catalog.prices as Record<string, number>)[data.kind === 'pnl' ? 'financials' : data.kind];
+    if (!amount) throw new Error('This report has no configured checkout price');
     const { data: row, error } = await sb.from("report_orders").insert({
       startup_id: data.startupId, kind: data.kind, amount, currency: catalog.currency, status: "paid",
       paid_at: paid.toISOString(), due_at: due.toISOString(), method: "Manual", payment_ref: `MAN-${Date.now().toString().slice(-6)}`,
@@ -145,9 +146,13 @@ export const authoriseSeller = createServerFn({ method: "POST" })
     await assertAdmin(ctx);
     const sb = await admin();
     const { data: prev } = await sb.from("report_orders").select("*").eq("id", data.orderId).single();
+    if(prev?.status==='delivered')return {prevStatus:'delivered'};
+    if(!prev||!['paid','generated'].includes(prev.status))throw new Error('Active paid order required');
+    if(!prev.generated_at)throw new Error('Generate and review the report before authorising');
+    if(['shareholders','credit'].includes(prev.kind)){const {data:r}=await sb.from('company_report_records').select('generated_at,content').eq('company_id',prev.startup_id).eq('report_key',prev.kind).maybeSingle();if(!r?.generated_at||!r?.content)throw new Error('The real analyst report must be recorded first');}
     const now = new Date().toISOString();
     const { data: o, error } = await sb.from("report_orders").update({ status: "delivered", delivered_at: now, delivered_by: ctx.userId,
-      generated_at: prev.generated_at ?? now, analyst_id: prev.analyst_id ?? ctx.userId }).eq("id", data.orderId).select("*").single();
+      generated_at: prev.generated_at ?? now, analyst_id: prev.analyst_id ?? ctx.userId }).eq("id", data.orderId).in('status',['paid','generated']).select("*").single();
     if (error) throw new Error(error.message);
     if (o.kind === "financials" || o.kind === "bundle") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
     return { prevStatus: prev.status as string };
@@ -198,7 +203,7 @@ export const markReportGenerated = createServerFn({ method: "POST" })
     // becomes ready. Delivered, cancelled and refunded orders are left alone.
     const { data: rows, error } = await sb.from("report_orders")
       .update({ status: "generated", generated_at: new Date().toISOString(), analyst_id: ctx.userId })
-      .eq("startup_id", base.startup_id).eq("status", "paid").select("*");
+      .eq("startup_id", base.startup_id).eq("status", "paid").in("kind",["financials","valuation","bundle","pnl","risk"]).select("*");
     if (error) throw new Error(error.message);
     await sb.from("financial_statements").update({ verified_status: "draft" }).eq("startup_id", base.startup_id);
     const yrs = (data.years ?? []).slice().sort();
@@ -214,9 +219,14 @@ export const publishReport = createServerFn({ method: "POST" })
     const ctx = context as Ctx;
     await assertAdmin(ctx);
     const sb = await admin();
+    const {data:prev}=await sb.from('report_orders').select('*').eq('id',data.orderId).single();
+    if(prev?.status==='delivered')return prev;
+    if(!prev||!['paid','generated'].includes(prev.status))throw new Error('Active paid order required');
+    if(!prev.generated_at)throw new Error('Generate and review the report before authorising');
+    if(['shareholders','credit'].includes(prev.kind)){const {data:r}=await sb.from('company_report_records').select('generated_at,content').eq('company_id',prev.startup_id).eq('report_key',prev.kind).maybeSingle();if(!r?.generated_at||!r?.content)throw new Error('The real analyst report must be recorded first');}
     const now = new Date().toISOString();
     const { data: o, error } = await sb.from("report_orders").update({ status: "delivered", delivered_at: now, delivered_by: ctx.userId,
-      invoice_no: undefined }).eq("id", data.orderId).select("*").single();
+      invoice_no: undefined }).eq("id", data.orderId).in('status',['paid','generated']).select("*").single();
     if (error) throw new Error(error.message);
     if (o.kind === "financials" || o.kind === "bundle") await sb.from("financial_statements").update({ verified_status: "verified" }).eq("startup_id", o.startup_id);
     await sb.from("report_order_events").insert({ order_id: o.id, event: "published", actor_id: ctx.userId,

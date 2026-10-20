@@ -184,6 +184,13 @@
 
 
 .dark {
+  --hub-buyer-soft: var(--muted);
+  --hub-surface: var(--background);
+  --hub-success-soft: var(--muted);
+  --hub-warning-soft: var(--muted);
+  --hub-hover: var(--muted);
+  --hub-buyer: var(--link);
+  --hub-success: var(--success);
   --background: hsl(225 30% 8%);
   --foreground: hsl(220 20% 92%);
   --card: hsl(225 25% 12%);

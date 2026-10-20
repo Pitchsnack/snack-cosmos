@@ -1,4 +1,5 @@
 import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
+import {PipelineReportsButton} from '@/components/reports/reports-hub';
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -523,6 +524,7 @@ function TrackingCard({ p, seller, open, onToggle, onEnded, t }: { p: PipelineRo
             {wd && <WithdrawnPill t={t} />}
 
           </div>
+          {!wd && p.ndaApprovedAt && (!p.ndaExpiresAt || Date.parse(p.ndaExpiresAt)>Date.now()) && <div className="mt-2 flex flex-wrap items-center gap-2"><span className="hub-pill" data-tone="muted">{t('Step')} {cur+1} · {t(STEPS[cur])}</span><PipelineReportsButton pipelineId={p.id} seller={seller}/></div>}
           <div className="truncate text-[12.5px] text-[#6B7280]">
             {[p.counterparty.sub, p.loiAmount ? `${seller ? t("offer") : t("your offer")} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
             {" · "}
