@@ -12,7 +12,7 @@ export async function verificationScope(sb: any, userId: string, companyId: stri
 }
 
 const text = (x: unknown): string | null => typeof x === 'string' && x.trim() ? x : typeof x === 'number' ? String(x) : null;
-export async function verificationState(sb: any, userId: string, companyId: string,pipelineId?:string): Promise<VerificationState> {
+export async function verificationState(sb: any, userId: string, companyId: string,pipelineId?:string, hubShared = false): Promise<VerificationState> {
   const { buyer } = await verificationScope(sb,userId,companyId,pipelineId);
   const plan = await planAccess(userId);
   const {data:me}=await sb.from('users').select('account_role').eq('id',userId).maybeSingle();
@@ -39,7 +39,7 @@ export async function verificationState(sb: any, userId: string, companyId: stri
   const status = v?.status ?? 'not_ordered';
   let record: VerificationRecord | null = null;
   let checks: VerificationState['checks'] = [];
-  if ((!buyer || canRead) && ['certified','needs_fix'].includes(status)) {
+  if ((!buyer || canRead || hubShared) && ['certified','needs_fix'].includes(status)) {
     const [{data:ci,error:ciError},{data:ds,error:dsError},{data:business},{data:cs,error:csError}] = await Promise.all([
       sb.from('company_info_th').select('id,legal_name_th,legal_name_en,registration_number,legal_entity_type_th,legal_entity_status_th,registration_date_th_raw,registered_capital_th_raw,business_size,head_office_address_th,authorized_signatory_th').eq('startup_id',companyId).maybeSingle(),
       sb.from('company_director_th').select('director_name_th,display_order').eq('startup_id',companyId).eq('is_active',true).order('display_order'),

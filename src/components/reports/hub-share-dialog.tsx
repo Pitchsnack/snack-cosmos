@@ -1,0 +1,20 @@
+import {useState} from 'react';
+import {useServerFn} from '@tanstack/react-start';
+import {useQueryClient} from '@tanstack/react-query';
+import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
+import {Button} from '@/components/ui/button';
+import {Checkbox} from '@/components/ui/checkbox';
+import {Switch} from '@/components/ui/switch';
+import {saveHubShare,revokeHubShare} from '@/lib/reports-hub.functions';
+import type {HubData,HubKey,Audience} from '@/lib/reports-hub';
+import {useHubCopy} from './hub-copy';
+import {toast} from 'sonner';
+export function HubShareAccessDialog({hub,buyer,selected,manage=false,onClose}:{hub:HubData;buyer:Audience;selected:HubKey;manage?:boolean;onClose:()=>void}){
+ const {c,name}=useHubCopy();const qc=useQueryClient();const save=useServerFn(saveHubShare),revoke=useServerFn(revokeHubShare);
+ const [keys,setKeys]=useState<HubKey[]>(manage?hub.rows.filter(r=>r.audience.some(a=>a.pipelineId===buyer.pipelineId&&a.state==='shared')).map(r=>r.key):[selected]);
+ const [download,setDownload]=useState(buyer.allowDownload),[confirm,setConfirm]=useState(false),[busy,setBusy]=useState(false);
+ const run=async()=>{setBusy(true);try{if(confirm)await revoke({data:{pipelineId:buyer.pipelineId,key:selected}});else await save({data:{pipelineId:buyer.pipelineId,keys,allowDownload:download}});await qc.invalidateQueries({queryKey:['reports-hub']});await qc.invalidateQueries({queryKey:['pipeline']});toast.success(confirm?c('Stopped sharing.','หยุดแชร์แล้ว'):c('Reports shared.','แชร์รายงานแล้ว'));onClose();}catch(e){toast.error((e as Error).message);}finally{setBusy(false);}};
+ return <Dialog open onOpenChange={o=>!o&&onClose()}><DialogContent><DialogTitle>{confirm?c(`Revoke access for ${buyer.name}?`,`ยกเลิกสิทธิ์ของ ${buyer.name}?`):manage?c(`Access for ${buyer.name}`,`สิทธิ์ของ ${buyer.name}`):c(`Share your reports with ${buyer.name}`,`แชร์รายงานกับ ${buyer.name}`)}</DialogTitle><DialogDescription>{confirm?c("They can no longer open this shared report. Reports they bought stay theirs; downloaded PDFs can't be taken back.",'ผู้ซื้อจะเปิดรายงานที่แชร์นี้ไม่ได้ รายงานที่ซื้อเองยังเป็นของผู้ซื้อ และไม่สามารถเรียกคืน PDF ที่ดาวน์โหลดแล้ว'):c('Only buyers whose NDA you approved can get access.','แชร์ได้เฉพาะผู้ซื้อที่ท่านอนุมัติ NDA แล้ว')}</DialogDescription>
+ {!confirm&&<><div className="grid gap-2">{hub.rows.map(r=><label key={r.key} className="flex items-center gap-3 rounded-lg border border-border p-3"><Checkbox disabled={r.status!=='ready'} checked={keys.includes(r.key)} onCheckedChange={v=>setKeys(old=>v?[...old,r.key]:old.filter(k=>k!==r.key))}/><span className="flex-1 text-sm font-semibold">{name(r.key)}</span><span className="text-xs text-muted-foreground">{r.status==='ready'?c('Ready','พร้อมแล้ว'):c('Not available yet','ยังไม่พร้อม')}</span></label>)}</div><label className="flex items-center justify-between gap-3 text-sm">{c('Allow download (PDF)','อนุญาตดาวน์โหลด (PDF)')}<Switch checked={download} onCheckedChange={setDownload}/></label><p className="text-xs text-muted-foreground">{c('Access ends when the NDA ends, or when you revoke it.','สิทธิ์สิ้นสุดเมื่อ NDA สิ้นสุด หรือเมื่อท่านยกเลิก')}</p></>}
+ <div className="flex flex-wrap justify-end gap-2">{manage&&!confirm&&<Button variant="ghost" className="text-destructive" onClick={()=>setConfirm(true)}>{c('Stop sharing','หยุดแชร์')}</Button>}<Button variant="outline" onClick={()=>confirm?setConfirm(false):onClose()}>{confirm?c('Keep access','คงสิทธิ์ไว้'):c('Cancel','ยกเลิก')}</Button><Button disabled={busy||(!confirm&&!keys.length)} className={confirm?'bg-destructive text-destructive-foreground':'hub-seller-button'} onClick={run}>{busy?c('Saving…','กำลังบันทึก…'):confirm?c('Revoke access','ยกเลิกสิทธิ์'):manage?c('Save changes','บันทึก'):c('Share report','แชร์รายงาน')}</Button></div></DialogContent></Dialog>;
+}

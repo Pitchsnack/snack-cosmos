@@ -36,6 +36,13 @@ const BUYER_TO = "The buyer";
 
 export const EMAIL_ALERTS: AlertDef[] = [
   {
+    key: 'report_share_request', n: 11, group: 'Pipeline', name: 'Report share request', icon: 'file', color: '#0E7490', wired: true,
+    placeholders: ['{buyer}', '{report}', '{pipeline}', '{key}'],
+    seller: v('A buyer with an approved NDA asks for a report', SELLER_TO, 'My Pipeline › Buyer reports', '/my-reports/buyer/{pipeline}?report={key}',
+      {subject:'{buyer} asked you to share {report}.',title:'A buyer asked for a report',body:'{buyer} asked you to share {report}. Sharing is free for the buyer and does not use their plan.',button:'Open buyer reports'},
+      {subject:'{buyer} ขอให้ท่านแชร์{report}',title:'ผู้ซื้อขอรายงาน',body:'{buyer} ขอให้ท่านแชร์{report} การแชร์ไม่มีค่าใช้จ่ายสำหรับผู้ซื้อ และไม่ใช้สิทธิ์ในแพ็กเกจ',button:'เปิดรายงานของผู้ซื้อ'}),
+  },
+  {
     key: "approved", n: 1, group: "Approvals", name: "Approved", icon: "check", color: "#16A34A", instant: true, wired: true,
     placeholders: ["{listing code name}", "{buyer code name}", "{firm}", "{date}"],
     seller: v("Admin approves the listing", SELLER_TO, "My Company › Public view", "/marketplace/my-company",

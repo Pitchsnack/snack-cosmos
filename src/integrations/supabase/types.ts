@@ -1151,6 +1151,64 @@ export type Database = {
           },
         ]
       }
+      buyer_report_access: {
+        Row: {
+          buyer_id: string
+          company_id: string
+          id: string
+          last_opened_at: string | null
+          opened_at: string
+          order_id: string | null
+          pipeline_id: string
+          report_key: string
+          via: string
+        }
+        Insert: {
+          buyer_id: string
+          company_id: string
+          id?: string
+          last_opened_at?: string | null
+          opened_at?: string
+          order_id?: string | null
+          pipeline_id: string
+          report_key: string
+          via: string
+        }
+        Update: {
+          buyer_id?: string
+          company_id?: string
+          id?: string
+          last_opened_at?: string | null
+          opened_at?: string
+          order_id?: string | null
+          pipeline_id?: string
+          report_key?: string
+          via?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_report_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyer_report_access_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyer_report_access_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyer_verifications: {
         Row: {
           assignee_id: string | null
@@ -1570,6 +1628,59 @@ export type Database = {
           {
             foreignKeyName: "company_registered_business_th_startup_id_fkey"
             columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_report_records: {
+        Row: {
+          authorised_at: string | null
+          authorised_by: string | null
+          checked_on: string | null
+          company_id: string
+          content: Json | null
+          created_at: string
+          generated_at: string | null
+          id: string
+          ready_by: string | null
+          report_key: string
+          source_filed_on: string | null
+          status: string
+        }
+        Insert: {
+          authorised_at?: string | null
+          authorised_by?: string | null
+          checked_on?: string | null
+          company_id: string
+          content?: Json | null
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          ready_by?: string | null
+          report_key: string
+          source_filed_on?: string | null
+          status?: string
+        }
+        Update: {
+          authorised_at?: string | null
+          authorised_by?: string | null
+          checked_on?: string | null
+          company_id?: string
+          content?: Json | null
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          ready_by?: string | null
+          report_key?: string
+          source_filed_on?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_report_records_company_id_fkey"
+            columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "startups"
             referencedColumns: ["id"]
@@ -4919,6 +5030,51 @@ export type Database = {
         }
         Relationships: []
       }
+      report_open_events: {
+        Row: {
+          buyer_id: string
+          company_id: string
+          id: string
+          opened_at: string
+          pipeline_id: string
+          report_key: string
+          via: string
+        }
+        Insert: {
+          buyer_id: string
+          company_id: string
+          id?: string
+          opened_at?: string
+          pipeline_id: string
+          report_key: string
+          via: string
+        }
+        Update: {
+          buyer_id?: string
+          company_id?: string
+          id?: string
+          opened_at?: string
+          pipeline_id?: string
+          report_key?: string
+          via?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_open_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_open_events_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_order_events: {
         Row: {
           actor_id: string | null
@@ -5060,6 +5216,57 @@ export type Database = {
           },
         ]
       }
+      report_share_requests: {
+        Row: {
+          buyer_id: string
+          company_id: string
+          id: string
+          pipeline_id: string
+          report_key: string
+          requested_at: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          buyer_id: string
+          company_id: string
+          id?: string
+          pipeline_id: string
+          report_key: string
+          requested_at?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          buyer_id?: string
+          company_id?: string
+          id?: string
+          pipeline_id?: string
+          report_key?: string
+          requested_at?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_share_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_share_requests_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_shares: {
         Row: {
           allow_download: boolean
@@ -5068,6 +5275,8 @@ export type Database = {
           financials: boolean
           id: string
           pipeline_id: string | null
+          report_keys: string[]
+          report_opened_at: Json
           revoked_at: string | null
           revoked_by: string | null
           shared_at: string
@@ -5083,6 +5292,8 @@ export type Database = {
           financials?: boolean
           id?: string
           pipeline_id?: string | null
+          report_keys?: string[]
+          report_opened_at?: Json
           revoked_at?: string | null
           revoked_by?: string | null
           shared_at?: string
@@ -5098,6 +5309,8 @@ export type Database = {
           financials?: boolean
           id?: string
           pipeline_id?: string | null
+          report_keys?: string[]
+          report_opened_at?: Json
           revoked_at?: string | null
           revoked_by?: string | null
           shared_at?: string
@@ -7163,6 +7376,19 @@ export type Database = {
         Returns: boolean
       }
       record_sign_in_day: { Args: never; Returns: boolean }
+      reports_open_plan: {
+        Args: {
+          _buyer: string
+          _pipeline: string
+          _plan_key: string
+          _report: string
+        }
+        Returns: Json
+      }
+      reports_pipeline_nda: {
+        Args: { _buyer: string; _pipeline: string }
+        Returns: boolean
+      }
       role_is: { Args: { _role: string; _uid: string }; Returns: boolean }
       share_email_has_account: { Args: { _email: string }; Returns: boolean }
       user_in_tenant: {

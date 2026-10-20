@@ -1,0 +1,23 @@
+import type { StartupFinancials } from './financials.functions';
+import type { VerificationState } from './company-verification';
+
+export const REPORT_KEYS = ['verification','shareholders','statements','pnl','risk','credit'] as const;
+export type HubKey = typeof REPORT_KEYS[number];
+export type HubMode = 'buyer' | 'seller' | 'admin';
+export type HubState = 'shared' | 'yours' | 'plan' | 'buy' | 'on_order' | 'asked';
+export const HUB_LAUNCH = '2026-10-20T01:02:00Z';
+export const hubIsNew = (now = Date.now()) => now >= Date.parse(HUB_LAUNCH) && now < Date.parse(HUB_LAUNCH) + 30 * 86400000;
+export const HUB_NAMES: Record<HubKey,string> = {verification:'Company verification',shareholders:'Shareholders',statements:'Financial statements',pnl:'P&L analysis',risk:'Company risk',credit:'Credit risk'};
+export const HUB_THAI: Record<HubKey,string> = {verification:'ตรวจสอบบริษัท',shareholders:'ผู้ถือหุ้น',statements:'งบการเงิน',pnl:'วิเคราะห์กำไรขาดทุน',risk:'ความเสี่ยงบริษัท',credit:'ความเสี่ยงเครดิต'};
+export function buyerReportState(o: {shared:boolean;yours:boolean;asked:boolean;ready:boolean;inPlan:boolean}): HubState {
+  if(o.shared)return 'shared'; if(o.yours)return 'yours'; if(o.asked)return 'asked'; if(!o.ready)return 'on_order'; return o.inPlan?'plan':'buy';
+}
+export const accessibleCount = (rows: {buyerState:HubState}[]) => rows.filter(r=>['shared','yours','plan'].includes(r.buyerState)).length;
+export function hubNdaActive(p:{status:string;nda_approved_at:string|null;nda_expires_at:string|null},now=Date.now()) {
+  return !!p.nda_approved_at && !['declined','withdrawn','revoked','ended'].includes(p.status) && Date.parse(p.nda_expires_at ?? new Date(Date.parse(p.nda_approved_at)+730*86400000).toISOString()) > now;
+}
+export type Audience = {pipelineId:string;buyerId:string;name:string;sub:string;ref:string|null;contact:string|null;state:'shared'|'yours'|'asked';at:string;openedAt:string|null;allowDownload:boolean};
+export type HubRow = {key:HubKey;planKey:string;years:number;name:string;status:'ready'|'in_progress'|'not_ordered';generatedAt:string|null;authorisedAt:string|null;readyBy:string|null;orderId:string|null;paidAt:string|null;price:number|null;paidAmount:number|null;buyerState:HubState;openedAt:string|null;askedAt:string|null;declinedAt:string|null;inPlan:boolean;left:number|null;total:number|null;included:boolean;audience:Audience[];allowDownload:boolean};
+export type HubData = {mode:HubMode;companyId:string;pipelineId:string|null;company:string;companyTh:string|null;code:string|null;ref:string|null;registration:string|null;sector:string|null;province:string|null;companyStatus:string|null;fiscalYear:number|null;owner:string|null;runBy:string|null;buyer: {id:string;name:string;sub:string;ref:string|null;contact:string|null}|null;ndaAt:string|null;step:number;stepName:string;rows:HubRow[];count:number;waiting:number;fresh:boolean};
+export type ShareholderContent = {capital:number|null;shares:number|null;par:number|null;fullyPaid:boolean|null;thaiPct:number|null;ultimateOwner:string|null;ultimatePct:number|null;holders:{name:string;registration:string|null;role:string|null;type:string;nationality:string;shares:number|null;pct:number}[];chains:{description:string;effective:string}[];notes:{title:string;text:string}[];sources:string[];filedOn:string|null;checkedOn:string|null};
+export type HubContent = {financials?:StartupFinancials;verification?:VerificationState;shareholders?:ShareholderContent;credit?:{title:string;text:string}[]};
