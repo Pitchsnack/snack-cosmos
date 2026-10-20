@@ -25,7 +25,7 @@ export async function verificationState(sb: any, userId: string, companyId: stri
     sb.from('startups').select('id,startup_name,registered_name,registered_number,logo_url').eq('id',companyId).single(),
     sb.from('company_verifications').select('*').eq('company_id',companyId).maybeSingle(),
     sb.from('hidden_profiles').select('code_name,ref_no').eq('startup_id',companyId).maybeSingle(),
-    sb.from('users').select('first_name,last_name,email,organisation').eq('id',userId).maybeSingle(),
+    sb.from('users').select('first_name,last_name,email').eq('id',userId).maybeSingle(),
     sb.from('verification_access').select('*').eq('company_id',companyId).eq('buyer_account_id',userId).maybeSingle(),
     sb.from('verification_orders').select('id,status,total,ref,paid_at,created_at').eq('company_id',companyId).eq('ordered_by',userId).order('created_at',{ascending:false}).limit(1),
     sb.from('plans').select('verification_price_thb,verification_vat_pct,verification_business_days,verification_recheck_business_days').eq('status','live').eq('role','seller').eq('verification_mode','paid').order('sort').limit(1).maybeSingle(),
