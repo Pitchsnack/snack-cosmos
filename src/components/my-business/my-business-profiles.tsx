@@ -199,20 +199,28 @@ export function Row({ label, link, onClick, circle }: { label: string; link: str
 
 /* --------------------------- Left: tabbed card ---------------------------- */
 
-export function FolderTab({ active, open, side, icon, title, sub, tone, onClick }: {
+export function FolderTab({ active, open, side, icon, title, sub, tone, onClick, controls, tabRef, compactNarrow }: {
   active: boolean; open?: boolean; side: "left" | "right"; icon: React.ReactNode; title: string; sub: string; tone: "indigo" | "green"; onClick: () => void;
+  /** Optional a11y wiring (Favourites): the panel id, and roving focus. */
+  controls?: string; tabRef?: (el: HTMLButtonElement | null) => void;
+  /** Tighter front-tab padding inside an @container narrower than 340px. */
+  compactNarrow?: boolean;
 }) {
   return (
     <button
       type="button"
       role="tab"
+      ref={tabRef}
       aria-selected={active}
+      aria-controls={controls}
+      tabIndex={controls ? (active ? 0 : -1) : undefined}
       onClick={onClick}
       className={cn(
         "absolute flex items-center overflow-hidden rounded-t-[12px] border border-b-0 text-left transition-[width,height,background-color] duration-200 ease-in-out",
         side === "left" ? "left-0" : "right-0",
         active
           ? cn("bottom-[-1px] z-[2] h-[59px] w-[56%] gap-2.5 bg-card px-4 text-foreground",
+              compactNarrow && "@max-[340px]:gap-2 @max-[340px]:px-3",
               open ? "border-accent" : "border-border",
               side === "left" ? "shadow-[7px_0_8px_-7px_rgba(16,24,40,.16)]" : "shadow-[-7px_0_8px_-7px_rgba(16,24,40,.16)]")
           : cn("bottom-0 z-[1] h-[52px] w-[50%] gap-2 border-[#E1E4EA] bg-[#ECEEF2] text-[#6B7385] hover:bg-[#E4E7EC] dark:border-border dark:bg-muted dark:text-muted-foreground",
