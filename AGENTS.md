@@ -2,7 +2,7 @@
 
 - Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
 - Admin listing review renders MyBusinessProfiles in AdminReviewCtx; StartupCard serves both My Business and Directory cards; private_notes are server-only.
-- Reports: report-catalog.json prices, report_orders; unlock on delivery. Financials/Valuation share my-reports-page.tsx; Tools offers share history to skip tabs.
+- Reports: reports-hub functions scope company/deal access, reuse report_shares; private company_report_records hold analyst content. Unlock sellers on delivery; keep existing Tools/history.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.
 - Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts); sellers get toPublic() only until NDA.

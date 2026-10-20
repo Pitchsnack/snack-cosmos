@@ -473,6 +473,7 @@ function StartupsPageInner() {
                   ) : (
                     <div key={it.id}>
                       <StartupListItem s={it} selected={selected === it.id} onSelect={pick} />
+                      {isControl&&<span className="hub-pill my-1">Reports · {reportSummaries.data?.[it.id]?.ready??0} of 6 ready</span>}
                       <div className="flex items-center gap-2 px-2 pt-1 text-[11px] text-muted-foreground">
                         Hidden profile: <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
                       </div>

@@ -8,7 +8,7 @@ export async function hubScope(ctx:any, mode:HubMode, companyId?:string,pipeline
   if(!companyId)throw new Error('Choose a company');
   if(mode==='admin') {const {data}=await ctx.supabase.rpc('is_control',{_user_id:ctx.userId});if(!data)throw new Error('Control Admin only');}
   else if(mode==='buyer'){await requireRole(ctx.userId,['buyer']);if(!p||p.buyer_user_id!==ctx.userId||!hubNdaActive(p))throw new Error('An approved active NDA is required');}
-  else {await requireRole(ctx.userId,['seller']);const {data}=await ctx.supabase.rpc('verification_owner',{_uid:ctx.userId,_company:companyId});if(!data)throw new Error('Not your company');const {scopeStartupIds}=await import('./workspace-scope.server');if(!(await scopeStartupIds(ctx.userId,[companyId])).includes(companyId))throw new Error('Not in your workspace');}
+  else {if(await requireRole(ctx.userId,['seller'])==='admin')throw new Error('Use the Admin report view');const {data}=await ctx.supabase.rpc('verification_owner',{_uid:ctx.userId,_company:companyId});if(!data)throw new Error('Not your company');const {scopeStartupIds}=await import('./workspace-scope.server');if(!(await scopeStartupIds(ctx.userId,[companyId])).includes(companyId))throw new Error('Not in your workspace');}
   const {supabaseAdmin}=await import('@/integrations/supabase/client.server');return {sb:supabaseAdmin as any,companyId,p};
 }
 const getRows=async(q:any)=>{const {data,error}=await q;if(error){console.error('[reports-hub] query failed',error.message);throw new Error('Report data could not be loaded');}return data??[];};
@@ -40,7 +40,7 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
     getRows(sb.from('startup_users').select('user_id').eq('startup_id',cid)),
   ]);
   const userIds=[...new Set([...ids,...owners.map((o:any)=>o.owning_agent_user_id),...sellerUsers.map((o:any)=>o.user_id)])].filter(Boolean);
-  const users=userIds.length?await getRows(sb.from('users').select('id,first_name,last_name,organisation').in('id',userIds)):[];
+  const users=userIds.length?await getRows(sb.from('users').select('id,first_name,last_name').in('id',userIds)):[];
   const buyerFor=(id:string)=>{const bp=bps.find((b:any)=>b.user_id===id),u=users.find((u:any)=>u.id===id);return {id,name:bp?.investors?.legal_name??bp?.investors?.investor_name??u?.organisation??'Buyer',sub:bp?.investors?.investor_type??'',ref:null,contact:[u?.first_name,u?.last_name].filter(Boolean).join(' ')||null};};
   const a=mode==='buyer'?await planAccess(ctx.userId):null;
   const [planRows,uses,rates]=await Promise.all([
@@ -69,10 +69,11 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
       if(req&&!shared)audience.push({pipelineId:d.id,buyerId:b.id,name:b.name,sub:b.sub,ref:b.ref,contact:b.contact,state:'asked',at:req.requested_at,openedAt:null,allowDownload:false});
     }
     const mine=p?audience.filter(x=>x.pipelineId===p.id):[];const sh=mine.find(x=>x.state==='shared'),own=mine.find(x=>x.state==='yours'),asked=mine.find(x=>x.state==='asked');const declined=p?requests.find((x:any)=>x.pipeline_id===p.id&&x.report_key===key&&x.status==='declined'):null;
+    if(mode==='buyer'&&own&&generatedAt)status='ready';
     const price=key==='verification'?num(Number(rates[0]?.verification_price_thb)):(catalog.prices as Record<string,number>)[kind]??null;
     return {key,planKey,years:key==='statements'?years:0,name:HUB_NAMES[key],status,generatedAt,authorisedAt,readyBy,orderId:o?.id??null,paidAt:o?.paid_at??(key==='verification'?vos.find((o:any)=>o.status==='paid')?.paid_at:null),paidAmount:o?Number(o.amount):null,price,buyerState:buyerReportState({shared:!!sh,yours:!!own,asked:!!asked,ready:status==='ready',inPlan}),openedAt:sh?.openedAt??own?.openedAt??null,askedAt:asked?.at??null,declinedAt:declined?.resolved_at??null,inPlan,left,total,included:key==='verification'&&!!v?.included,audience:mode==='buyer'?[]:p?mine:audience,allowDownload:sh?.allowDownload??!!own};
   });
-  const step=p?currentStep({ndaApprovedAt:p.nda_approved_at,reportSharedAt:p.report_shared_at,loiAcceptedAt:p.loi_accepted_at,contactAt:p.contact_at,legalAt:p.legal_at,spaAt:p.spa_at,paymentAt:p.payment_at} as any):0;
+  const step=p?Math.min(6,currentStep({ndaApprovedAt:p.nda_approved_at,reportSharedAt:p.report_shared_at,loiAcceptedAt:p.loi_accepted_at,contactAt:p.contact_at,legalAt:p.legal_at,spaAt:p.spa_at,paymentAt:p.payment_at} as any)):0;
   const ownerIds=[...owners.map((x:any)=>x.owning_agent_user_id),...sellerUsers.map((x:any)=>x.user_id)];const owner=users.filter((u:any)=>ownerIds.includes(u.id)).map((u:any)=>[u.first_name,u.last_name].filter(Boolean).join(' ')).filter(Boolean).join(', ')||null;
   return {mode,companyId:cid,pipelineId:p?.id??null,company:ci?.legal_name_en??s.registered_name??ci?.legal_name_th??s.startup_name??hp?.ref_no??'Company',companyTh:ci?.legal_name_th??null,code:hp?.code_name??null,ref:hp?.ref_no??null,registration:ci?.registration_number??s.registered_number??null,sector:s.industry?.join(' · ')??null,province:s.address_province_state??null,companyStatus:s.status??null,fiscalYear:fs.length?Math.max(...fs.map((x:any)=>x.fiscal_year)):null,owner,runBy:s.run_by??null,buyer:p?buyerFor(p.buyer_user_id):null,ndaAt:p?.nda_approved_at??null,step,stepName:STEPS[step]??'NDA',rows,count:mode==='buyer'?accessibleCount(rows):rows.filter(r=>r.status==='ready').length,waiting:rows.filter(r=>r.orderId&&r.status!=='ready').length,fresh:rows.some(r=>r.status==='ready'&&['shared','yours','plan'].includes(r.buyerState)&&(!r.openedAt||!!r.generatedAt&&r.generatedAt>r.openedAt))};
 }
