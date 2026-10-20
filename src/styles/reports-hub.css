@@ -15,3 +15,8 @@
 @media(max-width:999px){.hub-grid{grid-template-columns:1fr}.hub-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.hub-plan{grid-column:1/-1}.hub-heading{min-width:0}.hub-header{padding-right:48px}.hub-actions{margin-left:0}.hub-report{overflow:hidden}}
 @media(max-width:600px){.hub-dialog{inset:0;transform:none;width:100%;max-height:100dvh;border-radius:0;padding:56px 12px 16px}.hub-page{padding:16px 12px}.hub-header{padding:16px;gap:12px}.hub-tile{width:44px;height:44px}.hub-heading{flex-basis:calc(100% - 60px)}.hub-heading h2{font-size:20px}.hub-meta{font-size:12px}.hub-actions{width:100%}.hub-actions>*{flex:1}.hub-list{display:block}.hub-row{min-height:64px}.hub-report,.hub-audience{padding:14px}.hub-lock{padding:18px 8px}.hub-lock .hub-actions{flex-direction:column}.hub-facts>div{grid-template-columns:110px 1fr;gap:8px}.hub-facts dd{overflow-wrap:anywhere}.hub-person .hub-pill{width:auto}.hub-report .cv-report{overflow:hidden}}
 @media print{.hub-overlay,.hub-close,.hub-list,.hub-header,.hub-audience,.hub-footer{display:none!important}.hub-dialog{position:static;transform:none;width:100%;max-height:none;overflow:visible;box-shadow:none;padding:0}.hub-grid{display:block}.hub-report{border:0}}
+.reports-hub[data-mode=seller] .hub-row{display:grid!important;grid-template-columns:30px minmax(0,1fr)}
+.reports-hub[data-mode=seller] .hub-label{grid-column:2;white-space:normal;line-height:1.4}
+.hub-report .cv-embedded{padding:0;max-width:none}
+.hub-report .tools-offer-card{padding:20px;box-shadow:none}
+.hub-report .cv-offer-stage{min-height:600px}

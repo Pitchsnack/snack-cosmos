@@ -28,8 +28,11 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as AuthenticatedAiAgentsRouteImport } from './routes/_authenticated/ai-agents'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
+import { Route as AuthenticatedCompanyRiskRouteImport } from './routes/_authenticated/company-risk'
+import { Route as AuthenticatedCompanyValuationRouteImport } from './routes/_authenticated/company-valuation'
 import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
+import { Route as AuthenticatedCreditRiskRouteImport } from './routes/_authenticated/credit-risk'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedEmailAlertsRouteImport } from './routes/_authenticated/email-alerts'
@@ -53,6 +56,7 @@ import { Route as AuthenticatedStartupActivityRouteImport } from './routes/_auth
 import { Route as AuthenticatedStartupsRouteImport } from './routes/_authenticated/startups'
 import { Route as AuthenticatedTenantsRouteImport } from './routes/_authenticated/tenants'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedVerificationRouteImport } from './routes/_authenticated/verification'
 import { Route as HandoverTokenRouteImport } from './routes/handover.$token'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedAdminAccessCodesRouteImport } from './routes/_authenticated/admin/access-codes'
@@ -216,6 +220,18 @@ const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCompanyRiskRoute =
+  AuthenticatedCompanyRiskRouteImport.update({
+    id: '/company-risk',
+    path: '/company-risk',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCompanyValuationRoute =
+  AuthenticatedCompanyValuationRouteImport.update({
+    id: '/company-valuation',
+    path: '/company-valuation',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedConnectionsRoute =
   AuthenticatedConnectionsRouteImport.update({
     id: '/connections',
@@ -225,6 +241,11 @@ const AuthenticatedConnectionsRoute =
 const AuthenticatedContactsRoute = AuthenticatedContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCreditRiskRoute = AuthenticatedCreditRiskRouteImport.update({
+  id: '/credit-risk',
+  path: '/credit-risk',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -355,6 +376,12 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedVerificationRoute =
+  AuthenticatedVerificationRouteImport.update({
+    id: '/verification',
+    path: '/verification',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const HandoverTokenRoute = HandoverTokenRouteImport.update({
   id: '/handover/$token',
   path: '/handover/$token',
@@ -765,8 +792,11 @@ export interface FileRoutesByFullPath {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
+  '/company-risk': typeof AuthenticatedCompanyRiskRoute
+  '/company-valuation': typeof AuthenticatedCompanyValuationRoute
   '/connections': typeof AuthenticatedConnectionsRoute
   '/contacts': typeof AuthenticatedContactsRouteWithChildren
+  '/credit-risk': typeof AuthenticatedCreditRiskRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
   '/email-alerts': typeof AuthenticatedEmailAlertsRoute
@@ -790,6 +820,7 @@ export interface FileRoutesByFullPath {
   '/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/verification': typeof AuthenticatedVerificationRoute
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
@@ -877,7 +908,10 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/audit': typeof AuthenticatedAuditRoute
+  '/company-risk': typeof AuthenticatedCompanyRiskRoute
+  '/company-valuation': typeof AuthenticatedCompanyValuationRoute
   '/connections': typeof AuthenticatedConnectionsRoute
+  '/credit-risk': typeof AuthenticatedCreditRiskRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/email-alerts': typeof AuthenticatedEmailAlertsRoute
   '/entity-control': typeof AuthenticatedEntityControlRoute
@@ -896,6 +930,7 @@ export interface FileRoutesByTo {
   '/startup-activity': typeof AuthenticatedStartupActivityRoute
   '/tenants': typeof AuthenticatedTenantsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/verification': typeof AuthenticatedVerificationRoute
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
@@ -980,8 +1015,11 @@ export interface FileRoutesById {
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/ai-agents': typeof AuthenticatedAiAgentsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
+  '/_authenticated/company-risk': typeof AuthenticatedCompanyRiskRoute
+  '/_authenticated/company-valuation': typeof AuthenticatedCompanyValuationRoute
   '/_authenticated/connections': typeof AuthenticatedConnectionsRoute
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
+  '/_authenticated/credit-risk': typeof AuthenticatedCreditRiskRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
   '/_authenticated/email-alerts': typeof AuthenticatedEmailAlertsRoute
@@ -1005,6 +1043,7 @@ export interface FileRoutesById {
   '/_authenticated/startups': typeof AuthenticatedStartupsRouteWithChildren
   '/_authenticated/tenants': typeof AuthenticatedTenantsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/_authenticated/verification': typeof AuthenticatedVerificationRoute
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/_authenticated/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
@@ -1094,8 +1133,11 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/ai-agents'
     | '/audit'
+    | '/company-risk'
+    | '/company-valuation'
     | '/connections'
     | '/contacts'
+    | '/credit-risk'
     | '/dashboard'
     | '/deals'
     | '/email-alerts'
@@ -1119,6 +1161,7 @@ export interface FileRouteTypes {
     | '/startups'
     | '/tenants'
     | '/users'
+    | '/verification'
     | '/handover/$token'
     | '/sp2-gateway/'
     | '/admin/access-codes'
@@ -1206,7 +1249,10 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/ai-agents'
     | '/audit'
+    | '/company-risk'
+    | '/company-valuation'
     | '/connections'
+    | '/credit-risk'
     | '/dashboard'
     | '/email-alerts'
     | '/entity-control'
@@ -1225,6 +1271,7 @@ export interface FileRouteTypes {
     | '/startup-activity'
     | '/tenants'
     | '/users'
+    | '/verification'
     | '/handover/$token'
     | '/sp2-gateway'
     | '/admin/access-codes'
@@ -1308,8 +1355,11 @@ export interface FileRouteTypes {
     | '/_authenticated/access-management'
     | '/_authenticated/ai-agents'
     | '/_authenticated/audit'
+    | '/_authenticated/company-risk'
+    | '/_authenticated/company-valuation'
     | '/_authenticated/connections'
     | '/_authenticated/contacts'
+    | '/_authenticated/credit-risk'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
     | '/_authenticated/email-alerts'
@@ -1333,6 +1383,7 @@ export interface FileRouteTypes {
     | '/_authenticated/startups'
     | '/_authenticated/tenants'
     | '/_authenticated/users'
+    | '/_authenticated/verification'
     | '/handover/$token'
     | '/sp2-gateway/'
     | '/_authenticated/admin/access-codes'
@@ -1564,6 +1615,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAuditRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/company-risk': {
+      id: '/_authenticated/company-risk'
+      path: '/company-risk'
+      fullPath: '/company-risk'
+      preLoaderRoute: typeof AuthenticatedCompanyRiskRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/company-valuation': {
+      id: '/_authenticated/company-valuation'
+      path: '/company-valuation'
+      fullPath: '/company-valuation'
+      preLoaderRoute: typeof AuthenticatedCompanyValuationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/connections': {
       id: '/_authenticated/connections'
       path: '/connections'
@@ -1576,6 +1641,13 @@ declare module '@tanstack/react-router' {
       path: '/contacts'
       fullPath: '/contacts'
       preLoaderRoute: typeof AuthenticatedContactsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/credit-risk': {
+      id: '/_authenticated/credit-risk'
+      path: '/credit-risk'
+      fullPath: '/credit-risk'
+      preLoaderRoute: typeof AuthenticatedCreditRiskRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
@@ -1737,6 +1809,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/users'
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/verification': {
+      id: '/_authenticated/verification'
+      path: '/verification'
+      fullPath: '/verification'
+      preLoaderRoute: typeof AuthenticatedVerificationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/handover/$token': {
@@ -2450,8 +2529,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAiAgentsRoute: typeof AuthenticatedAiAgentsRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
+  AuthenticatedCompanyRiskRoute: typeof AuthenticatedCompanyRiskRoute
+  AuthenticatedCompanyValuationRoute: typeof AuthenticatedCompanyValuationRoute
   AuthenticatedConnectionsRoute: typeof AuthenticatedConnectionsRoute
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
+  AuthenticatedCreditRiskRoute: typeof AuthenticatedCreditRiskRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
   AuthenticatedEmailAlertsRoute: typeof AuthenticatedEmailAlertsRoute
@@ -2475,6 +2557,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedStartupsRoute: typeof AuthenticatedStartupsRouteWithChildren
   AuthenticatedTenantsRoute: typeof AuthenticatedTenantsRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
+  AuthenticatedVerificationRoute: typeof AuthenticatedVerificationRoute
   AuthenticatedAdminAccessCodesRoute: typeof AuthenticatedAdminAccessCodesRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
@@ -2499,8 +2582,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAiAgentsRoute: AuthenticatedAiAgentsRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
+  AuthenticatedCompanyRiskRoute: AuthenticatedCompanyRiskRoute,
+  AuthenticatedCompanyValuationRoute: AuthenticatedCompanyValuationRoute,
   AuthenticatedConnectionsRoute: AuthenticatedConnectionsRoute,
   AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
+  AuthenticatedCreditRiskRoute: AuthenticatedCreditRiskRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,
   AuthenticatedEmailAlertsRoute: AuthenticatedEmailAlertsRoute,
@@ -2524,6 +2610,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedStartupsRoute: AuthenticatedStartupsRouteWithChildren,
   AuthenticatedTenantsRoute: AuthenticatedTenantsRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
+  AuthenticatedVerificationRoute: AuthenticatedVerificationRoute,
   AuthenticatedAdminAccessCodesRoute: AuthenticatedAdminAccessCodesRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,

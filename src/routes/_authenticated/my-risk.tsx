@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-import { MyReportsPage } from "@/components/my-business/my-reports-page";
 
 export const Route = createFileRoute("/_authenticated/my-risk")({
   head: () => ({
@@ -17,10 +16,5 @@ export const Route = createFileRoute("/_authenticated/my-risk")({
     company: typeof s.company === "string" ? s.company : undefined,
     from: typeof s.from === "string" ? s.from : undefined,
   }),
-  component: Page,
+  beforeLoad: ({search}) => {throw redirect({to:'/my-reports',search:{company:search.company,report:'risk'},replace:true});},
 });
-
-function Page() {
-  const { company, from } = Route.useSearch();
-  return <MyReportsPage kind="risk" company={company} from={from} />;
-}
