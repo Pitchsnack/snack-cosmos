@@ -36,6 +36,13 @@ const BUYER_TO = "The buyer";
 
 export const EMAIL_ALERTS: AlertDef[] = [
   {
+    key:'report_ready',n:12,group:'Pipeline',name:'Report authorised',icon:'file',color:'#0E7490',wired:true,
+    placeholders:['{company}','{report}','{companyId}','{key}'],
+    seller:v('Admin authorises a report',SELLER_TO,'Tools › My reports','/my-reports?company={companyId}&report={key}',
+      {subject:'Your {report} for {company} is ready',title:'Your report is ready',body:'Your {report} for {company} is ready. You can share it with buyers whose NDA you approved.',button:'Open My reports'},
+      {subject:'{report} ของ {company} พร้อมแล้ว',title:'รายงานของท่านพร้อมแล้ว',body:'{report} ของ {company} พร้อมแล้ว ท่านแชร์ให้ผู้ซื้อที่ท่านอนุมัติ NDA ได้',button:'เปิดรายงานของฉัน'}),
+  },
+  {
     key: 'report_share_request', n: 11, group: 'Pipeline', name: 'Report share request', icon: 'file', color: '#0E7490', wired: true,
     placeholders: ['{buyer}', '{report}', '{pipeline}', '{key}'],
     seller: v('A buyer with an approved NDA asks for a report', SELLER_TO, 'My Pipeline › Buyer reports', '/my-reports/buyer/{pipeline}?report={key}',

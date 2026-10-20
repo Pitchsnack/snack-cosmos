@@ -1,10 +1,13 @@
 # Roadmap — Control setup wizards (brief 2)
-- [ ] Reports: six-type data, atomic buyer access, requests and shareholder record
-- [ ] Reports: buyer pop-up and Pipeline controls; seller My reports and buyer page
-- [ ] Reports: Admin Directory pop-up, Generate/Authorise and read-only audience
-- [ ] Reports: notifications, rule tests and 1440/390 English/Thai checks
-- [ ] Tools offers: shared close button, backdrop/Escape return and financials/valuation history grouping
-- [ ] Tools offers: navigation tests and English/Thai light/dark screen checks at 1440/1024/390
+- [x] Reports: six-type data, atomic buyer access, requests and shareholder record
+- [x] Reports: buyer pop-up and Pipeline controls; seller My reports and buyer page
+- [x] Reports: Admin Directory pop-up and read-only audience; financial generation/authorisation
+- [ ] Reports: Shareholders/Credit analyst completion requires real source records; no extraction/check-recording service exists
+- [x] Reports: request/shared/authorised notifications and 28 passing rule/email tests; signed-in Admin 1440/390 checks
+- [ ] Reports: buyer/seller live share/order and English/Thai checks require suitable approved test accounts
+- [ ] Reports: paid buyer checkout requires connected payment provider; Credit price is not configured
+- [x] Tools offers: shared close button, backdrop/Escape return and financials/valuation history grouping
+- [x] Tools offers: navigation tests and English/Thai light/dark screen checks at 1440/1024/390
 - [x] Company verification: data/access and atomic buyer allowances
 - [x] Company verification: shared report, sample, badges, seller and buyer screens, Thai
 - [ ] Company verification payments and transfer submission: no payment provider/bank setup
