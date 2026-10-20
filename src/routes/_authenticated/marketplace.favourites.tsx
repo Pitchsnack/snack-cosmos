@@ -27,6 +27,7 @@ import { usePersona } from "@/hooks/use-marketplace";
 import { SellerFavourites } from "@/components/marketplace/seller-favourites";
 import { NdaSentDialog } from "@/components/marketplace/buyer-invitations";
 import { cn } from "@/lib/utils";
+import { FavViewCard, FavViewLine, publicStatusSentence, type FavView } from "@/components/marketplace/fav-view-card";
 import { BrowseHeader, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
 
 export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
@@ -239,7 +240,7 @@ function FavouritesPage() {
 
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent className="max-h-[88vh] overflow-hidden p-0 sm:max-w-[860px]">
-          {modal && <div className="flex max-h-[88vh] flex-col"><FavPanel f={modal} savedIds={savedIds} toggleSave={toggleSave} /></div>}
+          {modal && <div className="flex max-h-[88vh] flex-col"><FavPanel key={`${modal.id}:${viewOf(modal)}`} f={modal} view={viewOf(modal)} savedIds={savedIds} toggleSave={toggleSave} /></div>}
         </DialogContent>
       </Dialog>
     </div>
