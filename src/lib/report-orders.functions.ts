@@ -261,7 +261,6 @@ async function notifyReady(sb: any, o: any) {
   const { data: st } = await sb.from("startups").select("startup_name").eq("id", o.startup_id).maybeSingle();
   const company = st?.startup_name ?? "your company";
   const val = o.kind === "valuation";
-  const risk = o.kind === "risk";
   const key=o.kind==='financials'||o.kind==='bundle'?'statements':o.kind;
   const {HUB_NAMES}=await import('./reports-hub');
   const report=HUB_NAMES[key as keyof typeof HUB_NAMES]??'estimated valuation';
