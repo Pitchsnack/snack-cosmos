@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
 });
 
 type Filter = "all" | FavStatus;
-const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Starred"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
+const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Favourites"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
 const baht = (n: number | null) => {
