@@ -1,7 +1,7 @@
 # Roadmap — Control setup wizards (brief 2)
-- [ ] My reports consolidation: seven reports, existing viewers/offers, Seller menu and legacy redirects
-- [ ] My reports consolidation: valuation access/sharing and dynamic counts
-- [ ] My reports consolidation: Control seller loading cause, error/empty states and live verification
+- [x] My reports consolidation: seven reports, existing viewers/offers, Seller menu and legacy redirects
+- [x] My reports consolidation: valuation access/sharing and dynamic counts
+- [x] My reports consolidation: Control seller role-gate cause fixed; live seven-row/empty/redirect/Admin checks, EN/TH and 1440/390
 - [x] Reports: six-type data, atomic buyer access, requests and shareholder record
 - [x] Reports: buyer pop-up and Pipeline controls; seller My reports and buyer page
 - [x] Reports: Admin Directory pop-up and read-only audience; financial generation/authorisation
