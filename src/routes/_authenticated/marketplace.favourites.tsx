@@ -74,25 +74,23 @@ function StarredBadge() {
   );
 }
 
-function FavCard({ f, selected, onSelect, expanded, onToggleExpand, savedIds, toggleSave, wrapMeta }: {
-  f: Favourite; selected?: boolean; onSelect?: () => void; expanded?: boolean; onToggleExpand?: () => void;
-  savedIds: Set<string>; toggleSave: (id: string) => void; wrapMeta?: boolean;
+function FavCard({ f, view, open, onView, onOpen, expanded, onToggleExpand, savedIds, toggleSave, reserveTabs }: {
+  f: Favourite; view: FavView; open: boolean; onView: (v: FavView) => void; onOpen: (v: FavView) => void;
+  expanded?: boolean; onToggleExpand?: () => void; savedIds: Set<string>; toggleSave: (id: string) => void; reserveTabs?: boolean;
 }) {
   const p = f.priv;
+  const star = <SaveButton square saved={savedIds.has(f.id)} nda={f.status !== "saved"} onClick={() => toggleSave(f.id)} />;
+  const publicBody = (
+    <PublicListingCard showManaged l={f.listing} deal={f} onSelect={() => onOpen("public")} expanded={expanded} onToggleExpand={onToggleExpand}
+      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : undefined} topRight={star} />
+  );
+  const privateBody = p ? (
+    <PublicListingCard l={f.listing} deal={f} onSelect={() => onOpen("private")} expanded={expanded} onToggleExpand={onToggleExpand} badge={<ApprovedBadge />}
+      priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
+  ) : undefined;
   return (
-    <PublicListingCard
-      showManaged
-      l={f.listing}
-      deal={f}
-      selected={selected}
-      onSelect={onSelect}
-      expanded={expanded}
-      onToggleExpand={onToggleExpand}
-      wrapMeta={wrapMeta}
-      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : <StarredBadge />}
-      priv={p ? { name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees } : undefined}
-      topRight={f.status === "saved" ? <SaveButton square saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} /> : undefined}
-    />
+    <FavViewCard side="buyer" name={p?.companyName ?? f.listing.codeName ?? f.listing.refNo ?? ""} hasPrivate={!!p} view={view} open={open}
+      onView={onView} privateBody={privateBody} publicBody={publicBody} reserveTabs={reserveTabs} />
   );
 }
 
