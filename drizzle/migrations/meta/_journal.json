@@ -736,6 +736,13 @@
       "when": 1792458215540,
       "tag": "0104_six_report_hub_access_and_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1792459750201,
+      "tag": "0105_serialize_report_entitlements_and_verification_usage",
+      "breakpoints": true
     }
   ]
 }
