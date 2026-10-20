@@ -1,4 +1,8 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Reports: six-type data, atomic buyer access, requests and shareholder record
+- [ ] Reports: buyer pop-up and Pipeline controls; seller My reports and buyer page
+- [ ] Reports: Admin Directory pop-up, Generate/Authorise and read-only audience
+- [ ] Reports: notifications, rule tests and 1440/390 English/Thai checks
 - [ ] Tools offers: shared close button, backdrop/Escape return and financials/valuation history grouping
 - [ ] Tools offers: navigation tests and English/Thai light/dark screen checks at 1440/1024/390
 - [x] Company verification: data/access and atomic buyer allowances
