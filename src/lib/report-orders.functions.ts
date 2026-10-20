@@ -217,6 +217,7 @@ export const publishReport = createServerFn({ method: "POST" })
     const ctx = context as Ctx;
     await assertAdmin(ctx);
     const sb = await admin();
+    const {data:prev}=await sb.from('report_orders').select('*').eq('id',data.orderId).single();
     if(!prev||['cancelled','refunded'].includes(prev.status))throw new Error('Active paid order required');
     if(!prev.generated_at)throw new Error('Generate and review the report before authorising');
     if(['shareholders','credit'].includes(prev.kind)){const {data:r}=await sb.from('company_report_records').select('generated_at,content').eq('company_id',prev.startup_id).eq('report_key',prev.kind).maybeSingle();if(!r?.generated_at||!r?.content)throw new Error('The real analyst report must be recorded first');}
