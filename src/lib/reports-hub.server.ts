@@ -41,7 +41,7 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
   ]);
   const userIds=[...new Set([...ids,...owners.map((o:any)=>o.owning_agent_user_id),...sellerUsers.map((o:any)=>o.user_id)])].filter(Boolean);
   const users=userIds.length?await getRows(sb.from('users').select('id,first_name,last_name').in('id',userIds)):[];
-  const buyerFor=(id:string)=>{const bp=bps.find((b:any)=>b.user_id===id),u=users.find((u:any)=>u.id===id);return {id,name:bp?.investors?.legal_name??bp?.investors?.investor_name??u?.organisation??'Buyer',sub:[bp?.investors?.investor_type,bp?.city].filter(Boolean).join(' · '),ref:bp?.ref_no??null,contact:[u?.first_name,u?.last_name].filter(Boolean).join(' ')||null};};
+  const buyerFor=(id:string)=>{const bp=bps.find((b:any)=>b.user_id===id),u=users.find((u:any)=>u.id===id);return {id,name:bp?.investors?.legal_name??bp?.investors?.investor_name??([u?.first_name,u?.last_name].filter(Boolean).join(' ')||'Buyer'),sub:[bp?.investors?.investor_type,bp?.city].filter(Boolean).join(' · '),ref:bp?.ref_no??null,contact:[u?.first_name,u?.last_name].filter(Boolean).join(' ')||null};};
   const a=mode==='buyer'?await planAccess(ctx.userId):null;
   const [planRows,uses,rates]=await Promise.all([
     a?.plan&&!a.ended?getRows(sb.from('plan_reports').select('*').eq('plan_id',a.plan.id)):[],

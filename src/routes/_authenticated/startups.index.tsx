@@ -425,7 +425,7 @@ function StartupsPageInner() {
           <div className="space-y-2">
             {items.map((it) => (
               <div key={it.id} className="flex items-center gap-3">
-                <div className="min-w-0 flex-1"><StartupRow s={it} onSelect={() => openStartup(it.id, { tab: "full" })} /></div>
+                <div className="min-w-0 flex-1"><StartupRow s={it} onSelect={() => openStartup(it.id, { tab: "full" })} />{isControl&&<span className="hub-pill mt-1">Reports · {reportSummaries.data?.[it.id]?.ready??0} of 6 ready</span>}</div>
                 <div className="w-44 shrink-0">
                   <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Hidden profile</div>
                   <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
