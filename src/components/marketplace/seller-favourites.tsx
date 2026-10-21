@@ -39,7 +39,7 @@ function StatusBadge({ s }: { s: SellerFavStatus }) {
 /** Fixed, filled star for investors in Favourites because of an NDA. */
 function NdaStar() {
   const { t } = useTranslation();
-  const tip = t("In Favourites because of an NDA");
+  const tip = t("In my watchlist because of an NDA");
   return <span title={tip} aria-label={tip} className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#FDE68A] bg-white"><Star className="h-4 w-4 fill-[#F59E0B] text-[#D97706]" /></span>;
 }
 
