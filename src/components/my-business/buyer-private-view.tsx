@@ -136,7 +136,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
   const editAt = (section: string, add?: boolean) => openEdit({ section, add, from: "private" });
   const ITEM_SEC: Record<string, string | undefined> = { ticket: "mandate", aum: "fund", logo: "media", focus: "industries", people: "people" };
   const editItem = (k: string) => { const sec = ITEM_SEC[k]; if (!sec) return edit(); editAt(sec, k === "people" && d.people.length === 0); };
-  const v = V_CHIP[d.verification.status];
+  const v = (V_CHIP as Record<string, (typeof V_CHIP)["none"]>)[d.verification.status] ?? V_CHIP.none;
   const req = privateChecklist(d).filter((x) => x.required && !x.done);
   const submit = useMutation({
     mutationFn: () => submitFn(),
@@ -144,7 +144,8 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     onError: (e) => toast.error((e as Error).message),
   });
   const web = i.website_url ? (i.website_url.startsWith("http") ? i.website_url : `https://${i.website_url}`) : null;
-  const canSubmit = d.verification.status === "none" || d.verification.status === "more_info" || d.verification.status === "declined";
+  const st = d.verification.status as string;
+  const canSubmit = st === "none" || st === "unverified" || st === "more_info" || st === "declined";
 
   const topBar = (
     <div className="-mx-5 -mt-5 mb-1 flex items-center gap-2 border-b border-border px-5 py-3">

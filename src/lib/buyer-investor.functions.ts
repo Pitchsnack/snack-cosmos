@@ -176,7 +176,7 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
       account: { name: (meta.full_name || meta.name || "") as string, title: (up?.title ?? "") as string },
       people: (p.people ?? []) as { name: string; role: string; email: string; phone: string }[],
       verification: {
-        status: (bv?.status ?? "none") as "none" | "pending" | "verified" | "more_info" | "declined",
+        status: (bv?.status === "unverified" || !bv?.status ? "none" : bv.status) as "none" | "pending" | "verified" | "more_info" | "declined",
         note: bv?.decision_note as string | null,
       },
       extra: r.extra,
