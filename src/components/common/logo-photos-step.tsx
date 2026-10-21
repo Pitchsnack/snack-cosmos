@@ -57,7 +57,7 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
   return (
     <div>
       <div className="max-[599px]:[&_.attachment-card]:p-[14px]">
-        <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={name} sectorLine={sectorLine} />
+        <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={name} sectorLine={sectorLine} intro={null} />
       </div>
       <p className="mt-2.5 flex items-start gap-1.5 text-[13px] text-[#6B7280] dark:text-muted-foreground">{note}</p>
       {ok ? (

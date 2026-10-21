@@ -23,8 +23,10 @@ export function attachmentMissing(m: EntityMediaState) {
   return (filled(m.logo) ? 0 : 1) + (m.slots.some(filled) ? 0 : 1);
 }
 
-export function AttachmentCard({ value, onChange, name, sectorLine }: {
+export function AttachmentCard({ value, onChange, name, sectorLine, intro }: {
   value: EntityMediaState; onChange: (m: EntityMediaState) => void; name: string; sectorLine: string;
+  /** Text above the card; null hides it. Defaults to the seller wording. */
+  intro?: string | null;
 }) {
   const tr = useTr();
   const hasLogo = filled(value.logo);
@@ -52,13 +54,16 @@ export function AttachmentCard({ value, onChange, name, sectorLine }: {
   const miss = !hasLogo && !photos ? tr("⚠ Missing: add your logo and at least one photo", "⚠ ยังขาด: เพิ่มโลโก้และรูปภาพอย่างน้อย 1 รูป")
     : !hasLogo ? tr("⚠ Missing: add your logo", "⚠ ยังขาด: เพิ่มโลโก้ของท่าน")
     : !photos ? tr("⚠ Missing: add at least one photo", "⚠ ยังขาด: เพิ่มรูปภาพอย่างน้อย 1 รูป") : null;
+  const introText = intro === undefined
+    ? tr("Your logo and up to 3 photos of the premises, the team or the products. Buyers see them like this after you approve their NDA.",
+      "โลโก้และรูปภาพของกิจการได้สูงสุด 3 รูป เช่น สถานที่ ทีมงาน หรือสินค้า ผู้ซื้อจะเห็นแบบนี้หลังจากท่านอนุมัติ NDA")
+    : intro;
 
   return (
     <div>
-      <p className="mb-[18px] max-w-[72ch] text-[13.5px] leading-[1.5] text-[#6A7181] dark:text-muted-foreground">
-        {tr("Your logo and up to 3 photos of the premises, the team or the products. Buyers see them like this after you approve their NDA.",
-          "โลโก้และรูปภาพของกิจการได้สูงสุด 3 รูป เช่น สถานที่ ทีมงาน หรือสินค้า ผู้ซื้อจะเห็นแบบนี้หลังจากท่านอนุมัติ NDA")}
-      </p>
+      {introText && (
+        <p className="mb-[18px] max-w-[72ch] text-[13.5px] leading-[1.5] text-[#6A7181] dark:text-muted-foreground">{introText}</p>
+      )}
       <div className="flex gap-8 max-[800px]:flex-col max-[800px]:gap-[22px]">
         <div className="min-w-0 flex-1">
           <div className="rounded-[14px] border border-[#E6E8EC] bg-card p-[18px] max-sm:p-[14px] dark:border-border">
