@@ -93,7 +93,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     city: cityError(a.city, a.country),
     name: nameError(a.name),
     year: yearError(a.year),
-    reg: thai && !/^\d{13}$/.test(a.reg) ? "The registration number has 13 digits." : null,
+    reg: thai && !/^\d{13}$/.test(a.reg) ? tr("The registration number has 13 digits.") : null,
     "a-street": addrErr.street, "a-district": addrErr.district, "a-province": addrErr.province, "a-postal": addrErr.postal,
     web: webError(a.web),
     services: a.services.length ? (a.services.every((s) => feeWords(a.fees[s] ?? newFee())) ? null : "fee") : tr("Pick at least one service."),
@@ -357,7 +357,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           <div className={cn("grid gap-4", !hid("year", "name") && "sm:grid-cols-[1fr_150px]")}>
             <div>
               <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
-              <input id="w-name" data-f="name" aria-required maxLength={80} placeholder="e.g. Acme Advisory" className={cn(inp, errors.name && "need-fill", show("name") && errCls)} {...(errors.name ? { "data-need": "1" } : {})} value={a.name} onBlur={blur("name")}
+              <input id="w-name" data-f="name" aria-required maxLength={80} placeholder={tr("e.g. Acme Advisory")} className={cn(inp, errors.name && "need-fill", show("name") && errCls)} {...(errors.name ? { "data-need": "1" } : {})} value={a.name} onBlur={blur("name")}
                 onChange={(e) => set({ name: e.target.value }, { name: e.target.value })} />
               <Err m={show("name")} />
             </div>
@@ -370,7 +370,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           <Err m={yearShown} />
           <div className="mt-4">
             <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
-            <input id="w-reg" data-f="reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : undefined}
+            <input id="w-reg" data-f="reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? tr("13 digits") : undefined}
               className={cn(inp, errors.reg && "need-fill", show("reg") && errCls)} {...(errors.reg ? { "data-need": "1" } : {})}
               value={a.reg} onBlur={blur("reg")}
               onChange={(e) => { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50); set({ reg: v }, { registration_no: v || null }); }} />
@@ -378,7 +378,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             <p className="mt-2 flex gap-1.5 text-[13px] text-[#B42318]">
               <ShieldCheck className="mt-[1px] h-[15px] w-[15px] shrink-0" />
               <span><b className="font-semibold">{tr("Sellers and buyers look for advisers they can trust.")}</b>{" "}
-                {thai ? "We verify your firm with this number, then show a Verified advisor badge on your card." : `Adding your registration number in ${a.country === "Other" ? "your country" : a.country} helps us verify your firm.`}</span>
+                {thai ? tr("We verify your firm with this number, then show a Verified advisor badge on your card.") : `Adding your registration number in ${a.country === "Other" ? "your country" : a.country} helps us verify your firm.`}</span>
             </p>
           </div>
           <div className="mt-6">
@@ -398,11 +398,11 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               onChange={(e) => { setTouched((t) => ({ ...t, webTyped: true })); setWebOpened(null); set({ web: e.target.value }, { website: e.target.value || null }); }} />
             <button type="button" disabled={!isValidUrl(a.web)} onClick={() => { window.open(normalizeUrl(a.web), "_blank", "noopener"); setWebOpened(domain); }}
               className="inline-flex h-[50px] items-center justify-center gap-1.5 rounded-[12px] border border-[#DCDFE5] bg-white px-4 text-[15px] font-semibold text-[#434A5C] disabled:opacity-40 dark:border-border dark:bg-background dark:text-foreground">
-              <ExternalLink className="h-4 w-4" /> Check website
+              <ExternalLink className="h-4 w-4" /> {tr("Check website")}
             </button>
           </div>
           {(touched.webTyped && a.web.trim() || forced.web) && errors.web ? <p className="mt-1.5 text-[13px] text-[#B42318]">{errors.web}</p>
-            : webOpened ? <p className="mt-1.5 flex items-center gap-1 text-[13px] text-[#15803D]"><Check className="h-3.5 w-3.5" />Opened {webOpened} in a new tab. Make sure it is your firm.</p>
+            : webOpened ? <p className="mt-1.5 flex items-center gap-1 text-[13px] text-[#15803D]"><Check className="h-3.5 w-3.5" />{L(`Opened ${webOpened} in a new tab. Make sure it is your firm.`, `เปิด ${webOpened} ในแท็บใหม่แล้ว โปรดตรวจสอบว่าเป็นเว็บไซต์ของบริษัทคุณ`)}</p>
             : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
         </div>
       ) },
@@ -424,7 +424,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
                     <input type="checkbox" className="sr-only" checked={on} onChange={() => toggleService(s.name)} />
                     <span className="mt-2.5">{tick(on)}</span>
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#E0F5F2] text-[#0F766E]"><s.icon className="h-5 w-5" /></span>
-                    <span className="min-w-0"><b className="block text-[15px] font-semibold">{s.name}</b><span className="block text-[13px] text-[#6B7280]">{s.line}</span></span>
+                    <span className="min-w-0"><b className="block text-[15px] font-semibold">{tr(s.name)}</b><span className="block text-[13px] text-[#6B7280]">{tr(s.line)}</span></span>
                   </label>
                   {on && (
                     <div className="mt-3 border-t border-[#D5DAE6] pt-3 dark:border-border" onClick={(e) => e.stopPropagation()}>
@@ -436,11 +436,11 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               );
             })}
           </div>
-          <p className="mt-3 text-[13px] text-[#6B7280]"><b className="text-[#151A28] dark:text-foreground">{a.services.length}</b> selected</p>
+          <p className="mt-3 text-[13px] text-[#6B7280]"><b className="text-[#151A28] dark:text-foreground">{a.services.length}</b> {tr("selected")}</p>
           {forced.services && errors.services === "Pick at least one service." && <Err m={errors.services} />}
           <p className="mt-3 flex gap-2 rounded-[10px] bg-[#F3F4F6] px-3.5 py-2.5 text-[13px] text-[#434A5C] dark:bg-muted dark:text-muted-foreground">
             <Info className="mt-[1px] h-4 w-4 shrink-0" />
-            Each service you tick starts on Request a Price Quote. To show a price, pick how you charge and type only the number. If none of the types fits, choose Other and write it in up to 80 characters.
+            {tr("Each service you tick starts on Request a Price Quote. To show a price, pick how you charge and type only the number. If none of the types fits, choose Other and write it in up to 80 characters.")}
           </p>
         </div>
       ) },
@@ -461,28 +461,28 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         <ManyTypeQuestion picks={a.picks} agnostic={a.agnostic} words={advisorWords(L)} error={forced.sectors ? errors.sectors : null}
           onChange={(p, ag) => { const v = ag ? [] : picksToSectors(p); set({ sectors: v, picks: p, agnostic: ag }, { sectors: v, sector_agnostic: ag, sector_picks: ag ? null : p }); }} />
       ) },
-    team: { req: true, t: hid("team", "team") ? "Which languages do you work in?" : tr("What is your company size?"),
-      h: hid("team", "team") ? "Sellers and buyers see them on your card." : tr("Sellers and buyers see your team size on your card, and the languages you work in."),
+    team: { req: true, t: hid("team", "team") ? tr("Which languages do you work in?") : tr("What is your company size?"),
+      h: hid("team", "team") ? tr("Sellers and buyers see them on your card.") : tr("Sellers and buyers see your team size on your card, and the languages you work in."),
       body: (
         <div>
           {!hid("team", "team") && <>
           <label className={lbl} htmlFor="w-team">{tr("Team size")}<Req /></label>
           <div className="flex items-center gap-2.5">
-            <input id="w-team" aria-required inputMode="numeric" maxLength={5} placeholder="e.g. 8" className={cn(inp, "w-[150px]", show("team") && errCls)} value={a.team} onBlur={blur("team")}
+            <input id="w-team" aria-required inputMode="numeric" maxLength={5} placeholder={tr("e.g. 8")} className={cn(inp, "w-[150px]", show("team") && errCls)} value={a.team} onBlur={blur("team")}
               onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 5); set({ team: v }, { team_size: Number(v) >= 1 ? Number(v) : null }); }} />
-            <span className="text-[15px] text-[#434A5C] dark:text-muted-foreground">people</span>
+            <span className="text-[15px] text-[#434A5C] dark:text-muted-foreground">{tr("people")}</span>
           </div>
           <Err m={show("team")} />
           </>}
           <div className={hid("team", "team") ? "" : "mt-5"}>
-            <div className={lbl}>{tr("Languages you work in")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">pick at least one</span></div>
+            <div className={lbl}>{tr("Languages you work in")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">{tr("pick at least one")}</span></div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {LANGUAGES.map((l) => {
                 const on = a.langs.includes(l);
                 return (
                   <label key={l} className={cn(tile(on), "flex h-[50px] items-center gap-2.5 px-3.5 text-[15px]")}>
                     <input type="checkbox" className="sr-only" checked={on} onChange={() => { const v = on ? a.langs.filter((x) => x !== l) : [...a.langs, l]; set({ langs: v }, { languages: v }); }} />
-                    {tick(on)}{l}
+                    {tick(on)}{tr(l)}
                   </label>
                 );
               })}
@@ -528,8 +528,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     desc: { req: true, t: tr("How would you describe your firm?"), h: tr("Sellers and buyers read it on your card, which shows the first 3 lines."),
       body: (
         <div>
-          <label className={lbl} htmlFor="w-desc">{tr("Description")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">30 to 300 characters</span></label>
-          <textarea id="w-desc" aria-required rows={4} maxLength={300} placeholder="e.g. Corporate law firm helping Thai founders sell their companies, from due diligence to signing."
+          <label className={lbl} htmlFor="w-desc">{tr("Description")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">{tr("30 to 300 characters")}</span></label>
+          <textarea id="w-desc" aria-required rows={4} maxLength={300} placeholder={tr("e.g. Corporate law firm helping Thai founders sell their companies, from due diligence to signing.")}
             className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={tr(a.desc)}
             onChange={(e) => set({ desc: e.target.value }, { description: e.target.value || null })} />
           <div className="mt-1 flex justify-between text-[12.5px]">
@@ -543,7 +543,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       body: <Review a={a} errors={errors} onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[cur];
-  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "services" ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
+  const continueLabel = cur === "review" ? tr("Continue to auto-fill") : fromProfile && cur === "services" ? tr("Back to your profile") : fromReview ? tr("Back to review") : tr("Continue");
   const continueOk = cur === "review" ? requiredOk : qValid(cur);
   const optional = cur === "deal";
 
@@ -591,11 +591,11 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       {topBar}
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
-          {header(tr(SECTION[cur]), `Step ${idx + 1} of ${shown.length}`, ((idx + 1) / shown.length) * 100)}
+          {header(tr(SECTION[cur]), L(`Step ${idx + 1} of ${shown.length}`, `ขั้นตอนที่ ${idx + 1} จาก ${shown.length}`), ((idx + 1) / shown.length) * 100)}
           <div className={card} ref={cardRef}>
             <div key={cur} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
-                {tr(q.t)}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
+                {tr(q.t)}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{tr(", required")}</span></>}
               </h1>
               <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr(q.h)}</p>
               {q.body}
@@ -669,7 +669,7 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
   type Row = [string, React.ReactNode, WizardQ, boolean?];
   const groups: [string, Row[]][] = [
     [tr("About the firm"), [
-      [tr("Firm type"), a.type || miss, "type"],
+      [tr("Firm type"), tr(a.type) || miss, "type"],
       [tr("Firm name"), errors.name ? miss : a.name, "name"],
       [tr("Year founded"), errors.year ? miss : a.year, "name"],
       [tr("Registration number"), a.reg || (thai ? miss : notSet), "name"],
@@ -677,14 +677,14 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
       [tr("Website"), errors.web ? miss : a.web, "web"],
     ]],
     [tr("Services and fees"), [
-      [tr("Services"), a.services.length ? a.services.join(", ") : miss, "services"],
-      ...a.services.map((s): Row => [s, feeWords(a.fees[s] ?? newFee()) ? <span>{nowrapPct(feeWords(a.fees[s]!)!)}</span> : miss, "services"]),
+      [tr("Services"), a.services.length ? a.services.map(tr).join(", ") : miss, "services"],
+      ...a.services.map((s): Row => [tr(s), feeWords(a.fees[s] ?? newFee()) ? <span>{nowrapPct(feeWords(a.fees[s]!)!)}</span> : miss, "services"]),
     ]],
     [tr("Your work"), [
       [tr("Typical deal size"), deal ? deal.full : notSet, "deal"],
-      [tr("Team size"), errors.team ? miss : `${a.team} people`, "team"],
-      [tr("Languages"), a.langs.length ? a.langs.join(", ") : miss, "team"],
-      [tr("Sectors"), a.agnostic ? "Sector agnostic" : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
+      [tr("Team size"), errors.team ? miss : `${a.team} ${tr("people")}`, "team"],
+      [tr("Languages"), a.langs.length ? a.langs.map(tr).join(", ") : miss, "team"],
+      [tr("Sectors"), a.agnostic ? tr("Sector agnostic") : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
     ]],
     [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
     [tr("Your card"), [

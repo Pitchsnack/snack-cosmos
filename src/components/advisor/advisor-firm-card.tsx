@@ -58,7 +58,7 @@ export function ServiceChip({ name }: { name: string }) {
   const I = serviceOf(name).icon;
   return (
     <span className="inline-flex h-6 items-center gap-1 rounded-full border border-[#B9E6DF] bg-[#F0FAF8] px-[9px] text-[12px] font-semibold text-[#0F5E57]">
-      <I className="h-[13px] w-[13px]" /> {name}
+      <I className="h-[13px] w-[13px]" /> {tr(name)}
     </span>
   );
 }
@@ -96,7 +96,7 @@ function Fig({ label, main, sub }: { label: string; main: string; sub: string | 
   return (
     <div className="min-w-0 whitespace-nowrap px-3 py-2.5">
       <div className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">{label}</div>
-      <div className={cn("mt-0.5 text-[15px] font-bold", sub == null && main === "Not added" ? "font-medium text-[#9CA3AF]" : "text-[#111827] dark:text-foreground")}>{main}</div>
+      <div className={cn("mt-0.5 text-[15px] font-bold", sub == null && main === tr("Not added") ? "font-medium text-[#9CA3AF]" : "text-[#111827] dark:text-foreground")}>{main}</div>
       {sub && <div className="text-[12px] text-[#6B7280]">{sub}</div>}
     </div>
   );
@@ -132,12 +132,12 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, foot,
       <div className={cn("space-y-2.5 p-4", foot && "flex-1")}>
         <div>
           <div className="flex items-start justify-between gap-3">
-            <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name.trim() || "New firm profile"}</h3>
+            <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name.trim() || tr("New firm profile")}</h3>
             <span className="shrink-0 whitespace-nowrap pt-0.5 text-[13px] text-[#6B7280]">
               {f.refNo}{f.city && <> · <span className="font-medium text-[#4B5563]">{f.city}</span></>}
             </span>
           </div>
-          <div className="mt-[3px] text-[13px] text-[#6B7280]">{f.firmType}{f.yearFounded ? ` · since ${f.yearFounded}` : ""}</div>
+          <div className="mt-[3px] text-[13px] text-[#6B7280]">{tr(f.firmType ?? "")}{f.yearFounded ? ` · ${tr("since")} ${f.yearFounded}` : ""}</div>
           {n > 0 && (
             <div className="mt-1.5 flex items-center gap-1.5 text-[13px]">
               <Stars value={avg} />
@@ -148,19 +148,19 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, foot,
         </div>
         {f.description?.trim()
           ? <p className={cn("text-[13.5px] leading-[1.5] text-[#374151] dark:text-foreground/80", (!showMore || preview) && "line-clamp-3")}>{f.description}</p>
-          : <p className="text-[13.5px] text-[#9CA3AF]">No description yet.</p>}
+          : <p className="text-[13.5px] text-[#9CA3AF]">{tr("No description yet.")}</p>}
         {f.services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
         <div className="@container">
           <div className="grid grid-cols-1 divide-y divide-border rounded-[10px] border border-border bg-muted/30 @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
-            <Fig label="Typical deal size" main={deal?.usd ?? "Not added"} sub={deal ? `(${deal.thb})` : null} />
-            <Fig label="Team size" main={f.teamSize ? String(f.teamSize) : "Not added"} sub={f.teamSize ? "people" : null} />
+            <Fig label={tr("Typical deal size")} main={deal?.usd ?? tr("Not added")} sub={deal ? `(${deal.thb})` : null} />
+            <Fig label={tr("Team size")} main={f.teamSize ? String(f.teamSize) : tr("Not added")} sub={f.teamSize ? tr("people") : null} />
           </div>
         </div>
         {showMore && !preview && (
           <div className="space-y-1.5">
-            <MoreRow label="Languages" value={f.languages.join(" · ") || "Not added"} />
-            {(f.sectorAgnostic || f.sectors.length > 0) && <MoreRow label="Sectors" value={
-              <span className="flex flex-wrap gap-1">{(f.sectorAgnostic ? ["Sector agnostic"] : f.sectors).map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
+            <MoreRow label={tr("Languages")} value={f.languages.map(tr).join(" · ") || tr("Not added")} />
+            {(f.sectorAgnostic || f.sectors.length > 0) && <MoreRow label={tr("Sectors")} value={
+              <span className="flex flex-wrap gap-1">{(f.sectorAgnostic ? [tr("Sector agnostic")] : f.sectors).map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
           </div>
         )}
       </div>
