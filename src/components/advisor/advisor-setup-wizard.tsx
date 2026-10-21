@@ -511,7 +511,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     logo: { req: true, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
       body: (
         <div>
-          <LogoPhotosStep L={L} name={a.name || tr("Your firm")} sectorLine={[a.type, [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+          <LogoPhotosStep L={L} name={a.name || tr("Your firm")} sectorLine={[tr(a.type), [a.city || a.addr.province, tr(a.country)].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
             initial={{ logoPath: firm.logoPath, logoUrl: firm.logoUrl, slots: firm.media ?? [] }}
             getUrl={({ kind, ext }) => advUpUrl({ data: { kind, ext } })}
             persist={async (logo_path, media) => {
