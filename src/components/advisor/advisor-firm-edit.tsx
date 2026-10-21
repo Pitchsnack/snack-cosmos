@@ -248,7 +248,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       <Section id="firm" active={false} title="Firm" setup={!!setup}>
         <F label={tr("Logo and photos")} opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
           <AttachmentCard value={f.media} onChange={(m) => set("media", m)} name={f.name || tr("Your firm")} sectorLine={[f.firmType, [f.city || f.addr.province, f.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
-            intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} />
+            intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
         </F>
         <div className="grid gap-4 sm:grid-cols-2">
           <F label="Firm name" req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>

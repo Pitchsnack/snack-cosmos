@@ -1,4 +1,5 @@
 # Roadmap — Control setup wizards (brief 2)
+- [x] Test new advisor signup and setup with approved email; draft saved unpublished; EN/TH layout checked (advisor content remains English in TH mode)
 - [x] My reports consolidation: seven reports, existing viewers/offers, Seller menu and legacy redirects
 - [x] My reports consolidation: valuation access/sharing and dynamic counts
 - [x] My reports consolidation: Control seller role-gate cause fixed; live seven-row/empty/redirect/Admin checks, EN/TH and 1440/390
