@@ -78,7 +78,7 @@ function useAdvisorStars() {
       saved ? [{ kind, id, at: new Date().toISOString() }, ...prev] : prev.filter((f) => !(f.kind === kind && f.id === id)));
     try {
       await toggleFn({ data: { kind, id, saved } });
-      toast.success(saved ? "Added to Favourites." : "Removed from Favourites.");
+      toast.success(saved ? "Added to my watchlist." : "Removed from my watchlist.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

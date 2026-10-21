@@ -50,7 +50,7 @@ export function useSavedListings() {
     qc.setQueryData<string[]>(["saved-listings"], (prev = []) => (saved ? [...prev, id] : prev.filter((x) => x !== id)));
     try {
       await toggleFn({ data: { id, saved } });
-      toast.success(saved ? t("Added to Favourites.") : t("Removed from Favourites."));
+      toast.success(saved ? t("Added to my watchlist.") : t("Removed from my watchlist."));
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -64,7 +64,7 @@ export function useSavedListings() {
 export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; onClick: () => void; square?: boolean; nda?: boolean }) {
   const { t } = useTranslation();
   const on = saved || !!nda;
-  const tip = nda ? t("In Favourites because of your NDA") : saved ? t("Remove from Favourites") : t("Add to Favourites");
+  const tip = nda ? t("In my watchlist because of your NDA") : saved ? t("Remove from my watchlist") : t("Add to my watchlist");
   const star = <Star className={cn("h-4 w-4", on ? "fill-[#F59E0B] text-[#D97706]" : "text-[#4B5563]")} />;
   if (square) {
     const cls = cn("inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border bg-white", on ? "border-[#FDE68A]" : "border-[#E5E7EB]");
@@ -79,7 +79,7 @@ export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; on
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={cn("inline-flex h-[34px] items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors",
         saved ? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]" : "border-border bg-background text-foreground hover:bg-muted")}>
-      {star}{saved ? t("In Favourites") : t("Add to Favourites")}
+      {star}{saved ? t("In my watchlist") : t("Add to my watchlist")}
     </button>
   );
 }

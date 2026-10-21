@@ -343,7 +343,7 @@ function DecisionBar({ r, reason, onClose }: { r: BuyerInvitation; reason?: stri
           <div className="flex flex-wrap gap-2">
             <button type="button" className={outline} onClick={() => setMode("pass")}>{tr("Not interested", "ไม่สนใจ")}</button>
             <button type="button" aria-pressed={inFav} onClick={() => toggle(r.listingId)} className={cn(outline, inFav && "text-[#92400E]")}>
-              <Star className={cn("h-4 w-4", inFav && "fill-[#F6A823] text-[#F6A823]")} />{inFav ? tr("In Favourites", "อยู่ในรายการโปรด") : tr("Add to Favourites", "เพิ่มในรายการโปรด")}
+              <Star className={cn("h-4 w-4", inFav && "fill-[#F6A823] text-[#F6A823]")} />{inFav ? tr("In my watchlist", "อยู่ในรายการโปรด") : tr("Add to my watchlist", "เพิ่มในรายการโปรด")}
             </button>
             <span className="flex-1" />
             <button type="button" className={navy} onClick={() => setMode("sign")}>{tr("Request NDA", "ขอ NDA")}</button>

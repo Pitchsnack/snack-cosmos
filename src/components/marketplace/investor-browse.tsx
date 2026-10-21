@@ -37,7 +37,7 @@ export function useSavedInvestors() {
     qc.setQueryData<string[]>(["saved-investors"], (prev = []) => (saved ? [...prev, id] : prev.filter((x) => x !== id)));
     try {
       await toggleFn({ data: { id, saved } });
-      toast.success(saved ? "Added to Favourites." : "Removed from Favourites.");
+      toast.success(saved ? "Added to my watchlist." : "Removed from my watchlist.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -50,7 +50,7 @@ export function useSavedInvestors() {
 
 export function StarBtn({ saved, onClick }: { saved: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-label={saved ? "Remove from Favourites" : "Add to Favourites"} title={saved ? "Remove from Favourites" : "Add to Favourites"}
+    <button type="button" aria-label={saved ? "Remove from my watchlist" : "Add to my watchlist"} title={saved ? "Remove from my watchlist" : "Add to my watchlist"}
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] border border-border bg-background hover:bg-muted">
       <Star className={cn("h-4 w-4", saved ? "fill-amber-500 text-amber-500" : "text-muted-foreground")} />
