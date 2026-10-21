@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 /** Fields shared by the firm setup wizard and Edit profile, so both keep one set of rules. */
 
 export const Req = () => <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>;
-export const Opt = () => <span className="ml-1.5 font-normal text-[#9CA3AF]">optional</span>;
+export const Opt = () => <span className="ml-1.5 font-normal text-[#9CA3AF]">{tr("optional")}</span>;
 export const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{m}</p> : null);
 const sub = "block text-[12px] font-medium text-[#6B7280] mb-1";
 const small = "h-10 w-full rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[14px] outline-none focus:border-[#1E2A4A] dark:border-border dark:bg-background";
@@ -32,7 +32,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
   const set = (p: Partial<FeeDetail>) => onChange({ ...value, ...p });
   const amountField = (label: string, ph: string) => (
     <div className="min-w-0">
-      <span className={sub}>{label}</span>
+      <span className={sub}>{tr(label)}</span>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-[#6B7280]">฿</span>
         <input inputMode="numeric" aria-required aria-label={`${service} ${label}`} placeholder={ph} onBlur={onBlurAll}
@@ -43,7 +43,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
   );
   const pctField = (label: string) => (
     <div className="min-w-0">
-      <span className={sub}>{label}</span>
+      <span className={sub}>{tr(label)}</span>
       <div className="relative">
         <input inputMode="decimal" aria-required aria-label={`${service} ${label}`} placeholder={ex.pct} onBlur={onBlurAll}
           className={cn(small, "pr-8", err?.pct && bad)} value={value.pct}
@@ -55,7 +55,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
   return (
     <div className="space-y-2.5">
       <div>
-        <span className={sub}>How you charge<Req /></span>
+        <span className={sub}>{tr("How you charge")}<Req /></span>
         <select autoFocus={autoFocus} aria-required aria-label={`How you charge for ${service}`} className={cn(small, "pr-8")} value={value.type}
           onChange={(e) => set({ type: e.target.value as FeeType })}>
           {FEE_TYPES.filter((t) => !proposal || t.value !== "quote").map((t) => <option key={t.value} value={t.value}>{tr(t.label)}</option>)}
@@ -70,13 +70,13 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
       )}
       {value.type === "other" && (
         <div>
-          <span className={sub}>In your own words</span>
+          <span className={sub}>{tr("In your own words")}</span>
           <textarea rows={2} maxLength={80} aria-required placeholder={ex.own} onBlur={onBlurAll}
             className={cn(small, "h-auto py-2", err?.words && bad)} value={value.words}
             onChange={(e) => set({ words: e.target.value })} />
         </div>
       )}
-      {words && <p className="text-[12.5px] text-[#6B7280]">{proposal ? "On the proposal" : "On your profile"}: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}
+      {words && <p className="text-[12.5px] text-[#6B7280]">{tr(proposal ? "On the proposal" : "On your profile")}: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}
       {err && <p className="text-[13px] text-[#B42318]">{err.msg}</p>}
     </div>
   );
@@ -97,9 +97,9 @@ export function addrErrors(a: Addr, thai: boolean, city: string) {
         street: a.street.trim() ? null : tr("Add the number and street."),
         district: a.district.trim() ? null : tr("Add the city or district."),
         province: a.province ? null : tr("Choose the province or state."),
-        postal: !a.postal ? "Add the postal code." : /^\d{5}$/.test(a.postal) ? null : tr("The postal code has 5 digits."),
+        postal: !a.postal ? tr("Add the postal code.") : /^\d{5}$/.test(a.postal) ? null : tr("The postal code has 5 digits."),
       }
-    : { street: a.street.trim() ? null : "Add the street and number.", district: city.trim() ? null : tr("Add the city or district."), province: null, postal: null };
+    : { street: a.street.trim() ? null : tr("Add the street and number."), district: city.trim() ? null : tr("Add the city or district."), province: null, postal: null };
 }
 
 export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, compact, note, need, title = tr("Business address"), stars = true, country, onCountry, countryErr }: {
@@ -120,7 +120,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
   const street = (
     <div>
       <label className={lbl} htmlFor="addr-street">{thai ? tr("No. and street") : tr("Street and number")}{stars && <Req />}</label>
-      <input id="addr-street" aria-required autoComplete="address-line1" maxLength={120} placeholder={thai ? "e.g. 191 Sukhumvit Road" : "e.g. 1 Raffles Place"}
+      <input id="addr-street" aria-required autoComplete="address-line1" maxLength={120} placeholder={tr(thai ? "e.g. 191 Sukhumvit Road" : "e.g. 1 Raffles Place")}
         className={cn(inp, nc("street"), show("street") && bad)} {...nd("street")} value={a.street} onBlur={() => onBlur("street")} onChange={(e) => onChange({ street: e.target.value })} />
       <Err m={show("street")} />
     </div>
@@ -128,7 +128,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
   const unit = (
     <div>
       <label className={lbl} htmlFor="addr-unit">{thai ? tr("Floor / unit / soi") : tr("Floor / unit")}<Opt /></label>
-      <input id="addr-unit" autoComplete="address-line2" maxLength={120} placeholder={thai ? "e.g. Unit 1203, 12th Floor" : "e.g. #20-01"}
+      <input id="addr-unit" autoComplete="address-line2" maxLength={120} placeholder={tr(thai ? "e.g. Unit 1203, 12th Floor" : "e.g. #20-01")}
         className={inp} value={a.unit} onChange={(e) => onChange({ unit: e.target.value })} />
     </div>
   );
@@ -136,7 +136,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
     <div className="flex flex-col justify-end">
       <label className={lbl} htmlFor="addr-district">{tr("City/District")}{stars && <Req />}</label>
       {thai ? (
-        <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder="e.g. Watthana"
+        <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder={tr("e.g. Watthana")}
           className={cn(inp, nc("district"), show("district") && bad)} {...nd("district")} value={a.district} onBlur={() => onBlur("district")} onChange={(e) => onChange({ district: e.target.value })} />
       ) : (
         <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder="e.g. Singapore"
@@ -164,7 +164,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
     <div className="flex flex-col justify-end">
       <label className={lbl} htmlFor="addr-postal">{tr("Postal code")}{thai ? (stars ? <Req /> : null) : <Opt />}</label>
       <input id="addr-postal" aria-required={thai} autoComplete="postal-code" inputMode={thai ? "numeric" : undefined} maxLength={thai ? 5 : 12}
-        placeholder={thai ? "5 digits" : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
+        placeholder={thai ? tr("5 digits") : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
         onChange={(e) => onChange({ postal: thai ? e.target.value.replace(/\D/g, "").slice(0, 5) : e.target.value.slice(0, 12) })} />
       <Err m={show("postal")} />
     </div>
