@@ -34,9 +34,9 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
   validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s.id === "string" ? { id: s.id } : {}),
   head: () => ({
     meta: [
-      { title: "My watch list — PitchSnack" },
+      { title: "My watchlist — PitchSnack" },
       { name: "description", content: "Listings you starred or requested an NDA for, with the private view once the seller approves." },
-      { property: "og:title", content: "My watch list — PitchSnack" },
+      { property: "og:title", content: "My watchlist — PitchSnack" },
       { property: "og:description", content: "Listings you starred or requested an NDA for, with the private view once the seller approves." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
 });
 
 type Filter = "all" | FavStatus;
-const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "My watch list"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
+const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "My watchlist"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
 const baht = (n: number | null) => {
@@ -155,7 +155,7 @@ function FavouritesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <BrowseHeader role="buyer" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("My watch list")}
+        <BrowseHeader role="buyer" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("My watchlist")}
           subtitle={t("Listings you starred or requested an NDA for")} toggle={<ViewToggle value={view} onChange={persist} />}
           q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหารายการโปรด" : "Search favourites"}
           hasFilters={!!q || filter !== "all"} onClear={() => { setQ(""); setFilter("all"); }}

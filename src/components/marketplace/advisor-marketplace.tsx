@@ -314,7 +314,7 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     <div className={splitFixed ? "flex h-[calc(100vh-7.5rem)] min-h-[520px] flex-col gap-5 [&>*]:shrink-0" : "space-y-5"}>
       <div>
         <BrowseHeader role="advisor" eyebrow={<>{fav ? <Star className="h-3.5 w-3.5" /> : <Store className="h-3.5 w-3.5" />} {th ? "ค้นพบ" : "Discover"}</>}
-          title={fav ? (th ? "รายการโปรด" : "My watch list") : "ตลาดธรุกิจ ซื้อขาย"}
+          title={fav ? (th ? "รายการโปรด" : "My watchlist") : "ตลาดธรุกิจ ซื้อขาย"}
           subtitle={!needle && !fav && th ? `ประกาศขาย ${sellersN} รายการ และโปรไฟล์นักลงทุน ${buyersN} ราย` : subtitle}
           toggle={<ViewToggle value={view} onChange={persist} />}
           q={q} setQ={setQ} placeholder={fav ? (th ? "ค้นหารายการโปรด" : "Search favourites") : (th ? "ค้นหาผู้ขายและผู้ซื้อ" : "Search sellers and buyers")}

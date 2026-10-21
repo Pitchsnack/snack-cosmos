@@ -26,7 +26,7 @@ import { Users } from "lucide-react";
 import { BrowseHeader, MatchTag, NdaInfoStrip, PlanEndedBar, useBrowseMatches } from "@/components/marketplace/browse-header";
 
 type Filter = "all" | SellerFavStatus;
-const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "My watch list"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
+const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "My watchlist"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
 
 function StatusBadge({ s }: { s: SellerFavStatus }) {
@@ -161,7 +161,7 @@ export function SellerFavourites() {
   return (
     <div className="space-y-6">
       <div>
-        <BrowseHeader role="seller" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("My watch list")}
+        <BrowseHeader role="seller" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("My watchlist")}
           subtitle={t("Investors you starred or have an NDA with")} toggle={<ViewToggle value={view} onChange={persist} />}
           q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหารายการโปรด" : "Search favourites"}
           hasFilters={!!q || filter !== "all"} onClear={() => { setQ(""); setFilter("all"); }}

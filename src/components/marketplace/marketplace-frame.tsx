@@ -412,16 +412,16 @@ export function marketplaceMenu(persona: Persona) {
     advisor
       ? [
           { to: "/marketplace/browse", label: "ตลาดธรุกิจซื้อขาย", icon: LayoutGrid },
-          { to: "/marketplace/favourites", label: "My watch list ", icon: Star },
+          { to: "/marketplace/favourites", label: "My watchlist ", icon: Star },
         ]
       : persona === "buyer"
       ? [
           { to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid },
           { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase },
-          { to: "/marketplace/favourites", label: "My watch list", icon: Star },
+          { to: "/marketplace/favourites", label: "My watchlist", icon: Star },
           { to: "/marketplace/invitations", label: "Invitations", icon: Send },
         ]
-      : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase }, { to: "/marketplace/favourites", label: "My watch list", icon: Star }, { to: "/marketplace/invitations", label: "Invitations", icon: Send }];
+      : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase }, { to: "/marketplace/favourites", label: "My watchlist", icon: Star }, { to: "/marketplace/invitations", label: "Invitations", icon: Send }];
   const workspace: MenuItem[] =
     advisor ? [{ to: "/marketplace/my-company", label: "My Company", icon: Building2, exact: false }, { to: "/advisor/pipeline", label: "My Pipeline", icon: GitBranch }, { to: "/advisor/messages", label: "Messages", icon: MessageSquare }, { to: "/marketplace/my-contact", label: "Contacts", icon: Contact }] : persona === "seller"
       ? [
