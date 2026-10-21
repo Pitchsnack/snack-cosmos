@@ -136,7 +136,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
   const editAt = (section: string, add?: boolean) => openEdit({ section, add, from: "private" });
   const ITEM_SEC: Record<string, string | undefined> = { ticket: "mandate", aum: "fund", logo: "media", focus: "industries", people: "people" };
   const editItem = (k: string) => { const sec = ITEM_SEC[k]; if (!sec) return edit(); editAt(sec, k === "people" && d.people.length === 0); };
-  const v = (V_CHIP as Record<string, (typeof V_CHIP)["none"]>)[d.verification.status] ?? V_CHIP.none;
+  const v = (V_CHIP as Record<string, { label: string; cls: string }>)[d.verification.status] ?? V_CHIP.none;
   const req = privateChecklist(d).filter((x) => x.required && !x.done);
   const submit = useMutation({
     mutationFn: () => submitFn(),
