@@ -34,9 +34,9 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
   validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s.id === "string" ? { id: s.id } : {}),
   head: () => ({
     meta: [
-      { title: "Favourites — PitchSnack" },
+      { title: "My watch list — PitchSnack" },
       { name: "description", content: "Listings you starred or requested an NDA for, with the private view once the seller approves." },
-      { property: "og:title", content: "Favourites — PitchSnack" },
+      { property: "og:title", content: "My watch list — PitchSnack" },
       { property: "og:description", content: "Listings you starred or requested an NDA for, with the private view once the seller approves." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/favourites")({
 });
 
 type Filter = "all" | FavStatus;
-const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "Favourites"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
+const FILTERS: [Filter, string][] = [["all", "All"], ["saved", "My watch list"], ["requested", "NDA requested"], ["approved", "NDA approved"]];
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace("Sept", "Sep") : "—");
 const baht = (n: number | null) => {
