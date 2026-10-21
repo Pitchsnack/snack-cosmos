@@ -248,7 +248,9 @@ export const myInvitedListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { roleOf } = await import("./plan-access.server");
-    if ((await roleOf(context.userId)) !== "buyer") return [] as string[];
+    const role = await roleOf(context.userId);
+    // Admins in Buyer view see their own organisation's invitations too.
+    if (role !== "buyer" && role !== "admin") return [] as string[];
     return [...(await (await import("./invitations.server")).invitedListingIds(context.userId))];
   });
 
@@ -259,7 +261,8 @@ export const invitationsBadgeCount = createServerFn({ method: "GET" })
     const { roleOf } = await import("./plan-access.server");
     const role = await roleOf(context.userId);
     if (role === "seller") return (await sellerRows(context.userId)).filter((r) => r.status === "waiting").length;
-    if (role !== "buyer") return 0;
+    // Admins previewing Buyer view count their own buyer invitations.
+    if (role !== "buyer" && role !== "admin") return 0;
     const { rows } = await (await import("./invitations.server")).orgInvitations(context.userId);
     return rows.filter((r) => r.status === "new").length;
   });
