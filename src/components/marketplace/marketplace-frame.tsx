@@ -418,7 +418,7 @@ export function marketplaceMenu(persona: Persona) {
       ? [
           { to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid },
           { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase },
-          { to: "/marketplace/favourites", label: "Favourites", icon: Star },
+          { to: "/marketplace/favourites", label: "My watch list", icon: Star },
           { to: "/marketplace/invitations", label: "Invitations", icon: Send },
         ]
       : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase }, { to: "/marketplace/favourites", label: "Favourites", icon: Star }, { to: "/marketplace/invitations", label: "Invitations", icon: Send }];
