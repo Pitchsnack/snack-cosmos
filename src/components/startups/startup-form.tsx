@@ -933,7 +933,7 @@ export function StartupForm({
 
   const revenueOptions = (() => {
     const base = /thailand/i.test(headquarters) ? THB_REVENUE_BANDS : REVENUE_RANGES;
-    return lastYearRevenue && !base.includes(lastYearRevenue) ? [lastYearRevenue, ...base] : base;
+    return lastYearRevenue && !base.includes(normRevBand(lastYearRevenue)) ? [lastYearRevenue, ...base] : base;
   })();
   const revenueCurrency = /thailand/i.test(headquarters) ? "THB" : "USD";
   const sizeOptions =
