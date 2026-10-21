@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/language";
 import { AlertCircle, Check, CircleDashed, Clock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AdminFirm } from "@/lib/advisor-admin.functions";

@@ -163,4 +163,5 @@ export const TH_ADVISORS: Record<string, string> = {
   "Advisory firm": "บริษัทที่ปรึกษา", "Law firm": "สำนักงานกฎหมาย", "Tax and accounting firm": "สำนักงานบัญชีและภาษี", "Valuation firm": "บริษัทประเมินมูลค่า",
   From: "เริ่มต้น", Amount: "จำนวนเงิน", "Per hour": "ต่อชั่วโมง", "Per month": "ต่อเดือน", "Of the deal": "ของมูลค่าดีล", "Retainer per month": "ค่าบริการรายเดือน", "On the proposal": "ในข้อเสนอ",
   "On your profile": "บนโปรไฟล์ของคุณ", "5 digits": "5 หลัก",
+  Paused: "หยุดชั่วคราว",
 };
