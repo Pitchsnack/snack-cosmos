@@ -164,7 +164,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
     <div className="flex flex-col justify-end">
       <label className={lbl} htmlFor="addr-postal">{tr("Postal code")}{thai ? (stars ? <Req /> : null) : <Opt />}</label>
       <input id="addr-postal" aria-required={thai} autoComplete="postal-code" inputMode={thai ? "numeric" : undefined} maxLength={thai ? 5 : 12}
-        placeholder={thai ? "5 digits" : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
+        placeholder={thai ? tr("5 digits") : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
         onChange={(e) => onChange({ postal: thai ? e.target.value.replace(/\D/g, "").slice(0, 5) : e.target.value.slice(0, 12) })} />
       <Err m={show("postal")} />
     </div>

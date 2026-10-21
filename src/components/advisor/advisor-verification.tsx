@@ -39,7 +39,7 @@ export function VerificationChip({ v }: { v: Pick<AdminFirm["v"], "state" | "rea
 
 export function FirmStatusPill({ status }: { status: string }) {
   const cls = status === "live" ? "text-[#166534] bg-[#E8F6EE]" : status === "paused" ? "text-[#4B5563] bg-[#F3F4F6]" : "text-[#92400E] bg-[#FEF3C7]";
-  return <span className={cn("inline-flex h-[22px] items-center gap-1.5 rounded-full px-2 text-[11px] font-semibold", cls)}><span className="h-1.5 w-1.5 rounded-full bg-current" />{status === "live" ? "Live" : status === "paused" ? "Paused" : "Draft"}</span>;
+  return <span className={cn("inline-flex h-[22px] items-center gap-1.5 rounded-full px-2 text-[11px] font-semibold", cls)}><span className="h-1.5 w-1.5 rounded-full bg-current" />{tr(status === "live" ? "Live" : status === "paused" ? "Paused" : "Draft")}</span>;
 }
 
 const list = (a: string[]) => (a.length <= 1 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
