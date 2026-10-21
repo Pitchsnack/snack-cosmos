@@ -595,7 +595,7 @@ function SignupInner() {
                         <label className="lg-check"><input type="checkbox" checked={news} onChange={(e) => setNews(e.target.checked)} /><span>{t(S.news)}</span></label>
                       </div>
                       {fail && <Err text={S.other} />}
-                      <div className="su-actions"><BackBtn to={afterAbout} /><Primary type="submit" label={S.create} busyLabel={S.creating} /></div>
+                      <div className="su-actions"><BackBtn to={afterAbout === 3 ? 2 : afterAbout} /><Primary type="submit" label={S.create} busyLabel={S.creating} /></div>
                     </form>
                     <div className="lg-div">{t(S.divider)}</div>
                     <div className="lg-prov su-prov">
