@@ -155,7 +155,7 @@ function FavouritesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <BrowseHeader role="buyer" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("Favourites")}
+        <BrowseHeader role="buyer" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("My watch list")}
           subtitle={t("Listings you starred or requested an NDA for")} toggle={<ViewToggle value={view} onChange={persist} />}
           q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหารายการโปรด" : "Search favourites"}
           hasFilters={!!q || filter !== "all"} onClear={() => { setQ(""); setFilter("all"); }}

@@ -412,7 +412,7 @@ export function marketplaceMenu(persona: Persona) {
     advisor
       ? [
           { to: "/marketplace/browse", label: "ตลาดธรุกิจซื้อขาย", icon: LayoutGrid },
-          { to: "/marketplace/favourites", label: "Favourites", icon: Star },
+          { to: "/marketplace/favourites", label: "My watch list ", icon: Star },
         ]
       : persona === "buyer"
       ? [
