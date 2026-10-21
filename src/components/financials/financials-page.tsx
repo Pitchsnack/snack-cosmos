@@ -386,7 +386,8 @@ export function StartupFinancialsPage({
       )}
 
 
-      {!editing && section !== 'valuation' && <VerificationPointer companyId={id} />}
+      {/* Seller-only: /my-verification resolves the caller's own companies, so the link would be wrong on Admin screens. */}
+      {!editing && section !== 'valuation' && workspace === 'my-startups' && <VerificationPointer companyId={id} />}
       {editing ? (
         <FinancialsEdit
           startupId={id}
