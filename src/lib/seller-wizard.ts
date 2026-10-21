@@ -15,7 +15,7 @@ export const SELLER_RELATIONS: { value: SellerRelation; label: string; hint: str
 
 /** Stored exactly as selected (THB bands) — never converted. */
 export const THB_REVENUE_BANDS: string[] = [
-  "ต่ำกว่า  ฿50M",
+  "Below ฿50M",
   "฿50M – 100M",
   "฿100M – 250M",
   "฿250M – 500M",
