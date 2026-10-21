@@ -23,10 +23,12 @@ export function attachmentMissing(m: EntityMediaState) {
   return (filled(m.logo) ? 0 : 1) + (m.slots.some(filled) ? 0 : 1);
 }
 
-export function AttachmentCard({ value, onChange, name, sectorLine, intro }: {
+export function AttachmentCard({ value, onChange, name, sectorLine, intro, showGuidance = true }: {
   value: EntityMediaState; onChange: (m: EntityMediaState) => void; name: string; sectorLine: string;
   /** Text above the card; null hides it. Defaults to the seller wording. */
   intro?: string | null;
+  /** Wizards supply their own role-specific checklist and guidance. */
+  showGuidance?: boolean;
 }) {
   const tr = useTr();
   const hasLogo = filled(value.logo);
@@ -84,7 +86,7 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro }: {
           </div>
           {miss && <p className="mt-[10px] text-[12.5px] text-[#DC2626]">{miss}</p>}
         </div>
-        <div className="w-[248px] shrink-0 max-[800px]:w-full">
+        {showGuidance && <div className="w-[248px] shrink-0 max-[800px]:w-full">
           {hasLogo && photos > 0 ? (
             <p className="flex gap-2 text-[13px] leading-[1.5] text-[#4B5563] dark:text-muted-foreground"><Tick />{tr("Your logo and photos are in. Buyers see them in your Private view.", "เพิ่มโลโก้และรูปภาพแล้ว ผู้ซื้อจะเห็นในมุมมองส่วนตัวของท่าน")}</p>
           ) : (
@@ -99,7 +101,7 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro }: {
               </ul>
             </>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );

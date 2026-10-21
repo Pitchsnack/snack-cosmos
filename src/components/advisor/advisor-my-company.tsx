@@ -361,9 +361,9 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
       {/* Header */}
       <div className="flex flex-wrap items-start gap-4 border-b border-border p-5">
         <FirmLogo f={f} ring={false} />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 max-sm:min-w-[180px]">
           <div className="flex flex-wrap items-center gap-2">
-            {!client && <span className="inline-flex h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 text-[10.5px] font-bold uppercase tracking-[.06em] text-[#0F766E]">Open to sellers and buyers</span>}
+            {!client && <span className="inline-flex min-h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 py-0.5 text-[10.5px] font-bold uppercase leading-normal tracking-[.06em] text-[#0F766E]">Open to sellers and buyers</span>}
             {f.verifiedAt ? <VerifiedAdvisorChip small /> : client && <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}{client && f.managed && <ManagedBadge size="sm" shadow align="left" />}
           </div>
           <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name || "New firm profile"}</h2>
