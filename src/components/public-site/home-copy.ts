@@ -21,7 +21,7 @@ export const HERO = {
 };
 
 export const CONNECT = {
-  h2: c("We connecting SME business owner (Sellers) to the right Buyers\u00a0", "เชื่อมผู้ขายและผู้ซื้อ ในตลาด M&A แห่งเดียว"),
+  h2: c("We connect Thai SME business owner (Sellers) to the right Buyers\u00a0", "เชื่อมผู้ขายและผู้ซื้อ ในตลาด M&A แห่งเดียว"),
   intro: c("PitchSnack is a neutral M&A marketplace where verified sellers meet qualified buyers, with privacy, controlled disclosure, and no pressure to transact until both sides are ready.",
     "PitchSnack คือตลาด M&A ที่เป็นกลาง ซึ่งผู้ขายที่ผ่านการตรวจสอบได้พบกับผู้ซื้อที่มีคุณสมบัติ โดยรักษาความเป็นส่วนตัว ควบคุมการเปิดเผยข้อมูลทีละขั้น และไม่มีแรงกดดันให้ต้องทำธุรกรรม จนกว่าทั้งสองฝ่ายจะพร้อม"),
   cards: [
