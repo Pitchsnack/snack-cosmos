@@ -53,6 +53,8 @@ const TH_BASE: Record<string, string> = {
   // Marketplace menu
   "Browse listings": "ดูประกาศขาย",
   "Browse investors": "ดูนักลงทุน",
+  "Browse prospects": "ตลาดธุรกิจซื้อขาย",
+  "Browse marketplace": "ตลาดธุรกิจ ซื้อขาย",
   Favourites: "รายการโปรด",
   Invitations: "คำเชิญ",
   "My Company": "บริษัทของฉัน",
