@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link, useRouterState, type AnyRouteMatch } from "@tanstack/react-router";
 import { ChevronRight, Home } from "lucide-react";
 
+import {useTranslation} from "@/i18n/language";
 import { cn } from "@/lib/utils";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useIsMarketplace, usePersona } from "@/hooks/use-marketplace";
@@ -56,9 +57,15 @@ const PATH_LABELS: Record<string, string> = {
   "/my-verification": "Company verification report",
   "/marketplace/browse": "Browse listings",
   "/marketplace/favourites": "My watchlist",
-  "/marketplace/invitations": "Invitations",
+  "/marketplace/invitations": "NDA Invitations",
   "/marketplace/advisors": "Browse advisors",
   "/marketplace/pipeline": "Pipeline",
+  "/marketplace/pipeline/invitations": "NDA Invitations",
+  "/marketplace/pipeline/all-deals": "All deals",
+  "/marketplace/pipeline/watchlist": "Deal watchlist",
+  "/marketplace/pipeline/status": "Deal status",
+  "/marketplace/pipeline/history": "History",
+  "/marketplace/pipeline/reports": "Reports",
   "/advisor/pipeline": "My Pipeline",
   "/advisor/messages": "Messages",
 
@@ -91,6 +98,9 @@ function resolveLabel(pathTemplate: string) {
 }
 
 export function RouteBreadcrumbs({ className, placement }: { className?: string; placement?: "row" | "bar" }) {
+  const {language}=useTranslation();
+  const pipelineTh:Record<string,string>={Pipeline:"ไปป์ไลน์","NDA Invitations":"คำเชิญ NDA","All deals":"ดีลทั้งหมด","Deal watchlist":"ดีลที่ติดตาม","Deal status":"สถานะดีล",History:"ประวัติ",Reports:"รายงาน"};
+  const crumb=(label:string)=>language==="th"?pipelineTh[label]??label:label;
   const matches = useRouterState({ select: (s) => s.matches as AnyRouteMatch[] });
   const isMarketplace = useIsMarketplace();
   const { persona } = usePersona();
@@ -223,7 +233,7 @@ export function RouteBreadcrumbs({ className, placement }: { className?: string;
                   aria-current="page"
                   className={cn("font-medium text-foreground", inBar && "min-w-0 truncate")}
                 >
-                  <span className={inBar ? "truncate" : "whitespace-pre"}>{item.label}</span>
+                  <span className={inBar ? "truncate" : "whitespace-pre"}>{crumb(item.label)}</span>
                 </span>
               ) : (
                 <>
@@ -232,7 +242,7 @@ export function RouteBreadcrumbs({ className, placement }: { className?: string;
                     params={item.params as never}
                     className={cn("transition-colors hover:text-foreground", inBar && "min-w-0 truncate")}
                   >
-                    <span className={inBar ? "truncate" : "whitespace-pre"}>{item.label}</span>
+                    <span className={inBar ? "truncate" : "whitespace-pre"}>{crumb(item.label)}</span>
                   </Link>
                   <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                 </>

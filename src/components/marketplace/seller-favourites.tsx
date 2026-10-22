@@ -1,3 +1,4 @@
+import {PrivateInvestorPanel} from "@/components/marketplace/private-investor-panel";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -122,20 +123,8 @@ export function SellerFavourites() {
         <>
           {header}
           <div className="min-h-0 flex-1 overflow-y-auto p-5">
-            <InvestorDetailPanel id={f.id} showEdit={false} onSelectStartup={() => {}} buyer={{
-              data: toDetail(f),
-              intro: <FavViewLine view="private">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>,
-              afterPortfolio: p.people.length ? (
-                <Section icon={Users} title={t("Decision makers")}>
-                  <div className="space-y-2">{p.people.map((m, k) => (
-                    <div key={k} className="flex items-center gap-3 text-[13px]">
-                      <div className="min-w-0 flex-1"><div className="truncate">{m.name}</div><div className="truncate text-[12px] text-muted-foreground">{m.role}</div></div>
-                      <div className="shrink-0 text-right text-[12px] text-muted-foreground"><div>{m.email}</div><div>{m.phone}</div></div>
-                    </div>
-                  ))}</div>
-                </Section>
-              ) : undefined,
-            }} />
+            <FavViewLine view="private">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>
+            <PrivateInvestorPanel f={f}/>
           </div>
         </>
       );

@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {useQuery} from '@tanstack/react-query';
+import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useServerFn} from '@tanstack/react-start';
 import {getHubReport} from '@/lib/reports-hub.functions';
 import type {HubData,HubRow} from '@/lib/reports-hub';
@@ -13,8 +13,9 @@ import {Button} from '@/components/ui/button';
 import {useHubCopy} from './hub-copy';
 
 export function HubReport({hub,row,tab:tabProp,onTab}:{hub:HubData;row:HubRow;tab?:string;onTab?:(t:string)=>void}){
+ const qc=useQueryClient();
  const {c,date,year}=useHubCopy(hub.mode==='admin');const fetch=useServerFn(getHubReport);const [own,setOwn]=useState('income');const tab=tabProp??own;const setTab=(t:string)=>{setOwn(t);onTab?.(t);};
- const q=useQuery({queryKey:['reports-hub','content',hub.mode,hub.companyId,hub.pipelineId,row.key],queryFn:()=>fetch({data:{mode:hub.mode,companyId:hub.companyId,pipelineId:hub.pipelineId??undefined,key:row.key}}),staleTime:0});
+ const q=useQuery({queryKey:['reports-hub','content',hub.mode,hub.companyId,hub.pipelineId,row.key],queryFn:async()=>{const result=await fetch({data:{mode:hub.mode,companyId:hub.companyId,pipelineId:hub.pipelineId??undefined,key:row.key}});if(hub.mode==='buyer'){void qc.invalidateQueries({queryKey:['reports-hub'],predicate:q=>q.queryKey[1]!=='content'});void qc.invalidateQueries({queryKey:['pipeline']});}return result;},staleTime:0});
  if(q.isPending)return <p className="hub-empty">{c('Loading report…','กำลังโหลดรายงาน…')}</p>;
  if(q.error||!q.data)return <p className="hub-empty" role="alert">{c('This report is not available yet.','รายงานนี้ยังไม่พร้อม')}</p>;
  const d=q.data;

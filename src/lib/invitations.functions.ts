@@ -148,7 +148,7 @@ export const adminInvitations = createServerFn({ method: "GET" })
 /* ───────────────────────── Buyer side ───────────────────────── */
 
 export type BuyerInvitation = {
-  id: string; listingId: string; status: import("./invitations.server").InvStatus;
+  id: string; listingId: string; origin?: "received" | "sent"; status: import("./invitations.server").InvStatus;
   sentAt: string; viewedAt: string | null; choiceAt: string | null; closedAt: string | null; closedReason: string | null;
   ndaAt: string | null; approvedAt: string | null; pipelineId: string | null;
   name: string; refNo: string | null; companyName: string | null;
@@ -161,12 +161,15 @@ export const listMyInvitations = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<BuyerInvitation[]> => {
     await (await import("./plan-access.server")).requireRole(context.userId, ["buyer"]);
     const { orgInvitations } = await import("./invitations.server");
-    const { rows } = await orgInvitations(context.userId);
-    if (!rows.length) return [];
+    const { rows,org } = await orgInvitations(context.userId);
     const sb = await admin();
+    const {data:standalone}=await sb.from("deal_pipelines").select("*").in("buyer_user_id",org.userIds).neq("status","withdrawn");
+    const linked=new Set(rows.map(r=>r.inv.hidden_profile_id));
+    for(const p of standalone??[]){if(linked.has(p.hidden_profile_id))continue;rows.push({inv:{id:p.id,hidden_profile_id:p.hidden_profile_id,sent_at:p.nda_requested_at,viewed_at:null,choice_at:null,closed_at:null,closed_reason:null},pipe:p,status:p.status==="ended"||p.status==="revoked"||(p.nda_approved_at&&p.nda_expires_at&&Date.parse(p.nda_expires_at)<=Date.now())?"closed":p.status==="declined"?"declined":p.nda_approved_at?"approved":"waiting"});}
+    if(!rows.length)return [];
     const hpIds = rows.map((r) => r.inv.hidden_profile_id as string);
     const [{ data: hps }, { loadMarketplaceTeasers }] = await Promise.all([
-      sb.from("hidden_profiles").select("id, ref_no, code_name, startup_id").in("id", hpIds),
+      sb.from("hidden_profiles").select("id, ref_no, code_name, startup_id, live, approval_status").in("id", hpIds),
       import("./hidden-profiles.functions"),
     ]);
     const hpBy = new Map<string, any>((hps ?? []).map((h: any) => [h.id, h]));
@@ -174,18 +177,21 @@ export const listMyInvitations = createServerFn({ method: "GET" })
     const approvedIds = rows.filter((r) => r.status === "approved").map((r) => hpBy.get(r.inv.hidden_profile_id)?.startup_id).filter(Boolean);
     const { data: sts } = approvedIds.length ? await sb.from("startups").select("id, startup_name").in("id", approvedIds) : { data: [] };
     const nameBy = new Map<string, string>((sts ?? []).map((s: any) => [s.id, s.startup_name]));
-    return rows.map(({ inv, pipe, status }) => {
+    return Promise.all(rows.map(async ({ inv, pipe, status }): Promise<BuyerInvitation> => {
+      if(pipe?.nda_approved_at&&(pipe.status==="ended"||pipe.status==="revoked"||(pipe.nda_expires_at&&Date.parse(pipe.nda_expires_at)<=Date.now())))status="closed";
       const hp = hpBy.get(inv.hidden_profile_id);
-      const t = status === "closed" && inv.closed_reason === "listing_not_live" ? null : teasers.get(inv.hidden_profile_id) ?? null;
+      let t = teasers.get(inv.hidden_profile_id) ?? null;
+      if(t){const {priceFor}=await import("./asking-price");const {askingPrice:_exact,...publicTeaser}=t;t={...publicTeaser,...priceFor(hp?.live as never,false)};}
+      if(!t){status="closed";inv.closed_reason="listing_not_live";}
       return {
-        id: inv.id, listingId: inv.hidden_profile_id, status,
-        sentAt: inv.sent_at, viewedAt: inv.viewed_at, choiceAt: inv.choice_at, closedAt: inv.closed_at, closedReason: inv.closed_reason,
+        id: inv.id, listingId: inv.hidden_profile_id, origin: inv.id===pipe?.id ? "sent" : "received", status,
+        sentAt: inv.sent_at, viewedAt: inv.viewed_at, choiceAt: inv.choice_at, closedAt: inv.closed_at, closedReason: status==="closed" ? inv.closed_reason??"nda_ended" : inv.closed_reason,
         ndaAt: pipe?.nda_requested_at ?? null, approvedAt: pipe?.nda_approved_at ?? null, pipelineId: pipe?.id ?? null,
         name: t?.listing?.codeName || hp?.code_name || hp?.ref_no || "Listing", refNo: hp?.ref_no ?? null,
         companyName: status === "approved" ? nameBy.get(hp?.startup_id) ?? null : null,
         teaser: t,
       };
-    });
+    }));
   });
 
 async function myInvitation(userId: string, id: string) {
@@ -270,7 +276,7 @@ export const invitationsBadgeCount = createServerFn({ method: "GET" })
 /* ───────────────────────── Seller side ───────────────────────── */
 
 export type SellerInvitation = {
-  id: string; investorId: string; status: import("./invitations.server").InvStatus;
+  id: string; investorId: string; origin?: "received" | "sent"; status: import("./invitations.server").InvStatus;
   sentAt: string; viewedAt: string | null; choiceAt: string | null; closedAt: string | null; closedReason: string | null;
   ndaAt: string | null; approvedAt: string | null; declinedAt: string | null; pipelineId: string | null;
   listingName: string; listingRef: string | null; companyName: string | null;
@@ -294,9 +300,13 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
   const ids = await sellerStartupIds(userId);
   if (!ids.length) return [];
   const { data: invs } = await sb.from("listing_invitations").select("*").in("startup_id", ids).order("sent_at", { ascending: false });
-  if (!invs?.length) return [];
-  const hpIds = [...new Set(invs.map((i: any) => i.hidden_profile_id as string))];
-  const invIds: string[] = [...new Set<string>(invs.map((i: any) => String(i.investor_id)))];
+  const {data:allPipes}=await sb.from("deal_pipelines").select("*").in("startup_id",ids).neq("status","withdrawn");
+  const invitations=invs??[];
+  const {data:allBps}=await sb.from("buyer_profiles").select("user_id,investor_id").in("user_id",(allPipes??[]).map((p:any)=>p.buyer_user_id));
+  for(const p of allPipes??[]){const bp=allBps?.find((b:any)=>b.user_id===p.buyer_user_id);if(invitations.some((i:any)=>i.hidden_profile_id===p.hidden_profile_id&&i.investor_id===bp?.investor_id))continue;invitations.push({id:p.id,hidden_profile_id:p.hidden_profile_id,startup_id:p.startup_id,investor_id:bp?.investor_id,sent_at:p.nda_requested_at,viewed_at:null,choice_at:null,closed_at:p.status==="ended"||p.status==="revoked"?p.updated_at:null,closed_reason:p.status==="ended"||p.status==="revoked"?"nda_ended":null});}
+  if(!invitations.length)return [];
+  const hpIds = [...new Set(invitations.map((i: any) => i.hidden_profile_id as string))];
+  const invIds: string[] = [...new Set<string>(invitations.map((i: any) => i.investor_id).filter(Boolean))];
   const [{ data: hps }, { data: sts }, { data: pipes }, { data: bps }, { loadPublicInvestors }, { isBuyerVisible }, { deriveStatus }] = await Promise.all([
     sb.from("hidden_profiles").select("id, startup_id, ref_no, code_name, approval_status, live").in("id", hpIds),
     sb.from("startups").select("id, startup_name").in("id", ids),
@@ -323,7 +333,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
   const seen = new Set<string>();
   const out: SellerInvitation[] = [];
   const pending: Array<[SellerInvitation, string]> = [];
-  for (const inv of invs as any[]) {
+  for (const inv of invitations as any[]) {
     const key = `${inv.hidden_profile_id}:${inv.investor_id}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -331,21 +341,22 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
     const pipe = latest.get(key) ?? null;
     const pub = pubBy.get(inv.investor_id) ?? null;
     let status = deriveStatus(inv, pipe);
+    if(pipe?.nda_approved_at&&(pipe.status==="ended"||pipe.status==="revoked"||(pipe.nda_expires_at&&Date.parse(pipe.nda_expires_at)<=Date.now())))status="closed";
     let closedReason = inv.closed_reason ?? null;
     let closedAt = inv.closed_at ?? null;
     if (status !== "closed") {
       if (!pub) { status = "closed"; closedReason = "profile_unpublished"; closedAt = closedAt ?? inv.updated_at ?? inv.sent_at; }
-      else if (hp && !isBuyerVisible(hp) && status !== "approved") { status = "closed"; closedReason = "listing_not_live"; closedAt = closedAt ?? inv.sent_at; }
+      else if (hp && !isBuyerVisible(hp)) { status = "closed"; closedReason = "listing_not_live"; closedAt = closedAt ?? inv.sent_at; }
     }
     const publicInvestor = pub ? (({ userId: _u, liveSince: _l, ...rest }) => rest)(pub) : null;
     const row: SellerInvitation = {
-      id: inv.id, investorId: inv.investor_id, status,
+      id: inv.id, investorId: inv.investor_id, origin: inv.id===pipe?.id ? "received" : "sent", status,
       sentAt: inv.sent_at, viewedAt: inv.viewed_at, choiceAt: inv.choice_at, closedAt, closedReason,
       ndaAt: pipe?.nda_requested_at ?? null, approvedAt: pipe?.nda_approved_at ?? null,
       declinedAt: pipe?.status === "declined" ? pipe.updated_at : null, pipelineId: pipe?.id ?? null,
       listingName: hp?.code_name || hp?.ref_no || "Listing", listingRef: hp?.ref_no ?? null,
       companyName: nameBy.get(inv.startup_id) ?? null,
-      investor: status === "closed" && closedReason === "profile_unpublished" ? null : publicInvestor,
+      investor: status === "closed" && ["profile_unpublished","listing_not_live"].includes(closedReason??"") ? null : publicInvestor,
       investorName: null,
     };
     if (status === "approved") { approvedInv.add(inv.investor_id); pending.push([row, inv.investor_id]); }
@@ -405,3 +416,15 @@ export const sellerNdaReview = createServerFn({ method: "GET" })
       companyName: st?.startup_name ?? null, investor, invitationId,
     };
   });
+
+/** Selected-pair private profile: never unlock using another deal's NDA. */
+export const invitationPrivateProfile=createServerFn({method:"GET"}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({pipelineId:z.string().uuid(),as:z.enum(["buyer","seller"])}).parse(d)).handler(async({data,context})=>{
+ await (await import("./plan-access.server")).requireRole(context.userId,[data.as]);
+ const sb=await admin();const {data:p}=await sb.from("deal_pipelines").select("*").eq("id",data.pipelineId).maybeSingle();if(!p)throw new Error("NDA request unavailable");
+ if(data.as==="buyer"){if(p.buyer_user_id!==context.userId)throw new Error("Private profile is only available to the NDA participant");}else{const ids=await sellerStartupIds(context.userId);if(!ids.includes(p.startup_id))throw new Error("Not your listing");}
+ const [{data:hp},{data:bp}]=await Promise.all([sb.from("hidden_profiles").select("approval_status,live").eq("id",p.hidden_profile_id).maybeSingle(),sb.from("buyer_profiles").select("status").eq("user_id",p.buyer_user_id).maybeSingle()]);
+ const {isBuyerVisible}=await import("./hidden-profile");if(!isBuyerVisible(hp)||bp?.status!=="live")throw new Error("Profile is no longer published");
+ const {hubNdaActive}=await import("./reports-hub");if(!hubNdaActive(p))throw new Error("An approved valid NDA is required");
+ if(data.as==="buyer"){const {loadBuyerFavourites}=await import("./favourites.functions");const row=(await loadBuyerFavourites(context.userId)).find(r=>r.id===p.hidden_profile_id&&r.pipelineId===p.id);return {buyer:row??null,seller:null};}
+ const {data:bp}=await sb.from("buyer_profiles").select("investor_id").eq("user_id",p.buyer_user_id).maybeSingle();const {loadSellerFavourites}=await import("./investor-browse.functions");const row=(await loadSellerFavourites(context.userId)).find(r=>r.id===bp?.investor_id);return {buyer:null,seller:row??null};
+});

@@ -2529,6 +2529,32 @@ export type Database = {
           },
         ]
       }
+      deal_watchlist: {
+        Row: {
+          created_at: string
+          deal_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_watchlist_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_withdrawals: {
         Row: {
           comment: string | null

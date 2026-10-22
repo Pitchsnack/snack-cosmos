@@ -1,4 +1,7 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Pipeline sub-menu: six seller/buyer pages, persistent deal stars and shared counts
+- [ ] Pipeline NDA Invitations: Received/Sent, sign/review actions and reused profile pop-up
+- [ ] Pipeline: status/reports/history, legacy destinations, EN/TH and signed-in layout/flow checks
 - [x] Test new advisor signup and setup with approved email; draft saved unpublished; EN/TH layout checked (advisor content remains English in TH mode)
 - [x] My reports consolidation: seven reports, existing viewers/offers, Seller menu and legacy redirects
 - [x] My reports consolidation: valuation access/sharing and dynamic counts

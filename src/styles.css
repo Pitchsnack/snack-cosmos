@@ -10,6 +10,7 @@
 @import "./styles/company-verification.css";
 @import "./styles/tools-offer-close.css";
 @import "./styles/reports-hub.css";
+@import "./styles/pipeline-workspace.css";
 @source "../src";
 @import "tw-animate-css";
 

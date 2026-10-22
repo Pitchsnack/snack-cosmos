@@ -114,19 +114,18 @@ export type SellerFavPrivate = {
 export type SellerFavourite = PublicInvestor & { status: SellerFavStatus; saved: boolean; at: string; listingCode: string | null; ndaRequestedAt: string | null; priv: SellerFavPrivate | null };
 
 /** Seller Favourites: starred investors plus buyers with an NDA requested/approved on the seller's listings. */
-export const listSellerFavourites = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+export const listSellerFavourites = createServerFn({method:"GET"}).middleware([requireSupabaseAuth]).handler(async({context})=>loadSellerFavourites(context.userId));
+export async function loadSellerFavourites(userId:string) {
     const { requireRole } = await import("./plan-access.server");
-    await requireRole(context.userId, ["seller"]);
+    await requireRole(userId, ["seller"]);
     const sb = await admin();
     const { ndaState } = await import("@/lib/favourites.functions");
     const [{ data: saves }, { data: own }, { data: su }] = await Promise.all([
-      sb.from("saved_investors").select("investor_id, created_at").eq("user_id", context.userId),
-      sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId),
-      sb.from("startup_users").select("startup_id").eq("user_id", context.userId),
+      sb.from("saved_investors").select("investor_id, created_at").eq("user_id", userId),
+      sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", userId),
+      sb.from("startup_users").select("startup_id").eq("user_id", userId),
     ]);
-    const stIds = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
+    const stIds = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
     const { data: pipes } = stIds.length
       ? await sb.from("deal_pipelines").select("buyer_user_id, hidden_profile_id, status, nda_requested_at, nda_approved_at, nda_expires_at").in("startup_id", stIds)
       : { data: [] };
@@ -197,7 +196,8 @@ export const listSellerFavourites = createServerFn({ method: "GET" })
     const rank = { approved: 0, requested: 1, saved: 2 } as const;
     out.sort((a, b) => rank[a.status] - rank[b.status] || (b.at ?? "").localeCompare(a.at ?? ""));
     return out;
-  });
+}
+
 
 export const mySavedInvestorIds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

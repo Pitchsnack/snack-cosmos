@@ -1,3 +1,4 @@
+import { PipelineSubmenu } from "@/components/pipeline/submenu";
 import { BellRing, BadgeCheck } from "lucide-react";
 import {FileText} from 'lucide-react';
 import {hubIsNew} from '@/lib/reports-hub';
@@ -419,9 +420,8 @@ export function marketplaceMenu(persona: Persona) {
           { to: "/marketplace/browse", label: "Browse listings", icon: LayoutGrid },
           { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase },
           { to: "/marketplace/favourites", label: "My watchlist", icon: Star },
-          { to: "/marketplace/invitations", label: "Invitations", icon: Send },
         ]
-      : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase }, { to: "/marketplace/favourites", label: "My watchlist", icon: Star }, { to: "/marketplace/invitations", label: "Invitations", icon: Send }];
+      : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase }, { to: "/marketplace/favourites", label: "My watchlist", icon: Star }];
   const workspace: MenuItem[] =
     advisor ? [{ to: "/marketplace/my-company", label: "My Company", icon: Building2, exact: false }, { to: "/advisor/pipeline", label: "My Pipeline", icon: GitBranch }, { to: "/advisor/messages", label: "Messages", icon: MessageSquare }, { to: "/marketplace/my-contact", label: "Contacts", icon: Contact }] : persona === "seller"
       ? [
@@ -459,6 +459,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
+      if(it.to==="/marketplace/pipeline")return <PipelineSubmenu key={it.to} collapsed/>;
       const locked = it.lock ? !isReportOrdered(it.lock) : false;
       const tip = locked ? `${t(it.label)} · ${rc.c("locked")}` : t(it.label);
       return (
@@ -507,7 +508,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
     );
   }
 
-  const fullItem = (it: MenuItem) => (
+  const fullItem = (it: MenuItem) => it.to==="/marketplace/pipeline" ? <PipelineSubmenu key={it.to}/> : (
     <Link
       key={it.to}
       to={it.to}

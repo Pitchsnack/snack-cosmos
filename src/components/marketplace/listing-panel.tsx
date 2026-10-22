@@ -185,7 +185,7 @@ export function DealTerms({ t }: { t: Teaser }) {
 const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contact"];
 
 /** Right panel body for anonymous listings — public read model only. */
-export function ListingDetail({ t, requested, approved, onRequested, advisor }: { t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
+export function ListingDetail({ t, requested, approved, onRequested, advisor, embedded=false }: { embedded?:boolean; t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
   const { t: tr } = useTranslation();
   const l = t.listing;
   const [more, setMore] = useState(false);
@@ -199,7 +199,7 @@ export function ListingDetail({ t, requested, approved, onRequested, advisor }: 
           <button type="button" onClick={() => setMore((m) => !m)} className="text-[12.5px] font-semibold hover:underline">{more ? tr("Show less ▴") : tr("Show more ▾")}</button>
         </Section>
       )}
-      {approved ? <div className="grid gap-3 sm:grid-cols-2"><DealTerms t={t} /></div> : <LowerPanel t={t} requested={requested} onRequested={onRequested} advisor={advisor} />}
+      {approved ? <div className="grid gap-3 sm:grid-cols-2"><DealTerms t={t} /></div> : <LowerPanel embedded={embedded} t={t} requested={requested} onRequested={onRequested} advisor={advisor} />}
     </div>
   );
 }
@@ -221,7 +221,7 @@ export function AdvisorNdaButton({ className }: { className?: string }) {
   );
 }
 
-function LowerPanel({ t, requested, onRequested, advisor }: { t: Teaser; requested?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
+function LowerPanel({ t, requested, onRequested, advisor, embedded=false }: { embedded?:boolean; t: Teaser; requested?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
   const { t: tr, language } = useTranslation();
   const l = t.listing;
   const x = t as Teaser & { growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus };
@@ -267,7 +267,7 @@ function LowerPanel({ t, requested, onRequested, advisor }: { t: Teaser; request
             ))}
           </div>
         </div>
-      ) : status === "approved" || status === "exchanged" ? (
+      ) : embedded ? null : status === "approved" || status === "exchanged" ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#86EFAC] bg-[#F0FDF4] px-[14px] py-3">
           <div className="text-sm font-bold text-[#166534]">{tr("NDA approved · full profile unlocked")}</div>
           <Button size="sm">{tr("Open full profile")}</Button>
@@ -282,7 +282,7 @@ function LowerPanel({ t, requested, onRequested, advisor }: { t: Teaser; request
         </div>
       )}
 
-      <section>
+      {!embedded&&<section>
         <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("How it works")}</h4>
         <ol className="relative grid grid-cols-4">
           <span className="absolute left-[12.5%] right-[12.5%] top-[7px] h-[2px] bg-[#E5E7EB]" />
@@ -299,7 +299,7 @@ function LowerPanel({ t, requested, onRequested, advisor }: { t: Teaser; request
             </li>
           ))}
         </ol>
-      </section>
+      </section>}
     </>
   );
 }
