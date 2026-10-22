@@ -411,7 +411,7 @@ export function marketplaceMenu(persona: Persona) {
   const discover: MenuItem[] =
     advisor
       ? [
-          { to: "/marketplace/browse", label: "ตลาดธรุกิจซื้อขาย", icon: LayoutGrid },
+          { to: "/marketplace/browse", label: "Browse prospects", icon: LayoutGrid },
           { to: "/marketplace/favourites", label: "My watchlist ", icon: Star },
         ]
       : persona === "buyer"
