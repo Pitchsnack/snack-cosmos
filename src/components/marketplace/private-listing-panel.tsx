@@ -31,7 +31,7 @@ function ApprovedBadge() {
 export function PrivateListingPanel({ f, code, embedded=false }: { f: Favourite; code: string; embedded?:boolean }) {
   const { t } = useTranslation();
   const p = f.priv;
-  const logo = useMediaUrl(p?.logoPath);
+  const logo = useMediaUrl(p?.logoPath??null);
   const [more, setMore] = useState(false);
   useEffect(() => setMore(false), [f.id]);
   if(!p)return null;

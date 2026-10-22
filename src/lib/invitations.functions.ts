@@ -169,7 +169,7 @@ export const listMyInvitations = createServerFn({ method: "GET" })
     if(!rows.length)return [];
     const hpIds = rows.map((r) => r.inv.hidden_profile_id as string);
     const [{ data: hps }, { loadMarketplaceTeasers }] = await Promise.all([
-      sb.from("hidden_profiles").select("id, ref_no, code_name, startup_id").in("id", hpIds),
+      sb.from("hidden_profiles").select("id, ref_no, code_name, startup_id, live, approval_status").in("id", hpIds),
       import("./hidden-profiles.functions"),
     ]);
     const hpBy = new Map<string, any>((hps ?? []).map((h: any) => [h.id, h]));
@@ -177,10 +177,11 @@ export const listMyInvitations = createServerFn({ method: "GET" })
     const approvedIds = rows.filter((r) => r.status === "approved").map((r) => hpBy.get(r.inv.hidden_profile_id)?.startup_id).filter(Boolean);
     const { data: sts } = approvedIds.length ? await sb.from("startups").select("id, startup_name").in("id", approvedIds) : { data: [] };
     const nameBy = new Map<string, string>((sts ?? []).map((s: any) => [s.id, s.startup_name]));
-    return rows.map(({ inv, pipe, status }): BuyerInvitation => {
+    return Promise.all(rows.map(async ({ inv, pipe, status }): Promise<BuyerInvitation> => {
       if(pipe?.nda_approved_at&&(pipe.status==="ended"||pipe.status==="revoked"||(pipe.nda_expires_at&&Date.parse(pipe.nda_expires_at)<=Date.now())))status="closed";
       const hp = hpBy.get(inv.hidden_profile_id);
-      const t = teasers.get(inv.hidden_profile_id) ?? null;
+      let t = teasers.get(inv.hidden_profile_id) ?? null;
+      if(t){const {priceFor}=await import("./asking-price");const {askingPrice:_exact,...publicTeaser}=t;t={...publicTeaser,...priceFor(hp?.live as never,false)};}
       if(!t){status="closed";inv.closed_reason="listing_not_live";}
       return {
         id: inv.id, listingId: inv.hidden_profile_id, origin: inv.id===pipe?.id ? "sent" : "received", status,
@@ -190,7 +191,7 @@ export const listMyInvitations = createServerFn({ method: "GET" })
         companyName: status === "approved" ? nameBy.get(hp?.startup_id) ?? null : null,
         teaser: t,
       };
-    });
+    }));
   });
 
 async function myInvitation(userId: string, id: string) {

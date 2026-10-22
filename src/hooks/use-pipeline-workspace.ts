@@ -12,7 +12,9 @@ export function usePipelineWorkspace(){
  const stars=useQuery({queryKey:['pipeline','watchlist',persona],queryFn:()=>star(),enabled,retry:false});
  const invites=useQuery<(BuyerInvitation|SellerInvitation)[]>({queryKey:['invitations',seller?'seller':'buyer'],queryFn:()=>seller?sellerInv():buyerInv(),enabled,retry:false});
  const approved=(deals.data??[]).filter(p=>pipelineOpen(p)&&!!p.ndaApprovedAt&&(!p.ndaExpiresAt||Date.parse(p.ndaExpiresAt)>Date.now()));
- const reports=useQuery<Record<string,HubData>>({queryKey:['reports-hub','pipeline-summary',persona,approved.map(p=>p.id)],queryFn:async()=>Object.fromEntries(await Promise.all(approved.map(async p=>[p.id,await hub({data:{mode:seller?'seller':'buyer',pipelineId:p.id}}).catch(()=>null)]))),enabled:enabled&&!!deals.data,retry:false});
+ const reports=useQuery<Record<string,HubData>>({queryKey:['reports-hub','pipeline-summary',persona,approved.map(p=>p.id)],queryFn:async()=>{
+ const entries=await Promise.all(approved.map(async p=>{try{return [p.id,await hub({data:{mode:seller?'seller':'buyer',pipelineId:p.id}})] as const;}catch{return null;}}));
+ return Object.fromEntries(entries.filter((entry):entry is readonly [string,HubData]=>entry!==null));},enabled:enabled&&!!deals.data,retry:false});
  const counts=pipelineCounts(deals.data??[],stars.data??[],seller);const newInv=(invites.data??[]).filter(r=>seller?r.status==='waiting':r.status==='new').length;
  const fresh=Object.values(reports.data??{}).filter(h=>h&&(seller?h.rows.some(r=>r.audience.some(a=>a.state==='asked')):h.rows.some(r=>r.buyerState==='shared'&&!r.openedAt))).length;
  const refresh=()=>Promise.all([qc.invalidateQueries({queryKey:['pipeline']}),qc.invalidateQueries({queryKey:['invitations']}),qc.invalidateQueries({queryKey:['reports-hub']}),qc.invalidateQueries({queryKey:['favourites']}),qc.invalidateQueries({queryKey:['seller-favourites']}),qc.invalidateQueries({queryKey:['saved-listings']})]);
