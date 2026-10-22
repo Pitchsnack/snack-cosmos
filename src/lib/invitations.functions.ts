@@ -422,8 +422,8 @@ export const invitationPrivateProfile=createServerFn({method:"GET"}).middleware(
  await (await import("./plan-access.server")).requireRole(context.userId,[data.as]);
  const sb=await admin();const {data:p}=await sb.from("deal_pipelines").select("*").eq("id",data.pipelineId).maybeSingle();if(!p)throw new Error("NDA request unavailable");
  if(data.as==="buyer"){if(p.buyer_user_id!==context.userId)throw new Error("Private profile is only available to the NDA participant");}else{const ids=await sellerStartupIds(context.userId);if(!ids.includes(p.startup_id))throw new Error("Not your listing");}
- const [{data:hp},{data:bp}]=await Promise.all([sb.from("hidden_profiles").select("approval_status,live").eq("id",p.hidden_profile_id).maybeSingle(),sb.from("buyer_profiles").select("status").eq("user_id",p.buyer_user_id).maybeSingle()]);
- const {isBuyerVisible}=await import("./hidden-profile");if(!isBuyerVisible(hp)||bp?.status!=="live")throw new Error("Profile is no longer published");
+ const [{data:hp},{data:buyerPublication}]=await Promise.all([sb.from("hidden_profiles").select("approval_status,live").eq("id",p.hidden_profile_id).maybeSingle(),sb.from("buyer_profiles").select("status").eq("user_id",p.buyer_user_id).maybeSingle()]);
+ const {isBuyerVisible}=await import("./hidden-profile");if(!isBuyerVisible(hp)||buyerPublication?.status!=="live")throw new Error("Profile is no longer published");
  const {hubNdaActive}=await import("./reports-hub");if(!hubNdaActive(p))throw new Error("An approved valid NDA is required");
  if(data.as==="buyer"){const {loadBuyerFavourites}=await import("./favourites.functions");const row=(await loadBuyerFavourites(context.userId)).find(r=>r.id===p.hidden_profile_id&&r.pipelineId===p.id);return {buyer:row??null,seller:null};}
  const {data:bp}=await sb.from("buyer_profiles").select("investor_id").eq("user_id",p.buyer_user_id).maybeSingle();const {loadSellerFavourites}=await import("./investor-browse.functions");const row=(await loadSellerFavourites(context.userId)).find(r=>r.id===bp?.investor_id);return {buyer:null,seller:row??null};
