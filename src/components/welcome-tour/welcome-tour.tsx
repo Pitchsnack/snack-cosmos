@@ -84,6 +84,7 @@ const LINES: Record<Role, Record<string, string>> = {
   },
   advisor: {
     "Browse marketplace": "Every live seller and buyer in one list, shown without their names.",
+    "Browse prospects": "Every live seller and buyer in one list, shown without their names.",
     Favourites: "Sellers and buyers you starred, kept in one place.",
     "My Company": "Your firm's profile in Browse advisors. Sellers and buyers see all of it, apart from your full address.",
     "My Pipeline": "Your clients' invitations, and the deals you joined, step by step.",
