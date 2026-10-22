@@ -12,8 +12,8 @@ import {buildRiskReport} from '@/lib/company-risk';
 import {Button} from '@/components/ui/button';
 import {useHubCopy} from './hub-copy';
 
-export function HubReport({hub,row}:{hub:HubData;row:HubRow}){
- const {c,date,year}=useHubCopy(hub.mode==='admin');const fetch=useServerFn(getHubReport);const [tab,setTab]=useState('income');
+export function HubReport({hub,row,tab:tabProp,onTab}:{hub:HubData;row:HubRow;tab?:string;onTab?:(t:string)=>void}){
+ const {c,date,year}=useHubCopy(hub.mode==='admin');const fetch=useServerFn(getHubReport);const [own,setOwn]=useState('income');const tab=tabProp??own;const setTab=(t:string)=>{setOwn(t);onTab?.(t);};
  const q=useQuery({queryKey:['reports-hub','content',hub.mode,hub.companyId,hub.pipelineId,row.key],queryFn:()=>fetch({data:{mode:hub.mode,companyId:hub.companyId,pipelineId:hub.pipelineId??undefined,key:row.key}}),staleTime:0});
  if(q.isPending)return <p className="hub-empty">{c('Loading report…','กำลังโหลดรายงาน…')}</p>;
  if(q.error||!q.data)return <p className="hub-empty" role="alert">{c('This report is not available yet.','รายงานนี้ยังไม่พร้อม')}</p>;
