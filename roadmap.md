@@ -1,7 +1,8 @@
 # Roadmap — Control setup wizards (brief 2)
-- [ ] Pipeline sub-menu: six seller/buyer pages, persistent deal stars and shared counts
-- [ ] Pipeline NDA Invitations: Received/Sent, sign/review actions and reused profile pop-up
-- [ ] Pipeline: status/reports/history, legacy destinations, EN/TH and signed-in layout/flow checks
+- [x] Pipeline sub-menu: six seller/buyer pages, persistent deal stars and shared counts
+- [x] Pipeline NDA Invitations: Received/Sent, sign/review actions and reused profile pop-up
+- [x] Pipeline: status/reports/history, legacy destinations, EN-light/TH-dark signed-in checks at 1440/1024/390; star/unstar persistence and approved profile dialogs
+- [ ] Pipeline live NDA approval/decline and report sharing mutation checks: require permission to change real deals; full EN-dark/TH-light keyboard matrix remains unverified
 - [x] Test new advisor signup and setup with approved email; draft saved unpublished; EN/TH layout checked (advisor content remains English in TH mode)
 - [x] My reports consolidation: seven reports, existing viewers/offers, Seller menu and legacy redirects
 - [x] My reports consolidation: valuation access/sharing and dynamic counts
