@@ -42,8 +42,6 @@
   "The name in your business profile": "ชื่อในโปรไฟล์ธุรกิจของท่าน",
   "Company Verification": "การตรวจสอบบริษัท",
   "Juristic Name : {NAME EN} · checked on {date}": "ชื่อนิติบุคคล : {NAME EN} · ตรวจสอบเมื่อ {date}",
-  "Export PDF": "ส่งออก PDF",
-  "Export PDF works once the company is certified": "ส่งออก PDF ได้เมื่อบริษัทได้รับการรับรองแล้ว",
   "Verification": "การตรวจสอบ",
   "Checked on {date} by PitchSnack": "ตรวจสอบโดย PitchSnack เมื่อ {date}",
   "Not certified yet": "ยังไม่ได้รับรอง",
