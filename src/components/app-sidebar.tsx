@@ -502,6 +502,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     }
   };
 
+  useEffect(()=>{const close=()=>setMobileOpen(false);window.addEventListener("ps-pipeline-navigate",close);return()=>window.removeEventListener("ps-pipeline-navigate",close);},[]);
   const collapsedByIntent = intent === "open" ? false : intent === "closed" ? true : autoCollapsed;
   const effectiveCollapsed = !isMobile && !isAdminRoute && !tourMenu ? collapsedByIntent : false;
 
