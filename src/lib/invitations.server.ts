@@ -22,6 +22,7 @@ export async function buyerOrg(userId: string) {
 /** Section 14's order: first match wins. `pipe` is the org's latest pipeline row on the listing. */
 export function deriveStatus(inv: any, pipe: any | null): InvStatus {
   if (inv.closed_at) return "closed";
+  if(pipe?.nda_approved_at&&(pipe.status==="ended"||pipe.status==="revoked"||(pipe.nda_expires_at&&Date.parse(pipe.nda_expires_at)<=Date.now())))return "closed";
   const live = pipe && !["withdrawn", "declined"].includes(pipe.status) && !pipe.ended_at;
   if (live && pipe.nda_approved_at && (!pipe.nda_expires_at || new Date(pipe.nda_expires_at) > new Date())) return "approved";
   if (pipe?.status === "declined" && (pipe.nda_requested_at ?? pipe.updated_at ?? "") >= inv.sent_at) return "declined";

@@ -15,6 +15,7 @@ export function isPending(p: PipelineRow) {
 
 /** Who the Tracking card is waiting on, and for what. */
 export function waitState(p: PipelineRow, seller: boolean): { onYou: boolean; what: string } {
+  if (!p.ndaApprovedAt) return { onYou: seller, what: seller ? "approve or decline the NDA request" : "approve your NDA request" };
   if (p.paymentAt) return { onYou: false, what: "deal completed" };
   if (seller) {
     if (p.reportRequestedAt && !p.share && (p.reports?.financials || p.reports?.valuation)) return { onYou: true, what: "share the financial report" };

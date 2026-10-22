@@ -84,4 +84,6 @@ export const TH_TOUR: Record<string, string> = {
   "Continue setup": "ตั้งค่าต่อ",
   "You can take the tour again from the ? button at the top.": "ดูแนะนำอีกครั้งได้จากปุ่ม ? ด้านบน",
   "Take the tour": "ดูแนะนำการใช้งาน",
+  "Buyers you invited, NDA requests to approve, and each deal's steps from NDA to payment.": "ผู้ซื้อที่ท่านเชิญ คำขอ NDA ที่รอท่านอนุมัติ และขั้นตอนของแต่ละดีลตั้งแต่ NDA จนถึงการชำระเงิน",
+  "Sellers who invited you, your NDA requests, and each deal's steps from NDA to payment.": "ผู้ขายที่เชิญท่าน คำขอ NDA ของท่าน และขั้นตอนของแต่ละดีลตั้งแต่ NDA จนถึงการชำระเงิน",
 };

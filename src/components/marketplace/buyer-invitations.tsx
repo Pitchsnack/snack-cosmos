@@ -396,7 +396,7 @@ export function NdaSentDialog({ name, onClose }: { name: string; onClose: () => 
         <DialogDescription className="mt-2 text-[14.5px] text-[#434A5C] dark:text-muted-foreground">
           {tr(`${name} has your signed request. They usually reply within 2–3 business days, and we'll email you as soon as they approve.`, `${name} ได้รับคำขอที่ลงนามของท่านแล้ว โดยปกติจะตอบกลับภายใน 2–3 วันทำการ และเราจะส่งอีเมลแจ้งทันทีที่อนุมัติ`)}
         </DialogDescription>
-        <p className="mt-1.5 text-[13.5px] text-[#6B7280]">{tr("The listing is in your Favourites in the meantime.", "ระหว่างนี้ประกาศนี้อยู่ในรายการโปรดของท่าน")}</p>
+        <p className="mt-1.5 text-[13.5px] text-[#6B7280]">{tr("The listing is in My watchlist and NDA Invitations in the meantime.", "ระหว่างนี้ประกาศนี้อยู่ในรายการโปรดและคำเชิญ NDA ของท่าน")}</p>
         <div className="mt-5 flex justify-end">
           <button type="button" onClick={onClose} className="inline-flex h-11 items-center rounded-[10px] bg-[#1E2A4A] px-[18px] text-[14.5px] font-semibold text-white dark:bg-[#E8ECF5] dark:text-[#1E2A4A]">{tr("Done", "เสร็จสิ้น")}</button>
         </div>

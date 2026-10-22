@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/invitations")(
 function InvitationsRoute() {
   const { persona } = usePersona();
   const { open } = Route.useSearch();
-  if (persona === "buyer") return <BuyerInvitationsPage openId={open} />;
-  if (persona === "seller") return <SellerInvitationsPage openId={open} />;
+  if (persona === "buyer") return <Navigate to="/marketplace/pipeline/invitations" search={{open}} replace />;
+  if (persona === "seller") return <Navigate to="/marketplace/pipeline/invitations" search={{open}} replace />;
   return <Navigate to="/marketplace/browse" replace />;
 }

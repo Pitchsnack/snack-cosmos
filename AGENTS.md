@@ -34,3 +34,6 @@
 - Sidebar sharing: email-bound retry-safe claims, no deletion or code seats/free plans; requests only to Help Desk.
 
 - Company verification: whitelisted DTOs; selected-deal NDA + entitlement on buyer reads; DB-enforced quotas and six-check badge.
+
+- Seller/buyer Pipeline uses shared workspace-page/cards and six child routes; invitations and counts share existing authenticated DTOs, and watchlist keys the stable pipeline ID so NDA approval preserves stars.
+- Invitation dialogs reuse extracted watchlist profile bodies; no route-module component imports and no private profile payload before a valid approved NDA.

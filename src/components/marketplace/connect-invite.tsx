@@ -211,7 +211,7 @@ export function InvitedLine({ investorId }: { investorId: string }) {
   return (
     <div className="border-b border-[#D6E7FC] bg-[#F4F9FF] px-[22px] py-[10px] text-[13.5px] text-[#434A5C] dark:border-border dark:bg-[#16283A] dark:text-muted-foreground">
       {tr(`You invited them to browse your listed profile on ${d}. If they're interested, their NDA request will arrive in `, `ท่านเชิญให้ดูโปรไฟล์ที่ประกาศไว้เมื่อ ${d} หากสนใจ คำขอ NDA จะมาที่ `)}
-      <b className="font-bold">{tr("Invitations", "คำเชิญ")}</b>{tr(". We'll email you too.", " เราจะส่งอีเมลแจ้งท่านด้วย")}
+      <b className="font-bold">{tr("NDA Invitations", "คำเชิญ NDA")}</b>{tr(". We'll email you too.", " เราจะส่งอีเมลแจ้งท่านด้วย")}
     </div>
   );
 }

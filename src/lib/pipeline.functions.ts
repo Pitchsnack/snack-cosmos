@@ -248,7 +248,7 @@ export const listPipeline = createServerFn({ method: "GET" })
     const empty = { data: [] as any[] };
     // Independent lookups run in parallel.
     const [{ data: hps }, { data: sts }, { data: owners }, { data: bvs }, { data: shares }, dkList] = await Promise.all([
-      hpIds.length ? sb.from("hidden_profiles").select("id, code_name, region, asking_price, asking_price_thb, startup_id").in("id", hpIds) : empty,
+      hpIds.length ? sb.from("hidden_profiles").select("id, ref_no, code_name, region, asking_price, asking_price_thb, startup_id").in("id", hpIds) : empty,
       stIds.length ? sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : empty,
       stIds.length ? sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds) : empty,
       buyerIds.length ? (await import("./profile-verification.server")).verificationsByUsers(sb, buyerIds, "user_id, company_name, buyer_type, status").then((mp: Map<string, any>) => ({ data: [...mp.values()] })) : empty,
@@ -272,30 +272,30 @@ export const listPipeline = createServerFn({ method: "GET" })
       const hp = hpMap[r.hidden_profile_id] ?? {};
       const st0 = stMap[r.startup_id] ?? {};
       const bv0 = bvMap[r.buyer_user_id] ?? {};
-      const revealed0 = data.as === "seller" || !!r.nda_approved_at;
+      const revealed0 = ndaActive(r);
       const parties = {
-        sellerCompany: revealed0 ? st0.startup_name || hp.code_name || "Business" : hp.code_name || "Business",
+        sellerCompany: data.as === "seller" || revealed0 ? st0.startup_name || hp.code_name || hp.ref_no || "Business" : hp.code_name || hp.ref_no || "Business",
         codeName: hp.code_name ?? null,
-        buyerOrg: bv0.company_name || names[r.buyer_user_id] || "Buyer",
-        buyerName: names[r.buyer_user_id] ?? null,
+        buyerOrg: revealed0 ? bv0.company_name || names[r.buyer_user_id] || "Buyer" : bv0.buyer_type || "Buyer",
+        buyerName: revealed0 ? names[r.buyer_user_id] ?? null : null,
         sellerName: revealed0 ? names[ownerMap[r.startup_id]] ?? null : null,
       };
       // Sellers see their own amount; a buyer sees it only with an approved NDA.
-      const asking = data.as === "seller" || r.nda_approved_at ? thbOf(hp) : null;
+      const asking = data.as === "seller" || revealed0 ? thbOf(hp) : null;
       if (data.as === "seller") {
         const bv = bvMap[r.buyer_user_id] ?? {};
         return mapRow(r, {
-          name: bv.company_name || names[r.buyer_user_id] || "Buyer",
+          name: revealed0 ? bv.company_name || names[r.buyer_user_id] || "Buyer" : bv.buyer_type || "Buyer",
           sub: bv.buyer_type || "Buyer",
-          person: names[r.buyer_user_id] ?? null,
+          person: revealed0 ? names[r.buyer_user_id] ?? null : null,
           verified: bv.status === "verified",
           logoUrl: null,
         }, asking, parties, names);
       }
       const st = stMap[r.startup_id] ?? {};
-      const revealed = !!r.nda_approved_at;
+      const revealed = ndaActive(r);
       return mapRow(r, {
-        name: revealed ? st.startup_name || hp.code_name : hp.code_name || "Business",
+        name: revealed ? st.startup_name || hp.code_name : hp.code_name || hp.ref_no || "Business",
         sub: [st.industry, hp.region].filter(Boolean).join(" · "),
         person: null,
         verified: true,
@@ -848,3 +848,15 @@ export const sendWithdrawalFeedback = createServerFn({ method: "POST" })
     await sb.from("deal_withdrawals").update({ feedback_sent: true }).eq("id", w.id);
     return { ok: true };
   });
+
+/** User-private deal stars; requests retain their pipeline ID when approved. */
+export const listDealWatchlist = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({context}) => {
+ const {data,error}=await context.supabase.from("deal_watchlist").select("deal_id").eq("user_id",context.userId);
+ if(error)throw new Error("Deal watchlist could not be loaded");return (data??[]).map(r=>r.deal_id);
+});
+export const setDealWatchlist = createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({id:z.string().uuid(),starred:z.boolean()}).parse(d)).handler(async({data,context})=>{
+ const p=await load(data.id);await assertParty(context,p);
+ if(data.starred&&["ended","declined","withdrawn","revoked"].includes(p.status))throw new Error("This deal is no longer open");
+ const sb=await admin();const result=data.starred?await sb.from("deal_watchlist").upsert({user_id:context.userId,deal_id:p.id},{onConflict:"user_id,deal_id",ignoreDuplicates:true}):await sb.from("deal_watchlist").delete().eq("user_id",context.userId).eq("deal_id",p.id);
+ if(result.error)throw new Error("Deal watchlist could not be saved");return {ok:true};
+});

@@ -46,7 +46,7 @@ export type Favourite = {
 };
 
 const TWO_YEARS = 730 * 86_400_000;
-const CLOSED = ["declined", "withdrawn", "revoked"];
+const CLOSED = ["declined", "withdrawn", "revoked", "ended"];
 
 /** Active NDA state for a pipeline row, or null when it no longer counts. */
 export function ndaState(r: { status: string; nda_approved_at: string | null; nda_expires_at?: string | null }): "approved" | "requested" | null {
@@ -68,14 +68,13 @@ export async function activeNdaIds(userId: string): Promise<Set<string>> {
   return new Set((data ?? []).filter((r: any) => ndaState(r)).map((r: any) => r.hidden_profile_id));
 }
 
-export const listFavourites = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+export const listFavourites = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({context}) => loadBuyerFavourites(context.userId));
+export async function loadBuyerFavourites(userId:string) {
     const sb = await admin();
     const { buildPublicListing } = await import("@/lib/public-listing");
     const [{ data: saves }, { data: pipes }] = await Promise.all([
-      sb.from("saved_listings").select("hidden_profile_id, created_at").eq("user_id", context.userId),
-      sb.from("deal_pipelines").select("id, hidden_profile_id, startup_id, status, nda_requested_at, nda_approved_at, nda_expires_at").eq("buyer_user_id", context.userId),
+      sb.from("saved_listings").select("hidden_profile_id, created_at").eq("user_id", userId),
+      sb.from("deal_pipelines").select("id, hidden_profile_id, startup_id, status, nda_requested_at, nda_approved_at, nda_expires_at").eq("buyer_user_id", userId),
     ]);
     const savedAt = new Map<string, string>((saves ?? []).map((s: any) => [s.hidden_profile_id, s.created_at]));
     const pipeBy = new Map<string, any>();
@@ -158,7 +157,8 @@ export const listFavourites = createServerFn({ method: "GET" })
     const rank = { approved: 0, requested: 1, saved: 2 } as const;
     out.sort((a, b) => rank[a.status] - rank[b.status] || (b.at ?? "").localeCompare(a.at ?? ""));
     return out;
-  });
+}
+
 
 export const mySavedListingIds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
