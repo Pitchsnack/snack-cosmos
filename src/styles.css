@@ -146,8 +146,13 @@
   --sidebar-border: hsl(225 20% 20%);
   --sidebar-ring: hsl(38 92% 55%);
 
-  --font-heading: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  /* English and Thai fonts are set separately: change --font-*-en for English,
+     --font-th for Thai. Thai characters always fall back to --font-th. */
+  --font-heading-en: 'Space Grotesk';
+  --font-body-en: 'DM Sans';
+  --font-th: 'Noto Sans Thai';
+  --font-heading: var(--font-heading-en), var(--font-th), system-ui, sans-serif;
+  --font-body: var(--font-body-en), var(--font-th), system-ui, sans-serif;
 
   --gradient-hero: linear-gradient(135deg, hsl(225 55% 22%), hsl(225 40% 32%));
   --gradient-accent: linear-gradient(135deg, hsl(38 92% 55%), hsl(28 95% 50%));
