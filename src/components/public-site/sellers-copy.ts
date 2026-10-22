@@ -4,7 +4,7 @@ const c = (en: string, th: string): C => ({ en, th });
 
 export const S_HERO = {
   chip: c("For Business Owners Looking to Sell · no exclusivity · **withdraw at any time**", "สำหรับเจ้าของกิจการที่ต้องการขาย · ไม่มีสัญญาผูกขาด · **ถอนตัวได้ทุกเมื่อ**"),
-  h1: c("Sell your business on your terms. Private until you choose otherwise.", "ขายกิจการตามเงื่อนไขของท่าน\nชื่อบรฺิษัท ข้อมูลเก็บเป็นความลับ\u00a0จนกว่าท่านจะเลือกเปิดเผย\nddddd\n"),
+  h1: c("Sell your business on your terms. Private until you choose otherwise.", "ขายกิจการตามเงื่อนไขของท่าน\nชื่อบรฺิษัท ข้อมูลเก็บเป็นความลับ\u00a0จนกว่าท่านจะเลือกเปิดเผย"),
   intro: c("Verified buyers see an anonymous profile, and you approve each one before your name is shared. No exclusivity, nothing owed if you do not sell, and your verified financials and valuation cost a one-time fee in the tens of thousands of baht, not an adviser’s retainer.", "ผู้ซื้อที่ผ่านการตรวจสอบเห็นเพียงโปรไฟล์ไม่ระบุชื่อบริษัท ท่านเป็นผู้อนุมัติทุกรายการก่อนเปิดเผยชื่อ ไม่มีสัญญาผูกขาด ไม่มีค่าใช้จ่ายหากไม่ได้ขาย และรายงานการเงินกับการประเมินมูลค่ามีราคาเพียงหลักหมื่นบาท และที่สำคัญข้อมูลของท่านปิดเป็นความลับ\u00a0ไม่กระทบต่อกิจการ"),
   red: c("List your business free", "ลงประกาศฟรี"),
   outline: c("See the owner plans", "ดูแผนสำหรับเจ้าของกิจการ"),
