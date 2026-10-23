@@ -1,4 +1,5 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Seller Connect flight: confirmation dismissal, source covers, amber landing/Sent link, EN/TH and screen-size checks
 - [x] Pending contact presentation: seller/buyer/advisor existing shared actions use server-derived first-check states; 16 rules/regression tests pass; shared tooltip hover/focus/click/Escape/scroll/reduced motion and 1440/1024/390 containment, EN-light/TH-dark checked; verified buyer normal actions remain
 - [ ] Pending contact full role matrix and approval transitions: no pending-account session tested; existing advisor marketplace action is Request NDA (coming-soon), not Send contact request, and cards currently have no outbound advisor action; preserved existing UI and behavior instead of inventing a contact flow
 - [x] My Company submenu: shared Pipeline presentation, My Profile moved, empty Advisor Account removed; existing pages/Admin preserved; signed-in seller/buyer/advisor EN-light/TH-dark at 1440/1024/390, navigation/folding, phone closure, rail keyboard/exclusive flyouts verified; 24 existing Pipeline tests pass
