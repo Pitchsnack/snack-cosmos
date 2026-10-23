@@ -206,10 +206,10 @@ export function InvestorDetailPanel({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <OwnershipPanelSlot id={i.id} />
+            {!sv && <OwnershipPanelSlot id={i.id} />}
             <h2 className="text-2xl font-semibold leading-tight tracking-tight">
               {i.investor_name}
-              {connectionState === "connected" && (
+              {!sv && connectionState === "connected" && (
                 <span
                   className="ml-2 inline-flex items-center align-middle text-emerald-600 dark:text-emerald-400"
                   title="Connected"
@@ -218,11 +218,11 @@ export function InvestorDetailPanel({
                   <Check className="h-5 w-5" strokeWidth={2.5} />
                 </span>
               )}
-              <PreviewNeedsReassignmentBadge
+              {!sv && <PreviewNeedsReassignmentBadge
                 name={i.investor_name}
                 domain="investor"
                 className="ml-2 align-middle"
-              />
+              />}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
               {i.country && <span>{i.country}</span>}
@@ -300,7 +300,7 @@ export function InvestorDetailPanel({
             </div>
           )}
         </div>
-      </header>
+      </header>}
 
       {buyer?.intro}
       {/* Relationship state (Connect → Requested → Share) */}
@@ -312,7 +312,7 @@ export function InvestorDetailPanel({
         />
       )}
 
-      {connectionState === "requested" ? null : (
+      {!sv && connectionState === "requested" ? null : (
         <>
           {/* Media */}
           {(mediaSlots.length > 0 || buyer?.mediaAdd) && (
@@ -355,8 +355,8 @@ export function InvestorDetailPanel({
             )}
 
           {/* Short description */}
-          {i.short_description && (
-            <p className="text-[15px] leading-relaxed text-foreground/85">{i.short_description}</p>
+          {about && (
+            <p className={cn("text-[15px] leading-relaxed text-foreground/85", sv && "whitespace-pre-line")}>{about}</p>
           )}
 
           {/* Meta grid */}
@@ -367,11 +367,11 @@ export function InvestorDetailPanel({
                 return (
                   <div
                     key={idx}
-                    className="flex min-w-0 items-center gap-2 text-foreground/80"
+                    className={cn("flex min-w-0 gap-2 text-foreground/80", sv ? "items-start" : "items-center")}
                     title={typeof m.label === "string" ? m.label : undefined}
                   >
                     <Icon className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-                    <span className="truncate">{m.label}</span>
+                    <span className={sv ? "min-w-0 break-words" : "truncate"}>{m.label}</span>
                   </div>
                 );
               })}
@@ -405,11 +405,18 @@ export function InvestorDetailPanel({
                   className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  <span className="truncate">{i.email}</span>
+                  <span className={sv ? "min-w-0 break-all" : "truncate"}>{i.email}</span>
                 </a>
               )}
             </dl>
           )}
+
+          {sv && revTxt && (
+            <Section icon={Coins} title={sv.revenueTitle}>
+              <ChipRow tags={[revTxt]} tone="primary" />
+            </Section>
+          )}
+          {sv && (metaItems.length > 0 || i.email || i.website_url) && <div className="border-t border-border/50" aria-hidden />}
 
           {/* Overview */}
           {overview && (
