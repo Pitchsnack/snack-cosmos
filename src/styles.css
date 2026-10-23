@@ -11,6 +11,7 @@
 @import "./styles/tools-offer-close.css";
 @import "./styles/reports-hub.css";
 @import "./styles/pipeline-workspace.css";
+@import "./styles/profile-box.css";
 @source "../src";
 @import "tw-animate-css";
 

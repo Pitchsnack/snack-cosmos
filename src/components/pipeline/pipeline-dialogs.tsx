@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip as TT, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 const Tooltip = ({ children }: { children: React.ReactNode }) => <TooltipProvider delayDuration={200}><TT>{children}</TT></TooltipProvider>;
 import { cn } from "@/lib/utils";
-import { PrivateNote } from "./private-note";
+import { ProfileBox } from "./profile-box";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
 import type { SampleReportData } from "@/lib/sample-report";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
@@ -550,8 +550,8 @@ export function CompareReports({ rows, onOpen, onClose }: { rows: PipelineRow[];
 }
 
 /* ---------------- investor profile ---------------- */
-export function InvestorProfile({ p, onClose }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void }) {
-  return <PrivateNote pipelineId={p.id} onClose={onClose} />;
+export function InvestorProfile({ p, onClose, onReview }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReview?: () => void }) {
+  return <ProfileBox pipelineId={p.id} onClose={onClose} onReview={onReview} />;
 }
 
 /* ---------------- NDA & LOI ---------------- */
@@ -743,7 +743,7 @@ export function LoiDialog({ p, seller, onClose }: { p: PipelineRow; seller: bool
 
 /* ---------------- Seller profile (buyer) ---------------- */
 export function SellerProfile({ p, onClose }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReport?: () => void; onAsk?: () => void }) {
-  return <PrivateNote pipelineId={p.id} onClose={onClose} />;
+  return <ProfileBox pipelineId={p.id} onClose={onClose} />;
 }
 
 /** Left/right arrow keys move between the enabled tabs of a tablist. */
