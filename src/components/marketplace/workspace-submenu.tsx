@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
+import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+  const router = useRouter();
   const groupId = `${id}-pages`;
   const flyId = `${id}-flyout`;
 
@@ -43,7 +44,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
     if (next) window.dispatchEvent(new CustomEvent('ps-workspace-flyout', { detail: id }));
     setFly(next);
   };
-  const focusPage = () => {
+  const focusPage = (to: string) => {
     // Existing Pipeline navigation signal also closes the Marketplace drawer.
     window.dispatchEvent(new Event('ps-pipeline-navigate'));
     const focus = () => {
@@ -53,7 +54,15 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
       title.focus({ preventScroll: true });
       return true;
     };
-    requestAnimationFrame(() => { if (!focus()) window.setTimeout(focus, 350); });
+    if (path.replace(/\/$/, '') === to.replace(/\/$/, '')) {
+      window.setTimeout(focus, 150);
+      return;
+    }
+    const unsubscribe = router.subscribe('onResolved', () => {
+      unsubscribe();
+      window.setTimeout(focus, 150);
+    });
+    window.setTimeout(unsubscribe, 10000);
   };
   const links = (flyout = false) => <div id={flyout ? flyId : groupId} role="group" aria-label={groupLabel}
     className={flyout ? 'pipeline-fly-links' : 'pipeline-sub-links'}
@@ -71,7 +80,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
     }}>
     {items.map(item => <Link key={item.to} to={item.to} className="pipeline-sub-link"
       aria-current={item.current ? 'page' : undefined}
-      onClick={() => { setFly(false); focusPage(); }}><span>{item.label}</span>{item.suffix}</Link>)}
+      onClick={() => { setFly(false); focusPage(item.to); }}><span>{item.label}</span>{item.suffix}</Link>)}
   </div>;
   const content = <><Icon className="h-4 w-4 shrink-0" />{collapsed ? railBadge : <>
     <span className="flex-1 text-left">{label}</span>{!open && badge}
