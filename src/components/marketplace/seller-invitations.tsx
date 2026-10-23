@@ -14,6 +14,7 @@ import { useTr } from "@/components/common/edit-info-popup";
 import { useTranslation } from "@/i18n/language";
 import { STANDARD_NDA_TEXT } from "@/config/standard-nda";
 import { cn } from "@/lib/utils";
+import { SellerApprovedBox } from "@/components/pipeline/nda-approval";
 
 /** Seller › Invitations (sections 6 and 10) and the Review investor dialog (section 9). */
 
@@ -345,9 +346,10 @@ export function ReviewInvestorDialog({ pipelineId, onClose }: { pipelineId: stri
   const { data: d, error } = useQuery({ queryKey: ["nda-review", pipelineId], queryFn: () => fn({ data: { pipelineId } }), staleTime: 0 });
   const [tick, setTick] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [approvedId, setApprovedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!d?.answered) return;
+    if (!d?.answered || approvedId) return;
     toast(tr("This NDA request has already been answered.", "คำขอ NDA นี้ได้รับการตอบแล้ว"));
     onClose();
     if (d.invitationId) navigate({ to: "/marketplace/invitations", search: { open: d.invitationId } });
@@ -361,7 +363,8 @@ export function ReviewInvestorDialog({ pipelineId, onClose }: { pipelineId: stri
     setBusy(true);
     try {
       await decide(pipelineId, approve, approve ? consent : undefined);
-      toast.success(approve ? tr("NDA approved. The buyer is in Pipeline › Contacts.", "อนุมัติ NDA แล้ว ผู้ซื้ออยู่ใน Pipeline › รายชื่อติดต่อ") : tr("NDA request declined. The investor is told.", "ปฏิเสธคำขอ NDA แล้ว นักลงทุนได้รับแจ้ง"));
+      if (approve) { setApprovedId(pipelineId); return; }
+      toast.success(tr("NDA request declined. The investor is told.", "ปฏิเสธคำขอ NDA แล้ว นักลงทุนได้รับแจ้ง"));
       onClose();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
@@ -379,6 +382,7 @@ export function ReviewInvestorDialog({ pipelineId, onClose }: { pipelineId: stri
   const box = "rounded-[12px] border border-[#E9EBF0] px-4 py-[14px] dark:border-border";
   const label = "mb-2 text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]";
 
+  if (approvedId) return <SellerApprovedBox pipelineId={approvedId} onClose={onClose} />;
   return (
     <Dialog open={!!d && !d.answered} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[760px] max-w-[calc(100vw-32px)] rounded-[16px] p-6 sm:max-w-[760px]">
