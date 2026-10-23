@@ -2,6 +2,7 @@
 - [x] Pipeline sub-menu: six seller/buyer pages, persistent deal stars and shared counts
 - [x] Pipeline NDA Invitations: Received/Sent, sign/review actions and reused profile pop-up
 - [x] Pipeline: status/reports/history, legacy destinations, EN-light/TH-dark signed-in checks at 1440/1024/390; star/unstar persistence and approved profile dialogs
+- [x] Pipeline › Reports rebuilt per lovable-pipeline-reports.md: deal selector + My reports layout (buyer pop-up content, seller per-buyer with one-buyer "Who can see" card); verified buyer/seller, EN/TH, dark, 1280/390, keyboard, Expand; live share/decline/stop-share mutations still unverified (real deals)
 - [ ] Pipeline live NDA approval/decline and report sharing mutation checks: require permission to change real deals; full EN-dark/TH-light keyboard matrix remains unverified
 - [x] Test new advisor signup and setup with approved email; draft saved unpublished; EN/TH layout checked (advisor content remains English in TH mode)
 - [x] My reports consolidation: seven reports, existing viewers/offers, Seller menu and legacy redirects

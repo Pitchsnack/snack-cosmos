@@ -39,3 +39,22 @@
 .hub-fold{display:inline-flex;align-items:center;gap:5px;min-height:40px;font-size:13.5px;font-weight:600;color:var(--link);margin-left:auto}.hub-fold:hover{text-decoration:underline}
 .hub-audience-title h3 .hub-fold-count{font-weight:500;color:var(--muted-foreground)}
 .hub-audience[data-folded=true] .hub-audience-title{margin-bottom:0}
+.hub-page.hub-embed{padding:0;max-width:none;margin:0}
+.hub-deal-selector{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:5px;margin-bottom:14px}
+.hub-deal-selector-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-foreground)}
+.hub-deal-btn{display:flex;align-items:center;gap:10px;height:52px;min-width:300px;padding:4px 12px 4px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card);color:var(--foreground);text-align:left;font-family:inherit;font-size:inherit;cursor:pointer}
+.hub-deal-btn:hover{border-color:var(--muted-foreground)}
+.hub-deal-btn[aria-expanded=true]{box-shadow:0 0 0 3px var(--hub-active-soft)}
+.hub-deal-btn-text{flex:1;min-width:0;display:grid}
+.hub-deal-btn-text b{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-deal-btn-text small{font-size:12.5px;color:var(--muted-foreground);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-deal-pill{flex:none;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:700;display:inline-flex;align-items:center}
+.hub-deal-pill[data-kind=new]{background:var(--hub-buyer-soft);color:var(--hub-buyer)}
+.hub-deal-pill[data-kind=request]{background:var(--hub-warning-soft);color:var(--hub-warning)}
+.hub-deal-list{position:absolute;top:calc(100% + 6px);right:0;z-index:50;width:440px;max-width:calc(100vw - 32px);max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:14px;background:var(--card);padding:6px;box-shadow:var(--hub-shadow)}
+.hub-deal-opt{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;cursor:pointer;color:var(--foreground);font-size:13.5px}
+.hub-deal-opt:hover,.hub-deal-opt[data-active]{background:var(--muted)}
+.hub-deal-opt[aria-selected=true]{background:var(--hub-active-soft)}
+.hub-deal-tile{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:9px;background:var(--hub-active-soft);color:var(--hub-active);font-size:12px;font-weight:700;text-transform:uppercase}
+.hub-one-buyer-note{font-size:13.5px;color:var(--muted-foreground);margin:10px 0}
+@media(max-width:600px){.hub-deal-selector{align-items:stretch}.hub-deal-btn{width:100%;min-width:0}.hub-deal-list{left:0;right:0;width:100%}}
