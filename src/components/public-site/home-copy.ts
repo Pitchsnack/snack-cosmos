@@ -10,7 +10,7 @@ export const NAV = {
 };
 
 export const HERO = {
-  chip: c("Thailand’s SME ownership marketplace · for businesses from **THB 250m** in annual revenue", "ตลาดกลางซื้อขายกิจการ SME ไทย · สำหรับกิจการที่มียอดขายตั้งแต่ **250 ล้านบาท**ต่อปี"),
+  chip: c("Thailand’s SME marketplace · for selling\u00a0 businesses with annual revenue from\u00a0THB 250m", "ตลาดกลางซื้อขายกิจการ SME ไทย · สำหรับกิจการที่มียอดขายตั้งแต่ **250 ล้านบาท**ต่อปี"),
   h1: c("The confidential marketplace for Thai businesses company changing hands.", "ตลาดกลาง ซื้อขายกิจการ SME ที่เป็นความลับ"),
   intro: c("PitchSnack is a neutral Thai marketplace where verified business owners (SME) meet verified buyers. We make the introduction and score every target against the documented failure predictors before an offer; licensed advisers run the deal, and PitchSnack never holds funds or takes a side.",
     "PitchSnack คือตลาดกลางที่เป็นกลาง ซึ่งเจ้าของกิจการ SME ไทยที่ผ่านการตรวจสอบ ได้พบกับผู้ซื้อระดับองค์กรและนักลงทุน เราทำหน้าที่ชี้ช่องแนะนำ และประเมินกิจการเป้าหมายทุกรายตามปัจจัยที่งานวิจัยระบุว่าทำให้ดีลล้มเหลว ก่อนมีการยื่นข้อเสนอ ธุรกรรมดำเนินการโดยที่ปรึกษาที่มีใบอนุญาต และ PitchSnack ไม่ถือเงินและไม่เข้าข้างฝ่ายใด"),
