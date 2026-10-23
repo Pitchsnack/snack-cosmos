@@ -24,8 +24,9 @@ export function nextBangkokMidnight(now: number): number {
   return day === null ? now + DAY : (day + 1) * DAY - 7 * 3_600_000;
 }
 
-export function showsAgreements(p: { status: string; ndaApprovedAt: string | null; loiAcceptedAt: string | null }) {
-  return p.status === 'active' && !!p.ndaApprovedAt && !!p.loiAcceptedAt;
+export function showsAgreements(p: { status: string; ndaApprovedAt: string | null; ndaExpiresAt?: string | null }, today: number) {
+  const expires = p.ndaExpiresAt ? bangkokDay(p.ndaExpiresAt) : null;
+  return p.status === 'active' && !!p.ndaApprovedAt && (!p.ndaExpiresAt || (expires !== null && expires >= today));
 }
 
 export function agreementDate(value: string | number, thai: boolean) {

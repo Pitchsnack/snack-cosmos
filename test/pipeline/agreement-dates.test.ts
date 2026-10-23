@@ -13,6 +13,9 @@ describe('Live legal agreement dates', () => {
   it('uses the stored end rather than recomputing a term', () => expect(timing('2026-10-25T00:00:00+07:00')?.termDays).toBe(24));
   it('clamps the elapsed bar to the full term after expiry', () => expect(timing('2026-10-22T00:00:00+07:00')?.progress).toBe(1));
   it('does not invent missing end dates', () => expect(agreementTiming('2026-10-01', null, today)).toBeNull());
-  it('shows only seller-accepted LOI deals', () => { expect(showsAgreements({ status: 'active', ndaApprovedAt: '2026-10-01', loiAcceptedAt: '2026-10-20' })).toBe(true); expect(showsAgreements({ status: 'active', ndaApprovedAt: '2026-10-01', loiAcceptedAt: null })).toBe(false); });
-  it('excludes ended deals and pending NDA cards', () => { expect(showsAgreements({ status: 'ended', ndaApprovedAt: '2026-10-01', loiAcceptedAt: '2026-10-20' })).toBe(false); expect(showsAgreements({ status: 'active', ndaApprovedAt: null, loiAcceptedAt: null })).toBe(false); });
+  it('shows from NDA approval without requiring an accepted LOI', () => expect(showsAgreements({ status: 'active', ndaApprovedAt: '2026-10-01', ndaExpiresAt: '2028-10-01' }, today)).toBe(true));
+  it('excludes ended deals', () => expect(showsAgreements({ status: 'ended', ndaApprovedAt: '2026-10-01' }, today)).toBe(false));
+  it('excludes pending NDA cards', () => expect(showsAgreements({ status: 'active', ndaApprovedAt: null }, today)).toBe(false));
+  it('excludes expired NDAs', () => expect(showsAgreements({ status: 'active', ndaApprovedAt: '2024-10-01', ndaExpiresAt: '2026-10-22' }, today)).toBe(false));
+  it('keeps the NDA visible through its Bangkok end day', () => expect(showsAgreements({ status: 'active', ndaApprovedAt: '2024-10-23', ndaExpiresAt: '2026-10-23T23:59:00+07:00' }, today)).toBe(true));
 });
