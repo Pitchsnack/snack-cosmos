@@ -45,7 +45,7 @@ export function NotificationCenter() {
             Mark all read
           </Button>
         </div>
-        <ScrollArea className="h-[min(440px,60vh)]">
+        <ScrollArea className={items.length > 3 ? "h-[min(440px,60vh)]" : undefined}>
           {items.length === 0 && (
             <div className="px-4 py-10 text-center text-sm text-muted-foreground">
               You're all caught up.
