@@ -69,12 +69,15 @@ export async function sendAlert(input: SendAlertInput) {
   }
 }
 
-/** Seller team = owning agents of the startup. */
+/** Seller team = the company's own users plus its owning agents. */
 export async function sellerTeam(startupId: string | null | undefined) {
   if (!startupId) return [];
   const sb = await admin();
-  const { data } = await sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", startupId);
-  return ((data ?? []) as any[]).map((o) => o.owning_agent_user_id).filter(Boolean) as string[];
+  const [{ data: su }, { data: own }] = await Promise.all([
+    sb.from("startup_users").select("user_id").eq("startup_id", startupId),
+    sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", startupId),
+  ]);
+  return [...new Set([...((su ?? []) as any[]).map((x) => x.user_id), ...((own ?? []) as any[]).map((o) => o.owning_agent_user_id)].filter(Boolean))] as string[];
 }
 
 const fmtDate = (d = new Date()) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Bangkok" });
