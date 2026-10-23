@@ -371,7 +371,7 @@ export function ReviewInvestorDialog({ pipelineId, onClose }: { pipelineId: stri
   ] : [];
   const terms: Array<[string, string]> = [
     [tr("Parties", "คู่สัญญา"), `${d?.listingName ?? ""}${d?.listingRef ? ` (${d.listingRef})` : ""} ${tr("and", "และ")} ${typeOf(i)}${i?.refNo ? ` (${i.refNo})` : ""}`],
-    [tr("Term", "ระยะเวลา"), tr("2 years from the day you approve", "2 ปีนับจากวันที่ท่านอนุมัติ")],
+    [tr("Term", "ระยะเวลา"), tr("2 years ", "2 ปีนับจากวันที่ท่านอนุมัติ")],
     [tr("Use", "การใช้"), tr("Only to consider this deal", "ใช้เพื่อพิจารณาดีลนี้เท่านั้น")],
     [tr("Contact", "การติดต่อ"), tr("No direct contact with your staff, customers or suppliers", "ห้ามติดต่อพนักงาน ลูกค้า หรือซัพพลายเออร์ของท่านโดยตรง")],
     [tr("Non-solicitation", "การไม่ชักชวน"), tr("12 months", "12 เดือน")],
@@ -384,18 +384,18 @@ export function ReviewInvestorDialog({ pipelineId, onClose }: { pipelineId: stri
       <DialogContent className="w-[760px] max-w-[calc(100vw-32px)] rounded-[16px] p-6 sm:max-w-[760px]">
         <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">{tr("NDA to approve", "NDA ที่รออนุมัติ")} · {i?.refNo}</div>
         <DialogTitle className="mt-1 font-['Space_Grotesk'] text-[21px] font-bold">{tr("Review investor", "ตรวจสอบนักลงทุน")}</DialogTitle>
-        <DialogDescription className="text-[14.5px] text-[#434A5C] dark:text-muted-foreground">{tr("The investor signed PitchSnack's standard mutual NDA and sent it to you. Look at their profile and the NDA, then approve or decline it.", "นักลงทุนลงนาม NDA มาตรฐานของ PitchSnack และส่งถึงท่าน ตรวจสอบโปรไฟล์และ NDA แล้วอนุมัติหรือปฏิเสธ")}</DialogDescription>
+        <DialogDescription className="text-[14.5px] text-[#434A5C] dark:text-muted-foreground">{tr("The investor signed PitchSnack's standard mutual NDA.  Review investor profile and the NDA agreement.  You decide to approve or decline. ", "นักลงทุนลงนาม NDA มาตรฐานของ PitchSnack และส่งถึงท่าน ตรวจสอบโปรไฟล์และ NDA แล้วอนุมัติหรือปฏิเสธ")}</DialogDescription>
         <span className="mt-1 inline-flex h-7 w-fit items-center gap-1.5 rounded-full border border-[#BBE8CA] bg-[#E9F6EE] px-3 text-[12.5px] font-semibold text-[#15803D]"><Check className="h-3.5 w-3.5" />{tr(`Signed by the investor · ${day(d?.signedAt ?? null)}`, `นักลงทุนลงนามแล้ว · ${day(d?.signedAt ?? null)}`)}</span>
         <div className="mt-2 grid gap-3 min-[720px]:grid-cols-2">
           <div className={box}>
             <div className={label}>{tr("Investor profile · name hidden", "โปรไฟล์นักลงทุน · ซ่อนชื่อ")}</div>
-            {i?.description && <p className="mb-2 text-[13.5px] text-[#434A5C] dark:text-muted-foreground">{i.description}</p>}
+            {i?.description && <p className="mb-2 text-[13.5px] text-[#434A5C] dark:text-muted-foreground">{tr("About the company", "เกี่ยวกับบริษัท")}</p>}
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13.5px]">
               {rows.filter(([, v]) => !!v).flatMap(([k, v]) => [<dt key={`${k}-k`} className="text-[#6B7280]">{k}</dt>, <dd key={`${k}-v`} className="font-medium">{v}</dd>])}
             </dl>
           </div>
           <div className={box}>
-            <div className={label}>{tr("The NDA they signed", "NDA ที่ผู้ซื้อลงนาม")}</div>
+            <div className={label}>{tr("NDA AGREEMENT", "ข้อตกลง NDA")}</div>
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13.5px]">
               {terms.flatMap(([k, v]) => [<dt key={`${k}-k`} className="text-[#6B7280]">{k}</dt>, <dd key={`${k}-v`} className="font-medium">{v}</dd>])}
             </dl>
