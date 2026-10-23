@@ -1,4 +1,5 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Add live NDA/LOI box on seller/buyer All deals and Deal watchlist; verify dates, independent folding, dialogs and EN/TH desktop layouts
 - [x] Pipeline sub-menu: six seller/buyer pages, persistent deal stars and shared counts
 - [x] Pipeline NDA Invitations: Received/Sent, sign/review actions and reused profile pop-up
 - [x] Pipeline: status/reports/history, legacy destinations, EN-light/TH-dark signed-in checks at 1440/1024/390; star/unstar persistence and approved profile dialogs
