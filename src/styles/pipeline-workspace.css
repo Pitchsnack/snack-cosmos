@@ -30,3 +30,34 @@
 @container (max-width:720px){.agreement-grid{grid-template-columns:1fr}}
 .agreement-tile[data-tone=unsigned]{background:var(--agreement-end-bg);border-color:var(--agreement-end-line)}.agreement-status[data-tone=unsigned]{background:var(--card);border-color:var(--agreement-line);border-style:dashed;color:var(--muted-foreground)}.agreement-tile[data-tone=unsigned] .agreement-icon{background:var(--agreement-end-line);color:var(--agreement-end-fill)}.agreement-tile[data-tone=unsigned] .agreement-name b{color:var(--agreement-end)}.agreement-tile[data-tone=unsigned] .agreement-bar{background:var(--agreement-end-line)}.agreement-tile[data-tone=unsigned] .agreement-dates b{color:var(--agreement-end-fill)}
 @media(prefers-reduced-motion:reduce){.agreement-live i:after{display:none;animation:none}.agreement-toggle svg{transition:none}}
+
+/* NDA request flight (after Done on "The seller has received your NDA request") */
+#nda-flight-layer{position:fixed;inset:0;z-index:2147483000;pointer-events:none}
+.nda-flight-card{position:absolute;width:224px;height:58px;display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:12px;background:#fff;color:#151A28;box-shadow:0 14px 34px rgba(16,24,40,.28),0 0 0 1px rgba(16,24,40,.06);will-change:transform,opacity;transform-origin:center}
+.nda-flight-thumb{position:relative;flex:none;width:42px;height:42px;border-radius:9px;overflow:hidden;background:#E5E7EB center/cover no-repeat}
+.nda-flight-clone{position:absolute!important;inset:0;width:100%!important;height:100%!important;margin:0!important}
+.nda-flight-icon{position:absolute;inset:0;display:grid;place-items:center;background:rgba(17,24,39,.18)}
+.nda-flight-body{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.nda-flight-body b{max-width:150px;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nda-flight-chip{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:999px;border:1px solid #FDE68A;background:#FFFBEB;color:#B45309;font-size:11px;font-weight:700;white-space:nowrap}
+.nda-flight-chip[data-kind="2"]{border-color:#E5E7EB;background:#F3F4F6;color:#4B5563}
+@keyframes nda-hit{0%{box-shadow:inset 0 0 0 2px transparent;background-color:transparent}15%,80%{box-shadow:inset 0 0 0 2px #A5B4FC;background-color:#EEF0FF}100%{box-shadow:inset 0 0 0 2px transparent;background-color:transparent}}
+.nda-flight-hit,.nda-flight-hit-inv{position:relative;animation:nda-hit 1.6s ease forwards}
+.nda-flight-hit-inv,.nda-flight-hit-inv span:first-child{color:#4338CA!important;font-weight:600}
+@keyframes nda-pop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+.nda-flight-star{fill:#F59E0B;stroke:#D97706;animation:nda-pop 380ms cubic-bezier(.3,1.6,.5,1)}
+.nda-flight-plus{position:absolute;right:10px;top:50%;height:20px;padding:0 7px;border-radius:999px;background:#4338CA;color:#fff;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;pointer-events:none;animation:nda-plus 1.1s ease-out forwards}
+.nda-flight-plus[data-rail]{right:-4px;top:-2px}
+@keyframes nda-plus{0%{opacity:0;transform:translateY(-50%) translateY(10px)}30%{opacity:1;transform:translateY(-50%)}100%{opacity:0;transform:translateY(-50%) translateY(-6px)}}
+.nda-flight-tips{position:fixed;inset:0;z-index:2147483001;pointer-events:none;opacity:0;transform:translateX(-6px);transition:opacity .2s,transform .2s}
+.nda-flight-tips.is-in{opacity:1;transform:none}
+.nda-flight-tip{position:fixed;pointer-events:auto;min-width:236px;display:flex;align-items:center;gap:9px;padding:0 6px 0 14px;border-radius:10px;background:#151A28;color:#fff;font-size:13.5px;box-shadow:0 12px 28px rgba(16,24,40,.3)}
+.nda-flight-tip::before{content:"";position:absolute;left:-5px;top:50%;width:10px;height:10px;background:#151A28;transform:translateY(-50%) rotate(45deg)}
+.nda-flight-tip-icon{display:grid;place-items:center;flex:none}
+.nda-flight-tip-text{white-space:nowrap}.nda-flight-tip-text b{font-weight:600}.nda-flight-tip-sub{color:#C9CEDA;font-weight:400}
+.nda-flight-view{margin-left:auto;padding-left:18px;min-height:32px;padding-right:8px;color:#A5B4FC;font-weight:600;background:none;border:0;border-radius:6px;cursor:pointer}
+.nda-flight-view:focus-visible{outline:2px solid #A5B4FC}
+.nda-flight-dot{position:relative}
+.nda-flight-dot::after{content:"";position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:50%;background:#F6A823;box-shadow:0 0 0 2px #151a28}
+.nda-sent-dialog[data-state=closed]{animation-duration:180ms}
+@media (prefers-reduced-motion:reduce){.nda-flight-star{animation:none}}

@@ -390,14 +390,13 @@ export type NdaSent = { listingId: string; name: string; invitationId: string | 
 /** Section 5: shown after Sign and request NDA from Browse listings or Favourites. Done/Esc plays the flight into the menu. */
 export function NdaSentDialog({ sent, fromWatchlist = false, onClose }: { sent: NdaSent; fromWatchlist?: boolean; onClose: () => void }) {
   const tr = useTr();
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const box = useRef<HTMLDivElement>(null);
   const done = () => {
     const r = box.current?.getBoundingClientRect();
     const fallback = r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: innerWidth / 2, y: innerHeight / 2 };
     onClose();
-    const w = t("My watchlist");
+    const w = "รายการโปรด";
     void import("@/lib/nda-flight").then(({ playNdaFlight }) => playNdaFlight({
       listingId: sent.listingId, name: sent.name, invitationId: sent.invitationId, fromWatchlist, alreadySaved: sent.saved, fallback,
       text: {
@@ -410,7 +409,7 @@ export function NdaSentDialog({ sent, fromWatchlist = false, onClose }: { sent: 
       toast: (msg, view) => toast(msg, { position: "bottom-center", duration: 4000, action: { label: tr("View", "ดู"), onClick: view } }),
     }));
   };
-  const w = t("My watchlist");
+  const w = "รายการโปรด";
   return (
     <Dialog open onOpenChange={(o) => !o && done()}>
       <DialogContent ref={box} className="nda-sent-dialog max-w-[calc(100vw-32px)] rounded-2xl p-6 sm:max-w-[460px] [&>button.absolute]:hidden">
