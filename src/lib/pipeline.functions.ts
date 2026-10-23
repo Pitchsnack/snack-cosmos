@@ -275,7 +275,22 @@ export const listPipeline = createServerFn({ method: "GET" })
       data.as === "buyer" && logoPaths.length ? sb.storage.from("startup-media").createSignedUrls(logoPaths, 3600) : Promise.resolve({ data: [] as any[] }),
     ]);
     for (const d of (signedRes as any).data ?? []) if (d.path && d.signedUrl) signedLogos[d.path] = d.signedUrl;
-    const bvMap = Object.fromEntries((bvs ?? []).map((b: any) => [b.user_id, b]));
+    const bvMap: Record<string, any> = Object.fromEntries((bvs ?? []).map((b: any) => [b.user_id, { ...b }]));
+    // The linked Investors Directory row is the source of truth for name and type.
+    if (buyerIds.length) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: links } = await supabaseAdmin
+        .from("buyer_profiles")
+        .select("user_id, investors:investor_id(investor_name, investor_type)")
+        .in("user_id", buyerIds);
+      for (const l of (links ?? []) as any[]) {
+        const inv = l.investors;
+        if (!inv) continue;
+        const cur = (bvMap[l.user_id] ??= {});
+        if (inv.investor_name) cur.company_name = inv.investor_name;
+        if (inv.investor_type) cur.buyer_type = inv.investor_type;
+      }
+    }
 
     const items = rows.map((r) => {
       const hp = hpMap[r.hidden_profile_id] ?? {};
