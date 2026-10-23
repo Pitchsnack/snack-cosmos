@@ -1,0 +1,3 @@
+ALTER TABLE public.listing_invitations ADD COLUMN IF NOT EXISTS invite_count integer NOT NULL DEFAULT 1 CHECK (invite_count IN (1,2)), ADD COLUMN IF NOT EXISTS first_declined_at timestamptz;
+ALTER TABLE public.deal_pipelines ADD COLUMN IF NOT EXISTS buyer_approval_seen_at timestamptz;
+UPDATE public.deal_pipelines SET buyer_approval_seen_at = now() WHERE nda_approved_at IS NOT NULL AND buyer_approval_seen_at IS NULL;

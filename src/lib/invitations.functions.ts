@@ -160,6 +160,7 @@ export type BuyerInvitation = {
   sentAt: string; viewedAt: string | null; choiceAt: string | null; closedAt: string | null; closedReason: string | null;
   ndaAt: string | null; approvedAt: string | null; pipelineId: string | null;
   name: string; refNo: string | null; companyName: string | null;
+  inviteCount: number; firstDeclinedAt: string | null; buyerOrg: string | null;
   /** Public listing (Browse teaser); null once the listing is no longer live. */
   teaser: any | null;
 };
@@ -185,6 +186,7 @@ export const listMyInvitations = createServerFn({ method: "GET" })
     const approvedIds = rows.filter((r) => r.status === "approved").map((r) => hpBy.get(r.inv.hidden_profile_id)?.startup_id).filter(Boolean);
     const { data: sts } = approvedIds.length ? await sb.from("startups").select("id, startup_name").in("id", approvedIds) : { data: [] };
     const nameBy = new Map<string, string>((sts ?? []).map((s: any) => [s.id, s.startup_name]));
+    const buyerOrg = await myOrgName(context.userId);
     return Promise.all(rows.map(async ({ inv, pipe, status }): Promise<BuyerInvitation> => {
       if(pipe?.nda_approved_at&&(pipe.status==="ended"||pipe.status==="revoked"||(pipe.nda_expires_at&&Date.parse(pipe.nda_expires_at)<=Date.now())))status="closed";
       const hp = hpBy.get(inv.hidden_profile_id);
@@ -197,6 +199,7 @@ export const listMyInvitations = createServerFn({ method: "GET" })
         ndaAt: pipe?.nda_requested_at ?? null, approvedAt: pipe?.nda_approved_at ?? null, pipelineId: pipe?.id ?? null,
         name: t?.listing?.codeName || hp?.code_name || hp?.ref_no || "Listing", refNo: hp?.ref_no ?? null,
         companyName: status === "approved" ? nameBy.get(hp?.startup_id) ?? null : null,
+        inviteCount: inv.id===pipe?.id ? 1 : inv.invite_count ?? 1, firstDeclinedAt: inv.first_declined_at ?? null, buyerOrg,
         teaser: t,
       };
     }));
@@ -278,7 +281,7 @@ export const invitationsBadgeCount = createServerFn({ method: "GET" })
     // Admins previewing Buyer view count their own buyer invitations.
     if (role !== "buyer" && role !== "admin") return 0;
     const { rows } = await (await import("./invitations.server")).orgInvitations(context.userId);
-    return rows.filter((r) => r.status === "new").length;
+    return rows.filter((r) => r.status === "new" || r.status === "viewed").length;
   });
 
 /* ───────────────────────── Seller side ───────────────────────── */
@@ -287,6 +290,7 @@ export type SellerInvitation = {
   id: string; investorId: string; origin?: "received" | "sent"; status: import("./invitations.server").InvStatus;
   sentAt: string; viewedAt: string | null; choiceAt: string | null; closedAt: string | null; closedReason: string | null;
   ndaAt: string | null; approvedAt: string | null; declinedAt: string | null; pipelineId: string | null;
+  inviteCount: number; firstDeclinedAt: string | null;
   listingName: string; listingRef: string | null; companyName: string | null;
   /** Public investor card; null once their profile is unpublished. */
   investor: import("@/lib/investor-browse").PublicInvestor | null;
@@ -311,7 +315,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
   const {data:allPipes}=await sb.from("deal_pipelines").select("*").in("startup_id",ids).neq("status","withdrawn");
   const invitations=invs??[];
   const {data:allBps}=await sb.from("buyer_profiles").select("user_id,investor_id").in("user_id",(allPipes??[]).map((p:any)=>p.buyer_user_id));
-  for(const p of allPipes??[]){const bp=allBps?.find((b:any)=>b.user_id===p.buyer_user_id);if(invitations.some((i:any)=>i.hidden_profile_id===p.hidden_profile_id&&i.investor_id===bp?.investor_id))continue;invitations.push({id:p.id,hidden_profile_id:p.hidden_profile_id,startup_id:p.startup_id,investor_id:bp?.investor_id,sent_at:p.nda_requested_at,viewed_at:null,choice_at:null,closed_at:p.status==="ended"||p.status==="revoked"?p.updated_at:null,closed_reason:p.status==="ended"||p.status==="revoked"?"nda_ended":null});}
+  for(const p of allPipes??[]){const bp=allBps?.find((b:any)=>b.user_id===p.buyer_user_id);if(invitations.some((i:any)=>i.pipeline_id===p.id))continue;if(invitations.some((i:any)=>i.hidden_profile_id===p.hidden_profile_id&&i.investor_id===bp?.investor_id))continue;invitations.push({id:p.id,hidden_profile_id:p.hidden_profile_id,startup_id:p.startup_id,investor_id:bp?.investor_id,sent_at:p.nda_requested_at,viewed_at:null,choice_at:null,closed_at:p.status==="ended"||p.status==="revoked"?p.updated_at:null,closed_reason:p.status==="ended"||p.status==="revoked"?"nda_ended":null});}
   if(!invitations.length)return [];
   const hpIds = [...new Set(invitations.map((i: any) => i.hidden_profile_id as string))];
   const invIds: string[] = [...new Set<string>(invitations.map((i: any) => i.investor_id).filter(Boolean))];
@@ -362,6 +366,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
       sentAt: inv.sent_at, viewedAt: inv.viewed_at, choiceAt: inv.choice_at, closedAt, closedReason,
       ndaAt: pipe?.nda_requested_at ?? null, approvedAt: pipe?.nda_approved_at ?? null,
       declinedAt: pipe?.status === "declined" ? pipe.updated_at : null, pipelineId: pipe?.id ?? null,
+      inviteCount: inv.id===pipe?.id ? 1 : inv.invite_count ?? 1, firstDeclinedAt: inv.first_declined_at ?? null,
       listingName: hp?.code_name || hp?.ref_no || "Listing", listingRef: hp?.ref_no ?? null,
       companyName: nameBy.get(inv.startup_id) ?? null,
       investor: status === "closed" && ["profile_unpublished","listing_not_live"].includes(closedReason??"") ? null : publicInvestor,
@@ -436,3 +441,96 @@ export const invitationPrivateProfile=createServerFn({method:"GET"}).middleware(
  if(data.as==="buyer"){const {loadBuyerFavourites}=await import("./favourites.functions");const row=(await loadBuyerFavourites(context.userId)).find(r=>r.id===p.hidden_profile_id&&r.pipelineId===p.id);return {buyer:row??null,seller:null};}
  const {data:bp}=await sb.from("buyer_profiles").select("investor_id").eq("user_id",p.buyer_user_id).maybeSingle();const {loadSellerFavourites}=await import("./investor-browse.functions");const row=(await loadSellerFavourites(context.userId)).find(r=>r.id===bp?.investor_id);return {buyer:null,seller:row??null};
 });
+
+async function myOrgName(userId: string): Promise<string | null> {
+  const sb = await admin();
+  const { data: bp } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", userId).not("investor_id", "is", null).limit(1).maybeSingle();
+  if (bp?.investor_id) { const { data: i } = await sb.from("investors").select("investor_name").eq("id", bp.investor_id).maybeSingle(); if (i?.investor_name) return i.investor_name; }
+  const { data: up } = await sb.from("user_profiles").select("organisation").eq("user_id", userId).maybeSingle();
+  return up?.organisation ?? null;
+}
+
+/** Seller › Invite again: one second invitation after a first decline. Same checks as Connect. */
+export const inviteAgain = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { requireRole, spendRequest, planAccess, requestsLeft } = await import("./plan-access.server");
+    await requireRole(context.userId, ["seller"]);
+    const sb = await admin();
+    const { data: inv } = await sb.from("listing_invitations").select("*").eq("id", data.id).maybeSingle();
+    if (!inv || !(await sellerStartupIds(context.userId)).includes(inv.startup_id)) throw new Error("Invitation not found");
+    if ((inv.invite_count ?? 1) >= 2) throw new Error("You can't invite this investor a third time.");
+    if (inv.buyer_choice !== "not_interested" || inv.closed_at) throw new Error("This invitation can't be sent again now.");
+    const hp = await myLiveListing(context.userId);
+    if (!hp || hp.id !== inv.hidden_profile_id) throw new Error("Your listing isn't live.");
+    const { loadPublicInvestors } = await import("./investor-browse.functions");
+    const [pub] = await loadPublicInvestors(sb, [inv.investor_id]);
+    if (!pub) throw new Error("This investor's profile is no longer published.");
+    const st = (await statesFor(sb, hp, [inv.investor_id]))[inv.investor_id];
+    if (st?.kind === "nda_requested") throw new Error("This investor has just asked you for an NDA. Review it now.");
+    if (st?.kind === "approved") throw new Error("You already have an approved NDA with this investor.");
+    const a0 = await planAccess(context.userId);
+    const left0 = requestsLeft(a0, "contact");
+    if (left0 !== "unlimited" && a0.role !== "admin" && (left0 == null || left0 <= 0)) throw new Error("You have no Connect requests left.");
+    const now = new Date().toISOString();
+    const { data: upd } = await sb.from("listing_invitations").update({ invite_count: 2, first_declined_at: inv.choice_at ?? now, buyer_choice: "open", choice_at: null, viewed_at: null, sent_at: now })
+      .eq("id", inv.id).eq("invite_count", 1).select("id");
+    if (!upd?.length) throw new Error("You can't invite this investor a third time.");
+    await spendRequest(context.userId, "contact", inv.investor_id);
+    const name = hp.code_name || hp.ref_no || "A business";
+    await sb.from("notifications").insert({
+      user_id: pub.userId, notification_type: "deal",
+      title: `${name} invited you to view their business`,
+      message: "Browse their listed profile. If you're interested, request an NDA to see the company's name and details.",
+      link_url: `/marketplace/invitations?open=${inv.id}`,
+    });
+    const a = await planAccess(context.userId);
+    return { ok: true, left: requestsLeft(a, "contact") };
+  });
+
+export type ApprovalSummary = { pipelineId: string; name: string; other: string; typeName: string; investorRef: string | null; listingName: string; listingRef: string | null; approvedAt: string | null };
+
+async function summaryFor(p: any): Promise<ApprovalSummary | null> {
+  const sb = await admin();
+  const { hubNdaActive } = await import("./reports-hub");
+  if (!hubNdaActive(p)) return null;
+  const [{ data: hp }, { data: st }, { data: bp }] = await Promise.all([
+    sb.from("hidden_profiles").select("ref_no, code_name").eq("id", p.hidden_profile_id).maybeSingle(),
+    sb.from("startups").select("startup_name").eq("id", p.startup_id).maybeSingle(),
+    sb.from("buyer_profiles").select("investor_id").eq("user_id", p.buyer_user_id).maybeSingle(),
+  ]);
+  let pub: any = null;
+  if (bp?.investor_id) { const { loadPublicInvestors } = await import("./investor-browse.functions"); [pub] = await loadPublicInvestors(sb, [bp.investor_id]); }
+  const org = (await myOrgName(p.buyer_user_id)) ?? "Buyer";
+  return { pipelineId: p.id, name: st?.startup_name ?? "", other: org, typeName: pub?.codeName ?? "Investor", investorRef: pub?.refNo ?? null,
+    listingName: hp?.code_name || hp?.ref_no || "Listing", listingRef: hp?.ref_no ?? null, approvedAt: p.nda_approved_at };
+}
+
+/** Seller: what the NDA approved box shows right after approving. */
+export const sellerApprovalSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ pipelineId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await (await import("./plan-access.server")).requireRole(context.userId, ["seller"]);
+    const { data: p } = await (await admin()).from("deal_pipelines").select("*").eq("id", data.pipelineId).maybeSingle();
+    if (!p || !(await sellerStartupIds(context.userId)).includes(p.startup_id)) throw new Error("Not your listing");
+    return summaryFor(p);
+  });
+
+/** Buyer: the next approved NDA not shown yet; marks it seen so it shows once on any device. */
+export const nextBuyerApproval = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { roleOf } = await import("./plan-access.server");
+    if ((await roleOf(context.userId)) !== "buyer") return null;
+    const sb = await admin();
+    const { data: ps } = await sb.from("deal_pipelines").select("*").eq("buyer_user_id", context.userId).not("nda_approved_at", "is", null).is("buyer_approval_seen_at", null).order("nda_approved_at").limit(5);
+    for (const p of ps ?? []) {
+      const { data: upd } = await sb.from("deal_pipelines").update({ buyer_approval_seen_at: new Date().toISOString() }).eq("id", p.id).is("buyer_approval_seen_at", null).select("id");
+      if (!upd?.length) continue;
+      const s = await summaryFor(p);
+      if (s) return s;
+    }
+    return null;
+  });

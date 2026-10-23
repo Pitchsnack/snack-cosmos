@@ -2214,6 +2214,7 @@ export type Database = {
       }
       deal_pipelines: {
         Row: {
+          buyer_approval_seen_at: string | null
           buyer_message: string | null
           buyer_user_id: string
           contact_at: string | null
@@ -2256,6 +2257,7 @@ export type Database = {
           wait_task: string | null
         }
         Insert: {
+          buyer_approval_seen_at?: string | null
           buyer_message?: string | null
           buyer_user_id: string
           contact_at?: string | null
@@ -2298,6 +2300,7 @@ export type Database = {
           wait_task?: string | null
         }
         Update: {
+          buyer_approval_seen_at?: string | null
           buyer_message?: string | null
           buyer_user_id?: string
           contact_at?: string | null
@@ -4192,10 +4195,12 @@ export type Database = {
           closed_at: string | null
           closed_reason: string | null
           created_at: string
+          first_declined_at: string | null
           from_contact_request: string | null
           hidden_profile_id: string
           id: string
           investor_id: string
+          invite_count: number
           pipeline_id: string | null
           sent_at: string
           sent_by: string
@@ -4209,10 +4214,12 @@ export type Database = {
           closed_at?: string | null
           closed_reason?: string | null
           created_at?: string
+          first_declined_at?: string | null
           from_contact_request?: string | null
           hidden_profile_id: string
           id?: string
           investor_id: string
+          invite_count?: number
           pipeline_id?: string | null
           sent_at?: string
           sent_by: string
@@ -4226,10 +4233,12 @@ export type Database = {
           closed_at?: string | null
           closed_reason?: string | null
           created_at?: string
+          first_declined_at?: string | null
           from_contact_request?: string | null
           hidden_profile_id?: string
           id?: string
           investor_id?: string
+          invite_count?: number
           pipeline_id?: string | null
           sent_at?: string
           sent_by?: string
