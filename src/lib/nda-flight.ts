@@ -165,9 +165,9 @@ export function playNdaFlight(o: FlightOptions) {
     const land2 = () => { if (inv) hit(inv, "nda-flight-hit-inv"); };
     const showTips = () => {
       const rows: { item: HTMLElement; holder: HTMLElement; kind: 1 | 2 }[] = [];
-      const menu = watch.closest<HTMLElement>("aside, nav") ?? watch;
+      const menu = watch.closest<HTMLElement>("#app-sidebar-nav, aside, nav") ?? watch;
       if (card1) rows.push({ item: watch, holder: menu, kind: 1 });
-      if (inv) rows.push({ item: inv, holder: inv.closest<HTMLElement>(".pipeline-flyout") ?? inv.closest<HTMLElement>("aside, nav") ?? inv, kind: 2 });
+      if (inv) rows.push({ item: inv, holder: inv.closest<HTMLElement>(".pipeline-flyout") ?? inv.closest<HTMLElement>("#app-sidebar-nav, aside, nav") ?? inv, kind: 2 });
       tooltips(o, rows, () => { if (railMode && card2) window.dispatchEvent(new CustomEvent("ps-flight-pipeline", { detail: "close" })); });
     };
     if (reduced) { if (card1) land1(); land2(); showTips(); return; }

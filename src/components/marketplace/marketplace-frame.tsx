@@ -114,6 +114,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo, collapsed, hint, onHintClo
           type="button"
           onClick={onMenu}
           aria-label="Open menu"
+          data-flight-target="menu-button"
           className="grid h-9 w-9 place-items-center rounded-lg text-[#e0e4eb] hover:bg-white/10"
         >
           <Menu className="h-5 w-5" />
@@ -470,6 +471,8 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
           to={it.to}
           activeOptions={it.exact === false ? { exact: false } : undefined}
           aria-label={tip}
+          data-flight-target={it.to === "/marketplace/favourites" ? "watchlist" : undefined}
+          data-flight-rail={it.to === "/marketplace/favourites" ? "" : undefined}
           activeProps={{ className: "bg-[var(--role-accent)] text-[var(--role-on)] font-medium" }}
           inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" }}
           className="relative flex items-center justify-center rounded-lg px-2 py-2.5 transition-colors"
@@ -517,6 +520,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       activeOptions={it.exact === false ? { exact: false } : undefined}
       activeProps={MENU_LINK_ACTIVE}
       inactiveProps={MENU_LINK_INACTIVE}
+      data-flight-target={it.to === "/marketplace/favourites" ? "watchlist" : undefined}
     >
       <it.icon className="h-4 w-4 shrink-0" />
       <span className="min-w-0">{it.to === '/my-reports' ? vc('My reports','รายงานของฉัน') : it.to === '/my-verification' ? vc(it.label) : t(it.label)}</span>
