@@ -93,7 +93,7 @@ export function useNdaStatuses() {
   return useQuery({ queryKey: ["pipeline", "nda-statuses"], queryFn: () => fn() });
 }
 
-export function NdaButton({ className, listingId, onRequested }: { className?: string; listingId: string; onRequested?: (id: string) => void }) {
+export function NdaButton({ className, listingId, onRequested }: { className?: string; listingId: string; onRequested?: (id: string, info?: { invitationId: string | null }) => void }) {
   const { t } = useTranslation();
   const { data } = useMyVerification();
   const { data: statuses } = useNdaStatuses();
@@ -125,8 +125,8 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
         if (planLock) { toast(t(planLock), { action: { label: t("See plans"), onClick: () => { window.location.href = "/preferences#subscription"; } } }); return; }
         setBusy(true);
         try {
-          await req({ data: { listingId } });
-          if (onRequested) onRequested(listingId);
+          const res = await req({ data: { listingId } }) as { invitationId?: string | null };
+          if (onRequested) onRequested(listingId, { invitationId: res?.invitationId ?? null });
           else toast.success("NDA request sent to the seller.");
           invalidate();
         } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); qc.invalidateQueries({ queryKey: ["plan-strip"] }); qc.invalidateQueries({ queryKey: ["invitations"] }); }
@@ -185,7 +185,7 @@ export function DealTerms({ t }: { t: Teaser }) {
 const STEPS = ["Request NDA", "Seller approves", "Full access", "Exchange contact"];
 
 /** Right panel body for anonymous listings — public read model only. */
-export function ListingDetail({ t, requested, approved, onRequested, advisor, embedded=false }: { embedded?:boolean; t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
+export function ListingDetail({ t, requested, approved, onRequested, advisor, embedded=false }: { embedded?:boolean; t: Teaser; requested?: boolean; approved?: boolean; onRequested?: (id: string, info?: { invitationId: string | null }) => void; advisor?: boolean }) {
   const { t: tr } = useTranslation();
   const l = t.listing;
   const [more, setMore] = useState(false);
@@ -221,7 +221,7 @@ export function AdvisorNdaButton({ className }: { className?: string }) {
   );
 }
 
-function LowerPanel({ t, requested, onRequested, advisor, embedded=false }: { embedded?:boolean; t: Teaser; requested?: boolean; onRequested?: (id: string) => void; advisor?: boolean }) {
+function LowerPanel({ t, requested, onRequested, advisor, embedded=false }: { embedded?:boolean; t: Teaser; requested?: boolean; onRequested?: (id: string, info?: { invitationId: string | null }) => void; advisor?: boolean }) {
   const { t: tr, language } = useTranslation();
   const l = t.listing;
   const x = t as Teaser & { growthBand?: string | null; ebitdaMargin?: string | null; netCash?: string | null; ndaStatus?: NdaStatus };
