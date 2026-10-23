@@ -383,13 +383,13 @@ function Tour({ role, open, onClose }: { role: Role; open: Open; onClose: (how: 
 
   // Keys: arrows move, Escape skips.
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") { e.preventDefault(); onClose("skip"); return; }
+    if (e.key === "Escape") { e.preventDefault(); return; }
     if (e.key === "ArrowRight" && !last) { e.preventDefault(); go(i + 1); return; }
     if (e.key === "ArrowLeft" && i > 0) { e.preventDefault(); go(i - 1); return; }
     trapTab(e, card.current);
   };
   useEffect(() => {
-    const f = (e: KeyboardEvent) => { if (e.key === "Escape" && !card.current?.contains(document.activeElement)) onClose("skip"); };
+    const f = (e: KeyboardEvent) => { if (e.key === "Escape") e.preventDefault(); };
     document.addEventListener("keydown", f);
     return () => document.removeEventListener("keydown", f);
   }, [onClose]);
@@ -473,11 +473,7 @@ function Tour({ role, open, onClose }: { role: Role; open: Open; onClose: (how: 
           </div>
         )}
         <div className="relative mt-1 flex items-center gap-2 border-t border-[#EEF0F3] pt-3 dark:border-[#323A4D]">
-          {last && i > 0 ? (
-            <button type="button" className={ghost} onClick={() => go(i - 1)}>{T("Back")}</button>
-          ) : (
-            <button type="button" onClick={() => onClose("skip")} className="px-1 text-[13.5px] font-semibold text-[#6A7181] underline-offset-[3px] hover:text-[#151A28] hover:underline dark:text-[#A3ABBD] dark:hover:text-[#F3F4F6]">{T("Skip tour")}</button>
-          )}
+          {last && i > 0 && <button type="button" className={ghost} onClick={() => go(i - 1)}>{T("Back")}</button>}
           <div className="ml-auto flex gap-2">
             {!last && i > 0 && <button type="button" className={ghost} onClick={() => go(i - 1)}>{T("Back")}</button>}
             {!last && <button type="button" className={navy} onClick={() => go(i + 1)}>{T("Next")} <ArrowRight className="h-[15px] w-[15px]" strokeWidth={2.2} /></button>}
