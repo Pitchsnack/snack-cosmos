@@ -416,7 +416,6 @@ export function InvestorDetailPanel({
               <ChipRow tags={[revTxt]} tone="primary" />
             </Section>
           )}
-          {sv && (metaItems.length > 0 || i.email || i.website_url) && <div className="border-t border-border/50" aria-hidden />}
 
           {/* Overview */}
           {overview && (
