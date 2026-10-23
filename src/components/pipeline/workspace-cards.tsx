@@ -1,4 +1,5 @@
 import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
+import { DealAgreements } from './deal-agreements';
 import {PipelineReportsButton} from '@/components/reports/reports-hub';
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -231,6 +232,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
         </div>
       </div>
       <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} t={t} endedOn={wd ? `${t("withdrawn")} ${day(wd.at)}` : undefined} /></div>
+      {!wd && <DealAgreements p={p} seller={seller} onNda={() => setDlg('nda')} onLoi={() => setDlg('loi')} />}
       <div className={cn("grid transition-[grid-template-rows] duration-[250ms] ease-in-out motion-reduce:transition-none", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
           {wd && <EndedBox w={wd} p={p} seller={seller} t={t} />}
