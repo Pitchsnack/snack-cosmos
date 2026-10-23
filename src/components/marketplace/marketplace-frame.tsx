@@ -1,4 +1,5 @@
 import { PipelineSubmenu } from "@/components/pipeline/submenu";
+import { CompanySubmenu } from "@/components/marketplace/company-submenu";
 import { BellRing, BadgeCheck } from "lucide-react";
 import {FileText} from 'lucide-react';
 import {hubIsNew} from '@/lib/reports-hub';
@@ -443,8 +444,8 @@ export function marketplaceMenu(persona: Persona) {
         ]
       : [];
   const account: MenuItem[] = advisor
-    ? [{ to: "/my-page", label: "My Profile", icon: UserCircle }]
-    : [{ to: "/my-page", label: "My Profile", icon: UserCircle }, { to: "/marketplace/notifications", label: "Notifications", icon: BellRing }];
+    ? []
+    : [{ to: "/marketplace/notifications", label: "Notifications", icon: BellRing }];
 
   return { discover, workspace, tools, account };
 }
@@ -459,6 +460,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
 
   if (collapsed) {
     const railItem = (it: MenuItem) => {
+      if(it.label==="My Company")return <CompanySubmenu key={it.to} collapsed/>;
       if(it.to==="/marketplace/pipeline")return <PipelineSubmenu key={it.to} collapsed/>;
       const locked = it.lock ? !isReportOrdered(it.lock) : false;
       const tip = locked ? `${t(it.label)} · ${rc.c("locked")}` : t(it.label);
@@ -502,13 +504,13 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
             <div className="space-y-1">{tools.map(railItem)}</div>
           </>
         )}
-        <RailDivider />
-        <div className="space-y-1">{account.map(railItem)}</div>
+        {account.length > 0 && <><RailDivider />
+        <div className="space-y-1">{account.map(railItem)}</div></>}
       </div>
     );
   }
 
-  const fullItem = (it: MenuItem) => it.to==="/marketplace/pipeline" ? <PipelineSubmenu key={it.to}/> : (
+  const fullItem = (it: MenuItem) => it.label==="My Company" ? <CompanySubmenu key={it.to}/> : it.to==="/marketplace/pipeline" ? <PipelineSubmenu key={it.to}/> : (
     <Link
       key={it.to}
       to={it.to}
@@ -535,7 +537,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       <div data-tour-sec="discover" className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
       {workspace.length > 0 && <div data-tour-sec="workspace" className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>}
       {tools.length > 0 && <div data-tour-sec="tools" className="space-y-1">{title("Tools")}{tools.map(fullItem)}</div>}
-      <div data-tour-sec="account" className="space-y-1">{title("Account")}{account.map(fullItem)}</div>
+      {account.length > 0 && <div data-tour-sec="account" className="space-y-1">{title("Account")}{account.map(fullItem)}</div>}
     </div>
   );
 }

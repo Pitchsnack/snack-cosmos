@@ -1,4 +1,5 @@
 # Decisions
+- Marketplace My Company and Pipeline share WorkspaceSubmenu for inline/rail/drawer interactions and exclusive flyouts; page destinations stay in their wrappers so existing pages and the Admin menu remain unchanged.
 - Live agreement cards use a browser-safe Bangkok calendar-day helper and a Pipeline-parent context for midnight updates and reload-only expansion reset; existing document dialogs and stored legal end dates remain authoritative.
 
 - Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
