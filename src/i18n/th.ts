@@ -4,6 +4,9 @@ import { TH_ADVISORS } from "./th-advisors";
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
+  "Highlights": "จุดเด่น",
+  "Customer profile": "ลักษณะลูกค้า",
+  "optional": "ไม่บังคับ",
   "Search name, company or message": "ค้นหาชื่อ บริษัท หรือข้อความ",
   "Reply to {first name}": "ตอบคุณ{first name}",
   "Replying as": "ตอบในนาม",
