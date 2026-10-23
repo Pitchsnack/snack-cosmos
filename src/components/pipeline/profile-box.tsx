@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -16,6 +16,7 @@ export function ProfileBox({ pipelineId, onClose, onReview }: { pipelineId: stri
   const th = language === "th";
   const c = (en: string, thai: string) => (th ? thai : en);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const [badLogo, setBadLogo] = useState(false);
   const { data, error } = useQuery({ queryKey: ["pipeline", "profile-box", pipelineId], queryFn: () => get({ data: { id: pipelineId } }), staleTime: 0 });
   const rowLabel = (k: string) => ({
     "Ticket size": c("Ticket size", "ขนาดเงินลงทุน"), Sectors: c("Sectors", "กลุ่มอุตสาหกรรม"), "Deal types": c("Deal types", "ประเภทดีล"),
@@ -60,7 +61,7 @@ export function ProfileBox({ pipelineId, onClose, onReview }: { pipelineId: stri
         </div>}
         <div className="pbox-org">
           <div className="pbox-orghead">
-            {data.org.logoUrl ? <img className="pbox-logo" src={data.org.logoUrl} alt="" /> : <span className="pbox-logo" data-tone="tile">{initials(data.org.name)}</span>}
+            {data.org.logoUrl && !badLogo ? <img className="pbox-logo" src={data.org.logoUrl} alt="" onError={() => setBadLogo(true)} /> : <span className="pbox-logo" data-tone="tile">{initials(data.org.name)}</span>}
             <div className="min-w-0"><div className="pbox-orgname">{data.org.name}</div>{data.org.line && <div className="pbox-orgline">{data.org.line}</div>}</div>
           </div>
           {data.org.rows.map((r) => (
