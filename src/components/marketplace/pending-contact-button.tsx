@@ -36,7 +36,7 @@ export function PendingContactButton({ children, className, iconClassName = "h-4
       <TooltipPrimitive.Root open={open} onOpenChange={setOpen}>
         <TooltipPrimitive.Trigger asChild>
           <Button variant="unstyled" size="unstyled" type="button" aria-disabled="true" aria-describedby={id}
-            className={cn(className, "pending-contact-button", open && "pending-contact-blink")}
+            className={cn("inline-flex items-center justify-center gap-2 whitespace-nowrap", className, "pending-contact-button", open && "pending-contact-blink")}
             onPointerEnter={(event) => { if (event.pointerType === "mouse") { clear(); timer.current = setTimeout(() => setOpen(true), 150); } }}
             onPointerLeave={hide} onFocus={() => { clear(); setOpen(true); }} onBlur={hide}
             onClick={(event) => { event.preventDefault(); event.stopPropagation(); clear(); setOpen(true); timer.current = setTimeout(hide, 4000); }}>
