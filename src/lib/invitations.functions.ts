@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sellerContactPending } from "@/lib/pending-contact";
 
 /**
  * Seller › Connect: invite an investor to view the seller's anonymous listing.
@@ -28,7 +29,7 @@ async function myLiveListing(userId: string) {
 
 export type ConnectKind = "connect" | "invited" | "nda_requested" | "approved" | "not_interested" | "declined";
 export type ConnectState = { kind: ConnectKind; at: string | null; invitationId: string | null; pipelineId: string | null };
-export type ConnectStates = { hasListing: boolean; listingRef: string | null; by: Record<string, ConnectState> };
+export type ConnectStates = { hasListing: boolean; pendingVerification: boolean; listingRef: string | null; by: Record<string, ConnectState> };
 
 /** What sits between the seller's live listing and each investor (section 1's table). */
 async function statesFor(sb: any, hp: any, investorIds?: string[]): Promise<Record<string, ConnectState>> {
@@ -72,8 +73,15 @@ export const myConnectStates = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<ConnectStates> => {
     await (await import("./plan-access.server")).requireRole(context.userId, ["seller"]);
     const hp = await myLiveListing(context.userId);
-    if (!hp) return { hasListing: false, listingRef: null, by: {} };
-    return { hasListing: true, listingRef: hp.ref_no ?? null, by: await statesFor(await admin(), hp) };
+    if (!hp) {
+      const ids = await (await import("./workspace-scope.server")).myWorkspaceStartupIds(context.userId);
+      const { data: rows, error } = ids.length
+        ? await (await admin()).from("hidden_profiles").select("approval_status, live").in("startup_id", ids)
+        : { data: [], error: null };
+      if (error) throw new Error("Couldn't read listing approval status.");
+      return { hasListing: false, pendingVerification: sellerContactPending(rows ?? []), listingRef: null, by: {} };
+    }
+    return { hasListing: true, pendingVerification: false, listingRef: hp.ref_no ?? null, by: await statesFor(await admin(), hp) };
   });
 
 export const sendInvitation = createServerFn({ method: "POST" })

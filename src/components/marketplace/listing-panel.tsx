@@ -15,6 +15,8 @@ import { mySavedListingIds, toggleSavedListing } from "@/lib/favourites.function
 import type { PublicListing } from "@/lib/public-listing";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
+import { PendingContactButton } from "@/components/marketplace/pending-contact-button";
+import { useSessionContext } from "@/hooks/use-session-context";
 
 export type Teaser = {
   id: string;
@@ -115,6 +117,11 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
       </span>
     );
   }
+  if (!planLock && data?.pendingContact) return (
+    <PendingContactButton className={cn("inline-flex h-[34px] items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium", className)} iconClassName="h-3.5 w-3.5">
+      {t("Request NDA")}
+    </PendingContactButton>
+  );
   return (
     <Button
       type="button"
@@ -213,6 +220,12 @@ type NdaStatus = "none" | "requested" | "approved" | "exchanged";
 /** Advisor view: requesting an NDA for a client is not built yet. */
 export function AdvisorNdaButton({ className }: { className?: string }) {
   const { t } = useTranslation();
+  const { data } = useSessionContext();
+  if (data?.user?.advisorContactPending) return (
+    <PendingContactButton className={cn("inline-flex h-[34px] items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium", className)} iconClassName="h-3.5 w-3.5">
+      {t("Request NDA")}
+    </PendingContactButton>
+  );
   return (
     <button type="button" onClick={(e) => { e.stopPropagation(); toast(t("Requesting an NDA for a client is coming soon.")); }}
       className={cn("h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90", className)}>

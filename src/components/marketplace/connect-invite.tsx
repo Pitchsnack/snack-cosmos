@@ -12,6 +12,7 @@ import { useTr } from "@/components/common/edit-info-popup";
 import { ReviewInvestorDialog } from "@/components/marketplace/seller-invitations";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
+import { PendingContactButton } from "@/components/marketplace/pending-contact-button";
 
 /**
  * Seller › Browse investors / Favourites: the Connect button and what replaces
@@ -19,7 +20,7 @@ import { cn } from "@/lib/utils";
  */
 export function useConnectStates() {
   const fn = useServerFn(myConnectStates);
-  return useQuery({ queryKey: ["connect-states"], queryFn: () => fn(), staleTime: 15_000 });
+  return useQuery({ queryKey: ["connect-states"], queryFn: () => fn(), staleTime: 15_000, refetchOnMount: "always", refetchInterval: (query) => query.state.data?.pendingVerification ? 15_000 : false });
 }
 
 function useDay() {
@@ -87,10 +88,15 @@ export function ConnectButton({ investorId, investorRef, big }: { investorId: st
   }
 
   const planLock = requestLock(strip);
-  const lock = planLock ?? (st && !st.hasListing ? "Add your business first" : null);
+  const lock = planLock ?? (st && !st.hasListing && !st.pendingVerification ? "Add your business first" : null);
   const lockLabel = lock === "Professional plan" ? tr("Professional plan", "แผน Professional")
     : lock === "No requests left" ? tr("No requests left", "ไม่มีคำขอเหลือ")
     : lock === "Add your business first" ? tr("Add your business first", "เพิ่มธุรกิจของท่านก่อน") : lock;
+  if (!lock && st?.pendingVerification) return (
+    <PendingContactButton className={cn("inline-flex shrink-0 items-center gap-2 rounded-[10px] font-semibold", h)} iconClassName={big ? "h-4 w-4" : "h-3.5 w-3.5"}>
+      {tr("Connect", "เชื่อมต่อ")}
+    </PendingContactButton>
+  );
   return (
     <>
       <button

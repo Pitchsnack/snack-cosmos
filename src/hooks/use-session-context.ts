@@ -11,6 +11,8 @@ export function useSessionContext() {
     queryKey: ["session-context"],
     queryFn: () => fn(),
     staleTime: 60_000,
+    refetchOnMount: "always",
+    refetchInterval: (query) => query.state.data?.user?.advisorContactPending ? 15_000 : false,
     enabled,
   });
 }

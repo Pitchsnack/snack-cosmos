@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { advisorContactPending } from "@/lib/pending-contact";
 import {
   ROLE_PERMISSIONS,
   type AppRole,
@@ -30,6 +31,7 @@ export interface SessionContextDTO {
     verified: boolean;
     plan: string | null;
     advisorView: boolean;
+    advisorContactPending: boolean;
     accountRole: "seller" | "buyer" | "advisor" | "admin" | null;
     planInfo: { id: string; key: string; name: string; badgeStyle: string; ended: boolean; termEnd: string | null } | null;
     /** Set once the first-visit welcome/tour is done; empty = show it. */
@@ -104,14 +106,18 @@ export const getSessionContext = createServerFn({ method: "GET" })
       (ctxRow?.roles as unknown as { role_code: AppRole } | null)?.role_code ?? null;
 
     const planTenant = activeTenantId ?? (userRow?.primary_tenant_id as string | null) ?? tenants[0]?.tenantId ?? null;
-    const [{ data: prof }, { data: ver }, { data: sub }, { data: mySub }] = await Promise.all([
+    const [{ data: prof }, { data: ver }, { data: sub }, { data: mySub }, { data: advisorFirms, error: advisorError }] = await Promise.all([
       supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("user_verifications").select("user_id").eq("user_id", userId).maybeSingle(),
       planTenant
         ? supabase.from("tenant_subscription").select("subscription_plan").eq("tenant_id", planTenant).maybeSingle()
         : Promise.resolve({ data: null }),
       supabase.from("subscriptions").select("status, term_end, source, plans(id, key, name, badge_style)").eq("user_id", userId).maybeSingle(),
+      supabase.from("advisor_firms").select("advisor_verification, verification_reason, verified_at").eq("owner_user_id", userId),
     ]);
+    if (advisorError) throw new Error("Couldn't read account verification status.");
+    const advisorPending = !(advisorFirms ?? []).some((firm) => Boolean(firm.verified_at))
+      && (advisorFirms ?? []).some(advisorContactPending);
     const sp = (mySub as any)?.source === "access_code" && (mySub as any)?.status === "ended" ? null : (mySub as any)?.plans;
     const planInfo = sp ? { id: sp.id, key: sp.key, name: sp.name, badgeStyle: sp.badge_style, ended: (mySub as any).status === "ended" || !!((mySub as any).term_end && new Date((mySub as any).term_end) < new Date()), termEnd: (mySub as any).term_end ?? null } : null;
     const plan = (sub as { subscription_plan?: string } | null)?.subscription_plan ?? null;
@@ -145,6 +151,7 @@ export const getSessionContext = createServerFn({ method: "GET" })
             verified: Boolean(ver),
             plan: plan && !/^free$/i.test(plan) ? plan : null,
             advisorView: Boolean((userRow as { advisor_view?: boolean }).advisor_view),
+            advisorContactPending: advisorPending,
             accountRole: ((userRow as { account_role?: string }).account_role ?? null) as any,
             planInfo,
             welcomeTourSeenAt: (prof as { welcome_tour_seen_at?: string | null } | null)?.welcome_tour_seen_at ?? null,
