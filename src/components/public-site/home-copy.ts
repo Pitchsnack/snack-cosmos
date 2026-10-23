@@ -12,7 +12,7 @@ export const NAV = {
 export const HERO = {
   chip: c("Thailand’s SME marketplace · for selling\u00a0 businesses with annual revenue from\u00a0THB 250m", "ตลาดกลางซื้อขายกิจการ SME ไทย · สำหรับกิจการที่มียอดขายตั้งแต่ **250 ล้านบาท**ต่อปี"),
   h1: c("The confidential marketplace to buy and sell Thai businesses", "ตลาดกลาง ซื้อขายกิจการ SME ที่เป็นความลับ"),
-  intro: c("PitchSnack is a trusted\u00a0 and confidential Thai marketplace where verified business owners (SME) meet verified buyers. We make the introduction and verify business target against the documents and verified authenticity of the buyer before an offer.\u00a0 PitchSnack never holds funds or takes a side.",
+  intro: c("PitchSnack is Thailand’s trusted and confidential M&A marketplace, connecting verified SME owners with qualified, verified buyers.\u00a0 We make the introduction and verify business target against the documents and verified authenticity of the buyer before an offer.\u00a0 PitchSnack never holds funds or takes a side.",
     "PitchSnack คือตลาดกลางที่เป็นกลาง ซึ่งเจ้าของกิจการ SME ไทยที่ผ่านการตรวจสอบ ได้พบกับผู้ซื้อระดับองค์กรและนักลงทุน เราทำหน้าที่ชี้ช่องแนะนำ และประเมินกิจการเป้าหมายทุกรายตามปัจจัยที่งานวิจัยระบุว่าทำให้ดีลล้มเหลว ก่อนมีการยื่นข้อเสนอ ธุรกรรมดำเนินการโดยที่ปรึกษาที่มีใบอนุญาต และ PitchSnack ไม่ถือเงินและไม่เข้าข้างฝ่ายใด"),
   joinFree: c("Free to join, about 2 minutes · Learn more:", "สมัครฟรี ใช้เวลาประมาณ 2 นาที · อ่านเพิ่มเติม:"), forSellers: c("For sellers", "สำหรับผู้ขาย"), forBuyers: c("For buyers", "สำหรับผู้ซื้อ"), advisers: c("Advisers and partners, sign up here", "ที่ปรึกษาและพาร์ทเนอร์ สมัครที่นี่"),
   own: c("I own a business", "ฉันเป็นเจ้าของกิจการ"), acquire: c("I am looking to acquire", "ฉันต้องการซื้อกิจการ"),
