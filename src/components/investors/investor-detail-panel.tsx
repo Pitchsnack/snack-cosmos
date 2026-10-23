@@ -106,6 +106,8 @@ export function InvestorDetailPanel({
     afterPortfolio?: React.ReactNode;
     footer?: React.ReactNode;
     /** Edit link for a section heading (Buyer › My Company only). */
+    /** Seller's view of a buyer (after an approved NDA): NDA line, header action, revenue section, no overview, wrapping facts. */
+    seller?: { ndaLine: React.ReactNode; action?: React.ReactNode; revenueTitle: string; hideHeader?: boolean };
     sectionEdit?: (key: "focus" | "stages" | "industries" | "keywords" | "portfolio") => React.ReactNode;
   };
   showEdit?: boolean;
@@ -172,7 +174,9 @@ export function InvestorDetailPanel({
   const mediaSlots = (i.media ?? []).filter((m) => m.image_signed_url);
   const ticket =
     i.ticket_size || [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null;
-  const overview = i.long_description || i.bio || null;
+  const sv = buyer?.seller;
+  const overview = sv ? null : i.long_description || i.bio || null;
+  const about = sv ? i.long_description || i.short_description : i.short_description;
 
   const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
   if (i.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${i.year_founded}` });
@@ -184,14 +188,14 @@ export function InvestorDetailPanel({
   const tktTxt = bandText(ib.ticket_band) ?? ticket;
   if (tktTxt) metaItems.push({ icon: Layers, label: `Ticket ${tktTxt}` });
   const revTxt = bandText(ib.revenue_min_band);
-  if (revTxt) metaItems.push({ icon: Coins, label: `Min. target revenue ${revTxt}` });
+  if (revTxt && !sv) metaItems.push({ icon: Coins, label: `Min. target revenue ${revTxt}` });
 
   return (
     <div className="space-y-[14px] text-foreground">
       {buyer?.topBar}
       {/* Header */}
-      <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
-        <div className="flex items-start gap-4">
+      {!sv?.hideHeader && <header className={cn("flex items-start justify-between gap-4", compact && "pt-1", sv && "flex-wrap")}>
+        <div className={cn("flex items-start gap-4", sv && "min-w-0 flex-1 flex-col sm:flex-row")}>
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {i.logo_signed_url ? (
               <img src={i.logo_signed_url} alt="" className="h-full w-full object-contain" />
@@ -202,10 +206,10 @@ export function InvestorDetailPanel({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <OwnershipPanelSlot id={i.id} />
+            {!sv && <OwnershipPanelSlot id={i.id} />}
             <h2 className="text-2xl font-semibold leading-tight tracking-tight">
               {i.investor_name}
-              {connectionState === "connected" && (
+              {!sv && connectionState === "connected" && (
                 <span
                   className="ml-2 inline-flex items-center align-middle text-emerald-600 dark:text-emerald-400"
                   title="Connected"
@@ -214,18 +218,18 @@ export function InvestorDetailPanel({
                   <Check className="h-5 w-5" strokeWidth={2.5} />
                 </span>
               )}
-              <PreviewNeedsReassignmentBadge
+              {!sv && <PreviewNeedsReassignmentBadge
                 name={i.investor_name}
                 domain="investor"
                 className="ml-2 align-middle"
-              />
+              />}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
               {i.country && <span>{i.country}</span>}
               {i.country && i.investor_type ? <span aria-hidden>·</span> : null}
               {i.investor_type && <span>{i.investor_type}</span>}
             </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            {sv ? <div className="mt-[2px] text-[14px] leading-[1.5] text-muted-foreground">{sv.ndaLine}</div> : <div className="mt-2 flex flex-wrap gap-1.5">
               {buyer ? buyer.chips : <>
               {i.status && (
                 <Badge variant="outline" className="text-[10px]">
@@ -238,11 +242,12 @@ export function InvestorDetailPanel({
                 </Badge>
               )}
               </>}
-            </div>
+            </div>}
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-2">
+          {sv?.action}
           {!buyer && showEdit && canManage && !compact && (
             <Button
               asChild
@@ -295,7 +300,7 @@ export function InvestorDetailPanel({
             </div>
           )}
         </div>
-      </header>
+      </header>}
 
       {buyer?.intro}
       {/* Relationship state (Connect → Requested → Share) */}
@@ -307,7 +312,7 @@ export function InvestorDetailPanel({
         />
       )}
 
-      {connectionState === "requested" ? null : (
+      {!sv && connectionState === "requested" ? null : (
         <>
           {/* Media */}
           {(mediaSlots.length > 0 || buyer?.mediaAdd) && (
@@ -350,8 +355,8 @@ export function InvestorDetailPanel({
             )}
 
           {/* Short description */}
-          {i.short_description && (
-            <p className="text-[15px] leading-relaxed text-foreground/85">{i.short_description}</p>
+          {about && (
+            <p className={cn("text-[15px] leading-relaxed text-foreground/85", sv && "whitespace-pre-line")}>{about}</p>
           )}
 
           {/* Meta grid */}
@@ -362,11 +367,11 @@ export function InvestorDetailPanel({
                 return (
                   <div
                     key={idx}
-                    className="flex min-w-0 items-center gap-2 text-foreground/80"
+                    className={cn("flex min-w-0 gap-2 text-foreground/80", sv ? "items-start" : "items-center")}
                     title={typeof m.label === "string" ? m.label : undefined}
                   >
                     <Icon className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-                    <span className="truncate">{m.label}</span>
+                    <span className={sv ? "min-w-0 break-words" : "truncate"}>{m.label}</span>
                   </div>
                 );
               })}
@@ -400,10 +405,16 @@ export function InvestorDetailPanel({
                   className="flex min-w-0 items-center gap-2 text-blue-900 hover:underline"
                 >
                   <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  <span className="truncate">{i.email}</span>
+                  <span className={sv ? "min-w-0 break-all" : "truncate"}>{i.email}</span>
                 </a>
               )}
             </dl>
+          )}
+
+          {sv && revTxt && (
+            <Section icon={Coins} title={sv.revenueTitle}>
+              <ChipRow tags={[revTxt]} tone="primary" />
+            </Section>
           )}
 
           {/* Overview */}

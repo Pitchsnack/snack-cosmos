@@ -105,28 +105,10 @@ export function SellerFavourites() {
       : <ConnectButton investorId={f.id} investorRef={f.refNo} />;
     const p = f.priv;
     if (v === "private" && p) {
-      const header = (
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3 pr-12">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="grid h-[46px] w-[46px] flex-none place-items-center overflow-hidden rounded-[10px] border border-border bg-card text-[13px] font-bold">
-              {p.logo_signed_url ? <img src={p.logo_signed_url} alt="" className="h-full w-full object-contain" /> : p.investor_name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-[18px] font-bold leading-tight">{p.investor_name}</div>
-              <div className="mt-1 flex min-w-0 items-center gap-2"><StatusBadge s="approved" /><span className="truncate text-[12.5px] text-muted-foreground">{[typeName(p.investor_type, f.actsFor ?? []), f.refNo].filter(Boolean).join(" · ")}</span></div>
-            </div>
-          </div>
-          <span className="shrink-0">{actions}</span>
-        </div>
-      );
       return (
-        <>
-          {header}
-          <div className="min-h-0 flex-1 overflow-y-auto p-5">
-            <FavViewLine view="private">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>
-            <PrivateInvestorPanel f={f}/>
-          </div>
-        </>
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 pr-12">
+          <PrivateInvestorPanel f={f} />
+        </div>
       );
     }
     const header = (

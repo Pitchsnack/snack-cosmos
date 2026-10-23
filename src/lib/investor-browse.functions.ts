@@ -109,6 +109,8 @@ export type SellerFavPrivate = {
   preferred_stages: string[]; preferred_industries: string[]; logo_signed_url: string | null;
   aum_band: string | null; ticket_band: string | null; revenue_min_band: string | null;
   people: { name: string; role: string; email: string; phone: string }[];
+  media: { slot: number; image_signed_url: string | null }[];
+  linked_startups: { id: string; startup_name: string; logo_signed_url: string | null }[];
   ndaApprovedAt: string; ndaValidUntil: string;
 };
 export type SellerFavourite = PublicInvestor & { status: SellerFavStatus; saved: boolean; at: string; listingCode: string | null; ndaRequestedAt: string | null; priv: SellerFavPrivate | null };
@@ -153,12 +155,16 @@ export async function loadSellerFavourites(userId:string) {
     const privBy = new Map<string, SellerFavPrivate>();
     if (approvedInv.length) {
       const invIds = approvedInv.map((i) => i.id);
-      const [{ data: invs }, { data: bps }] = await Promise.all([
+      const [{ data: invs }, { data: bps }, { data: links }] = await Promise.all([
         sb.from("investors").select("*").in("id", invIds),
         sb.from("buyer_profiles").select("investor_id, city, description, people").in("investor_id", invIds),
+        sb.from("startup_investors").select("investor_id, startups:startup_id(id, startup_name)").in("investor_id", invIds),
       ]);
+      const linksBy = new Map<string, { id: string; startup_name: string; logo_signed_url: null }[]>();
+      for (const l of (links ?? []) as any[]) if (l.startups) linksBy.set(l.investor_id, [...(linksBy.get(l.investor_id) ?? []), { id: l.startups.id, startup_name: l.startups.startup_name, logo_signed_url: null }]);
+      const mediaOf = (r: any) => (Array.isArray(r.media) ? r.media : []).filter((m: any) => m && [1, 2, 3].includes(m.slot) && typeof m.image_path === "string" && m.image_path) as { slot: number; image_path: string }[];
       const bpBy = new Map<string, any>((bps ?? []).map((b: any) => [b.investor_id, b]));
-      const paths = (invs ?? []).map((r: any) => r.logo_url).filter((x: any): x is string => !!x && !/^https?:/.test(x));
+      const paths = (invs ?? []).flatMap((r: any) => [r.logo_url, ...mediaOf(r).map((m) => m.image_path)]).filter((x: any): x is string => !!x && !/^https?:/.test(x));
       const signed: Record<string, string> = {};
       if (paths.length) {
         const { data: su } = await sb.storage.from("startup-media").createSignedUrls(paths, 3600);
@@ -180,6 +186,8 @@ export async function loadSellerFavourites(userId:string) {
           logo_signed_url: !r.logo_url ? null : /^https?:/.test(r.logo_url) ? r.logo_url : signed[r.logo_url] ?? null,
           aum_band: r.aum_band ?? null, ticket_band: r.ticket_band ?? null, revenue_min_band: r.revenue_min_band ?? null,
           people: Array.isArray(bp.people) ? bp.people : [],
+          media: mediaOf(r).map((m) => ({ slot: m.slot, image_signed_url: /^https?:/.test(m.image_path) ? m.image_path : signed[m.image_path] ?? null })),
+          linked_startups: linksBy.get(r.id) ?? [],
           ndaApprovedAt: p.nda_approved_at,
           ndaValidUntil: p.nda_expires_at ?? new Date(new Date(p.nda_approved_at).getTime() + TWO_YEARS).toISOString(),
         });
