@@ -25,6 +25,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslation } from "@/i18n/language";
 import { TakeTourButton } from "@/components/welcome-tour/welcome-tour";
 import { RailTip, FoldedMenuHint, useRailCopy } from "@/components/marketplace/rail-tip";
+import { BuyerApprovalWatcher } from "@/components/pipeline/nda-approval";
 
 export function useUserIdentity() {
   const { data } = useSessionContext();
@@ -160,7 +161,7 @@ export function GlobalBar({ onMenu, showMenu, onLogo, collapsed, hint, onHintClo
         ) : (
           <span className="hidden text-[13px] text-[#aab1c4] min-[1180px]:inline">{label}</span>
         )}
-        {showMenu && <TakeTourButton tone="dark" />}
+        {showMenu && <TakeTourButton tone="dark" />}<BuyerApprovalWatcher />
         <LanguageSwitcher tone="dark" />
         <ThemeToggle />
       </div>
