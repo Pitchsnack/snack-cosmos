@@ -39,6 +39,7 @@ export function PendingContactButton({ children, className, iconClassName = "h-4
             className={cn("inline-flex items-center justify-center gap-2 whitespace-nowrap", className, "pending-contact-button", open && "pending-contact-blink")}
             onPointerEnter={(event) => { if (event.pointerType === "mouse") { clear(); timer.current = setTimeout(() => setOpen(true), 150); } }}
             onPointerLeave={hide} onFocus={() => { clear(); setOpen(true); }} onBlur={hide}
+            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") event.stopPropagation(); }}
             onClick={(event) => { event.preventDefault(); event.stopPropagation(); clear(); setOpen(true); timer.current = setTimeout(hide, 4000); }}>
             <Lock className={iconClassName} />{children}
           </Button>
