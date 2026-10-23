@@ -1,4 +1,5 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Pending contact buttons: server-derived first-check states, shared EN/TH lock tooltip/blink, preserve plan/state priority; verify role rules and live interactions
 - [x] My Company submenu: shared Pipeline presentation, My Profile moved, empty Advisor Account removed; existing pages/Admin preserved; signed-in seller/buyer/advisor EN-light/TH-dark at 1440/1024/390, navigation/folding, phone closure, rail keyboard/exclusive flyouts verified; 24 existing Pipeline tests pass
 - [x] Updated agreement brief: show from valid NDA approval; unsigned LOI tile; 24 tests passed; live buyer/seller EN/TH, 1440/1280/1024, more/less and NDA dialog verified without changing legal records; both watchlists currently empty
 - [x] Add live NDA/LOI box on seller/buyer All deals and Deal watchlist; 21 date/workspace tests pass; isolated EN seller/TH buyer display, more/less and existing-dialog callbacks checked at 1440/1280/1024; reference interactions checked; build OK

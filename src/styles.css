@@ -74,6 +74,13 @@
 }
 
 :root {
+  --pending-contact-background: #ECEEF2;
+  --pending-contact-border: #E1E4EA;
+  --pending-contact-foreground: #8A90A0;
+  --pending-tooltip-background: #151A28;
+  --pending-tooltip-foreground: #D7DBE5;
+  --pending-tooltip-heading: #FFFFFF;
+  --pending-tooltip-shadow: 0 10px 26px rgba(15,23,42,.28);
   --hub-buyer: #4338CA;
   --hub-buyer-soft: #EEF0FF;
   --hub-teal: #0E5E6F;
@@ -190,6 +197,9 @@
 
 
 .dark {
+  --pending-contact-background: var(--muted);
+  --pending-contact-border: var(--border);
+  --pending-contact-foreground: var(--muted-foreground);
   --hub-buyer-soft: var(--muted);
   --hub-surface: var(--background);
   --hub-success-soft: var(--muted);
@@ -246,6 +256,30 @@
   }
   #lovable-badge { display: none !important; }
 }
+
+.pending-contact-button, .pending-contact-button:hover, .pending-contact-button:active {
+  background: var(--pending-contact-background);
+  border: 1px solid var(--pending-contact-border);
+  color: var(--pending-contact-foreground);
+  cursor: not-allowed;
+}
+.pending-contact-blink { animation: pending-contact-blink .9s ease-in-out infinite; }
+@keyframes pending-contact-blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.pending-contact-tooltip {
+  z-index: 160;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: var(--pending-tooltip-background);
+  color: var(--pending-tooltip-foreground);
+  font-size: 12.5px;
+  line-height: 1.45;
+  box-shadow: var(--pending-tooltip-shadow);
+  pointer-events: none;
+}
+.pending-contact-tooltip strong { color: var(--pending-tooltip-heading); font-weight: 600; }
+.pending-contact-arrow { fill: var(--pending-tooltip-background); }
+@media (prefers-reduced-motion: reduce) { .pending-contact-blink { animation: none; } }
 
 @layer utilities {
   .bg-gradient-hero { background: var(--gradient-hero); }
