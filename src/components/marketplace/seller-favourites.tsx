@@ -206,9 +206,9 @@ export function SellerFavourites() {
       ) : (
         <div className="space-y-2">
           {items.map((f) => (
-            <div key={f.id} role="button" tabIndex={0} onClick={() => setModalId(f.id)}
+            <div key={f.id} data-connect-source={f.refNo} data-connect-type={f.type ?? f.codeName} role="button" tabIndex={0} onClick={() => setModalId(f.id)}
               className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-muted"><TypeIcon type={f.type} className="h-5 w-5 text-muted-foreground" /></div>
+              <div data-connect-cover={f.refNo} data-connect-type={f.type ?? f.codeName} className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-muted"><TypeIcon type={f.type} className="h-5 w-5 text-muted-foreground" /></div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground">{f.name || f.codeName} <span className="font-normal text-muted-foreground">· {f.refNo}</span></div>
                 <div className="truncate text-[12px] text-muted-foreground">

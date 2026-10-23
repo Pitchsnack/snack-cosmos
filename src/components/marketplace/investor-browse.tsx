@@ -320,8 +320,8 @@ export function InvestorBrowse() {
       ) : items.length === 0 ? empty : (
         <div className="space-y-2">
           {items.map((i) => (
-            <div key={i.id} role="button" tabIndex={0} onClick={() => setModalId(i.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(i.id); }} className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card transition-colors hover:border-accent">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-muted"><TypeIcon type={i.type} className="h-5 w-5 text-muted-foreground" /></div>
+            <div key={i.id} data-connect-source={i.refNo} data-connect-type={i.type ?? i.codeName} role="button" tabIndex={0} onClick={() => setModalId(i.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(i.id); }} className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card transition-colors hover:border-accent">
+              <div data-connect-cover={i.refNo} data-connect-type={i.type ?? i.codeName} className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-muted"><TypeIcon type={i.type} className="h-5 w-5 text-muted-foreground" /></div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground">{i.name || i.codeName} <span className="font-normal text-muted-foreground">· {i.refNo}</span></div>
                 <div className="truncate text-[12px] text-muted-foreground">

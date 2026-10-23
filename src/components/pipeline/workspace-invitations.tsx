@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {Link,useNavigate} from '@tanstack/react-router';
+import {Link,useNavigate,useRouterState} from '@tanstack/react-router';
 import {useQuery} from '@tanstack/react-query';
 import {useServerFn} from '@tanstack/react-start';
 import {ChevronLeft,ChevronRight,X,Building2} from 'lucide-react';
@@ -24,6 +24,8 @@ import {STANDARD_NDA_TEXT} from '@/config/standard-nda';
 import {usePlanStrip} from '@/components/marketplace/plan-strip';
 type Row=BuyerInvitation|SellerInvitation;
 export function PipelineInvitations({openId}:{openId?:string}){
+ const requestedTab=useRouterState({select:s=>(s.location.search as {view?:string}).view});
+ useEffect(()=>{if(requestedTab==='sent'||requestedTab==='received')setTab(requestedTab);},[requestedTab]);
  const w=usePipelineWorkspace();const {seller,invites}=w;const {t,language}=useTranslation();const th=language==='th';const c=(en:string,thai:string)=>th?thai:en;const date=(s:string|null,full=false)=>s?new Date(s).toLocaleDateString(th?'th-TH':'en-GB',{day:'numeric',month:'short',...(full?{year:'numeric'}:{})}):'—';const rows=(invites.data??[]) as Row[];const [tab,setTab]=useState('received'),[selection,setSelection]=useState<{ids:string[];at:number}|null>(null),[sign,setSign]=useState<Row|null>(null),[review,setReview]=useState<string|null>(null),[tick,setTick]=useState(false),[busy,setBusy]=useState(false);const title=useRef<HTMLHeadingElement>(null),body=useRef<HTMLDivElement>(null),back=useRef<HTMLElement|null>(null);const opening=useServerFn(openInvitation),choice=useServerFn(setInvitationChoice),nda=useServerFn(requestNda),decision=useServerFn(decideNda);const bf=useServerFn(listFavourites),sf=useServerFn(listSellerFavourites);const nav=useNavigate();const {data:strip}=usePlanStrip();
  const origin=(r:Row)=>r.origin??(seller?'sent':'received');const list=rows.filter(r=>origin(r)===tab).sort((a,b)=>Date.parse(b.sentAt)-Date.parse(a.sentAt));const current=selection?rows.find(r=>r.id===selection.ids[selection.at]):undefined;
  const buyer=current&&'listingId' in current?current:null;const investor=current&&'investor' in current?current:null;
