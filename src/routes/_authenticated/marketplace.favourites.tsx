@@ -196,16 +196,16 @@ function FavouritesPage() {
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((f) => <div key={f.id} data-flight-src={f.id}><FavCard f={f} view={viewOf(f)} open={false} onView={(v) => setView(f.id, v)}
-            onOpen={(v) => { setView(f.id, v); setModalId(f.id); }} expanded={false} savedIds={savedIds} toggleSave={toggleSave} reserveTabs={anyTabs} />)}
+            onOpen={(v) => { setView(f.id, v); setModalId(f.id); }} expanded={false} savedIds={savedIds} toggleSave={toggleSave} reserveTabs={anyTabs} /></div>)}
         </div>
       ) : view === "split" ? (
         <div className="grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]">
           <div className="space-y-5">
             {items.map((f) => (
-              <FavCard key={f.id} f={f} view={viewOf(f)} open={wide && current?.id === f.id}
+              <div key={f.id} data-flight-src={f.id}><FavCard f={f} view={viewOf(f)} open={wide && current?.id === f.id}
                 onView={(v) => { setView(f.id, v); open(f.id); }} onOpen={(v) => { setView(f.id, v); open(f.id); }}
                 expanded={expandedId === f.id} onToggleExpand={() => setExpandedId((e) => (e === f.id ? null : f.id))}
-                savedIds={savedIds} toggleSave={toggleSave} />
+                savedIds={savedIds} toggleSave={toggleSave} /></div>
             ))}
           </div>
           {wide && current && (
