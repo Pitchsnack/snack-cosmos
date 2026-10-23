@@ -242,13 +242,9 @@ function Welcome({ role, firstName, individual, onSkip, onStart }: { role: Role;
   return (
     <>
       <div aria-hidden className="fixed inset-0 bg-[rgba(15,23,42,.55)] dark:bg-[rgba(0,0,0,.6)]" />
-      <div className="fixed inset-0 grid place-items-center p-4" onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); onSkip(); } trapTab(e, box.current); }}>
+      <div className="fixed inset-0 grid place-items-center p-4" onKeyDown={(e) => { if (e.key === "Escape") e.preventDefault(); trapTab(e, box.current); }}>
         <div ref={box} role="dialog" aria-modal="true" aria-labelledby="wt-title" aria-describedby="wt-lead"
           className="relative max-h-[calc(100dvh-32px)] w-[min(520px,100%)] overflow-y-auto rounded-[18px] bg-white px-7 pb-6 pt-7 text-[#151A28] shadow-[0_30px_70px_rgba(15,23,42,.32)] max-[600px]:px-5 max-[600px]:pb-5 max-[600px]:pt-[22px] dark:border dark:border-[#323A4D] dark:bg-[#1E2433] dark:text-[#F3F4F6]">
-          <button type="button" aria-label={T("Close")} onClick={onSkip}
-            className="absolute right-[14px] top-[14px] grid h-9 w-9 place-items-center rounded-[10px] text-[#6A7181] hover:bg-[#F2F4F7] dark:text-[#A3ABBD] dark:hover:bg-white/[.06]">
-            <X className="h-[18px] w-[18px]" />
-          </button>
           <div className={cn("grid h-[52px] w-[52px] place-items-center rounded-[14px]", TINT[role])}><Sparkles className="h-[26px] w-[26px]" /></div>
           <h2 id="wt-title" className={cn("mt-[18px] pr-7 font-bold max-[600px]:mt-4 max-[600px]:text-[23px]", th ? "text-[25px] leading-[1.4]" : "text-[26px] leading-[1.25] tracking-[-0.01em]")}
             style={{ fontFamily: th ? "'Noto Sans Thai', sans-serif" : "'Space Grotesk', system-ui, sans-serif" }}>{title}</h2>
@@ -263,10 +259,6 @@ function Welcome({ role, firstName, individual, onSkip, onStart }: { role: Role;
           </ul>
           <div className="mt-[22px] border-t border-[#EEF0F3] pt-[18px] text-[14px] text-[#434A5C] dark:border-[#323A4D] dark:text-[#C5CAD6]">{T("Take a one-minute tour to see what each menu is for.")}</div>
           <div className="mt-4 flex justify-end gap-2.5 max-[600px]:flex-col-reverse">
-            <button type="button" onClick={onSkip}
-              className="h-[42px] rounded-[10px] border border-[#DCDFE5] bg-white px-4 text-[14.5px] font-semibold text-[#151A28] hover:bg-[#F6F7F9] max-[600px]:h-[46px] max-[600px]:w-full dark:border-[#3A4256] dark:bg-transparent dark:text-[#F3F4F6] dark:hover:bg-white/[.06]">
-              {T("Skip for now")}
-            </button>
             <button ref={go} type="button" onClick={onStart}
               className="inline-flex h-[42px] items-center justify-center gap-2 rounded-[10px] border border-[#1E2A4A] bg-[#1E2A4A] px-[18px] text-[14.5px] font-semibold text-white hover:bg-[#26355C] max-[600px]:h-[46px] max-[600px]:w-full dark:border-[#F3F4F6] dark:bg-[#F3F4F6] dark:text-[#151A28] dark:hover:bg-white">
               {T("Show me around")} <ArrowRight className="h-[15px] w-[15px]" strokeWidth={2.2} />
@@ -391,13 +383,13 @@ function Tour({ role, open, onClose }: { role: Role; open: Open; onClose: (how: 
 
   // Keys: arrows move, Escape skips.
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") { e.preventDefault(); onClose("skip"); return; }
+    if (e.key === "Escape") { e.preventDefault(); return; }
     if (e.key === "ArrowRight" && !last) { e.preventDefault(); go(i + 1); return; }
     if (e.key === "ArrowLeft" && i > 0) { e.preventDefault(); go(i - 1); return; }
     trapTab(e, card.current);
   };
   useEffect(() => {
-    const f = (e: KeyboardEvent) => { if (e.key === "Escape" && !card.current?.contains(document.activeElement)) onClose("skip"); };
+    const f = (e: KeyboardEvent) => { if (e.key === "Escape") e.preventDefault(); };
     document.addEventListener("keydown", f);
     return () => document.removeEventListener("keydown", f);
   }, [onClose]);
@@ -481,11 +473,7 @@ function Tour({ role, open, onClose }: { role: Role; open: Open; onClose: (how: 
           </div>
         )}
         <div className="relative mt-1 flex items-center gap-2 border-t border-[#EEF0F3] pt-3 dark:border-[#323A4D]">
-          {last && i > 0 ? (
-            <button type="button" className={ghost} onClick={() => go(i - 1)}>{T("Back")}</button>
-          ) : (
-            <button type="button" onClick={() => onClose("skip")} className="px-1 text-[13.5px] font-semibold text-[#6A7181] underline-offset-[3px] hover:text-[#151A28] hover:underline dark:text-[#A3ABBD] dark:hover:text-[#F3F4F6]">{T("Skip tour")}</button>
-          )}
+          {last && i > 0 && <button type="button" className={ghost} onClick={() => go(i - 1)}>{T("Back")}</button>}
           <div className="ml-auto flex gap-2">
             {!last && i > 0 && <button type="button" className={ghost} onClick={() => go(i - 1)}>{T("Back")}</button>}
             {!last && <button type="button" className={navy} onClick={() => go(i + 1)}>{T("Next")} <ArrowRight className="h-[15px] w-[15px]" strokeWidth={2.2} /></button>}
