@@ -26,7 +26,7 @@ import { listFavourites, withdrawNdaRequest, type Favourite, type FavStatus } fr
 import { useTranslation } from "@/i18n/language";
 import { usePersona } from "@/hooks/use-marketplace";
 import { SellerFavourites } from "@/components/marketplace/seller-favourites";
-import { NdaSentDialog } from "@/components/marketplace/buyer-invitations";
+import { NdaSentDialog, type NdaSent } from "@/components/marketplace/buyer-invitations";
 import { cn } from "@/lib/utils";
 import { FavViewCard, FavViewLine, publicStatusSentence, type FavView } from "@/components/marketplace/fav-view-card";
 import { BrowseHeader, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
@@ -195,7 +195,7 @@ function FavouritesPage() {
         </div>
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((f) => <FavCard key={f.id} f={f} view={viewOf(f)} open={false} onView={(v) => setView(f.id, v)}
+          {items.map((f) => <div key={f.id} data-flight-src={f.id}><FavCard f={f} view={viewOf(f)} open={false} onView={(v) => setView(f.id, v)}
             onOpen={(v) => { setView(f.id, v); setModalId(f.id); }} expanded={false} savedIds={savedIds} toggleSave={toggleSave} reserveTabs={anyTabs} />)}
         </div>
       ) : view === "split" ? (
@@ -219,7 +219,7 @@ function FavouritesPage() {
           {items.map((f) => {
             const l = f.listing;
             return (
-              <div key={f.id} role="button" tabIndex={0} onClick={() => setModalId(f.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(f.id); }}
+              <div key={f.id} data-flight-src={f.id} role="button" tabIndex={0} onClick={() => setModalId(f.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(f.id); }}
                 className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
                 <SectorArt art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[54px] w-[96px] shrink-0 rounded-md" />
                 <div className="min-w-0 flex-1">
@@ -251,13 +251,13 @@ function FavouritesPage() {
 function FavPanel({ f, view, savedIds, toggleSave }: { f: Favourite; view: FavView; savedIds: Set<string>; toggleSave: (id: string) => void }) {
   const { t } = useTranslation();
   const code = [f.listing.codeName, f.listing.refNo].filter(Boolean).join(" · ");
-  const [sentName, setSentName] = useState<string | null>(null);
-  if (sentName) return <NdaSentDialog name={sentName} onClose={() => setSentName(null)} />;
+  const [sent, setSent] = useState<NdaSent | null>(null);
+  if (sent) return <NdaSentDialog sent={sent} fromWatchlist onClose={() => setSent(null)} />;
   if (view === "private" && f.priv) return <PrivateListingPanel f={f} code={code} />;
-  return <PublicPanel f={f} savedIds={savedIds} toggleSave={toggleSave} onSent={setSentName} />;
+  return <PublicPanel f={f} savedIds={savedIds} toggleSave={toggleSave} onSent={(name, invitationId) => setSent({ listingId: f.id, name, invitationId, saved: true })} />;
 }
 
-function PublicPanel({ f, savedIds, toggleSave, onSent }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void; onSent: (name: string) => void }) {
+function PublicPanel({ f, savedIds, toggleSave, onSent }: { f: Favourite; savedIds: Set<string>; toggleSave: (id: string) => void; onSent: (name: string, invitationId: string | null) => void }) {
   const { t } = useTranslation();
   const withdraw = useServerFn(withdrawNdaRequest);
   const invalidate = useInvalidateListings();
@@ -277,7 +277,7 @@ function PublicPanel({ f, savedIds, toggleSave, onSent }: { f: Favourite; savedI
   ) : (
     <div className="flex shrink-0 gap-2">
       <SaveButton saved={savedIds.has(f.id)} onClick={() => toggleSave(f.id)} />
-      <NdaButton listingId={f.id} onRequested={() => onSent(name)} />
+      <NdaButton listingId={f.id} onRequested={(_, info) => onSent(name, info?.invitationId ?? null)} />
     </div>
   );
   return (

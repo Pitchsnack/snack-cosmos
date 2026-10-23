@@ -18,7 +18,7 @@ import { useHasSession } from "@/hooks/use-has-session";
 import { listMarketplaceTeasers } from "@/lib/hidden-profiles.functions";
 import { myNdaRequestDates } from "@/lib/pipeline.functions";
 import { markListingViewed } from "@/lib/invitations.functions";
-import { InvitedYouChip, NdaSentDialog, useInvitedListings } from "@/components/marketplace/buyer-invitations";
+import { InvitedYouChip, NdaSentDialog, useInvitedListings, type NdaSent } from "@/components/marketplace/buyer-invitations";
 import { ListingDetail, NdaApprovedBadge, NdaButton, NdaRequestedBadge, SaveButton, useNdaStatuses, useSavedListings, type Teaser } from "@/components/marketplace/listing-panel";
 import { InvestorBrowse } from "@/components/marketplace/investor-browse";
 import { AdvisorBrowse } from "@/components/marketplace/advisor-marketplace";
@@ -83,10 +83,11 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
     return v === "requested" ? "requested" : v === "approved" || v === "exchanged" ? "approved" : null;
   };
   // After Request NDA the listing stays in Browse, marked NDA requested.
-  const [sentName, setSentName] = useState<string | null>(null);
-  const onRequested = (id: string) => {
+  const [sent, setSent] = useState<NdaSent | null>(null);
+  const onRequested = (id: string, info?: { invitationId: string | null }) => {
     const item = all.find((x) => x.id === id);
-    setSentName(item?.listing.codeName || item?.listing.refNo || t("This listing"));
+    setModalId(null);
+    setSent({ listingId: id, name: item?.listing.codeName || item?.listing.refNo || t("This listing"), invitationId: info?.invitationId ?? null, saved: savedIds.has(id) });
   };
   const invited = useInvitedListings();
   const star = (id: string) => <SaveButton square nda={!!ndaOf(id)} saved={savedIds.has(id)} onClick={() => toggleSave(id)} />;
@@ -182,7 +183,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       ) : !ownOnly && view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((t) => (
-            <PublicListingCard showManaged key={t.id} tag={tagOf(t.id)} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} />
+            <div key={t.id} data-flight-src={t.id}><PublicListingCard showManaged tag={tagOf(t.id)} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} /></div>
           ))}
           {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
@@ -190,9 +191,8 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
         <div className={splitFixed ? "!shrink grid min-h-0 flex-1 grid-cols-[400px_minmax(0,1fr)] gap-[18px]" : "grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]"}>
           <div ref={listRef} className={splitFixed ? "min-h-0 space-y-3 overflow-y-scroll pr-2 [scrollbar-gutter:stable]" : "space-y-3"}>
             {items.map((t) => (
-              <PublicListingCard
+              <div key={t.id} data-flight-src={t.id}><PublicListingCard
                 showManaged
-                key={t.id}
                 tag={tagOf(t.id)}
                 l={t.listing}
                 deal={t}
@@ -202,7 +202,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
                 onSelect={() => { if (wide) setSelected(t.id); else setModalId(t.id); }}
                 badge={badgeOf(t.id)}
                 topRight={ownOnly ? undefined : star(t.id)}
-              />
+              /></div>
             ))}
             {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
           </div>
@@ -221,7 +221,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           {items.map((item) => {
             const l = item.listing;
             return (
-              <div key={item.id} role="button" tabIndex={0} onClick={() => setModalId(item.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(item.id); }}
+              <div key={item.id} data-flight-src={item.id} role="button" tabIndex={0} onClick={() => setModalId(item.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(item.id); }}
                 className="group flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card transition-all duration-200 hover:border-accent hover:shadow-[var(--shadow-elevated)]">
                 <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[54px] w-[96px] shrink-0 rounded-md" />
                 <div className="min-w-0 flex-1">
@@ -252,13 +252,13 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           )}
         </DialogContent>
       </Dialog>
-      {sentName && <NdaSentDialog name={sentName} onClose={() => setSentName(null)} />}
+      {sent && <NdaSentDialog sent={sent} onClose={() => setSent(null)} />}
     </div>
   );
 }
 
 function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested, match, invited }: {
-  invited?: boolean; match?: string[]; t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string) => void;
+  invited?: boolean; match?: string[]; t: Teaser; ownOnly: boolean; nda: "requested" | "approved" | null; saved: boolean; onToggleSave: () => void; onRequested: (id: string, info?: { invitationId: string | null }) => void;
 }) {
   const { t: tr } = useTranslation();
   const datesFn = useServerFn(myNdaRequestDates);
@@ -281,7 +281,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested, match,
         {ownOnly ? (
           <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{tr("Buyer preview")}</span>
         ) : nda === "requested" ? (
-          <Button asChild variant="outline" size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><Star className="mr-1.5 h-4 w-4" />{tr("Open in Favourites")}</Link></Button>
+          <Button asChild variant="outline" size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><Star className="mr-1.5 h-4 w-4" />{tr("Open in My watchlist")}</Link></Button>
         ) : nda === "approved" ? (
           <Button asChild size="sm" className="shrink-0"><Link to="/marketplace/favourites" search={{ id: t.id }}><LockOpen className="mr-1.5 h-4 w-4" />{tr("Open private view")}</Link></Button>
         ) : (
@@ -295,7 +295,7 @@ function BrowsePanel({ t, ownOnly, nda, saved, onToggleSave, onRequested, match,
         {nda === "requested" && (
           <div className="flex items-start gap-2 rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-[14px] py-[11px] text-[13.5px] text-[#92400E]">
             <Clock className="mt-0.5 h-4 w-4 flex-none" />
-            <span>{tr("You requested the NDA")}{when ? ` ${tr("on")} ${when}` : ""}. {tr("This listing is in your Favourites, and its private view opens there once the seller approves.")}</span>
+            <span>{tr("You requested the NDA")}{when ? ` ${tr("on")} ${when}` : ""}. {tr("This listing is in My watchlist, and its private view opens there once the seller approves.")}</span>
           </div>
         )}
         {nda === "approved" && (
