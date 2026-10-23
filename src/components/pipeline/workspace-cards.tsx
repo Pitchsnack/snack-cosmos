@@ -220,7 +220,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
         <div className="deal-header-actions flex items-center gap-[14px] text-[12.5px] font-semibold text-muted-foreground">
           {!wd&&onStar&&<Button size="icon" variant="outline" className="deal-star" aria-pressed={!!starred} aria-label={t(starred?"Remove from Deal watchlist":"Add to Deal watchlist")} title={t(starred?"On your Deal watchlist":"Add to Deal watchlist")} onClick={e=>{stop(e);onStar();}}><Star size={15}/></Button>}
           {pendingNda&&seller&&<Button size="sm" onClick={e=>{stop(e);setReviewNda(true);}}>{t("Review request")}</Button>}
-          {pendingNda ? <Button variant="link" className="p-0 h-auto" asChild><Link to="/marketplace/pipeline/invitations" search={{open:p.id}}>{t(seller?"Investor profile":"View listing")}</Link></Button> : seller
+          {pendingNda && !seller ? <Button variant="link" className="p-0 h-auto" asChild><Link to="/marketplace/pipeline/invitations" search={{open:p.id}}>{t("View listing")}</Link></Button> : seller
             ? <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("investor"); }}>{t("Investor profile")}</button>
             : <button className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={(e) => { stop(e); setDlg("seller"); }}>{t(pendingNda?"View listing":"Seller profile")}</button>}
           <span className="flex items-center gap-2">
@@ -260,7 +260,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} t={t} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "share" && <ShareAccessDialog p={p} mode={p.share ? "manage" : "share"} onClose={() => setDlg(null)} onDone={refresh} />}
-      {dlg === "investor" && <InvestorProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
+      {dlg === "investor" && <InvestorProfile p={p} onReview={pendingNda ? () => setReviewNda(true) : undefined} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
       {dlg === "seller" && <SellerProfile p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} onReport={() => setDlg("report")} onAsk={() => { setDlg(null); ask(); }} />}
       {dlg === "nda" && <NdaDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "loi" && <LoiDocDialog p={p} seller={seller} onClose={() => setDlg(null)} />}

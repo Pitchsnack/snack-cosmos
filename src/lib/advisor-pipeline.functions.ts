@@ -238,9 +238,9 @@ export const advisorOtherProfile = createServerFn({ method: "GET" })
     const { data: da } = ids.length ? await sb.from("deal_advisors").select("side").eq("deal_id", data.dealId).in("firm_profile_id", ids).maybeSingle() : { data: null };
     if (!da) throw new Error("Not your deal");
     const { data: deal } = await sb.from("deal_pipelines").select("*").eq("id", data.dealId).single();
-    const { buildNoteProfile } = await import("./private-notes.functions");
+    const { buildPartyProfile } = await import("./party-profile.server");
     // The other side buys → its investor profile; the other side sells → its seller profile.
-    const r = await buildNoteProfile(sb, deal, da.side === "seller" ? "seller_on_buyer" : "buyer_on_seller");
+    const r = await buildPartyProfile(sb, deal, da.side === "seller" ? "seller_on_buyer" : "buyer_on_seller");
     // Profile facts only: the deal figures (price, stake, deal type, reason) never reach the advisor.
     const { askingPrice: _a, handover: _s, dealType: _d, reason: _r, ...g } = r.generated as Record<string, string | null>;
     return { otherIsBuyer: da.side === "seller", name: r.name, sub: r.sub, logoUrl: r.logoUrl, verified: r.verified, codeName: r.codeName, contact: r.contact, fields: g };
