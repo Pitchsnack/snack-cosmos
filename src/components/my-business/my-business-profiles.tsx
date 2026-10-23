@@ -407,6 +407,8 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
         hasFinancials={hasFinancials}
         onPart={(k) => {
           if (k === "description") openEdit(s.id, "public", "description", "description");
+          else if (k === "highlights") openEdit(s.id, "public", "identity", "highlights");
+          else if (k === "customers") openEdit(s.id, "public", "identity", "customers");
           else if (k === "terms") openEdit(s.id, "public", "deal", "deal");
           else if (k === "chips") openEdit(s.id, "private", "market", "product-tags");
           else if (k === "markets") openEdit(s.id, "private", "market", "market-tags");

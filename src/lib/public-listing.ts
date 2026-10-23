@@ -60,6 +60,10 @@ export interface PublicListing {
   newDays: number | null;
   /** A PitchSnack private client (Control, Admin-owned). Only the flag is sent. */
   managed?: boolean;
+  /** Seller-written public highlights (filled ones only, in order). */
+  highlights?: string[];
+  /** Seller-written anonymous customer profile (public). */
+  customerProfile?: string;
 }
 
 export const HEADLINE_MAX = 90;
@@ -407,6 +411,8 @@ export function buildPublicListing(
   p: {
     headline?: string | null;
     description?: string | null;
+    highlights?: string[] | null;
+    customers_summary?: string | null;
     product_tags?: string[] | null;
     market_tags?: string[] | null;
     code_name?: string | null;
@@ -425,6 +431,8 @@ export function buildPublicListing(
   return {
     headline: p?.headline?.trim() || "",
     description: p?.description?.trim() || suggestBusinessDescription(s) || suggestDescription(s.long_description || s.short_description, terms),
+    highlights: (p?.highlights ?? []).map((h) => h?.trim() ?? "").filter(Boolean).slice(0, 4),
+    customerProfile: p?.customers_summary?.trim() || "",
     productTags: cleanTags(p?.product_tags ?? s.product_tags, terms),
     // MARKETS = the company's Market Tags (Edit information › Industry & Market); older listing copies are the fallback.
     marketTags: cleanTags(s.market_tags?.length ? s.market_tags : p?.market_tags ?? [], terms),

@@ -3,7 +3,7 @@ import { fmtThb } from "@/lib/asking-price";
 import { MissingText } from "@/components/my-business/missing-info";
 import { cloneElement, isValidElement, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, LockOpen, BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
+import { Check, Clock, LockOpen, BadgeCheck, Briefcase, Building2, Calendar, FileText, Lock, MapPin, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/language";
 import type { PublicListing } from "@/lib/public-listing";
@@ -94,7 +94,7 @@ export function dealLine(d?: ListingDeal, t: (s: string) => string = (s) => s) {
  * the Split list and the Split detail panel. The cover is ALWAYS sector vector
  * art — photos and logos only appear in the Private view after NDA.
  */
-export type ListingPart = "description" | "chips" | "markets" | "revenue" | "employees" | "terms";
+export type ListingPart = "description" | "highlights" | "customers" | "chips" | "markets" | "revenue" | "employees" | "terms";
 function PartEdit({ k, on }: { k: ListingPart; on?: (k: ListingPart) => void }) {
   if (!on) return null;
   return <button type="button" onClick={(e) => { e.stopPropagation(); on(k); }}
@@ -188,6 +188,19 @@ export function PublicListingCard({
           <div className="mt-3 space-y-2.5 border-t border-border pt-3">
             {l.description ? <p className="text-[13px] text-foreground/80">{l.description}{editable && <span className="ml-2 inline-flex"><PartEdit k="description" on={editable} /></span>}</p>
               : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("description"); }} className="text-[13px] hover:underline"><MissingText small>Write a public description</MissingText></button>}
+            {!!l.highlights?.length && (
+              <div className="!mt-[18px] !mb-[18px]">
+                <div className="flex items-center gap-2"><span className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Highlights")}</span><PartEdit k="highlights" on={editable} /></div>
+                <ul className="mt-2.5 space-y-2">
+                  {l.highlights.map((h, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#E8F6EE]"><Check className="h-3 w-3 text-[#15803D]" strokeWidth={2.8} /></span>
+                      <span className="min-w-0 break-words text-[15px] leading-[1.5] text-foreground/80">{h}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-2">
               <span className="pt-0.5 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Products & services")}</span>
               <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><TagChips tags={l.productTags} red={!!editable} /></div><PartEdit k="chips" on={editable} /></div>
@@ -201,6 +214,17 @@ export function PublicListingCard({
             )}
             {dl ? <div className="flex items-center gap-2 text-[12.5px] font-medium"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />{dl}<PartEdit k="terms" on={editable} /></div>
               : editable && <button type="button" onClick={(e) => { e.stopPropagation(); editable("terms"); }} className="flex items-center gap-2 text-[12.5px] hover:underline"><MissingText small>Set deal terms</MissingText></button>}
+            {l.customerProfile ? (
+              <div className="!mt-4 border-t border-border pt-4">
+                <div className="flex items-center gap-2"><span className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{t("Customer profile")}</span><PartEdit k="customers" on={editable} /></div>
+                <p className="mt-2 whitespace-pre-line break-words text-[15px] leading-[1.55] text-foreground/80">{l.customerProfile}</p>
+              </div>
+            ) : editable && (
+              <div className="!mt-4 flex items-center gap-2 border-t border-border pt-4">
+                <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#6B7280]">{t("Customer profile")}<span className="font-medium normal-case tracking-normal"> · {t("optional")}</span></span>
+                <button type="button" onClick={(e) => { e.stopPropagation(); editable("customers"); }} className="ml-auto shrink-0 text-[12.5px] font-medium text-[#8A4B06] hover:underline dark:text-[#F6A823]">{t("Add")}</button>
+              </div>
+            )}
           </div>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-2 text-[12px] text-muted-foreground" style={{ marginTop: 12 }}>
