@@ -35,5 +35,5 @@
 
 - Company verification: whitelisted DTOs; selected-deal NDA + entitlement on buyer reads; DB-enforced quotas and six-check badge.
 
-- Seller/buyer Pipeline uses shared workspace-page/cards and six child routes; invitations and counts share existing authenticated DTOs, and watchlist keys the stable pipeline ID so NDA approval preserves stars.
+- Seller/buyer Pipeline uses shared workspace-page/cards and six child routes; invitations and counts share existing authenticated DTOs, and watchlist keys the stable pipeline ID so NDA approval preserves stars. Pipeline › Reports embeds the shared ReportsHub (buyer or per-buyer seller mode) behind a deal selector in workspace-reports.tsx — never a table; per-buyer extras there are gated by the pipelinePage prop so /my-reports and the pop-up stay unchanged.
 - Invitation dialogs reuse extracted watchlist profile bodies; no route-module component imports and no private profile payload before a valid approved NDA.
