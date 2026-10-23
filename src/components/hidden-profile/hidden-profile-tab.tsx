@@ -1,4 +1,5 @@
 import { useManagedIds } from "@/hooks/use-managed-ids";
+import { priceFor } from "@/lib/asking-price";
 import { useEffect, useState } from "react";
 import { AlertTriangle, Check, Pencil, Store } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -101,7 +102,7 @@ export function HiddenProfileTab({
           </span>
           {live && <Button size="sm" variant="outline" asChild><Link to="/marketplace/browse" search={{ company: row.id }}><Store className="mr-1.5 h-3.5 w-3.5" />View in Marketplace</Link></Button>}
         </div>
-        <PublicListingCard showManaged l={{ ...listing, managed: managedIds.has(row.startup_id) }} seller editable={adminReview ? undefined : onPart} />
+        <PublicListingCard showManaged l={{ ...listing, managed: managedIds.has(row.startup_id) }} deal={{ dealType: row.deal_type, ...priceFor(row, true) }} seller editable={adminReview ? undefined : onPart} />
       </div>
       {flagged.length === 0 ? (
         <p className="flex items-center gap-1.5 text-[12.5px] text-emerald-700 dark:text-emerald-400"><Check className="h-4 w-4" />Identity check passed · no company, product or people names in the public text.</p>
