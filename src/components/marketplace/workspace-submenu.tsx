@@ -41,6 +41,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
     return () => window.removeEventListener('ps-workspace-flyout', closeOther);
   }, [id]);
   const quietFly = useRef(false);
+  const flightClosePending = useRef(false);
   const flyEl = useRef<HTMLDivElement>(null);
   // NDA request flight (Pipeline only): open the sub-menu or flyout so NDA Invitations is showing.
   useEffect(() => {
@@ -48,9 +49,11 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
     const onFlight = (event: Event) => {
       const what = (event as CustomEvent<string>).detail;
       if (what === 'open') {
+        flightClosePending.current = false;
         if (collapsed) { quietFly.current = true; window.dispatchEvent(new CustomEvent('ps-workspace-flyout', { detail: id })); setFly(true); }
         else setOpen(true);
       } else if (what === 'close' && collapsed) {
+        flightClosePending.current = true;
         const el = flyEl.current;
         if (el && (el.matches(':hover') || el.contains(document.activeElement))) return;
         setFly(false);
@@ -115,6 +118,8 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
     <PopoverContent side="right" align="start" sideOffset={12} collisionPadding={8}
       className={`pipeline-flyout${company ? ' company-flyout' : ''}`} data-mkt-view={persona}
       ref={flyEl}
+      onPointerLeave={() => { if (flightClosePending.current && !flyEl.current?.contains(document.activeElement)) setFly(false); }}
+      onBlurCapture={event => { if (flightClosePending.current && !event.currentTarget.contains(event.relatedTarget as Node | null) && !event.currentTarget.matches(':hover')) setFly(false); }}
       onOpenAutoFocus={event => {
         event.preventDefault();
         if (quietFly.current) { quietFly.current = false; return; }

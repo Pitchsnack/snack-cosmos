@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Check, CircleSlash, Inbox, Lock, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,7 @@ import { ReviewInvestorDialog } from "@/components/marketplace/seller-invitation
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 import { PendingContactButton } from "@/components/marketplace/pending-contact-button";
+import { playConnectFlight } from "@/lib/connect-flight";
 
 /**
  * Seller › Browse investors / Favourites: the Connect button and what replaces
@@ -126,18 +127,36 @@ function ConnectDialog({ investorId, investorRef, listingRef, onClose }: { inves
   const send = useServerFn(sendInvitation);
   const { data: strip } = usePlanStrip();
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState<{ left: unknown; termMonths: number | null } | null>(null);
+  const [sent, setSent] = useState<{ id: string; left: unknown; termMonths: number | null } | null>(null);
+  const [closing, setClosing] = useState(false);
+  const closingRef = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const total = strip?.total ?? null;
   const counter = sent ? counterText(tr, sent.left, total, sent.termMonths) : counterText(tr, strip?.left, total, strip?.plan?.termMonths);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["connect-states"] }); qc.invalidateQueries({ queryKey: ["plan-strip"] }); };
 
-  const close = () => { if (sent) refresh(); onClose(); };
+  const close = () => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    if (!sent) { onClose(); return; }
+    const rect = dialogRef.current?.getBoundingClientRect();
+    setClosing(true);
+    playConnectFlight({
+      invitationId: sent.id, investorRef,
+      fallback: rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: innerWidth / 2, y: innerHeight / 2 },
+      text: { invitations: tr('NDA Invitations', 'คำเชิญ NDA'), sent: tr('Invitation Sent', 'ส่งคำเชิญแล้ว'), view: tr('View', 'ดู') },
+      view: () => { void navigate({ to: '/marketplace/pipeline/invitations', search: { open: sent.id, view: 'sent' } }); },
+      toast: (message, view) => toast(message, { duration: 4000, action: { label: tr('View', 'ดู'), onClick: view } }),
+    });
+    window.setTimeout(() => { refresh(); onClose(); }, 180);
+  };
 
   const onSend = async () => {
     setBusy(true);
     try {
       const r = await send({ data: { investorId } });
-      setSent({ left: r.left, termMonths: r.termMonths });
+      setSent({ id: r.id, left: r.left, termMonths: r.termMonths });
     } catch (e) {
       const m = (e as Error).message;
       const th: Record<string, string> = {
@@ -154,8 +173,8 @@ function ConnectDialog({ investorId, investorRef, listingRef, onClose }: { inves
 
   const btn = "inline-flex h-11 items-center justify-center rounded-[10px] px-[18px] text-[14.5px] font-semibold";
   return (
-    <Dialog open onOpenChange={(o) => { if (!o) close(); }}>
-      <DialogContent onClick={(e) => e.stopPropagation()} className={cn("max-h-[calc(100vh-32px)] max-w-[calc(100vw-32px)] overflow-y-auto rounded-2xl p-6", sent ? "sm:max-w-[660px]" : "sm:max-w-[540px]")}>
+    <Dialog open={!closing} onOpenChange={(o) => { if (!o) close(); }}>
+      <DialogContent ref={dialogRef} onClick={(e) => e.stopPropagation()} className={cn("max-h-[calc(100vh-32px)] max-w-[calc(100vw-32px)] overflow-y-auto rounded-2xl p-6", sent ? "sm:max-w-[660px] connect-sent-dialog" : "sm:max-w-[540px]")}>
         {!sent ? (
           <>
             <DialogTitle className="pr-6 font-['Space_Grotesk'] text-[21px] font-bold leading-[1.3]">{tr(`Connect with investor (${investorRef})`, `เชื่อมต่อกับนักลงทุน (${investorRef})`)}</DialogTitle>

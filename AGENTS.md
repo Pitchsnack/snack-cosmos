@@ -1,4 +1,5 @@
 # Decisions
+- Seller Connect flight is browser-only presentation using the stored invitation ID, shared Pipeline opening signal and public investor cover markers; invitation writes and authorization remain in the existing server function.
 - Pending contact presentation uses the existing seller Connect, buyer verification and session DTOs with one shared focusable tooltip button; status is derived server-side from own approval records and request authorization is unchanged.
 - Marketplace My Company and Pipeline share WorkspaceSubmenu for inline/rail/drawer interactions and exclusive flyouts; page destinations stay in their wrappers so existing pages and the Admin menu remain unchanged.
 - Live agreement cards use a browser-safe Bangkok calendar-day helper and a Pipeline-parent context for midnight updates and reload-only expansion reset; existing document dialogs and stored legal end dates remain authoritative.

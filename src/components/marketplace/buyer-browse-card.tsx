@@ -213,12 +213,15 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
   const fit = useCoverFit(managed, 1);
   return (
     <div
+      data-connect-source={i.refNo}
+      data-connect-type={i.type ?? i.codeName}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" && e.target === e.currentTarget) onClick(); } : undefined}
       className={cn("group/card overflow-hidden rounded-[14px] border bg-card", selected ? "border-accent ring-1 ring-accent/40" : "border-border", onClick && "cursor-pointer transition-all duration-200 ease-out hover:border-accent hover:shadow-[var(--shadow-elevated)] [&_[data-card-title]]:transition-colors hover:[&_[data-card-title]]:text-accent", className)}
     >
+      <div data-connect-cover={i.refNo} data-connect-type={i.type ?? i.codeName}>
       <BuyerCover type={i.type} src={(i as { coverUrl?: string | null }).coverUrl} className="h-[110px]">
         <div ref={fit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
         <span ref={fit.left as React.RefObject<HTMLSpanElement>} className={cn("absolute left-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground", panel && managed ? "top-3" : "top-2.5")}>
@@ -226,6 +229,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
         </span>
         {(topRight || status || managed) && <div ref={fit.right} className={cn("absolute flex items-center gap-1.5", panel && managed ? "right-3 top-3" : "right-2.5 top-2.5")}>{managed && <ManagedBadge size={status ? "sm" : panel ? "panel" : "card"} border={!!status} shadow={!status} hatOnly={fit.level >= 1} />}{status && <StatusPill status={status} />}{topRight}</div>}
       </BuyerCover>
+      </div>
       <div className="p-4">
         {tag && <div className="mb-1.5">{tag}</div>}
         <CardBody i={i} empty={empty} desc={desc} oneRow={panel} onPart={editable} />
