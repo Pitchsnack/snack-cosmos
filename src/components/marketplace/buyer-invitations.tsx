@@ -385,20 +385,44 @@ function DecisionBar({ r, reason, onClose }: { r: BuyerInvitation; reason?: stri
   );
 }
 
-/** Section 5: shown after Sign and request NDA from Browse listings or Favourites. */
-export function NdaSentDialog({ name, onClose }: { name: string; onClose: () => void }) {
+export type NdaSent = { listingId: string; name: string; invitationId: string | null; saved: boolean };
+
+/** Section 5: shown after Sign and request NDA from Browse listings or Favourites. Done/Esc plays the flight into the menu. */
+export function NdaSentDialog({ sent, fromWatchlist = false, onClose }: { sent: NdaSent; fromWatchlist?: boolean; onClose: () => void }) {
   const tr = useTr();
+  const navigate = useNavigate();
+  const box = useRef<HTMLDivElement>(null);
+  const done = () => {
+    const r = box.current?.getBoundingClientRect();
+    const fallback = r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: innerWidth / 2, y: innerHeight / 2 };
+    onClose();
+    const w = "รายการโปรด";
+    void import("@/lib/nda-flight").then(({ playNdaFlight }) => playNdaFlight({
+      listingId: sent.listingId, name: sent.name, invitationId: sent.invitationId, fromWatchlist, alreadySaved: sent.saved, fallback,
+      text: {
+        added: tr("Added to My watchlist", `เพิ่มใน${w}แล้ว`), inList: tr("In My watchlist", `อยู่ใน${w}แล้ว`),
+        inv: tr("NDA Invitations", "คำเชิญ NDA"), waiting: tr("Waiting for the seller", "รอผู้ขาย"), view: tr("View", "ดู"),
+        toast: tr("Added to My watchlist", `เพิ่มใน${w}แล้ว`), toastBoth: tr("Added to My watchlist and NDA Invitations", `เพิ่มใน${w}และคำเชิญ NDA แล้ว`),
+        requested: tr("NDA requested", "ขอ NDA แล้ว"),
+      },
+      go: (to) => void navigate(to as never),
+      toast: (msg, view) => toast(msg, { position: "bottom-center", duration: 4000, action: { label: tr("View", "ดู"), onClick: view } }),
+    }));
+  };
+  const w = "รายการโปรด";
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[calc(100vw-32px)] rounded-2xl p-6 sm:max-w-[460px] [&>button.absolute]:hidden">
+    <Dialog open onOpenChange={(o) => !o && done()}>
+      <DialogContent ref={box} className="nda-sent-dialog max-w-[calc(100vw-32px)] rounded-2xl p-6 sm:max-w-[460px] [&>button.absolute]:hidden">
         <span className="grid h-11 w-11 place-items-center rounded-full bg-[#E9F6EE]"><Check className="h-[22px] w-[22px] text-[#15803D]" /></span>
         <DialogTitle className="mt-3.5 font-['Space_Grotesk'] text-[21px] font-bold">{tr("The seller has received your NDA request", "ผู้ขายได้รับคำขอ NDA ของท่านแล้ว")}</DialogTitle>
         <DialogDescription className="mt-2 text-[14.5px] text-[#434A5C] dark:text-muted-foreground">
-          {tr(`${name} has your signed request. They usually reply within 2–3 business days, and we'll email you as soon as they approve.`, `${name} ได้รับคำขอที่ลงนามของท่านแล้ว โดยปกติจะตอบกลับภายใน 2–3 วันทำการ และเราจะส่งอีเมลแจ้งทันทีที่อนุมัติ`)}
+          {tr(`${sent.name} has your signed request. They usually reply within 2–3 business days, and we'll email you as soon as they approve.`, `${sent.name} ได้รับคำขอที่ลงนามของท่านแล้ว โดยปกติจะตอบกลับภายใน 2–3 วันทำการ และเราจะส่งอีเมลแจ้งทันทีที่อนุมัติ`)}
         </DialogDescription>
-        <p className="mt-1.5 text-[13.5px] text-[#6B7280]">{tr("The listing is in My watchlist and NDA Invitations in the meantime.", "ระหว่างนี้ประกาศนี้อยู่ในรายการโปรดและคำเชิญ NDA ของท่าน")}</p>
+        <p className="mt-1.5 text-[13.5px] text-[#6B7280]">{sent.invitationId
+          ? tr("The listing is in My watchlist and NDA Invitations in the meantime.", `ระหว่างนี้ประกาศนี้อยู่ใน${w}และคำเชิญ NDA ของท่าน`)
+          : tr("The listing is in My watchlist in the meantime.", `ระหว่างนี้ประกาศนี้อยู่ใน${w}ของท่าน`)}</p>
         <div className="mt-5 flex justify-end">
-          <button type="button" onClick={onClose} className="inline-flex h-11 items-center rounded-[10px] bg-[#1E2A4A] px-[18px] text-[14.5px] font-semibold text-white dark:bg-[#E8ECF5] dark:text-[#1E2A4A]">{tr("Done", "เสร็จสิ้น")}</button>
+          <button type="button" onClick={done} className="inline-flex h-11 items-center rounded-[10px] bg-[#1E2A4A] px-[18px] text-[14.5px] font-semibold text-white dark:bg-[#E8ECF5] dark:text-[#1E2A4A]">{tr("Done", "เสร็จสิ้น")}</button>
         </div>
       </DialogContent>
     </Dialog>

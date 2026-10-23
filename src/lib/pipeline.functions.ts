@@ -169,7 +169,7 @@ export const requestNda = createServerFn({ method: "POST" })
       await update(prev.id, { status: "active", nda_requested_at: new Date().toISOString(), nda_approved_at: null, buyer_message: data.message ?? null });
       await log(prev.id, "nda_requested", context.userId, data.consent);
       await linkInvitation(prev.id);
-      return { ok: true };
+      return { ok: true, invitationId: invRow?.inv.id ?? null };
     }
     const { data: row, error } = await sb
       .from("deal_pipelines")
@@ -182,7 +182,7 @@ export const requestNda = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (row?.id) await log(row.id, "nda_requested", context.userId, data.consent);
     await linkInvitation(row?.id);
-    return { ok: true };
+    return { ok: true, invitationId: row?.id && invRow ? invRow.inv.id as string : null };
   });
 
 /** Buyer: NDA status per listing id, for Browse listings. */

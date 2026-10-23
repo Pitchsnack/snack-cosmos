@@ -40,6 +40,25 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
     window.addEventListener('ps-workspace-flyout', closeOther);
     return () => window.removeEventListener('ps-workspace-flyout', closeOther);
   }, [id]);
+  const quietFly = useRef(false);
+  const flyEl = useRef<HTMLDivElement>(null);
+  // NDA request flight (Pipeline only): open the sub-menu or flyout so NDA Invitations is showing.
+  useEffect(() => {
+    if (id !== 'pipeline') return;
+    const onFlight = (event: Event) => {
+      const what = (event as CustomEvent<string>).detail;
+      if (what === 'open') {
+        if (collapsed) { quietFly.current = true; window.dispatchEvent(new CustomEvent('ps-workspace-flyout', { detail: id })); setFly(true); }
+        else setOpen(true);
+      } else if (what === 'close' && collapsed) {
+        const el = flyEl.current;
+        if (el && (el.matches(':hover') || el.contains(document.activeElement))) return;
+        setFly(false);
+      }
+    };
+    window.addEventListener('ps-flight-pipeline', onFlight);
+    return () => window.removeEventListener('ps-flight-pipeline', onFlight);
+  }, [id, collapsed]);
   const changeFly = (next: boolean) => {
     if (next) window.dispatchEvent(new CustomEvent('ps-workspace-flyout', { detail: id }));
     setFly(next);
@@ -79,6 +98,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
       }
     }}>
     {items.map(item => <Link key={item.to} to={item.to} className="pipeline-sub-link"
+      data-flight-target={id === 'pipeline' && item.to.endsWith('/invitations') ? 'invitations' : undefined}
       aria-current={item.current ? 'page' : undefined}
       onClick={() => { setFly(false); focusPage(item.to); }}><span>{item.label}</span>{item.suffix}</Link>)}
   </div>;
@@ -94,8 +114,10 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
     </PopoverTrigger></RailTip>
     <PopoverContent side="right" align="start" sideOffset={12} collisionPadding={8}
       className={`pipeline-flyout${company ? ' company-flyout' : ''}`} data-mkt-view={persona}
+      ref={flyEl}
       onOpenAutoFocus={event => {
         event.preventDefault();
+        if (quietFly.current) { quietFly.current = false; return; }
         requestAnimationFrame(() => document.querySelector<HTMLElement>(`#${flyId} [aria-current="page"], #${flyId} a`)?.focus());
       }}>
       <div className="pipeline-fly-heading"><Icon size={15} />{heading}</div>{links(true)}

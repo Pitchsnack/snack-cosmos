@@ -138,6 +138,8 @@ const TH_BASE: Record<string, string> = {
   "Select a listing to see the details.": "เลือกประกาศเพื่อดูรายละเอียด",
   "Buyer preview": "ตัวอย่างสำหรับผู้ซื้อ",
   "Open in Favourites": "เปิดในรายการโปรด",
+  "Open in My watchlist": "เปิดในรายการโปรด",
+  "This listing is in My watchlist, and its private view opens there once the seller approves.": "ประกาศนี้อยู่ในรายการโปรดของท่าน และมุมมองส่วนตัวจะเปิดที่นั่นเมื่อผู้ขายอนุมัติ",
   "Open private view": "เปิดข้อมูลส่วนตัว",
   "Verified company": "บริษัทที่ยืนยันแล้ว",
   "Verified financials": "งบการเงินที่ตรวจสอบแล้ว",
