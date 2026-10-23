@@ -151,7 +151,8 @@ export function playNdaFlight(o: FlightOptions) {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const inv = card2 ? target("invitations") : null;
     if (inv && !railMode) {
-      const scroller = inv.closest<HTMLElement>("[data-flight-scroll]") ?? inv.closest<HTMLElement>("nav");
+      let scroller: HTMLElement | null = inv.parentElement;
+      while (scroller && !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))) scroller = scroller.parentElement;
       if (scroller) {
         const sr = scroller.getBoundingClientRect(), ir = inv.getBoundingClientRect(), wr = watch.getBoundingClientRect();
         if (ir.bottom > sr.bottom) scroller.scrollTop += Math.min(ir.bottom - sr.bottom + 8, Math.max(0, wr.top - sr.top));
