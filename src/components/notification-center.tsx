@@ -31,7 +31,7 @@ export function NotificationCenter() {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[360px] p-0">
+      <PopoverContent align="end" className="w-[400px] max-w-[calc(100vw-32px)] overflow-hidden p-0">
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
           <div className="text-sm font-semibold">Notifications</div>
           <Button
@@ -45,7 +45,7 @@ export function NotificationCenter() {
             Mark all read
           </Button>
         </div>
-        <ScrollArea className="max-h-[360px]">
+        <ScrollArea className="h-[min(440px,60vh)]">
           {items.length === 0 && (
             <div className="px-4 py-10 text-center text-sm text-muted-foreground">
               You're all caught up.
@@ -61,14 +61,12 @@ export function NotificationCenter() {
                 )}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="h-4 px-1 text-[10px]">
-                      {n.type}
-                    </Badge>
-                    <span className="truncate font-medium">{n.title}</span>
-                  </div>
+                  <Badge variant="outline" className="h-4 px-1 text-[10px]">
+                    {n.type}
+                  </Badge>
+                  <div className="mt-1 break-words font-medium leading-snug">{n.title}</div>
                   {n.message && (
-                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                    <p className="mt-0.5 break-words text-xs text-muted-foreground">
                       {n.message}
                     </p>
                   )}
