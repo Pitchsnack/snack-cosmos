@@ -159,7 +159,13 @@ export const requestNda = createServerFn({ method: "POST" })
       await spendRequest(context.userId, "nda", hp.id);
     }
     const linkInvitation = async (pipelineId: string | null | undefined) => {
-      if (!invRow || !pipelineId) return;
+      if (!pipelineId) return;
+      const { notifySellers } = await import("./invitations.server");
+      await notifySellers(hp.startup_id,
+        invRow ? "An investor accepted your invitation and signed the NDA" : "New NDA request",
+        "Open Pipeline › NDA Invitations to review and approve the NDA.",
+        "/marketplace/pipeline/invitations").catch(() => {});
+      if (!invRow) return;
       const now = new Date().toISOString();
       await sb.from("listing_invitations").update({ pipeline_id: pipelineId, buyer_choice: "open", viewed_at: invRow.inv.viewed_at ?? now }).eq("id", invRow.inv.id);
     };
