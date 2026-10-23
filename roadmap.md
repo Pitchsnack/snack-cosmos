@@ -1,4 +1,5 @@
 # Roadmap — Control setup wizards (brief 2)
+- [x] Updated agreement brief: show from valid NDA approval; unsigned LOI tile; 24 tests passed; live buyer/seller EN/TH, 1440/1280/1024, more/less and NDA dialog verified without changing legal records; both watchlists currently empty
 - [x] Add live NDA/LOI box on seller/buyer All deals and Deal watchlist; 21 date/workspace tests pass; isolated EN seller/TH buyer display, more/less and existing-dialog callbacks checked at 1440/1280/1024; reference interactions checked; build OK
 - [ ] Live signed-LOI agreement box, route-persistence and document-opening end-to-end: database has five active deals and zero accepted LOIs; no real legal agreement changed for testing
 - [x] Pipeline sub-menu: six seller/buyer pages, persistent deal stars and shared counts
