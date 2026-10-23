@@ -1,4 +1,5 @@
 # Decisions
+- Live agreement cards use a browser-safe Bangkok calendar-day helper and a Pipeline-parent context for midnight updates and reload-only expansion reset; existing document dialogs and stored legal end dates remain authoritative.
 
 - Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
 - Admin review uses MyBusinessProfiles in AdminReviewCtx; StartupCard serves My Business/Directory; private_notes stay server-only.
