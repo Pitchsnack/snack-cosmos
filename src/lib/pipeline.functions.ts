@@ -74,6 +74,8 @@ export type PipelineRow = {
   reportViewedAt: string | null;
   reportAllowDownload: boolean;
   ndaExpiresAt: string | null;
+  /** Raw stored expiry for legal-date displays; never a derived legacy fallback. */
+  ndaStoredExpiresAt: string | null;
   loiStakePct: number | null;
   loiAcceptedByName: string | null;
   loiChangesRequestedAt: string | null;
@@ -116,6 +118,7 @@ function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: numbe
     reportViewedAt: r.report_viewed_at ?? null,
     reportAllowDownload: !!r.report_allow_download,
     ndaExpiresAt: r.nda_expires_at ?? (r.nda_approved_at ? new Date(new Date(r.nda_approved_at).getTime() + 730 * 86_400_000).toISOString() : null),
+    ndaStoredExpiresAt: r.nda_expires_at ?? null,
     loiStakePct: r.loi_stake_pct != null ? Number(r.loi_stake_pct) : null,
     loiAcceptedByName: r.loi_accepted_by ? names[r.loi_accepted_by] ?? null : null,
     loiChangesRequestedAt: r.loi_changes_requested_at ?? null,

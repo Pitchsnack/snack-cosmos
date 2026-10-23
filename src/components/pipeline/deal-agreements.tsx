@@ -17,7 +17,7 @@ export function DealAgreements({ p, seller, onNda, onLoi }: { p: PipelineRow; se
   const fmt = (value: string | null) => value ? agreementDate(value, th) : '—';
   const status = (timing: ReturnType<typeof agreementTiming>, end: string | null) => !timing ? c('End date not recorded', 'ยังไม่ได้บันทึกวันสิ้นสุด') : timing.daysLeft < 0 ? c(`Ended ${fmt(end)}`, `สิ้นสุดแล้ว ${fmt(end)}`) : timing.daysLeft === 0 ? c('Ends today', 'สิ้นสุดวันนี้') : timing.daysLeft <= 14 ? c(`Ends in ${timing.daysLeft} ${timing.daysLeft === 1 ? 'day' : 'days'}`, `สิ้นสุดใน ${timing.daysLeft} วัน`) : c(`Active · ${timing.daysLeft} days left`, `มีผลอยู่ · เหลือ ${timing.daysLeft} วัน`);
   const agreements = [
-    { key: 'nda', name: 'NDA', start: p.ndaApprovedAt, end: p.ndaExpiresAt, subtitle: c('Term 2 years', 'อายุสัญญา 2 ปี'), endLabel: c('In force until', 'มีผลถึง'), Icon: ShieldCheck, onView: onNda },
+    { key: 'nda', name: 'NDA', start: p.ndaApprovedAt, end: p.ndaStoredExpiresAt, subtitle: c('Term 2 years', 'อายุสัญญา 2 ปี'), endLabel: c('In force until', 'มีผลถึง'), Icon: ShieldCheck, onView: onNda },
     { key: 'loi', name: 'LOI', start: p.loiAcceptedAt, end: p.exclusivityUntil, subtitle: p.loiExclusivityDays === null ? c('Exclusivity', 'สิทธิ์เจรจาแต่เพียงผู้เดียว') : c(`Exclusivity ${p.loiExclusivityDays} days`, `สิทธิ์เจรจาแต่เพียงผู้เดียว ${p.loiExclusivityDays} วัน`), endLabel: c('Exclusive until', 'เจรจาแต่เพียงผู้เดียวถึง'), Icon: FileSignature, onView: onLoi },
   ].map(a => ({ ...a, timing: agreementTiming(a.start, a.end, today) }));
   const pill = (a: typeof agreements[number]) => <span className="agreement-status" data-tone={a.timing?.tone ?? 'ended'}>{status(a.timing, a.end)}</span>;
