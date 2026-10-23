@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.private_notes IS 'DEPRECATED: Pipeline private notes removed; replaced by the read-only profile box. Drop after publish.';
