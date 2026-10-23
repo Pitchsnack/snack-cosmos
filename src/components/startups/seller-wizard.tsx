@@ -445,7 +445,7 @@ export function SellerWizard({
         </div>
         <div className="rounded-[14px] border border-[#e5e7eb] bg-white px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-[-0.015em]">{tr(q.t)}</h2>
+            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-[-0.015em]">{tr(q.t)}{cur.id !== "web" && cur.id !== "lic" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
             {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{tr(q.h)}</p>}
             {!q.h && <div className="mb-6" />}
             {q.body}
