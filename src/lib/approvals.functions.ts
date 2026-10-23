@@ -351,7 +351,9 @@ export const getMyVerification = createServerFn({ method: "GET" })
     const sb = context.supabase as any;
     const data = await (await import("./profile-verification.server")).verificationByUser(sb, context.userId);
     const { data: uv } = await sb.from("user_verifications").select("user_id").eq("user_id", context.userId).maybeSingle();
-    return { request: data ?? null, verified: !!uv || data?.status === "verified" };
+    const verified = !!uv || data?.status === "verified";
+    const { buyerContactPending } = await import("./pending-contact");
+    return { request: data ?? null, verified, pendingContact: buyerContactPending(data?.status, verified) };
   });
 
 const domainOf = (v?: string | null) => {

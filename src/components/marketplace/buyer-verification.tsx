@@ -13,7 +13,7 @@ import { useHasSession } from "@/hooks/use-has-session";
 export function useMyVerification() {
   const fn = useServerFn(getMyVerification);
   const enabled = useHasSession();
-  return useQuery({ queryKey: ["my-verification"], queryFn: () => fn(), enabled, staleTime: 60_000 });
+  return useQuery({ queryKey: ["my-verification"], queryFn: () => fn(), enabled, staleTime: 60_000, refetchOnMount: "always", refetchInterval: (query) => query.state.data?.pendingContact ? 15_000 : false });
 }
 
 const TYPES = ["Private equity", "Family office", "Corporate", "Individual investor", "Search fund"];
