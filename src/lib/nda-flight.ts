@@ -101,11 +101,8 @@ function tooltips(o: FlightOptions, rows: { item: HTMLElement; holder: HTMLEleme
     const tip = document.createElement("div"); tip.className = "nda-flight-tip";
     tip.style.left = `${hr.right + 12}px`; tip.style.top = `${ir.top}px`; tip.style.height = `${Math.max(ir.height, 36)}px`;
     tip.innerHTML = r.kind === 1
-      ? `<span class="nda-flight-tip-icon">${STAR.replace(/18/g, "15")}</span><span class="nda-flight-tip-text"><b>${esc(o.alreadySaved ? o.text.inList : o.text.added)}</b>.</span>`
-      : `<span class="nda-flight-tip-icon">${SEND("#A5B4FC", 15)}</span><span class="nda-flight-tip-text"><b>${esc(o.text.inv)}</b><span>, ${esc(o.text.waiting)}.</span></span>`;
-    // Screen readers hear "…. NDA Invitations, Waiting for the seller."; sighted users see the "·" form.
-    const sep = tip.querySelector(".nda-flight-tip-text > span"); if (sep) sep.innerHTML = `<span aria-hidden="true"> · </span><span class="sr-only">, </span>${esc(o.text.waiting)}<span class="sr-only">.</span>`;
-    tip.querySelectorAll(".nda-flight-tip-text").forEach((t) => t.innerHTML = t.innerHTML.replace(/<\/b>\.<\/span>$/, '</b><span class="sr-only">.</span></span>'));
+      ? `<span class="nda-flight-tip-icon">${STAR.replace(/18/g, "15")}</span><span class="nda-flight-tip-text"><b>${esc(o.alreadySaved ? o.text.inList : o.text.added)}</b><span class="sr-only">.</span></span>`
+      : `<span class="nda-flight-tip-icon">${SEND("#A5B4FC", 15)}</span><span class="nda-flight-tip-text"><b>${esc(o.text.inv)}</b><span aria-hidden="true"> · </span><span class="sr-only">, </span><span class="nda-flight-tip-sub">${esc(o.text.waiting)}</span><span class="sr-only">.</span></span>`;
     const btn = document.createElement("button"); btn.type = "button"; btn.className = "nda-flight-view"; btn.textContent = o.text.view;
     btn.onclick = () => { clearTimeout(timer); hide(); o.go(r.kind === 1 ? { to: "/marketplace/favourites", search: { id: o.listingId } } : { to: "/marketplace/pipeline/invitations", search: { open: o.invitationId! } }); };
     tip.appendChild(btn);
