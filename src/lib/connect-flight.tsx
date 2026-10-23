@@ -32,7 +32,7 @@ function flight(o: Options, cover: HTMLElement | undefined, from: Options['fallb
   const icon = document.createElement('span'); icon.className = 'connect-flight-icon';
   const iconRoot = createRoot(icon); iconRoot.render(<Send size={18}/>); thumb.appendChild(icon);
   const body = document.createElement('div'); body.className = 'connect-flight-body';
-  const name = document.createElement('b'); name.textContent = `${cover?.dataset.connectType || o.investorRef} · ${o.investorRef}`;
+  const name = document.createElement('b'); name.textContent = cover?.dataset.connectType ? `${cover.dataset.connectType} · ${o.investorRef}` : o.investorRef;
   const pill = document.createElement('span'); pill.className = 'connect-flight-chip'; pill.textContent = o.text.sent;
   body.append(name, pill); card.append(thumb, body); layer.appendChild(card); document.body.appendChild(layer);
   const transform = (x: number, y: number, scale: number) => `translate(${x - 112}px, ${y - 29}px) scale(${scale})`;
@@ -71,8 +71,9 @@ function tooltip(o: Options, item: HTMLElement, rail: boolean) {
 /** After successful What's next dismissal only; no writes or count changes. */
 export function playConnectFlight(o: Options) {
   if (!claim(o.invitationId)) return;
-  const covers = Array.from(document.querySelectorAll<HTMLElement>('[data-connect-cover]')).filter(el => el.dataset.connectCover === o.investorRef && visible(el) && !el.closest('[role="dialog"]'));
-  const cover = covers[0], from = cover ? centre(cover) : o.fallback;
+  const covers = Array.from(document.querySelectorAll<HTMLElement>('[data-connect-cover]')).filter(el => el.dataset.connectCover === o.investorRef && !el.closest('[role="dialog"]'));
+  const onScreen = covers.find(visible), cover = onScreen ?? covers[0];
+  const from = onScreen ? centre(onScreen) : o.fallback;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const menu = target('menu-button');
   if (menu) {
