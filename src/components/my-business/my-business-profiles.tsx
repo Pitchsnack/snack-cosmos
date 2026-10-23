@@ -54,7 +54,7 @@ function useCompleteness(s: StartupListItem) {
     { key: "valuation", label: `Estimated valuation ${reportPrice("valuation")}`, weight: 0, required: false, done: false },
     { key: "terms", label: "Deal terms", weight: 20, required: true, done: !!row && !!row.deal_type && !!row.owner_stays },
     { key: "hidden", label: "Public headline", weight: 25, required: true, done: !!row && !!row.headline?.trim() },
-    { key: "people", label: "Key people & customers", weight: 15, required: false, done: (facts?.people?.length ?? 0) > 0 && (facts?.customers?.length ?? 0) > 0 },
+    { key: "people", label: "Founders", weight: 15, required: false, done: (facts?.people?.length ?? 0) > 0 },
   ];
   const pct = items.reduce((a, i) => a + (i.done ? i.weight : 0), 0);
   return { items, pct, missingRequired: items.filter((i) => i.required && !i.done).length, hasData };
@@ -82,7 +82,7 @@ const HELP: Record<ItemKey, { cta: string; link: string; help: string }> = {
   hidden: { cta: "Write public headline", link: "Write →", help: "One line buyers read first. No company or product names." },
   desc: { cta: "Add description", link: "Add →", help: "A short description and tags for your company." },
   logo: { cta: "Add logo & photos", link: "Add →", help: "Shown only after you approve an NDA." },
-  people: { cta: "Add people & customers", link: "Add →", help: "Key people and customers, names after the NDA." },
+  people: { cta: "Add founders", link: "Add →", help: "Founder names, shown after the NDA." },
 };
 
 function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) => void }) {
