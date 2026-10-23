@@ -568,7 +568,7 @@ export function DocHead({ title, sub, onClose }: { title: string; sub: string; o
     </div>
   );
 }
-export function Reader({ label, text, onRead }: { label: string; text: string; onRead?: () => void }) {
+export function Reader({ label, text, onRead, openText, hideText }: { label: string; text: string; onRead?: () => void; openText?: string; hideText?: string }) {
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -579,7 +579,7 @@ export function Reader({ label, text, onRead }: { label: string; text: string; o
   return (
     <div className="mt-4">
       <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => { setOpen(!open); setTimeout(check, 30); }}>
-        <FileText className="h-3.5 w-3.5" />{open ? `Hide the full ${label}` : `Read the full ${label}`}
+        <FileText className="h-3.5 w-3.5" />{open ? hideText ?? `Hide the full ${label}` : openText ?? `Read the full ${label}`}
       </Button>
       {open && (
         <>

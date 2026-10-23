@@ -399,7 +399,7 @@ export function ReviewInvestorDialog({ pipelineId, onClose }: { pipelineId: stri
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13.5px]">
               {terms.flatMap(([k, v]) => [<dt key={`${k}-k`} className="text-[#6B7280]">{k}</dt>, <dd key={`${k}-v`} className="font-medium">{v}</dd>])}
             </dl>
-            <div className="mt-3"><Reader label={tr("Read the full NDA", "อ่าน NDA ฉบับเต็ม")} text={STANDARD_NDA_TEXT} /></div>
+            <div className="mt-3"><Reader label="NDA" openText={tr("Read the full NDA", "อ่าน NDA ฉบับเต็ม")} hideText={tr("Hide the full NDA", "ซ่อน NDA ฉบับเต็ม")} text={STANDARD_NDA_TEXT} /></div>
           </div>
         </div>
         <p className="mt-1 flex items-start gap-2 text-[13.5px] text-[#434A5C] dark:text-muted-foreground"><LockOpen className="mt-0.5 h-4 w-4 shrink-0 text-[#15803D]" />{tr("When you approve, you both see each other's names, exact figures, email and phone, you're added to each other's contact list, and you can message each other.", "เมื่อท่านอนุมัติ ทั้งสองฝ่ายจะเห็นชื่อ ตัวเลขที่แน่นอน อีเมลและโทรศัพท์ของกันและกัน เพิ่มในรายชื่อติดต่อของกันและกัน และส่งข้อความหากันได้")}</p>
