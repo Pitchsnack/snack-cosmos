@@ -94,7 +94,7 @@ export async function resolveBuyer(userId: string, investorId?: string | null): 
 
 /** Buyer-side fields: the account's buyer profile, or (Admin's extra profiles) kept on the investor record. */
 async function writeBp(r: Resolved, userId: string, bp: Record<string, unknown>) {
-  if (!r.extra) return r.sb.from("buyer_profiles").update(bp).eq("user_id", userId);
+  if (!r.extra) return r.sb.from("buyer_profiles").update(bp).eq("user_id", r.bpUser ?? userId);
   const { data: cur } = await r.sb.from("investors").select("wizard").eq("id", r.investorId).single();
   const w = (cur?.wizard ?? {}) as Record<string, any>;
   return r.sb.from("investors").update({ wizard: { ...w, bp: { ...(w.bp ?? {}), ...bp } } }).eq("id", r.investorId);
