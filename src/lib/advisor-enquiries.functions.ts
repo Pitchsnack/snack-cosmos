@@ -135,10 +135,10 @@ export const sendAdvisorEnquiry = createServerFn({ method: "POST" })
     const me = (await people(sb, [context.userId]))[context.userId];
     const key = `e:${conv.id}`;
     const link = `/advisor/messages?thread=${encodeURIComponent(key)}`;
-    await bell(sb, [firm.owner_user_id], `New enquiry from a ${w.side}`, `${me?.name ?? "Someone"} at ${org.name} asked ${firm.name} about ${data.service}.`, link);
+    await bell(sb, [firm.owner_user_id].filter(Boolean) as string[], `New enquiry from a ${w.side}`, `${me?.name ?? "Someone"} at ${org.name} asked ${firm.name} about ${data.service}.`, link);
     const { sendAlert } = await import("@/lib/email-alerts.server");
     await sendAlert({
-      alert: "advisor_new_enquiry", role: "advisor", userIds: [firm.owner_user_id], refKey: ins.data.id,
+      alert: "advisor_new_enquiry", role: "advisor", userIds: [firm.owner_user_id].filter(Boolean) as string[], refKey: ins.data.id,
       vars: { "client company": org.name, "client name": me?.name ?? "", firm: firm.name, service: data.service, "seller | buyer": w.side, thread: key },
       details: [["Service", data.service], ["When", timingLabel(data.timing) ?? "Not said"], ["From", `${me?.name ?? ""} · ${org.name}`]], 
     });
@@ -174,10 +174,10 @@ export const acceptAdvisorProposal = createServerFn({ method: "POST" })
     await sb.from("advisor_enquiries").update({ status: "engaged", engaged_at: now }).eq("id", e.id);
     await sb.from("advisor_enquiry_events").insert({ conversation_id: e.conversation_id, enquiry_id: e.id, kind: "accepted", ref_id: p.id, actor_user_id: context.userId, data: { consent, by: me?.name ?? null } });
     const link = `/advisor/messages?thread=${encodeURIComponent(`e:${e.conversation_id}`)}`;
-    await bell(sb, [firm.owner_user_id], "Your proposal was accepted", `${org.name} accepted your proposal for ${p.service_key}. You're now their advisor.`, link);
+    await bell(sb, [firm.owner_user_id].filter(Boolean) as string[], "Your proposal was accepted", `${org.name} accepted your proposal for ${p.service_key}. You're now their advisor.`, link);
     const { sendAlert } = await import("@/lib/email-alerts.server");
     await sendAlert({
-      alert: "advisor_proposal_accepted", role: "advisor", userIds: [firm.owner_user_id], refKey: p.id,
+      alert: "advisor_proposal_accepted", role: "advisor", userIds: [firm.owner_user_id].filter(Boolean) as string[], refKey: p.id,
       vars: { "client company": org.name, service: p.service_key, firm: firm.name, fee: p.fee_text, thread: `e:${e.conversation_id}` },
       details: [["Client", `${org.name} · ${w.side}`], ["Fee", p.fee_text]], 
     });
@@ -201,7 +201,7 @@ export const declineAdvisorProposal = createServerFn({ method: "POST" })
     const key = `e:${e.conversation_id}`;
     if (data.note) await sb.from("marketplace_messages").insert({ thread_key: key, sender_id: context.userId, body: data.note, created_at: new Date(Date.now() + 5).toISOString() });
     const org = await orgInfo(sb, w.side, w.orgId);
-    await bell(sb, [firm.owner_user_id], "Proposal declined", `${org.name} declined your proposal for ${p.service_key}.`, `/advisor/messages?thread=${encodeURIComponent(key)}`);
+    await bell(sb, [firm.owner_user_id].filter(Boolean) as string[], "Proposal declined", `${org.name} declined your proposal for ${p.service_key}.`, `/advisor/messages?thread=${encodeURIComponent(key)}`);
     return { ok: true as const, firm: firm.name };
   });
 
@@ -222,7 +222,7 @@ export const completeAdvisorWork = createServerFn({ method: "POST" })
     });
     if (r.error) throw new Error(r.error.code === "23505" ? "This engagement already has a review." : r.error.message);
     await sb.from("advisor_enquiry_events").insert({ conversation_id: e.conversation_id, enquiry_id: e.id, kind: "done", actor_user_id: context.userId, data: { stars: data.stars } });
-    await bell(sb, [firm.owner_user_id], "New client review", `${org.name} rated your work ${data.stars} ★.`, "/marketplace/my-company");
+    await bell(sb, [firm.owner_user_id].filter(Boolean) as string[], "New client review", `${org.name} rated your work ${data.stars} ★.`, "/marketplace/my-company");
     return { ok: true as const, firm: firm.name };
   });
 

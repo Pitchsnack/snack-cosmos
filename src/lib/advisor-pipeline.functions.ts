@@ -299,9 +299,9 @@ export const inviteAdvisor = createServerFn({ method: "POST" })
     const { sendAlert } = await import("./email-alerts.server");
     const vars = { person: me?.name ?? "Someone", client: parties[side].name, firm: firm.name, "client side": side };
     // The invitation email never names the other side.
-    await sendAlert({ alert: "advisor_invitation", role: "advisor", userIds: [firm.owner_user_id], vars,
+    await sendAlert({ alert: "advisor_invitation", role: "advisor", userIds: [firm.owner_user_id].filter(Boolean) as string[], vars,
       details: [["Client", `${parties[side].name} · ${side}`], ["Letter of intent", `signed ${S.fmtDay(deal.loi_accepted_at)}`]], refKey: `${inv.id}:invite` });
-    await S.bell(sb, [firm.owner_user_id], "A client invited you to a deal", `${vars.person} at ${vars.client} invited ${firm.name} to work on one of its deals. Open the invitation to see the deal, then join or decline.`, `/advisor/pipeline?invitation=${inv.id}`);
+    await S.bell(sb, [firm.owner_user_id].filter(Boolean) as string[], "A client invited you to a deal", `${vars.person} at ${vars.client} invited ${firm.name} to work on one of its deals. Open the invitation to see the deal, then join or decline.`, `/advisor/pipeline?invitation=${inv.id}`);
     return { ok: true, firm: firm.name };
   });
 

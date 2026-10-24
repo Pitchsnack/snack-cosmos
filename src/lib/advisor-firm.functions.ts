@@ -151,6 +151,23 @@ export const getAdvisorFirmForAdmin = createServerFn({ method: "GET" })
     return toFirm(rr, { fees: fees.data ?? [], team: team.data ?? [], creds: creds.data ?? [], docs: docs.data ?? [], reviews: reviews.data ?? [] }, urls);
   });
 
+/**
+ * Admin's Advisors Directory › Add advisor: an unverified Draft with only a firm name and no owner.
+ * The only way to create a firm without an owner — the database function checks Admin itself,
+ * and a trigger keeps ownerless firms out of verified/live unless Managed by PitchSnack.
+ */
+export const createAdvisorFirmForAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ name: z.string().trim().min(2).max(80) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const { data: ctl } = await sb.rpc("is_control", { _user_id: context.userId });
+    if (!ctl) throw new Error("Admin only");
+    const { data: id, error } = await sb.rpc("admin_create_ownerless_advisor_firm", { _name: data.name });
+    if (error) throw new Error(error.message);
+    return { id: id as string };
+  });
+
 /** + Add Firm Profile: a new Draft with the next ADV reference. */
 export const createAdvisorDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
