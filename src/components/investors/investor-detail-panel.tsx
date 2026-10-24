@@ -176,7 +176,7 @@ export function InvestorDetailPanel({
     i.ticket_size || [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null;
   const sv = buyer?.seller;
   const overview = sv ? null : i.long_description || i.bio || null;
-  const about = sv ? i.long_description || i.short_description : i.short_description;
+  const about = i.short_description;
 
   const metaItems: { icon: typeof Calendar; label: React.ReactNode }[] = [];
   if (i.year_founded) metaItems.push({ icon: Calendar, label: `Est. ${i.year_founded}` });
@@ -421,7 +421,7 @@ export function InvestorDetailPanel({
             return (
               <section
                 className={cn(
-                  "grid border-t border-b border-border/50 py-[11.2px]",
+                  "grid border-t border-border/50 py-[11.2px]",
                   "max-[760px]:grid-cols-1 max-[760px]:divide-y max-[760px]:divide-border/50 max-[760px]:gap-0",
                   cols.length === 3 && "min-[760px]:grid-cols-[1fr_1px_1fr_1px_1fr]",
                   cols.length === 2 && "min-[760px]:grid-cols-[1fr_1px_1fr]",
