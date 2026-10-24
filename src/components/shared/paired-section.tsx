@@ -21,7 +21,7 @@ export function PairedSection({
   return (
     <section
       className={cn(
-        "grid border-t border-b border-border/50 py-[11.2px]",
+        "grid border-t border-border/50 py-[11.2px]",
         "max-[700px]:grid-cols-1 max-[700px]:divide-y max-[700px]:divide-border/50 max-[700px]:gap-0",
         "min-[700px]:grid-cols-[1fr_1px_1fr] min-[700px]:gap-[11.5px]",
         className,

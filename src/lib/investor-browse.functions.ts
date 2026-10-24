@@ -181,7 +181,7 @@ export async function loadSellerFavourites(userId:string) {
           email: r.email ?? null, year_founded: r.year_founded ?? null, aum: r.aum ?? null,
           min_ticket_size: r.min_ticket_size ?? null, max_ticket_size: r.max_ticket_size ?? null,
           revenue_min_m: r.revenue_min_m == null ? null : Number(r.revenue_min_m), revenue_max_m: r.revenue_max_m == null ? null : Number(r.revenue_max_m),
-          short_description: r.short_description ?? null, long_description: bp.description || r.long_description || null,
+          short_description: r.short_description ?? null, long_description: r.long_description ?? null,
           keywords: r.keywords ?? [], investment_focus: r.investment_focus ?? [], preferred_stages: r.preferred_stages ?? [], preferred_industries: r.preferred_industries ?? [],
           logo_signed_url: !r.logo_url ? null : /^https?:/.test(r.logo_url) ? r.logo_url : signed[r.logo_url] ?? null,
           aum_band: r.aum_band ?? null, ticket_band: r.ticket_band ?? null, revenue_min_band: r.revenue_min_band ?? null,
