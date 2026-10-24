@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { CompleteFirmInput, DraftFirmInput, advisorNeedsCompleteSave } from "@/lib/advisor-form-schema";
 import { DEAL_BANDS, feeWords, parsePct, type AdvisorFirm, type FeeDetail, type FeeType } from "@/lib/advisor-firm";
 
 /**
@@ -220,45 +221,22 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const s = (max: number) => z.string().trim().max(max).nullable().optional().transform((v) => (v ? v : null));
-const FirmInput = z.object({
-  id: z.string().uuid().nullable(),
-  name: z.string().trim().min(2).max(80),
-  firmType: z.string().trim().min(1).max(60),
-  logoPath: s(300),
-  logoSource: z.enum(["upload", "enrich"]).nullable(),
-  media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3).optional(),
-  description: z.string().trim().min(30).max(300),
-  yearFounded: z.number().int().min(1800).max(new Date().getFullYear()),
-  city: z.string().trim().min(2).max(100),
-  country: z.string().trim().min(1).max(100),
-  services: z.array(z.string().max(60)).min(1).max(10),
-  fees: z.record(z.string(), FeeIn),
-  dealBand: z.enum(BAND_KEYS).nullable(),
-  teamSize: z.number().int().min(1).max(99999),
-  languages: z.array(z.string().max(40)).max(20),
-  sectors: z.array(z.string().max(80)).max(60),
-  sectorAgnostic: z.boolean().optional(),
-  legalName: z.string().trim().min(1).max(200),
-  thaiName: s(200),
-  registrationNo: s(50),
-  addrStreet: s(120), addrUnit: s(120), addrDistrict: s(80), addrProvince: s(80), addrPostal: s(12),
-  website: z.string().trim().min(3).max(200), email: z.string().trim().email().max(120), phone: z.string().trim().min(9).max(30),
-  team: z.array(z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(1).max(120), role: s(120), email: s(255) })).max(100),
-  credentials: z.array(z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(1).max(160), note: s(300) })).max(100),
-  documents: z.array(z.object({ id: z.string().uuid().optional(), path: z.string().max(300), name: z.string().trim().min(1).max(160), type: s(40) })).max(100),
-}).refine((d) => d.country !== "Thailand" || /^\d{13}$/.test(d.registrationNo ?? ""), { message: "The registration number has 13 digits." });
-
 /** Save profile (Review & complete) and Save changes (Edit profile). Both mark the setup as done. */
 export const saveAdvisorFirm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => FirmInput.parse(d))
+  .inputValidator((d) => DraftFirmInput.parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
     await requireAdvisor(sb, context.userId);
     const own = `advisor/${context.userId}/`;
-    if (data.logoPath && !data.logoPath.startsWith(own)) throw new Error("Invalid logo file.");
-    if (data.media?.some((m) => !m.image_path.startsWith(own))) throw new Error("Invalid photo file.");
+    const { data: current, error: readError } = data.id
+      ? await sb.from("advisor_firms").select("status, owner_user_id, logo_path, media").eq("id", data.id).maybeSingle()
+      : { data: null, error: null };
+    if (data.id && (readError || !current)) throw new Error("Firm profile not found.");
+    if (!current || advisorNeedsCompleteSave(current.status)) CompleteFirmInput.parse(data);
+    const existingPaths = new Set<string>([current?.logo_path, ...(current?.media ?? []).map((m: any) => m.image_path)].filter(Boolean));
+    if (data.logoPath && !data.logoPath.startsWith(own) && !existingPaths.has(data.logoPath)) throw new Error("Invalid logo file.");
+    if (data.media?.some((m) => !m.image_path.startsWith(own) && !existingPaths.has(m.image_path))) throw new Error("Invalid photo file.");
     const thai = data.country === "Thailand";
     const row = {
       ...(data.media ? { media: data.media } : {}),
@@ -269,7 +247,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       registration_no: data.registrationNo ?? null, addr_street: data.addrStreet, addr_unit: data.addrUnit,
       addr_district: thai ? data.addrDistrict : data.city, addr_province: data.addrProvince,
       addr_postal: data.addrPostal, website: data.website, email: data.email, phone: data.phone,
-      setup_done_at: new Date().toISOString(),
+      ...(CompleteFirmInput.safeParse(data).success ? { setup_done_at: new Date().toISOString() } : {}),
     };
     if (data.id) { const { data: ctl0 } = await sb.rpc("is_control", { _user_id: context.userId }); if (ctl0) delete (row as Record<string, unknown>).setup_done_at; }
     let id = data.id;
@@ -281,9 +259,10 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       id = ins.id as string;
     }
+    if (!id) throw new Error("Firm profile not found.");
     // fees: only ticked services keep theirs
     await sb.from("advisor_firm_fees").delete().eq("firm_id", id);
-    const fees = data.services.map((sv) => feeToRow(id!, sv, data.fees[sv] ?? { type: "quote", amount: "", pct: "", words: "" }));
+    const fees = data.services.map((sv) => feeToRow(id, sv, data.fees[sv] ?? { type: "quote", amount: "", pct: "", words: "" }));
     if (fees.length) { const { error } = await sb.from("advisor_firm_fees").insert(fees); if (error) throw new Error(error.message); }
     // team
     await sb.from("advisor_firm_team").delete().eq("firm_id", id);

@@ -179,7 +179,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
     ["phone", phoneError(f.phone)],
   ];
   const errOf = Object.fromEntries(errs) as Record<string, string | null>;
-  const show = (k: string) => ((touched[k] || forced) ? errOf[k] : null);
+  const show = (k: string) => (firm?.status === "draft" && errOf[k] ? "Missing" : (touched[k] || forced) ? errOf[k] : null);
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const addrErr = addrErrors(f.addr, thai, f.city);
   const showAddr = (k: keyof Addr) => (touched[`a-${k}`] ? (addrErr as Record<string, string | null>)[k] ?? null : null);
@@ -188,8 +188,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
   const changeCountry = (c: string) => setF((p) => ({ ...p, country: c, city: "", registrationNo: "", addr: { street: "", unit: "", district: "", province: "", postal: "" } }));
 
   async function submit() {
-    if (!f.services.length) { toast.error("Pick at least one service."); return; }
-    if (firstBad) {
+    if (firm?.status !== "draft" && !f.services.length) { toast.error("Pick at least one service."); return; }
+    if (firm?.status !== "draft" && firstBad) {
       setForced(true);
       setTimeout(() => (document.getElementById(`fe-${firstBad}`) as HTMLElement | null)?.focus(), 0);
       return;
@@ -201,14 +201,14 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       const logoChanged = up.logoPath !== f.logo.path;
       await save({
         data: {
-          id: firm?.id ?? null, name: f.name.trim(), firmType: f.firmType || "Other", logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
-          description: f.description.trim(), yearFounded: Number(f.yearFounded), city: (thai ? f.addr.province : f.city).trim(), country: f.country,
+          id: firm?.id ?? null, name: f.name.trim(), firmType: f.firmType, logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
+          description: f.description.trim(), yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
-          dealBand: f.dealBand || null, teamSize: Number(f.teamSize), languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
+          dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
           legalName: f.legalName.trim(), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
           addrStreet: nul(f.addr.street), addrUnit: nul(f.addr.unit), addrDistrict: thai ? nul(f.addr.district) : nul(f.city),
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
-          website: normalizeUrl(f.website), email: f.email.trim(), phone: f.phone.trim(),
+          website: f.website.trim() ? normalizeUrl(f.website) : "", email: f.email.trim(), phone: f.phone.trim(),
           team: f.team.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name, role: nul(t.role), email: nul(t.email) })),
           credentials: f.credentials.filter((c) => c.name.trim()).map((c) => ({ id: c.id, name: c.name, note: nul(c.note) })),
           documents: f.documents.map((d) => ({ id: d.id, path: d.path, name: d.name || "Document", type: nul(d.type) })),
