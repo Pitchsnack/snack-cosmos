@@ -33,7 +33,7 @@ import {
 } from "@/components/media/entity-media-editor";
 import { supabase } from "@/integrations/supabase/client";
 import { createMyBuyerUploadUrl, getBuyerInvestorById, getMyBuyerInvestor, saveMyBuyerInvestor } from "@/lib/buyer-investor.functions";
-import { createInvestor } from "@/lib/investors.functions";
+import { createInvestor, updateInvestor } from "@/lib/investors.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
@@ -164,6 +164,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
   const {data:session} = useSessionContext();
   const admin = session?.user?.accountRole === "admin";
   const create = useServerFn(createInvestor);
+  const updateDirectory = useServerFn(updateInvestor);
+  const [companyType,setCompanyType] = useState(data.investor.company_type ?? "");
+  const [companyTypeDirty,setCompanyTypeDirty] = useState(false);
   const getTenants = useServerFn(listAssignableTenants);
   const getUsers = useServerFn(listAssignableUsers);
   const [tenant,setTenant] = useState(session?.activeWorkspace.tenantId ?? "");
@@ -208,7 +211,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
   const [actsFor, setActsFor] = useState<string[]>(() => sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []));
   const typeOf = agent ? actsFor[0] ?? "" : f.investor_type;
   const [deals, setDeals] = useState<string[]>(data.buyer.deal_types);
-  const [keywords, setKeywords] = useState(inv.keywords);
+  const [keywords, setKeywords] = useState(inv.keywords ?? []);
   const [focus, setFocus] = useState(inv.investment_focus);
   const [stages, setStages] = useState(inv.preferred_stages);
   const showsFund = !individual && rel !== "agent";
@@ -274,6 +277,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
     setCustomIndustry("");
   };
 
+  const autoEnrich = <InvestorAutoEnrichButton websiteUrl={f.website_url} onEnriched={applyEnrichment} disabled={busy} />;
   const leaks = descriptionLeaks(f.description, f.investor_name, f.website_url);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,13 +294,13 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
-    if (!directory && aBad) { setAddrShow(true); setErrs({ address: aBad }); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
+    if (!directory && aBad) { setAddrShow(true); setErrs({ address: aBad }); setView("private");setTab("address"); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
     const bad = checks.find(([, m]) => m);
     if (!directory && bad) {
       setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
       const target = bad[0] === "registration_no" ? "people" : bad[0] === "description" ? "description" : "about";
       setView(target === "description" ? "public" : "private"); setTab(target);
-      document.getElementById(`f-${bad[0]}`)?.focus();
+      setTimeout(()=>document.getElementById(`f-${bad[0]}`)?.focus(),60);
       return;
     }
     setErrs({});
@@ -334,6 +338,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
         people: people.filter((p) => p.name.trim()),
         investor_id: inv.id,
       } });
+      if (admin && companyTypeDirty && companyType) await updateDirectory({data:{id:inv.id,companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"}});
       await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
       await qc.invalidateQueries({ queryKey: ["investors"] });
       await qc.invalidateQueries({ queryKey: ["investor", inv.id] });
@@ -394,7 +399,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
         </div></S>
 
 </div>}
-          {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")} />        {/* Row 1: Year Founded | Company Name | Investor Classification */}
+          {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>        {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className={agent ? "grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-3"}>
           <div className="space-y-1.5">
             <Label>Year Founded{!individual && req}<Tag s={src.year_founded} /></Label>
@@ -427,7 +432,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
         </S>}
 
 <CompactFields>        <>
-          <CompanyTypeField value={(inv as { company_type?: string | null }).company_type ?? companyTypeForRelation(rel)} source={(inv as { company_type_source?: string }).company_type_source ?? "account"} admin={false} />
+          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onChange={(v)=>{setCompanyType(v);setCompanyTypeDirty(true);}} />
         </>
         {!individual && (
           <>
@@ -509,11 +514,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
         </div>
 
 </div>}
-          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")} />        {/* Row 4: Firm Name, then the address box */}
+          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>        {/* Row 4: Firm Name, then the address box */}
         <div className="grid gap-4">
           <div className="space-y-1.5">
             <Label>Firm Name</Label>
-            <Input value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
+            <Input id="f-firm_name" value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
           </div>
         </div>
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
@@ -742,7 +747,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
         </S>}
 
         <div className="grid grid-cols-[220px_1fr] gap-4">
-          <CompanyTypeField value={(inv as { company_type?: string | null }).company_type ?? companyTypeForRelation(rel)} source={(inv as { company_type_source?: string }).company_type_source ?? "account"} admin={false} />
+          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onChange={(v)=>{setCompanyType(v);setCompanyTypeDirty(true);}} />
         </div>
         {!individual && (
           <div className="grid grid-cols-[220px_1fr] gap-4">

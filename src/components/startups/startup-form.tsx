@@ -281,7 +281,7 @@ export function StartupForm({
   const { data: session } = useSessionContext();
   const { language } = useTranslation();
   const th = language === "th";
-  const ctAdmin = ((session?.user as any)?.accountRole ?? "admin") === "admin";
+  const ctAdmin = session?.user?.accountRole === "admin" && workspace === "startups";
   const [companyTypeReset, setCompanyTypeReset] = useState(false);
   const [companyTypeSource, setCompanyTypeSource] = useState<string>((startup as any)?.company_type_source ?? "account");
   const create = useServerFn(createStartup);

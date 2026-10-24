@@ -298,5 +298,5 @@ export function TabHead({ title, children, line }: { title: string; children?: R
 
 /** Equal-width fields shared by all profile editors; stack without empty tracks on phones. */
 export function CompactFields({ children, two = false }: { children: ReactNode; two?: boolean }) {
-  return <div className={cn("grid items-start gap-4", two ? "sm:grid-cols-2" : "sm:grid-cols-3")}>{children}</div>;
+  return <div className={cn("grid min-w-0 items-start gap-4 [&>*]:min-w-0", two ? "sm:grid-cols-2" : "sm:grid-cols-3")}>{children}</div>;
 }

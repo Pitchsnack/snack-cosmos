@@ -445,3 +445,9 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .edit-info-fields input:not([type=checkbox]):not([type=radio]):not([type=file]),
 .edit-info-fields select, .edit-info-fields [role=combobox] { height: 36px; font-size: 14px; border-radius: 6px; }
 .edit-info-fields label { font-size: 14px; font-weight: 500; }
+
+/* Profile forms retain readable field labels and equal field tops. */
+.edit-info-fields [data-slot="select-trigger"] { min-width: 0; }
+.edit-info-fields [data-slot="select-value"] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.edit-info-fields [class*="grid"] { min-width: 0; }
+.edit-info-fields label { min-height: 24px; display: inline-flex; align-items: center; }
