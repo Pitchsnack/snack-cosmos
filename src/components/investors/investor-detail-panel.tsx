@@ -1,6 +1,6 @@
 import { bizName } from "@/lib/biz-name";
 import { OwnershipPanelSlot, OwnershipMenuItem } from "@/components/handover/ownership";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { bandText, usd } from "@/lib/investor-bands";
 import { Link } from "@tanstack/react-router";
