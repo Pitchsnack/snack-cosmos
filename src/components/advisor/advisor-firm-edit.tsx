@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ServiceTiles, useMyAdvisorFirms, ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
 import { AddressBox, FeeControl, LogoRow, addrErrors, logoFileError, useLogoUpload, type Addr, type LogoState } from "@/components/advisor/advisor-firm-fields";
-import { createAdvisorUploadUrl, saveAdvisorFirm } from "@/lib/advisor-firm.functions";
+import { createAdvisorFirmForAdmin, createAdvisorUploadUrl, saveAdvisorFirm } from "@/lib/advisor-firm.functions";
 import {
   DEAL_BANDS, FIRM_TYPES, LANGUAGES, cityError, dealBandLabels, descError, emailError, feeWords, firmChecklist, mergeServiceOrder, nameError,
   newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type EditSection, type FeeDetail,
@@ -118,11 +118,12 @@ function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
 const sel = "flex h-[42px] w-full rounded-md border border-input bg-background px-3 pr-8 text-[14px] outline-none focus:border-[#1E2A4A]";
 const errB = "border-[#B42318]";
 
-export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void }) {
+export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreate }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void; adminCreate?: (id: string) => void }) {
   const asAdmin = usePermissions().isControl;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveAdvisorFirm);
+  const create = useServerFn(createAdvisorFirmForAdmin);
   const upUrl = useServerFn(createAdvisorUploadUrl);
   const upload = useServerFn(createAdvisorUploadUrl);
   const uploadLogo = useLogoUpload();
@@ -193,8 +194,10 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
   const changeCountry = (c: string) => setF((p) => ({ ...p, country: c, city: "", registrationNo: "", addr: { street: "", unit: "", district: "", province: "", postal: "" } }));
 
   async function submit() {
-    if (firm?.status !== "draft" && !f.services.length) { toast.error("Pick at least one service."); return; }
-    if (firm?.status !== "draft" && firstBad) {
+    if (adminCreate && nameError(f.name)) { setForced(true); setTab("about"); setTimeout(() => document.getElementById("fe-name")?.focus(), 60); return; }
+
+    if (!adminCreate && firm?.status !== "draft" && !f.services.length) { toast.error("Pick at least one service."); return; }
+    if (!adminCreate && firm?.status !== "draft" && firstBad) {
       setForced(true);
       setTimeout(() => (document.getElementById(`fe-${firstBad}`) as HTMLElement | null)?.focus(), 0);
       return;
@@ -204,9 +207,10 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       const nul = (v: string) => (v.trim() ? v.trim() : null);
       const up = await uploadPending(f.media, ({ kind, ext }) => upUrl({ data: { kind, ext } }), supabase.storage.from("startup-media"));
       const logoChanged = up.logoPath !== f.logo.path;
+      const created = adminCreate ? await create({data:{name:f.name.trim()}}) : null;
       await save({
         data: {
-          id: firm?.id ?? null, name: f.name.trim(), firmType: f.firmType, logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
+          id: created?.id ?? firm?.id ?? null, name: f.name.trim(), firmType: f.firmType, logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
           description: f.description.trim(), yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
@@ -225,6 +229,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       const fresh = qc.getQueryData<AdvisorFirm[]>(ADVISOR_FIRMS_KEY)?.find((x) => x.id === firm?.id);
       const complete = fresh ? firmChecklist(fresh).every((i) => i.done) : false;
       const msg = complete ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the checklist to publish.";
+      if (created && adminCreate) { pop?.setDirty(false); toast.success(`${f.name.trim()} created`); adminCreate(created.id); return; }
       base.current = f;
       if (setup) { setup.onDirty(null); setup.onSaved(msg); return; }
       toast.success(firm?.setupDoneAt || firm?.status !== "draft" ? "Profile saved." : msg);
@@ -522,7 +527,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
       {pop ? (
         <EditInfoFooter>
           <Button variant="outline" onClick={back}>Cancel</Button>
-          <Button disabled={busy || uploading} onClick={submit} className="bg-accent text-accent-foreground hover:bg-accent/90">Save changes</Button>
+          <Button disabled={busy || uploading} onClick={submit} className="bg-accent text-accent-foreground hover:bg-accent/90">{adminCreate ? "Add advisor" : "Save changes"}</Button>
         </EditInfoFooter>
       ) : (
       <div className="sticky bottom-0 z-10 -mx-1 flex items-center justify-between gap-3 rounded-[12px] border border-border bg-card/95 px-4 py-3 shadow-lg backdrop-blur">
