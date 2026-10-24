@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InvestorCard } from "@/components/investors/investor-card";
+import { InvestorEditPopup } from "@/components/investors/investor-edit-popup";
 import { InvestorRow } from "@/components/investors/investor-row";
 import { InvestorListItem } from "@/components/investors/investor-list-item";
 import {
@@ -43,6 +44,7 @@ export const investorDirectorySearchSchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
   cards: z.enum(["full", "hidden"]).optional(),
+  editor: z.string().optional(),
 });
 
 export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSchema>;
@@ -418,8 +420,9 @@ function InvestorsPageInner() {
         </div>
       )}
 
+      {s.editor && <InvestorEditPopup id={s.editor} onClose={() => navigate({search:(p:typeof s) => ({...p,editor:undefined}),replace:true})} />}
       <Dialog
-        open={!!s.panel && view !== "split"}
+        open={!!s.panel && view !== "split" && !s.editor}
         onOpenChange={(o) =>
           !o && navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }) })
         }

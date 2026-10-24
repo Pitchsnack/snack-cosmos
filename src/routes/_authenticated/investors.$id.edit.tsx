@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowLeft } from "lucide-react";
 import { InvestorForm, type InvestorEditModel } from "@/components/investors/investor-form";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/investors/$id/edit")({
     tab: z.enum(["startups", "investors", "drafts"]).optional(),
   }),
   head: () => ({ meta: [{ title: "Edit Investor — SnackPortal2" }] }),
+  beforeLoad: ({params}) => {throw redirect({to:"/investors",search:{editor:params.id,selected:params.id},replace:true});},
   component: EditInvestorPage,
 });
 
