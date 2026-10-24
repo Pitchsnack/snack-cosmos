@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/my-startups/$id/edit")({
   // Edit my startup now opens as the Edit information pop-up over My Company
   // (the Valuation tab keeps this page so it can return there).
   beforeLoad: ({ params, search }) => {
-    if (search.returnTo === "valuation") return;
+    if (search.returnTo === "valuation") throw redirect({to:"/my-startups/$id/financials",params:{id:params.id},search:{tab:"valuation",edit:"startup"},replace:true});
     throw redirect({ to: "/my-startups", search: { panel: params.id, edit: "startup", view: "private", tab: "images", ...(search.section ? { section: search.section } : {}) } as never, replace: true });
   },
   head: () => ({
