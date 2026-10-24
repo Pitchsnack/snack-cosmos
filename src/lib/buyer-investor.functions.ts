@@ -62,7 +62,7 @@ export async function ensureLinked(userId: string) {
   return { sb, p: { ...p, investor_id: inv.id }, investorId: inv.id as string };
 }
 
-type Resolved = { sb: any; p: any; investorId: string; extra: boolean; bpUser?: string };
+type Resolved = { sb: any; p: any; investorId: string; extra: boolean; bpUser?: string; directory?: boolean };
 
 /**
  * The investor profile to work on: the caller's own linked one (no id, or its id),
@@ -87,9 +87,10 @@ export async function resolveBuyer(userId: string, investorId?: string | null): 
   const w = ((inv.wizard as any)?.bp ?? {}) as Record<string, unknown>;
   if (!linked && inv.created_by === userId && (inv.wizard as any)?.admin_profile) return { sb, p: { status: "draft", ...w }, investorId, extra: true };
   const { data: canManage } = await sb.rpc("can_manage_investor", { _user_id: userId, _tenant_id: inv.tenant_id });
-  if (!canManage) throw new Error("This profile isn't yours.");
-  if (linked) return { sb, p: linked, investorId, extra: false, bpUser: linked.user_id as string };
-  return { sb, p: { status: "draft", ...w }, investorId, extra: true };
+  const { canEditDirectoryInvestor } = await import("./profile-edit-access");
+  if (!canEditDirectoryInvestor(role, !!canManage)) throw new Error("This profile isn't yours.");
+  if (linked) return { sb, p: linked, investorId, extra: false, bpUser: linked.user_id as string, directory: true };
+  return { sb, p: { status: "draft", ...w }, investorId, extra: true, directory: true };
 }
 
 /** Buyer-side fields: the account's buyer profile, or (Admin's extra profiles) kept on the investor record. */
@@ -131,7 +132,7 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         year_founded: inv.year_founded as number | null,
         company_size_band: (inv.company_size_band ?? null) as string | null,
         country: inv.country as string | null,
-        city: p.city as string | null,
+        city: (p.city ?? inv.city) as string | null,
         email: inv.email as string | null,
         website_url: inv.website_url as string | null,
         linkedin_url: inv.linkedin_url as string | null,
@@ -296,7 +297,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       (data.description && (descriptionError(data.description) ||
         (descriptionLeaks(data.description, data.investor_name, data.website_url ?? "").length ? "Your description mentions names, websites or contact details." : null))) ||
       (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? ""));
-    if (problem) throw new Error(problem);
+    if (!r.directory && problem) throw new Error(problem);
     const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${investorId}/`);
     if (!own(data.logo_path) || (data.media ?? []).some((m) => !own(m.image_path))) throw new Error("Invalid file.");
     const n = (v?: string | null) => (v === undefined ? undefined : v || null);
@@ -334,7 +335,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
         inv.acts_for_types = acts; inv.investor_type = acts[0];
       }
     } else inv.acts_for_types = [];
-    inv.setup_done_at = new Date().toISOString();
+    if (!r.directory) inv.setup_done_at = new Date().toISOString();
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
     if (error) throw new Error(error.message);
 

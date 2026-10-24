@@ -28,13 +28,13 @@ export function ProfileEditPopup({ advisor }: { advisor: boolean }) {
   const firm = advisor ? (firms.data?.find((f) => f.id === s.firm) ?? firms.data?.[0]) : undefined;
   const name = advisor ? firm?.name ?? "" : buyer?.investor?.investor_name ?? "";
   const subtitle = advisor ? name || tr("Firm profile", "โปรไฟล์บริษัท")
-    : `${name || tr("Your company", "บริษัทของท่าน")} · ${s.from === "private" ? tr("Private view", "มุมมองส่วนตัว") : tr("Public view", "มุมมองสาธารณะ")}`;
+    : `${name || tr("Your company", "บริษัทของท่าน")} · ${s.from === "public" ? tr("Public view", "มุมมองสาธารณะ") : tr("Private view", "มุมมองส่วนตัว")}`;
   const close = () => leaveEditUrl(() => void navigate({ to: "/marketplace/my-company", search: {} as never, replace: true }));
   return (
     <EditInfoPopup open subtitle={subtitle} companyName={name} onClosed={close}>
       {advisor
         ? (firm ? <AdvisorFirmEdit firmId={firm.id} section={s.section as EditSection | undefined} /> : null)
-        : <BuyerInvestorEdit section={s.section} add={!!s.add} />}
+        : <BuyerInvestorEdit section={s.section} add={!!s.add} initialView={s.from} />}
     </EditInfoPopup>
   );
 }

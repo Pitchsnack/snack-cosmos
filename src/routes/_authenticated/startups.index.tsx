@@ -13,6 +13,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
+import { StartupEditPopup } from "@/components/startups/startup-edit-popup";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
 import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
@@ -69,6 +70,8 @@ const searchSchema = z.object({
   hp: z.enum(["all", "live", "draft", "none"]).optional(),
   tab: z.enum(["full", "hidden", "compare"]).optional(),
   edit: z.coerce.boolean().optional(),
+  editor: z.string().optional(),
+  adding: z.boolean().optional(),
 });
 
 
@@ -265,7 +268,7 @@ function StartupsPageInner() {
           />
           {has("startups.write") && (
             <Button
-              onClick={() => navigate({ to: "/startups/new" })}
+              onClick={() => navigate({ search: (p: typeof s) => ({...p, adding:true}) })}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               <Plus className="mr-2 h-4 w-4" /> New startup
@@ -506,7 +509,8 @@ function StartupsPageInner() {
         </div>
       )}
 
-      <Dialog open={!!modalId} onOpenChange={(o) => !o && closeStartup()}>
+      {(s.editor || s.adding) && <StartupEditPopup id={s.editor} onClose={() => navigate({search:(p:typeof s) => ({...p,editor:undefined,adding:undefined}),replace:true})} onCreated={(id) => navigate({search:(p:typeof s) => ({...p,editor:undefined,adding:undefined,selected:id,sort:"created_desc"}),replace:true})} />}
+      <Dialog open={!!modalId && !s.editor && !s.adding} onOpenChange={(o) => !o && closeStartup()}>
         <DialogContent
           onCloseAutoFocus={(e) => {
             if (openerRef.current) {

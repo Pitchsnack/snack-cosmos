@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InvestorCard } from "@/components/investors/investor-card";
+import { InvestorEditPopup, InvestorAddPopup } from "@/components/investors/investor-edit-popup";
 import { InvestorRow } from "@/components/investors/investor-row";
 import { InvestorListItem } from "@/components/investors/investor-list-item";
 import {
@@ -43,6 +44,8 @@ export const investorDirectorySearchSchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   fav: z.coerce.boolean().optional(),
   cards: z.enum(["full", "hidden"]).optional(),
+  editor: z.string().optional(),
+  adding:z.boolean().optional(),
 });
 
 export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSchema>;
@@ -51,18 +54,19 @@ export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSche
 export const Route = createFileRoute("/_authenticated/investors/")({
   head: () => ({
     meta: [
-      { title: "Investor Directory — SnackPortal2" },
+      { title: "Investors Directory — PitchSnack" },
       {
         name: "description",
         content:
-          "Browse the SnackPortal2 investor directory: search, filter and connect with investors across stages, sectors and geographies.",
+          "Browse the PitchSnack investor directory: search, filter and connect with investors across stages, sectors and geographies.",
       },
-      { property: "og:title", content: "Investor Directory — SnackPortal2" },
+      { property: "og:title", content: "Investors Directory — PitchSnack" },
       {
         property: "og:description",
         content:
-          "Browse the SnackPortal2 investor directory: search, filter and connect with investors across stages, sectors and geographies.",
+          "Browse the PitchSnack investor directory: search, filter and connect with investors across stages, sectors and geographies.",
       },
+      {property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},
     ],
   }),
   validateSearch: investorDirectorySearchSchema,
@@ -209,7 +213,7 @@ function InvestorsPageInner() {
           />
           {has("investors.write") && (
             <Button
-              onClick={() => navigate({ to: "/investors/new" })}
+              onClick={() => navigate({search:(p:typeof s)=>({...p,adding:true})})}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               <Plus className="mr-2 h-4 w-4" /> New investor
@@ -418,8 +422,10 @@ function InvestorsPageInner() {
         </div>
       )}
 
+      {s.adding && <InvestorAddPopup onClose={()=>navigate({search:(p:typeof s)=>({...p,adding:undefined}),replace:true})} onCreated={(id)=>navigate({search:(p:typeof s)=>({...p,adding:undefined,selected:id,sort:"created_desc"}),replace:true})} />}
+      {s.editor && <InvestorEditPopup id={s.editor} onClose={() => navigate({search:(p:typeof s) => ({...p,editor:undefined}),replace:true})} />}
       <Dialog
-        open={!!s.panel && view !== "split"}
+        open={!!s.panel && view !== "split" && !s.editor}
         onOpenChange={(o) =>
           !o && navigate({ search: (prev: typeof s) => ({ ...prev, panel: undefined }) })
         }

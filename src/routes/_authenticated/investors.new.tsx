@@ -1,26 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { InvestorForm } from "@/components/investors/investor-form";
-import { PermissionGuard } from "@/components/permission-guard";
-
-export const Route = createFileRoute("/_authenticated/investors/new")({
-  head: () => ({ meta: [{ title: "New Investor — SnackPortal2" }] }),
-  component: NewInvestorPage,
+import {createFileRoute,redirect} from "@tanstack/react-router";
+export const Route=createFileRoute("/_authenticated/investors/new")({
+ head:()=>({meta:[{title:"Add investor — PitchSnack"},{name:"description",content:"Manage PitchSnack profiles in the shared Edit information pop-up."},{property:"og:title",content:"Add investor — PitchSnack"},{property:"og:description",content:"PitchSnack profile editing."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}]}),
+ beforeLoad:({params})=>{throw redirect({to:"/investors",search:{adding:true},replace:true});},
 });
-
-function NewInvestorPage() {
-  return (
-    <PermissionGuard permission="investors.write" message="You don't have permission to create investors.">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <Link to="/investors" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to investors
-        </Link>
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">New investor</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Provide basic details and assign required ownership.</p>
-        </div>
-        <InvestorForm />
-      </div>
-    </PermissionGuard>
-  );
-}

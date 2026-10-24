@@ -1,26 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { StartupForm } from "@/components/startups/startup-form";
-import { PermissionGuard } from "@/components/permission-guard";
-
-export const Route = createFileRoute("/_authenticated/startups/new")({
-  head: () => ({ meta: [{ title: "New Startup — SnackPortal2" }] }),
-  component: NewStartupPage,
+import {createFileRoute,redirect} from "@tanstack/react-router";
+export const Route=createFileRoute("/_authenticated/startups/new")({
+ head:()=>({meta:[{title:"New startup — PitchSnack"},{name:"description",content:"Manage PitchSnack profiles in the shared Edit information pop-up."},{property:"og:title",content:"New startup — PitchSnack"},{property:"og:description",content:"PitchSnack profile editing."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}]}),
+ beforeLoad:({params})=>{throw redirect({to:"/startups",search:{adding:true},replace:true});},
 });
-
-function NewStartupPage() {
-  return (
-    <PermissionGuard permission="startups.write" message="You don't have permission to create startups.">
-      <div className="mx-auto max-w-4xl space-y-6">
-        <Link to="/startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to startups
-        </Link>
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">New startup</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Build the full company profile, media, founders, and investors.</p>
-        </div>
-        <StartupForm />
-      </div>
-    </PermissionGuard>
-  );
-}

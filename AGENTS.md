@@ -22,12 +22,14 @@
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts.
 - One SetSectorPicker (common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries (advisors: sector_agnostic).
 - Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts. Ownerless firms come only from admin_create_ownerless_advisor_firm (createAdvisorFirmForAdmin); a trigger blocks verified/live without an owner unless run_by is pitchsnack, so every owner_user_id reader must allow null.
+- Advisor saving uses shared structural and complete schemas; server-read status chooses Draft validation so browser flags cannot weaken live checks, and Admin save invalidates both Directory and edit caches for read-back.
 - saveMyBuyerInvestor/resolveBuyer: Admin (stored role + can_manage_investor, as Edit Investor) may edit any Directory investor; buyer-side fields go to the linked buyer's row (bpUser), never the caller's.
 - Roles/plans: account_role checked in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Seller Connect: listing_invitations (one open per listing+investor) via invitations.functions.ts only; status derived server-side; contact_requests deprecated.
 - Admin Plans publish atomically; public cards share the live-plan renderer.
 - Contact enquiries: sendContactEnquiry (rate-limited); email-identity.ts drives replies and Sending rules.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
+- Directory and valuation edit hosts reuse StartupForm, BuyerInvestorForm and FirmEditForm; page wrappers own dismissal so form saves cannot change the originating page.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner.

@@ -39,6 +39,7 @@ import {
 import { usePermissions } from "@/hooks/use-session-context";
 import { FINANCIALS_STALE_TIME, financialsQueryKey } from "@/hooks/use-has-financials";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
+import { StartupEditPopup } from "@/components/startups/startup-edit-popup";
 
 
 const NAVY = "#122B54";
@@ -165,6 +166,7 @@ export function StartupFinancialsPage({
   initialTab,
   readOnly = false,
   section,
+  initialProfileEdit = false,
   embedded = false,
 }: {
   /** Inside the seller's tabbed reports page: no Back, page edges. */
@@ -176,12 +178,14 @@ export function StartupFinancialsPage({
   readOnly?: boolean;
   /** Seller pages: "financials" hides Valuation; "valuation" shows only Valuation. */
   section?: "financials" | "valuation";
+  initialProfileEdit?: boolean;
 }) {
   const fetchFinancials = useServerFn(getStartupFinancials);
   const clearFinancials = useServerFn(clearStartupFinancials);
   const enrichFinancials = useServerFn(autoEnrichFinancials);
   const saveFinancials = useServerFn(saveStartupFinancials);
   const queryClient = useQueryClient();
+  const [profileEdit, setProfileEdit] = useState(initialProfileEdit);
   const { has, isControl } = usePermissions();
   const canManage = !readOnly && (isControl || has("startups.write"));
 
@@ -384,6 +388,8 @@ export function StartupFinancialsPage({
           onSelectYear={setYear}
         />
       )}
+      {!editing && tab === "valuation" && workspace === "my-startups" && <div className="flex justify-end"><Button variant="link" onClick={() => setProfileEdit(true)}><Pencil className="mr-2 h-4 w-4" />Edit information</Button></div>}
+      {profileEdit && <StartupEditPopup id={id} seller onClose={() => {setProfileEdit(false); queryClient.invalidateQueries({queryKey:["startup-financials",id]});}} />}
 
 
       {/* Seller-only: /my-verification resolves the caller's own companies, so the link would be wrong on Admin screens. */}

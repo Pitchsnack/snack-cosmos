@@ -68,12 +68,12 @@ export function leaveEditUrl(replaceWithout: () => void) {
 
 export type RoleTone = "seller" | "buyer" | "advisor";
 const ROLE_FILL: Record<RoleTone, string> = {
-  seller: "bg-[#F6A823] text-[#0E162F]",
-  buyer: "bg-[#4338CA] text-white",
-  advisor: "bg-[#0F766E] text-white",
+  seller: "bg-help-seller text-accent-foreground",
+  buyer: "bg-help-buyer text-primary-foreground",
+  advisor: "bg-help-advisor text-primary-foreground",
 };
 
-export function EditInfoPopup({ open, subtitle, companyName, onClosed, children, phoneTabs }: {
+export function EditInfoPopup({ open, subtitle, companyName, onClosed, children, phoneTabs, title, creating }: {
   open: boolean;
   subtitle: string;
   companyName: string;
@@ -81,6 +81,8 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
   onClosed: () => void;
   children: ReactNode;
   phoneTabs?: boolean;
+  title?: string;
+  creating?: "startup" | "investor" | "advisor";
 }) {
   const tr = useTr();
   const [footer, setFooter] = useState<HTMLElement | null>(null);
@@ -145,7 +147,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
     <EditInfoCtx.Provider value={ctx}>
       <DialogPrimitive.Root open={open} onOpenChange={(o) => { if (!o) requestClose(); }}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="edit-info-shade fixed inset-0 z-50 bg-[rgba(17,24,39,0.32)] dark:bg-[rgba(0,0,0,0.5)]" />
+          <DialogPrimitive.Overlay className="edit-info-shade fixed inset-0 z-50 bg-edit-shade" />
           <DialogPrimitive.Content
             aria-describedby={undefined}
             onOpenAutoFocus={(e) => {
@@ -165,12 +167,12 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
             )}
             style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
           >
-            <div className={cn("flex shrink-0 items-center gap-4 border-b border-[#EEF0F3] px-6 py-[18px] dark:border-border", phoneTabs && "max-sm:flex-wrap")}>
+             <div className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border px-6 py-[18px] sm:flex-nowrap">
               <div className="min-w-0 flex-1">
-                <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
+                <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{title ?? tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
                 <div className="mt-[3px] text-[13px] text-[#6B7280] dark:text-muted-foreground">{subtitle}</div>
               </div>
-              <div ref={setTabsSlot} className={cn("shrink-0 empty:hidden", phoneTabs && "max-sm:order-3 max-sm:mt-4 max-sm:w-full")} />
+               <div ref={setTabsSlot} className="shrink-0 empty:hidden max-sm:order-3 max-sm:w-full" />
               <button type="button" aria-label={tr("Close", "ปิด")} onClick={requestClose}
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] text-[#434A5C] hover:bg-[#F2F4F7] dark:text-muted-foreground dark:hover:bg-muted">
                 <X className="h-[18px] w-[18px]" />
@@ -179,7 +181,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
             <div ref={setBody} data-edit-info-body
               className="min-h-0 shrink overflow-y-auto overscroll-contain transition-[height] duration-200 ease-out motion-reduce:transition-none max-sm:!h-auto max-sm:flex-1"
               style={h != null ? { height: h } : undefined}>
-              <div ref={inner} className="px-6 pb-[26px] pt-0">{children}</div>
+              <div ref={inner} className="edit-info-fields px-6 pb-[26px] pt-0">{children}</div>
             </div>
             <div ref={setFooter} className="flex shrink-0 items-center justify-end gap-2 border-t border-[#EEF0F3] px-6 py-[14px] dark:border-border" />
           </DialogPrimitive.Content>
@@ -188,9 +190,9 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
       <AlertDialog open={!!confirm} onOpenChange={(o) => { if (!o) { confirm?.stay(); setConfirm(null); } }}>
         <AlertDialogContent className="z-[60]">
           <AlertDialogHeader>
-            <AlertDialogTitle>{tr("Discard your changes?", "ยกเลิกการแก้ไขหรือไม่")}</AlertDialogTitle>
+            <AlertDialogTitle>{creating ? tr(`Discard this new ${creating}?`, "ยกเลิกข้อมูลใหม่หรือไม่") : tr("Discard your changes?", "ยกเลิกการแก้ไขหรือไม่")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {tr(`Your changes to ${companyName || "this company"} aren't saved yet.`, `การแก้ไขข้อมูลของ ${companyName || "บริษัท"} ยังไม่ได้บันทึก`)}
+              {creating ? tr("It hasn’t been created yet. What you’ve typed will be lost.", "ยังไม่ได้สร้างข้อมูล สิ่งที่ท่านกรอกจะหายไป") : tr(`Your changes to ${companyName || "this company"} aren't saved yet.`, `การแก้ไขข้อมูลของ ${companyName || "บริษัท"} ยังไม่ได้บันทึก`)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -259,15 +261,20 @@ export function TabRow<T extends string>({ tabs, value, onChange, label, idBase,
   tabs: { key: T; label: string; count?: number; icon?: ReactNode }[];
   value: T; onChange: (k: T) => void; label: string; idBase: string; extra?: ReactNode;
 }) {
+  const edit = useEditInfo();
+  const change = (next: T) => {
+    onChange(next);
+    requestAnimationFrame(() => edit?.body?.scrollTo({ top: 0 }));
+  };
   return (
     <div data-sticky-tabs className="sticky top-0 z-10 -mx-6 mb-5 bg-card px-6">
-      <div role="tablist" aria-label={label} onKeyDown={(e) => onTabKeys(e, tabs.map((t) => t.key), value, onChange)}
+      <div role="tablist" aria-label={label} onKeyDown={(e) => onTabKeys(e, tabs.map((t) => t.key), value, change)}
         className="flex gap-[22px] overflow-x-auto border-b border-[#E6E8EC] [scrollbar-width:none] max-sm:gap-[18px] dark:border-border">
         {tabs.map((t) => {
           const on = t.key === value;
           return (
             <button key={t.key} type="button" role="tab" data-tab={t.key} id={`${idBase}-tab-${t.key}`} aria-selected={on} tabIndex={on ? 0 : -1}
-              aria-controls={`${idBase}-panel`} onClick={() => onChange(t.key)}
+              aria-controls={`${idBase}-panel`} onClick={() => change(t.key)}
               className={cn("-mb-px inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 text-[14px]",
                 on ? "border-[#151A28] font-semibold text-[#151A28] dark:border-foreground dark:text-foreground" : "border-transparent font-medium text-[#6A7181] dark:text-muted-foreground")}>
               {t.label}{t.icon}
@@ -292,4 +299,9 @@ export function TabHead({ title, children, line }: { title: string; children?: R
       {line}
     </div>
   );
+}
+
+/** Equal-width fields shared by all profile editors; stack without empty tracks on phones. */
+export function CompactFields({ children, two = false }: { children: ReactNode; two?: boolean }) {
+  return <div className={cn("grid min-w-0 items-start gap-4 [&>*]:min-w-0", two ? "sm:grid-cols-2" : "sm:grid-cols-3")}>{children}</div>;
 }

@@ -18,7 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { FirmEditForm } from "@/components/advisor/advisor-firm-edit";
-import { EditInfoPopup } from "@/components/common/edit-info-popup";
+import { EditInfoPopup, useEditInfo } from "@/components/common/edit-info-popup";
 import { CredMark, DocMark, FirmStatusPill, VerificationBox, VerificationChip, chipKey, businessDays } from "@/components/advisor/advisor-verification";
 import { listAdminAdvisorFirms, decideAdvisor, type AdminFirm } from "@/lib/advisor-admin.functions";
 import { createAdvisorFirmForAdmin, getAdvisorFirmForAdmin } from "@/lib/advisor-firm.functions";
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/advisors/")({
     meta: [
       { title: "Advisors Directory — PitchSnack Admin" },
       { name: "description", content: "Every advisor firm profile on PitchSnack, with its verification." },
+      {property:"og:title",content:"Advisors Directory — PitchSnack Admin"},{property:"og:description",content:"Manage advisor firms and verification on PitchSnack."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},
     ],
   }),
   validateSearch: z.object({
@@ -196,7 +197,7 @@ function AdvisorsDirectory() {
           </div>
         </div>
       )}
-      {editing && <EditDialog id={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); }} />}
+      {editing && <AdvisorEditPopup id={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); }} />}
       {adding && <AddAdvisorDialog onClose={() => setAdding(false)} onCreated={(id) => { setAdding(false); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); set({ view: "split", selected: id }); }} />}
     </div>
     </OwnershipProvider>
@@ -309,6 +310,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button type="button" aria-label="More" className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted"><MoreVertical className="h-4 w-4" /></button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
               {f.v.state === "unverified" && <DropdownMenuItem onSelect={() => act("send")}>Send to verification</DropdownMenuItem>}
               {f.v.state === "declined" && <DropdownMenuItem onSelect={() => act("reopen")}>Reopen verification</DropdownMenuItem>}
               <OwnershipMenuItem id={f.id} />
@@ -354,49 +356,19 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
 }
 
 /** ⋮ › Edit: the shared Edit information pop-up over the Directory, saving through Admin's existing advisor save. */
-function EditDialog({ id, onClose }: { id: string; onClose: () => void }) {
+function AdvisorEditPopup({ id, onClose }: { id: string; onClose: () => void }) {
   const fn = useServerFn(getAdvisorFirmForAdmin);
   const { data } = useQuery({ queryKey: ["advisor-admin-edit", id], queryFn: () => fn({ data: { id } }) });
   return (
-    <EditInfoPopup open subtitle="Advisor · Admin edit" companyName={data?.name || "Advisor firm"} onClosed={onClose}>
+    <EditInfoPopup open subtitle={data?.name ?? ""} companyName={data?.name || "Advisor firm"} onClosed={onClose}>
       {data ? <FirmEditForm firm={data} onDone={onClose} /> : <Skeleton className="h-[500px]" />}
     </EditInfoPopup>
   );
 }
 
-/** + Add advisor: an unverified Draft with only a firm name and no owner (Admin only, checked on the server). */
+/** Admin create uses the same role form; no record is created before submission. */
 function AddAdvisorDialog({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
-  const create = useServerFn(createAdvisorFirmForAdmin);
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const ok = name.trim().length >= 2;
-  const submit = async () => {
-    if (!ok || busy) return;
-    setBusy(true);
-    try {
-      const r = await create({ data: { name: name.trim() } });
-      toast.success(`${name.trim()} added as a Draft. It stays hidden until it has an owner and is verified.`);
-      onCreated(r.id);
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-  };
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[440px]">
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold">Add advisor</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Only the firm name is needed now. The firm stays an unverified Draft, hidden from sellers and buyers, until it has an owner and is verified.</p>
-          </div>
-          <label className="block space-y-1.5 text-sm font-medium">
-            <span>Firm name <span className="text-destructive">*</span></span>
-            <Input autoFocus value={name} maxLength={80} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
-          </label>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={!ok || busy} onClick={submit}>{busy ? "Adding…" : "Add advisor"}</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  return <EditInfoPopup open title="Add advisor" creating="advisor" subtitle="Not created yet" companyName="" onClosed={onClose} phoneTabs>
+    <FirmEditForm firm={null} adminCreate={onCreated} />
+  </EditInfoPopup>;
 }
