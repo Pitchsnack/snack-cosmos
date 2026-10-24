@@ -184,11 +184,11 @@ export function InvestorDetailPanel({
   if (i.country) metaItems.push({ icon: MapPin, label: i.country });
   const ib = i as typeof i & { aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; aum_exact_usd?: number | null };
   const aumTxt = bandText(ib.aum_band) ?? i.aum;
-  if (aumTxt && !sv) metaItems.push({ icon: Coins, label: `AUM ${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` });
+  if (aumTxt && buyer && !sv) metaItems.push({ icon: Coins, label: `AUM ${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` });
   const tktTxt = bandText(ib.ticket_band) ?? ticket;
-  if (tktTxt && !sv) metaItems.push({ icon: Layers, label: `Ticket ${tktTxt}` });
+  if (tktTxt && buyer && !sv) metaItems.push({ icon: Layers, label: `Ticket ${tktTxt}` });
   const revTxt = bandText(ib.revenue_min_band);
-  if (revTxt && !sv) metaItems.push({ icon: Coins, label: `Min. target revenue ${revTxt}` });
+  if (revTxt && buyer && !sv) metaItems.push({ icon: Coins, label: `Min. target revenue ${revTxt}` });
 
   return (
     <div className="space-y-[14px] text-foreground">
@@ -411,11 +411,11 @@ export function InvestorDetailPanel({
             </dl>
           )}
 
-          {sv && (() => {
+          {(sv || !buyer) && (() => {
             const cols = [
-              aumTxt ? { icon: Coins, title: sv.aumTitle, value: `${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` } : null,
-              tktTxt ? { icon: Layers, title: sv.ticketTitle, value: tktTxt } : null,
-              revTxt ? { icon: Coins, title: sv.revenueTitle, value: revTxt } : null,
+              aumTxt ? { icon: Coins, title: sv ? sv.aumTitle : "AUM", value: `${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` } : null,
+              tktTxt ? { icon: Layers, title: sv ? sv.ticketTitle : "Ticket size", value: tktTxt } : null,
+              revTxt ? { icon: Coins, title: sv ? sv.revenueTitle : "Min. target revenue", value: revTxt } : null,
             ].filter((c): c is { icon: typeof Coins; title: string; value: string } => !!c);
             if (cols.length === 0) return null;
             return (
