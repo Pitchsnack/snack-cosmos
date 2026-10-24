@@ -33,6 +33,9 @@ import {
 } from "@/components/media/entity-media-editor";
 import { supabase } from "@/integrations/supabase/client";
 import { createMyBuyerUploadUrl, getBuyerInvestorById, getMyBuyerInvestor, saveMyBuyerInvestor } from "@/lib/buyer-investor.functions";
+import { createInvestor } from "@/lib/investors.functions";
+import { listAssignableTenants } from "@/lib/tenants.functions";
+import { listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { REGION_OPTIONS, regionForCountry } from "@/lib/country-region";
 
@@ -134,8 +137,8 @@ export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry";
 export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void; enrich?: EnrichInvestorResult | null };
 
 /** Review & complete in the setup wizard: the same form, with source tags. */
-export function BuyerInvestorForm({ data, setup }: { data: Data; setup?: SetupMode }) {
-  return <Form data={data} setup={setup} />;
+export function BuyerInvestorForm({ data, setup, onCreated }: { data: Data; setup?: SetupMode; onCreated?: (id:string) => void }) {
+  return <Form data={data} setup={setup} directory={!!onCreated} onCreated={onCreated} />;
 }
 
 function Tag({ s }: { s?: SourceTag }) {
@@ -157,9 +160,19 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data, setup, section, add, directory, initialView }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private" }) {
+function Form({ data, setup, section, add, directory, initialView, onCreated }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void }) {
   const {data:session} = useSessionContext();
   const admin = session?.user?.accountRole === "admin";
+  const create = useServerFn(createInvestor);
+  const getTenants = useServerFn(listAssignableTenants);
+  const getUsers = useServerFn(listAssignableUsers);
+  const [tenant,setTenant] = useState(session?.activeWorkspace.tenantId ?? "");
+  const [human,setHuman] = useState("");
+  const [ai,setAi] = useState("");
+  const tenants = useQuery({queryKey:["investor-form-tenants"],queryFn:()=>getTenants(),enabled:admin && !!onCreated});
+  const humans = useQuery({queryKey:["investor-form-humans",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"Human"}}),enabled:admin && !!onCreated && !!tenant});
+  const ais = useQuery({queryKey:["investor-form-ais",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"AI"}}),enabled:admin && !!onCreated && !!tenant});
+
   const inv = data.investor;
   const src = setup?.sources ?? {};
   const rel = data.buyer.relation;
@@ -200,9 +213,9 @@ function Form({ data, setup, section, add, directory, initialView }: { data: Dat
   const [stages, setStages] = useState(inv.preferred_stages);
   const showsFund = !individual && rel !== "agent";
   // Fund falls back to Investor Classification when the form hides the band.
-  type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate";
+  type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate" | "admin";
   const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "mandate" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
-  const [tab, setTab] = useState<Tab>(section ? tabFor(section) : initialView === "public" ? "description" : "media");
+  const [tab, setTab] = useState<Tab>(onCreated ? "about" : section ? tabFor(section) : initialView === "public" ? "description" : "media");
   const [view, setView] = useState<"public" | "private">(initialView ?? (section && ["description","mandate"].includes(tabFor(section)) ? "public" : "private"));
   const sec = section === "fund" && !showsFund ? "classification" : section;
   useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "button[role=checkbox]" } : undefined);
@@ -264,6 +277,10 @@ function Form({ data, setup, section, add, directory, initialView }: { data: Dat
   const leaks = descriptionLeaks(f.description, f.investor_name, f.website_url);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (onCreated && (!f.investor_name.trim() || !tenant || !human || !ai || tenant !== session?.activeWorkspace.tenantId)) {
+      setView("private");setTab(f.investor_name.trim() ? "admin" : "about");
+      setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings). The tenant must be active."});return;
+    }
     const checks: [string, string | null][] = [
       ["year_founded", individual ? null : yearError(f.year_founded)],
       ["investor_name", f.investor_name.trim().length < 2 ? "Add your firm's name." : null],
@@ -287,6 +304,11 @@ function Form({ data, setup, section, add, directory, initialView }: { data: Dat
     setBusy(true);
     try {
       const t = (v: string) => v.trim() || null;
+      if (onCreated) {
+        const result = await create({data:{tenantId:tenant,investorName:f.investor_name.trim(),owningAgentUserId:human,owningAiAgentId:ai,websiteUrl:t(f.website_url),linkedinUrl:t(f.linkedin_url),country:t(f.country),investorType:t(f.investor_type),yearFounded:f.year_founded ? Number(f.year_founded) : null,firmName:t(f.firm_name),email:t(f.email),address:addr,bio:t(f.short_description),preferredIndustries:industries,preferredStages:stages,keywords,investmentFocus:focus,aumBand:t(f.aum_band),ticketBand:t(f.ticket_band)}});
+        await qc.invalidateQueries({queryKey:["investors"]});pop?.setDirty(false);toast.success(`${f.investor_name.trim()} created`);onCreated(result.id);return;
+      }
+
       const { logoPath, media: resolvedMedia } = await uploadPending(
         media,
         ({ kind, ext }) => getUrl({ data: { kind, ext, investor_id: inv.id } }),
@@ -349,7 +371,7 @@ function Form({ data, setup, section, add, directory, initialView }: { data: Dat
       <form id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {pop && !setup ? <>
           <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Public view"),icon:<Eye />,count:0},{key:"private",label:tr("Private view"),icon:<Lock />,count:0}]} /></EditInfoTabsSlot>
-          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers")}]} />
+          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers")},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings")}]:[])]} />
           {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -661,6 +683,11 @@ function Form({ data, setup, section, add, directory, initialView }: { data: Dat
         </div>
 
 </div>}
+          {tab === "admin" && admin && <div className="space-y-4"><TabHead title={tr("Admin settings")} /><p className="text-sm text-muted-foreground">Only Admin sees this tab.</p>
+          {onCreated ? <CompactFields two><div className="space-y-1.5"><Label>Tenant *</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger><SelectValue placeholder="Choose tenant" /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label>Owning Agent *</Label><Select value={human} onValueChange={setHuman}><SelectTrigger><SelectValue placeholder="Choose agent" /></SelectTrigger><SelectContent>{humans.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label>Owning AI Agent *</Label><Select value={ai} onValueChange={setAi}><SelectTrigger><SelectValue placeholder="Choose AI agent" /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></>}
+          </div>}
         </> : <>        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -970,6 +997,7 @@ function Form({ data, setup, section, add, directory, initialView }: { data: Dat
 </>}
         {pop ? (
           <EditInfoFooter>
+          {errs.creation && <p className="mr-auto text-xs text-destructive">{errs.creation}</p>}
             <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
             <Button type="submit" form="buyer-edit-form" disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
           </EditInfoFooter>
