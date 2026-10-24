@@ -18,9 +18,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { FirmEditForm } from "@/components/advisor/advisor-firm-edit";
+import { EditInfoPopup } from "@/components/common/edit-info-popup";
 import { CredMark, DocMark, FirmStatusPill, VerificationBox, VerificationChip, chipKey, businessDays } from "@/components/advisor/advisor-verification";
 import { listAdminAdvisorFirms, decideAdvisor, type AdminFirm } from "@/lib/advisor-admin.functions";
-import { getAdvisorFirmForAdmin } from "@/lib/advisor-firm.functions";
+import { createAdvisorFirmForAdmin, getAdvisorFirmForAdmin } from "@/lib/advisor-firm.functions";
 import { ADVISOR_SERVICES, FIRM_TYPES, dealBandLabels, initials } from "@/lib/advisor-firm";
 import { SECTOR_GROUPS } from "@/lib/sectors";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +58,7 @@ function AdvisorsDirectory() {
   const view: ViewMode = s.view ?? "split";
   const set = (p: Partial<typeof s>) => navigate({ search: (prev: typeof s) => ({ ...prev, ...p }) });
   const [editing, setEditing] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [runBy, setRunBy] = useState<RunByFilter>("all");
   const favs = new Set(data?.favourites ?? []);
   const toggleFav = async (id: string) => {
@@ -110,7 +112,7 @@ function AdvisorsDirectory() {
             <Star className={cn("h-4 w-4", s.fav && "fill-accent")} /><span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", s.fav ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground")}>{favs.size}</span>
           </button>
           <ViewToggle value={view} onChange={(v) => set({ view: v })} />
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => toast("New firms without an owner need one more database change — see the chat.")}>+ New firm</Button>
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setAdding(true)}>+ Add advisor</Button>
         </div>
       </div>
 
@@ -195,6 +197,7 @@ function AdvisorsDirectory() {
         </div>
       )}
       {editing && <EditDialog id={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); }} />}
+      {adding && <AddAdvisorDialog onClose={() => setAdding(false)} onCreated={(id) => { setAdding(false); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); set({ view: "split", selected: id }); }} />}
     </div>
     </OwnershipProvider>
   );
@@ -350,13 +353,49 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
   );
 }
 
+/** ⋮ › Edit: the shared Edit information pop-up over the Directory, saving through Admin's existing advisor save. */
 function EditDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const fn = useServerFn(getAdvisorFirmForAdmin);
   const { data } = useQuery({ queryKey: ["advisor-admin-edit", id], queryFn: () => fn({ data: { id } }) });
   return (
+    <EditInfoPopup open subtitle="Advisor · Admin edit" companyName={data?.name || "Advisor firm"} onClosed={onClose}>
+      {data ? <FirmEditForm firm={data} onDone={onClose} /> : <Skeleton className="h-[500px]" />}
+    </EditInfoPopup>
+  );
+}
+
+/** + Add advisor: an unverified Draft with only a firm name and no owner (Admin only, checked on the server). */
+function AddAdvisorDialog({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+  const create = useServerFn(createAdvisorFirmForAdmin);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const ok = name.trim().length >= 2;
+  const submit = async () => {
+    if (!ok || busy) return;
+    setBusy(true);
+    try {
+      const r = await create({ data: { name: name.trim() } });
+      toast.success(`${name.trim()} added as a Draft. It stays hidden until it has an owner and is verified.`);
+      onCreated(r.id);
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[900px]">
-        {data ? <FirmEditForm firm={data} onDone={onClose} /> : <Skeleton className="h-[500px]" />}
+      <DialogContent className="sm:max-w-[440px]">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Add advisor</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Only the firm name is needed now. The firm stays an unverified Draft, hidden from sellers and buyers, until it has an owner and is verified.</p>
+          </div>
+          <label className="block space-y-1.5 text-sm font-medium">
+            <span>Firm name <span className="text-destructive">*</span></span>
+            <Input autoFocus value={name} maxLength={80} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          </label>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={!ok || busy} onClick={submit}>{busy ? "Adding…" : "Add advisor"}</Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
