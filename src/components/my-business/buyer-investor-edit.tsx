@@ -4,7 +4,7 @@ import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { CompanySizeField } from "@/components/investors/company-size-field";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
-import { EditInfoFooter, useEditInfo } from "@/components/common/edit-info-popup";
+import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
@@ -14,7 +14,7 @@ import {
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Eye, Lock, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -197,6 +197,10 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
   const [stages, setStages] = useState(inv.preferred_stages);
   const showsFund = !individual && rel !== "agent";
   // Fund falls back to Investor Classification when the form hides the band.
+  type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate";
+  const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "mandate" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
+  const [tab, setTab] = useState<Tab>(section ? tabFor(section) : "media");
+  const [view, setView] = useState<"public" | "private">(section && ["description","mandate"].includes(tabFor(section)) ? "public" : "private");
   const sec = section === "fund" && !showsFund ? "classification" : section;
   useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "button[role=checkbox]" } : undefined);
   const [industries, setIndustries] = useState(inv.preferred_industries);
@@ -336,7 +340,321 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       )}
 
       <form id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
-        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
+        {pop && !setup ? <>
+          <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Public view"),icon:<Eye />,count:0},{key:"private",label:tr("Private view"),icon:<Lock />,count:0}]} /></EditInfoTabsSlot>
+          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers")}]} />
+          {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
+        <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: f.website_url }} />
+          </div>
+          <div className="pt-6 shrink-0">
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InvestorAutoEnrichButton
+                    websiteUrl={f.website_url}
+                    onEnriched={applyEnrichment}
+                    disabled={busy}
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Fills empty fields only</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div></S>
+
+</div>}
+          {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")} />        {/* Row 1: Year Founded | Company Name | Investor Classification */}
+        <div className={agent ? "grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-3"}>
+          <div className="space-y-1.5">
+            <Label>Year Founded{!individual && req}<Tag s={src.year_founded} /></Label>
+            <Input id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
+              onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder="e.g. 2014"
+              className={errs.year_founded ? "border-[#B42318]" : ""} />
+            <Err k="year_founded" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Company Name{req}<Tag s={src.investor_name} /></Label>
+            <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder="e.g. Acme Ventures" maxLength={120}
+              className={errs.investor_name ? "border-[#B42318]" : ""} />
+            <Err k="investor_name" />
+          </div>
+          {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
+            <Label>Investor Classification<Tag s={src.investor_type} /></Label>
+            <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
+              <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Select —</SelectItem>
+                {Array.from(new Set([...INVESTOR_CLASSIFICATIONS, ...(f.investor_type ? [f.investor_type] : [])])).map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </S>}
+        </div>
+        {agent && <S cur={setup ? undefined : sec} id="classification">
+          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>Acts for<Tag s={src.investor_type} /></>} />
+        </S>}
+
+<CompactFields>        <>
+          <CompanyTypeField value={(inv as { company_type?: string | null }).company_type ?? companyTypeForRelation(rel)} source={(inv as { company_type_source?: string }).company_type_source ?? "account"} admin={false} />
+        </>
+        {!individual && (
+          <>
+            <CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} />
+          </>
+        )}
+
+        {/* Row 2: Region (Country lives in the address box) */}
+
+          <div className="space-y-1.5">
+            <div className="flex h-6 items-center gap-1.5">
+              <Label>Region</Label>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label="Re-detect region from Country"
+                      onClick={() => {
+                        const suggested = regionForCountry(f.country);
+                        setF((o) => ({ ...o, region: suggested || "" }));
+                        toast.success(
+                          suggested
+                            ? `Region set to ${suggested}`
+                            : f.country ? "No region mapping for this country" : "Set Country first",
+                        );
+                      }}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Re-detect from Country</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Select value={f.region || ""} onValueChange={(v) => setF((o) => ({ ...o, region: v === "__clear__" ? "" : v }))}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select Region" /></SelectTrigger>
+              <SelectContent>
+                {f.region && <SelectItem value="__clear__" className="text-muted-foreground">Clear selection</SelectItem>}
+                {REGION_OPTIONS.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    <span className="font-medium">{r.label}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">— {r.description}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+</CompactFields>        {/* Row 3: Email | Company URL | LinkedIn URL */}
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <Label>Email Address</Label>
+            <Input type="email" value={f.email} onChange={set("email")} placeholder="investor@example.com" maxLength={255} />
+          </div>
+          <div className="space-y-1.5">
+            <EditableUrlField
+              label="Company URL *"
+              value={f.website_url}
+              onChange={(v) => setF((o) => ({ ...o, website_url: v }))}
+              placeholder="https://www.yourfirm.com"
+            />
+            <input id="f-website_url" className="sr-only" readOnly tabIndex={-1} aria-hidden value={f.website_url} />
+            <Err k="website_url" />
+          </div>
+          <EditableUrlField
+            label="LinkedIn URL"
+            value={f.linkedin_url}
+            onChange={(v) => setF((o) => ({ ...o, linkedin_url: v }))}
+            placeholder="https://www.linkedin.com/company/…"
+          />
+        </div>
+
+        {/* About */}
+        <div className="space-y-1.5">
+          <Label>About Company</Label>
+          <Textarea value={f.short_description} onChange={set("short_description")} rows={3} maxLength={2000}
+            placeholder="Brief description of the company" />
+        </div>
+
+</div>}
+          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")} />        {/* Row 4: Firm Name, then the address box */}
+        <div className="grid gap-4">
+          <div className="space-y-1.5">
+            <Label>Firm Name</Label>
+            <Input value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
+          </div>
+        </div>
+        <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
+          {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
+          <AddressBox compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+            title={individual ? tr("Address") : tr("Business address")}
+            note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+            country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
+            show={(k) => (addrShow && addrErr ? (addrErr as Record<string, string | null>)[k] ?? null : null)} onBlur={() => {}} />
+        </div>
+
+</div>}
+          {tab === "mandate" && <div className="space-y-4"><TabHead title={tr("Mandate")} />        {/* Fund & ticket — US$ bands */}
+        {showsFund && (
+          <S cur={setup ? undefined : sec} id="fund"><div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{corp ? "Group revenue band" : "Fund's AUM band"}<Tag s={src.aum_band} /></Label>
+              <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                <SelectContent>
+                  {!inv.aum_band && <SelectItem value="none">Not set</SelectItem>}
+                  {AUM_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-[12px] text-muted-foreground">Sellers see this band on your card.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{corp ? "Exact group revenue (US$)" : "Exact AUM (US$)"} <span className="text-[#9CA3AF] font-normal">optional</span></Label>
+              <Input inputMode="numeric" value={f.aum_exact} placeholder="e.g. 120,000,000"
+                onChange={(e) => { const d = e.target.value.replace(/[^\d]/g, ""); setF((o) => ({ ...o, aum_exact: d ? Number(d).toLocaleString("en-US") : "" })); }} />
+              <p className="text-[12px] text-muted-foreground">Private. Only sellers who approve your NDA see it.</p>
+            </div>
+          </div></S>
+        )}
+        <S cur={setup ? undefined : sec} id="mandate" className="space-y-1.5">
+          <Label>Average investment per deal<Tag s={src.ticket_band} /></Label>
+          <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
+            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {TICKET_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size. Sellers see this range on your card and filter Browse investors by it.</p>
+        </S>
+        {/* Buying Requirement */}
+        <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
+          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
+          <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
+          <Label>Min. target revenue<Tag s={src.revenue_min_band} /></Label>
+          <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
+            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
+          </S>
+        </div>
+        <S cur={setup ? undefined : sec} id="focus" className="space-y-1.5">
+          <Label>Investment Focus<Tag s={src.deal_types} /></Label>
+          <div className="flex flex-wrap gap-2">
+            {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{d}</Pill>)}
+          </div>
+        </S>
+
+        {/* Geography */}
+        <S cur={setup ? undefined : sec} id="geography" className="space-y-1.5">
+          <Label>Geography<Tag s={src.geography} /></Label>
+          <div className="flex flex-wrap gap-2">
+            {allGeo.map((g) => <Pill key={g} active={focus.includes(g)} onClick={() => setFocus(toggle(focus, g, 10))}>{g}</Pill>)}
+          </div>
+        </S>
+
+</div>}
+          {tab === "industries" && <div className="space-y-4"><TabHead title={tr("Industries & Portfolio")} />        {/* Tags */}
+        <S cur={setup ? undefined : sec} id="keywords" className="space-y-1.5">
+          <Label>Product &amp; Service Tags (Up to 5)</Label>
+          <TagEditor values={keywords} onChange={setKeywords} max={5} maxLength={50}
+            placeholder="Example: Portfolio Management, Due Diligence" />
+        </S>
+
+        {/* Preferred Stages */}
+        {showsStages(typeOf, agent ? actsFor : null) && <S cur={setup ? undefined : sec} id="stages" className="space-y-1.5">
+          <Label>Preferred Stages</Label>
+          <div className="flex flex-wrap gap-2">
+            {allStages.map((s) => (
+              <Pill key={s} active={stages.includes(s)} onClick={() => setStages(toggle(stages, s))}>{s}</Pill>
+            ))}
+          </div>
+        </S>}
+
+        {/* Preferred Industries */}
+        <S cur={setup ? undefined : sec} id="industries" className="space-y-1.5">
+          <Label>Preferred Industries<Tag s={src.preferred_industries} /></Label>
+          <SetSectorPicker mode="multi" value={industries.filter((x) => x !== SECTOR_AGNOSTIC)}
+            onChange={(v) => setIndustries([...(agnostic ? [SECTOR_AGNOSTIC] : []), ...v])}
+            limitMsg="Pick up to 5 industries, or Sector agnostic."
+            agnostic={{ on: agnostic, onToggle: (on) => setIndustries(on ? [SECTOR_AGNOSTIC, ...industries.filter((x) => x !== SECTOR_AGNOSTIC)] : industries.filter((x) => x !== SECTOR_AGNOSTIC)),
+              line: "I look at companies in every industry",
+              note: "Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.",
+              summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
+        </S>
+
+        {/* Portfolio Startups */}
+        <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
+          <Label>Portfolio Startups</Label>
+          {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Linked in Investors Directory: {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).join(", ")}
+            </p>
+          )}
+          <TagEditor values={portfolio} onChange={setPortfolio} max={50} placeholder="Add a portfolio company" />
+        </S>
+
+</div>}
+          {tab === "description" && <div className="space-y-4"><TabHead title={tr("Public Description")} />        {/* Public view */}
+        <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public view · sellers see this before an NDA</h3>
+          <S cur={setup ? undefined : sec} id="description" className="space-y-1.5">
+          <Label>Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span><Tag s={src.description} /></Label>
+          <Textarea id="f-description" value={f.description} onChange={(e) => setF((o) => ({ ...o, description: e.target.value.slice(0, 140) }))} rows={3} maxLength={140}
+            placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans" className={errs.description ? "border-[#B42318]" : ""} />
+          <div className="flex justify-between text-[12px]">
+            <span className="text-[#B42318]">{errs.description && errs.description !== "leak" ? errs.description : ""}</span>
+            <span className="text-muted-foreground">{f.description.length} / 140</span>
+          </div>
+          </S>
+          {leaks.length > 0 && <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Your description mentions <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
+        </div>
+
+</div>}
+          {tab === "people" && <div className="space-y-4"><TabHead title={tr("Decision Makers")} />        {/* For verification */}
+        <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">For verification · also visible to Admin</h3>
+          {!individual && (
+            <div className="space-y-1.5">
+              <Label>{f.country === "Thailand" ? <>Company Registration Number (เลขทะเบียนนิติบุคคล){req}</> : <>Company registration number <span className="font-normal text-[#9CA3AF]">optional</span></>}<Tag s={src.registration_no} /></Label>
+              <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
+                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
+                inputMode={f.country === "Thailand" ? "numeric" : undefined}
+                onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
+                className={errs.registration_no ? "border-[#B42318]" : ""} />
+              <Err k="registration_no" />
+            </div>
+          )}
+          <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
+            <Label>Decision makers</Label>
+            <div className="space-y-2">
+              {people.map((p, i) => (
+                <div key={i} data-row className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+                  {(["name", "role", "email", "phone"] as const).map((k) => (
+                    <Input key={k} placeholder={k[0].toUpperCase() + k.slice(1)} value={p[k]}
+                      onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)))} />
+                  ))}
+                  <Button type="button" variant="ghost" size="icon" aria-label="Remove" onClick={() => setPeople((o) => o.filter((_, j) => j !== i))}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => setPeople((o) => [...o, { name: "", role: "", email: "", phone: "" }])}>
+                <Plus className="mr-1 h-4 w-4" />Add decision maker
+              </Button>
+            </div>
+          </S>
+        </div>
+
+</div>}
+        </> : <>        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
             <EntityMediaEditor value={media} onChange={setMedia} screenshot={{ websiteUrl: f.website_url }} />
@@ -642,6 +960,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
           </S>
         </div>
 
+</>}
         {pop ? (
           <EditInfoFooter>
             <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
