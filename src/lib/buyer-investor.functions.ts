@@ -288,7 +288,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const r = await resolveBuyer(context.userId, data.investor_id);
     const { sb, investorId } = r;
-    const relation = r.extra ? ((r.p.buyer_relation ?? null) as string | null) : await relationOf(sb, context.userId);
+    const relation = r.extra ? ((r.p.buyer_relation ?? null) as string | null) : await relationOf(sb, r.bpUser ?? context.userId);
     // Same checks as Review & complete (section 5); the buyer can't save past them.
     const problem =
       (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
