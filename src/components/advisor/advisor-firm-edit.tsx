@@ -2,7 +2,7 @@ import { tr } from "@/i18n/language";
 import { supabase } from "@/integrations/supabase/client";
 import { AttachmentCard } from "@/components/startups/attachment-card";
 import { EMPTY_SLOT, uploadPending, type EntityMediaState } from "@/components/media/entity-media-editor";
-import { usePermissions } from "@/hooks/use-session-context";
+import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { CompactFields, EditInfoFooter, EditInfoTabsSlot, TabHead, TabRow, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState } from "react";
@@ -119,7 +119,8 @@ const sel = "flex h-[42px] w-full rounded-md border border-input bg-background p
 const errB = "border-[#B42318]";
 
 export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreate }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void; adminCreate?: (id: string) => void }) {
-  const asAdmin = usePermissions().isControl;
+  const {data:session} = useSessionContext();
+  const asAdmin = session?.user?.accountRole === "admin" && usePermissions().isControl;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveAdvisorFirm);

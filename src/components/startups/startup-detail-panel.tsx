@@ -597,7 +597,7 @@ export function StartupDetailPanel({
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </Link>
                       ) : (
-                        <Link to="/startups/$id/edit" params={{ id }} search={directoryReturnSearch} onClick={() => onClose?.()}>
+                        <Link to="/startups" search={{...directoryReturnSearch,editor:id,selected:id}}>
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </Link>
                       )}

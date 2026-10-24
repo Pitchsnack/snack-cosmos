@@ -255,7 +255,7 @@ export function InvestorDetailPanel({
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
             >
-              <Link to="/investors/$id/edit" params={{ id }}>
+              <Link to="/investors" search={{editor:id,selected:id}}>
                 <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
               </Link>
             </Button>
@@ -281,7 +281,7 @@ export function InvestorDetailPanel({
                   </DropdownMenuItem>
                   {canManage ? (
                     <DropdownMenuItem asChild>
-                      <Link to="/investors/$id/edit" params={{ id }} onClick={() => onClose?.()}>
+                      <Link to="/investors" search={{...directorySearch,editor:id,selected:id}}>
                         <Pencil className="mr-2 h-4 w-4" /> Edit
                       </Link>
                     </DropdownMenuItem>
