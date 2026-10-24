@@ -106,8 +106,8 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
       sb.from("investors").select("*").eq("id", investorId).single(),
       (await import("./profile-verification.server")).verificationByInvestor(sb, investorId, "status, decision_note, submitted_at").then((data: any) => ({ data })),
       sb.from("startup_investors").select("startups(id, startup_name)").eq("investor_id", investorId),
-      sb.from("user_profiles").select("title").eq("user_id", context.userId).maybeSingle(),
-      sb.auth.admin.getUserById(context.userId),
+      sb.from("user_profiles").select("title").eq("user_id", r.bpUser ?? context.userId).maybeSingle(),
+      sb.auth.admin.getUserById(r.bpUser ?? context.userId),
     ]);
     const meta = (au?.user?.user_metadata ?? {}) as Record<string, string>;
     const media = (Array.isArray(inv.media) ? inv.media : []) as { slot: number; image_path: string }[];
@@ -486,6 +486,6 @@ export const saveBuyerMedia = createServerFn({ method: "POST" })
     if (!own(data.logo_path) || data.media.some((m) => !own(m.image_path))) throw new Error("Invalid file.");
     const { error } = await r.sb.from("investors").update({ logo_url: data.logo_path, media: data.media, updated_by: context.userId, updated_at: new Date().toISOString() }).eq("id", r.investorId);
     if (error) throw new Error(error.message);
-    if (!r.extra) await r.sb.from("buyer_profiles").update({ logo_url: data.logo_path }).eq("user_id", context.userId);
+    if (!r.extra) await r.sb.from("buyer_profiles").update({ logo_url: data.logo_path }).eq("user_id", r.bpUser ?? context.userId);
     return { ok: true };
   });
