@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InvestorCard } from "@/components/investors/investor-card";
-import { InvestorEditPopup } from "@/components/investors/investor-edit-popup";
+import { InvestorEditPopup, InvestorAddPopup } from "@/components/investors/investor-edit-popup";
 import { InvestorRow } from "@/components/investors/investor-row";
 import { InvestorListItem } from "@/components/investors/investor-list-item";
 import {
@@ -45,6 +45,7 @@ export const investorDirectorySearchSchema = z.object({
   fav: z.coerce.boolean().optional(),
   cards: z.enum(["full", "hidden"]).optional(),
   editor: z.string().optional(),
+  adding:z.boolean().optional(),
 });
 
 export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSchema>;
@@ -211,7 +212,7 @@ function InvestorsPageInner() {
           />
           {has("investors.write") && (
             <Button
-              onClick={() => navigate({ to: "/investors/new" })}
+              onClick={() => navigate({search:(p:typeof s)=>({...p,adding:true})})}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               <Plus className="mr-2 h-4 w-4" /> New investor
@@ -420,6 +421,7 @@ function InvestorsPageInner() {
         </div>
       )}
 
+      {s.adding && <InvestorAddPopup onClose={()=>navigate({search:(p:typeof s)=>({...p,adding:undefined}),replace:true})} onCreated={(id)=>navigate({search:(p:typeof s)=>({...p,adding:undefined,selected:id,sort:"created_desc"}),replace:true})} />}
       {s.editor && <InvestorEditPopup id={s.editor} onClose={() => navigate({search:(p:typeof s) => ({...p,editor:undefined}),replace:true})} />}
       <Dialog
         open={!!s.panel && view !== "split" && !s.editor}
