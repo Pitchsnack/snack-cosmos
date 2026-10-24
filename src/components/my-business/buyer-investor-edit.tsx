@@ -33,6 +33,7 @@ import {
 } from "@/components/media/entity-media-editor";
 import { supabase } from "@/integrations/supabase/client";
 import { createMyBuyerUploadUrl, getBuyerInvestorById, getMyBuyerInvestor, saveMyBuyerInvestor } from "@/lib/buyer-investor.functions";
+import { useInvestor } from "@/hooks/use-investor";
 import { createInvestor, updateInvestor } from "@/lib/investors.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
 import { listAssignableUsers } from "@/lib/startup-ownership.functions";
@@ -122,22 +123,23 @@ function S({ id, cur, className, children }: { id: string; cur?: string; classNa
 export function BuyerInvestorEdit({ section, add, id, directory, initialView }: { section?: string; add?: boolean; id?: string; directory?: boolean; initialView?: "public" | "private" } = {}) {
   const fetchMe = useServerFn(getMyBuyerInvestor);
   const fetchById = useServerFn(getBuyerInvestorById);
+  const directoryData = useInvestor(directory ? id : undefined);
   const { data, isLoading, error } = useQuery({
     // Own key: the card and setup page cache an { ok, data } wrapper under buyerInvestorKey(id).
     queryKey: id ? [...buyerInvestorKey(id), "edit"] : BUYER_INVESTOR_KEY,
     queryFn: async () => { if (!id) return fetchMe(); const r = await fetchById({ data: { id } }); if (!r.ok) throw new Error("This profile isn't yours."); return r.data as Data; },
     meta: { pageLoading: true },
   });
-  if (isLoading) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
+  if (isLoading || (directory && directoryData.isLoading)) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
-  return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} />;
+  return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} directoryRecord={directoryData.data} />;
 }
 
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry";
 export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void; enrich?: EnrichInvestorResult | null };
 
 /** Review & complete in the setup wizard: the same form, with source tags. */
-export function BuyerInvestorForm({ data, setup, onCreated }: { data: Data; setup?: SetupMode; onCreated?: (id:string) => void }) {
+export function BuyerInvestorForm({ data, setup, onCreated }: { data: Data; setup?: SetupMode; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
   return <Form data={data} setup={setup} directory={!!onCreated} onCreated={onCreated} />;
 }
 
@@ -160,7 +162,7 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data, setup, section, add, directory, initialView, onCreated }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void }) {
+function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void }) {
   const {data:session} = useSessionContext();
   const admin = session?.user?.accountRole === "admin";
   const create = useServerFn(createInvestor);
@@ -169,12 +171,16 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
   const [companyTypeDirty,setCompanyTypeDirty] = useState(false);
   const getTenants = useServerFn(listAssignableTenants);
   const getUsers = useServerFn(listAssignableUsers);
-  const [tenant,setTenant] = useState(session?.activeWorkspace.tenantId ?? "");
+  const [tenant,setTenant] = useState(directoryRecord?.tenant_id ?? session?.activeWorkspace.tenantId ?? "");
+  const [directoryStatus,setDirectoryStatus] = useState(directoryRecord?.status ?? "Prospect");
+  const [directoryVisibility,setDirectoryVisibility] = useState(directoryRecord?.visibility ?? "Tenant");
+  const [legalName,setLegalName] = useState(directoryRecord?.legal_name ?? "");
+  const [longDescription,setLongDescription] = useState(directoryRecord?.long_description ?? "");
   const [human,setHuman] = useState("");
   const [ai,setAi] = useState("");
-  const tenants = useQuery({queryKey:["investor-form-tenants"],queryFn:()=>getTenants(),enabled:admin && !!onCreated});
-  const humans = useQuery({queryKey:["investor-form-humans",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"Human"}}),enabled:admin && !!onCreated && !!tenant});
-  const ais = useQuery({queryKey:["investor-form-ais",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"AI"}}),enabled:admin && !!onCreated && !!tenant});
+  const tenants = useQuery({queryKey:["investor-form-tenants"],queryFn:()=>getTenants(),enabled:admin && !!directory});
+  const humans = useQuery({queryKey:["investor-form-humans",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"Human"}}),enabled:admin && !!directory && !!tenant});
+  const ais = useQuery({queryKey:["investor-form-ais",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"AI"}}),enabled:admin && !!directory && !!tenant});
 
   const inv = data.investor;
   const src = setup?.sources ?? {};
@@ -340,6 +346,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
         people: people.filter((p) => p.name.trim()),
         investor_id: inv.id,
       } });
+      if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
       if (admin && companyTypeDirty && companyType) await updateDirectory({data:{id:inv.id,companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"}});
       await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
       await qc.invalidateQueries({ queryKey: ["investors"] });
@@ -515,8 +522,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
             placeholder="Brief description of the company" />
         </div>
 
-</div>}
-          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>        {/* Row 4: Firm Name, then the address box */}
+{directory && <div className="space-y-1.5"><Label>Long Description</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
+          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>{directory && <div className="space-y-1.5"><Label>Legal name</Label><Input value={legalName} onChange={e=>setLegalName(e.target.value)} maxLength={255} /></div>}        {/* Row 4: Firm Name, then the address box */}
         <div className="grid gap-4">
           <div className="space-y-1.5">
             <Label>Firm Name</Label>
@@ -691,10 +698,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
 
 </div>}
           {tab === "admin" && admin && <div className="space-y-4"><TabHead title={tr("Admin settings")} /><p className="text-sm text-muted-foreground">Only Admin sees this tab.</p>
-          {onCreated ? <CompactFields two><div className="space-y-1.5"><Label>Tenant *</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger><SelectValue placeholder="Choose tenant" /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
+          {directory ? <CompactFields two><div className="space-y-1.5"><Label>Tenant *</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger><SelectValue placeholder="Choose tenant" /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Owning Agent *</Label><Select value={human} onValueChange={setHuman}><SelectTrigger><SelectValue placeholder="Choose agent" /></SelectTrigger><SelectContent>{humans.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-1.5"><Label>Owning AI Agent *</Label><Select value={ai} onValueChange={setAi}><SelectTrigger><SelectValue placeholder="Choose AI agent" /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></>}
-          </div>}
+          <div className="space-y-1.5"><Label>Owning AI Agent *</Label><Select value={ai} onValueChange={setAi}><SelectTrigger><SelectValue placeholder="Choose AI agent" /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Status</Label><Select value={directoryStatus} onValueChange={(v)=>setDirectoryStatus(v as typeof directoryStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Prospect","Active","Engaged","Investing","Inactive","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Visibility</Label><Select value={directoryVisibility} onValueChange={(v)=>setDirectoryVisibility(v as typeof directoryVisibility)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Private","Tenant","Shared","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></>}
+          <Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></div>}
         </> : <>        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
