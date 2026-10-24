@@ -167,12 +167,12 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
             )}
             style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
           >
-            <div className={cn("flex shrink-0 items-center gap-4 border-b border-[#EEF0F3] px-6 py-[18px] dark:border-border", phoneTabs && "max-sm:flex-wrap")}>
+             <div className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border px-6 py-[18px] sm:flex-nowrap">
               <div className="min-w-0 flex-1">
                 <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{title ?? tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
                 <div className="mt-[3px] text-[13px] text-[#6B7280] dark:text-muted-foreground">{subtitle}</div>
               </div>
-              <div ref={setTabsSlot} className={cn("shrink-0 empty:hidden", phoneTabs && "max-sm:order-3 max-sm:mt-4 max-sm:w-full")} />
+               <div ref={setTabsSlot} className="shrink-0 empty:hidden max-sm:order-3 max-sm:w-full" />
               <button type="button" aria-label={tr("Close", "ปิด")} onClick={requestClose}
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] text-[#434A5C] hover:bg-[#F2F4F7] dark:text-muted-foreground dark:hover:bg-muted">
                 <X className="h-[18px] w-[18px]" />

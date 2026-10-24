@@ -185,7 +185,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
     ["phone", phoneError(f.phone)],
   ];
   const errOf = Object.fromEntries(errs) as Record<string, string | null>;
-  const show = (k: string) => (firm?.status === "draft" && errOf[k] ? "Missing" : (touched[k] || forced) ? errOf[k] : null);
+  const show = (k: string) => ((firm?.status === "draft" || adminCreate) && errOf[k] ? (adminCreate && k === "name" && forced ? "Needed to add the advisor." : "Missing") : (touched[k] || forced) ? errOf[k] : null);
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const addrErr = addrErrors(f.addr, thai, f.city);
   const showAddr = (k: keyof Addr) => (touched[`a-${k}`] ? (addrErr as Record<string, string | null>)[k] ?? null : null);
