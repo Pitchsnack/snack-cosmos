@@ -482,7 +482,7 @@ export function StartupForm({
 
   // Ownership (create only — required by current API)
   // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
-  const [phase, setPhase] = useState<"quick" | "full">(isEdit ? "full" : "quick");
+  const [phase, setPhase] = useState<"quick" | "full">(isEdit || editCtx ? "full" : "quick");
   const [enriching, setEnriching] = useState(false);
   // UI-only quick facts — no backend column exists yet (BACKEND: BLOCKED).
   const [lastYearRevenue, setLastYearRevenue] = useState(normRevBand(startup?.last_year_revenue ?? prefill?.lastYearRevenue ?? ""));
