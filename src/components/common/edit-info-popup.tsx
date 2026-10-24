@@ -261,15 +261,20 @@ export function TabRow<T extends string>({ tabs, value, onChange, label, idBase,
   tabs: { key: T; label: string; count?: number; icon?: ReactNode }[];
   value: T; onChange: (k: T) => void; label: string; idBase: string; extra?: ReactNode;
 }) {
+  const edit = useEditInfo();
+  const change = (next: T) => {
+    onChange(next);
+    requestAnimationFrame(() => edit?.body?.scrollTo({ top: 0 }));
+  };
   return (
     <div data-sticky-tabs className="sticky top-0 z-10 -mx-6 mb-5 bg-card px-6">
-      <div role="tablist" aria-label={label} onKeyDown={(e) => onTabKeys(e, tabs.map((t) => t.key), value, onChange)}
+      <div role="tablist" aria-label={label} onKeyDown={(e) => onTabKeys(e, tabs.map((t) => t.key), value, change)}
         className="flex gap-[22px] overflow-x-auto border-b border-[#E6E8EC] [scrollbar-width:none] max-sm:gap-[18px] dark:border-border">
         {tabs.map((t) => {
           const on = t.key === value;
           return (
             <button key={t.key} type="button" role="tab" data-tab={t.key} id={`${idBase}-tab-${t.key}`} aria-selected={on} tabIndex={on ? 0 : -1}
-              aria-controls={`${idBase}-panel`} onClick={() => onChange(t.key)}
+              aria-controls={`${idBase}-panel`} onClick={() => change(t.key)}
               className={cn("-mb-px inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 text-[14px]",
                 on ? "border-[#151A28] font-semibold text-[#151A28] dark:border-foreground dark:text-foreground" : "border-transparent font-medium text-[#6A7181] dark:text-muted-foreground")}>
               {t.label}{t.icon}

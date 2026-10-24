@@ -442,16 +442,6 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind
   );
 }
 
-function useSave() {
-  const qc = useQueryClient();
-  const save = useServerFn(saveMyBuyerProfile);
-  return useMutation({
-    mutationFn: (patch: Record<string, unknown>) => save({ data: patch as any }),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-}
-
 function Box({ title, rows }: { title: string; rows: [string, React.ReactNode][] }) {
   return (
     <div className="rounded-[12px] border border-border p-3.5">
