@@ -565,7 +565,7 @@ export type Database = {
           more_info_note: string | null
           name: string
           owner_relation: string | null
-          owner_user_id: string
+          owner_user_id: string | null
           phone: string | null
           prepared_at: string | null
           prepared_by: string | null
@@ -633,7 +633,7 @@ export type Database = {
           more_info_note?: string | null
           name?: string
           owner_relation?: string | null
-          owner_user_id: string
+          owner_user_id?: string | null
           phone?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
@@ -701,7 +701,7 @@ export type Database = {
           more_info_note?: string | null
           name?: string
           owner_relation?: string | null
-          owner_user_id?: string
+          owner_user_id?: string | null
           phone?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
@@ -7292,6 +7292,10 @@ export type Database = {
       active_tenant_id: { Args: { _user_id: string }; Returns: string }
       address_place: {
         Args: { _country: string; _district: string; _province: string }
+        Returns: string
+      }
+      admin_create_ownerless_advisor_firm: {
+        Args: { _name: string }
         Returns: string
       }
       advisor_child_move: {
