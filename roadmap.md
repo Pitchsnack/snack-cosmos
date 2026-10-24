@@ -1,4 +1,5 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] Advisor checkpoint: name-only Add, new/existing ⋮ Edit, Draft incomplete Save/read-back, 1440/390 screenshots; then continue unified brief in order
 - [x] Edit information backend: ownerless advisor drafts (Admin only), Admin buyer saves via saveMyBuyerInvestor, Directory Add advisor + Edit pop-up
 - [ ] October 24 unified Edit information UI: shared role tabs, Address/compact rows, Investors/Startups Admin edit/add pop-ups, valuation host, redirects and duplicate-form cleanup
 - [ ] Unified editing checks: required-field errors, authenticated role saves/read-back, wizard regressions, 1440/390 EN/TH and dark-mode screenshots
