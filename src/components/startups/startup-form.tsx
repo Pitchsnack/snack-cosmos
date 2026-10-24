@@ -66,7 +66,7 @@ import {
 import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
 import { LicenceLists } from "./licence-lists";
-import { EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
+import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
 import { PublicViewTab, normalizePublicTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
 import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
 import { setMyListingImage } from "@/lib/sector-images.functions";
@@ -205,9 +205,9 @@ interface Props {
   popup?: StartupPopup;
 }
 
-export type PrivateTab = "images" | "about" | "market" | "licenses";
+export type PrivateTab = "images" | "about" | "address" | "market" | "licenses";
 export const PUBLIC_TABS: PublicTab[] = ["identity", "deal"];
-export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "market", "licenses"];
+export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "address", "market", "licenses"];
 export type StartupPopup = {
   view: "public" | "private";
   tab: string;
@@ -1274,7 +1274,7 @@ export function StartupForm({
   const aboutJsx = (<>
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
       <div className="@container">
-      <div className="grid grid-cols-[100px_1fr_2fr_140px] gap-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         <EditSec id="facts" tone="seller" active={secOn("facts")} className="space-y-1.5">
           <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
           <Input type="number" min={1800} max={new Date().getFullYear()}
@@ -1291,15 +1291,6 @@ export function StartupForm({
           {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr("Add the Company Name before you save.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Registered Name</Label>
-          <Input
-            value={registeredName}
-            onChange={(e) => setRegisteredName(e.target.value)}
-            placeholder="Official registered company name"
-            maxLength={255}
-          />
-        </div>
-        <div className="space-y-1.5">
           <Label>Registered Number</Label>
           <Input
             value={registeredNumber}
@@ -1308,7 +1299,9 @@ export function StartupForm({
             maxLength={64}
           />
         </div>
-        <div className="space-y-1.5">
+      </div>
+      </div>
+<CompactFields>        <div className="space-y-1.5">
           <Label>Company Type</Label>
           {(() => {
             const fromAdmin = companyTypeSource === "admin" && !companyTypeReset;
@@ -1332,28 +1325,6 @@ export function StartupForm({
             </>);
           })()}
         </div>
-        <div className="col-span-4 space-y-1.5 @[760px]:col-span-3">
-          <Label htmlFor="addr-street">Business Address</Label>
-          <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
-            onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
-            onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
-            note={ctAdmin ? "Buyers see the country and province, never the full address, until the seller approves their NDA." : tr("Buyers see your country and province, never the full address, until you approve their NDA.", "ผู้ซื้อจะเห็นเพียงประเทศและจังหวัดของท่าน ไม่เห็นที่อยู่เต็ม จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")} />
-        </div>
-      </div>
-      </div>
-
-
-      {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="stage">{secOn("stage") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label className="text-[#9CA3AF]">{th ? "ระยะการลงทุน" : "Investment Stage"}</Label>
-          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-            <div tabIndex={-1} aria-disabled="true" className="flex h-9 cursor-not-allowed items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-3 text-sm text-[#9CA3AF]">
-              <span>{th ? "สำหรับสตาร์ทอัพ · เร็วๆ นี้" : "For startups · coming soon"}</span><span aria-hidden="true">⌄</span>
-            </div>
-          </TooltipTrigger><TooltipContent>{th ? "ระยะการลงทุนใช้สำหรับสตาร์ทอัพ ส่วนนี้ของ PitchSnack ยังไม่เปิดใช้งาน" : "Investment stage is for startups. This part of PitchSnack isn't open yet."}</TooltipContent></Tooltip></TooltipProvider>
-        </div>
-
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="size">{secOn("size") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
           <Label>Company Size</Label>
           <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
@@ -1365,42 +1336,6 @@ export function StartupForm({
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="revenue">{secOn("revenue") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
-          <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {revenueOptions.map((s) => (
-                <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Row 3: Headquarters | Region | City */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-1.5">
-          <div className="flex h-6 items-center">
-            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>Headquarters</Label>
-          </div>
-          <CountryCombobox
-            value={headquarters}
-            onChange={(v) => {
-              setHeadquarters(v);
-              if (!v) {
-                setRegion("");
-              } else if (!region) {
-                const suggested = regionForCountry(v);
-                if (suggested) setRegion(suggested);
-              }
-            }}
-            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : "Select country..."}
-            className={miss(isStrEmpty(headquarters)) ? MISSING_INPUT : undefined}
-          />
         </div>
 
         <div className="space-y-1.5">
@@ -1465,6 +1400,54 @@ export function StartupForm({
             </Select>
           </TooltipProvider>
         </div>
+</CompactFields>
+      {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="stage">{secOn("stage") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
+          <Label className="text-[#9CA3AF]">{th ? "ระยะการลงทุน" : "Investment Stage"}</Label>
+          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+            <div tabIndex={-1} aria-disabled="true" className="flex h-9 cursor-not-allowed items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-3 text-sm text-[#9CA3AF]">
+              <span>{th ? "สำหรับสตาร์ทอัพ · เร็วๆ นี้" : "For startups · coming soon"}</span><span aria-hidden="true">⌄</span>
+            </div>
+          </TooltipTrigger><TooltipContent>{th ? "ระยะการลงทุนใช้สำหรับสตาร์ทอัพ ส่วนนี้ของ PitchSnack ยังไม่เปิดใช้งาน" : "Investment stage is for startups. This part of PitchSnack isn't open yet."}</TooltipContent></Tooltip></TooltipProvider>
+        </div>
+
+        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="revenue">{secOn("revenue") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
+          <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
+          <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {revenueOptions.map((s) => (
+                <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Row 3: Headquarters | Region | City */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <div className="flex h-6 items-center">
+            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>Headquarters</Label>
+          </div>
+          <CountryCombobox
+            value={headquarters}
+            onChange={(v) => {
+              setHeadquarters(v);
+              if (!v) {
+                setRegion("");
+              } else if (!region) {
+                const suggested = regionForCountry(v);
+                if (suggested) setRegion(suggested);
+              }
+            }}
+            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : "Select country..."}
+            className={miss(isStrEmpty(headquarters)) ? MISSING_INPUT : undefined}
+          />
+        </div>
+
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
             <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>City</Label>
@@ -1516,6 +1499,22 @@ export function StartupForm({
       </EditSec>
 
   </>);
+  const addressJsx = (<div className="space-y-4">        <div className="space-y-1.5">
+          <Label>Registered Name</Label>
+          <Input
+            value={registeredName}
+            onChange={(e) => setRegisteredName(e.target.value)}
+            placeholder="Official registered company name"
+            maxLength={255}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="addr-street">Business Address</Label>
+          <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
+            onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
+            onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
+            note={ctAdmin ? "Buyers see the country and province, never the full address, until the seller approves their NDA." : tr("Buyers see your country and province, never the full address, until you approve their NDA.", "ผู้ซื้อจะเห็นเพียงประเทศและจังหวัดของท่าน ไม่เห็นที่อยู่เต็ม จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")} />
+  </div>);
   const marketJsx = (<>
       {/* Industry pills */}
       <EditSec id="tags" tone="seller" active={secOn("tags")} className="space-y-1.5">
@@ -1655,6 +1654,7 @@ export function StartupForm({
   // ── Tabs (edit) ──
   const has = (x: string | null | undefined) => !!x && !!x.trim();
   const privateCounts: Record<PrivateTab, number> = {
+    address: [registeredName, addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
     images: attachmentMissing(media),
     about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(linkedinUrl), has(shortDescription), has(longDescription), founders.some((f) => f.full_name.trim())].filter((x) => !x).length,
     market: (industries.length ? 0 : 1) + (productTags.length ? 0 : 1),
@@ -1665,6 +1665,7 @@ export function StartupForm({
   const privTabs = [
     { key: "images" as const, label: tr("Images & Logo", "รูปภาพและโลโก้"), count: privateCounts.images },
     { key: "about" as const, label: tr("About Company", "เกี่ยวกับบริษัท"), count: privateCounts.about },
+    { key: "address" as const, label: tr("Address", "ที่อยู่"), count: privateCounts.address },
     { key: "market" as const, label: tr("Industry & Market", "อุตสาหกรรมและตลาด"), count: privateCounts.market },
     { key: "licenses" as const, label: tr("Licenses", "ใบอนุญาต") },
   ];
@@ -1706,6 +1707,7 @@ export function StartupForm({
               </EditSec>
             )}
             {curPriv === "about" && (<><TabHead title={tr("Company Info", "ข้อมูลบริษัท")}>{enrichBtn}</TabHead>{aboutJsx}{peopleJsx}</>)}
+            {curPriv === "address" && (<><TabHead title={tr("Company Address", "ที่อยู่บริษัท")}>{enrichBtn}</TabHead>{addressJsx}</>)}
             {curPriv === "market" && (<><TabHead title={tr("Market Target", "ตลาดเป้าหมาย")}>{enrichBtn}</TabHead>{marketJsx}</>)}
             {curPriv === "licenses" && (
               <EditSec id="licenses" tone="seller" active={secOn("licenses")}>
@@ -1813,7 +1815,7 @@ export function StartupForm({
         </div>
       )}
 
-      {isEdit ? tabbedJsx : (<>{mediaJsx}{aboutJsx}{marketJsx}{complianceJsx}{peopleJsx}</>)}
+      {isEdit ? tabbedJsx : (<>{mediaJsx}{aboutJsx}{addressJsx}{marketJsx}{complianceJsx}{peopleJsx}</>)}
 
       {tenantId && (
         <CreateInvestorDialog
