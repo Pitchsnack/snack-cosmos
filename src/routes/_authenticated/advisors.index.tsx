@@ -309,6 +309,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button type="button" aria-label="More" className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted"><MoreVertical className="h-4 w-4" /></button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
               {f.v.state === "unverified" && <DropdownMenuItem onSelect={() => act("send")}>Send to verification</DropdownMenuItem>}
               {f.v.state === "declined" && <DropdownMenuItem onSelect={() => act("reopen")}>Reopen verification</DropdownMenuItem>}
               <OwnershipMenuItem id={f.id} />

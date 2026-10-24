@@ -215,6 +215,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
         },
       });
       await qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
+      await qc.invalidateQueries({ queryKey: ["advisor-admin-edit", firm?.id] });
+      await qc.invalidateQueries({ queryKey: ["advisors-admin"] });
       const fresh = qc.getQueryData<AdvisorFirm[]>(ADVISOR_FIRMS_KEY)?.find((x) => x.id === firm?.id);
       const complete = fresh ? firmChecklist(fresh).every((i) => i.done) : false;
       const msg = complete ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the checklist to publish.";
