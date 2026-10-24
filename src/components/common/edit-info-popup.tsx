@@ -68,12 +68,12 @@ export function leaveEditUrl(replaceWithout: () => void) {
 
 export type RoleTone = "seller" | "buyer" | "advisor";
 const ROLE_FILL: Record<RoleTone, string> = {
-  seller: "bg-[#F6A823] text-[#0E162F]",
-  buyer: "bg-[#4338CA] text-white",
-  advisor: "bg-[#0F766E] text-white",
+  seller: "bg-help-seller text-accent-foreground",
+  buyer: "bg-help-buyer text-primary-foreground",
+  advisor: "bg-help-advisor text-primary-foreground",
 };
 
-export function EditInfoPopup({ open, subtitle, companyName, onClosed, children, phoneTabs }: {
+export function EditInfoPopup({ open, subtitle, companyName, onClosed, children, phoneTabs, title, creating }: {
   open: boolean;
   subtitle: string;
   companyName: string;
@@ -81,6 +81,8 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
   onClosed: () => void;
   children: ReactNode;
   phoneTabs?: boolean;
+  title?: string;
+  creating?: "startup" | "investor" | "advisor";
 }) {
   const tr = useTr();
   const [footer, setFooter] = useState<HTMLElement | null>(null);
@@ -145,7 +147,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
     <EditInfoCtx.Provider value={ctx}>
       <DialogPrimitive.Root open={open} onOpenChange={(o) => { if (!o) requestClose(); }}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="edit-info-shade fixed inset-0 z-50 bg-[rgba(17,24,39,0.32)] dark:bg-[rgba(0,0,0,0.5)]" />
+          <DialogPrimitive.Overlay className="edit-info-shade fixed inset-0 z-50 bg-edit-shade" />
           <DialogPrimitive.Content
             aria-describedby={undefined}
             onOpenAutoFocus={(e) => {
@@ -167,7 +169,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
           >
             <div className={cn("flex shrink-0 items-center gap-4 border-b border-[#EEF0F3] px-6 py-[18px] dark:border-border", phoneTabs && "max-sm:flex-wrap")}>
               <div className="min-w-0 flex-1">
-                <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
+                <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{title ?? tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
                 <div className="mt-[3px] text-[13px] text-[#6B7280] dark:text-muted-foreground">{subtitle}</div>
               </div>
               <div ref={setTabsSlot} className={cn("shrink-0 empty:hidden", phoneTabs && "max-sm:order-3 max-sm:mt-4 max-sm:w-full")} />
@@ -179,7 +181,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
             <div ref={setBody} data-edit-info-body
               className="min-h-0 shrink overflow-y-auto overscroll-contain transition-[height] duration-200 ease-out motion-reduce:transition-none max-sm:!h-auto max-sm:flex-1"
               style={h != null ? { height: h } : undefined}>
-              <div ref={inner} className="px-6 pb-[26px] pt-0">{children}</div>
+              <div ref={inner} className="edit-info-fields px-6 pb-[26px] pt-0">{children}</div>
             </div>
             <div ref={setFooter} className="flex shrink-0 items-center justify-end gap-2 border-t border-[#EEF0F3] px-6 py-[14px] dark:border-border" />
           </DialogPrimitive.Content>
@@ -188,9 +190,9 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
       <AlertDialog open={!!confirm} onOpenChange={(o) => { if (!o) { confirm?.stay(); setConfirm(null); } }}>
         <AlertDialogContent className="z-[60]">
           <AlertDialogHeader>
-            <AlertDialogTitle>{tr("Discard your changes?", "ยกเลิกการแก้ไขหรือไม่")}</AlertDialogTitle>
+            <AlertDialogTitle>{creating ? tr(`Discard this new ${creating}?`, "ยกเลิกข้อมูลใหม่หรือไม่") : tr("Discard your changes?", "ยกเลิกการแก้ไขหรือไม่")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {tr(`Your changes to ${companyName || "this company"} aren't saved yet.`, `การแก้ไขข้อมูลของ ${companyName || "บริษัท"} ยังไม่ได้บันทึก`)}
+              {creating ? tr("It hasn’t been created yet. What you’ve typed will be lost.", "ยังไม่ได้สร้างข้อมูล สิ่งที่ท่านกรอกจะหายไป") : tr(`Your changes to ${companyName || "this company"} aren't saved yet.`, `การแก้ไขข้อมูลของ ${companyName || "บริษัท"} ยังไม่ได้บันทึก`)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -292,4 +294,9 @@ export function TabHead({ title, children, line }: { title: string; children?: R
       {line}
     </div>
   );
+}
+
+/** Equal-width fields shared by all profile editors; stack without empty tracks on phones. */
+export function CompactFields({ children, two = false }: { children: ReactNode; two?: boolean }) {
+  return <div className={cn("grid items-start gap-4", two ? "sm:grid-cols-2" : "sm:grid-cols-3")}>{children}</div>;
 }
