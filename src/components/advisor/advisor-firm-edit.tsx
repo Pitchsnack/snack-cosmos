@@ -324,8 +324,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone }: { firm: 
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
         </div>
 </div>}
-        {visible("services") && <div className="space-y-4"><TabHead title={tr("Services & Fees")} />      <Section id="services" active={!setup && section === "services"} title="Services and fees" setup={!!setup}
-        action={setup ? <button type="button" onClick={setup.onChangeServices} className="text-[13px] font-semibold text-[#1E2A4A] hover:underline dark:text-foreground">Change services</button> : undefined}>
+        {visible("services") && <div className="space-y-4"><TabHead title={tr("Services & Fees")} />      <Section id="services" active={section === "services"} title="Services and fees">
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">Pick at least one service.</p>}
         {f.services.length > 0 && (
