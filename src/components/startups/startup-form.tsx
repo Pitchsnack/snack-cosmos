@@ -1514,6 +1514,7 @@ export function StartupForm({
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
             note={ctAdmin ? "Buyers see the country and province, never the full address, until the seller approves their NDA." : tr("Buyers see your country and province, never the full address, until you approve their NDA.", "ผู้ซื้อจะเห็นเพียงประเทศและจังหวัดของท่าน ไม่เห็นที่อยู่เต็ม จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")} />
+        </div>
   </div>);
   const marketJsx = (<>
       {/* Industry pills */}
