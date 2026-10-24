@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { StartupForm } from "@/components/startups/startup-form";
 import { PermissionGuard } from "@/components/permission-guard";
 
 export const Route = createFileRoute("/_authenticated/startups/new")({
   head: () => ({ meta: [{ title: "New Startup — SnackPortal2" }] }),
+  beforeLoad: () => {throw redirect({to:"/startups",search:{adding:true},replace:true});},
   component: NewStartupPage,
 });
 

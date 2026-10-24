@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { StartupForm } from "@/components/startups/startup-form";
@@ -30,6 +30,7 @@ const editSearchSchema = z.object({
 export const Route = createFileRoute("/_authenticated/startups/$id/edit")({
   head: () => ({ meta: [{ title: "Edit Startup — SnackPortal2" }] }),
   validateSearch: editSearchSchema,
+  beforeLoad: ({params,search}) => { throw redirect({to:"/startups",search:{editor:params.id,selected:params.id,view:search.view,q:search.q,sort:search.sort},replace:true}); },
   component: EditStartupPage,
 });
 
