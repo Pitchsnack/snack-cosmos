@@ -32,8 +32,8 @@ export function PrivateInvestorPanel({ f, hideHeader = false }: { f: SellerFavou
           ndaLine,
           hideHeader,
           revenueTitle: th ? "รายได้ขั้นต่ำของกิจการเป้าหมาย" : "Min. target revenue",
-          aumTitle: th ? "มูลค่าสินทรัพย์ภายใต้การบริหาร" : "AUM",
-          ticketTitle: th ? "ขนาดการลงทุนต่อดีล" : "Ticket size",
+          aumTitle: "AUM",
+          ticketTitle: th ? "ขนาดเงินลงทุน" : "Ticket size",
           action: <Link to="/marketplace/pipeline" className="whitespace-nowrap text-[14px] font-semibold text-[#2563EB] hover:underline">{t("Open in Pipeline")}</Link>,
         },
         afterPortfolio: p.people.length ? (
