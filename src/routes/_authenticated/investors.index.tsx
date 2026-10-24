@@ -54,18 +54,19 @@ export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSche
 export const Route = createFileRoute("/_authenticated/investors/")({
   head: () => ({
     meta: [
-      { title: "Investor Directory — SnackPortal2" },
+      { title: "Investors Directory — PitchSnack" },
       {
         name: "description",
         content:
-          "Browse the SnackPortal2 investor directory: search, filter and connect with investors across stages, sectors and geographies.",
+          "Browse the PitchSnack investor directory: search, filter and connect with investors across stages, sectors and geographies.",
       },
-      { property: "og:title", content: "Investor Directory — SnackPortal2" },
+      { property: "og:title", content: "Investors Directory — PitchSnack" },
       {
         property: "og:description",
         content:
-          "Browse the SnackPortal2 investor directory: search, filter and connect with investors across stages, sectors and geographies.",
+          "Browse the PitchSnack investor directory: search, filter and connect with investors across stages, sectors and geographies.",
       },
+      {property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},
     ],
   }),
   validateSearch: investorDirectorySearchSchema,

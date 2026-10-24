@@ -14,7 +14,7 @@ import {
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Eye, Lock, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Eye, Lock, Shield, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -310,6 +310,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
       const t = (v: string) => v.trim() || null;
       if (onCreated) {
         const result = await create({data:{tenantId:tenant,investorName:f.investor_name.trim(),owningAgentUserId:human,owningAiAgentId:ai,websiteUrl:t(f.website_url),linkedinUrl:t(f.linkedin_url),country:t(f.country),investorType:t(f.investor_type),yearFounded:f.year_founded ? Number(f.year_founded) : null,firmName:t(f.firm_name),email:t(f.email),address:addr,bio:t(f.short_description),preferredIndustries:industries,preferredStages:stages,keywords,investmentFocus:focus,aumBand:t(f.aum_band),ticketBand:t(f.ticket_band)}});
+        const uploaded = await uploadPending(media,({kind,ext})=>getUrl({data:{kind,ext,investor_id:result.id}}),supabase.storage.from("startup-media"));
+        if (uploaded.logoPath || uploaded.media.length) await updateDirectory({data:{id:result.id,logoPath:uploaded.logoPath,media:uploaded.media}});
         await qc.invalidateQueries({queryKey:["investors"]});pop?.setDirty(false);toast.success(`${f.investor_name.trim()} created`);onCreated(result.id);return;
       }
 
@@ -376,7 +378,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
       <form id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {pop && !setup ? <>
           <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Public view"),icon:<Eye />,count:0},{key:"private",label:tr("Private view"),icon:<Lock />,count:0}]} /></EditInfoTabsSlot>
-          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers")},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings")}]:[])]} />
+          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers")},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />}]:[])]} />
           {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">

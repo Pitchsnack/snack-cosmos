@@ -35,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/advisors/")({
     meta: [
       { title: "Advisors Directory — PitchSnack Admin" },
       { name: "description", content: "Every advisor firm profile on PitchSnack, with its verification." },
+      {property:"og:title",content:"Advisors Directory — PitchSnack Admin"},{property:"og:description",content:"Manage advisor firms and verification on PitchSnack."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},
     ],
   }),
   validateSearch: z.object({

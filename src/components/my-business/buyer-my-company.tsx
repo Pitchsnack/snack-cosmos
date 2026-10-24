@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { EditInfoPopup } from "@/components/common/edit-info-popup";
+import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, Check, ChevronDown, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Star, X } from "lucide-react";
@@ -611,109 +613,9 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
 
 /* --------------------------------- Editor --------------------------------- */
 
-const TITLES: Record<Section, string> = { public: "Edit public view", company: "Company", fund: "Fund", people: "Decision makers", mandate: "Mandate", portfolio: "Portfolio" };
-const list = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
-const num = (s: string) => { const n = Number(s.replace(/[^0-9.]/g, "")); return s.trim() && Number.isFinite(n) ? n : null; };
-
-function F({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return <label className="block space-y-1"><span className="text-[12.5px] font-medium">{label}</span>{children}{hint && <span className="block text-[11.5px] text-muted-foreground">{hint}</span>}</label>;
-}
-
-function EditDialog({ section, p, org, onClose }: { section: Section; p: BuyerProfile; org: BuyerOrg; onClose: () => void }) {
-  const save = useSave();
-  const [f, setF] = useState<Record<string, string>>({
-    headline: p.headline ?? "", description: p.description ?? "", legal_name: p.legal_name ?? "", address: p.address ?? "",
-    city: p.city ?? "", country: p.country ?? "", logo_url: p.logo_url ?? "", private_description: p.private_description ?? "",
-    aum_exact: p.aum_exact ?? "", aum_value: p.aum_value?.toString() ?? "", ticket_exact: p.ticket_exact ?? "",
-    ticket_min: p.ticket_min?.toString() ?? "", ticket_max: p.ticket_max?.toString() ?? "", track_record: p.track_record ?? "",
-    decision_process: p.decision_process ?? "", sectors: p.sectors.join(", "), stages: p.stages.join(", "), deal_types: p.deal_types.join(", "),
-    target_size: p.target_size ?? "", geography: p.geography ?? "",
-  });
-  const [people, setPeople] = useState(p.people.length ? p.people : [{ name: "", role: "", email: "", phone: "" }]);
-  const [holdings, setHoldings] = useState(p.portfolio.length ? p.portfolio : [{ name: "", note: "" }]);
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
-  const t = (k: string) => f[k].trim() || null;
-
-  const submit = async () => {
-    const patch: Record<string, unknown> =
-      section === "public" ? { headline: t("headline"), description: t("description") }
-      : section === "company" ? { legal_name: t("legal_name"), address: t("address"), city: t("city"), country: t("country"), logo_url: t("logo_url"), private_description: t("private_description") }
-      : section === "fund" ? { aum_exact: t("aum_exact"), aum_value: num(f.aum_value), ticket_exact: t("ticket_exact"), track_record: t("track_record"), decision_process: t("decision_process") }
-      : section === "mandate" ? { ticket_min: num(f.ticket_min), ticket_max: num(f.ticket_max), sectors: list(f.sectors), stages: list(f.stages), deal_types: list(f.deal_types), target_size: t("target_size"), geography: t("geography") }
-      : section === "people" ? { people: people.filter((m) => m.name.trim()) }
-      : { portfolio: holdings.filter((h) => h.name.trim()) };
-    await save.mutateAsync(patch);
-    toast.success("Saved");
-    onClose();
-  };
-
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[calc(100vh-64px)] max-w-[560px] overflow-y-auto">
-        <DialogHeader><DialogTitle>{TITLES[section]}</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          {section === "public" && <>
-            <F label="Public headline" hint="No firm, brand or people names."><Input value={f.headline} onChange={set("headline")} maxLength={140} /></F>
-            <F label="Anonymous description"><Textarea value={f.description} onChange={set("description")} maxLength={600} rows={4} /></F>
-            <p className="text-[12px] text-muted-foreground">Code name: <b className="font-semibold">{p.code_name}</b> (assigned by PitchSnack)</p>
-          </>}
-          {section === "company" && <>
-            <p className="text-[12px] text-muted-foreground">Name{org.website ? ", website" : ""} and registration no. come from your buyer verification.</p>
-            <F label="Legal name"><Input value={f.legal_name} onChange={set("legal_name")} /></F>
-            <F label="Address"><Textarea value={f.address} onChange={set("address")} rows={2} /></F>
-            <div className="grid grid-cols-2 gap-3"><F label="City"><Input value={f.city} onChange={set("city")} /></F><F label="Country"><Input value={f.country} onChange={set("country")} /></F></div>
-            <F label="Logo URL"><Input value={f.logo_url} onChange={set("logo_url")} placeholder="https://" /></F>
-            <F label="Short description"><Textarea value={f.private_description} onChange={set("private_description")} rows={3} /></F>
-          </>}
-          {section === "fund" && <>
-            <div className="grid grid-cols-2 gap-3">
-              <F label="AUM (exact)"><Input value={f.aum_exact} onChange={set("aum_exact")} placeholder="$320M" /></F>
-              <F label="AUM in USD" hint="Sellers see a range."><Input value={f.aum_value} onChange={set("aum_value")} inputMode="numeric" placeholder="320000000" /></F>
-            </div>
-            <F label="Ticket size (exact)"><Input value={f.ticket_exact} onChange={set("ticket_exact")} placeholder="$4M – $12M" /></F>
-            <F label="Track record"><Textarea value={f.track_record} onChange={set("track_record")} rows={2} /></F>
-            <F label="Decision process"><Textarea value={f.decision_process} onChange={set("decision_process")} rows={2} /></F>
-          </>}
-          {section === "mandate" && <>
-            <div className="grid grid-cols-2 gap-3">
-              <F label="Ticket min (USD)"><Input value={f.ticket_min} onChange={set("ticket_min")} inputMode="numeric" /></F>
-              <F label="Ticket max (USD)"><Input value={f.ticket_max} onChange={set("ticket_max")} inputMode="numeric" /></F>
-            </div>
-            <F label="Sectors" hint="Separate with commas."><Input value={f.sectors} onChange={set("sectors")} /></F>
-            <F label="Stages" hint="Separate with commas."><Input value={f.stages} onChange={set("stages")} placeholder="Growth, Mature" /></F>
-            <F label="Deal types" hint="Separate with commas."><Input value={f.deal_types} onChange={set("deal_types")} placeholder="Majority, Full buyout" /></F>
-            <F label="Target size"><Input value={f.target_size} onChange={set("target_size")} placeholder="Revenue $5M – $50M" /></F>
-            <F label="Geography"><Input value={f.geography} onChange={set("geography")} placeholder="Thailand, Southeast Asia" /></F>
-          </>}
-          {section === "people" && <>
-            {people.map((m, i) => (
-              <div key={i} className="grid grid-cols-2 gap-2 rounded-[10px] border border-border p-2.5">
-                {(["name", "role", "email", "phone"] as const).map((k) => (
-                  <Input key={k} placeholder={k[0].toUpperCase() + k.slice(1)} value={m[k]} onChange={(e) => setPeople((l) => l.map((x, j) => j === i ? { ...x, [k]: e.target.value } : x))} />
-                ))}
-                <button type="button" onClick={() => setPeople((l) => l.filter((_, j) => j !== i))} className="col-span-2 inline-flex items-center gap-1 justify-self-end text-[12px] text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" />Remove</button>
-              </div>
-            ))}
-            <Button variant="outline" size="sm" onClick={() => setPeople((l) => [...l, { name: "", role: "", email: "", phone: "" }])}><Plus className="mr-1 h-4 w-4" />Add a decision maker</Button>
-          </>}
-          {section === "portfolio" && <>
-            {holdings.map((h, i) => (
-              <div key={i} className="flex gap-2">
-                <Input placeholder="Company" value={h.name} onChange={(e) => setHoldings((l) => l.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
-                <Input placeholder="Note (optional)" value={h.note} onChange={(e) => setHoldings((l) => l.map((x, j) => j === i ? { ...x, note: e.target.value } : x))} />
-                <Button variant="ghost" size="icon" aria-label="Remove" onClick={() => setHoldings((l) => l.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-              </div>
-            ))}
-            <Button variant="outline" size="sm" onClick={() => setHoldings((l) => [...l, { name: "", note: "" }])}><Plus className="mr-1 h-4 w-4" />Add holding</Button>
-          </>}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => void submit()} disabled={save.isPending}><BadgeCheck className="mr-1.5 h-4 w-4" />Save</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+function EditDialog({section,p,onClose}:{section:Section;p:BuyerProfile;org:BuyerOrg;onClose:()=>void}) {
+ const mapped = section === "public" ? "description" : section === "company" ? "address" : section;
+ return <EditInfoPopup open subtitle="Your company" companyName={p.legal_name ?? ""} onClosed={onClose} phoneTabs><BuyerInvestorEdit section={mapped} /></EditInfoPopup>;
 }
 
 function SplitPrivate() {
