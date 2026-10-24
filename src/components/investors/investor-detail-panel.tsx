@@ -1,6 +1,6 @@
 import { bizName } from "@/lib/biz-name";
 import { OwnershipPanelSlot, OwnershipMenuItem } from "@/components/handover/ownership";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { bandText, usd } from "@/lib/investor-bands";
 import { Link } from "@tanstack/react-router";
@@ -107,7 +107,7 @@ export function InvestorDetailPanel({
     footer?: React.ReactNode;
     /** Edit link for a section heading (Buyer › My Company only). */
     /** Seller's view of a buyer (after an approved NDA): NDA line, header action, revenue section, no overview, wrapping facts. */
-    seller?: { ndaLine: React.ReactNode; action?: React.ReactNode; revenueTitle: string; hideHeader?: boolean };
+    seller?: { ndaLine: React.ReactNode; action?: React.ReactNode; revenueTitle: string; aumTitle: string; ticketTitle: string; hideHeader?: boolean };
     sectionEdit?: (key: "focus" | "stages" | "industries" | "keywords" | "portfolio") => React.ReactNode;
   };
   showEdit?: boolean;
@@ -184,9 +184,9 @@ export function InvestorDetailPanel({
   if (i.country) metaItems.push({ icon: MapPin, label: i.country });
   const ib = i as typeof i & { aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; aum_exact_usd?: number | null };
   const aumTxt = bandText(ib.aum_band) ?? i.aum;
-  if (aumTxt) metaItems.push({ icon: Coins, label: `AUM ${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` });
+  if (aumTxt && !sv) metaItems.push({ icon: Coins, label: `AUM ${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` });
   const tktTxt = bandText(ib.ticket_band) ?? ticket;
-  if (tktTxt) metaItems.push({ icon: Layers, label: `Ticket ${tktTxt}` });
+  if (tktTxt && !sv) metaItems.push({ icon: Layers, label: `Ticket ${tktTxt}` });
   const revTxt = bandText(ib.revenue_min_band);
   if (revTxt && !sv) metaItems.push({ icon: Coins, label: `Min. target revenue ${revTxt}` });
 
@@ -411,11 +411,39 @@ export function InvestorDetailPanel({
             </dl>
           )}
 
-          {sv && revTxt && (
-            <Section icon={Coins} title={sv.revenueTitle}>
-              <ChipRow tags={[revTxt]} tone="primary" />
-            </Section>
-          )}
+          {sv && (() => {
+            const cols = [
+              aumTxt ? { icon: Coins, title: sv.aumTitle, value: `${aumTxt}${ib.aum_exact_usd ? ` · ${usd(ib.aum_exact_usd)}` : ""}` } : null,
+              tktTxt ? { icon: Layers, title: sv.ticketTitle, value: tktTxt } : null,
+              revTxt ? { icon: Coins, title: sv.revenueTitle, value: revTxt } : null,
+            ].filter((c): c is { icon: typeof Coins; title: string; value: string } => !!c);
+            if (cols.length === 0) return null;
+            return (
+              <section
+                className={cn(
+                  "grid border-t border-b border-border/50 py-[11.2px]",
+                  "max-[760px]:grid-cols-1 max-[760px]:divide-y max-[760px]:divide-border/50 max-[760px]:gap-0",
+                  cols.length === 3 && "min-[760px]:grid-cols-[1fr_1px_1fr_1px_1fr]",
+                  cols.length === 2 && "min-[760px]:grid-cols-[1fr_1px_1fr]",
+                  cols.length === 1 && "min-[760px]:grid-cols-1",
+                  "min-[760px]:gap-[11.5px]",
+                )}
+              >
+                {cols.map((c, k) => (
+                  <Fragment key={k}>
+                    {k > 0 && <div className="hidden w-px self-stretch bg-[#EEEEEE] min-[760px]:block" aria-hidden />}
+                    <div className={cn("min-w-0", k > 0 && "max-[760px]:pt-[11.2px]")}>
+                      <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        <c.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                        {c.title}
+                      </h3>
+                      <ChipRow tags={[c.value]} tone="primary" />
+                    </div>
+                  </Fragment>
+                ))}
+              </section>
+            );
+          })()}
 
           {/* Overview */}
           {overview && (
