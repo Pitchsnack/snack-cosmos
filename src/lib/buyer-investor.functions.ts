@@ -62,11 +62,14 @@ export async function ensureLinked(userId: string) {
   return { sb, p: { ...p, investor_id: inv.id }, investorId: inv.id as string };
 }
 
-type Resolved = { sb: any; p: any; investorId: string; extra: boolean };
+type Resolved = { sb: any; p: any; investorId: string; extra: boolean; bpUser?: string };
 
 /**
  * The investor profile to work on: the caller's own linked one (no id, or its id),
- * or, for Admin only, one of the extra investor profiles Admin made with + Add Investor Profile.
+ * Admin's extra investor profiles made with + Add Investor Profile, or — Admin only,
+ * with the same check the Edit Investor page relies on (can_manage_investor on the
+ * record's workspace) — any Directory investor. Admin is decided here from the
+ * account's stored role, never from anything the browser sends.
  * Anyone else's profile throws "This profile isn't yours.".
  */
 export async function resolveBuyer(userId: string, investorId?: string | null): Promise<Resolved> {
@@ -76,18 +79,22 @@ export async function resolveBuyer(userId: string, investorId?: string | null): 
   if (bp?.investor_id === investorId) return { sb, p: bp, investorId, extra: false };
   const { roleOf } = await import("./plan-access.server");
   const [{ data: inv }, { data: linked }, role] = await Promise.all([
-    sb.from("investors").select("id, created_by, wizard").eq("id", investorId).maybeSingle(),
-    sb.from("buyer_profiles").select("user_id").eq("investor_id", investorId).maybeSingle(),
+    sb.from("investors").select("id, created_by, wizard, tenant_id").eq("id", investorId).maybeSingle(),
+    sb.from("buyer_profiles").select("*").eq("investor_id", investorId).maybeSingle(),
     roleOf(userId),
   ]);
-  if (!inv || linked || role !== "admin" || inv.created_by !== userId || !(inv.wizard as any)?.admin_profile) throw new Error("This profile isn't yours.");
+  if (!inv || role !== "admin") throw new Error("This profile isn't yours.");
   const w = ((inv.wizard as any)?.bp ?? {}) as Record<string, unknown>;
+  if (!linked && inv.created_by === userId && (inv.wizard as any)?.admin_profile) return { sb, p: { status: "draft", ...w }, investorId, extra: true };
+  const { data: canManage } = await sb.rpc("can_manage_investor", { _user_id: userId, _tenant_id: inv.tenant_id });
+  if (!canManage) throw new Error("This profile isn't yours.");
+  if (linked) return { sb, p: linked, investorId, extra: false, bpUser: linked.user_id as string };
   return { sb, p: { status: "draft", ...w }, investorId, extra: true };
 }
 
 /** Buyer-side fields: the account's buyer profile, or (Admin's extra profiles) kept on the investor record. */
 async function writeBp(r: Resolved, userId: string, bp: Record<string, unknown>) {
-  if (!r.extra) return r.sb.from("buyer_profiles").update(bp).eq("user_id", userId);
+  if (!r.extra) return r.sb.from("buyer_profiles").update(bp).eq("user_id", r.bpUser ?? userId);
   const { data: cur } = await r.sb.from("investors").select("wizard").eq("id", r.investorId).single();
   const w = (cur?.wizard ?? {}) as Record<string, any>;
   return r.sb.from("investors").update({ wizard: { ...w, bp: { ...(w.bp ?? {}), ...bp } } }).eq("id", r.investorId);
@@ -99,8 +106,8 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
       sb.from("investors").select("*").eq("id", investorId).single(),
       (await import("./profile-verification.server")).verificationByInvestor(sb, investorId, "status, decision_note, submitted_at").then((data: any) => ({ data })),
       sb.from("startup_investors").select("startups(id, startup_name)").eq("investor_id", investorId),
-      sb.from("user_profiles").select("title").eq("user_id", context.userId).maybeSingle(),
-      sb.auth.admin.getUserById(context.userId),
+      sb.from("user_profiles").select("title").eq("user_id", r.bpUser ?? context.userId).maybeSingle(),
+      sb.auth.admin.getUserById(r.bpUser ?? context.userId),
     ]);
     const meta = (au?.user?.user_metadata ?? {}) as Record<string, string>;
     const media = (Array.isArray(inv.media) ? inv.media : []) as { slot: number; image_path: string }[];
@@ -281,7 +288,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const r = await resolveBuyer(context.userId, data.investor_id);
     const { sb, investorId } = r;
-    const relation = r.extra ? ((r.p.buyer_relation ?? null) as string | null) : await relationOf(sb, context.userId);
+    const relation = r.extra ? ((r.p.buyer_relation ?? null) as string | null) : await relationOf(sb, r.bpUser ?? context.userId);
     // Same checks as Review & complete (section 5); the buyer can't save past them.
     const problem =
       (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
@@ -479,6 +486,6 @@ export const saveBuyerMedia = createServerFn({ method: "POST" })
     if (!own(data.logo_path) || data.media.some((m) => !own(m.image_path))) throw new Error("Invalid file.");
     const { error } = await r.sb.from("investors").update({ logo_url: data.logo_path, media: data.media, updated_by: context.userId, updated_at: new Date().toISOString() }).eq("id", r.investorId);
     if (error) throw new Error(error.message);
-    if (!r.extra) await r.sb.from("buyer_profiles").update({ logo_url: data.logo_path }).eq("user_id", context.userId);
+    if (!r.extra) await r.sb.from("buyer_profiles").update({ logo_url: data.logo_path }).eq("user_id", r.bpUser ?? context.userId);
     return { ok: true };
   });
