@@ -159,7 +159,7 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
 
 function Form({ data, setup, section, add, directory, initialView }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private" }) {
   const {data:session} = useSessionContext();
-  const admin = session?.user.accountRole === "admin";
+  const admin = session?.user?.accountRole === "admin";
   const inv = data.investor;
   const src = setup?.sources ?? {};
   const rel = data.buyer.relation;
