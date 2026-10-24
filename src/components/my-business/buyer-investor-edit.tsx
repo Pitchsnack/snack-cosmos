@@ -999,7 +999,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated }: 
           <EditInfoFooter>
           {errs.creation && <p className="mr-auto text-xs text-destructive">{errs.creation}</p>}
             <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
-            <Button type="submit" form="buyer-edit-form" disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+            <Button type="submit" form="buyer-edit-form" disabled={busy}>{busy ? "Saving…" : onCreated ? "Add investor" : "Save changes"}</Button>
           </EditInfoFooter>
         ) : (
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
