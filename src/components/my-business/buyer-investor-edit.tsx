@@ -162,7 +162,7 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void }) {
+function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
   const {data:session} = useSessionContext();
   const admin = session?.user?.accountRole === "admin";
   const create = useServerFn(createInvestor);
