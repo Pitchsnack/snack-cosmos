@@ -34,7 +34,7 @@ export function ProfileEditPopup({ advisor }: { advisor: boolean }) {
     <EditInfoPopup open subtitle={subtitle} companyName={name} onClosed={close}>
       {advisor
         ? (firm ? <AdvisorFirmEdit firmId={firm.id} section={s.section as EditSection | undefined} /> : null)
-        : <BuyerInvestorEdit section={s.section} add={!!s.add} />}
+        : <BuyerInvestorEdit section={s.section} add={!!s.add} initialView={s.from} />}
     </EditInfoPopup>
   );
 }

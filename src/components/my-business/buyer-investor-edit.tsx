@@ -33,6 +33,7 @@ import {
 } from "@/components/media/entity-media-editor";
 import { supabase } from "@/integrations/supabase/client";
 import { createMyBuyerUploadUrl, getBuyerInvestorById, getMyBuyerInvestor, saveMyBuyerInvestor } from "@/lib/buyer-investor.functions";
+import { useSessionContext } from "@/hooks/use-session-context";
 import { REGION_OPTIONS, regionForCountry } from "@/lib/country-region";
 
 export const BUYER_INVESTOR_KEY = ["buyer-investor", "me"];
@@ -115,7 +116,7 @@ function S({ id, cur, className, children }: { id: string; cur?: string; classNa
   return <EditSec id={id} tone="buyer" active={cur === id} className={className}>{children}</EditSec>;
 }
 
-export function BuyerInvestorEdit({ section, add, id }: { section?: string; add?: boolean; id?: string } = {}) {
+export function BuyerInvestorEdit({ section, add, id, directory, initialView }: { section?: string; add?: boolean; id?: string; directory?: boolean; initialView?: "public" | "private" } = {}) {
   const fetchMe = useServerFn(getMyBuyerInvestor);
   const fetchById = useServerFn(getBuyerInvestorById);
   const { data, isLoading, error } = useQuery({
@@ -126,7 +127,7 @@ export function BuyerInvestorEdit({ section, add, id }: { section?: string; add?
   });
   if (isLoading) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
-  return <Form data={data} section={section} add={add} />;
+  return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} />;
 }
 
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry";
@@ -156,7 +157,9 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; section?: string; add?: boolean }) {
+function Form({ data, setup, section, add, directory, initialView }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private" }) {
+  const {data:session} = useSessionContext();
+  const admin = session?.user.accountRole === "admin";
   const inv = data.investor;
   const src = setup?.sources ?? {};
   const rel = data.buyer.relation;
@@ -199,8 +202,8 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
   // Fund falls back to Investor Classification when the form hides the band.
   type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate";
   const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "mandate" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
-  const [tab, setTab] = useState<Tab>(section ? tabFor(section) : "media");
-  const [view, setView] = useState<"public" | "private">(section && ["description","mandate"].includes(tabFor(section)) ? "public" : "private");
+  const [tab, setTab] = useState<Tab>(section ? tabFor(section) : initialView === "public" ? "description" : "media");
+  const [view, setView] = useState<"public" | "private">(initialView ?? (section && ["description","mandate"].includes(tabFor(section)) ? "public" : "private"));
   const sec = section === "fund" && !showsFund ? "classification" : section;
   useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "button[role=checkbox]" } : undefined);
   const [industries, setIndustries] = useState(inv.preferred_industries);
@@ -270,10 +273,12 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
-    if (aBad) { setAddrShow(true); setErrs({ address: aBad }); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
+    if (!directory && aBad) { setAddrShow(true); setErrs({ address: aBad }); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
     const bad = checks.find(([, m]) => m);
-    if (bad) {
-      setErrs({ [bad[0]]: bad[1]! });
+    if (!directory && bad) {
+      setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
+      const target = bad[0] === "registration_no" ? "people" : bad[0] === "description" ? "description" : "about";
+      setView(target === "description" ? "public" : "private"); setTab(target);
       document.getElementById(`f-${bad[0]}`)?.focus();
       return;
     }
@@ -308,6 +313,8 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
         investor_id: inv.id,
       } });
       await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
+      await qc.invalidateQueries({ queryKey: ["investors"] });
+      await qc.invalidateQueries({ queryKey: ["investor", inv.id] });
       await qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
       const live = data.buyer.status === "live";
       const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(typeOf, agent ? actsFor : null) || stages.length > 0);
@@ -499,7 +506,7 @@ function Form({ data, setup, section, add }: { data: Data; setup?: SetupMode; se
 </div>}
           {tab === "mandate" && <div className="space-y-4"><TabHead title={tr("Mandate")} />        {/* Fund & ticket — US$ bands */}
         {showsFund && (
-          <S cur={setup ? undefined : sec} id="fund"><div className="grid grid-cols-2 gap-4">
+          <S cur={setup ? undefined : sec} id="fund"><div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>{corp ? "Group revenue band" : "Fund's AUM band"}<Tag s={src.aum_band} /></Label>
               <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
