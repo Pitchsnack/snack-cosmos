@@ -62,11 +62,14 @@ export async function ensureLinked(userId: string) {
   return { sb, p: { ...p, investor_id: inv.id }, investorId: inv.id as string };
 }
 
-type Resolved = { sb: any; p: any; investorId: string; extra: boolean };
+type Resolved = { sb: any; p: any; investorId: string; extra: boolean; bpUser?: string };
 
 /**
  * The investor profile to work on: the caller's own linked one (no id, or its id),
- * or, for Admin only, one of the extra investor profiles Admin made with + Add Investor Profile.
+ * Admin's extra investor profiles made with + Add Investor Profile, or — Admin only,
+ * with the same check the Edit Investor page relies on (can_manage_investor on the
+ * record's workspace) — any Directory investor. Admin is decided here from the
+ * account's stored role, never from anything the browser sends.
  * Anyone else's profile throws "This profile isn't yours.".
  */
 export async function resolveBuyer(userId: string, investorId?: string | null): Promise<Resolved> {
@@ -76,12 +79,16 @@ export async function resolveBuyer(userId: string, investorId?: string | null): 
   if (bp?.investor_id === investorId) return { sb, p: bp, investorId, extra: false };
   const { roleOf } = await import("./plan-access.server");
   const [{ data: inv }, { data: linked }, role] = await Promise.all([
-    sb.from("investors").select("id, created_by, wizard").eq("id", investorId).maybeSingle(),
-    sb.from("buyer_profiles").select("user_id").eq("investor_id", investorId).maybeSingle(),
+    sb.from("investors").select("id, created_by, wizard, tenant_id").eq("id", investorId).maybeSingle(),
+    sb.from("buyer_profiles").select("*").eq("investor_id", investorId).maybeSingle(),
     roleOf(userId),
   ]);
-  if (!inv || linked || role !== "admin" || inv.created_by !== userId || !(inv.wizard as any)?.admin_profile) throw new Error("This profile isn't yours.");
+  if (!inv || role !== "admin") throw new Error("This profile isn't yours.");
   const w = ((inv.wizard as any)?.bp ?? {}) as Record<string, unknown>;
+  if (!linked && inv.created_by === userId && (inv.wizard as any)?.admin_profile) return { sb, p: { status: "draft", ...w }, investorId, extra: true };
+  const { data: canManage } = await sb.rpc("can_manage_investor", { _user_id: userId, _tenant_id: inv.tenant_id });
+  if (!canManage) throw new Error("This profile isn't yours.");
+  if (linked) return { sb, p: linked, investorId, extra: false, bpUser: linked.user_id as string };
   return { sb, p: { status: "draft", ...w }, investorId, extra: true };
 }
 
