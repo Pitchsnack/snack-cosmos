@@ -1,4 +1,6 @@
 # Roadmap — Control setup wizards (brief 2)
+- [ ] October 24 unified Edit information: shared role tabs, Address/compact rows, Admin edit/add pop-ups, origin-preserving valuation editing, redirects and duplicate-form cleanup; awaiting plan approval
+- [ ] Unified editing checks: required-field errors, authenticated role saves/read-back, wizard regressions, 1440/390 EN/TH and dark-mode screenshots
 - [x] Seller Connect flight: stored-ID dismissal hook, public source covers, amber landing/no count change, Sent deep link; 19 rules pass; authenticated existing-invitation View verified; EN/TH 1440/1024/390, inline/rail and reduced motion checked without sending invitations
 - [ ] Seller Connect send-to-Done/Escape/close live check: requires a suitable test invitation recipient; no new real invitation or request quota was consumed
 - [x] Pending contact presentation: seller/buyer/advisor existing shared actions use server-derived first-check states; 16 rules/regression tests pass; shared tooltip hover/focus/click/Escape/scroll/reduced motion and 1440/1024/390 containment, EN-light/TH-dark checked; verified buyer normal actions remain
