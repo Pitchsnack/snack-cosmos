@@ -29,6 +29,7 @@
 - Admin Plans publish atomically; public cards share the live-plan renderer.
 - Contact enquiries: sendContactEnquiry (rate-limited); email-identity.ts drives replies and Sending rules.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
+- Directory and valuation edit hosts reuse StartupForm, BuyerInvestorForm and FirmEditForm; page wrappers own dismissal so form saves cannot change the originating page.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner.

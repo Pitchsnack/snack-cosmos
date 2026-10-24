@@ -87,7 +87,8 @@ export async function resolveBuyer(userId: string, investorId?: string | null): 
   const w = ((inv.wizard as any)?.bp ?? {}) as Record<string, unknown>;
   if (!linked && inv.created_by === userId && (inv.wizard as any)?.admin_profile) return { sb, p: { status: "draft", ...w }, investorId, extra: true };
   const { data: canManage } = await sb.rpc("can_manage_investor", { _user_id: userId, _tenant_id: inv.tenant_id });
-  if (!canManage) throw new Error("This profile isn't yours.");
+  const { canEditDirectoryInvestor } = await import("./profile-edit-access");
+  if (!canEditDirectoryInvestor(role, !!canManage)) throw new Error("This profile isn't yours.");
   if (linked) return { sb, p: linked, investorId, extra: false, bpUser: linked.user_id as string, directory: true };
   return { sb, p: { status: "draft", ...w }, investorId, extra: true, directory: true };
 }
