@@ -249,7 +249,7 @@ const TH_BASE: Record<string, string> = {
   "has left Favourites.": "ออกจากรายการโปรดแล้ว",
   "You requested the NDA on": "คุณส่งคำขอ NDA เมื่อ",
   "The seller usually replies within 2 days, and the private view opens here once they approve.": "ผู้ขายมักตอบกลับภายใน 2 วัน และข้อมูลส่วนตัวจะเปิดที่นี่เมื่ออนุมัติ",
-  "Shared with you under your NDA, approved": "แบ่งปันกับคุณภายใต้ NDA อนุมัติเมื่อ",
+  "Shared with you under NDA, approved": "แบ่งปันกับคุณภายใต้ NDA อนุมัติเมื่อ",
   "and valid until": "มีผลถึง",
   "Financials": "งบการเงิน",
   "Net profit": "กำไรสุทธิ",
