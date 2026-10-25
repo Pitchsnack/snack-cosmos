@@ -1,5 +1,6 @@
+import {InvestorEditPopup} from "@/components/investors/investor-edit-popup";
 import { bizName } from "@/lib/biz-name";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +24,7 @@ import { isUuid } from "@/lib/uuid";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 
 export const Route = createFileRoute("/_authenticated/investors/$id/")({
-  validateSearch: z.object({ from: z.literal("edit").optional() }),
+  validateSearch: z.object({ from: z.literal("edit").optional(),editor:z.boolean().optional() }),
   beforeLoad: ({ params, search }) => {
     // This page is only reachable from Edit → Properties. Any other entry
     // point shows the investor information panel in the directory instead.
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/investors/$id/")({
       throw redirect({ to: "/investors", search: { panel: params.id } });
     }
   },
-  head: () => ({ meta: [{ title: `Investor — SnackPortal2` }] }),
+  head: () => ({ meta: [{ title: "Investor profile — PitchSnack" },{name:"description",content:"Investor company information and ownership on PitchSnack."},{property:"og:title",content:"Investor profile — PitchSnack"},{property:"og:description",content:"Investor company information and ownership on PitchSnack."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}] }),
   component: InvestorDetailPage,
 });
 
@@ -40,6 +41,8 @@ const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
 
 function InvestorDetailPage() {
   const { id } = Route.useParams();
+  const search=Route.useSearch();
+  const navigate=useNavigate();
   const validId = isUuid(id);
   const { data, isLoading, error } = useInvestor(validId ? id : undefined);
   const { has, isControl } = usePermissions();
@@ -89,6 +92,7 @@ function InvestorDetailPage() {
 
   return (
     <div className="space-y-6">
+      {search.editor && <InvestorEditPopup id={id} onClose={()=>navigate({search:(p:typeof search)=>({...p,editor:undefined}),replace:true})} />}
       <Link to="/investors" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Back to investors
       </Link>
@@ -116,7 +120,7 @@ function InvestorDetailPage() {
           <Badge variant="outline">{s.visibility}</Badge>
           {canManage && (
             <Button asChild size="sm" variant="outline">
-              <Link to="/investors/$id/edit" params={{ id }}>
+              <Link to="/investors/$id" params={{ id }} search={{from:"edit",editor:true}}>
                 <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
               </Link>
             </Button>

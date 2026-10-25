@@ -1,3 +1,4 @@
+import {StartupEditPopup} from "@/components/startups/startup-edit-popup";
 import { bizName } from "@/lib/biz-name";
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -66,6 +67,7 @@ function ListingReview() {
   });
   const assign = useMutation({ mutationFn: () => assignFn({ data: { kind: "listing", id } }), onSuccess: () => { refresh(); toast.success("Assigned to you"); } });
   const notify = useMutation({ mutationFn: (value: boolean) => notifyFn({ data: { id, value } }), onSuccess: refresh });
+  const [profileEditing,setProfileEditing]=useState(false);
   const [changes, setChanges] = useState(false);
   const [reject, setReject] = useState(false);
   const [approve, setApprove] = useState(false);
@@ -85,13 +87,14 @@ function ListingReview() {
     onToggleNotify: (x) => notify.mutate(x),
     onSetImage: () => setLibrary(true),
     onShowEdits: () => setEditsOpen(true),
-    onEditPrivate: () => navigate({ to: "/startups/$id/edit", params: { id: hp.startup_id } }),
-    onEditMedia: () => navigate({ to: "/startups/$id/edit", params: { id: hp.startup_id } }),
+    onEditPrivate: () => setProfileEditing(true),
+    onEditMedia: () => setProfileEditing(true),
   };
   const statusLabel = hp.approval_status === "in_review" && !!hp.live ? "Live · edits pending" : STATUS[hp.approval_status] ?? hp.approval_status;
 
   return (
     <div className="space-y-5" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+      {profileEditing && <StartupEditPopup id={hp.startup_id} onClose={()=>{setProfileEditing(false);refresh();}} />}
       <Link to="/approvals" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Approvals</Link>
       <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 rounded-[14px] border border-border bg-card p-4">
         <div className="min-w-0">

@@ -1,3 +1,5 @@
+import {z} from "zod";
+import {StartupEditPopup} from "@/components/startups/startup-edit-popup";
 import { bizName } from "@/lib/biz-name";
 import { RegistrationVerifiedSwitch } from "@/components/startups/registration-verified-switch";
 import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
@@ -23,10 +25,11 @@ import { isUuid } from "@/lib/uuid";
 import { StartupNotFound } from "@/components/startups/startup-not-found";
 
 export const Route = createFileRoute("/_authenticated/startups/$id/")({
-  head: () => ({ meta: [{ title: "Startup — SnackPortal2" }] }),
+  head: () => ({ meta: [{ title: "Startup profile — PitchSnack" },{name:"description",content:"Company information and ownership on PitchSnack."},{property:"og:title",content:"Startup profile — PitchSnack"},{property:"og:description",content:"Company information and ownership on PitchSnack."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}] }),
+  validateSearch:z.object({from:z.literal("edit").optional(),editor:z.boolean().optional()}),
   // No separate entry page: a link to an entry opens its information box over the directory.
-  beforeLoad: ({ params }) => {
-    throw redirect({ to: "/startups", search: { panel: params.id, tab: "full" } });
+  beforeLoad: ({ params,search }) => {
+    if(search.from !== "edit") throw redirect({ to: "/startups", search: { panel: params.id, tab: "full" } });
   },
   component: StartupDetailPage,
 });
@@ -42,6 +45,7 @@ function monogram(name: string | null | undefined) {
 function StartupDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const validId = isUuid(id);
   const { data, isLoading, error } = useStartup(validId ? id : undefined);
   const { has, isControl } = usePermissions();
@@ -81,6 +85,7 @@ function StartupDetailPage() {
 
   return (
     <div className="space-y-6">
+      {search.editor && <StartupEditPopup id={id} onClose={()=>navigate({search:(p:typeof search)=>({...p,editor:undefined}),replace:true})} />}
       <Link to="/startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Back to startups
       </Link>
@@ -118,7 +123,7 @@ function StartupDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
-            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/startups/$id/edit", params: { id } })}>
+            <Button size="sm" variant="outline" onClick={() => navigate({search:(p:typeof search)=>({...p,editor:true})})}>
               <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
             </Button>
           )}

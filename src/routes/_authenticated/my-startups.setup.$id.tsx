@@ -66,7 +66,7 @@ function Page() {
 
   if (error) return <p className="p-8 text-sm text-muted-foreground">{(error as Error).message}</p>;
   if (!data || !initial || !session?.user?.id) return null;
-  if (fill) return <SellerAutoFill id={id} web={fill} onDone={() => { void qc.invalidateQueries(); navigate({ to: "/my-startups/$id/edit", params: { id } }); }} />;
+  if (fill) return <SellerAutoFill id={id} web={fill} onDone={() => { void qc.invalidateQueries(); navigate({ to: "/my-startups", search:{panel:id,edit:"startup",view:"private",tab:"images"} }); }} />;
   return (
     <SellerWizard
       userId={session.user.id}
@@ -82,7 +82,7 @@ function Page() {
         try { await saveFn({ data: payload(d, true) }); } catch (e) { toast.error((e as Error).message); return; }
         if (d.web.trim()) { setFill(d.web); return; }
         void qc.invalidateQueries();
-        navigate({ to: "/my-startups/$id/edit", params: { id } });
+        navigate({ to: "/my-startups", search:{panel:id,edit:"startup",view:"private",tab:"images"} });
       }}
     />
   );
