@@ -171,6 +171,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const updateDirectory = useServerFn(updateInvestor);
   const [companyType,setCompanyType] = useState(data.investor.company_type ?? "");
   const [companyTypeDirty,setCompanyTypeDirty] = useState(false);
+  const [companyTypeReset,setCompanyTypeReset] = useState(false);
   const getTenants = useServerFn(listAssignableTenants);
   const getUsers = useServerFn(listAssignableUsers);
   const [tenant,setTenant] = useState(directoryRecord?.tenant_id ?? session?.activeWorkspace.tenantId ?? "");
@@ -247,6 +248,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const pop = useEditInfo();
+  const editSnapshot = JSON.stringify([f,addr,companyType,companyTypeDirty,companyTypeReset,tenant,directoryStatus,directoryVisibility,legalName,longDescription,human,ai,deals,keywords,focus,stages,actsFor,industries,portfolio,media,people,linkedPortfolio,revenueMin,revenueMax]);
+  const originalSnapshot = useRef(editSnapshot);
+  useEffect(()=>{pop?.setDirty(editSnapshot !== originalSnapshot.current);},[editSnapshot]);
+
   useEffect(() => { pop?.setPresentation(f.investor_name, tr(view === "public" ? "Public view" : "Private view")); }, [f.investor_name, view]);
   const back = () => (setup ? setup.onBack() : pop ? pop.requestClose() : navigate({ to: "/marketplace/my-company" }));
 
@@ -357,7 +362,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         investor_id: inv.id,
       } });
       if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
-      if (admin && companyTypeDirty && companyType) await updateDirectory({data:{id:inv.id,companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"}});
+      if (admin && companyTypeDirty) await updateDirectory({data:{id:inv.id,...(companyTypeReset ? {companyTypeReset:true} : companyType ? {companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"} : {})}});
       await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
       await qc.invalidateQueries({ queryKey: ["investors"] });
       await qc.invalidateQueries({ queryKey: ["investor", inv.id] });
@@ -392,7 +397,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </>
       )}
 
-      <form id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
+      <form noValidate={!!pop} id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {pop && !setup ? <>
           <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Public view"),icon:<Eye />,count:0},{key:"private",label:tr("Private view"),icon:<Lock />,count:0}]} /></EditInfoTabsSlot>
           <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo")},{key:"about",label:tr("About Company"),error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers")},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
@@ -431,7 +436,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <Label>Company Name{req}<Tag s={src.investor_name} /></Label>
             <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder="e.g. Acme Ventures" maxLength={120}
               className={errs.investor_name && !f.investor_name.trim() ? "creation-invalid" : ""} />
-            <Err k="investor_name" />
+            {!f.investor_name.trim() && <Err k="investor_name" />}
           </div>
           {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
             <Label>Investor Classification<Tag s={src.investor_type} /></Label>
@@ -451,17 +456,18 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>}
 
 <CompactFields two={individual}>        <>
-          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onChange={(v)=>{setCompanyType(v);setCompanyTypeDirty(true);}} />
+          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onReset={()=>{setCompanyType(companyTypeForRelation(rel) ?? "");setCompanyTypeReset(true);setCompanyTypeDirty(true);}} onChange={(v)=>{setCompanyType(v);setCompanyTypeReset(false);setCompanyTypeDirty(true);}} />
         </>
         {!individual && (
           <>
-            <CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} />
+            <S id="size" cur={sec}><CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} /></S>
           </>
         )}
 
         {/* Row 2: Region (Country lives in the address box) */}
 
-          <div className="space-y-1.5">
+          <div data-edit-sec="region" className="relative space-y-1.5">
+            {sec === "region" && <div aria-hidden className="edit-sec-box is-buyer" />}
             <div className="flex h-6 items-center gap-1.5">
               <Label>Region</Label>
               <TooltipProvider delayDuration={150}>
@@ -540,7 +546,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <Input id="f-firm_name" value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
           </div>
         </div>
-        <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
+        <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec={sec === "address" ? "address" : "country"}>
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
           <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
             title={individual ? tr("Address") : tr("Business address")}
@@ -551,6 +557,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
 </div>}
           {tab === "mandate" && <div className="space-y-4"><TabHead title={tr("Mandate")} />        {/* Fund & ticket — US$ bands */}
+        {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
         {showsFund && (
           <S cur={setup ? undefined : sec} id="fund"><div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -767,7 +774,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>}
 
         <div className="grid grid-cols-[220px_1fr] gap-4">
-          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onChange={(v)=>{setCompanyType(v);setCompanyTypeDirty(true);}} />
+          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onReset={()=>{setCompanyType(companyTypeForRelation(rel) ?? "");setCompanyTypeReset(true);setCompanyTypeDirty(true);}} onChange={(v)=>{setCompanyType(v);setCompanyTypeReset(false);setCompanyTypeDirty(true);}} />
         </div>
         {!individual && (
           <div className="grid grid-cols-[220px_1fr] gap-4">
@@ -1022,7 +1029,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </>}
         {pop ? (
           <EditInfoFooter>
-          {errs.creation && <p className="mr-auto text-xs text-destructive">{errs.creation}</p>}
+          {errs.creation && missingCreationFields("investor",f.investor_name,tenant,human,ai).length > 0 && <p className="basis-full text-[13px] font-medium text-destructive">To add the investor, fill in: {missingCreationFields("investor",f.investor_name,tenant,human,ai).join(", ")}. Company Name is in About Company; ownership is in Admin settings.</p>}
             <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
             <Button type="submit" form="buyer-edit-form" disabled={busy}>{busy ? "Saving…" : onCreated ? "Add investor" : "Save changes"}</Button>
           </EditInfoFooter>

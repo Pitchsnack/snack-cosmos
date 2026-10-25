@@ -462,8 +462,8 @@ export function StartupForm({
     startup_ownership?: Array<{ owning_agent_user_id: string }>;
     startup_ai_ownership?: Array<{ owning_ai_agent_id: string }>;
   } | undefined;
-  const startupAgentDefault = startupOwn?.startup_ownership?.[0]?.owning_agent_user_id ?? null;
-  const startupAiAgentDefault = startupOwn?.startup_ai_ownership?.[0]?.owning_ai_agent_id ?? null;
+  const startupAgentDefault = (Array.isArray(startupOwn?.startup_ownership) ? startupOwn.startup_ownership[0] : startupOwn?.startup_ownership as {owning_agent_user_id?:string} | undefined)?.owning_agent_user_id ?? null;
+  const startupAiAgentDefault = (Array.isArray(startupOwn?.startup_ai_ownership) ? startupOwn.startup_ai_ownership[0] : startupOwn?.startup_ai_ownership as {owning_ai_agent_id?:string} | undefined)?.owning_ai_agent_id ?? null;
 
   // Founders
   const [founders, setFounders] = useState<FounderDraft[]>(
@@ -499,7 +499,7 @@ export function StartupForm({
   // Under the flag, tenant-dependent queries fire only when selected tenant
   // equals the active workspace. Options are hidden when mismatched.
   const ownershipEnabled =
-    enabled && !!tenantId && (!isEdit || ctAdmin) && (!WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive);
+    enabled && !!tenantId && (!isEdit || ctAdmin) && (isEdit || !WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive);
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
@@ -794,7 +794,7 @@ export function StartupForm({
   };
 
   const guard = useUnsavedChangesGuard({
-    isDirty: popup ? false : isDirty,
+    isDirty: popup || editCtx ? false : isDirty,
     isSaving: submitting,
     onSave: submitForm,
     canSave: canSubmit,
@@ -1483,7 +1483,7 @@ export function StartupForm({
           onChange={setWebsiteUrl}
           onCommit={(url) => void websiteDup.check(url)}
           placeholder="https://"
-          required={!isEdit}
+          required={!isEdit && !editCtx}
         />
         <EditableUrlField
           label="LinkedIn URL"
@@ -1687,7 +1687,7 @@ export function StartupForm({
               })}
             </SelectContent>
           </Select>
-          {WORKSPACE_ENFORCEMENT_ENABLED && tenantId && !tenantMatchesActive && (
+          {!isEdit && WORKSPACE_ENFORCEMENT_ENABLED && tenantId && !tenantMatchesActive && (
             <WorkspaceConflictNotice
               recordWorkspaceName={selectedTenantName}
               activeWorkspaceName={activeTenantName}
@@ -1757,7 +1757,7 @@ export function StartupForm({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Owning Agent <span className="text-destructive">*</span></Label>
-              <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={isMyStartupsCreate || !tenantId || (WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
+              <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={isMyStartupsCreate || !tenantId || (!isEdit && WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
                 <SelectTrigger>
                   <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
                 </SelectTrigger>
@@ -1777,7 +1777,7 @@ export function StartupForm({
             </div>
             <div className="space-y-1.5">
               <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
-              <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi || (WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
+              <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi || (!isEdit && WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
                 <SelectTrigger>
                   <SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} />
                 </SelectTrigger>
@@ -1977,7 +1977,7 @@ export function StartupForm({
 
       {editCtx ? (
         <EditInfoFooter>
-          {createAttempted && !isEdit && !canSubmit && <p className="mr-auto text-[13px] font-medium text-destructive">To create the startup, fill in: {!startupName.trim() && "Company Name (About Company), "}{!tenantId && "Tenant, "}{(!owningAgentUserId || !owningAiAgentId) && "required ownership (Admin settings)."}</p>}
+          {createAttempted && !isEdit && !canSubmit && <p className="basis-full text-[13px] font-medium text-destructive">To create the startup, fill in: {!startupName.trim() && "Company Name (About Company), "}{!tenantId && "Tenant, "}{(!owningAgentUserId || !owningAiAgentId) && "required ownership (Admin settings)."}</p>}
           <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>Cancel</Button>
           <Button type="submit" form="startup-edit-form" disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
             {submitting ? "Saving…" : isEdit ? "Save changes" : "Create startup"}
