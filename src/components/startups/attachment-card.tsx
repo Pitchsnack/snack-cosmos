@@ -88,7 +88,7 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
         </div>
         {showGuidance && <div className="w-[248px] shrink-0 max-[800px]:w-full">
           {hasLogo && photos > 0 ? (
-            <p className="flex gap-2 text-[13px] leading-[1.5] text-[#4B5563] dark:text-muted-foreground"><Tick />{tr("Your logo and photos are in. Buyers see them in your Private view.", "เพิ่มโลโก้และรูปภาพแล้ว ผู้ซื้อจะเห็นในมุมมองส่วนตัวของท่าน")}</p>
+            <p className="flex gap-2 text-[13px] leading-[1.5] text-[#4B5563] dark:text-muted-foreground"><Tick />{tr("Your logo and photos are in. Buyers see them in your Exclusive view.", "เพิ่มโลโก้และรูปภาพแล้ว ผู้ซื้อจะเห็นในมุมมองพิเศษของท่าน")}</p>
           ) : (
             <>
               <div className="text-[13.5px] font-semibold text-[#151A28] dark:text-foreground">{tr("Why add them", "ทำไมควรเพิ่ม")}</div>

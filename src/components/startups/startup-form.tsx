@@ -202,7 +202,7 @@ interface Props {
   valuationReturn?: boolean;
   /** Seller › My Company: open the form at this section, in the light orange box. */
   section?: string;
-  /** My Company › Edit information pop-up: Public view + Private view tabs, one Save. */
+  /** My Company › Edit information pop-up: Listing view + Exclusive view tabs, one Save. */
   popup?: StartupPopup;
 }
 
@@ -475,7 +475,7 @@ export function StartupForm({
   // Logo + Media — hydrated from persisted paths in edit mode.
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMediaState(startup));
 
-  // Edit information › Public view: the listing draft, saved by the same Save.
+  // Edit information › Listing view: the listing draft, saved by the same Save.
   const listingSource = useMemo<ListingSource | undefined>(
     () => (popup && startup ? ({ ...(startup as unknown as ListingSource), sector, city, headquarters, product_tags: productTags, market_tags: marketTags, people: popup.facts?.people ?? [] } as ListingSource) : undefined),
     [popup?.facts, startup, sector, city, headquarters, productTags, marketTags], // eslint-disable-line react-hooks/exhaustive-deps
@@ -483,7 +483,7 @@ export function StartupForm({
   const pd = usePublicDraft(popup?.row ?? null, popup?.facts, listingSource);
   const [nameErr, setNameErr] = useState(false);
   const [createAttempted, setCreateAttempted] = useState(false);
-  useEffect(() => { editCtx?.setPresentation(startupName, tr(pView === "public" ? "Public view" : "Private view", pView === "public" ? "มุมมองสาธารณะ" : "มุมมองส่วนตัว")); }, [startupName,pView]);
+  useEffect(() => { editCtx?.setPresentation(startupName, tr(pView === "public" ? "Listing view" : "Exclusive view", pView === "public" ? "มุมมองรายการ" : "มุมมองพิเศษ")); }, [startupName,pView]);
 
   // Ownership (create only — required by current API)
   // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
@@ -1834,14 +1834,14 @@ export function StartupForm({
         <EditInfoTabsSlot>
           <MainTabs idBase="sf" tone="seller" value={showPublic ? "public" : "private"} onChange={(v) => navTab(v, "")}
             tabs={[
-              { key: "public", label: tr("Public view", "มุมมองสาธารณะ"), icon: <Eye />, count: pubTotal },
-              { key: "private", label: tr("Private view", "มุมมองส่วนตัว"), icon: <Lock />, count: privTotal },
+              { key: "public", label: tr("Listing view", "มุมมองรายการ"), icon: <Eye />, count: pubTotal },
+              { key: "private", label: tr("Exclusive view", "มุมมองพิเศษ"), icon: <Lock />, count: privTotal },
             ]} />
         </EditInfoTabsSlot>
       )}
       {showPublic ? (
         <>
-          <TabRow idBase="sfp" label={tr("Public view sections", "ส่วนของมุมมองสาธารณะ")} tabs={pubTabs} value={curPub} onChange={(k) => navTab("public", k)} />
+          <TabRow idBase="sfp" label={tr("Listing view sections", "ส่วนของมุมมองรายการ")} tabs={pubTabs} value={curPub} onChange={(k) => navTab("public", k)} />
           <div role="tabpanel" id="sfp-panel" aria-labelledby={`sfp-tab-${curPub}`}>
             <PublicViewTab tab={curPub} pd={pd} sector={sector} section={section} source={listingSource} refNo={popup?.row?.ref_no}
               pickedImage={(popup?.row as { public_image_id?: string | null } | null)?.public_image_id ?? null} />
@@ -1849,7 +1849,7 @@ export function StartupForm({
         </>
       ) : (
         <>
-          <TabRow idBase="sfv" label={tr("Private view sections", "ส่วนของมุมมองส่วนตัว")} tabs={privTabs} value={curPriv} onChange={(k) => navTab("private", k)} />
+          <TabRow idBase="sfv" label={tr("Exclusive view sections", "ส่วนของมุมมองพิเศษ")} tabs={privTabs} value={curPriv} onChange={(k) => navTab("private", k)} />
           <div role="tabpanel" id="sfv-panel" aria-labelledby={`sfv-tab-${curPriv}`} className="space-y-4">
             {curPriv === "images" && (
               <EditSec id="media" tone="seller" active={secOn("media") || secOn("photos") || secOn("logo")}>

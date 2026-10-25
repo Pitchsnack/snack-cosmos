@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 export type FavView = "private" | "public";
 
 /**
- * Favourites card: with an approved NDA, My Company's folder tabs (Private view
- * left and in front by default, Public view right); otherwise one public card.
+ * Favourites card: with an approved NDA, My Company's folder tabs (Exclusive view
+ * left and in front by default, Listing view right); otherwise one public card.
  */
 export function FavViewCard({ name, hasPrivate, view, open, side, onView, privateBody, publicBody, reserveTabs }: {
   name: string;
@@ -37,10 +37,10 @@ export function FavViewCard({ name, hasPrivate, view, open, side, onView, privat
     <div className="@container">
       <div role="tablist" aria-label={`${t("Views of")} ${name}`} onKeyDown={onKey} className="standard-watch-tabs relative z-10 h-[58px]">
         {hasPrivate && <FolderTab side="left" active={v === "private"} open={open} tone="green" compactNarrow
-          icon={<LockOpen className="h-4 w-4 shrink-0" />} title={t("Private view")} sub={t("Shared under your NDA")}
+          icon={<LockOpen className="h-4 w-4 shrink-0" />} title={t("Exclusive view")} sub={t("Shared under your NDA")}
           controls={bodyId} tabRef={(el) => { refs.current.private = el; }} onClick={() => onView("private")} />}
         <FolderTab side={hasPrivate ? "right" : "left"} active={v === "public"} open={open} tone="indigo" compactNarrow
-          icon={<Eye className="h-4 w-4 shrink-0" />} title={t("Public view")} sub={t(side === "advisor" ? "What everyone sees" : side === "buyer" ? "What every buyer sees" : "What every seller sees")}
+          icon={<Eye className="h-4 w-4 shrink-0" />} title={t("Listing view")} sub={t(side === "advisor" ? "What everyone sees" : side === "buyer" ? "What every buyer sees" : "What every seller sees")}
           controls={bodyId} tabRef={(el) => { refs.current.public = el; }} onClick={() => onView("public")} />
       </div>
       <div id={bodyId} role="tabpanel" className={cn("overflow-hidden rounded-b-[14px] rounded-t-none border bg-card", open ? "border-accent" : "border-border", strip)}>
@@ -58,15 +58,15 @@ export function FavViewLine({ view, children }: { view: FavView; children: React
     <div className={cn("flex flex-wrap items-start gap-2 rounded-[10px] border px-[14px] py-[11px] text-[13.5px]",
       priv ? "border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]" : "border-[#E0E7FF] bg-[#F5F7FF] text-[#312E81]")}>
       {priv ? <LockOpen className="mt-0.5 h-4 w-4 flex-none" /> : <Eye className="mt-0.5 h-4 w-4 flex-none" />}
-      <span className={cn("rounded-[6px] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide", priv ? "bg-[#E8F6EE]" : "bg-[#E0E7FF]")}>{t(priv ? "Private view" : "Public view")}</span>
+      <span className={cn("rounded-[6px] px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide", priv ? "bg-[#E8F6EE]" : "bg-[#E0E7FF]")}>{t(priv ? "Exclusive view" : "Listing view")}</span>
       <span className="min-w-0 flex-1">{children}</span>
     </div>
   );
 }
 
-/** Second sentence of the Public view line. */
+/** Second sentence of the Listing view line. */
 export function publicStatusSentence(t: (s: string) => string, status: "approved" | "requested" | "saved", what: "company" | "investor", requestedOn: string) {
-  const pv = <b>{t("Private view")}</b>;
+  const pv = <b>{t("Exclusive view")}</b>;
   if (status === "approved") return <>{t("Your NDA is approved, so the")} {pv} {t(what === "company" ? "tab shows the company." : "tab shows the investor.")}</>;
   if (status === "requested") return <>{t("The NDA was requested on")} {requestedOn}. {t("Once it's approved, this card gets a")} {pv} {t("tab, shown first.")}</>;
   return <>{t("Once an NDA is approved, this card gets a")} {pv} {t("tab, shown first.")}</>;

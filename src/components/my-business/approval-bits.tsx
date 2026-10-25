@@ -111,7 +111,7 @@ function changedFields(row: HiddenProfileRow) {
 
 type Missing = { key: string; label: string };
 
-/** Footer bar, identical on the Public and Private view tabs. */
+/** Footer bar, identical on the Public and Exclusive view tabs. */
 export function ApprovalFooter({
   startupId, row, missing, flagged, blockedReason, onItem, onCreate,
 }: {
@@ -145,7 +145,7 @@ export function ApprovalFooter({
     text = <>Buyers see the approved version from {fmt(row?.published_at)} until you resubmit.</>;
     action = submitBtn("Resubmit");
   } else if (!row) {
-    text = <>Create your Public view before you can submit for approval.</>;
+    text = <>Create your Listing view before you can submit for approval.</>;
     action = <><Button size="sm" variant="outline" onClick={onCreate}>Create public view</Button>{submitBtn()}</>;
   } else if (!ready) {
     const parts: React.ReactNode[] = missing.map((m) => (
@@ -157,7 +157,7 @@ export function ApprovalFooter({
     );
     action = submitBtn();
   } else {
-    text = <>Everything is ready. Your Public view and Private view are submitted together; Admin usually reviews within 1 business day.</>;
+    text = <>Everything is ready. Your Listing view and Exclusive view are submitted together; Admin usually reviews within 1 business day.</>;
     action = submitBtn(st === "rejected" || st === "unpublished" ? "Resubmit" : "Publish");
   }
   return (
@@ -241,8 +241,8 @@ function ConfirmSubmitDialog({
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : (
             <>
-              <Section title="Public view" rows={pub} edit="hidden" />
-              <Section title="Private view" rows={priv} edit="private" />
+              <Section title="Listing view" rows={pub} edit="hidden" />
+              <Section title="Exclusive view" rows={priv} edit="private" />
             </>
           )}
         </div>
@@ -277,7 +277,7 @@ export function ApprovedChip({ row }: { row: HiddenProfileRow | null | undefined
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto max-w-[300px] rounded-[10px] px-3 py-2.5 text-[13px] leading-snug">
-        Any change to the Public or Private view must be resubmitted before buyers see it; the approved version stays live in the meantime.
+        Any change to the Public or Exclusive view must be resubmitted before buyers see it; the approved version stays live in the meantime.
       </PopoverContent>
     </Popover>
   );

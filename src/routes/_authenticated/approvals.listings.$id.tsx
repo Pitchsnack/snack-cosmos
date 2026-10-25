@@ -27,15 +27,15 @@ export const Route = createFileRoute("/_authenticated/approvals/listings/$id")({
   head: () => ({
     meta: [
       { title: "Listing review — Pitchsnack Admin" },
-      { name: "description", content: "Review a seller's Public and Private view before publishing it to the Marketplace." },
+      { name: "description", content: "Review a seller's Public and Exclusive view before publishing it to the Marketplace." },
     ],
   }),
   component: ListingReview,
 });
 
 const fmt = (d?: string | null) => (d ? new Date(d).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
-const REASONS = ["Contains a name", "Unverifiable claim", "Wrong sector/tags", "Fact doesn't match Private view", "Other"];
-const FIELDS = ["Headline", "Description", "Products & services", "Markets", "Facts", "Private view"];
+const REASONS = ["Contains a name", "Unverifiable claim", "Wrong sector/tags", "Fact doesn't match Exclusive view", "Other"];
+const FIELDS = ["Headline", "Description", "Products & services", "Markets", "Facts", "Exclusive view"];
 const STATUS: Record<string, string> = { in_review: "In review", changes_requested: "Changes requested", live: "Live", live_edits_pending: "Live · edits pending", rejected: "Rejected", draft: "Draft", unpublished: "Unpublished" };
 
 function ListingReview() {

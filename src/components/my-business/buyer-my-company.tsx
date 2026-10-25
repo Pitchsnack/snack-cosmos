@@ -347,7 +347,7 @@ function useOwnCard(p: BuyerProfile, org: BuyerOrg) {
   };
 }
 
-/** Seller-style folder-tab card (Public view / Private view) for the investor profile. */
+/** Seller-style folder-tab card (Listing view / Exclusive view) for the investor profile. */
 function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
   const shell = "overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card";
   const { iv, props } = useOwnCard(p, org);
@@ -355,8 +355,8 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
-        <FolderTab side="left" active={view === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Seller preview" open tone="indigo" onClick={() => onView("public")} />
-        <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open tone="green" onClick={() => onView("private")} />
+        <FolderTab side="left" active={view === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Listing view" sub="Seller preview" open tone="indigo" onClick={() => onView("public")} />
+        <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Exclusive view" sub="Shared after NDA" open tone="green" onClick={() => onView("private")} />
       </div>
       {view === "public" ? (
         <BuyerBrowseCard {...props} managed={managedIds.has(iv?.id ?? "")} onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
@@ -367,7 +367,7 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
   );
 }
 
-/** Public view card part → Edit profile section (shared Edit-at-section helper). */
+/** Listing view card part → Edit profile section (shared Edit-at-section helper). */
 const PART_SEC: Record<CardPart, string> = { description: "description", ticket: "mandate", aum: "fund", revenue: "revenue", geography: "geography", based: "country", focus: "focus" };
 
 function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit, pill }: {
@@ -376,8 +376,8 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit, pill }: {
 }) {
   return <div className="space-y-5">
     <div role="tablist" aria-label="Profile visibility" className="flex gap-1 border-b border-border pb-2">
-      <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => setView("public")}><Eye className="mr-2 h-4 w-4" /> Public view</Button>
-      <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => setView("private")}><Lock className="mr-2 h-4 w-4" /> Private view</Button>
+      <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => setView("public")}><Eye className="mr-2 h-4 w-4" /> Listing view</Button>
+      <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => setView("private")}><Lock className="mr-2 h-4 w-4" /> Exclusive view</Button>
     </div>
     {view === "public"
       ? <PublicPanel p={p} org={org} pill={pill} onEdit={onEdit} />
@@ -429,8 +429,8 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind
       {thumb}
       <div className="min-w-0 flex-1">
         {kind === "public"
-          ? <span className="inline-flex rounded-full bg-[#EEF0FF] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#4338CA] dark:bg-indigo-950/50 dark:text-indigo-300">Public view · Seller preview</span>
-          : <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">Private view · Shared after NDA</span>}
+          ? <span className="inline-flex rounded-full bg-[#EEF0FF] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#4338CA] dark:bg-indigo-950/50 dark:text-indigo-300">Listing view · Seller preview</span>
+          : <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">Exclusive view · Shared after NDA</span>}
         <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{title}</h2>
         <div className="truncate text-[13px] text-muted-foreground">{meta}</div>
       </div>

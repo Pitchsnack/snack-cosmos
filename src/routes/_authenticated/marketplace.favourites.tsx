@@ -146,7 +146,7 @@ function FavouritesPage() {
   const current = items.find((f) => f.id === selected) ?? items[0] ?? null;
   const modal = all.find((f) => f.id === modalId) ?? null;
   const open = (id: string) => (view === "split" && wide ? setSelected(id) : setModalId(id));
-  // Each card keeps its front tab while on the page; Private view first.
+  // Each card keeps its front tab while on the page; Exclusive view first.
   const [views, setViews] = useState<Record<string, FavView>>({});
   const viewOf = (f: Favourite): FavView => (f.priv ? views[f.id] ?? "private" : "public");
   const setView = (id: string, v: FavView) => setViews((m) => ({ ...m, [id]: v }));

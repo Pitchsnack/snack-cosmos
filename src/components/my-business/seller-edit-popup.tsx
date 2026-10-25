@@ -48,7 +48,7 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
   const last = useRef<Record<View, string>>({ public: "identity", private: "images" });
   last.current[view] = tab;
 
-  // Create public view / Edit public view open Public view: make the draft listing first.
+  // Create public view / Edit public view open Listing view: make the draft listing first.
   const creating = useRef(false);
   useEffect(() => {
     if (!id || row || rowLoading || view !== "public" || creating.current) return;
@@ -69,7 +69,7 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
   });
   const name = data?.startup_name ?? "";
   const showPublic = view === "public" && !!row;
-  const subtitle = showPublic ? `${row?.code_name || row?.ref_no || tr("Public view", "มุมมองสาธารณะ")} · ${tr("Public view", "มุมมองสาธารณะ")}` : `${name || tr("Your company", "บริษัทของท่าน")} · ${tr("Private view", "มุมมองส่วนตัว")}`;
+  const subtitle = showPublic ? `${row?.code_name || row?.ref_no || tr("Listing view", "มุมมองรายการ")} · ${tr("Listing view", "มุมมองรายการ")}` : `${name || tr("Your company", "บริษัทของท่าน")} · ${tr("Exclusive view", "มุมมองพิเศษ")}`;
   const ready = !!data && !(view === "public" && !row);
 
   return (

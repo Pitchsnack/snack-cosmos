@@ -229,7 +229,7 @@ export const applySellerEnrich = createServerFn({ method: "POST" })
         if (!error) found += 1;
       }
     }
-    // Public view: its description and tags come from the private fields; the headline is stored, so draft it when empty.
+    // Listing view: its description and tags come from the private fields; the headline is stored, so draft it when empty.
     const { data: hp } = await sb.from("hidden_profiles").select("id, headline").eq("startup_id", data.id).maybeSingle();
     if (hp && !String(hp.headline ?? "").trim()) {
       const { suggestHeadline } = await import("@/lib/public-listing");

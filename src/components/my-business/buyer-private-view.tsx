@@ -151,8 +151,8 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     <div className="-mx-5 -mt-5 mb-1 flex items-center gap-2 border-b border-border px-5 py-3">
       {onView && (
         <div role="tablist" className="flex gap-1">
-          <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => onView("public")}><Eye className="mr-2 h-4 w-4" />Public view</Button>
-          <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => onView("private")}><Lock className="mr-2 h-4 w-4" />Private view</Button>
+          <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => onView("public")}><Eye className="mr-2 h-4 w-4" />Listing view</Button>
+          <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => onView("private")}><Lock className="mr-2 h-4 w-4" />Exclusive view</Button>
         </div>
       )}
       <span className="flex-1" />
@@ -164,7 +164,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
   );
   const chips = (
     <>
-      <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">Private view · Shared after NDA</span>
+      <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">Exclusive view · Shared after NDA</span>
       <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold", v.cls)}>{v.label}</span>
     </>
   );
