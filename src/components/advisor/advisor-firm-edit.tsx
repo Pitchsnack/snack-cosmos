@@ -532,6 +532,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
 </>}
       {pop ? (
         <EditInfoFooter>
+          {adminCreate && forced && nameError(f.name) && <p className="mr-auto text-[13px] font-medium text-destructive">To add the advisor, fill in: Firm name (About Company).</p>}
           <Button variant="outline" onClick={back}>Cancel</Button>
           <Button disabled={busy || uploading} onClick={submit} className="bg-accent text-accent-foreground hover:bg-accent/90">{adminCreate ? "Add advisor" : "Save changes"}</Button>
         </EditInfoFooter>

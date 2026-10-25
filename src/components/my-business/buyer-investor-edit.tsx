@@ -176,8 +176,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const [directoryVisibility,setDirectoryVisibility] = useState(directoryRecord?.visibility ?? "Tenant");
   const [legalName,setLegalName] = useState(directoryRecord?.legal_name ?? "");
   const [longDescription,setLongDescription] = useState(directoryRecord?.long_description ?? "");
-  const [human,setHuman] = useState(directoryRecord?.investor_ownership?.[0]?.owning_agent_user_id ?? "");
-  const [ai,setAi] = useState(directoryRecord?.investor_ai_ownership?.[0]?.owning_ai_agent_id ?? "");
+  const [human,setHuman] = useState(directoryRecord?.investor_ownership?.owning_agent_user_id ?? "");
+  const [ai,setAi] = useState(directoryRecord?.investor_ai_ownership?.owning_ai_agent_id ?? "");
   const tenants = useQuery({queryKey:["investor-form-tenants"],queryFn:()=>getTenants(),enabled:admin && !!directory});
   const humans = useQuery({queryKey:["investor-form-humans",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"Human"}}),enabled:admin && !!directory && !!tenant});
   const ais = useQuery({queryKey:["investor-form-ais",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"AI"}}),enabled:admin && !!directory && !!tenant});

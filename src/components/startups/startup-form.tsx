@@ -702,6 +702,7 @@ export function StartupForm({
       return res;
     },
     onSuccess: async () => {
+      if (!startup) return;
       if (popup || editCtx) {
         toast.success(tr("Changes saved.", "บันทึกการเปลี่ยนแปลงแล้ว"));
         await Promise.all([
