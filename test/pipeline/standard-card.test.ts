@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { cardAskingPrice, cardNdaStatus, newCardDays, publicRevenueLabel } from '../../src/lib/standard-card';
+import { cardAllowsExact, cardAskingPrice, cardNdaStatus, newCardDays, publicRevenueLabel } from '../../src/lib/standard-card';
 describe('standard discovery card rules', () => {
+  it('a requested NDA does not authorize exact asking price in Browse', () => {
+    expect(cardAllowsExact('buyer', false)).toBe(false);
+    expect(cardAllowsExact('buyer', true)).toBe(true);
+  });
   it('public watchlist never renders an authorized exact asking price', () => {
     expect(cardAskingPrice({ askingPrice: 75_123_456 }, false, false)).toBe('฿50M – 100M');
   });

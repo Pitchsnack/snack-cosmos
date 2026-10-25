@@ -4,6 +4,9 @@ export type CardNdaStatus = 'hidden' | 'requested' | 'approved';
 export function cardNdaStatus(status?: string | null): CardNdaStatus {
   return status === 'approved' ? 'approved' : status === 'requested' ? 'requested' : 'hidden';
 }
+export function cardAllowsExact(role: string | null, approved: boolean): boolean {
+  return role === 'admin' || approved;
+}
 export function publicRevenueLabel(value?: string | null) {
   return value?.replace(/^Below\s+/i, 'Under ') ?? null;
 }

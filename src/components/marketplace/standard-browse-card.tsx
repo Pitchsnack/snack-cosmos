@@ -51,7 +51,8 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
     <div className="standard-card-body" id={id}>
       <div ref={nameRow} className={cn('standard-card-name', cut && 'standard-card-title-cut', subtitle && 'standard-card-private-name')}>
         <span className="standard-card-ref">{refNo}{place && <> · <b>{place}</b></>}</span>
-        <h3 ref={titleRef} title={title} data-card-title>{onOpen ? <Button variant="unstyled" size="unstyled" onClick={onOpen} className="standard-card-title-link">{title}</Button> : title}</h3>
+        <h3 ref={titleRef} title={title} data-card-title>{title}</h3>
+        {onOpen && <Button variant="unstyled" size="unstyled" onClick={onOpen} aria-label={title} className="standard-card-title-link" />}
         {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitle}</p>}
       </div>
       <p className="standard-card-description" title={description ?? undefined}>{description}</p>
