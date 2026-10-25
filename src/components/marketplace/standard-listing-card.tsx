@@ -10,7 +10,7 @@ import { fmtThb } from '@/lib/asking-price';
 import type { FavPrivate } from '@/lib/favourites.functions';
 
 export function StandardListingCard({ l, deal, privateData, publicOnly, status, selected, onSelect, topRight, tag, className }: {
-  l: PublicListing; deal?: ListingDeal; privateData?: FavPrivate | null; publicOnly?: boolean; status?: string;
+  l: PublicListing; deal?: ListingDeal; privateData?: FavPrivate | null; publicOnly?: boolean; status?: string | null;
   selected?: boolean; onSelect?: () => void; topRight?: ReactNode; tag?: ReactNode; className?: string;
 }) {
   const { t, language } = useTranslation();
