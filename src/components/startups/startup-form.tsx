@@ -1325,7 +1325,7 @@ export function StartupForm({
             </>);
             return (<>
               <Select value={companyType} onValueChange={(v) => { setCompanyType(v); setCompanyTypeReset(false); setCompanyTypeSource(v === "SME" && companyTypeSource !== "admin" ? "account" : "admin"); }}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Choose a company type" /></SelectTrigger>
                 <SelectContent>{COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{label(c)}</SelectItem>)}</SelectContent>
               </Select>
               {fromAdmin && (
@@ -1758,7 +1758,7 @@ export function StartupForm({
             <div className="space-y-1.5">
               <Label>Owning Agent <span className="text-destructive">*</span></Label>
               <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={isMyStartupsCreate || !tenantId || (!isEdit && WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
-                <SelectTrigger>
+                <SelectTrigger id="sf-owner" className={createAttempted && !owningAgentUserId ? "creation-invalid" : undefined}>
                   <SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -1778,7 +1778,7 @@ export function StartupForm({
             <div className="space-y-1.5">
               <Label>Owning AI Agent <span className="text-destructive">*</span></Label>
               <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={!tenantId || noAi || (!isEdit && WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
-                <SelectTrigger>
+                <SelectTrigger id="sf-ai-owner" className={createAttempted && !owningAiAgentId ? "creation-invalid" : undefined}>
                   <SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} />
                 </SelectTrigger>
                 <SelectContent>

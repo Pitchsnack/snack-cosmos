@@ -237,6 +237,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const [industries, setIndustries] = useState(inv.preferred_industries);
   const [customIndustry, setCustomIndustry] = useState("");
   const [linkedPortfolio, setLinkedPortfolio] = useState<RelationshipRow[]>(()=>(directoryRecord?.linked_startups ?? []).map(x=>({id:x.id,refId:x.id,name:x.startup_name,subtitle:null,industry:null,relationshipType:"investment",status:"linked"})));
+  const [portfolioInvestors,setPortfolioInvestors] = useState<RelationshipRow[]>(()=>(directoryRecord?.portfolio_investors ?? []).map(x=>({id:x.id,refId:x.id,name:x.investor_name,subtitle:null,industry:null,relationshipType:"investment",status:"linked"})));
+  const [portfolioInvestorsDirty,setPortfolioInvestorsDirty]=useState(false);
+  const [bio,setBio] = useState(directoryRecord?.bio ?? "");
   const [linkedDirty,setLinkedDirty] = useState(false);
   const [revenueMin,setRevenueMin] = useState(inv.revenue_min_m?.toString() ?? "");
   const [revenueMax,setRevenueMax] = useState(inv.revenue_max_m?.toString() ?? "");
@@ -251,7 +254,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const pop = useEditInfo();
-  const editSnapshot = JSON.stringify([f,addr,companyType,companyTypeDirty,companyTypeReset,tenant,directoryStatus,directoryVisibility,legalName,longDescription,human,ai,deals,keywords,focus,stages,actsFor,industries,portfolio,media,people,linkedPortfolio,revenueMin,revenueMax]);
+  const editSnapshot = JSON.stringify([f,addr,companyType,companyTypeDirty,companyTypeReset,tenant,directoryStatus,directoryVisibility,legalName,longDescription,human,ai,deals,keywords,focus,stages,actsFor,industries,portfolio,media,people,linkedPortfolio,portfolioInvestors,bio,revenueMin,revenueMax]);
   const originalSnapshot = useRef(editSnapshot);
   useEffect(()=>{pop?.setDirty(editSnapshot !== originalSnapshot.current);},[editSnapshot]);
 
@@ -365,7 +368,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         people: people.filter((p) => p.name.trim()),
         investor_id: inv.id,
       } });
-      if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
+      if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,bio:bio || null,...(portfolioInvestorsDirty ? {portfolioInvestorIds:portfolioInvestors.flatMap(x=>x.refId ? [x.refId] : [])} : {}),...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
       if (admin && companyTypeDirty) await updateDirectory({data:{id:inv.id,...(companyTypeReset ? {companyTypeReset:true} : companyType ? {companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"} : {})}});
       await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
       await qc.invalidateQueries({ queryKey: ["investors"] });
@@ -542,7 +545,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             placeholder="Brief description of the company" />
         </div>
 
-{directory && <div className="space-y-1.5"><Label>Long Description</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
+{directory && <div className="space-y-1.5"><Label>Bio</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>Long Description</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
           {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>{directory && <div className="space-y-1.5"><Label>Legal name</Label><Input value={legalName} onChange={e=>setLegalName(e.target.value)} maxLength={255} /></div>}        {/* Row 4: Firm Name, then the address box */}
         <div className="grid gap-4">
           <div className="space-y-1.5">
@@ -654,7 +657,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
         </S>
 
-        {directory && <><CompactFields two><div className="space-y-1.5"><Label>Min. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMin} onChange={e=>setRevenueMin(e.target.value)} /></div><div className="space-y-1.5"><Label>Max. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMax} onChange={e=>setRevenueMax(e.target.value)} /></div></CompactFields><RelationshipLinksEditor mode="startups" title="Portfolio Startups" rows={linkedPortfolio} onChange={r=>{setLinkedPortfolio(r);setLinkedDirty(true);}} /></>}
+        {directory && <><CompactFields two><div className="space-y-1.5"><Label>Min. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMin} onChange={e=>setRevenueMin(e.target.value)} /></div><div className="space-y-1.5"><Label>Max. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMax} onChange={e=>setRevenueMax(e.target.value)} /></div></CompactFields><RelationshipLinksEditor mode="startups" title="Portfolio Startups" rows={linkedPortfolio} onChange={r=>{setLinkedPortfolio(r);setLinkedDirty(true);}} /><RelationshipLinksEditor mode="investors" title="Portfolio Investors" rows={portfolioInvestors} onChange={r=>{setPortfolioInvestors(r);setPortfolioInvestorsDirty(true);}} /></>}
         {/* Portfolio Startups */}
         <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
           <Label>Portfolio Startups</Label>
