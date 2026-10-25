@@ -7,7 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2, Lock } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
-import { AddressBox } from "@/components/advisor/advisor-firm-fields";
+import { AddressBox } from "@/components/common/business-address";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1511,7 +1511,7 @@ export function StartupForm({
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="addr-street">Business Address</Label>
-          <AddressBox a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
+          <AddressBox noteOutside a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
             note={ctAdmin ? "Buyers see the country and province, never the full address, until the seller approves their NDA." : tr("Buyers see your country and province, never the full address, until you approve their NDA.", "ผู้ซื้อจะเห็นเพียงประเทศและจังหวัดของท่าน ไม่เห็นที่อยู่เต็ม จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")} />

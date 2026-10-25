@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
+import { AddressBox, addrErrors, type Addr } from "@/components/common/business-address";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
 import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
 import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
@@ -533,7 +533,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div>
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
-          <AddressBox compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+          <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
             title={individual ? tr("Address") : tr("Business address")}
             note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
@@ -842,7 +842,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div>
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
-          <AddressBox compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+          <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
             title={individual ? tr("Address") : tr("Business address")}
             note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}

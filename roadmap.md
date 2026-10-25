@@ -1,6 +1,7 @@
 # Roadmap — Control setup wizards (brief 2)
 - [x] Advisor checkpoint: name-only Add, new/existing ⋮ Edit, Draft incomplete Save/read-back, 1440/390 screenshots; six refreshed captures in Files. Test Draft ADV-1009 retained.
 - [x] Edit information backend: ownerless advisor drafts (Admin only), Admin buyer saves via saveMyBuyerInvestor, Directory Add advisor + Edit pop-up
+- [ ] October 25 continuation in brief order: shared address/rows, buyer/advisor tabs, seller Address, Admin editing/add, valuation, redirects/removal, Done when screenshots and verification.
 - [ ] October 24 unified Edit information final checks: role tabs/Address rows, three Directory hosts/add entry points, valuation host and old route redirects built; still finish creation marks/counts/subtitle/highlight/focus, preserve all legacy investor portfolio fields, Admin startup edit settings, section-link audit and actual-user/wizard EN/TH/dark tests.
 - [ ] Unified editing checks: required-field errors, authenticated role saves/read-back, wizard regressions, 1440/390 EN/TH and dark-mode screenshots
 - [x] Seller Connect flight: stored-ID dismissal hook, public source covers, amber landing/no count change, Sent deep link; 19 rules pass; authenticated existing-invitation View verified; EN/TH 1440/1024/390, inline/rail and reduced motion checked without sending invitations
