@@ -63,7 +63,7 @@ export function PrivateListingPanel({ f, code, embedded=false }: { f: Favourite;
       </div>
       }
       <div className="space-y-5 overflow-y-auto p-5">
-        {!embedded&&<FavViewLine view="private">{t("Shared with you under your NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>}
+        {!embedded&&<FavViewLine view="private">{t("Shared with you under NDA, approved")} {fmtDate(p.ndaApprovedAt)} {t("and valid until")} {fmtDate(p.ndaValidUntil)}.</FavViewLine>}
         <PublicListingCard l={f.listing} deal={f} wrapMeta badge={<ApprovedBadge />}
           priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
         {p.description && (
