@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/")(
     ...(typeof s.firm === "string" ? { firm: s.firm } : {}),
     ...(s.from === "public" || s.from === "private" ? { from: s.from } : {}),
     ...(s.add ? { add: "1" as const } : {}),
+    ...(s.new ? { new: "1" as const } : {}),
   }),
   head: () => ({
     meta: [
