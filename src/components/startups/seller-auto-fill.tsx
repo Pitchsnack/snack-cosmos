@@ -39,8 +39,8 @@ export function SellerAutoFill({ id, web, onDone }: { id: string; web: string; o
   const done = state !== "running";
   const rows: [string, string][] = [
     [L("Your website", "เว็บไซต์ของท่าน"), domain],
-    [L("Exclusive view", "มุมมองพิเศษ"), L("Company details, description, licences, founders", "ข้อมูลบริษัท คำอธิบาย ใบอนุญาต ผู้ก่อตั้ง")],
-    [L("Listed view", "มุมมองที่ประกาศ"), L("Anonymous headline, summary and tags", "หัวข้อ สรุป และแท็กแบบไม่ระบุตัวตน")],
+    [L("Private view", "มุมมองส่วนตัว"), L("Company details, description, licences, founders", "ข้อมูลบริษัท คำอธิบาย ใบอนุญาต ผู้ก่อตั้ง")],
+    [L("Public view", "มุมมองสาธารณะ"), L("Anonymous headline, summary and tags", "หัวข้อ สรุป และแท็กแบบไม่ระบุตัวตน")],
   ];
   return (
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">

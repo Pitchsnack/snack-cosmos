@@ -28,7 +28,7 @@ export function ProfileEditPopup({ advisor }: { advisor: boolean }) {
   const firm = advisor && s.new !== "1" ? (firms.data?.find((f) => f.id === s.firm) ?? firms.data?.[0]) : undefined;
   const name = advisor ? firm?.name ?? "" : buyer?.investor?.investor_name ?? "";
   const subtitle = advisor ? name || tr("Firm profile", "โปรไฟล์บริษัท")
-    : `${name || tr("Your company", "บริษัทของท่าน")} · ${s.from === "public" ? tr("Listed view", "มุมมองที่ประกาศ") : tr("Exclusive view", "มุมมองพิเศษ")}`;
+    : `${name || tr("Your company", "บริษัทของท่าน")} · ${s.from === "public" ? tr("Public view", "มุมมองสาธารณะ") : tr("Private view", "มุมมองส่วนตัว")}`;
   const close = () => leaveEditUrl(() => void navigate({ to: "/marketplace/my-company", search: ((p:Record<string,unknown>)=>({...p,edit:undefined,section:undefined,from:undefined,add:undefined,new:undefined})) as never, replace: true }));
   return (
     <EditInfoPopup open subtitle={subtitle} companyName={name} onClosed={close}>

@@ -69,7 +69,7 @@ export const template = {
   previewData: {
     role: 'seller', subject: 'Project Nimbus is live on PitchSnack', title: 'Your listing is approved and live',
     body: 'Admin approved Project Nimbus. Buyers can now find it in Browse listings.',
-    details: [['Listing', 'Project Nimbus'], ['Approved', '3 Oct 2026']], button: 'View my listing', place: 'My Company › Listed view', color: '#16A34A',
+    details: [['Listing', 'Project Nimbus'], ['Approved', '3 Oct 2026']], button: 'View my listing', place: 'My Company › Public view', color: '#16A34A',
   },
 } satisfies TemplateEntry
 

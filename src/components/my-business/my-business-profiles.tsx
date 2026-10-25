@@ -78,7 +78,7 @@ export function Ring({ pct, size, stroke = 5, done }: { pct: number; size: numbe
 const HELP: Record<ItemKey, { cta: string; link: string; help: string }> = {
   fin: { cta: "Verified financial report", link: "View →", help: "Optional analyst-verified FY23–25 report, available to buyers after the NDA." },
   valuation: { cta: "Estimated valuation", link: "View →", help: "Optional independent valuation, after the verified financial report." },
-  terms: { cta: "Set deal terms", link: "Set →", help: "Stake, deal type and asking price shown in your listed view." },
+  terms: { cta: "Set deal terms", link: "Set →", help: "Stake, deal type and asking price shown in your public view." },
   hidden: { cta: "Write public headline", link: "Write →", help: "One line buyers read first. No company or product names." },
   desc: { cta: "Add description", link: "Add →", help: "A short description and tags for your company." },
   logo: { cta: "Add logo & photos", link: "Add →", help: "Shown only after you approve an NDA." },
@@ -271,7 +271,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
       </SectorArt>
       <div className="px-3 pb-3">
         <div className="pt-2.5">
-          <div className="truncate text-[14px] font-bold">{d?.code_name || row?.ref_no || listing.headline || "Listed view"}</div>
+          <div className="truncate text-[14px] font-bold">{d?.code_name || row?.ref_no || listing.headline || "Public view"}</div>
         </div>
         <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
         <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>No description yet</em>}</p>
@@ -296,8 +296,8 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
-        <FolderTab side="left" active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Listed view" sub="Buyer preview" open={selected} tone="indigo" onClick={() => pick("public")} />
-        <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Exclusive view" sub="Shared after NDA" open={selected} tone="green" onClick={() => pick("private")} />
+        <FolderTab side="left" active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Public view" sub="Buyer preview" open={selected} tone="indigo" onClick={() => pick("public")} />
+        <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Private view" sub="Shared after NDA" open={selected} tone="green" onClick={() => pick("private")} />
       </div>
       {v === "public" ? (
         <div role="button" tabIndex={0} onClick={() => pick("public")} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) pick("public"); }} className={cn("cursor-pointer overflow-hidden rounded-b-[14px] rounded-t-none border bg-card transition-shadow hover:shadow-md [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
@@ -329,9 +329,9 @@ function KindPill({ kind, row }: { kind: View; row?: HiddenProfileRow | null }) 
 
 function KindLabel({ kind }: { kind: View }) {
   return kind === "public" ? (
-    <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">Listed view · Buyer preview</span>
+    <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">Public view · Buyer preview</span>
   ) : (
-    <span className="inline-flex rounded-full bg-green-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-green-800 dark:bg-green-950/50 dark:text-green-400">Exclusive view · Shared after NDA</span>
+    <span className="inline-flex rounded-full bg-green-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-green-800 dark:bg-green-950/50 dark:text-green-400">Private view · Shared after NDA</span>
   );
 }
 
@@ -347,7 +347,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
   const openEdit = useOpenSellerEdit();
   void navigate;
 
-  // Create listed view and Edit listed view open Edit my startup › Listed view › Listing Identity.
+  // Create public view and Edit public view open Edit my startup › Public view › Listing Identity.
   const create = async () => { openEdit(s.id, "public", "identity"); };
 
   return (
@@ -356,7 +356,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
         <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-accent to-accent-dark text-accent-foreground"><EyeOff className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
           <KindPill kind="public" row={row} />
-          <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || row?.ref_no || "Listed view"}</h2>
+          <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{row?.code_name || row?.ref_no || "Public view"}</h2>
           <div className="truncate text-[13px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -366,8 +366,8 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
                 <Button size="sm" variant="outline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit as Admin<ChevronDown className="ml-1 h-3.5 w-3.5" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72">
-                <DropdownMenuItem onClick={() => void create()}>Edit listed view <span className="ml-auto text-[11px] text-muted-foreground">headline, description, chips</span></DropdownMenuItem>
-                <DropdownMenuItem onClick={adminReview.onEditPrivate}>Edit exclusive view <span className="ml-auto text-[11px] text-muted-foreground">NDA details</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void create()}>Edit public view <span className="ml-auto text-[11px] text-muted-foreground">headline, description, chips</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={adminReview.onEditPrivate}>Edit private view <span className="ml-auto text-[11px] text-muted-foreground">NDA details</span></DropdownMenuItem>
                 <DropdownMenuItem onClick={adminReview.onSetImage}>Set public image <span className="ml-auto text-[11px] text-muted-foreground">admin only</span></DropdownMenuItem>
                 <DropdownMenuItem onClick={adminReview.onEditMedia}>Change logo & private photos</DropdownMenuItem>
                 <DropdownMenuSeparator />

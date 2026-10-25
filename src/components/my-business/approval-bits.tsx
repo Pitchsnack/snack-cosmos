@@ -79,7 +79,7 @@ export function ApprovalNotice({ row, onEditPublic }: { row: HiddenProfileRow | 
           {row.decision_note && <p className="mt-0.5">“{row.decision_note}”</p>}
           {!!row.decision_fields?.length && <p className="mt-1 text-[12px]">Fields to fix: {row.decision_fields.join(" · ")}</p>}
         </div>
-        <Button size="sm" variant="outline" onClick={onEditPublic}>Edit listed view</Button>
+        <Button size="sm" variant="outline" onClick={onEditPublic}>Edit public view</Button>
       </div>
     );
   if (st === "live")
@@ -111,7 +111,7 @@ function changedFields(row: HiddenProfileRow) {
 
 type Missing = { key: string; label: string };
 
-/** Footer bar, identical on the Public and Exclusive view tabs. */
+/** Footer bar, identical on the Public and Private view tabs. */
 export function ApprovalFooter({
   startupId, row, missing, flagged, blockedReason, onItem, onCreate,
 }: {
@@ -145,8 +145,8 @@ export function ApprovalFooter({
     text = <>Buyers see the approved version from {fmt(row?.published_at)} until you resubmit.</>;
     action = submitBtn("Resubmit");
   } else if (!row) {
-    text = <>Create your Listed view before you can submit for approval.</>;
-    action = <><Button size="sm" variant="outline" onClick={onCreate}>Create listed view</Button>{submitBtn()}</>;
+    text = <>Create your Public view before you can submit for approval.</>;
+    action = <><Button size="sm" variant="outline" onClick={onCreate}>Create public view</Button>{submitBtn()}</>;
   } else if (!ready) {
     const parts: React.ReactNode[] = missing.map((m) => (
       <button key={m.key} type="button" onClick={() => onItem(m.key)} className="font-semibold text-[#DC2626] underline-offset-2 hover:underline dark:text-[#F87171]">{m.label}</button>
@@ -157,7 +157,7 @@ export function ApprovalFooter({
     );
     action = submitBtn();
   } else {
-    text = <>Everything is ready. Your Listed view and Exclusive view are submitted together; Admin usually reviews within 1 business day.</>;
+    text = <>Everything is ready. Your Public view and Private view are submitted together; Admin usually reviews within 1 business day.</>;
     action = submitBtn(st === "rejected" || st === "unpublished" ? "Resubmit" : "Publish");
   }
   return (
@@ -241,8 +241,8 @@ function ConfirmSubmitDialog({
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : (
             <>
-              <Section title="Listed view" rows={pub} edit="hidden" />
-              <Section title="Exclusive view" rows={priv} edit="private" />
+              <Section title="Public view" rows={pub} edit="hidden" />
+              <Section title="Private view" rows={priv} edit="private" />
             </>
           )}
         </div>
@@ -277,7 +277,7 @@ export function ApprovedChip({ row }: { row: HiddenProfileRow | null | undefined
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto max-w-[300px] rounded-[10px] px-3 py-2.5 text-[13px] leading-snug">
-        Any change to the Public or Exclusive view must be resubmitted before buyers see it; the approved version stays live in the meantime.
+        Any change to the Public or Private view must be resubmitted before buyers see it; the approved version stays live in the meantime.
       </PopoverContent>
     </Popover>
   );

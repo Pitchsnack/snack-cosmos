@@ -21,7 +21,7 @@ export type MarketplaceListing = {
   isNew?: boolean;
   name?: string; // after NDA only
   logoUrl?: string; // after NDA only
-  /** Public listing (same card as the seller's Listed view). */
+  /** Public listing (same card as the seller's Public view). */
   listing?: PublicListing;
 };
 

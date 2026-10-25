@@ -102,8 +102,8 @@ function P3({ img }: { img: string | null }) {
   const { t } = useHomeLang();
   return (
     <div className="bw bw-glass">
-      <Head icon={Star} eb={t(c("Favourites", "รายการโปรด"))} title={t(c("Exclusive view", "มุมมองพิเศษ"))}
-        right={<span className="bw-sw"><i>{t(c("Listed view", "มุมมองที่ประกาศ"))}</i><i className="is-on">{t(c("Exclusive view", "มุมมองพิเศษ"))}</i></span>} />
+      <Head icon={Star} eb={t(c("Favourites", "รายการโปรด"))} title={t(c("Private view", "มุมมองส่วนตัว"))}
+        right={<span className="bw-sw"><i>{t(c("Public view", "มุมมองสาธารณะ"))}</i><i className="is-on">{t(c("Private view", "มุมมองส่วนตัว"))}</i></span>} />
       <div className="bw-col">
         <div className="bw-stack">
           <div className="bw-behind is-far"><div style={cover(filmLine.url, "50% 60%")} /></div>

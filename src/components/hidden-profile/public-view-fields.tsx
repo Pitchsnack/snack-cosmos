@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-session-context";
 
 /**
- * Edit information › Listed view: Listing Identity and Deal Terms, as two tabs
+ * Edit information › Public view: Listing Identity and Deal Terms, as two tabs
  * of Edit my startup. State lives in usePublicDraft so the one Save stores it.
  */
 
