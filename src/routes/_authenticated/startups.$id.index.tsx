@@ -85,7 +85,7 @@ function StartupDetailPage() {
 
   return (
     <div className="space-y-6">
-      {search.editor && <StartupEditPopup id={id} onClose={()=>navigate({search:(p:typeof search)=>({...p,editor:undefined}),replace:true})} />}
+      {search.editor && <StartupEditPopup id={id} onClose={()=>navigate({to:"/startups/$id",params:{id},search:{from:"edit",editor:undefined},replace:true})} />}
       <Link to="/startups" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Back to startups
       </Link>
@@ -123,7 +123,7 @@ function StartupDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
-            <Button size="sm" variant="outline" onClick={() => navigate({search:(p:typeof search)=>({...p,editor:true})})}>
+            <Button size="sm" variant="outline" onClick={() => navigate({to:"/startups/$id",params:{id},search:{from:"edit",editor:true}})}>
               <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
             </Button>
           )}
