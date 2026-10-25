@@ -30,7 +30,7 @@ function viewAndTab(view: string | undefined, rawTab: string | undefined, fallba
   let v: View = view === "public" || view === "private" ? view : isPub ? "public" : isPriv ? "private" : fallback;
   if (view === "public" && isPriv) v = "private";
   if (view === "private" && isPub) v = "public";
-  const t = v === "public" ? (isPub ? tab! : "identity") : (isPriv ? tab! : "images");
+  const t = v === "public" ? (isPub ? tab ?? "identity" : "identity") : (isPriv ? tab ?? "images" : "images");
   return [v, t];
 }
 
