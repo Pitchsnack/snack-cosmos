@@ -62,7 +62,7 @@ export const submitListing = createServerFn({ method: "POST" })
     const sb = context.supabase as any;
     const { data: hp, error } = await sb.from("hidden_profiles").select("*").eq("startup_id", data.startupId).maybeSingle();
     if (error) throw new Error(error.message);
-    if (!hp) throw new Error("Create the Public view first");
+    if (!hp) throw new Error("Create the Listing view first");
     if (hp.approval_status === "in_review") throw new Error("Already in review");
     const { data: st } = await sb.from("startups").select("startup_name").eq("id", data.startupId).maybeSingle();
     if (!st?.startup_name?.trim()) throw new Error("Add the company name before you submit.");
@@ -126,7 +126,7 @@ export const getSubmissionPreview = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
     const { data: hp } = await sb.from("hidden_profiles").select("*").eq("startup_id", data.startupId).maybeSingle();
-    if (!hp) throw new Error("Create the Public view first");
+    if (!hp) throw new Error("Create the Listing view first");
     return buildSnapshot(sb, data.startupId, hp);
   });
 

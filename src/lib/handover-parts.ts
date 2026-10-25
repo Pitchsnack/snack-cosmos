@@ -45,8 +45,8 @@ export const PARTS: Record<HandoverKind, PartDef[]> = {
 };
 
 export const VIEW_LABEL = {
-  startup: { public: ["Public view", "มุมมองสาธารณะ", "what buyers see before an NDA", "สิ่งที่ผู้ซื้อเห็นก่อน NDA"], private: ["Private view", "มุมมองส่วนตัว", "shared after you approve an NDA", "แชร์หลังท่านอนุมัติ NDA"] },
-  investor: { public: ["Public view", "มุมมองสาธารณะ", "what sellers see before an NDA", "สิ่งที่ผู้ขายเห็นก่อน NDA"], private: ["Private view", "มุมมองส่วนตัว", "shared after a seller approves your NDA", "แชร์หลังผู้ขายอนุมัติ NDA ของท่าน"] },
+  startup: { public: ["Listing view", "มุมมองรายการ", "what buyers see before an NDA", "สิ่งที่ผู้ซื้อเห็นก่อน NDA"], private: ["Exclusive view", "มุมมองพิเศษ", "shared after you approve an NDA", "แชร์หลังท่านอนุมัติ NDA"] },
+  investor: { public: ["Listing view", "มุมมองรายการ", "what sellers see before an NDA", "สิ่งที่ผู้ขายเห็นก่อน NDA"], private: ["Exclusive view", "มุมมองพิเศษ", "shared after a seller approves your NDA", "แชร์หลังผู้ขายอนุมัติ NDA ของท่าน"] },
   firm: { open: ["Open to sellers and buyers", "เปิดให้ผู้ขายและผู้ซื้อ", "", ""] },
 } as const;
 

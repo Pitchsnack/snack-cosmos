@@ -1,5 +1,5 @@
 /**
- * Public view (Marketplace listing) — pure builders shared by the seller
+ * Listing view (Marketplace listing) — pure builders shared by the seller
  * preview and the server's buyer read model. Everything is derived from the
  * wizard answers / private view; only the headline is written by the seller.
  */

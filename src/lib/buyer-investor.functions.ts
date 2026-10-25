@@ -339,7 +339,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
     if (error) throw new Error(error.message);
 
-    // Mirror the mandate into the buyer's seller-facing (Public view) fields.
+    // Mirror the mandate into the buyer's seller-facing (Listing view) fields.
     const bp: Record<string, unknown> = {
       legal_name: n(data.firm_name), city: n(data.city), country: n(data.country), address: n(data.business_address),
       aum_exact: n(data.aum), aum_value: num(data.aum), ticket_min: num(data.min_ticket_size), ticket_max: num(data.max_ticket_size),

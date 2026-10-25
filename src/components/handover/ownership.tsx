@@ -359,7 +359,7 @@ function OwnershipBody({ kind, id, d, onInvite, onManage }: { kind: HandoverKind
       <p className="ho-p"><b>No owner yet.</b> Prepared by {d.preparedByName ?? "PitchSnack"} on {fmtDate(d.head.preparedAt ?? d.head.createdAt)}. Only Admin can see it.</p>
       {views.map((v) => (
         <div key={v} className="ho-partrow">
-          <span className={cn("ho-vl", v === "public" ? "ho-vl-pub" : "ho-vl-priv")}>{v === "public" ? "Public view" : v === "private" ? "Private view" : "Open to sellers and buyers"}</span>
+          <span className={cn("ho-vl", v === "public" ? "ho-vl-pub" : "ho-vl-priv")}>{v === "public" ? "Listing view" : v === "private" ? "Exclusive view" : "Open to sellers and buyers"}</span>
           <div className="ho-chips">{parts.filter((p) => p.view === v).map((p) => <span key={p.key} className="ho-partchip">✓ {p.en}</span>)}</div>
         </div>
       ))}
