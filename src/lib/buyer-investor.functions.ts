@@ -348,7 +348,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     };
     if (data.preferred_stages) bp.stages = data.preferred_stages;
     if (data.preferred_industries) bp.sectors = data.preferred_industries;
-    if (data.portfolio_extra) bp.portfolio = data.portfolio_extra.map((name) => ({ name, note: "" }));
+    if (data.portfolio_extra) { const {preservePortfolioEntries} = await import("./profile-edit-rules"); bp.portfolio = preservePortfolioEntries(data.portfolio_extra, r.p.portfolio); }
     if (data.people) bp.people = data.people.filter((m) => m.name.trim());
     if (data.description !== undefined) { bp.description = data.description || null; bp.headline = data.description || null; }
     if (data.deal_types) bp.deal_types = data.deal_types;

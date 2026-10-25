@@ -1,3 +1,5 @@
+import { missingCreationFields } from "@/lib/profile-edit-rules";
+import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { tr } from "@/i18n/language";
 import { CompanyTypeField, companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
@@ -230,6 +232,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "button[role=checkbox]" } : undefined);
   const [industries, setIndustries] = useState(inv.preferred_industries);
   const [customIndustry, setCustomIndustry] = useState("");
+  const [linkedPortfolio, setLinkedPortfolio] = useState<RelationshipRow[]>(()=>(directoryRecord?.linked_startups ?? []).map(x=>({id:x.id,refId:x.id,name:x.startup_name,subtitle:null,industry:null,relationshipType:"investment",status:"linked"})));
+  const [linkedDirty,setLinkedDirty] = useState(false);
+  const [revenueMin,setRevenueMin] = useState(inv.revenue_min_m?.toString() ?? "");
+  const [revenueMax,setRevenueMax] = useState(inv.revenue_max_m?.toString() ?? "");
   const [portfolioDirty, setPortfolioDirty] = useState(false);
   const [portfolio, setPortfolio] = useState(inv.portfolio_extra);
   const [media, setMedia] = useState<EntityMediaState>(() => initialMedia(inv));
@@ -289,7 +295,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const leaks = descriptionLeaks(f.description, f.investor_name, f.website_url);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onCreated && (!f.investor_name.trim() || !tenant || !human || !ai || tenant !== session?.activeWorkspace.tenantId)) {
+    if (onCreated && (missingCreationFields("investor",f.investor_name,tenant,human,ai).length || tenant !== session?.activeWorkspace.tenantId)) {
       setView("private");setTab(f.investor_name.trim() ? "admin" : "about");
       setTimeout(()=>document.getElementById(f.investor_name.trim() ? "investor-tenant" : "f-investor_name")?.focus(),80);
       setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings). The tenant must be active."});return;
@@ -350,7 +356,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         people: people.filter((p) => p.name.trim()),
         investor_id: inv.id,
       } });
-      if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
+      if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
       if (admin && companyTypeDirty && companyType) await updateDirectory({data:{id:inv.id,companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"}});
       await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
       await qc.invalidateQueries({ queryKey: ["investors"] });
@@ -637,6 +643,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
         </S>
 
+        {directory && <><CompactFields two><div className="space-y-1.5"><Label>Min. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMin} onChange={e=>setRevenueMin(e.target.value)} /></div><div className="space-y-1.5"><Label>Max. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMax} onChange={e=>setRevenueMax(e.target.value)} /></div></CompactFields><RelationshipLinksEditor mode="startups" title="Portfolio Startups" rows={linkedPortfolio} onChange={r=>{setLinkedPortfolio(r);setLinkedDirty(true);}} /></>}
         {/* Portfolio Startups */}
         <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
           <Label>Portfolio Startups</Label>
@@ -705,7 +712,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           {directory ? <CompactFields two><div className="space-y-1.5"><Label>Tenant *</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger id="investor-tenant" className={errs.creation && !tenant ? "creation-invalid" : undefined}><SelectValue placeholder="Choose tenant" /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Owning Agent *</Label><Select value={human} onValueChange={setHuman}><SelectTrigger><SelectValue placeholder="Choose agent" /></SelectTrigger><SelectContent>{humans.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Owning AI Agent *</Label><Select value={ai} onValueChange={setAi}><SelectTrigger><SelectValue placeholder="Choose AI agent" /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Status</Label><Select value={directoryStatus} onValueChange={(v)=>setDirectoryStatus(v as typeof directoryStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Prospect","Active","Engaged","Investing","Inactive","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Visibility</Label><Select value={directoryVisibility} onValueChange={(v)=>setDirectoryVisibility(v as typeof directoryVisibility)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Private","Tenant","Shared","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></>}
-          <Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></div>}
+          <Label>Verification status</Label><Input readOnly value={data.verification.status} /><Button type="button" variant="link" onClick={()=>{pop?.requestClose();void navigate({to:"/approvals",search:{tab:"buyers"} as never});}}>Change it in Approvals</Button></div>}
         </> : <>        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">

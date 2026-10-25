@@ -1,3 +1,4 @@
+import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
@@ -1896,7 +1897,7 @@ export function StartupForm({
       noValidate={!!popup || !!editCtx}
       onSubmit={(e) => {
         e.preventDefault();
-        if (editCtx && !isEdit && !canSubmit) { setCreateAttempted(true); setNameErr(!startupName.trim()); navTab("private", startupName.trim() ? "admin" : "about"); setTimeout(()=>document.getElementById(startupName.trim() ? "sf-tenant" : "sf-company-name")?.focus(),80); return; }
+        if (editCtx && !isEdit && (missingCreationFields("startup",startupName,tenantId,owningAgentUserId,owningAiAgentId).length || !canSubmit)) { setCreateAttempted(true); setNameErr(!startupName.trim()); navTab("private", startupName.trim() ? "admin" : "about"); setTimeout(()=>document.getElementById(startupName.trim() ? "sf-tenant" : "sf-company-name")?.focus(),80); return; }
         if (popup) return popupSubmit();
         if (isEdit) {
           updateM.mutate();
