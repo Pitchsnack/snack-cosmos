@@ -29,7 +29,7 @@ export function CompanyTypeField({ value, source, admin, onChange, onReset }: {
       {admin ? (
         <>
           <Select value={value ?? ""} onValueChange={(v) => onChange?.(v as CompanyType)}>
-            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={th ? "เลือกประเภทบริษัท" : "Choose a company type"} /></SelectTrigger>
             <SelectContent>
               {COMPANY_TYPE_VALUES.map((v) => <SelectItem key={v} value={v}>{label(v)}</SelectItem>)}
             </SelectContent>
