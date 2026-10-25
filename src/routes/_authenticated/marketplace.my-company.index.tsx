@@ -5,7 +5,7 @@ import { usePersona } from "@/hooks/use-marketplace";
 import { ProfileEditPopup } from "@/components/my-business/profile-edit-popup";
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/")({
-  validateSearch: (s: Record<string, unknown>): { open?: string; edit?: "profile"; section?: string; firm?: string; from?: "public" | "private"; add?: "1" } => ({
+  validateSearch: (s: Record<string, unknown>): { open?: string; edit?: "profile"; section?: string; firm?: string; from?: "public" | "private"; add?: "1"; new?: "1" } => ({
     ...(typeof s.open === "string" ? { open: s.open } : {}),
     ...(s.edit === "profile" ? { edit: "profile" as const } : {}),
     ...(typeof s.section === "string" && /^[a-z-]{2,30}$/.test(s.section) ? { section: s.section } : {}),

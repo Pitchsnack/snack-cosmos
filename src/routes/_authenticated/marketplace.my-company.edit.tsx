@@ -3,8 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
-import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
-import { AdvisorFirmEdit } from "@/components/advisor/advisor-firm-edit";
 import { usePersona } from "@/hooks/use-marketplace";
 import type { EditSection } from "@/lib/advisor-firm";
 
@@ -44,14 +42,9 @@ function EditPage() {
     if (blockNew) { toast("Your account has one company. Ask PitchSnack if you need another."); void navigate({ to: "/marketplace/my-company", replace: true }); }
   }, [blockNew, navigate]);
   // Edit profile now opens as a pop-up over My Company.
-  const toPopup = !search.new && !blockNew && (persona !== "advisor" || !!search.firm || (firms.data?.length ?? 0) > 0);
+  const toPopup = !blockNew && !!session?.user && (persona !== "advisor" || !firms.isLoading);
   useEffect(() => {
-    if (toPopup) void navigate({ to: "/marketplace/my-company", search: { edit: "profile", ...(search.section ? { section: search.section } : {}), ...(search.firm ? { firm: search.firm } : {}), ...(search.add ? { add: "1" } : {}) } as never, replace: true });
+    if (toPopup) void navigate({ to: "/marketplace/my-company", search: { edit: "profile", ...(search.new ? {new:"1"} : {}), ...(search.section ? { section: search.section } : {}), ...(search.firm ? { firm: search.firm } : {}), ...(search.add ? { add: "1" } : {}) } as never, replace: true });
   }, [toPopup]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (blockNew || toPopup) return null;
-  if (persona === "advisor") {
-    const sec = search.section && SECTIONS.includes(search.section) ? (search.section as EditSection) : undefined;
-    return <AdvisorFirmEdit firmId={search.firm ?? null} section={sec} />;
-  }
-  return <BuyerInvestorEdit section={search.section} add={!!search.add} />;
+  return null;
 }

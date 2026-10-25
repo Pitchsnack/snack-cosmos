@@ -20,7 +20,6 @@ import {
   type ListingSource,
 } from "@/lib/public-listing";
 import { PublicListingCard, type ListingPart } from "./public-listing-card";
-import { PublicListingEditor } from "./public-listing-editor";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
 
 
@@ -55,14 +54,13 @@ export function HiddenProfileTab({
   source: ListingSource;
   hasFinancials: boolean;
 }) {
-  const [editorOpen, setEditorOpen] = useState(false);
   const adminReview = useAdminReview();
   const managedIds = useManagedIds("startup", [row?.startup_id]);
   const [editAfterCreate, setEditAfterCreate] = useState(false);
   const startup = isStartupEntry(companyType);
   // After "Edit public view" creates the draft, open the editor as soon as the row arrives.
   useEffect(() => {
-    if (row && editAfterCreate) { setEditorOpen(true); setEditAfterCreate(false); }
+    if (row && editAfterCreate) { onEdit(); setEditAfterCreate(false); }
   }, [row, editAfterCreate]);
   if (!row) {
     const preview = buildPublicListing(source, null, hasFinancials);
@@ -111,9 +109,7 @@ export function HiddenProfileTab({
       )}
 
 
-      {editorOpen && (
-        <PublicListingEditor row={row} source={src} listing={listing} onClose={() => setEditorOpen(false)} onFullEdit={() => { setEditorOpen(false); onEdit(); }} />
-      )}
+
     </div>
   );
 }
