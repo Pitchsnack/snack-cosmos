@@ -806,7 +806,7 @@ export function StartupForm({
   const isStrEmpty = (s: string | null | undefined) => !s || !s.trim();
   const miss = (empty: boolean) => isEdit && empty;
   const MISSING_INPUT =
-    "border-destructive focus-visible:ring-destructive placeholder:text-destructive/70";
+    "border-destructive focus-visible:ring-destructive placeholder:text-destructive text-destructive";
   const MISSING_LABEL = "text-destructive";
   const missingPh = (field: string) => `⚠ Missing: ${field}`;
 
@@ -1489,7 +1489,7 @@ export function StartupForm({
           label="LinkedIn URL"
           value={linkedinUrl}
           onChange={setLinkedinUrl}
-          placeholder={miss(isStrEmpty(linkedinUrl)) ? missingPh("LinkedIn URL") : "https://www.linkedin.com/company/…"}
+          placeholder="https://www.linkedin.com/company/… (optional)"
         />
 
       </div>
@@ -1805,7 +1805,7 @@ export function StartupForm({
   const privateCounts: Record<PrivateTab, number> = {
     address: [registeredName, addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
     images: attachmentMissing(media),
-    about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(linkedinUrl), has(shortDescription), has(longDescription), founders.some((f) => f.full_name.trim())].filter((x) => !x).length,
+    about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(shortDescription), has(longDescription), founders.some((f) => f.full_name.trim())].filter((x) => !x).length,
     market: (industries.length ? 0 : 1) + (productTags.length ? 0 : 1),
     licenses: 0,
     admin: 0,
