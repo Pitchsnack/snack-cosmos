@@ -71,8 +71,18 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   const figure = (f: StandardFigure, highlight = false) => <dl className={cn('standard-card-cell', highlight && !!f.value && 'standard-card-fit')}>
     <dt title={t(f.label)}>{t(f.label)}</dt><dd><span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={f.value ?? undefined}>{f.value || t('Not stated')}</span><span className="standard-card-second" title={f.second ?? undefined}>{f.second || '\u00a0'}</span></dd>
   </dl>;
+  const openFromCard = (e: React.MouseEvent<HTMLElement>) => {
+    if (!onOpen) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('.standard-card-title-link')) return;
+    if (target.closest('button, a, input, select, textarea, [role="tab"], [role="button"], .standard-card-tools, .standard-card-badges, .standard-card-toggle')) return;
+    if (window.getSelection()?.toString()) return;
+    e.currentTarget.querySelector<HTMLElement>('.standard-card-title-link')?.focus({ preventScroll: true });
+    onOpen();
+  };
   return <article ref={article} data-standard-card data-expanded={expanded} data-connect-source={refNo} data-connect-type={sourceType}
-    className={cn('standard-card', expanded && 'standard-card-open', selected && 'standard-card-selected', className)}>
+    onClick={openFromCard}
+    className={cn('standard-card', onOpen && 'standard-card-clickable', expanded && 'standard-card-open', selected && 'standard-card-selected', className)}>
     <div className="standard-card-cover" data-connect-cover={refNo} data-connect-type={sourceType}>
       {cover(<>
         <div ref={coverFit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />

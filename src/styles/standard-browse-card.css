@@ -34,6 +34,7 @@
 .standard-card-name h3 { margin:0; font-size:16px; line-height:21.6px; font-weight:700; }
 .standard-card-title-link { position:absolute; inset:0; display:block; width:100%; height:100%; }
 .standard-card-title-link:hover { color:var(--accent-dark); }
+.standard-card-clickable { cursor:pointer; }
 .standard-card-ref { float:right; margin:3px 0 0 12px; font-size:12.5px; line-height:18px; color:var(--standard-muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
 .standard-card-ref b { font-weight:500; color:var(--standard-hidden-ink); }
 .standard-card-title-cut::after { content:'…'; position:absolute; right:0; bottom:0; padding-left:12px; font-size:16px; font-weight:700; line-height:21.6px; background:var(--card); }
