@@ -1,3 +1,5 @@
+import { missingCreationFields } from "@/lib/profile-edit-rules";
+import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { tr } from "@/i18n/language";
 import { CompanyTypeField, companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
@@ -23,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
+import { AddressBox, addrErrors, type Addr } from "@/components/common/business-address";
 import { EditableUrlField } from "@/components/ui/editable-url-field";
 import { InvestorAutoEnrichButton } from "@/components/investors/investor-auto-enrich-button";
 import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
@@ -151,6 +153,8 @@ function Tag({ s }: { s?: SourceTag }) {
 
 export type Data = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
 
+function mediaMissing(inv: Data["investor"]) { return inv.logo_path ? 0 : 1; }
+
 function initialMedia(inv: Data["investor"]): EntityMediaState {
   const slots = [1, 2, 3].map((n): SlotState => {
     const m = inv.media.find((x) => x.slot === n);
@@ -169,6 +173,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const updateDirectory = useServerFn(updateInvestor);
   const [companyType,setCompanyType] = useState(data.investor.company_type ?? "");
   const [companyTypeDirty,setCompanyTypeDirty] = useState(false);
+  const [companyTypeReset,setCompanyTypeReset] = useState(false);
   const getTenants = useServerFn(listAssignableTenants);
   const getUsers = useServerFn(listAssignableUsers);
   const [tenant,setTenant] = useState(directoryRecord?.tenant_id ?? session?.activeWorkspace.tenantId ?? "");
@@ -176,8 +181,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const [directoryVisibility,setDirectoryVisibility] = useState(directoryRecord?.visibility ?? "Tenant");
   const [legalName,setLegalName] = useState(directoryRecord?.legal_name ?? "");
   const [longDescription,setLongDescription] = useState(directoryRecord?.long_description ?? "");
-  const [human,setHuman] = useState("");
-  const [ai,setAi] = useState("");
+  const [human,setHuman] = useState(directoryRecord?.investor_ownership?.owning_agent_user_id ?? "");
+  const [ai,setAi] = useState(directoryRecord?.investor_ai_ownership?.owning_ai_agent_id ?? "");
   const tenants = useQuery({queryKey:["investor-form-tenants"],queryFn:()=>getTenants(),enabled:admin && !!directory});
   const humans = useQuery({queryKey:["investor-form-humans",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"Human"}}),enabled:admin && !!directory && !!tenant});
   const ais = useQuery({queryKey:["investor-form-ais",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"AI"}}),enabled:admin && !!directory && !!tenant});
@@ -221,6 +226,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const [focus, setFocus] = useState(inv.investment_focus);
   const [stages, setStages] = useState(inv.preferred_stages);
   const showsFund = !individual && rel !== "agent";
+  const buyerMissing = {media: mediaMissing(inv),about:[!individual && !!yearError(f.year_founded),!f.investor_name.trim(),!f.website_url.trim()].filter(Boolean).length,address:0,people:!individual && !!regError(f.registration_no,f.country) ? 1 : 0};
   // Fund falls back to Investor Classification when the form hides the band.
   type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate" | "admin";
   const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "mandate" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
@@ -230,6 +236,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "button[role=checkbox]" } : undefined);
   const [industries, setIndustries] = useState(inv.preferred_industries);
   const [customIndustry, setCustomIndustry] = useState("");
+  const [linkedPortfolio, setLinkedPortfolio] = useState<RelationshipRow[]>(()=>(directoryRecord?.linked_startups ?? []).map(x=>({id:x.id,refId:x.id,name:x.startup_name,subtitle:null,industry:null,relationshipType:"investment",status:"linked"})));
+  const [portfolioInvestors,setPortfolioInvestors] = useState<RelationshipRow[]>(()=>(directoryRecord?.portfolio_investors ?? []).map(x=>({id:x.id,refId:x.id,name:x.investor_name,subtitle:null,industry:null,relationshipType:"investment",status:"linked"})));
+  const [portfolioInvestorsDirty,setPortfolioInvestorsDirty]=useState(false);
+  const [bio,setBio] = useState(directoryRecord?.bio ?? "");
+  const [linkedDirty,setLinkedDirty] = useState(false);
+  const [revenueMin,setRevenueMin] = useState(inv.revenue_min_m?.toString() ?? "");
+  const [revenueMax,setRevenueMax] = useState(inv.revenue_max_m?.toString() ?? "");
+  const [portfolioDirty, setPortfolioDirty] = useState(false);
   const [portfolio, setPortfolio] = useState(inv.portfolio_extra);
   const [media, setMedia] = useState<EntityMediaState>(() => initialMedia(inv));
   const [people, setPeople] = useState(() => {
@@ -240,6 +254,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const pop = useEditInfo();
+  const editSnapshot = JSON.stringify([f,addr,companyType,companyTypeDirty,companyTypeReset,tenant,directoryStatus,directoryVisibility,legalName,longDescription,human,ai,deals,keywords,focus,stages,actsFor,industries,portfolio,media,people,linkedPortfolio,portfolioInvestors,bio,revenueMin,revenueMax]);
+  const originalSnapshot = useRef(editSnapshot);
+  useEffect(()=>{pop?.setDirty(editSnapshot !== originalSnapshot.current);},[editSnapshot]);
+
+  useEffect(() => { pop?.setPresentation(f.investor_name, tr(view === "public" ? "Public view" : "Private view")); }, [f.investor_name, view]);
   const back = () => (setup ? setup.onBack() : pop ? pop.requestClose() : navigate({ to: "/marketplace/my-company" }));
 
   /** Auto Enrich merge — back-fills ONLY empty fields, same as Edit investor. */
@@ -287,9 +306,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const leaks = descriptionLeaks(f.description, f.investor_name, f.website_url);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onCreated && (!f.investor_name.trim() || !tenant || !human || !ai || tenant !== session?.activeWorkspace.tenantId)) {
+    if (onCreated && (missingCreationFields("investor",f.investor_name,tenant,human,ai).length)) {
       setView("private");setTab(f.investor_name.trim() ? "admin" : "about");
-      setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings). The tenant must be active."});return;
+      setTimeout(()=>document.getElementById(f.investor_name.trim() ? "investor-tenant" : "f-investor_name")?.focus(),80);
+      setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings)."});return;
     }
     const checks: [string, string | null][] = [
       ["year_founded", individual ? null : yearError(f.year_founded)],
@@ -315,9 +335,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     try {
       const t = (v: string) => v.trim() || null;
       if (onCreated) {
-        const result = await create({data:{tenantId:tenant,investorName:f.investor_name.trim(),owningAgentUserId:human,owningAiAgentId:ai,websiteUrl:t(f.website_url),linkedinUrl:t(f.linkedin_url),country:t(f.country),investorType:t(f.investor_type),yearFounded:f.year_founded ? Number(f.year_founded) : null,firmName:t(f.firm_name),email:t(f.email),address:addr,bio:t(f.short_description),preferredIndustries:industries,preferredStages:stages,keywords,investmentFocus:focus,aumBand:t(f.aum_band),ticketBand:t(f.ticket_band)}});
+        const result = await create({data:{tenantId:tenant,investorName:f.investor_name.trim(),owningAgentUserId:human,owningAiAgentId:ai,websiteUrl:t(f.website_url),linkedinUrl:t(f.linkedin_url),country:t(f.country),investorType:t(f.investor_type),yearFounded:f.year_founded ? Number(f.year_founded) : null,firmName:t(f.firm_name),email:t(f.email),address:addr,bio:t(f.short_description),shortDescription:t(f.short_description),longDescription:t(longDescription),legalName:t(legalName),status:directoryStatus,visibility:directoryVisibility,companySizeBand:(f.company_size_band || null) as "1-10" | null,preferredIndustries:industries,preferredStages:stages,keywords,investmentFocus:focus,aumBand:t(f.aum_band),ticketBand:t(f.ticket_band)}});
         const uploaded = await uploadPending(media,({kind,ext})=>getUrl({data:{kind,ext,investor_id:result.id}}),supabase.storage.from("startup-media"));
-        if (uploaded.logoPath || uploaded.media.length) await updateDirectory({data:{id:result.id,logoPath:uploaded.logoPath,media:uploaded.media}});
+        await save({data:{investor_id:result.id,investor_name:f.investor_name.trim(),investor_type:t(f.investor_type),year_founded:f.year_founded ? Number(f.year_founded) : null,company_size_band:(f.company_size_band || null) as "1-10" | null,country:t(f.country),city:t(f.city),email:t(f.email),website_url:t(f.website_url),linkedin_url:t(f.linkedin_url),firm_name:t(f.firm_name),short_description:t(f.short_description),aum:t(f.aum),min_ticket_size:t(f.min_ticket_size),max_ticket_size:t(f.max_ticket_size),...(f.aum_band ? {aum_band:f.aum_band as never} : {}),...(f.ticket_band ? {ticket_band:f.ticket_band as never} : {}),revenue_min_band:(f.rev_band || null) as never,registration_no:t(f.registration_no),description:f.description,deal_types:deals,people,portfolio_extra:portfolio,keywords,preferred_stages:stages,preferred_industries:industries,investment_focus:focus,logo_path:uploaded.logoPath,media:uploaded.media,address_line1:t(addr.street),address_line2:t(addr.unit),address_city_district:t(addr.district),address_province_state:t(addr.province),postal_code:t(addr.postal)}});
+        if(companyType) await updateDirectory({data:{id:result.id,companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"}});
         await qc.invalidateQueries({queryKey:["investors"]});pop?.setDirty(false);toast.success(`${f.investor_name.trim()} created`);onCreated(result.id);return;
       }
 
@@ -342,13 +363,13 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         aum_exact_usd: f.aum_exact.trim() && Number.isFinite(exact) ? exact : null,
         registration_no: individual ? null : t(f.registration_no),
         description: f.description.trim(), deal_types: deals,
-        keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, portfolio_extra: portfolio,
+        keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
         investor_id: inv.id,
       } });
-      if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
-      if (admin && companyTypeDirty && companyType) await updateDirectory({data:{id:inv.id,companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"}});
+      if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,bio:bio || null,...(portfolioInvestorsDirty ? {portfolioInvestorIds:portfolioInvestors.flatMap(x=>x.refId ? [x.refId] : [])} : {}),...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
+      if (admin && companyTypeDirty) await updateDirectory({data:{id:inv.id,...(companyTypeReset ? {companyTypeReset:true} : companyType ? {companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"} : {})}});
       await qc.invalidateQueries({ queryKey: ["buyer-investor"] });
       await qc.invalidateQueries({ queryKey: ["investors"] });
       await qc.invalidateQueries({ queryKey: ["investor", inv.id] });
@@ -383,10 +404,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </>
       )}
 
-      <form id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
+      <form noValidate={!!pop} id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {pop && !setup ? <>
-          <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Public view"),icon:<Eye />,count:0},{key:"private",label:tr("Private view"),icon:<Lock />,count:0}]} /></EditInfoTabsSlot>
-          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers")},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />}]:[])]} />
+          <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Public view"),icon:<Eye />,count:0},{key:"private",label:tr("Private view"),icon:<Lock />,count:buyerMissing.about+buyerMissing.media+buyerMissing.people}]} /></EditInfoTabsSlot>
+          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
           {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -421,8 +442,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <div className="space-y-1.5">
             <Label>Company Name{req}<Tag s={src.investor_name} /></Label>
             <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder="e.g. Acme Ventures" maxLength={120}
-              className={errs.investor_name ? "border-[#B42318]" : ""} />
-            <Err k="investor_name" />
+              className={errs.investor_name && !f.investor_name.trim() ? "creation-invalid" : ""} />
+            {!f.investor_name.trim() && <Err k="investor_name" />}
           </div>
           {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
             <Label>Investor Classification<Tag s={src.investor_type} /></Label>
@@ -441,18 +462,19 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>Acts for<Tag s={src.investor_type} /></>} />
         </S>}
 
-<CompactFields>        <>
-          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onChange={(v)=>{setCompanyType(v);setCompanyTypeDirty(true);}} />
+<CompactFields two={individual}>        <>
+          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onReset={()=>{setCompanyType(companyTypeForRelation(rel) ?? "");setCompanyTypeReset(true);setCompanyTypeDirty(true);}} onChange={(v)=>{setCompanyType(v);setCompanyTypeReset(false);setCompanyTypeDirty(true);}} />
         </>
         {!individual && (
           <>
-            <CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} />
+            <S id="size" cur={sec}><CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} /></S>
           </>
         )}
 
         {/* Row 2: Region (Country lives in the address box) */}
 
-          <div className="space-y-1.5">
+          <div data-edit-sec="region" className="relative space-y-1.5">
+            {sec === "region" && <div aria-hidden className="edit-sec-box is-buyer" />}
             <div className="flex h-6 items-center gap-1.5">
               <Label>Region</Label>
               <TooltipProvider delayDuration={150}>
@@ -523,7 +545,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             placeholder="Brief description of the company" />
         </div>
 
-{directory && <div className="space-y-1.5"><Label>Long Description</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
+{directory && <div className="space-y-1.5"><Label>Bio</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>Long Description</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
           {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>{directory && <div className="space-y-1.5"><Label>Legal name</Label><Input value={legalName} onChange={e=>setLegalName(e.target.value)} maxLength={255} /></div>}        {/* Row 4: Firm Name, then the address box */}
         <div className="grid gap-4">
           <div className="space-y-1.5">
@@ -531,9 +553,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <Input id="f-firm_name" value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
           </div>
         </div>
-        <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
+        <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec={sec === "address" ? "address" : "country"}>
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
-          <AddressBox compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+          <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
             title={individual ? tr("Address") : tr("Business address")}
             note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
@@ -542,6 +564,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
 </div>}
           {tab === "mandate" && <div className="space-y-4"><TabHead title={tr("Mandate")} />        {/* Fund & ticket — US$ bands */}
+        {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
         {showsFund && (
           <S cur={setup ? undefined : sec} id="fund"><div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -634,6 +657,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
         </S>
 
+        {directory && <><CompactFields two><div className="space-y-1.5"><Label>Min. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMin} onChange={e=>setRevenueMin(e.target.value)} /></div><div className="space-y-1.5"><Label>Max. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMax} onChange={e=>setRevenueMax(e.target.value)} /></div></CompactFields><RelationshipLinksEditor mode="startups" title="Portfolio Startups" rows={linkedPortfolio} onChange={r=>{setLinkedPortfolio(r);setLinkedDirty(true);}} /><RelationshipLinksEditor mode="investors" title="Portfolio Investors" rows={portfolioInvestors} onChange={r=>{setPortfolioInvestors(r);setPortfolioInvestorsDirty(true);}} /></>}
         {/* Portfolio Startups */}
         <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
           <Label>Portfolio Startups</Label>
@@ -642,7 +666,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               Linked in Investors Directory: {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).join(", ")}
             </p>
           )}
-          <TagEditor values={portfolio} onChange={setPortfolio} max={50} placeholder="Add a portfolio company" />
+          <TagEditor values={portfolio} onChange={(v)=>{setPortfolio(v);setPortfolioDirty(true);}} max={50} placeholder="Add a portfolio company" />
         </S>
 
 </div>}
@@ -699,10 +723,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
 </div>}
           {tab === "admin" && admin && <div className="space-y-4"><TabHead title={tr("Admin settings")} /><p className="text-sm text-muted-foreground">Only Admin sees this tab.</p>
-          {directory ? <CompactFields two><div className="space-y-1.5"><Label>Tenant *</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger><SelectValue placeholder="Choose tenant" /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-1.5"><Label>Owning Agent *</Label><Select value={human} onValueChange={setHuman}><SelectTrigger><SelectValue placeholder="Choose agent" /></SelectTrigger><SelectContent>{humans.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-1.5"><Label>Owning AI Agent *</Label><Select value={ai} onValueChange={setAi}><SelectTrigger><SelectValue placeholder="Choose AI agent" /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Status</Label><Select value={directoryStatus} onValueChange={(v)=>setDirectoryStatus(v as typeof directoryStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Prospect","Active","Engaged","Investing","Inactive","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Visibility</Label><Select value={directoryVisibility} onValueChange={(v)=>setDirectoryVisibility(v as typeof directoryVisibility)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Private","Tenant","Shared","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></>}
-          <Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></div>}
+          {directory ? <CompactFields two><div className="space-y-1.5"><Label>Tenant *</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger id="investor-tenant" className={errs.creation && !tenant ? "creation-invalid" : undefined}><SelectValue placeholder="Choose tenant" /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label className={errs.creation && !human ? "text-destructive" : undefined}>Owning Agent *</Label><Select value={human} onValueChange={setHuman}><SelectTrigger className={errs.creation && !human ? "creation-invalid" : undefined}><SelectValue placeholder="Choose agent" /></SelectTrigger><SelectContent>{humans.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label className={errs.creation && !ai ? "text-destructive" : undefined}>Owning AI Agent *</Label><Select value={ai} onValueChange={setAi}><SelectTrigger className={errs.creation && !ai ? "creation-invalid" : undefined}><SelectValue placeholder="Choose AI agent" /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Status</Label><Select value={directoryStatus} onValueChange={(v)=>setDirectoryStatus(v as typeof directoryStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Prospect","Active","Engaged","Investing","Inactive","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Visibility</Label><Select value={directoryVisibility} onValueChange={(v)=>setDirectoryVisibility(v as typeof directoryVisibility)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Private","Tenant","Shared","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></>}
+          <Label>Verification status</Label><Input readOnly value={data.verification.status} /><Button type="button" variant="link" onClick={()=>{pop?.requestClose();void navigate({to:"/approvals",search:{tab:"buyers"} as never});}}>Change it in Approvals</Button></div>}
         </> : <>        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -757,7 +781,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>}
 
         <div className="grid grid-cols-[220px_1fr] gap-4">
-          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onChange={(v)=>{setCompanyType(v);setCompanyTypeDirty(true);}} />
+          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onReset={()=>{setCompanyType(companyTypeForRelation(rel) ?? "");setCompanyTypeReset(true);setCompanyTypeDirty(true);}} onChange={(v)=>{setCompanyType(v);setCompanyTypeReset(false);setCompanyTypeDirty(true);}} />
         </div>
         {!individual && (
           <div className="grid grid-cols-[220px_1fr] gap-4">
@@ -842,7 +866,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div>
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
-          <AddressBox compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+          <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
             title={individual ? tr("Address") : tr("Business address")}
             note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
@@ -971,7 +995,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               Linked in Investors Directory: {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).join(", ")}
             </p>
           )}
-          <TagEditor values={portfolio} onChange={setPortfolio} max={50} placeholder="Add a portfolio company" />
+          <TagEditor values={portfolio} onChange={(v)=>{setPortfolio(v);setPortfolioDirty(true);}} max={50} placeholder="Add a portfolio company" />
         </S>
 
         {/* For verification */}
@@ -1012,7 +1036,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </>}
         {pop ? (
           <EditInfoFooter>
-          {errs.creation && <p className="mr-auto text-xs text-destructive">{errs.creation}</p>}
+          {errs.creation && missingCreationFields("investor",f.investor_name,tenant,human,ai).length > 0 && <p className="basis-full text-[13px] font-medium text-destructive">To add the investor, fill in: {missingCreationFields("investor",f.investor_name,tenant,human,ai).join(", ")}. Company Name is in About Company; ownership is in Admin settings.</p>}
             <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
             <Button type="submit" form="buyer-edit-form" disabled={busy}>{busy ? "Saving…" : onCreated ? "Add investor" : "Save changes"}</Button>
           </EditInfoFooter>

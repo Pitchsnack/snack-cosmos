@@ -85,10 +85,10 @@ function EntityControlInner() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => navigate({ to: "/startups/new" })}>
+            <DropdownMenuItem onSelect={() => navigate({ to: "/startups",search:{adding:true} })}>
               New Startup
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate({ to: "/investors/new" })}>
+            <DropdownMenuItem onSelect={() => navigate({ to: "/investors",search:{adding:true} })}>
               New Investor / VC
             </DropdownMenuItem>
           </DropdownMenuContent>

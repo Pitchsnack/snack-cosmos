@@ -29,6 +29,7 @@ type Ctx = {
   body: HTMLElement | null;
   /** Header slot for Edit my startup's main tabs. */
   tabsSlot: HTMLElement | null;
+  setPresentation: (name: string, view?: string) => void;
   setDirty: (d: boolean) => void;
   /** Cancel: asks first while dirty. */
   requestClose: () => void;
@@ -43,7 +44,7 @@ export function EditInfoFooter({ children, inline }: { children: ReactNode; inli
   const ctx = useEditInfo();
   if (!ctx) return <>{inline ?? children}</>;
   if (!ctx.footer) return null;
-  return createPortal(<div className="flex w-full items-center justify-end gap-2">{children}</div>, ctx.footer);
+  return createPortal(<div className="flex w-full flex-wrap items-center justify-end gap-2">{children}</div>, ctx.footer);
 }
 
 /** Puts the form's main tabs into the pop-up header. */
@@ -88,6 +89,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
   const [footer, setFooter] = useState<HTMLElement | null>(null);
   const [body, setBody] = useState<HTMLElement | null>(null);
   const [tabsSlot, setTabsSlot] = useState<HTMLElement | null>(null);
+  const [presentation, setPresentation] = useState<{name: string; view?: string} | null>(null);
   const dirtyRef = useRef(false);
   const bypass = useRef(false);
   const [confirm, setConfirm] = useState<null | { go: () => void; stay: () => void }>(null);
@@ -112,7 +114,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
 
   // Back button (or any navigation away from ?edit=) while dirty asks first.
   const blocker = useBlocker({
-    shouldBlockFn: ({ next }) => open && dirtyRef.current && !bypass.current && !(next.search as { edit?: string } | undefined)?.edit,
+    shouldBlockFn: ({ current, next }) => open && dirtyRef.current && !bypass.current && (next.pathname !== current.pathname || !(next.search as { edit?: string; editor?: string | boolean; adding?: boolean } | undefined)?.edit && !(next.search as { editor?: string | boolean } | undefined)?.editor && !(next.search as { adding?: boolean } | undefined)?.adding),
     withResolver: true,
     enableBeforeUnload: () => dirtyRef.current,
   }) as unknown as { status: "blocked" | "idle"; proceed: () => void; reset: () => void };
@@ -126,6 +128,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
 
   const ctx: Ctx = {
     footer, body, tabsSlot,
+    setPresentation: (name, view) => setPresentation((old) => old?.name === name && old?.view === view ? old : {name, view}),
     setDirty: (d) => { dirtyRef.current = d; },
     requestClose,
     done: leave,
@@ -170,13 +173,13 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
              <div className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border px-6 py-[18px] sm:flex-nowrap">
               <div className="min-w-0 flex-1">
                 <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{title ?? tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
-                <div className="mt-[3px] text-[13px] text-[#6B7280] dark:text-muted-foreground">{subtitle}</div>
+                 <div className="mt-[3px] text-[13px] text-muted-foreground">{presentation ? [presentation.name || (creating ? tr("Not created yet", "ยังไม่ได้สร้าง") : companyName), presentation.view].filter(Boolean).join(" · ") : subtitle}</div>
               </div>
                <div ref={setTabsSlot} className="shrink-0 empty:hidden max-sm:order-3 max-sm:w-full" />
-              <button type="button" aria-label={tr("Close", "ปิด")} onClick={requestClose}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] text-[#434A5C] hover:bg-[#F2F4F7] dark:text-muted-foreground dark:hover:bg-muted">
+              <Button type="button" variant="ghost" size="icon" aria-label={tr("Close", "ปิด")} onClick={requestClose}
+                className="h-9 w-9 shrink-0 text-muted-foreground hover:bg-muted">
                 <X className="h-[18px] w-[18px]" />
-              </button>
+              </Button>
             </div>
             <div ref={setBody} data-edit-info-body
               className="min-h-0 shrink overflow-y-auto overscroll-contain transition-[height] duration-200 ease-out motion-reduce:transition-none max-sm:!h-auto max-sm:flex-1"
@@ -258,7 +261,7 @@ export function MainTabs<T extends string>({ tabs, value, onChange, tone, idBase
 }
 
 export function TabRow<T extends string>({ tabs, value, onChange, label, idBase, extra }: {
-  tabs: { key: T; label: string; count?: number; icon?: ReactNode }[];
+   tabs: { key: T; label: string; count?: number; icon?: ReactNode; error?: boolean }[];
   value: T; onChange: (k: T) => void; label: string; idBase: string; extra?: ReactNode;
 }) {
   const edit = useEditInfo();
@@ -277,7 +280,8 @@ export function TabRow<T extends string>({ tabs, value, onChange, label, idBase,
               aria-controls={`${idBase}-panel`} onClick={() => change(t.key)}
               className={cn("-mb-px inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 text-[14px]",
                 on ? "border-[#151A28] font-semibold text-[#151A28] dark:border-foreground dark:text-foreground" : "border-transparent font-medium text-[#6A7181] dark:text-muted-foreground")}>
-              {t.label}{t.icon}
+               {t.icon}{t.label}
+               {t.error && <span aria-label="Required field missing" className="h-[7px] w-[7px] rounded-full bg-destructive" />}
               {!!t.count && <MissingCount n={t.count} />}
             </button>
           );

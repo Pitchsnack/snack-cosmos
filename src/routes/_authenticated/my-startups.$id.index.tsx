@@ -52,7 +52,7 @@ function MyStartupDetailPage() {
           <div className="flex items-center gap-2">
             {canManage && (
               <Button asChild size="sm" variant="outline">
-                <Link to="/my-startups/$id/edit" params={{ id }}>
+                <Link to="/my-startups" search={{panel:id,edit:"startup",view:"private",tab:"images"}}>
                   <Pencil className="mr-1 h-3.5 w-3.5" /> Edit my startup
                 </Link>
               </Button>

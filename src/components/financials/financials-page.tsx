@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -186,6 +186,7 @@ export function StartupFinancialsPage({
   const saveFinancials = useServerFn(saveStartupFinancials);
   const queryClient = useQueryClient();
   const [profileEdit, setProfileEdit] = useState(initialProfileEdit);
+  const navigate = useNavigate();
   const { has, isControl } = usePermissions();
   const canManage = !readOnly && (isControl || has("startups.write"));
 
@@ -389,7 +390,7 @@ export function StartupFinancialsPage({
         />
       )}
       {!editing && tab === "valuation" && workspace === "my-startups" && <div className="flex justify-end"><Button variant="link" onClick={() => setProfileEdit(true)}><Pencil className="mr-2 h-4 w-4" />Edit information</Button></div>}
-      {profileEdit && <StartupEditPopup id={id} seller onClose={() => {setProfileEdit(false); queryClient.invalidateQueries({queryKey:["startup-financials",id]});}} />}
+      {profileEdit && <StartupEditPopup id={id} seller onClose={() => {setProfileEdit(false); if(initialProfileEdit) void navigate({search:((p:Record<string,unknown>)=>({...p,edit:undefined})) as never,replace:true}); queryClient.invalidateQueries({queryKey:["startup-financials",id]});}} />}
 
 
       {/* Seller-only: /my-verification resolves the caller's own companies, so the link would be wrong on Admin screens. */}

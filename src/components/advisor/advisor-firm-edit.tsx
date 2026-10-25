@@ -78,8 +78,9 @@ export function AdvisorFirmEdit({ firmId, section }: { firmId: string | null; se
 }
 
 function Section({ id, title, action, setup, active, children }: { id: EditSection; title: string; action?: React.ReactNode; setup?: boolean; active?: boolean; children: React.ReactNode }) {
+  const pop = useEditInfo();
   return (
-    <section id={`sec-${id}`} className="scroll-mt-6 rounded-[14px] border border-border bg-card p-5 shadow-card">
+    <section id={`sec-${id}`} className={pop ? "scroll-mt-6" : "scroll-mt-6 rounded-[14px] border border-border bg-card p-5 shadow-card"}>
       <EditSec id={id} tone="buyer" active={active}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className={setup ? "text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]" : "text-[16px] font-semibold"}>{title}</h2>
@@ -101,7 +102,7 @@ function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
   label: string; req?: boolean; opt?: boolean; hint?: React.ReactNode; err?: string | null; tag?: SourceTag; children: React.ReactNode; className?: string; htmlFor?: string;
 }) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-1.5", className)} data-edit-sec={htmlFor === "fe-teamSize" ? "team-size" : undefined}>
       <Label htmlFor={htmlFor}>
         {label}
         {req && <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>}
@@ -145,6 +146,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const visible = (t: Tab) => !pop || !!setup || tab === t;
 
   const back = () => (pop ? pop.requestClose() : onDone ? onDone() : navigate({ to: "/marketplace/my-company", search: firm ? ({ open: firm.id } as never) : undefined }));
+  useEffect(() => { pop?.setPresentation(f.name); }, [f.name]);
   const thai = f.country === "Thailand";
   const src = setup?.sources ?? {};
 
@@ -192,6 +194,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const addrErr = addrErrors(f.addr, thai, f.city);
   const showAddr = (k: keyof Addr) => (touched[`a-${k}`] ? (addrErr as Record<string, string | null>)[k] ?? null : null);
   const firstBad = errs.find(([, e]) => e)?.[0];
+  const missingCounts = {about:errs.filter(([k,e])=>e && !["city","legalName"].includes(k)).length + (f.firmType ? 0 : 1) + (f.languages.length ? 0 : 1), address:errs.filter(([k,e])=>e && ["city","legalName"].includes(k)).length};
 
   const changeCountry = (c: string) => setF((p) => ({ ...p, country: c, city: "", registrationNo: "", addr: { street: "", unit: "", district: "", province: "", postal: "" } }));
 
@@ -262,7 +265,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       {pop && !setup ? <>
         <EditInfoTabsSlot><span className="inline-flex h-9 items-center gap-2 rounded-md bg-help-advisor px-3.5 text-sm font-semibold text-primary-foreground"><Globe className="h-4 w-4" />{tr("Open to sellers and buyers")}</span></EditInfoTabsSlot>
         <TabRow value={tab} onChange={setTab} label="Advisor information" idBase="advisor-edit" tabs={[
-          {key:"logo",label:tr("Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},
+          {key:"logo",label:tr("Logo")},{key:"about",label:tr("About Company"),count:missingCounts.about,error:!!adminCreate && forced && !!nameError(f.name)},{key:"address",label:tr("Address"),count:missingCounts.address},
           {key:"services",label:tr("Services & Fees")},{key:"team",label:tr("Team")},{key:"documents",label:tr("Licences & Documents")},
           ...(asAdmin ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />}]:[]),
         ]} />
@@ -271,10 +274,10 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
         </F>
 </div>}
-        {visible("about") && <div className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label="Year founded" req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
+        {visible("about") && <EditSec id={section === "work" ? "work" : "firm"} active={section === "work" || section === "firm"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label="Year founded" req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder="e.g. 2014" value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
-          <F label="Firm name" req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
+          <F label="Firm name" req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
           <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
             <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
@@ -292,13 +295,13 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label="Typical deal size" opt tag={f.dealBand ? src.dealBand : undefined} hint={deal ? <>Your card shows <b>{deal.usd}</b> ({deal.thb}).</> : undefined}>
             <select className={sel} value={f.dealBand} onChange={(e) => set("dealBand", e.target.value)}>
               <option value="">Choose a range</option>
-              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)!.full}</option>)}
+              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)?.full ?? b.key}</option>)}
             </select>
           </F>
 </CompactFields><CompactFields>          <F label="Website" req tag={src.website} err={show("web")} htmlFor="fe-web"><Input id="fe-web" aria-required className={cn(inp, show("web") && errB)} maxLength={200} placeholder="https://www.yourfirm.com" value={f.website} onBlur={blur("web")} onChange={(e) => set("website", e.target.value)} /></F>
           <F label="Email" req tag={src.email} err={show("email")} htmlFor="fe-email"><Input id="fe-email" aria-required type="email" className={cn(inp, show("email") && errB)} maxLength={120} placeholder="hello@yourfirm.com" value={f.email} onBlur={blur("email")} onChange={(e) => set("email", e.target.value)} /></F>
           <F label="Phone" req tag={src.phone} err={show("phone")} htmlFor="fe-phone"><Input id="fe-phone" aria-required className={cn(inp, show("phone") && errB)} maxLength={30} placeholder="+66 2 123 4567" value={f.phone} onBlur={blur("phone")} onChange={(e) => set("phone", e.target.value)} /></F>
-</CompactFields>        <F label="Languages" tag={f.languages.length ? src.languages : undefined}>
+</CompactFields>        <F label="Languages" req tag={f.languages.length ? src.languages : undefined}>
           <div className="flex flex-wrap gap-1.5">
             {LANGUAGES.map((l) => {
               const on = f.languages.includes(l);
@@ -318,19 +321,21 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         <F label="Description" req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${f.description.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} value={f.description} onBlur={blur("desc")} onChange={(e) => set("description", e.target.value)} />
         </F>
-</div>}
-        {visible("address") && <div className="space-y-4"><TabHead title={tr("Company Address")} /><CompactFields two>          <F label="Legal name" req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
+</EditSec>}
+        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} /><CompactFields two>          <F label="Legal name" req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
             <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder="e.g. Acme Advisory Co., Ltd." value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
           <F label="Thai name" opt={!thai} tag={f.thaiName ? src.thaiName : undefined}><Input className={inp} maxLength={200} placeholder="บริษัท … จำกัด" value={f.thaiName} onChange={(e) => set("thaiName", e.target.value)} /></F>
-</CompactFields>        <div>
-          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map.")}
-            country={f.country} onCountry={changeCountry}
+</CompactFields><CompactFields two>
+          <F label={tr("Country")} req><select id="fe-country" className={sel} value={f.country} onChange={e=>changeCountry(e.target.value)}><option value="">{tr("Choose a country")}</option>{COUNTRIES.map(c=><option key={c} value={c}>{tr(c)}</option>)}</select></F>
+          <F label={tr("City / province")} req err={show("city")}><Input id="fe-city" value={thai ? f.addr.province : f.city} onChange={e=>thai ? set("addr", {...f.addr,province:e.target.value}) : set("city",e.target.value)} /></F>
+        </CompactFields><div>
+          <AddressBox noteOutside compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map.")}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
         </div>
-</div>}
+</EditSec>}
         {visible("services") && <div className="space-y-4"><TabHead title={tr("Services & Fees")} />      <Section id="services" active={section === "services"} title="Services and fees">
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">Pick at least one service.</p>}
@@ -434,7 +439,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label="Typical deal size" opt tag={f.dealBand ? src.dealBand : undefined} hint={deal ? <>Your card shows <b>{deal.usd}</b> ({deal.thb}).</> : undefined}>
             <select className={sel} value={f.dealBand} onChange={(e) => set("dealBand", e.target.value)}>
               <option value="">Choose a range</option>
-              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)!.full}</option>)}
+              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)?.full ?? b.key}</option>)}
             </select>
           </F>
           <F label="Team size" req tag={src.teamSize} err={show("teamSize")} htmlFor="fe-teamSize">
@@ -528,6 +533,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
 </>}
       {pop ? (
         <EditInfoFooter>
+          {adminCreate && forced && nameError(f.name) && <p className="mr-auto text-[13px] font-medium text-destructive">To add the advisor, fill in: Firm name (About Company).</p>}
           <Button variant="outline" onClick={back}>Cancel</Button>
           <Button disabled={busy || uploading} onClick={submit} className="bg-accent text-accent-foreground hover:bg-accent/90">{adminCreate ? "Add advisor" : "Save changes"}</Button>
         </EditInfoFooter>

@@ -1,3 +1,4 @@
+import {StartupEditPopup} from "@/components/startups/startup-edit-popup";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +20,7 @@ import { useDebounced } from "@/hooks/use-debounced";
 import type { ControlListParams } from "@/lib/entity-control/types";
 
 export function StartupControlTab() {
+  const [editing,setEditing]=useState<string | null>(null);
   const [status, setStatus] = useState<"all" | "published" | "unpublished">("all");
   const [q, setQ] = useState("");
   const debouncedQ = useDebounced(q, 350);
@@ -80,6 +82,7 @@ export function StartupControlTab() {
 
   return (
     <div className="space-y-4">
+      {editing && <StartupEditPopup id={editing} onClose={()=>setEditing(null)} />}
       <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         Published startups are visible in the Startup Directory. Unpublished startups remain internal
@@ -189,11 +192,7 @@ export function StartupControlTab() {
               </span>
               <DirectoryStateBadge state={r.directory_state} />
               <div className="flex items-center justify-end gap-1">
-                <Button asChild size="sm" variant="ghost">
-                  <Link to="/startups/$id/edit" params={{ id: r.id }} search={{ from: "entity-control", tab: "startups" }}>
-                    Edit
-                  </Link>
-                </Button>
+                <Button size="sm" variant="ghost" onClick={()=>setEditing(r.id)}>Edit</Button>
                 {r.directory_state === "published" ? (
                   <Button size="sm" variant="outline" className="w-[104px]" onClick={() => setState.mutate({ entity: "startup", ids: [r.id], state: "unpublished" })}>
                     Unpublish

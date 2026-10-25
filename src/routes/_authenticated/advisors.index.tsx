@@ -1,3 +1,4 @@
+import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, OwnershipCardSlot, OwnershipPanelSlot, OwnershipMenuItem, type RunByFilter } from "@/components/handover/ownership";
 import { useMemo, useState } from "react";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import {
   Briefcase, Building2, Calendar, ExternalLink, FileText, Globe, Languages, Mail, MapPin, MessageSquare, MoreVertical, Phone,
-  RefreshCw, Search, ShieldCheck, Star, Tag, Users, Wallet,
+  Plus, RefreshCw, Search, ShieldCheck, Star, Tag, Users, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ function AdvisorsDirectory() {
   const view: ViewMode = s.view ?? "split";
   const set = (p: Partial<typeof s>) => navigate({ search: (prev: typeof s) => ({ ...prev, ...p }) });
   const [editing, setEditing] = useState<string | null>(null);
+  const [createdId,setCreatedId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [runBy, setRunBy] = useState<RunByFilter>("all");
   const favs = new Set(data?.favourites ?? []);
@@ -113,7 +115,7 @@ function AdvisorsDirectory() {
             <Star className={cn("h-4 w-4", s.fav && "fill-accent")} /><span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", s.fav ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground")}>{favs.size}</span>
           </button>
           <ViewToggle value={view} onChange={(v) => set({ view: v })} />
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setAdding(true)}>+ Add advisor</Button>
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setAdding(true)}><Plus className="mr-2 h-4 w-4" />Add advisor</Button>
         </div>
       </div>
 
@@ -190,7 +192,7 @@ function AdvisorsDirectory() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
           <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
-            {items.map((f) => <div key={f.id}><SplitCard f={f} selected={selected?.id === f.id} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} onSelect={() => set({ selected: f.id })} /><div className="px-2 pt-1"><Under f={f} /></div></div>)}
+            {items.map((f) => <CreatedDirectoryRow key={f.id} active={createdId === f.id} onEdit={()=>setEditing(f.id)}><SplitCard f={f} selected={selected?.id === f.id} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} onSelect={() => set({ selected: f.id })} /><div className="px-2 pt-1"><Under f={f} /></div></CreatedDirectoryRow>)}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
             {selected ? <Panel f={selected} fav={favs.has(selected.id)} onFav={() => toggleFav(selected.id)} onEdit={() => setEditing(selected.id)} /> : <p className="text-sm text-muted-foreground">Pick a firm to see its profile.</p>}
@@ -198,7 +200,7 @@ function AdvisorsDirectory() {
         </div>
       )}
       {editing && <AdvisorEditPopup id={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); }} />}
-      {adding && <AddAdvisorDialog onClose={() => setAdding(false)} onCreated={(id) => { setAdding(false); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); set({ view: "split", selected: id }); }} />}
+      {adding && <AddAdvisorDialog onClose={() => setAdding(false)} onCreated={(id) => { setAdding(false); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); setCreatedId(id);setRunBy("all");void navigate({search:{view:"split",selected:id,sort:"newest"},replace:true}); }} />}
     </div>
     </OwnershipProvider>
   );

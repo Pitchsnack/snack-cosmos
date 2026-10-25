@@ -593,7 +593,7 @@ export function StartupDetailPanel({
                   {companyMenuEdit ? null : canManage ? (
                     <DropdownMenuItem asChild>
                       {isMyWorkspace ? (
-                        <Link to="/my-startups/$id/edit" params={{ id }} search={myStartupsReturnSearch}>
+                        <Link to="/my-startups" search={{...myStartupsReturnSearch,panel:id,edit:"startup",view:"private",tab:"images"}}>
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </Link>
                       ) : (
