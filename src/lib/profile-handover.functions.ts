@@ -207,7 +207,7 @@ export const publishManaged = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     if (data.kind === "startup") {
       const { data: hp } = await sb.from("hidden_profiles").select("*").eq("startup_id", data.id).maybeSingle();
-      if (!hp) throw new Error("Create the Public view first.");
+      if (!hp) throw new Error("Create the Listed view first.");
       const { pickDraft } = await import("./hidden-profile");
       const cover = hp.pending_cover ?? hp.cover_image_url ?? null;
       const { error } = await sb.from("hidden_profiles").update({

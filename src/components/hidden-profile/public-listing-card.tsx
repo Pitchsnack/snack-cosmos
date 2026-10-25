@@ -92,7 +92,7 @@ export function dealLine(d?: ListingDeal, t: (s: string) => string = (s) => s) {
 /**
  * One listing card used by the seller's "How buyers see it", the buyer Grid,
  * the Split list and the Split detail panel. The cover is ALWAYS sector vector
- * art — photos and logos only appear in the Private view after NDA.
+ * art — photos and logos only appear in the Exclusive view after NDA.
  */
 export type ListingPart = "description" | "highlights" | "customers" | "chips" | "markets" | "revenue" | "employees" | "terms";
 function PartEdit({ k, on }: { k: ListingPart; on?: (k: ListingPart) => void }) {
@@ -108,7 +108,7 @@ export function PublicListingCard({
   showManaged?: boolean;
   /** Optional tag at the top of the card body (e.g. "Matches your mandate"). */
   tag?: React.ReactNode;
-  /** Seller's own Public view preview only: an Edit link on each card part. Off by default. */
+  /** Seller's own Listed view preview only: an Edit link on each card part. Off by default. */
   editable?: (k: ListingPart) => void;
   l: PublicListing;
   seller?: boolean;

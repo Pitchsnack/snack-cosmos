@@ -52,7 +52,7 @@ export function HiddenProfileEditor({
   const a = useHiddenProfileActions();
   void autoPublish; // Publishing moved to Admin approval; the editor only saves.
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
-  // The public view may name the region but never the exact city, the registered
+  // The listed view may name the region but never the exact city, the registered
   // name or any person — so generated text is guarded by the private facts.
   const opts = useMemo(
     () => ({ geo: d.region?.trim() || null, guard: facts ? identityTerms(facts) : [] }),
@@ -134,10 +134,10 @@ export function HiddenProfileEditor({
     <div className="flex min-h-[60vh] flex-col">
       <div className="flex-1 space-y-5 pb-4">
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to the public view
+          <ArrowLeft className="h-4 w-4" /> Back to the listed view
         </button>
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold">Edit public view</h2>
+          <h2 className="text-lg font-semibold">Edit listed view</h2>
           <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">{isLive ? (liveChanged ? "Live · edited" : "Live") : "Draft"}</span>
           {source && (
             <Button type="button" variant="outline" size="sm" className="ml-auto" onClick={fillAll}>

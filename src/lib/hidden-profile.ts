@@ -75,7 +75,7 @@ export interface HiddenDraft {
   nda_approver: "seller" | "admin";
   owner_stays?: "yes" | "no" | null;
   handover_months?: number | null;
-  /** Public tags; null = derived from the private view (Auto Enrich). */
+  /** Public tags; null = derived from the exclusive view (Auto Enrich). */
   product_tags?: string[] | null;
   market_tags?: string[] | null;
   /** Optional uploaded cover picture (startup-media storage path); null = sector vector art. */

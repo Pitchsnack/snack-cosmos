@@ -1,7 +1,7 @@
 /**
- * Public view (Marketplace listing) — pure builders shared by the seller
+ * Listed view (Marketplace listing) — pure builders shared by the seller
  * preview and the server's buyer read model. Everything is derived from the
- * wizard answers / private view; only the headline is written by the seller.
+ * wizard answers / exclusive view; only the headline is written by the seller.
  */
 import { findTermsIn, identityTerms, type EntryFacts } from "@/lib/hidden-profile";
 
@@ -74,7 +74,7 @@ export function factsFromSource(s: ListingSource): EntryFacts {
     startup_name: s.startup_name,
     registered_name: s.registered_name,
     website_url: s.website_url,
-    city: null, // province is allowed in the public view
+    city: null, // province is allowed in the listed view
     year_founded: s.year_founded,
     company_size: null,
     last_year_revenue: null,
@@ -225,7 +225,7 @@ const GEO_ADJ = (geo: string | null) =>
   !geo ? "" : /thai/i.test(geo) ? "Thai" : /asean|southeast/i.test(geo) ? "ASEAN" : titleCase(geo.split(",")[0].trim());
 
 /**
- * geo: region shown in the public view (used instead of the exact city).
+ * geo: region shown in the listed view (used instead of the exact city).
  * guard: extra identity terms the generated text must never contain.
  */
 export interface SuggestOpts {
