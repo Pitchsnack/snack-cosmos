@@ -194,6 +194,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const addrErr = addrErrors(f.addr, thai, f.city);
   const showAddr = (k: keyof Addr) => (touched[`a-${k}`] ? (addrErr as Record<string, string | null>)[k] ?? null : null);
   const firstBad = errs.find(([, e]) => e)?.[0];
+  const missingCounts = {about:errs.filter(([k,e])=>e && !["city","legalName"].includes(k)).length + (f.firmType ? 0 : 1) + (f.languages.length ? 0 : 1), address:errs.filter(([k,e])=>e && ["city","legalName"].includes(k)).length};
 
   const changeCountry = (c: string) => setF((p) => ({ ...p, country: c, city: "", registrationNo: "", addr: { street: "", unit: "", district: "", province: "", postal: "" } }));
 
@@ -264,7 +265,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       {pop && !setup ? <>
         <EditInfoTabsSlot><span className="inline-flex h-9 items-center gap-2 rounded-md bg-help-advisor px-3.5 text-sm font-semibold text-primary-foreground"><Globe className="h-4 w-4" />{tr("Open to sellers and buyers")}</span></EditInfoTabsSlot>
         <TabRow value={tab} onChange={setTab} label="Advisor information" idBase="advisor-edit" tabs={[
-          {key:"logo",label:tr("Logo")},{key:"about",label:tr("About Company"),error:!!adminCreate && forced && !!nameError(f.name)},{key:"address",label:tr("Address")},
+          {key:"logo",label:tr("Logo")},{key:"about",label:tr("About Company"),count:missingCounts.about,error:!!adminCreate && forced && !!nameError(f.name)},{key:"address",label:tr("Address"),count:missingCounts.address},
           {key:"services",label:tr("Services & Fees")},{key:"team",label:tr("Team")},{key:"documents",label:tr("Licences & Documents")},
           ...(asAdmin ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />}]:[]),
         ]} />
@@ -276,7 +277,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {visible("about") && <EditSec id={section === "work" ? "work" : "firm"} active={section === "work" || section === "firm"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label="Year founded" req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder="e.g. 2014" value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
-          <F label="Firm name" req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
+          <F label="Firm name" req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
           <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
             <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
