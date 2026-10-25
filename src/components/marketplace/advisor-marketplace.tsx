@@ -1,3 +1,6 @@
+import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
+import { StandardInvestorCard } from "@/components/marketplace/standard-investor-card";
+import { FavViewCard } from "@/components/marketplace/fav-view-card";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { BrowseHeader, FilterPill, NdaInfoStrip, PlanEndedBar } from "@/components/marketplace/browse-header";
@@ -216,16 +219,13 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     ? <SaveButton square saved={stars.isStarred("listing", x.id)} onClick={() => stars.toggle("listing", x.id)} />
     : <StarBtn saved={stars.isStarred("investor", x.id)} onClick={() => stars.toggle("investor", x.id)} />;
 
-  const card = (x: Item, split: boolean) => x.kind === "listing" ? (
-    <PublicListingCard showManaged l={x.t.listing} deal={x.t} topRight={starOf(x)}
-      expanded={split ? expanded === x.key : true}
-      onToggleExpand={split ? () => setExpanded((e) => (e === x.key ? null : x.key)) : undefined}
-      selected={split && wide && current?.key === x.key}
-      onSelect={() => (split && wide ? setSelected(x.key) : openInSplit(x.key))} />
-  ) : (
-    <PublicInvestorCard showManaged i={x.i} topRight={starOf(x)} selected={split && wide && current?.key === x.key}
-      onClick={() => (split && wide ? setSelected(x.key) : openInSplit(x.key))} />
-  );
+  const card = (x: Item, split: boolean) => {
+    const selected = split && wide && current?.key === x.key;
+    const onOpen = () => (split && wide ? setSelected(x.key) : openInSplit(x.key));
+    const body = x.kind === "listing" ? <StandardListingCard l={x.t.listing} deal={x.t} publicOnly topRight={starOf(x)} selected={selected} onSelect={onOpen} />
+      : <StandardInvestorCard i={x.i} topRight={starOf(x)} selected={selected} onClick={onOpen} />;
+    return fav ? <FavViewCard side="advisor" name={x.kind === "listing" ? x.t.listing.refNo : x.i.refNo} hasPrivate={false} view="public" open={selected} onView={() => {}} publicBody={body} /> : body;
+  };
 
   const th = useTranslation().language === "th";
   const anyFilter = !!q || sector !== "all" || deal !== "all" || price !== "all" || type !== "all" || country !== "all" || !!aum || !!ticket || !!revenue;
@@ -314,10 +314,10 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
     <div className={splitFixed ? "flex h-[calc(100vh-7.5rem)] min-h-[520px] flex-col gap-5 [&>*]:shrink-0" : "space-y-5"}>
       <div>
         <BrowseHeader role="advisor" eyebrow={<>{fav ? <Star className="h-3.5 w-3.5" /> : <Store className="h-3.5 w-3.5" />} {th ? "ค้นพบ" : "Discover"}</>}
-          title={fav ? (th ? "รายการโปรด" : "My watchlist") : (th ? "ตลาดธุรกิจ ซื้อขาย" : "Browse marketplace")}
-          subtitle={!needle && !fav && th ? `ประกาศขาย ${sellersN} รายการ และโปรไฟล์นักลงทุน ${buyersN} ราย` : subtitle}
+          title={fav ? (th ? "รายการที่ติดตาม" : "My watchlist") : (th ? "ตลาดธุรกิจ ซื้อขาย" : "Browse marketplace")}
+          subtitle={!needle && !fav && th ? `ประกาศขาย ${sellersN} รายการ และโปรไฟล์นักลงทุน ${buyersN} ราย` : fav && th ? "ผู้ขายและผู้ซื้อที่ท่านติดดาว" : subtitle}
           toggle={<ViewToggle value={view} onChange={persist} />}
-          q={q} setQ={setQ} placeholder={fav ? (th ? "ค้นหารายการโปรด" : "Search favourites") : (th ? "ค้นหาผู้ขายและผู้ซื้อ" : "Search sellers and buyers")}
+          q={q} setQ={setQ} placeholder={fav ? (th ? "ค้นหาในรายการที่ติดตาม" : "Search my watchlist") : (th ? "ค้นหาผู้ขายและผู้ซื้อ" : "Search sellers and buyers")}
           hasFilters={anyFilter} onClear={() => { setQ(""); pickSide(side); }}
           count={th ? `แสดง ${items.length}` : `Showing ${items.length}`}
           lead={tray}
@@ -343,11 +343,11 @@ function AdvisorMarket({ mode }: { mode: "browse" | "favourites" }) {
       </div>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[400px] rounded-[14px]" />)}
         </div>
       ) : items.length === 0 ? empty : view === "grid" ? (
-        <div className="grid gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {items.map((x) => <div key={x.key}><RoleLine kind={x.kind} text={lineText(x)} />{card(x, false)}</div>)}
         </div>
       ) : view === "split" ? (

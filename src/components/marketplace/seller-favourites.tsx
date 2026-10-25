@@ -1,3 +1,4 @@
+import { StandardInvestorCard } from "@/components/marketplace/standard-investor-card";
 import {PrivateInvestorPanel} from "@/components/marketplace/private-investor-panel";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useEffect, useMemo, useState } from "react";
@@ -95,8 +96,8 @@ export function SellerFavourites() {
   const card = (f: SellerFavourite, open: boolean, onOpen: (v: FavView) => void, onView: (v: FavView) => void, reserve?: boolean) => (
     <FavViewCard key={f.id} side="seller" name={f.priv?.investor_name ?? f.codeName} hasPrivate={!!f.priv} view={viewOf(f)} open={open}
       onView={onView} reserveTabs={reserve}
-      privateBody={f.priv ? <InvestorListItem i={toListItem(f)} selected={false} onSelect={() => onOpen("private")} wideBadge badge={<StatusBadge s="approved" />} /> : undefined}
-      publicBody={<PublicInvestorCard showManaged i={f} coverBadge={coverBadge(f)} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => onOpen("public")} topRight={star(f)} />} />
+      privateBody={f.priv ? <StandardInvestorCard i={f} privateData={f.priv} onClick={() => onOpen("private")} topRight={star(f)} /> : undefined}
+      publicBody={<StandardInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => onOpen("public")} topRight={star(f)} />} />
   );
   const panel = (f: SellerFavourite) => {
     const v = viewOf(f);
@@ -134,7 +135,7 @@ export function SellerFavourites() {
       <div>
         <BrowseHeader role="seller" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("My watchlist")}
           subtitle={t("Investors you starred or have an NDA with")} toggle={<ViewToggle value={view} onChange={persist} />}
-          q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหารายการโปรด" : "Search favourites"}
+          q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหาในรายการที่ติดตาม" : "Search my watchlist"}
           hasFilters={!!q || filter !== "all"} onClear={() => { setQ(""); setFilter("all"); }}
           count={language === "th" ? `แสดง ${items.length} รายการ` : `Showing ${items.length}`}
           lead={
@@ -157,7 +158,7 @@ export function SellerFavourites() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[260px] rounded-[14px]" />)}
         </div>
       ) : items.length === 0 ? (
@@ -168,7 +169,7 @@ export function SellerFavourites() {
           ) : <p>{t("No investors with this status.")}</p>}
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {items.map((f) => card(f, false, (v) => { setView(f.id, v); setModalId(f.id); }, (v) => setView(f.id, v), anyTabs))}
         </div>
       ) : view === "split" ? (

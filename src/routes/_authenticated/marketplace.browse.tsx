@@ -1,3 +1,4 @@
+import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -172,7 +173,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       )}
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[453px] rounded-[14px]" />)}
         </div>
       ) : items.length === 0 ? (
@@ -181,9 +182,9 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
           <p>{ownOnly ? t("Your company is not live on the Marketplace yet.") : directId ? t("This listing isn't available.") : hasFilter ? t("No listings match your filters yet.") : t("Approved businesses appear here.")}</p>
         </div>
       ) : !ownOnly && view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {items.map((t) => (
-            <div key={t.id} data-flight-src={t.id}><PublicListingCard showManaged tag={tagOf(t.id)} l={t.listing} deal={t} onSelect={() => setModalId(t.id)} badge={badgeOf(t.id)} topRight={star(t.id)} /></div>
+            <div key={t.id} data-flight-src={t.id}><StandardListingCard tag={tagOf(t.id)} l={t.listing} deal={t} status={ndaOf(t.id)} onSelect={() => setModalId(t.id)} topRight={star(t.id)} /></div>
           ))}
           {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
@@ -191,16 +192,13 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
         <div className={splitFixed ? "!shrink grid min-h-0 flex-1 grid-cols-[400px_minmax(0,1fr)] gap-[18px]" : "grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]"}>
           <div ref={listRef} className={splitFixed ? "min-h-0 space-y-3 overflow-y-scroll pr-2 [scrollbar-gutter:stable]" : "space-y-3"}>
             {items.map((t) => (
-              <div key={t.id} data-flight-src={t.id}><PublicListingCard
-                showManaged
+              <div key={t.id} data-flight-src={t.id}><StandardListingCard
                 tag={tagOf(t.id)}
                 l={t.listing}
                 deal={t}
-                expanded={expandedId === t.id}
-                onToggleExpand={() => setExpandedId((e) => (e === t.id ? null : t.id))}
                 selected={wide && current?.id === t.id}
                 onSelect={() => { if (wide) setSelected(t.id); else setModalId(t.id); }}
-                badge={badgeOf(t.id)}
+                status={ndaOf(t.id)}
                 topRight={ownOnly ? undefined : star(t.id)}
               /></div>
             ))}

@@ -1,3 +1,4 @@
+import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
 import {PrivateListingPanel} from "@/components/marketplace/private-listing-panel";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { BuyerVerificationBox } from '@/components/company-verification/buyer-box';
@@ -83,12 +84,10 @@ function FavCard({ f, view, open, onView, onOpen, expanded, onToggleExpand, save
   const p = f.priv;
   const star = <SaveButton square saved={savedIds.has(f.id)} nda={f.status !== "saved"} onClick={() => toggleSave(f.id)} />;
   const publicBody = (
-    <PublicListingCard showManaged l={f.listing} deal={f} onSelect={() => onOpen("public")} expanded={expanded} onToggleExpand={onToggleExpand}
-      badge={f.status === "approved" ? <ApprovedBadge /> : f.status === "requested" ? <NdaRequestedBadge /> : undefined} topRight={star} />
+    <StandardListingCard l={f.listing} deal={f} publicOnly status={f.status} onSelect={() => onOpen("public")} topRight={star} />
   );
   const privateBody = p ? (
-    <PublicListingCard l={f.listing} deal={f} onSelect={() => onOpen("private")} expanded={expanded} onToggleExpand={onToggleExpand} badge={<ApprovedBadge />}
-      priv={{ name: p.companyName, logoPath: p.logoPath, revenueText: baht(p.revenue), fy: p.fy, employees: p.employees }} />
+    <StandardListingCard l={f.listing} deal={f} status={f.status} privateData={p} onSelect={() => onOpen("private")} topRight={star} />
   ) : undefined;
   return (
     <FavViewCard side="buyer" name={p?.companyName ?? f.listing.codeName ?? f.listing.refNo ?? ""} hasPrivate={!!p} view={view} open={open}
@@ -157,8 +156,8 @@ function FavouritesPage() {
     <div className="space-y-6">
       <div>
         <BrowseHeader role="buyer" eyebrow={<><Star className="h-3.5 w-3.5" /> {t("Discover")}</>} title={t("My watchlist")}
-          subtitle={t("Listings you starred or requested an NDA for")} toggle={<ViewToggle value={view} onChange={persist} />}
-          q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหารายการโปรด" : "Search favourites"}
+          subtitle={t("Listings you starred or have an NDA with")} toggle={<ViewToggle value={view} onChange={persist} />}
+          q={q} setQ={setQ} placeholder={language === "th" ? "ค้นหาในรายการที่ติดตาม" : "Search my watchlist"}
           hasFilters={!!q || filter !== "all"} onClear={() => { setQ(""); setFilter("all"); }}
           count={language === "th" ? `แสดง ${items.length} รายการ` : `Showing ${items.length}`}
           lead={
@@ -181,7 +180,7 @@ function FavouritesPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[320px] rounded-[14px]" />)}
         </div>
       ) : items.length === 0 ? (
@@ -194,7 +193,7 @@ function FavouritesPage() {
           )}
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {items.map((f) => <div key={f.id} data-flight-src={f.id}><FavCard f={f} view={viewOf(f)} open={false} onView={(v) => setView(f.id, v)}
             onOpen={(v) => { setView(f.id, v); setModalId(f.id); }} expanded={false} savedIds={savedIds} toggleSave={toggleSave} reserveTabs={anyTabs} /></div>)}
         </div>
