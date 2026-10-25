@@ -4,9 +4,7 @@ import { toast } from "sonner";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { usePersona } from "@/hooks/use-marketplace";
-import type { EditSection } from "@/lib/advisor-firm";
 
-const SECTIONS = ["firm", "services", "work", "company", "team", "credentials", "documents"];
 type Search = { firm?: string; new?: string; section?: string; add?: "1" };
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/edit")({
