@@ -28,8 +28,9 @@
 .standard-card-badges { position:absolute; left:10px; bottom:10px; display:flex; gap:6px; max-width:calc(100% - 20px); overflow:hidden; }
 .standard-card-badge { display:inline-flex; align-items:center; gap:5px; flex:none; height:24px; padding:0 10px; border-width:1px; border-style:solid; border-radius:999px; font-size:11.5px; font-weight:600; white-space:nowrap; box-shadow:var(--standard-pill-shadow); }
 .standard-card-badge svg { width:12px; height:12px; }
-.standard-card-body { display:flex; flex-direction:column; gap:10px; padding:14px 16px 16px; min-width:0; }
-.standard-card-name { display:flow-root; position:relative; height:43.2px; overflow:hidden; }
+.standard-card-body { display:flex; flex-direction:column; gap:10px; padding:14px 16px 8px; min-width:0; }
+.standard-card-text { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.standard-card-name { display:flow-root; position:relative; max-height:43.2px; overflow:hidden; }
 .standard-card-name h3 { margin:0; font-size:16px; line-height:21.6px; font-weight:700; }
 .standard-card-title-link { position:absolute; inset:0; display:block; width:100%; height:100%; }
 .standard-card-title-link:hover { color:var(--accent-dark); }
@@ -38,7 +39,7 @@
 .standard-card-title-cut::after { content:'…'; position:absolute; right:0; bottom:0; padding-left:12px; font-size:16px; font-weight:700; line-height:21.6px; background:var(--card); }
 .standard-card-private-name h3,.standard-card-subtitle { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .standard-card-subtitle { margin:0; font-size:13px; line-height:21.6px; color:var(--standard-muted); }
-.standard-card-description { margin:0; height:63px; font-size:14px; line-height:21px; color:var(--standard-copy); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.standard-card-description { margin:0; font-size:14px; line-height:21px; color:var(--standard-copy); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 .standard-card-figures { border:1px solid var(--standard-line); border-radius:12px; overflow:hidden; background:var(--standard-box); }
 .standard-card-figure-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
 .standard-card-one { grid-template-columns:minmax(0,1fr); }
@@ -55,12 +56,13 @@
 .standard-card-text-row { display:flex; align-items:baseline; gap:10px; margin:0; padding:9px 12px 10px; height:38px; border-top:1px solid var(--standard-line); }
 .standard-card-text-row dt { flex:none; font-size:11.5px; color:var(--standard-muted); }
 .standard-card-text-row dd { margin:0; min-width:0; font-size:12.5px; font-weight:600; line-height:18px; color:var(--standard-copy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.standard-card-toggle { height:44px; width:100%; flex:none; display:flex; align-items:center; justify-content:center; gap:6px; border-top:1px solid var(--standard-line); font-size:13px; font-weight:600; color:var(--standard-hidden-ink); background:var(--card); }
-.standard-card-toggle:hover { background:var(--standard-box); color:var(--standard-ink); }
-.standard-card-toggle svg { height:15px; width:15px; transition:transform .18s; }
+.standard-card-desc-4 { -webkit-line-clamp:4; }
+.standard-card-description:empty { display:none; }
+.standard-card-toggle { height:28px; width:100%; flex:none; margin:-2px 0 8px; display:flex; align-items:center; justify-content:center; gap:5px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--standard-hidden-ink); background:transparent; }
+.standard-card-toggle:hover { background:var(--standard-chip); color:var(--standard-ink); }
+.standard-card-toggle svg { height:14px; width:14px; transition:transform .18s; }
 .standard-card-open .standard-card-toggle svg { transform:rotate(180deg); }
-.standard-card-open .standard-card-name,.standard-card-open .standard-card-description { height:auto; min-height:43.2px; overflow:visible; display:block; }
-.standard-card-open .standard-card-description { min-height:63px; }
+.standard-card-open .standard-card-name,.standard-card-open .standard-card-description { max-height:none; overflow:visible; display:block; }
 .standard-card-open .standard-card-name::after { display:none; }
 .standard-card-open .standard-card-private-name h3,.standard-card-open .standard-card-subtitle,.standard-card-open .standard-card-text-row dd { white-space:normal; overflow:visible; }
 .standard-card-open .standard-card-text-row { height:auto; min-height:38px; }
