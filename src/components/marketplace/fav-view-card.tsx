@@ -20,7 +20,7 @@ export function FavViewCard({ name, hasPrivate, view, open, side, onView, privat
   onView: (v: FavView) => void;
   privateBody?: React.ReactNode;
   publicBody: React.ReactNode;
-  /** Grid: keep 58px above a one-view card so bodies line up. */
+  /** Legacy caller option; all cards now use a real folder-tab row. */
   reserveTabs?: boolean;
 }) {
   const { t } = useTranslation();
