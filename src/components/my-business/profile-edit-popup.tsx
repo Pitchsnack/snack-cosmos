@@ -13,7 +13,7 @@ export function useOpenProfileEdit() {
   const navigate = useNavigate();
   return (o: { section?: string; firm?: string; from?: "public" | "private"; add?: boolean } = {}) => {
     markEditPushed();
-    void navigate({ to: "/marketplace/my-company", search: { edit: "profile", ...(o.section ? { section: o.section } : {}), ...(o.firm ? { firm: o.firm } : {}), ...(o.from ? { from: o.from } : {}), ...(o.add ? { add: "1" } : {}) } as never });
+    void navigate({ to: "/marketplace/my-company", search: ((p:Record<string,unknown>)=>({...p, edit: "profile", ...(o.section ? { section: o.section } : {}), ...(o.firm ? { firm: o.firm } : {}), ...(o.from ? { from: o.from } : {}), ...(o.add ? { add: "1" } : {}) })) as never });
   };
 }
 
@@ -29,7 +29,7 @@ export function ProfileEditPopup({ advisor }: { advisor: boolean }) {
   const name = advisor ? firm?.name ?? "" : buyer?.investor?.investor_name ?? "";
   const subtitle = advisor ? name || tr("Firm profile", "โปรไฟล์บริษัท")
     : `${name || tr("Your company", "บริษัทของท่าน")} · ${s.from === "public" ? tr("Public view", "มุมมองสาธารณะ") : tr("Private view", "มุมมองส่วนตัว")}`;
-  const close = () => leaveEditUrl(() => void navigate({ to: "/marketplace/my-company", search: {} as never, replace: true }));
+  const close = () => leaveEditUrl(() => void navigate({ to: "/marketplace/my-company", search: ((p:Record<string,unknown>)=>({...p,edit:undefined,section:undefined,from:undefined,add:undefined})) as never, replace: true }));
   return (
     <EditInfoPopup open subtitle={subtitle} companyName={name} onClosed={close}>
       {advisor

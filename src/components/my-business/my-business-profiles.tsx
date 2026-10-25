@@ -430,6 +430,7 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
 function sectionTab(k: string): ["public" | "private", string] {
   if (k === "photos" || k === "media" || k === "logo") return ["private", "images"];
   if (k === "tags" || k === "product-tags" || k === "market-tags" || k === "sector") return ["private", "market"];
+  if (k === "address" || k === "registered-name") return ["private", "address"];
   if (k === "licenses") return ["private", "licenses"];
   return ["private", "about"];
 }

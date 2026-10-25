@@ -47,3 +47,5 @@
 - NDA Invitations: one row per NDA (linked requests show only on the invitation row); Invite again (invite_count ≤ 2) via inviteAgain; approval boxes come from nda-approval.tsx and the buyer's box shows once via deal_pipelines.buyer_approval_seen_at.
 - Pipeline Investor/Seller profile box is read-only from getProfileBox (profile-box.functions.ts): private person/firm facts only while the NDA is approved and valid, else the public investor profile; nothing is stored.
 - Seller's view of a buyer's private profile is InvestorDetailPanel with the buyer.seller option (private-investor-panel.tsx); private fields, media and portfolio come only from listSellerFavourites' approved-NDA gate, so directory changes show in both.
+
+- Shared editor layouts use EditInfoPopup, CompactFields and common/business-address; directory create rows own transient highlighting/focus so editor state never changes permissions or saving rules.
