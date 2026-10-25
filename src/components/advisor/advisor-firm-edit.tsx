@@ -102,7 +102,7 @@ function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
   label: string; req?: boolean; opt?: boolean; hint?: React.ReactNode; err?: string | null; tag?: SourceTag; children: React.ReactNode; className?: string; htmlFor?: string;
 }) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-1.5", className)} data-edit-sec={htmlFor === "fe-teamSize" ? "team-size" : undefined}>
       <Label htmlFor={htmlFor}>
         {label}
         {req && <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>}
@@ -273,7 +273,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
         </F>
 </div>}
-        {visible("about") && <div className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label="Year founded" req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
+        {visible("about") && <EditSec id={section === "work" ? "work" : "firm"} active={section === "work" || section === "firm"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label="Year founded" req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder="e.g. 2014" value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
           <F label="Firm name" req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
@@ -320,8 +320,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         <F label="Description" req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${f.description.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} value={f.description} onBlur={blur("desc")} onChange={(e) => set("description", e.target.value)} />
         </F>
-</div>}
-        {visible("address") && <div className="space-y-4"><TabHead title={tr("Company Address")} /><CompactFields two>          <F label="Legal name" req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
+</EditSec>}
+        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} /><CompactFields two>          <F label="Legal name" req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
             <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder="e.g. Acme Advisory Co., Ltd." value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
@@ -334,7 +334,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
         </div>
-</div>}
+</EditSec>}
         {visible("services") && <div className="space-y-4"><TabHead title={tr("Services & Fees")} />      <Section id="services" active={section === "services"} title="Services and fees">
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">Pick at least one service.</p>}
