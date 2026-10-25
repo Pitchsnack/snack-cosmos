@@ -33,7 +33,7 @@ import {
   createStartupMediaUploadUrl,
   type StartupDetail,
 } from "@/lib/startups.functions";
-import { listAssignableUsers } from "@/lib/startup-ownership.functions";
+import { reassignOwner, reassignAiOwner, listAssignableUsers } from "@/lib/startup-ownership.functions";
 import { listAssignableTenants } from "@/lib/tenants.functions";
 import { queryAssignableTenants } from "@/lib/assignable-tenants-query";
 import { switchWorkspace } from "@/lib/session-context.functions";
@@ -72,7 +72,7 @@ import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
 import { setMyListingImage } from "@/lib/sector-images.functions";
 import type { EntryFacts, HiddenProfileRow } from "@/lib/hidden-profile";
 import type { ListingSource } from "@/lib/public-listing";
-import { Eye } from "lucide-react";
+import { Eye, Shield } from "lucide-react";
 import { StartupStepper } from "./startup-stepper";
 import { THB_REVENUE_BANDS, normRevBand, type SellerPrefill } from "@/lib/seller-wizard";
 import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
@@ -290,6 +290,8 @@ export function StartupForm({
   /** Sector image picked in Listing Identity (undefined = unchanged). */
   const [imagePick, setImagePick] = useState<string | null | undefined>(undefined);
   const update = useServerFn(updateStartup);
+  const changeOwner = useServerFn(reassignOwner);
+  const changeAiOwner = useServerFn(reassignAiOwner);
   const getUploadUrl = useServerFn(createStartupMediaUploadUrl);
   const fetchUsers = useServerFn(listAssignableUsers);
   const fetchTenants = useServerFn(listAssignableTenants);
@@ -304,7 +306,7 @@ export function StartupForm({
       ? ["assignable-tenants", principalRef]
       : ["assignable-tenants"],
     queryFn: () => queryAssignableTenants(fetchTenants),
-    enabled: enabled && !isEdit,
+    enabled: enabled && (!isEdit || ctAdmin),
     staleTime: 60_000,
   });
   const sessionTenants = useMemo(() => session?.tenants ?? [], [session]);
@@ -370,7 +372,7 @@ export function StartupForm({
 
   // Company profile
   const [startupName, setStartupName] = useState(startup?.startup_name ?? prefill?.startupName ?? "");
-  const [companyType, setCompanyType] = useState<string>(startup?.company_type || "SME");
+  const [companyType, setCompanyType] = useState<string>(startup?.company_type || (editCtx && !startup ? "" : "SME"));
   const [addr, setAddr] = useState({
     street: startup?.address_line1 ?? prefill?.addr?.street ?? "",
     unit: startup?.address_line2 ?? prefill?.addr?.unit ?? "",
@@ -479,6 +481,8 @@ export function StartupForm({
   );
   const pd = usePublicDraft(popup?.row ?? null, popup?.facts, listingSource);
   const [nameErr, setNameErr] = useState(false);
+  const [createAttempted, setCreateAttempted] = useState(false);
+  useEffect(() => { editCtx?.setPresentation(startupName, tr(pView === "public" ? "Public view" : "Private view", pView === "public" ? "มุมมองสาธารณะ" : "มุมมองส่วนตัว")); }, [startupName,pView]);
 
   // Ownership (create only — required by current API)
   // Progressive disclosure (create only): Quick Info → Auto Enrich → Review.
@@ -488,13 +492,13 @@ export function StartupForm({
   const [lastYearRevenue, setLastYearRevenue] = useState(normRevBand(startup?.last_year_revenue ?? prefill?.lastYearRevenue ?? ""));
   const [companySize, setCompanySize] = useState(startup?.company_size ?? prefill?.companySize ?? "");
 
-  const [owningAgentUserId, setOwningAgent] = useState("");
-  const [owningAiAgentId, setOwningAi] = useState("");
+  const [owningAgentUserId, setOwningAgent] = useState(startupAgentDefault ?? "");
+  const [owningAiAgentId, setOwningAi] = useState(startupAiAgentDefault ?? "");
 
   // Under the flag, tenant-dependent queries fire only when selected tenant
   // equals the active workspace. Options are hidden when mismatched.
   const ownershipEnabled =
-    enabled && !!tenantId && !isEdit && (!WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive);
+    enabled && !!tenantId && (!isEdit || ctAdmin) && (!WORKSPACE_ENFORCEMENT_ENABLED || tenantMatchesActive);
   const humansQ = useQuery({
     queryKey: ["assignable-humans", tenantId],
     queryFn: () => fetchUsers({ data: { tenantId, userType: "Human" } }),
@@ -651,7 +655,7 @@ export function StartupForm({
     onSuccess: (res) => {
       // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
       void investorStartupLinksAdapter.saveStartupInvestorRelationships(res.id, investorLinks);
-      toast.success("Startup created");
+      toast.success(`${startupName} created`);
       onCreated?.(res.id);
       if (editCtx) { qc.invalidateQueries({queryKey:["startups"]}); guard.markSaved(); editCtx.setDirty(false); return; }
       qc.invalidateQueries({ queryKey: ["startups"] });
@@ -668,10 +672,11 @@ export function StartupForm({
 
   const updateM = useMutation({
     mutationFn: async () => {
-      const { logoPath, media: resolvedMedia } = await uploadAllForStartup(startup!.id);
+      if (!startup) throw new Error("Startup not found");
+      const { logoPath, media: resolvedMedia } = await uploadAllForStartup(startup.id);
       const res = await update({
         data: {
-          id: startup!.id,
+          id: startup.id,
           startupName,
           
           websiteUrl: websiteUrl || null,
@@ -682,13 +687,16 @@ export function StartupForm({
           logoPath,
           media: resolvedMedia,
           ...buildProfileBase(),
+          ...(ctAdmin ? {status:status as never,visibility:visibility as never} : {}),
         },
       });
+      if (ctAdmin && owningAgentUserId && owningAgentUserId !== startupAgentDefault) await changeOwner({data:{startupId:startup.id,owningAgentUserId}});
+      if (ctAdmin && owningAiAgentId && owningAiAgentId !== startupAiAgentDefault) await changeAiOwner({data:{startupId:startup.id,owningAiAgentId}});
       if (popup?.row) {
-        if (pd.changedFromRow) await saveHidden({ data: { startupId: startup!.id, draft: pd.payload } });
-        const sectorChanged = (sector ?? null) !== (startup!.sector ?? null);
+        if (pd.changedFromRow) await saveHidden({ data: { startupId: startup.id, draft: pd.payload } });
+        const sectorChanged = (sector ?? null) !== (startup?.sector ?? null);
         if (imagePick !== undefined || sectorChanged) {
-          await setListingImage({ data: { startupId: startup!.id, imageId: imagePick ?? null } });
+          await setListingImage({ data: { startupId: startup.id, imageId: imagePick ?? null } });
         }
       }
       return res;
@@ -697,20 +705,20 @@ export function StartupForm({
       if (popup || editCtx) {
         toast.success(tr("Changes saved.", "บันทึกการเปลี่ยนแปลงแล้ว"));
         await Promise.all([
-          qc.invalidateQueries({ queryKey: ["startup", startup!.id] }),
+          qc.invalidateQueries({ queryKey: ["startup", startup?.id] }),
           qc.invalidateQueries({ queryKey: ["startups"] }),
           qc.invalidateQueries({ queryKey: ["hidden-profiles"] }),
-          qc.invalidateQueries({ queryKey: ["hidden-profile-facts", startup!.id] }),
+          qc.invalidateQueries({ queryKey: ["hidden-profile-facts", startup?.id] }),
         ]);
         guard.markSaved();
         editCtx?.done();
         return;
       }
       // Stub adapter save — future SnackPortal2 API Gateway. UI-staged only.
-      void investorStartupLinksAdapter.saveStartupInvestorRelationships(startup!.id, investorLinks);
+      void investorStartupLinksAdapter.saveStartupInvestorRelationships(startup?.id, investorLinks);
       toast.success("Saved");
       await Promise.all([
-        qc.invalidateQueries({ queryKey: ["startup", startup!.id] }),
+        qc.invalidateQueries({ queryKey: ["startup", startup?.id] }),
         qc.invalidateQueries({ queryKey: ["startups"] }),
       ]);
       guard.markSaved();
@@ -721,14 +729,14 @@ export function StartupForm({
       } else if (isMyWorkspace) {
         navigate({
           to: "/my-startups",
-          search: { ...myStartupsReturnSearch, panel: startup!.id },
+          search: { ...myStartupsReturnSearch, panel: startup?.id },
         });
       } else {
         // Return to the Startup Directory with the information panel reopened,
         // so the cards stay visible behind the same panel UX.
         navigate({
           to: "/startups",
-          search: { ...directoryReturnSearch, panel: startup!.id },
+          search: { ...directoryReturnSearch, panel: startup?.id },
         });
       }
     },
@@ -1006,8 +1014,8 @@ export function StartupForm({
               <p className="text-xs text-[#6B7280]">{fromAdmin ? (th ? "กำหนดโดย PitchSnack" : "Set by PitchSnack") : (th ? "กำหนดจากประเภทบัญชีของท่าน" : "Set from your account type")}</p>
             </>);
             return (<>
-              <Select value={companyType || "SME"} onValueChange={(v) => { setCompanyType(v); setCompanyTypeReset(false); setCompanyTypeSource(v === "SME" && companyTypeSource !== "admin" ? "account" : "admin"); }}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={companyType} onValueChange={(v) => { setCompanyType(v); setCompanyTypeReset(false); setCompanyTypeSource(v === "SME" && companyTypeSource !== "admin" ? "account" : "admin"); }}>
+                <SelectTrigger><SelectValue placeholder="Choose a company type" /></SelectTrigger>
                 <SelectContent>{COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{label(c)}</SelectItem>)}</SelectContent>
               </Select>
               {fromAdmin && (
@@ -1287,9 +1295,9 @@ export function StartupForm({
           <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>Company Name <span className="text-destructive">*</span></Label>
           <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
             placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
-            className={miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
-            id="sf-company-name" required={!popup} maxLength={255} />
-          {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr("Add the Company Name before you save.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
+            className={nameErr && !startupName.trim() ? "creation-invalid" : miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
+            id="sf-company-name" required={!popup && !editCtx} maxLength={255} />
+          {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr(isEdit ? "Add the Company Name before you save." : "Needed to create the startup.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Registered Number</Label>
@@ -1314,7 +1322,7 @@ export function StartupForm({
               <p className="text-xs text-[#6B7280]">{fromAdmin ? (th ? "กำหนดโดย PitchSnack" : "Set by PitchSnack") : (th ? "กำหนดจากประเภทบัญชีของท่าน" : "Set from your account type")}</p>
             </>);
             return (<>
-              <Select value={companyType || "SME"} onValueChange={(v) => { setCompanyType(v); setCompanyTypeReset(false); setCompanyTypeSource(v === "SME" && companyTypeSource !== "admin" ? "account" : "admin"); }}>
+              <Select value={companyType} onValueChange={(v) => { setCompanyType(v); setCompanyTypeReset(false); setCompanyTypeSource(v === "SME" && companyTypeSource !== "admin" ? "account" : "admin"); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{COMPANY_TYPES.map((c) => <SelectItem key={c} value={c}>{label(c)}</SelectItem>)}</SelectContent>
               </Select>
@@ -1500,7 +1508,7 @@ export function StartupForm({
       </EditSec>
 
   </>);
-  const addressJsx = (<div className="space-y-4">        <div className="space-y-1.5">
+  const addressJsx = (<div className="space-y-4">        <EditSec id="address" tone="seller" active={secOn("address")} className="space-y-1.5">
           <Label>Registered Name</Label>
           <Input
             value={registeredName}
@@ -1508,7 +1516,7 @@ export function StartupForm({
             placeholder="Official registered company name"
             maxLength={255}
           />
-        </div>
+        </EditSec>
         <div className="space-y-1.5">
           <Label htmlFor="addr-street">Business Address</Label>
           <AddressBox noteOutside a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
@@ -1654,11 +1662,11 @@ export function StartupForm({
   </>);
 
   const adminJsx = (<div className="space-y-4">      {/* Tenant (create only) */}
-      {!isEdit && (
+      {(!isEdit || ctAdmin) && (
         <div className="space-y-1.5">
           <Label>Tenant <span className="text-destructive">*</span></Label>
-          <Select value={tenantId} onValueChange={setTenantId}>
-            <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
+          <Select value={tenantId} onValueChange={setTenantId} disabled={isEdit}>
+            <SelectTrigger id="sf-tenant" className={createAttempted && !tenantId ? "creation-invalid" : undefined}><SelectValue placeholder="Select tenant" /></SelectTrigger>
             <SelectContent>
               {tenants.map((t) => {
                 const fx = isFixtureTenant(t.id);
@@ -1709,8 +1717,8 @@ export function StartupForm({
       )}
 
       {/* Status / visibility (create only) */}
-      {!isEdit && (
-        <div className="grid grid-cols-2 gap-4">
+      {(!isEdit || ctAdmin) && (
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
@@ -1729,7 +1737,7 @@ export function StartupForm({
       )}
 
       {/* Ownership (create only, admin surfaces only — hidden in My Business) */}
-      {!isEdit && !isMyStartupsCreate && (
+      {(!isEdit || ctAdmin) && !isMyStartupsCreate && (
         <div className="border-t border-border pt-4">
           <DefaultIntakeOwnershipModeSection
             domain="startup"
@@ -1789,7 +1797,7 @@ export function StartupForm({
         </div>
       )}
 
-{isEdit && <p className="text-sm text-muted-foreground">Listing status: {startup?.status} · Visibility: {startup?.visibility}</p>}</div>);
+{isEdit && <p className="text-sm text-muted-foreground">Tenant changes remain in Ownership. Existing tenant and publication guards still apply.</p>}</div>);
   // ── Tabs (edit) ──
   const has = (x: string | null | undefined) => !!x && !!x.trim();
   const privateCounts: Record<PrivateTab, number> = {
@@ -1804,11 +1812,11 @@ export function StartupForm({
   const pubTotal = pd.counts.identity + pd.counts.deal;
   const privTabs = [
     { key: "images" as const, label: tr("Images & Logo", "รูปภาพและโลโก้"), count: privateCounts.images },
-    { key: "about" as const, label: tr("About Company", "เกี่ยวกับบริษัท"), count: privateCounts.about },
+    { key: "about" as const, label: tr("About Company", "เกี่ยวกับบริษัท"), count: privateCounts.about, error: createAttempted && !startupName.trim() },
     { key: "address" as const, label: tr("Address", "ที่อยู่"), count: privateCounts.address },
     { key: "market" as const, label: tr("Industry & Market", "อุตสาหกรรมและตลาด"), count: privateCounts.market },
     { key: "licenses" as const, label: tr("Licenses", "ใบอนุญาต") },
-    ...(ctAdmin && workspace === "startups" ? [{key:"admin" as const,label:tr("Admin settings", "การตั้งค่าผู้ดูแล")}]:[]),
+    ...(ctAdmin && workspace === "startups" ? [{key:"admin" as const,label:tr("Admin settings", "การตั้งค่าผู้ดูแล"),icon:<Shield className="h-3.5 w-3.5" />,error:createAttempted && (!tenantId || !owningAgentUserId || !owningAiAgentId)}]:[]),
   ];
   const pubTabs = [
     { key: "identity" as const, label: tr("Listing Identity", "ตัวตนของประกาศ"), count: pd.counts.identity },
@@ -1884,10 +1892,10 @@ export function StartupForm({
   return (
     <form
       id="startup-edit-form"
-      noValidate={!!popup}
+      noValidate={!!popup || !!editCtx}
       onSubmit={(e) => {
         e.preventDefault();
-        if (editCtx && !isEdit && !canSubmit) { setNameErr(!startupName.trim()); navTab("private", startupName.trim() ? "admin" : "about"); toast.error("Fill in Company Name, Tenant and required ownership before creating."); return; }
+        if (editCtx && !isEdit && !canSubmit) { setCreateAttempted(true); setNameErr(!startupName.trim()); navTab("private", startupName.trim() ? "admin" : "about"); setTimeout(()=>document.getElementById(startupName.trim() ? "sf-tenant" : "sf-company-name")?.focus(),80); return; }
         if (popup) return popupSubmit();
         if (isEdit) {
           updateM.mutate();
@@ -1967,6 +1975,7 @@ export function StartupForm({
 
       {editCtx ? (
         <EditInfoFooter>
+          {createAttempted && !isEdit && !canSubmit && <p className="mr-auto text-[13px] font-medium text-destructive">To create the startup, fill in: {!startupName.trim() && "Company Name (About Company), "}{!tenantId && "Tenant, "}{(!owningAgentUserId || !owningAiAgentId) && "required ownership (Admin settings)."}</p>}
           <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>Cancel</Button>
           <Button type="submit" form="startup-edit-form" disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
             {submitting ? "Saving…" : isEdit ? "Save changes" : "Create startup"}
