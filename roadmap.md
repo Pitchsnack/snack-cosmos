@@ -1,4 +1,6 @@
 # Roadmap — Control setup wizards (brief 2)
+- [x] Standard Browse/watchlist: shared six-part card, fixed closed sizes, figures, status and independent expansion across seller/buyer/advisor Grid and Split lists; all measured closed cards 507.1875px at 1440/390.
+- [x] Standard watchlist tabs, public price ranges, Thai wording and authenticated Control seller/buyer/advisor checks at 1440/390; zero overflow/runtime errors; nine card/flight and seven pending-contact tests pass. Ordinary-account checks not separately exercised; existing actions/panels/List rows retained.
 - [x] Advisor checkpoint: name-only Add, new/existing ⋮ Edit, Draft incomplete Save/read-back, 1440/390 screenshots; six refreshed captures in Files. Test Draft ADV-1009 retained.
 - [x] Edit information backend: ownerless advisor drafts (Admin only), Admin buyer saves via saveMyBuyerInvestor, Directory Add advisor + Edit pop-up
 - [x] October 25 editor layout continuation: shared address/rows, buyer/advisor tabs, seller Address, Admin directory/add hosts, valuation and old-link redirects; removed duplicate public listing editor and full-page buyer/advisor edit branch.

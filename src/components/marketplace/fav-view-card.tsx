@@ -16,39 +16,31 @@ export function FavViewCard({ name, hasPrivate, view, open, side, onView, privat
   view: FavView;
   /** This card is the one shown in the panel (orange outline). */
   open: boolean;
-  side: "buyer" | "seller";
+  side: "buyer" | "seller" | "advisor";
   onView: (v: FavView) => void;
   privateBody?: React.ReactNode;
   publicBody: React.ReactNode;
-  /** Grid: keep 58px above a one-view card so bodies line up. */
+  /** Legacy caller option; all cards now use a real folder-tab row. */
   reserveTabs?: boolean;
 }) {
   const { t } = useTranslation();
   const bodyId = useId();
   const refs = useRef<Record<FavView, HTMLButtonElement | null>>({ private: null, public: null });
   const strip = "[&>*]:rounded-none [&>*]:border-0 [&>*]:shadow-none [&>*]:ring-0 [&>*:hover]:shadow-none";
-  if (!hasPrivate) {
-    return (
-      <div>
-        {reserveTabs && <div aria-hidden className="h-[58px]" />}
-        <div className={cn("overflow-hidden rounded-[14px] border bg-card", open ? "border-accent" : "border-border", strip)}>{publicBody}</div>
-      </div>
-    );
-  }
-  const v = view;
+  const v = hasPrivate ? view : "public";
   const go = (x: FavView) => { onView(x); requestAnimationFrame(() => refs.current[x]?.focus()); };
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowLeft") { e.preventDefault(); go("private"); }
+    if (e.key === "ArrowLeft" && hasPrivate) { e.preventDefault(); go("private"); }
     if (e.key === "ArrowRight") { e.preventDefault(); go("public"); }
   };
   return (
     <div className="@container">
-      <div role="tablist" aria-label={`${t("Views of")} ${name}`} onKeyDown={onKey} className="relative z-10 h-[58px]">
-        <FolderTab side="left" active={v === "private"} open={open} tone="green" compactNarrow
+      <div role="tablist" aria-label={`${t("Views of")} ${name}`} onKeyDown={onKey} className="standard-watch-tabs relative z-10 h-[58px]">
+        {hasPrivate && <FolderTab side="left" active={v === "private"} open={open} tone="green" compactNarrow
           icon={<LockOpen className="h-4 w-4 shrink-0" />} title={t("Private view")} sub={t("Shared under your NDA")}
-          controls={bodyId} tabRef={(el) => { refs.current.private = el; }} onClick={() => onView("private")} />
-        <FolderTab side="right" active={v === "public"} open={open} tone="indigo" compactNarrow
-          icon={<Eye className="h-4 w-4 shrink-0" />} title={t("Public view")} sub={t(side === "buyer" ? "What every buyer sees" : "What every seller sees")}
+          controls={bodyId} tabRef={(el) => { refs.current.private = el; }} onClick={() => onView("private")} />}
+        <FolderTab side={hasPrivate ? "right" : "left"} active={v === "public"} open={open} tone="indigo" compactNarrow
+          icon={<Eye className="h-4 w-4 shrink-0" />} title={t("Public view")} sub={t(side === "advisor" ? "What everyone sees" : side === "buyer" ? "What every buyer sees" : "What every seller sees")}
           controls={bodyId} tabRef={(el) => { refs.current.public = el; }} onClick={() => onView("public")} />
       </div>
       <div id={bodyId} role="tabpanel" className={cn("overflow-hidden rounded-b-[14px] rounded-t-none border bg-card", open ? "border-accent" : "border-border", strip)}>

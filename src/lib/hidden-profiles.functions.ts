@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { cardAllowsExact } from "@/lib/standard-card";
 import {
   BUYER_VISIBLE,
   isBuyerVisible,
@@ -284,6 +285,9 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       rowsIn = rowsIn.filter((r) => !nda.has(r.id));
     }
     const nda = role === "buyer" || cap !== null ? await (await import("@/lib/favourites.functions")).activeNdaIds(userId) : new Set<string>();
+    const { ndaState } = await import("@/lib/favourites.functions");
+    const { data: viewerNdas } = role === "buyer" ? await supabaseAdmin.from("deal_pipelines").select("hidden_profile_id, status, nda_approved_at, nda_expires_at").eq("buyer_user_id", userId) : { data: [] };
+    const approvedNdaIds = new Set((viewerNdas ?? []).filter((p) => ndaState(p) === "approved").map((p) => p.hidden_profile_id));
     const invited = role === "buyer" ? await (await import("@/lib/invitations.server")).invitedListingIds(userId) : new Set<string>();
     const { thbOf, priceFor, bandOf } = await import("@/lib/asking-price");
     const cover = await (await import("@/lib/cover-urls.server")).sectorCoverResolver();
@@ -308,7 +312,7 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
       (listing as { certified?: boolean }).certified = !!(st as { registration_verified_at?: string | null }).registration_verified_at;
       listing.managed = managed.has(r.startup_id);
       // Exact amount only for Admin or an approved NDA; everyone else (sellers' own previews too) gets the range.
-      const price = priceFor(live as never, role === "admin" || nda.has(r.id));
+      const price = priceFor(live as never, cardAllowsExact(role, approvedNdaIds.has(r.id)));
       return { id: r.id, listing, dealType: live.deal_type, ...price, handover: handoverLine(live.owner_stays, live.handover_months) };
     }
 }

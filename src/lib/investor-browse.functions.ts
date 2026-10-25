@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type PublicInvestor } from "@/lib/investor-browse";
 import { bandOf, bandText, sortActsFor, typeName } from "@/lib/investor-bands";
+import { newCardDays } from "@/lib/standard-card";
 
 /**
  * Seller › Browse investors. Returns the PUBLIC investor record only:
@@ -55,6 +56,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       id: r.id,
       userId: bp.user_id,
       liveSince: (bp?.live_since ?? bp?.decided_at ?? bp?.created_at ?? null) as string | null,
+      newDays: newCardDays(bp?.live_since ?? bp?.decided_at ?? null),
       refNo: bp?.ref_no || `INV-${String(h % 10000).padStart(4, "0")}`,
       codeName,
       // Never the firm's name before an approved NDA.

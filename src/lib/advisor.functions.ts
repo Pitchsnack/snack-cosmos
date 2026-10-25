@@ -10,7 +10,7 @@ import type { PublicListing } from "@/lib/public-listing";
  * exactly as sellers get them in Browse investors. Requires users.advisor_view.
  */
 
-export type AdvisorTeaser = { id: string; listing: PublicListing; dealType?: string | null; askingPrice?: number | null; handover?: string | null };
+export type AdvisorTeaser = { id: string; listing: PublicListing; dealType?: string | null; askingPrice?: number | null; priceBand?: { key: string; label: string; th: string } | null; handover?: string | null };
 export type AdvisorInvestor = PublicInvestor & { liveSince: string | null };
 export type AdvisorFav = { kind: "listing" | "investor"; id: string; at: string };
 
@@ -31,7 +31,7 @@ export const listAdvisorMarketplace = createServerFn({ method: "GET" })
       loadPublicInvestors(supabaseAdmin),
     ]);
     return {
-      listings: (teasers as any[]).filter((t) => !t.closed) as unknown as AdvisorTeaser[],
+      listings: (teasers as any[]).filter((t) => !t.closed).map((t) => ({ ...t, askingPrice: null })) as unknown as AdvisorTeaser[],
       investors: invs.map(({ userId: _u, ...i }) => i) as AdvisorInvestor[],
     };
   });

@@ -1,3 +1,4 @@
+import { StandardInvestorCard } from "@/components/marketplace/standard-investor-card";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { ConnectButton } from "@/components/marketplace/connect-invite";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -18,7 +19,7 @@ import { ViewToggle } from "@/components/shared/view-toggle";
 import { usePersistentView } from "@/hooks/use-persistent-view";
 import { NameAfterNdaPill, PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { INDIVIDUAL_TYPE, actsForText, bandOf } from "@/lib/investor-bands";
-import { listBrowseInvestors, mySavedInvestorIds, toggleSavedInvestor } from "@/lib/investor-browse.functions";
+import { listBrowseInvestors, listSellerFavourites, mySavedInvestorIds, toggleSavedInvestor } from "@/lib/investor-browse.functions";
 import {
   AUM_FILTER, REVENUE_FILTER, TICKET_FILTER, isCorporateBuyer, matchAum, matchRevenue, matchTicket,
   type FilterOpt, type PublicInvestor,
@@ -186,7 +187,10 @@ export function InvestorDetail({ i, saved, onSave, ndaApproved, pill, actions, m
 export function InvestorBrowse() {
   const fetchAll = useServerFn(listBrowseInvestors);
   const { data, isLoading } = useQuery({ queryKey: ["browse-investors"], queryFn: () => fetchAll(), staleTime: 60_000 });
+  const fetchFavourites = useServerFn(listSellerFavourites);
+  const { data: favourites } = useQuery({ queryKey: ["seller-favourites"], queryFn: () => fetchFavourites() });
   const all = useMemo(() => (data ?? []) as PublicInvestor[], [data]);
+  const cardInvestor = (i: PublicInvestor) => ({ ...i, status: favourites?.find((f) => f.id === i.id)?.status });
 
   const { view, persist } = usePersistentView("ps-investor-browse-view", undefined);
   const { ids: savedIds, toggle: toggleSave } = useSavedInvestors();
@@ -285,13 +289,13 @@ export function InvestorBrowse() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[260px] rounded-[14px]" />)}
         </div>
       ) : view === "grid" ? (
         items.length === 0 ? empty : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((i) => <PublicInvestorCard showManaged key={i.id} i={i} tag={tagOf(i.id)} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
+          <div className="standard-card-grid">
+            {items.map((i) => <StandardInvestorCard key={i.id} i={cardInvestor(i)} tag={tagOf(i.id)} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
           </div>
         )
       ) : view === "split" ? (
@@ -300,8 +304,7 @@ export function InvestorBrowse() {
             className={cn("space-y-3 outline-none", splitFixed && "min-h-0 overflow-y-scroll pr-2 [scrollbar-gutter:stable]")}>
             {items.length === 0 ? empty : items.map((i) => (
               <div key={i.id} data-id={i.id}>
-                <PublicInvestorCard showManaged i={i} tag={tagOf(i.id)} selected={current?.id === i.id}
-                  expanded={expandedId === i.id} onToggleExpand={() => setExpandedId((e) => (e === i.id ? null : i.id))}
+                <StandardInvestorCard i={cardInvestor(i)} tag={tagOf(i.id)} selected={current?.id === i.id}
                   onClick={() => setSelected(i.id)}
                   topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />
               </div>

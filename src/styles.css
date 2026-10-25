@@ -12,6 +12,7 @@
 @import "./styles/reports-hub.css";
 @import "./styles/pipeline-workspace.css";
 @import "./styles/profile-box.css";
+@import "./styles/standard-browse-card.css";
 @source "../src";
 @import "tw-animate-css";
 

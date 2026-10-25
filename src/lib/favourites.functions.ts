@@ -13,6 +13,7 @@ import type { PublicListing } from "@/lib/public-listing";
 
 export type FavStatus = "approved" | "requested" | "saved";
 export type FavPrivate = {
+  photoUrl?: string | null;
   companyName: string;
   logoPath: string | null;
   description: string | null;
@@ -117,6 +118,13 @@ export async function loadBuyerFavourites(userId:string) {
       return { fy: y, revenue: r0, netProfit: m[y].net ?? null, growthPct: r0 != null && r1 ? ((r0 - r1) / Math.abs(r1)) * 100 : null };
     };
 
+    const { data: photos } = approvedSt.length ? await sb.from("startup_media").select("startup_id, image_url, slot").in("startup_id", approvedSt).order("slot", { ascending: true }) : { data: [] };
+    const photoBy = new Map<string, string>();
+    for (const photo of photos ?? []) {
+      if (photoBy.has(photo.startup_id) || !photo.image_url) continue;
+      const { data: signed } = await sb.storage.from("startup-media").createSignedUrl(photo.image_url, 3600);
+      if (signed?.signedUrl) photoBy.set(photo.startup_id, signed.signedUrl);
+    }
     const managed = await (await import("@/lib/managed.server")).managedStartupIds(sb, stIds);
     const out: Favourite[] = rows.map((r: any) => {
       const live = (r.live ?? {}) as any;
@@ -127,12 +135,13 @@ export async function loadBuyerFavourites(userId:string) {
       const state = p ? ndaState(p) : null;
       const status: FavStatus = state ?? "saved";
       // Not on the Private view (approved NDA).
-      listing.managed = state !== "approved" && managed.has(r.startup_id);
+      listing.managed = managed.has(r.startup_id);
       let priv: FavPrivate | null = null;
       if (state === "approved") {
         const c = ciBy.get(r.startup_id) ?? {};
         const until = p.nda_expires_at ?? new Date(new Date(p.nda_approved_at).getTime() + TWO_YEARS).toISOString();
         priv = {
+          photoUrl: photoBy.get(r.startup_id) ?? null,
           companyName: st.startup_name || c.legal_name_en || c.legal_name_th || live.code_name || "Company",
           logoPath: st.logo_url ?? null,
           description: st.long_description || st.short_description || null,

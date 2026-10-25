@@ -5,6 +5,8 @@
 import { AUM_BANDS, REV_BANDS, TICKET_BANDS, bandOf } from "@/lib/investor-bands";
 
 export type PublicInvestor = {
+  /** Days since the profile went live, only while under 14 days. */
+  newDays?: number | null;
   /** A PitchSnack private client (Control, Admin-owned). */
   managed?: boolean;
   /** Card-sized cover address sent with Browse investors. */

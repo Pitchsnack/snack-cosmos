@@ -4,6 +4,19 @@ import { TH_ADVISORS } from "./th-advisors";
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
+  "Name hidden": "ซ่อนชื่อ",
+  "What everyone sees": "สิ่งที่ทุกคนเห็น",
+  "Exact": "ตัวเลขจริง",
+  "Search my watchlist": "ค้นหาในรายการที่ติดตาม",
+  "Sellers and buyers you starred": "ผู้ขายและผู้ซื้อที่ท่านติดดาว",
+  "Listings you starred or have an NDA with": "ประกาศที่ท่านติดดาวหรือมี NDA ด้วย",
+  "Investors you starred or have an NDA with": "นักลงทุนที่ท่านติดดาวหรือมี NDA ด้วย",
+  "Not stated": "ไม่ระบุ",
+  "Ticket size": "ขนาดเงินลงทุน",
+  "Certified": "ผ่านการรับรอง",
+  "Verified investor": "นักลงทุนที่ผ่านการตรวจสอบ",
+  "Focus": "แนวทางการลงทุน",
+  "Licences": "ใบอนุญาต",
   "Highlights": "จุดเด่น",
   "Customer profile": "ลักษณะลูกค้า",
   "optional": "ไม่บังคับ",
