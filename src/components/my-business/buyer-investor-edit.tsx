@@ -300,10 +300,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const leaks = descriptionLeaks(f.description, f.investor_name, f.website_url);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onCreated && (missingCreationFields("investor",f.investor_name,tenant,human,ai).length || tenant !== session?.activeWorkspace.tenantId)) {
+    if (onCreated && (missingCreationFields("investor",f.investor_name,tenant,human,ai).length)) {
       setView("private");setTab(f.investor_name.trim() ? "admin" : "about");
       setTimeout(()=>document.getElementById(f.investor_name.trim() ? "investor-tenant" : "f-investor_name")?.focus(),80);
-      setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings). The tenant must be active."});return;
+      setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings)."});return;
     }
     const checks: [string, string | null][] = [
       ["year_founded", individual ? null : yearError(f.year_founded)],

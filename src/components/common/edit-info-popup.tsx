@@ -114,7 +114,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
 
   // Back button (or any navigation away from ?edit=) while dirty asks first.
   const blocker = useBlocker({
-    shouldBlockFn: ({ next }) => open && dirtyRef.current && !bypass.current && !(next.search as { edit?: string } | undefined)?.edit,
+    shouldBlockFn: ({ current, next }) => open && dirtyRef.current && !bypass.current && (next.pathname !== current.pathname || !(next.search as { edit?: string; editor?: string | boolean; adding?: boolean } | undefined)?.edit && !(next.search as { editor?: string | boolean } | undefined)?.editor && !(next.search as { adding?: boolean } | undefined)?.adding),
     withResolver: true,
     enableBeforeUnload: () => dirtyRef.current,
   }) as unknown as { status: "blocked" | "idle"; proceed: () => void; reset: () => void };
