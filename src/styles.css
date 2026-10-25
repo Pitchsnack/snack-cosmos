@@ -451,3 +451,11 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .edit-info-fields [data-slot="select-value"] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .edit-info-fields [class*="grid"] { min-width: 0; }
 .edit-info-fields label { min-height: 24px; display: inline-flex; align-items: center; }
+
+:root { --edit-needed-border: #F87171; --edit-needed-ink: #DC2626; --edit-created-row: #E6F0FF; }
+.dark { --edit-created-row: #203855; }
+.edit-info-fields .creation-invalid { border-color: var(--edit-needed-border); }
+.edit-info-fields div:has(> .creation-invalid) > label { color: var(--edit-needed-ink); }
+@keyframes edit-created-flash { 0%, 57% { background: var(--edit-created-row); } 100% { background: transparent; } }
+.edit-created-row { animation: edit-created-flash 2.8s ease-out; }
+@media (prefers-reduced-motion: reduce) { .edit-created-row { animation-duration: 1.6s; } }

@@ -78,8 +78,9 @@ export function AdvisorFirmEdit({ firmId, section }: { firmId: string | null; se
 }
 
 function Section({ id, title, action, setup, active, children }: { id: EditSection; title: string; action?: React.ReactNode; setup?: boolean; active?: boolean; children: React.ReactNode }) {
+  const pop = useEditInfo();
   return (
-    <section id={`sec-${id}`} className="scroll-mt-6 rounded-[14px] border border-border bg-card p-5 shadow-card">
+    <section id={`sec-${id}`} className={pop ? "scroll-mt-6" : "scroll-mt-6 rounded-[14px] border border-border bg-card p-5 shadow-card"}>
       <EditSec id={id} tone="buyer" active={active}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className={setup ? "text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]" : "text-[16px] font-semibold"}>{title}</h2>
@@ -145,6 +146,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const visible = (t: Tab) => !pop || !!setup || tab === t;
 
   const back = () => (pop ? pop.requestClose() : onDone ? onDone() : navigate({ to: "/marketplace/my-company", search: firm ? ({ open: firm.id } as never) : undefined }));
+  useEffect(() => { pop?.setPresentation(f.name); }, [f.name]);
   const thai = f.country === "Thailand";
   const src = setup?.sources ?? {};
 
@@ -262,7 +264,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       {pop && !setup ? <>
         <EditInfoTabsSlot><span className="inline-flex h-9 items-center gap-2 rounded-md bg-help-advisor px-3.5 text-sm font-semibold text-primary-foreground"><Globe className="h-4 w-4" />{tr("Open to sellers and buyers")}</span></EditInfoTabsSlot>
         <TabRow value={tab} onChange={setTab} label="Advisor information" idBase="advisor-edit" tabs={[
-          {key:"logo",label:tr("Logo")},{key:"about",label:tr("About Company")},{key:"address",label:tr("Address")},
+          {key:"logo",label:tr("Logo")},{key:"about",label:tr("About Company"),error:!!adminCreate && forced && !!nameError(f.name)},{key:"address",label:tr("Address")},
           {key:"services",label:tr("Services & Fees")},{key:"team",label:tr("Team")},{key:"documents",label:tr("Licences & Documents")},
           ...(asAdmin ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />}]:[]),
         ]} />
@@ -292,13 +294,13 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label="Typical deal size" opt tag={f.dealBand ? src.dealBand : undefined} hint={deal ? <>Your card shows <b>{deal.usd}</b> ({deal.thb}).</> : undefined}>
             <select className={sel} value={f.dealBand} onChange={(e) => set("dealBand", e.target.value)}>
               <option value="">Choose a range</option>
-              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)!.full}</option>)}
+              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)?.full ?? b.key}</option>)}
             </select>
           </F>
 </CompactFields><CompactFields>          <F label="Website" req tag={src.website} err={show("web")} htmlFor="fe-web"><Input id="fe-web" aria-required className={cn(inp, show("web") && errB)} maxLength={200} placeholder="https://www.yourfirm.com" value={f.website} onBlur={blur("web")} onChange={(e) => set("website", e.target.value)} /></F>
           <F label="Email" req tag={src.email} err={show("email")} htmlFor="fe-email"><Input id="fe-email" aria-required type="email" className={cn(inp, show("email") && errB)} maxLength={120} placeholder="hello@yourfirm.com" value={f.email} onBlur={blur("email")} onChange={(e) => set("email", e.target.value)} /></F>
           <F label="Phone" req tag={src.phone} err={show("phone")} htmlFor="fe-phone"><Input id="fe-phone" aria-required className={cn(inp, show("phone") && errB)} maxLength={30} placeholder="+66 2 123 4567" value={f.phone} onBlur={blur("phone")} onChange={(e) => set("phone", e.target.value)} /></F>
-</CompactFields>        <F label="Languages" tag={f.languages.length ? src.languages : undefined}>
+</CompactFields>        <F label="Languages" req tag={f.languages.length ? src.languages : undefined}>
           <div className="flex flex-wrap gap-1.5">
             {LANGUAGES.map((l) => {
               const on = f.languages.includes(l);
@@ -324,9 +326,11 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder="e.g. Acme Advisory Co., Ltd." value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
           <F label="Thai name" opt={!thai} tag={f.thaiName ? src.thaiName : undefined}><Input className={inp} maxLength={200} placeholder="บริษัท … จำกัด" value={f.thaiName} onChange={(e) => set("thaiName", e.target.value)} /></F>
-</CompactFields>        <div>
-          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map.")}
-            country={f.country} onCountry={changeCountry}
+</CompactFields><CompactFields two>
+          <F label={tr("Country")} req><select id="fe-country" className={sel} value={f.country} onChange={e=>changeCountry(e.target.value)}><option value="">{tr("Choose a country")}</option>{COUNTRIES.map(c=><option key={c} value={c}>{tr(c)}</option>)}</select></F>
+          <F label={tr("City / province")} req err={show("city")}><Input id="fe-city" value={thai ? f.addr.province : f.city} onChange={e=>thai ? set("addr", {...f.addr,province:e.target.value}) : set("city",e.target.value)} /></F>
+        </CompactFields><div>
+          <AddressBox noteOutside compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map.")}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
         </div>
@@ -434,7 +438,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label="Typical deal size" opt tag={f.dealBand ? src.dealBand : undefined} hint={deal ? <>Your card shows <b>{deal.usd}</b> ({deal.thb}).</> : undefined}>
             <select className={sel} value={f.dealBand} onChange={(e) => set("dealBand", e.target.value)}>
               <option value="">Choose a range</option>
-              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)!.full}</option>)}
+              {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)?.full ?? b.key}</option>)}
             </select>
           </F>
           <F label="Team size" req tag={src.teamSize} err={show("teamSize")} htmlFor="fe-teamSize">
