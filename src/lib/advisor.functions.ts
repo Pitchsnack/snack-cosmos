@@ -10,7 +10,7 @@ import type { PublicListing } from "@/lib/public-listing";
  * exactly as sellers get them in Browse investors. Requires users.advisor_view.
  */
 
-export type AdvisorTeaser = { id: string; listing: PublicListing; dealType?: string | null; askingPrice?: number | null; handover?: string | null };
+export type AdvisorTeaser = { id: string; listing: PublicListing; dealType?: string | null; askingPrice?: number | null; priceBand?: { key: string; label: string; th: string } | null; handover?: string | null };
 export type AdvisorInvestor = PublicInvestor & { liveSince: string | null };
 export type AdvisorFav = { kind: "listing" | "investor"; id: string; at: string };
 
