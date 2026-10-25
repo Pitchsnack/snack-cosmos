@@ -1,3 +1,4 @@
+import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search, Briefcase, RefreshCw, X, Star, ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -86,6 +87,7 @@ function InvestorsPage() {
 
 function InvestorsPageInner() {
   const { has, isControl } = usePermissions();
+  const [createdId,setCreatedId] = useState<string | null>(null);
   const [runBy, setRunBy] = useState<RunByFilter>("all");
   const navigate = useNavigate({ from: "/investors" });
   const s = Route.useSearch();
@@ -383,12 +385,11 @@ function InvestorsPageInner() {
                   onClick={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
                 />
               ) : (
-                <InvestorListItem
-                  key={it.id}
+                <CreatedDirectoryRow key={it.id} active={createdId === it.id} onEdit={()=>navigate({search:(p:typeof s)=>({...p,editor:it.id})})}><InvestorListItem
                   i={it}
                   selected={selected === it.id}
                   onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })}
-                />
+                /></CreatedDirectoryRow>
               ),
             )}
           </div>
@@ -422,7 +423,7 @@ function InvestorsPageInner() {
         </div>
       )}
 
-      {s.adding && <InvestorAddPopup onClose={()=>navigate({search:(p:typeof s)=>({...p,adding:undefined}),replace:true})} onCreated={(id)=>navigate({search:(p:typeof s)=>({...p,adding:undefined,selected:id,sort:"created_desc"}),replace:true})} />}
+      {s.adding && <InvestorAddPopup onClose={()=>navigate({search:(p:typeof s)=>({...p,adding:undefined}),replace:true})} onCreated={(id)=>{setCreatedId(id);setRunBy("all");void navigate({search:{adding:undefined,selected:id,sort:"created_desc",view:"split",page:1},replace:true});}} />}
       {s.editor && <InvestorEditPopup id={s.editor} onClose={() => navigate({search:(p:typeof s) => ({...p,editor:undefined}),replace:true})} />}
       <Dialog
         open={!!s.panel && view !== "split" && !s.editor}

@@ -1,3 +1,4 @@
+import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import {REPORT_KEYS} from '@/lib/reports-hub';
 import { useEffect, useMemo, useRef, useState } from "react";
 import {useHubSummaries} from '@/components/reports/reports-hub';
@@ -91,6 +92,7 @@ function StartupsPage() {
 
 function StartupsPageInner() {
   const { has, isControl } = usePermissions();
+  const [createdId,setCreatedId] = useState<string | null>(null);
   const [runBy, setRunBy] = useState<RunByFilter>("all");
   const navigate = useNavigate({ from: "/startups" });
   const s = Route.useSearch();
@@ -403,7 +405,8 @@ function StartupsPageInner() {
                 onCreate={() => void createHidden(it.id, false)}
               />
             ) : (
-              <div key={it.id} className="space-y-1.5">
+              <CreatedDirectoryRow key={it.id} active={createdId === it.id} onEdit={()=>navigate({search:(p:typeof s)=>({...p,editor:it.id})})}>
+              <div className="space-y-1.5">
                 <StartupCard s={it} onClick={() => openStartup(it.id, { tab: "full" })} compact={favOnly} reportCount={isControl?(reportSummaries.data?.[it.id]?.ready??0):undefined} />
                 {orderByStartup.get(it.id) && (
                   <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><ReportChip o={orderByStartup.get(it.id)!} /></div>
@@ -413,7 +416,7 @@ function StartupsPageInner() {
                   <HiddenStatusChip status={statusOf(it)} codeName={byStartup.get(it.id)?.code_name} />
                   <button type="button" onClick={() => openStartup(it.id, { tab: "full" })} className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 font-medium text-foreground hover:bg-muted">Profiles</button>
                 </div>
-              </div>
+              </div></CreatedDirectoryRow>
             ),
           )}
         </div>
@@ -475,7 +478,7 @@ function StartupsPageInner() {
                       onCreate={() => void createHidden(it.id, true)}
                     />
                   ) : (
-                    <div key={it.id}>
+                    <CreatedDirectoryRow key={it.id} active={createdId === it.id} onEdit={()=>navigate({search:(p:typeof s)=>({...p,editor:it.id})})}>
                       <StartupListItem s={it} selected={selected === it.id} onSelect={pick} />
                       {isControl&&<span className="hub-pill my-1">Reports · {reportSummaries.data?.[it.id]?.ready??0} of {REPORT_KEYS.length} ready</span>}
                       <div className="flex items-center gap-2 px-2 pt-1 text-[11px] text-muted-foreground">
@@ -486,7 +489,7 @@ function StartupsPageInner() {
                           <ReportChip o={orderByStartup.get(it.id)!} />
                         </div>
                       )}
-                    </div>
+                    </CreatedDirectoryRow>
                   );
                 })}
           </div>
@@ -509,7 +512,7 @@ function StartupsPageInner() {
         </div>
       )}
 
-      {(s.editor || s.adding) && <StartupEditPopup id={s.editor} onClose={() => navigate({search:(p:typeof s) => ({...p,editor:undefined,adding:undefined}),replace:true})} onCreated={(id) => navigate({search:(p:typeof s) => ({...p,editor:undefined,adding:undefined,selected:id,sort:"created_desc"}),replace:true})} />}
+      {(s.editor || s.adding) && <StartupEditPopup id={s.editor} onClose={() => navigate({search:(p:typeof s) => ({...p,editor:undefined,adding:undefined}),replace:true})} onCreated={(id) => {setCreatedId(id);setRunBy("all");void navigate({search:{editor:undefined,adding:undefined,selected:id,sort:"created_desc",view:"split",page:1},replace:true});}} />}
       <Dialog open={!!modalId && !s.editor && !s.adding} onOpenChange={(o) => !o && closeStartup()}>
         <DialogContent
           onCloseAutoFocus={(e) => {
