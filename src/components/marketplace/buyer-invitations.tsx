@@ -234,7 +234,7 @@ function InvitationPanel({ r, index, total, onPrev, onNext, onClose }: { r: Buye
                   <div className="rounded-[12px] border border-[#BBE8CA] bg-[#F3FBF6] px-[14px] py-3 dark:bg-transparent">
                     <div className="text-[12px] font-semibold text-[#15803D]">{tr("Company name", "ชื่อบริษัท")}</div>
                     <div className="text-[15px] font-bold">{r.companyName}</div>
-                    <div className="text-[13px] text-[#434A5C] dark:text-muted-foreground">{tr("The private view has the logo, exact figures and the seller's email and phone.", "มุมมองส่วนตัวมีโลโก้ ตัวเลขที่แน่นอน และอีเมลและโทรศัพท์ของผู้ขาย")}</div>
+                    <div className="text-[13px] text-[#434A5C] dark:text-muted-foreground">{tr("The exclusive view has the logo, exact figures and the seller's email and phone.", "มุมมองส่วนตัวมีโลโก้ ตัวเลขที่แน่นอน และอีเมลและโทรศัพท์ของผู้ขาย")}</div>
                   </div>
                 )}
                 {l?.description && <p className="text-[14px] text-[#434A5C] dark:text-muted-foreground">{l.description}</p>}
@@ -359,7 +359,7 @@ function DecisionBar({ r, reason, onClose }: { r: BuyerInvitation; reason?: stri
       <div className="flex flex-wrap items-center gap-2">
         <span className={line}>{tr(`NDA approved on ${day(r.approvedAt)}. The seller is in your contacts.`, `อนุมัติ NDA เมื่อ ${day(r.approvedAt)} ผู้ขายอยู่ในรายชื่อติดต่อของท่านแล้ว`)}</span>
         <Link to="/marketplace/messages" className={outline}>{tr("Message seller", "ส่งข้อความถึงผู้ขาย")}</Link>
-        <Link to="/marketplace/favourites" search={{ id: r.listingId }} className={navy}>{tr("Open private view", "เปิดมุมมองส่วนตัว")}</Link>
+        <Link to="/marketplace/favourites" search={{ id: r.listingId }} className={navy}>{tr("Open exclusive view", "เปิดมุมมองส่วนตัว")}</Link>
       </div>
     );
   } else if (r.status === "not_interested") {

@@ -258,7 +258,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const originalSnapshot = useRef(editSnapshot);
   useEffect(()=>{pop?.setDirty(editSnapshot !== originalSnapshot.current);},[editSnapshot]);
 
-  useEffect(() => { pop?.setPresentation(f.investor_name, tr(view === "public" ? "Public view" : "Private view")); }, [f.investor_name, view]);
+  useEffect(() => { pop?.setPresentation(f.investor_name, tr(view === "public" ? "Listed view" : "Exclusive view")); }, [f.investor_name, view]);
   const back = () => (setup ? setup.onBack() : pop ? pop.requestClose() : navigate({ to: "/marketplace/my-company" }));
 
   /** Auto Enrich merge — back-fills ONLY empty fields, same as Edit investor. */
@@ -406,7 +406,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
       <form noValidate={!!pop} id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {pop && !setup ? <>
-          <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Public view"),icon:<Eye />,count:0},{key:"private",label:tr("Private view"),icon:<Lock />,count:buyerMissing.about+buyerMissing.media+buyerMissing.people}]} /></EditInfoTabsSlot>
+          <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Listed view"),icon:<Eye />,count:0},{key:"private",label:tr("Exclusive view"),icon:<Lock />,count:buyerMissing.about+buyerMissing.media+buyerMissing.people}]} /></EditInfoTabsSlot>
           <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
           {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
@@ -670,9 +670,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>
 
 </div>}
-          {tab === "description" && <div className="space-y-4"><TabHead title={tr("Public Description")} />        {/* Public view */}
+          {tab === "description" && <div className="space-y-4"><TabHead title={tr("Public Description")} />        {/* Listed view */}
         <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public view · sellers see this before an NDA</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Listed view · sellers see this before an NDA</h3>
           <S cur={setup ? undefined : sec} id="description" className="space-y-1.5">
           <Label>Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span><Tag s={src.description} /></Label>
           <Textarea id="f-description" value={f.description} onChange={(e) => setF((o) => ({ ...o, description: e.target.value.slice(0, 140) }))} rows={3} maxLength={140}
@@ -972,9 +972,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
         </S>
 
-        {/* Public view */}
+        {/* Listed view */}
         <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public view · sellers see this before an NDA</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Listed view · sellers see this before an NDA</h3>
           <S cur={setup ? undefined : sec} id="description" className="space-y-1.5">
           <Label>Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span><Tag s={src.description} /></Label>
           <Textarea id="f-description" value={f.description} onChange={(e) => setF((o) => ({ ...o, description: e.target.value.slice(0, 140) }))} rows={3} maxLength={140}

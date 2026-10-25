@@ -58,7 +58,7 @@ export function HiddenProfileTab({
   const managedIds = useManagedIds("startup", [row?.startup_id]);
   const [editAfterCreate, setEditAfterCreate] = useState(false);
   const startup = isStartupEntry(companyType);
-  // After "Edit public view" creates the draft, open the editor as soon as the row arrives.
+  // After "Edit listed view" creates the draft, open the editor as soon as the row arrives.
   useEffect(() => {
     if (row && editAfterCreate) { onEdit(); setEditAfterCreate(false); }
   }, [row, editAfterCreate]);
@@ -69,7 +69,7 @@ export function HiddenProfileTab({
         {startup && <p className="flex items-start gap-2 text-sm text-muted-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Startup listings aren't available on the Marketplace yet. This preview is private.</p>}
         <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
           <span>{name} has no public listing yet. This preview is private.</span>
-          <Button onClick={() => { setEditAfterCreate(true); onCreate(); }} disabled={creating} variant="outline"><Pencil className="mr-1.5 h-4 w-4" />{creating ? "Creating…" : "Edit public view"}</Button>
+          <Button onClick={() => { setEditAfterCreate(true); onCreate(); }} disabled={creating} variant="outline"><Pencil className="mr-1.5 h-4 w-4" />{creating ? "Creating…" : "Edit listed view"}</Button>
         </div>
         <div className="rounded-[14px] bg-muted p-3.5">
           <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">How buyers would see it</div>
@@ -105,7 +105,7 @@ export function HiddenProfileTab({
       {flagged.length === 0 ? (
         <p className="flex items-center gap-1.5 text-[12.5px] text-emerald-700 dark:text-emerald-400"><Check className="h-4 w-4" />Identity check passed · no company, product or people names in the public text.</p>
       ) : (
-        <p className="flex items-start gap-1.5 text-[12.5px] text-destructive"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Identity check found: {flagged.join(", ")}. Edit the public view to remove them before you publish.</p>
+        <p className="flex items-start gap-1.5 text-[12.5px] text-destructive"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Identity check found: {flagged.join(", ")}. Edit the listed view to remove them before you publish.</p>
       )}
 
 

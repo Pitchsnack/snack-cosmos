@@ -205,7 +205,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
   cardFooter?: React.ReactNode;
   /** Split information panel: figures in one row of three. */
   panel?: boolean;
-  /** Buyer's own Public view preview only: an Edit link on each card part. Off by default. */
+  /** Buyer's own Listed view preview only: an Edit link on each card part. Off by default. */
   editable?: (k: CardPart) => void;
 }) {
   const desc = i.description || (empty === "Not added" ? "Not added" : null);

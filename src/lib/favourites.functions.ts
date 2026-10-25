@@ -134,7 +134,7 @@ export async function loadBuyerFavourites(userId:string) {
       const p = pipeBy.get(r.id);
       const state = p ? ndaState(p) : null;
       const status: FavStatus = state ?? "saved";
-      // Not on the Private view (approved NDA).
+      // Not on the Exclusive view (approved NDA).
       listing.managed = managed.has(r.startup_id);
       let priv: FavPrivate | null = null;
       if (state === "approved") {
