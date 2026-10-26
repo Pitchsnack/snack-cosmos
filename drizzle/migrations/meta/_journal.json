@@ -778,6 +778,13 @@
       "when": 1792844940424,
       "tag": "0110_advisor_firms_ownerless_admin_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1793021648637,
+      "tag": "0111_founder_bio_story",
+      "breakpoints": true
     }
   ]
 }
