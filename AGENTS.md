@@ -1,4 +1,5 @@
 # Decisions
+- Pipeline chat uses the Messages Chat in a lazy locked presentation inside the existing ProfileBox dialog; Pipeline-parent in-memory drafts preserve unsent content without new storage or authorization paths.
 - Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, the seller InvestorDetailPanel body and shared company identity/section/pill parts; only All deals/watchlist opt in so other profile viewers stay unchanged.
 - Shared Pipeline card company chips use an own-organisation DTO sourced from each deal's startup or linked buyer firm; counterparty privacy fields and page-selected organisations are not chip sources, so pending/ended cards retain correct identity without changing NDA gates.
 - Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor adapters; watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.

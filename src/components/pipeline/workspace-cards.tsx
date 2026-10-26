@@ -108,7 +108,7 @@ function Stepper({ cur, t, endedOn }: { cur: number; t: T; endedOn?: string }) {
   );
 }
 
-export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, onStar }: { starred?: boolean; onStar?: () => void; p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; onEnded: () => void; t: T }) {
+export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, onStar, chatPopup=false }: { starred?: boolean; onStar?: () => void; p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; onEnded: () => void; t: T; chatPopup?:boolean }) {
   const withdrawNda = useServerFn(withdrawNdaRequest);
   const [reviewNda,setReviewNda]=useState(false);
   const [withdrawConfirm,setWithdrawConfirm]=useState(false);
@@ -264,8 +264,8 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} t={t} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "share" && <ShareAccessDialog p={p} mode={p.share ? "manage" : "share"} onClose={() => setDlg(null)} onDone={refresh} />}
-      {dlg === "investor" && <InvestorProfile fullProfile={p.status!=='ended'} p={p} onReview={pendingNda ? () => setReviewNda(true) : undefined} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
-      {dlg === "seller" && <SellerProfile fullProfile={p.status!=='ended'} p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} onReport={() => setDlg("report")} onAsk={() => { setDlg(null); ask(); }} />}
+      {dlg === "investor" && <InvestorProfile chatPopup={chatPopup} fullProfile={p.status!=='ended'} p={p} onReview={pendingNda ? () => setReviewNda(true) : undefined} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} />}
+      {dlg === "seller" && <SellerProfile chatPopup={chatPopup} fullProfile={p.status!=='ended'} p={p} onClose={() => setDlg(null)} onNda={() => setDlg("nda")} onLoi={() => setDlg("loi")} onReport={() => setDlg("report")} onAsk={() => { setDlg(null); ask(); }} />}
       {dlg === "nda" && <NdaDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "loi" && <LoiDocDialog p={p} seller={seller} onClose={() => setDlg(null)} />}
     </div>
