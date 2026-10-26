@@ -468,7 +468,8 @@ export function StartupForm({
   // Founders
   const [founders, setFounders] = useState<FounderDraft[]>(
     startup?.founders.map((f) => ({
-      full_name: f.full_name, position: f.position, linkedin_url: f.linkedin_url, bio: f.bio, bio_story: f.bio_story, photo_url: f.photo_url,
+      full_name: f.full_name, position: f.position, linkedin_url: f.linkedin_url, bio: f.bio,
+      bio_story: initialFounderStory(f.bio, f.bio_story, th ? "th" : "en", startup?.year_founded?.toString() ?? "", founderRevenueLabel(normRevBand(startup?.last_year_revenue), th ? "th" : "en")), photo_url: f.photo_url,
     })) ?? [],
   );
 
