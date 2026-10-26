@@ -416,7 +416,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile,
       {shownNames.map((m, i) => (
         <span key={m.id}>
           {i > 0 && <span className="text-[#9CA3AF]">, </span>}
-          <Button variant="unstyled" size="unstyled" onClick={e => openContact(m, e.currentTarget)} className="font-semibold text-link hover:underline">{m.name}</Button>
+          {popup ? <Button variant="unstyled" size="unstyled" onClick={e => openContact(m, e.currentTarget)} className="font-semibold text-link hover:underline">{m.name}</Button> : <Link to="/marketplace/my-contact" className="font-semibold text-link hover:underline">{m.name}</Link>}
         </span>
       ))}
       {others.length > 3 && <span className="text-[#9CA3AF]"> +{others.length - 3}</span>}
@@ -481,7 +481,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile,
         {people && (
           <div ref={peopleBox} id="people-in-chat" role="dialog" aria-label={tr("People in this chat")} className="absolute right-7 top-[60px] z-20 w-[300px] max-w-[calc(100%-32px)] rounded-xl border border-[#E5E7EB] bg-white px-4 pb-3 pt-0.5 shadow-[0_12px_32px_rgba(16,24,40,.14)]">
             <div className="mb-1 mt-3 text-[10.5px] font-bold uppercase tracking-[.07em] text-[#9CA3AF]">{tr("People in this chat")} · {members.length}</div>
-            <PeopleRows others={others} mine={mine} meId={data?.meId} as={as} onContact={openContact} />
+            <PeopleRows others={others} mine={mine} meId={data?.meId} as={as} onContact={popup ? openContact : undefined} />
             <div className="mt-1 flex items-center gap-1.5 border-t border-[#F0F1F4] pt-2.5 text-[11.5px] text-[#6B7280]"><Lock className="h-3 w-3" />{tr("Only these people can read this chat.")}</div>
           </div>
         )}
@@ -554,7 +554,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile,
           <>
             {adminView && profile && <div className="px-6 pt-2 text-[12px] text-muted-foreground">{profile.advisor ? tr("Replying as {advisor}, {first name}’s advisor").replace("{advisor}", profile.advisor).replace("{first name}", profile.first) : <span className="inline-flex flex-wrap items-center gap-1">{tr("Replying as")} <HatMark width={13} /><b>{tr("Help desk")}</b> · {tr("{first name} won’t see your name").replace("{first name}", profile.first)}</span>}</div>}
             {data && <Composer placeholder={placeholder} as={as} onSend={send} autoFocus={popup} draft={popup ? drafts?.get(draftId) : undefined} onDraft={popup && drafts ? d => saveDraft(drafts, draftId, d) : undefined} />}
-            {c.kind === 'p' && <div className="chat-confidential"><Lock size={12} /><span>{tr("Messages are confidential under your NDA and stored by PitchSnack. Advisors on this deal can’t read them.")}</span></div>}
+            {popup && c.kind === 'p' && <div className="chat-confidential"><Lock size={12} /><span>{tr("Messages are confidential under your NDA and stored by PitchSnack. Advisors on this deal can’t read them.")}</span></div>}
           </>
         )}
       </div>
@@ -636,7 +636,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile,
             </div>
 
             <Cap>People</Cap>
-            <PeopleRows others={others} mine={mine} meId={data?.meId} as={as} onContact={openContact} />
+            <PeopleRows others={others} mine={mine} meId={data?.meId} as={as} />
 
             <Cap>Shared files</Cap>
             {files.length === 0 ? (
