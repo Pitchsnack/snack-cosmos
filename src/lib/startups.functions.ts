@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { FounderStorySchema, composeFounderBio, type FounderStory } from "@/lib/founder-story";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   ISO_STANDARDS,
@@ -135,6 +136,7 @@ export interface StartupFounder {
   position: string | null;
   linkedin_url: string | null;
   bio: string | null;
+  bio_story?: FounderStory | null;
   photo_url: string | null;
   display_order: number;
 }
@@ -379,7 +381,7 @@ export const getStartup = createServerFn({ method: "GET" })
         startup_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
         startup_users(id, user_id, role, created_at, users:user_id(id,email,first_name,last_name)),
         startup_media(id, slot, image_url, caption),
-        startup_founders(id, full_name, position, linkedin_url, bio, photo_url, display_order),
+        startup_founders(id, full_name, position, linkedin_url, bio, bio_story, photo_url, display_order),
         startup_investors(id, investor_id, investors:investor_id(id, investor_name, website_url, logo_url))
       `)
       .eq("id", data.id)
@@ -479,6 +481,7 @@ const FounderInput = z.object({
   position: z.string().max(255).nullable().optional(),
   linkedin_url: z.string().max(2048).nullable().optional(),
   bio: z.string().max(5000).nullable().optional(),
+  bio_story: FounderStorySchema.nullable().optional(),
   photo_url: z.string().max(2048).nullable().optional(),
   display_order: z.number().int().default(0),
 });
@@ -578,7 +581,8 @@ async function syncFounders(
     full_name: f.full_name,
     position: f.position ?? null,
     linkedin_url: f.linkedin_url ?? null,
-    bio: f.bio ?? null,
+    bio: f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story) : f.bio ?? null,
+    bio_story: f.bio_story ?? null,
     photo_url: f.photo_url ?? null,
     display_order: f.display_order ?? i,
   }));

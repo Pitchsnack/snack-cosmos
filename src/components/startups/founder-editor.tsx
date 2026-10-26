@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { FounderStoryEditor } from "./founder-story-editor";
+import { initialFounderStory, type FounderStory } from "@/lib/founder-story";
+import { useTranslation } from "@/i18n/language";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +19,7 @@ export interface FounderDraft {
   position?: string | null;
   linkedin_url?: string | null;
   bio?: string | null;
+  bio_story?: FounderStory | null;
   photo_url?: string | null;
 }
 
@@ -25,6 +28,9 @@ interface Props {
   onChange: (next: FounderDraft[]) => void;
   tenantId?: string;
   startupId?: string;
+  year?: string;
+  sales?: string;
+  addOnOpen?: boolean;
 }
 
 const POSITION_OPTIONS = [
@@ -229,23 +235,40 @@ function PositionMultiSelect({
   );
 }
 
-export function FounderEditor({ value, onChange, tenantId, startupId }: Props) {
+export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", addOnOpen }: Props) {
+  const {language} = useTranslation();
+  const root = useRef<HTMLDivElement>(null);
+  const added = useRef(false);
+  const focusIndex = useRef<number | null>(null);
+  const add = () => {
+    focusIndex.current = value.length;
+    onChange([...value, {full_name:"", bio_story:initialFounderStory(null, null, language === "th" ? "th" : "en", year, sales)}]);
+  };
+  useEffect(() => {if (addOnOpen && !added.current) {added.current = true; add();}}, [addOnOpen]);
+  useEffect(() => {
+    const i = focusIndex.current;
+    if (i === null) return;
+    root.current?.querySelectorAll<HTMLInputElement>('input[data-founder-name]')[i]?.focus({preventScroll:true});
+    focusIndex.current = null;
+  }, [value.length]);
   const update = (i: number, patch: Partial<FounderDraft>) =>
     onChange(value.map((f, idx) => (idx === i ? { ...f, ...patch } : f)));
   return (
-    <div className="space-y-3">
+    <div ref={root} className="min-w-0 space-y-3">
       {value.map((f, i) => (
         <div key={i} className="rounded-md border border-border bg-background p-3">
-          <div className="flex gap-3">
+          <div className="flex min-w-0 gap-3 max-sm:flex-col">
             <FounderPhoto
               path={f.photo_url}
               onChange={(p) => update(i, { photo_url: p })}
               tenantId={tenantId}
               startupId={startupId}
             />
-            <div className="flex-1 space-y-2">
+            <div className="min-w-0 flex-1 space-y-2">
               <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                 <Input
+                  data-founder-name
+                  aria-label={language === "th" ? "ชื่อผู้ก่อตั้ง" : "Founder name"}
                   placeholder="Full name *"
                   value={f.full_name}
                   onChange={(e) => update(i, { full_name: e.target.value })}
@@ -260,12 +283,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId }: Props) {
                   onChange={(e) => update(i, { linkedin_url: e.target.value })}
                 />
               </div>
-              <Textarea
-                placeholder="Short bio"
-                rows={2}
-                value={f.bio ?? ""}
-                onChange={(e) => update(i, { bio: e.target.value })}
-              />
+              <FounderStoryEditor bio={f.bio} story={f.bio_story} year={year} sales={sales} onChange={patch => update(i, patch)} />
               <div className="flex justify-end">
                 <Button
                   type="button"
@@ -284,7 +302,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId }: Props) {
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => onChange([...value, { full_name: "" }])}
+        onClick={add}
       >
         <Plus className="h-4 w-4 mr-1" /> Add founder
       </Button>

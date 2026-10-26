@@ -398,7 +398,7 @@ export function StartupInfoBody({
                   {f.position && (
                     <div className="mt-0.5 text-xs text-muted-foreground">{f.position}</div>
                   )}
-                  {f.bio && <p className="mt-1 text-xs leading-relaxed text-foreground/75">{f.bio}</p>}
+                  {f.bio && <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-foreground/75">{f.bio}</p>}
                   {f.linkedinUrl && (
                     <a
                       href={href(f.linkedinUrl)}
