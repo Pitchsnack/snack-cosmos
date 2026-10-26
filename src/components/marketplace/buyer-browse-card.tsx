@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tr } from '@/i18n/language';
 import { BadgeCheck, ChevronDown, ChevronUp, Briefcase, Building2, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import { INDIVIDUAL_TYPE, bandOf, typeName } from "@/lib/investor-bands";
@@ -120,6 +121,10 @@ export function KeyFigures({ i, empty, oneRow, onPart }: { i: CardInvestor; empt
         <Figure label="Ticket size" band={i.ticketBand} empty={empty} big part="ticket" onPart={onPart} />
         {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big part="aum" onPart={onPart} />}
         <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big part="revenue" onPart={onPart} />
+      </div>
+      <div className="investor-focus-row">
+        <dt>{tr('Investment Focus')}<PartEdit k="focus" onPart={onPart} /></dt>
+        <dd>{i.dealTypes.length ? i.dealTypes.join(' · ') : empty}</dd>
       </div>
       {(
         <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">

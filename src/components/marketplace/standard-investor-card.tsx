@@ -6,9 +6,10 @@ import { isCorporateBuyer } from '@/lib/investor-browse';
 import { cardNdaStatus } from '@/lib/standard-card';
 import type { SellerFavPrivate } from '@/lib/investor-browse.functions';
 
-export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag }: {
+export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent }: {
   i: CardInvestor & { managed?: boolean; coverUrl?: string | null; status?: string; newDays?: number | null };
   privateData?: SellerFavPrivate | null; onClick?: () => void; selected?: boolean; topRight?: ReactNode; className?: string; tag?: ReactNode;
+  descriptionContent?: ReactNode;
 }) {
   const p = privateData;
   const name = p?.investor_name;
@@ -27,6 +28,6 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
     status={cardNdaStatus(i.status)} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={className} sourceType={i.type ?? i.codeName} tag={tag}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}
     badges={[...(i.verified ? [{ label: 'Verified investor' }] : []), ...(i.proofOfFunds ? [{ label: 'Proof of funds' }] : [])]}
-    figures={figures} fit={band('Min. target revenue', p?.revenue_min_band ?? i.revBand)} textRow={{ label: 'Geography', value: geography }}
+    descriptionContent={descriptionContent} figures={figures} fit={band('Min. target revenue', p?.revenue_min_band ?? i.revBand)} focusRow={{label:'Investment Focus',value:i.dealTypes.join(' · ')}} textRow={{ label: 'Geography', value: geography }}
     more={<>{(p?.city ?? i.city) && <StandardCardSection label="Based in">{p?.city ?? i.city}</StandardCardSection>}{!!(sectors.length || stages.length || i.dealTypes.length) && <StandardCardSection label="Focus"><StandardCardChips values={[...sectors, ...stages, ...i.dealTypes]} /></StandardCardSection>}</>} />;
 }

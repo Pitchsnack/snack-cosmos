@@ -29,11 +29,12 @@ export function scheduleCardRows(el: Element | null) {
 }
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', newDays, managed, topRight, badges, figures, fit, textRow, more, selected, onOpen, className, sourceType, tag }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, textRow, more, selected, onOpen, className, sourceType, tag }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
   fit: StandardFigure; textRow: StandardFigure; more?: ReactNode; selected?: boolean; onOpen?: () => void;
+  focusRow?: StandardFigure; descriptionContent?: ReactNode;
   className?: string; sourceType?: string; tag?: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -101,11 +102,12 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
         {onOpen && <Button variant="unstyled" size="unstyled" onClick={onOpen} aria-label={title} className="standard-card-title-link" />}
         {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitle}</p>}
       </div>
-      <p className={cn('standard-card-description', twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4')} title={description ?? undefined}>{description}</p>
+      <p className={cn('standard-card-description', twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4')} title={description ?? undefined}>{descriptionContent ?? description}</p>
       </div>
       <div className="standard-card-figures">
         <div className={cn('standard-card-figure-row', figures.length === 1 && 'standard-card-one')}>{figures.map((f) => <div key={f.label}>{figure(f)}</div>)}</div>
         <div className="standard-card-fit-row">{figure(fit, true)}</div>
+        {focusRow && <dl className="standard-card-focus-row"><dt>{t(focusRow.label)}</dt><dd>{focusRow.value || t('Not stated')}</dd></dl>}
         <dl className="standard-card-text-row"><dt>{t(textRow.label)}</dt><dd title={textRow.value ?? undefined}>{textRow.value || t('Not stated')}</dd></dl>
       </div>
       {expanded && <div className="standard-card-more">{tag}{more}</div>}
