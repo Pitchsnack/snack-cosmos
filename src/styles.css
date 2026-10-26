@@ -461,3 +461,17 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 @keyframes edit-created-flash { 0%, 57% { background: var(--edit-created-row); } 100% { background: transparent; } }
 .edit-created-row { animation: edit-created-flash 2.8s ease-out; }
 @media (prefers-reduced-motion: reduce) { .edit-created-row { animation-duration: 1.6s; } }
+
+/* Edit information: folder tabs (TabRow) */
+.edit-folder-row { background: #F7F8FA; border-bottom: 1px solid #E6E8EC; padding: 10px 24px 0; }
+.edit-folder-list { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-bottom: -1px; }
+.edit-folder-list::-webkit-scrollbar { display: none; }
+.edit-folder-tab { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; white-space: nowrap; height: 42px; padding: 0 16px; border-radius: 10px 10px 0 0; font-size: 14px; font-weight: 500; color: #4B5563; background: #EEF0F3; cursor: pointer; margin-bottom: 1px; }
+.edit-folder-tab:hover { background: #E6E8EC; color: #151A28; }
+.edit-folder-tab[aria-selected="true"] { height: 43px; margin-bottom: 0; background: #FFFFFF; color: #151A28; font-weight: 600; border: 1px solid #E6E8EC; border-bottom: 0; cursor: default; }
+.edit-folder-tab:focus-visible { outline: 2px solid #2563EB; outline-offset: -2px; }
+.dark .edit-folder-row { background: var(--muted); border-color: var(--border); }
+.dark .edit-folder-tab { background: var(--secondary); color: var(--muted-foreground); }
+.dark .edit-folder-tab:hover { background: var(--border); color: var(--foreground); }
+.dark .edit-folder-tab[aria-selected="true"] { background: var(--card); color: var(--foreground); border-color: var(--border); }
+@media (max-width: 639px) { .edit-folder-row { padding: 8px 10px 0; } .edit-folder-tab { padding: 0 12px; } }
