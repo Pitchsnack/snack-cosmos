@@ -43,7 +43,7 @@ export function FounderStoryEditor({bio, story: saved, year, sales, onChange}: {
   onChange: (patch: {bio: string; bio_story: FounderStory}) => void;
 }) {
   const {language} = useTranslation();
-  const lang = language === "th" ? "th" : "en";
+  const lang: "en" | "th" = language === "th" ? "th" : "en";
   const tr = useTr();
   const story = initialFounderStory(bio, saved, lang, year, sales);
   const textarea = useRef<HTMLTextAreaElement>(null);

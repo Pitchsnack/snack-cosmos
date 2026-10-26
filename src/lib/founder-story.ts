@@ -32,6 +32,10 @@ export const STORY_HINTS: Record<"en" | "th", Record<StoryKey, string>> = {
 export function plainStoryPart(value: string): string {
   return Array.from(value.replace(/[\r\n\u2028\u2029]+/g, " ")).slice(0, 120).join("");
 }
+export function founderRevenueLabel(value: string, lang: "en" | "th"): string {
+  const thai: Record<string, string> = {"Below ฿50M":"ต่ำกว่า 50 ล้านบาท", "฿50M – 100M":"50–100 ล้านบาท", "฿100M – 250M":"100–250 ล้านบาท", "฿250M – 500M":"250–500 ล้านบาท", "฿500M – 1B":"500–1,000 ล้านบาท", "฿1B +":"มากกว่า 1,000 ล้านบาท"};
+  return lang === "th" ? thai[value] ?? value : value;
+}
 export function composeFounderBio(story: FounderStory, lang = story.lang): string {
   return STORY_LINES[lang].filter(line => line.every(token => typeof token === "string" || !!story.parts[token[0]].trim()))
     .map(line => line.map(token => typeof token === "string" ? token : story.parts[token[0]]).join("")).join("\n");

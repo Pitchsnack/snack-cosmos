@@ -80,7 +80,7 @@ import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapsho
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
 import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
-import { composeFounderBio, initialFounderStory } from "@/lib/founder-story";
+import { composeFounderBio, initialFounderStory, founderRevenueLabel } from "@/lib/founder-story";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -611,7 +611,7 @@ export function StartupForm({
     investorIds,
     founders: founders.filter((f) => f.full_name.trim()).map((f, display_order) => {
       const lang = th ? "th" : "en";
-      const story = {...initialFounderStory(f.bio, f.bio_story, lang, yearFounded, t(lastYearRevenue)), lang} as ReturnType<typeof initialFounderStory>;
+      const story = {...initialFounderStory(f.bio, f.bio_story, lang, yearFounded, founderRevenueLabel(lastYearRevenue, lang)), lang} as ReturnType<typeof initialFounderStory>;
       return {...f, display_order, bio_story:story, bio:story.mode === "lines" ? composeFounderBio(story) : f.bio};
     }),
   });
@@ -1092,7 +1092,7 @@ export function StartupForm({
                 <SelectContent>
                   <SelectItem value="none">— Select —</SelectItem>
                   {revenueOptions.map((s) => (
-                    <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>
+                    <SelectItem key={s} value={s}>{founderRevenueLabel(s, th ? "th" : "en")}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1434,7 +1434,7 @@ export function StartupForm({
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
               {revenueOptions.map((s) => (
-                <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>
+                <SelectItem key={s} value={s}>{founderRevenueLabel(s, th ? "th" : "en")}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1628,7 +1628,7 @@ export function StartupForm({
         <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
       )}
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
-        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={t(lastYearRevenue)} addOnOpen={section === "founders-add"} />
+        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} addOnOpen={section === "founders-add"} />
       </EditSec>
 
   </>);
