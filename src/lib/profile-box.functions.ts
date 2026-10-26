@@ -52,17 +52,25 @@ async function person(sb: any, userId: string | null, verified: boolean): Promis
 
 export const getProfileBox = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .inputValidator((d) => z.object({ id: z.string().uuid(), as: z.enum(["seller", "buyer"]) }).parse(d))
   .handler(async ({ data, context: ctx }): Promise<ProfileBox> => {
     const sb = await admin();
     const { data: p } = await sb.from("deal_pipelines").select("*").eq("id", data.id).maybeSingle();
     if (!p) throw new Error("Deal not found");
-    let side: "seller" | "buyer";
-    if (p.buyer_user_id === ctx.userId) side = "buyer";
-    else {
-      const { data: ok } = await ctx.supabase.rpc("can_access_startup", { _user_id: ctx.userId, _startup_id: p.startup_id });
-      if (!ok) throw new Error("Not your deal");
-      side = "seller";
+    // The caller says which side they are viewing from; never guessed.
+    const side: "seller" | "buyer" = data.as;
+    if (side === "buyer") {
+      // Same rule as the buyer's Pipeline list (listPipeline as buyer).
+      if (p.buyer_user_id !== ctx.userId) throw new Error("Not your deal");
+    } else {
+      // Same rule as the seller's Pipeline list: own or member of the business, in the active workspace.
+      const [{ data: own }, { data: su }] = await Promise.all([
+        sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", ctx.userId).eq("startup_id", p.startup_id),
+        sb.from("startup_users").select("startup_id").eq("user_id", ctx.userId).eq("startup_id", p.startup_id),
+      ]);
+      const ids = [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))];
+      const scoped = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(ctx.userId, ids);
+      if (!scoped.includes(p.startup_id)) throw new Error("Not your deal");
     }
     const valid = !!p.nda_approved_at && !p.ended_at && (!p.nda_expires_at || new Date(p.nda_expires_at).getTime() > Date.now());
 

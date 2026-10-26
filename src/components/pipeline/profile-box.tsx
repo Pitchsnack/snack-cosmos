@@ -10,14 +10,14 @@ import { getProfileBox, type ProfileBox as Box } from "@/lib/profile-box.functio
 const initials = (s: string) => s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 
 /** Pipeline › Investor profile (seller) / Seller profile (buyer): read-only box about the other side of the deal. */
-export function ProfileBox({ pipelineId, onClose, onReview }: { pipelineId: string; onClose: () => void; onReview?: () => void }) {
+export function ProfileBox({ pipelineId, asSide, onClose, onReview }: { pipelineId: string; asSide: "seller" | "buyer"; onClose: () => void; onReview?: () => void }) {
   const get = useServerFn(getProfileBox);
   const { language } = useTranslation();
   const th = language === "th";
   const c = (en: string, thai: string) => (th ? thai : en);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [badLogo, setBadLogo] = useState(false);
-  const { data, error } = useQuery({ queryKey: ["pipeline", "profile-box", pipelineId], queryFn: () => get({ data: { id: pipelineId } }), staleTime: 0 });
+  const { data, error } = useQuery({ queryKey: ["pipeline", "profile-box", pipelineId, asSide], queryFn: () => get({ data: { id: pipelineId, as: asSide } }), staleTime: 0 });
   const rowLabel = (k: string) => ({
     "Ticket size": c("Ticket size", "ขนาดเงินลงทุน"), Sectors: c("Sectors", "กลุ่มอุตสาหกรรม"), "Deal types": c("Deal types", "ประเภทดีล"),
     Website: c("Website", "เว็บไซต์"), "Listed as": c("Listed as", "ประกาศในชื่อ"), Founded: c("Founded", "ก่อตั้ง"), "Deal type": c("Deal type", "ประเภทดีล"),
