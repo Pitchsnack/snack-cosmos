@@ -5,7 +5,7 @@ import { InvestorDetailPanel, Section, type InvestorDetail } from "@/components/
 import type { SellerFavourite } from "@/lib/investor-browse.functions";
 
 /** Seller's view of a buyer after an approved NDA: the Investors Directory card with the seller's options. */
-export function PrivateInvestorPanel({ f, hideHeader = false }: { f: SellerFavourite; hideHeader?: boolean }) {
+export function PrivateInvestorPanel({ f, hideHeader = false, pipeline = false }: { f: SellerFavourite; hideHeader?: boolean; pipeline?: boolean }) {
   const { t, language } = useTranslation();
   const p = f.priv;
   if (!p) return null;
@@ -27,6 +27,7 @@ export function PrivateInvestorPanel({ f, hideHeader = false }: { f: SellerFavou
       showEdit={false}
       onSelectStartup={() => {}}
       buyer={{
+        label: pipeline ? t : undefined,
         data,
         seller: {
           ndaLine,

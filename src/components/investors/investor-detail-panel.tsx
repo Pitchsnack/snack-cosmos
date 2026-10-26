@@ -106,6 +106,7 @@ export function InvestorDetailPanel({
     mediaAdd?: React.ReactNode;
     afterPortfolio?: React.ReactNode;
     footer?: React.ReactNode;
+    label?: (text: string) => string;
     /** Edit link for a section heading (Buyer › My Company only). */
     /** Seller's view of a buyer (after an approved NDA): NDA line, header action, revenue section, no overview, wrapping facts. */
     seller?: { ndaLine: React.ReactNode; action?: React.ReactNode; revenueTitle: string; aumTitle: string; ticketTitle: string; hideHeader?: boolean };
@@ -176,6 +177,7 @@ export function InvestorDetailPanel({
   const ticket =
     i.ticket_size || [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null;
   const sv = buyer?.seller;
+  const label = buyer?.label ?? ((text: string) => text);
   const overview = sv ? null : i.long_description || i.bio || null;
   const about = i.short_description;
 
@@ -230,7 +232,7 @@ export function InvestorDetailPanel({
               {i.country && i.investor_type ? <span aria-hidden>·</span> : null}
               {i.investor_type && <span>{i.investor_type}</span>}
             </div>
-            {sv ? <div className="mt-[2px] text-[14px] leading-[1.5] text-muted-foreground">{sv.ndaLine}</div> : <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {buyer ? buyer.chips : <>
               {i.status && (
                 <Badge variant="outline" className="text-[10px]">
@@ -243,7 +245,7 @@ export function InvestorDetailPanel({
                 </Badge>
               )}
               </>}
-            </div>}
+            </div>
           </div>
         </div>}
 
@@ -385,7 +387,7 @@ export function InvestorDetailPanel({
                 >
                   <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">
-                    Website <span aria-hidden>→</span>
+                    {label('Website')} <span aria-hidden>→</span>
                   </span>
                 </a>
               )}
@@ -487,13 +489,13 @@ export function InvestorDetailPanel({
                 <PairedSection
                   left={{
                     icon: Layers,
-                    title: "Investment focus",
+                    title: label("Investment focus"),
                     content: <ChipRow tags={focus} tone="primary" />,
                     action: buyer?.sectionEdit?.("focus"),
                   }}
                   right={{
                     icon: Layers,
-                    title: "Preferred stages",
+                    title: label("Preferred stages"),
                     content: <ChipRow tags={stages} tone="primary" />,
                     action: buyer?.sectionEdit?.("stages"),
                   }}
@@ -503,14 +505,14 @@ export function InvestorDetailPanel({
 
             if (hasFocus) {
               return (
-                <Section icon={Layers} title="Investment focus" right={buyer?.sectionEdit?.("focus")}>
+                <Section icon={Layers} title={label("Investment focus")} right={buyer?.sectionEdit?.("focus")}>
                   <ChipRow tags={focus} tone="primary" />
                 </Section>
               );
             }
 
             return (
-              <Section icon={Layers} title="Preferred stages" right={buyer?.sectionEdit?.("stages")}>
+              <Section icon={Layers} title={label("Preferred stages")} right={buyer?.sectionEdit?.("stages")}>
                 <ChipRow tags={stages} tone="primary" />
               </Section>
             );
@@ -529,13 +531,13 @@ export function InvestorDetailPanel({
                 <PairedSection
                   left={{
                     icon: Building2,
-                    title: "Preferred industries",
+                    title: label("Preferred industries"),
                     content: <ChipRow tags={industries} tone="muted" />,
                     action: buyer?.sectionEdit?.("industries"),
                   }}
                   right={{
                     icon: Tag,
-                    title: "Keywords",
+                    title: label("Keywords"),
                     content: <ChipRow tags={keywords} tone="muted" />,
                     action: buyer?.sectionEdit?.("keywords"),
                   }}
@@ -545,14 +547,14 @@ export function InvestorDetailPanel({
 
             if (hasIndustries) {
               return (
-                <Section icon={Building2} title="Preferred industries" right={buyer?.sectionEdit?.("industries")}>
+                <Section icon={Building2} title={label("Preferred industries")} right={buyer?.sectionEdit?.("industries")}>
                   <ChipRow tags={industries} tone="muted" />
                 </Section>
               );
             }
 
             return (
-              <Section icon={Tag} title="Keywords" right={buyer?.sectionEdit?.("keywords")}>
+              <Section icon={Tag} title={label("Keywords")} right={buyer?.sectionEdit?.("keywords")}>
                 <ChipRow tags={keywords} tone="muted" />
               </Section>
             );
@@ -561,7 +563,7 @@ export function InvestorDetailPanel({
           {/* Portfolio startups */}
           <Section
             icon={Building2}
-            title={`Portfolio startups${linked.length > 0 ? ` (${linked.length})` : ""}`}
+            title={`${label('Portfolio startups')}${linked.length > 0 ? ` (${linked.length})` : ""}`}
             right={
               buyer ? buyer.sectionEdit?.("portfolio") : linked.length > 0 ? (
                 <Link
@@ -576,7 +578,7 @@ export function InvestorDetailPanel({
             }
           >
             {linked.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No startups linked yet.</p>
+              <p className="text-sm text-muted-foreground">{label('No startups linked yet.')}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {linked.map((s) => (

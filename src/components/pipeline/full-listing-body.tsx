@@ -14,14 +14,15 @@ export function FullListingBody({ f }: {f: Favourite}) {
   const l=f.listing; const year=p.fy==null?'':String(p.fy).slice(-2);
   const money=(v:number|null|undefined)=>v==null?null:fmtThb(v);
   const web=p.website ? (/^https?:/i.test(p.website)?p.website:`https://${p.website}`):null;
-  const facts=[
+  const rawFacts: (false | null | undefined | '' | {icon:typeof Calendar;value:ReactNode})[]=[
     p.founded && {icon:Calendar,value:`${t('Est.')} ${p.founded}`},
     l.sector && {icon:Building2,value:l.sector},
     l.location && {icon:MapPin,value:l.location},
     p.employees && {icon:Users,value:language==='th'?`พนักงาน ${p.employees} คน`:`${p.employees} employees`},
     web && {icon:Globe,value:<a href={web} target="_blank" rel="noreferrer">{t('Website')} →</a>},
     p.email && {icon:ExternalLink,value:<a href={`mailto:${p.email}`}>{p.email.split('@')[0]}@<wbr/>{p.email.split('@').slice(1).join('@')}</a>},
-  ].filter((v):v is {icon:typeof Calendar;value:ReactNode}=>!!v);
+  ];
+  const facts=rawFacts.filter((v):v is {icon:typeof Calendar;value:ReactNode}=>!!v);
   const figures=[{icon:LineChart,title:`${t('Revenue')}${year?` FY${year}`:''}`,value:money(p.revenue)},{icon:Coins,title:t('Asking price'),value:money(f.askingPrice)},{icon:Briefcase,title:t('Deal type'),value:f.dealType}].filter(v=>v.value);
   const terms:[string,ReactNode][]=[[t('Owner handover'),f.handover??null]];
   const financial:[string,ReactNode][]=[[t('Net profit'),money(p.netProfit)],[t('Revenue growth'),p.growthPct!=null && p.fy!=null?`${p.growthPct>=0?'+':''}${p.growthPct.toFixed(1)}% ${t('vs')} FY${String(p.fy-1).slice(-2)}`:null],[t('Verified by'),l.hasFinancials?<span className="full-profile-ok">✓ PitchSnack {t('analysts')}</span>:null]];

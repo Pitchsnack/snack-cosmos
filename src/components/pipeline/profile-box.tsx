@@ -20,6 +20,7 @@ export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=
   const [badLogo, setBadLogo] = useState(false);
   const [full,setFull]=useState(false);
   const opener=useRef<HTMLElement|null>(null);
+  if (!opener.current && typeof document!=='undefined' && document.activeElement instanceof HTMLElement) opener.current=document.activeElement;
   const { data, error } = useQuery({ queryKey: ["pipeline", "profile-box", pipelineId, asSide], queryFn: () => get({ data: { id: pipelineId, as: asSide } }), staleTime: 0 });
   const rowLabel = (k: string) => ({
     "Ticket size": c("Ticket size", "ขนาดเงินลงทุน"), Sectors: c("Sectors", "กลุ่มอุตสาหกรรม"), "Deal types": c("Deal types", "ประเภทดีล"),
@@ -116,7 +117,7 @@ export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className={full?'pbox full-profile':'pbox'} aria-describedby={full?undefined:undefined} onOpenAutoFocus={(e) => { e.preventDefault(); opener.current=document.activeElement instanceof HTMLElement?document.activeElement:null; requestAnimationFrame(() => titleRef.current?.focus()); }} onCloseAutoFocus={e=>{e.preventDefault();opener.current?.focus();}}>
+      <DialogContent className={full?'pbox full-profile':'pbox'} aria-describedby={undefined} onOpenAutoFocus={(e) => { e.preventDefault(); requestAnimationFrame(() => titleRef.current?.focus()); }} onCloseAutoFocus={e=>{e.preventDefault();requestAnimationFrame(()=>opener.current?.focus());}}>
         {full?<FullProfileContent pipelineId={pipelineId} side={asSide} onClose={onClose} approvedAt={approvedAt} endAt={endAt}/>:<>{head}<div className="pbox-body">{body}</div>{foot}</>}
       </DialogContent>
     </Dialog>
