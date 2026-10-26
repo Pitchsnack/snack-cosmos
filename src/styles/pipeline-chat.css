@@ -1,0 +1,42 @@
+.pbox.pipeline-chat { max-width: 640px !important; height: 680px; max-height: calc(100dvh - 64px); }
+.pipeline-chat [data-chat-popup] { color: var(--pb-text); }
+.pipeline-chat-header { height: auto !important; min-height: 76px; padding: 16px 14px 14px 20px !important; gap: 12px; border-color: var(--pb-row) !important; }
+.pipeline-chat-name { font-size: 15px !important; font-weight: 600; line-height: 1.4; color: var(--pb-ink); overflow-wrap: anywhere; }
+.pipeline-chat-header > div { min-width: 0; }
+.pipeline-chat-header > div > div { flex-wrap: wrap; }
+.pipeline-chat-header > div > div:last-child { white-space: normal; overflow-wrap: anywhere; }
+.pipeline-chat-tile { width: 44px; height: 44px; flex: none; border-radius: 11px; display: grid; place-items: center; overflow: hidden; font-size: 15px; font-weight: 700; color: var(--primary-foreground); background: var(--plan-buyer); }
+.pipeline-chat-tile[data-side="seller"] { background: var(--plan-seller); color: var(--accent-foreground); }
+.pipeline-chat-tile img { width: 100%; height: 100%; object-fit: contain; background: var(--pb-bg); }
+.pipeline-chat .chat-scroll { padding: 4px 20px 16px; overscroll-behavior: contain; }
+.pipeline-chat .chat-scroll * { overflow-wrap: anywhere; }
+.pipeline-chat .chat-composer { padding: 0; margin: 0 20px 8px; }
+.pipeline-chat .chat-composer textarea { min-width: 0; }
+.chat-confidential { display: flex; flex: none; align-items: flex-start; gap: 6px; margin: 0 24px 14px; font-size: 11.5px; color: var(--muted-foreground); }
+.chat-confidential svg { flex: none; margin-top: 2px; }
+.pipeline-chat .chat-confidential { margin: 0 20px 14px; }
+.chat-contact { position: absolute; z-index: 30; top: 76px; right: 16px; width: 300px; max-width: calc(100% - 32px); border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--foreground); padding: 16px; box-shadow: var(--hub-shadow); overflow-wrap: anywhere; }
+.chat-contact p { font-size: 12px; margin: 4px 0 8px; color: var(--muted-foreground); }
+/* The shared chat's legacy palette is mapped to the profile dialog's theme. */
+.pipeline-chat [class*="text-[#111827]"], .pipeline-chat [class*="text-[#1F2937]"] { color: var(--pb-ink); }
+.pipeline-chat [class*="text-[#6B7280]"], .pipeline-chat [class*="text-[#9CA3AF]"] { color: var(--pb-mute); }
+.pipeline-chat [class*="text-[#2563EB]"] { color: var(--pb-link); }
+.pipeline-chat [class*="bg-white"] { background: var(--pb-bg); }
+.pipeline-chat [class*="bg-[#F3F4F6]"], .pipeline-chat [class*="bg-[#E5E7EB]"] { background: var(--pb-tile); }
+.pipeline-chat [class*="border-[#"], .pipeline-chat [class*="divide-[#"] > * { border-color: var(--pb-line); }
+.pipeline-chat [class*="hover:bg-[#"]:hover { background: var(--pb-hover); }
+.pipeline-chat [class*="bg-[#FEF3DE]"] { background: var(--help-soft); color: var(--help-ink); }
+.pipeline-chat [class*="bg-[#EEF0FF]"] { background: var(--profile-soft); color: var(--profile); }
+.pipeline-chat [class*="bg-[#F6A823]"] { background: var(--plan-seller); color: var(--accent-foreground); }
+.pipeline-chat [class*="bg-[#4338CA]"] { background: var(--plan-buyer); color: var(--primary-foreground); }
+.pipeline-chat #people-in-chat { top: 76px; right: 16px; background: var(--pb-bg); border-color: var(--pb-line); }
+.pipeline-chat .chat-scroll [class*="min-w-[200px]"] { min-width: 0; }
+@media (max-width:600px) {
+  .pbox.pipeline-chat { width: 100vw !important; max-width: none !important; height: 100dvh; max-height: 100dvh; border-radius: 0 !important; }
+  .pipeline-chat-header { padding: 12px 10px 12px 16px !important; gap: 10px; }
+  .pipeline-chat-tile { width: 40px; height: 40px; border-radius: 10px; }
+  .pipeline-chat .chat-scroll { padding: 4px 16px 14px; }
+  .pipeline-chat .chat-scroll [class*="max-w-[70%]"] { max-width: 82%; }
+  .pipeline-chat .chat-composer { margin: 0 12px 8px; }
+  .pipeline-chat .chat-confidential { margin: 0 16px max(12px, env(safe-area-inset-bottom)); }
+}
