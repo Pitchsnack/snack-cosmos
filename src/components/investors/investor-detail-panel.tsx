@@ -424,7 +424,7 @@ export function InvestorDetailPanel({
             return (
               <section
                 className={cn(
-                  "grid border-t border-border/50 py-[11.2px]",
+                  "profile-investor-figures grid border-t border-border/50 py-[11.2px]",
                   "max-[760px]:grid-cols-1 max-[760px]:divide-y max-[760px]:divide-border/50 max-[760px]:gap-0",
                   cols.length === 3 && "min-[760px]:grid-cols-[1fr_1px_1fr_1px_1fr]",
                   cols.length === 2 && "min-[760px]:grid-cols-[1fr_1px_1fr]",

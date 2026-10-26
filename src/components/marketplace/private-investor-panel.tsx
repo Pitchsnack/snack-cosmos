@@ -27,7 +27,7 @@ export function PrivateInvestorPanel({ f, hideHeader = false, pipeline = false }
       showEdit={false}
       onSelectStartup={() => {}}
       buyer={{
-        label: pipeline ? t : undefined,
+        label: pipeline ? (text)=> th ? ({'Investment focus':'เป้าหมายการลงทุน','Preferred stages':'ช่วงการลงทุนที่ต้องการ','Preferred industries':'อุตสาหกรรมที่ต้องการ','Keywords':'คำสำคัญ','Portfolio startups':'กิจการในพอร์ตการลงทุน','No startups linked yet.':'ยังไม่มีกิจการที่เชื่อมโยง'} as Record<string,string>)[text]??t(text) : t(text) : undefined,
         data,
         seller: {
           ndaLine,
