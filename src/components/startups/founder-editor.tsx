@@ -268,6 +268,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
               <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                 <Input
                   data-founder-name
+                  data-edit-focus={addOnOpen && i === value.length - 1 ? "" : undefined}
                   aria-label={language === "th" ? "ชื่อผู้ก่อตั้ง" : "Founder name"}
                   placeholder="Full name *"
                   value={f.full_name}

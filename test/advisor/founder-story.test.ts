@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { initialFounderStory, composeFounderBio, plainStoryPart, FounderStorySchema } from "../../src/lib/founder-story";
+import { initialFounderStory, composeFounderBio, plainStoryPart, FounderStorySchema, founderRevenueLabel } from "../../src/lib/founder-story";
 
 describe("founder story rules", () => {
   it("prefills only actual year and sales, without dash spaces", () => {
@@ -8,6 +8,7 @@ describe("founder story rules", () => {
     expect(story.parts.sales).toBe("฿50M–100M");
     expect(story.parts.grew).toBe("");
     expect(initialFounderStory(null, null, "en", "", "").parts.sales).toBe("");
+    expect(founderRevenueLabel("฿50M – 100M", "th")).toBe("50–100 ล้านบาท");
   });
   it("keeps legacy bios in own mode without rewriting them", () => {
     const story = initialFounderStory("My original\nwords", null, "th", "2016", "");

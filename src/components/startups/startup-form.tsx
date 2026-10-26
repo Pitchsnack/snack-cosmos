@@ -262,7 +262,7 @@ export function StartupForm({
   const pView = popup?.view ?? "private";
   const pTab = section === "founders" || section === "founders-add" || (popup?.tab === "people") ? "owner" : (popup ? popup.tab : localTab) as string;
   const navTab = (view: "public" | "private", tab: string) => (popup ? popup.onNav(view, tab) : setLocalTab(tab as PrivateTab));
-  useOpenAtSection(section === "founders-add" ? "founders" : section, true, section === "founders-add" ? { focusSelector: "input[data-founder-name]:last-of-type" } : undefined);
+  useOpenAtSection(section === "founders-add" ? "founders" : section, true, section === "founders-add" ? { focusSelector: "input[data-edit-focus]" } : undefined);
   const secOn = (id: string) => section === id || (id === "founders" && section === "founders-add");
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
