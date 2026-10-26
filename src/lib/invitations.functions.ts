@@ -436,7 +436,8 @@ export const invitationPrivateProfile=createServerFn({method:"GET"}).middleware(
  const sb=await admin();const {data:p}=await sb.from("deal_pipelines").select("*").eq("id",data.pipelineId).maybeSingle();if(!p)throw new Error("NDA request unavailable");
  if(data.as==="buyer"){if(p.buyer_user_id!==context.userId)throw new Error("Private profile is only available to the NDA participant");}else{const ids=await sellerStartupIds(context.userId);if(!ids.includes(p.startup_id))throw new Error("Not your listing");}
  const [{data:hp},{data:buyerPublication}]=await Promise.all([sb.from("hidden_profiles").select("approval_status,live").eq("id",p.hidden_profile_id).maybeSingle(),sb.from("buyer_profiles").select("status").eq("user_id",p.buyer_user_id).maybeSingle()]);
- const {isBuyerVisible}=await import("./hidden-profile");if(!isBuyerVisible(hp)||buyerPublication?.status!=="live")throw new Error("Profile is no longer published");
+ // Same rule for both sides: only the profile being viewed (the counterparty's) must still be published.
+ const {isBuyerVisible}=await import("./hidden-profile");if(data.as==="buyer"?!isBuyerVisible(hp):buyerPublication?.status!=="live")throw new Error("Profile is no longer published");
  const {hubNdaActive}=await import("./reports-hub");if(!hubNdaActive(p))throw new Error("An approved valid NDA is required");
  const nda={approvedAt:p.nda_approved_at as string,endAt:p.nda_expires_at as string|null};
  if(data.as==="buyer"){const {loadBuyerFavourites}=await import("./favourites.functions");const row=(await loadBuyerFavourites(context.userId)).find(r=>r.id===p.hidden_profile_id&&r.pipelineId===p.id);return {buyer:row??null,seller:null,nda};}
