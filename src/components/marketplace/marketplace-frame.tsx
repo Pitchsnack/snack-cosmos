@@ -380,10 +380,10 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
                   <span id={`tip-${p}`} role="tooltip" className={cn("pointer-events-none absolute top-[calc(100%+6px)] z-50 hidden w-[200px] rounded-[9px] bg-[#151A28] px-2.5 py-2 text-left text-[12px] font-normal leading-snug text-white group-hover:block group-focus-visible:block", p === "seller" ? "left-0" : p === "advisor" ? "right-0" : "left-1/2 -translate-x-1/2")}>{lockTip(p)}</span>
                 </>
               )}
-              {three ? (p === "seller" ? "Seller" : p === "buyer" ? "Buyer" : "Advisor") : (
+              {three ? t(p === "seller" ? "Seller" : p === "buyer" ? "Buyer" : "Advisor") : (
                 <>
                   <Icon className="h-[15px] w-[15px]" />
-                  {aria}
+                  {t(aria)}
                 </>
               )}
             </button>

@@ -4,6 +4,15 @@ import { TH_ADVISORS } from "./th-advisors";
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
+  "Seller": "ผู้ขาย",
+  "Buyer": "ผู้ซื้อ",
+  "Advisor": "ที่ปรึกษา",
+  "I'm Advisor": "ฉันเป็นที่ปรึกษา",
+  "Profiles": "โปรไฟล์",
+  "Shared after NDA": "แชร์หลัง NDA",
+  "Listing view · Buyer preview": "มุมมองรายการ · ตัวอย่างสำหรับผู้ซื้อ",
+  "Exclusive view · Shared after NDA": "มุมมองพิเศษ · แชร์หลัง NDA",
+  "Add My Business": "เพิ่มบริษัท",
   "Name hidden": "ซ่อนชื่อ",
   "What everyone sees": "สิ่งที่ทุกคนเห็น",
   "Exact": "ตัวเลขจริง",
