@@ -533,6 +533,8 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .buyer-mandate-money > [data-edit-sec=mandate]:first-child { grid-column:2; }
 .buyer-mandate-divider { border-top:1px solid var(--border); padding-top:18px; margin-top:20px; }
 .buyer-investment-mandate button[aria-pressed] { font-size:13.5px; padding-inline:14px; }
+.buyer-investment-mandate button[aria-pressed=true] { background:var(--standard-logo); border-color:var(--standard-logo); color:var(--standard-white); }
+.buyer-investment-mandate button[aria-pressed=false] { background:var(--standard-chip); border-color:var(--standard-edge); color:var(--standard-muted); }
 @keyframes buyer-preview-pulse { from { box-shadow:inset 0 0 0 2px var(--buyer-preview-ring); } to { box-shadow:inset 0 0 0 2px transparent; } }
 .buyer-preview-hit { animation:buyer-preview-pulse 1.4s ease-out; }
 @media (prefers-reduced-motion:reduce) { .buyer-preview-hit { animation:none; } }
