@@ -42,8 +42,9 @@
 .hub-page.hub-embed{padding:0;max-width:none;margin:0}
 .hub-deal-selector{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:5px;margin-bottom:14px}
 .hub-deal-selector-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-foreground)}
-.hub-deal-btn{display:flex;align-items:center;gap:10px;height:52px;min-width:300px;padding:4px 12px 4px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card);color:var(--foreground);text-align:left;font-family:inherit;font-size:inherit;cursor:pointer}
-.hub-deal-btn:hover{border-color:var(--muted-foreground)}
+.hub-deal-btn{display:flex;align-items:center;gap:10px;height:52px;min-width:300px;padding:4px 12px 4px 14px;border:1px solid var(--accent-dark);border-radius:11px;background:var(--accent);color:var(--accent-foreground);text-align:left;font-family:inherit;font-size:inherit;cursor:pointer}
+.hub-deal-btn:hover{background:var(--accent-dark)}
+.hub-deal-btn .hub-deal-btn-text small{color:var(--accent-foreground);opacity:.8}
 .hub-deal-btn[aria-expanded=true]{box-shadow:0 0 0 3px var(--hub-active-soft)}
 .hub-deal-btn-text{flex:1;min-width:0;display:grid}
 .hub-deal-btn-text b{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
