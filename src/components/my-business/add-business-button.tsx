@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { addDraftBusiness } from "@/lib/seller-setup.functions";
 import { useSessionContext } from "@/hooks/use-session-context";
+import { useTranslation } from "@/i18n/language";
 
 /** + Add My Business: makes the Draft on the server, then opens the seller wizard on it. One Draft per click. */
 export function AddBusinessButton({ label = "Add My Business", size }: { label?: string; size?: "sm" }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const add = useServerFn(addDraftBusiness);
   const { data: session } = useSessionContext();
   const [busy, setBusy] = useState(false);
@@ -25,7 +27,7 @@ export function AddBusinessButton({ label = "Add My Business", size }: { label?:
   };
   return (
     <Button size={size} disabled={busy} aria-busy={busy} onClick={() => void go()} className="bg-accent text-accent-foreground hover:bg-accent/90">
-      {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} {label}
+      {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} {t(label)}
     </Button>
   );
 }
