@@ -95,7 +95,7 @@ export function ConnectButton({ investorId, investorRef, big }: { investorId: st
     : lock === "Add your business first" ? tr("Add your business first", "เพิ่มธุรกิจของท่านก่อน") : lock;
   if (!lock && st?.pendingVerification) return (
     <PendingContactButton className={cn("inline-flex shrink-0 items-center gap-2 rounded-[10px] font-semibold", h)} iconClassName={big ? "h-4 w-4" : "h-3.5 w-3.5"}>
-      {tr("Connect", "เชื่อมต่อ")}
+      {tr("Connect buyer", "เชื่อมต่อผู้ซื้อ")}
     </PendingContactButton>
   );
   return (
@@ -114,7 +114,7 @@ export function ConnectButton({ investorId, investorRef, big }: { investorId: st
         className={cn("inline-flex shrink-0 items-center gap-2 rounded-[10px] font-semibold", h, lock ? `cursor-pointer border border-dashed ${LOCK_STYLE}` : NAVY)}
       >
         {lock ? <Lock className="h-3.5 w-3.5" /> : <Send className={big ? "h-4 w-4" : "h-3.5 w-3.5"} />}
-        {lock ? lockLabel : tr("Connect", "เชื่อมต่อ")}
+        {lock ? lockLabel : tr("Connect buyer", "เชื่อมต่อผู้ซื้อ")}
       </button>
       {open && <ConnectDialog investorId={investorId} investorRef={investorRef} listingRef={st?.listingRef ?? ""} onClose={() => setOpen(false)} />}
     </>

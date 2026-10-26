@@ -119,7 +119,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
   }
   if (!planLock && data?.pendingContact) return (
     <PendingContactButton className={cn("inline-flex h-[34px] items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium", className)} iconClassName="h-3.5 w-3.5">
-      {t("Request NDA")}
+      {t("Connect seller")}
     </PendingContactButton>
   );
   return (
@@ -140,7 +140,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
       }}
       className={cn(planLock && "opacity-70", "h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
     >
-      {locked ? t("Available after verification") : planLock ? <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />{t(planLock === "Renew to request" ? "Renew to request" : "Request NDA")}</span> : t("Request NDA")}
+      {locked ? t("Available after verification") : planLock ? <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />{t(planLock === "Renew to request" ? "Renew to request" : "Connect seller")}</span> : t("Connect seller")}
     </Button>
   );
 }
