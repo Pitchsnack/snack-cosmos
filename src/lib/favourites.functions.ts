@@ -13,6 +13,7 @@ import type { PublicListing } from "@/lib/public-listing";
 
 export type FavStatus = "approved" | "requested" | "saved";
 export type FavPrivate = {
+  email?: string | null;
   photoUrl?: string | null;
   companyName: string;
   logoPath: string | null;
@@ -141,6 +142,7 @@ export async function loadBuyerFavourites(userId:string) {
         const c = ciBy.get(r.startup_id) ?? {};
         const until = p.nda_expires_at ?? new Date(new Date(p.nda_approved_at).getTime() + TWO_YEARS).toISOString();
         priv = {
+          email: st.email ?? null,
           photoUrl: photoBy.get(r.startup_id) ?? null,
           companyName: st.startup_name || c.legal_name_en || c.legal_name_th || live.code_name || "Company",
           logoPath: st.logo_url ?? null,

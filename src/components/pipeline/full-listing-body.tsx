@@ -20,6 +20,7 @@ export function FullListingBody({ f }: {f: Favourite}) {
     l.location && {icon:MapPin,value:l.location},
     p.employees && {icon:Users,value:language==='th'?`พนักงาน ${p.employees} คน`:`${p.employees} employees`},
     web && {icon:Globe,value:<a href={web} target="_blank" rel="noreferrer">{t('Website')} →</a>},
+    p.email && {icon:ExternalLink,value:<a href={`mailto:${p.email}`}>{p.email.split('@')[0]}@<wbr/>{p.email.split('@').slice(1).join('@')}</a>},
   ].filter((v):v is {icon:typeof Calendar;value:ReactNode}=>!!v);
   const figures=[{icon:LineChart,title:`${t('Revenue')}${year?` FY${year}`:''}`,value:money(p.revenue)},{icon:Coins,title:t('Asking price'),value:money(f.askingPrice)},{icon:Briefcase,title:t('Deal type'),value:f.dealType}].filter(v=>v.value);
   const terms:[string,ReactNode][]=[[t('Owner handover'),f.handover??null]];

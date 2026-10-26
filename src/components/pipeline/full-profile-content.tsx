@@ -27,6 +27,6 @@ export function FullProfileContent({pipelineId,side,onClose,approvedAt,endAt}:{p
     <CompanyProfileIdentity expanded name={isPending?t('Loading…'):name} logo={seller?.priv?.logo_signed_url??buyerLogo} meta={meta} line={nda} title={DialogTitle} titleRef={title}/>
     <Button variant="ghost" size="icon" className="pbox-x" aria-label={t('Close')} title={t('Close')} onClick={onClose}><X size={18}/></Button>
   </header><div className="full-profile-body" onScroll={e=>setScrolled(e.currentTarget.scrollTop>2)}>
-    {error?<p role="alert" className="text-destructive">{t('Private profile unavailable.')}</p>:isPending?<p>{t('Loading…')}</p>:seller?.priv?<PrivateInvestorPanel f={{...seller,priv:{...seller.priv,people:[]}} hideHeader/>:buyer?.priv?<FullListingBody f={buyer}/>:<p role="alert">{t('Private profile unavailable.')}</p>}
+    {error?<p role="alert" className="text-destructive">{t('Private profile unavailable.')}</p>:isPending?<p>{t('Loading…')}</p>:seller?.priv?<PrivateInvestorPanel f={{...seller,priv:{...seller.priv,people:[]}}} hideHeader/>:buyer?.priv?<FullListingBody f={buyer}/>:<p role="alert">{t('Private profile unavailable.')}</p>}
   </div></>;
 }
