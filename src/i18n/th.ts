@@ -7,8 +7,6 @@ const TH_BASE: Record<string, string> = {
   "Seller": "ผู้ขาย",
   "Buyer": "ผู้ซื้อ",
   "Advisor": "ที่ปรึกษา",
-  "I'm Seller": "ฉันเป็นผู้ขาย",
-  "I'm Buyer": "ฉันเป็นผู้ซื้อ",
   "I'm Advisor": "ฉันเป็นที่ปรึกษา",
   "Profiles": "โปรไฟล์",
   "Add My Business": "เพิ่มบริษัท",
