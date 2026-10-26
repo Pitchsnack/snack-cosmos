@@ -54,3 +54,5 @@
 - Seller's view of a buyer's private profile is InvestorDetailPanel with the buyer.seller option (private-investor-panel.tsx); private fields, media and portfolio come only from listSellerFavourites' approved-NDA gate, so directory changes show in both.
 
 - Shared editor layouts use EditInfoPopup, CompactFields and common/business-address; directory create rows own transient highlighting/focus so editor state never changes permissions or saving rules.
+
+- Buyer description counts and grandfathering use the browser-safe buyer-description helper in existing form/server validators; editor previews adapt unsaved public-only values into StandardInvestorCard, preserving existing persistence and authorization.

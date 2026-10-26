@@ -46,6 +46,7 @@ export const investorDirectorySearchSchema = z.object({
   fav: z.coerce.boolean().optional(),
   cards: z.enum(["full", "hidden"]).optional(),
   editor: z.string().optional(),
+  tab: z.string().optional(),
   adding:z.boolean().optional(),
 });
 

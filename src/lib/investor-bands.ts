@@ -108,13 +108,7 @@ export function descriptionLeaks(text: string, firm: string, website: string): s
   if (phone) found.add(phone[0]);
   return [...found];
 }
-export function descriptionError(text: string): string | null {
-  const n = text.trim().length;
-  if (!n) return null;
-  if (n < 10) return "Write at least 10 characters.";
-  if (n > 140) return "Keep it to 140 characters.";
-  return null;
-}
+export { buyerDescriptionError as descriptionError } from './buyer-description';
 
 // ---------- year / registration ----------
 export function yearError(y: string): string | null {
