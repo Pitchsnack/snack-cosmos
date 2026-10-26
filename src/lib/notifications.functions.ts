@@ -31,7 +31,10 @@ export const listNotifications = createServerFn({ method: "GET" })
       message: (r.message as string | null) ?? null,
       isRead: !!r.is_read,
       createdAt: r.created_at as string,
-      linkUrl: (r.link_url as string | null) ?? null,
+      // Older invitation bell items pointed at the generic Pipeline page.
+      linkUrl: r.link_url === "/marketplace/pipeline" && /(isn't interested in your listing|has opened your listed profile)\.$/.test(r.title as string)
+        ? "/marketplace/pipeline/invitations?view=sent"
+        : ((r.link_url as string | null) ?? null),
     }));
     return { notifications: rows, unread: rows.filter((r) => !r.isRead).length };
   });
