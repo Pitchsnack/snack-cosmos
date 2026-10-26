@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, Linkedin, Lock, LockOpen, Mail, MessageSquare, Phone, User, X } from "lucide-react";
@@ -7,11 +7,13 @@ import { useTranslation } from "@/i18n/language";
 import { getProfileBox, type ProfileBox as Box } from "@/lib/profile-box.functions";
 import { Button } from '@/components/ui/button';
 import { FullProfileContent } from './full-profile-content';
+import type { PipelineRow } from '@/lib/pipeline.functions';
+const LockedDealChat = lazy(() => import('@/components/messages/messages-page').then(m => ({ default: m.LockedDealChat })));
 
 const initials = (s: string) => s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 
 /** Pipeline › Investor profile (seller) / Seller profile (buyer): read-only box about the other side of the deal. */
-export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=false, approvedAt, endAt }: { pipelineId: string; asSide: "seller" | "buyer"; onClose: () => void; onReview?: () => void; fullProfile?: boolean; approvedAt?:string|null; endAt?:string|null }) {
+export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=false, approvedAt, endAt, chatPipeline }: { pipelineId: string; asSide: "seller" | "buyer"; onClose: () => void; onReview?: () => void; fullProfile?: boolean; approvedAt?:string|null; endAt?:string|null; chatPipeline?: PipelineRow }) {
   const get = useServerFn(getProfileBox);
   const { language } = useTranslation();
   const th = language === "th";
@@ -19,6 +21,7 @@ export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [badLogo, setBadLogo] = useState(false);
   const [full,setFull]=useState(false);
+  const [chat,setChat]=useState(false);
   const opener=useRef<HTMLElement|null>(null);
   if (!opener.current && typeof document!=='undefined' && document.activeElement instanceof HTMLElement) opener.current=document.activeElement;
   const { data, error } = useQuery({ queryKey: ["pipeline", "profile-box", pipelineId, asSide], queryFn: () => get({ data: { id: pipelineId, as: asSide } }), staleTime: 0 });
@@ -79,7 +82,7 @@ export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=
       <footer className="pbox-foot">
         <p className="pbox-line"><LockOpen size={14} className="pbox-okicon" />{seller ? c("Shared because you approved the NDA.", "แสดงเพราะท่านอนุมัติ NDA แล้ว") : c("Shared because your NDA is approved.", "แสดงเพราะ NDA ของท่านได้รับอนุมัติแล้ว")}</p>
         <div className="pbox-buttons">
-          <a className="pbox-btn" href={`/marketplace/messages?thread=p:${pipelineId}`}><MessageSquare size={15} />{seller ? c("Message buyer", "ส่งข้อความถึงผู้ซื้อ") : c("Message seller", "ส่งข้อความถึงผู้ขาย")}</a>
+          {chatPipeline ? <Button variant="unstyled" size="unstyled" className="pbox-btn" onClick={()=>setChat(true)}><MessageSquare size={15} />{seller ? c("Message buyer", "ส่งข้อความถึงผู้ซื้อ") : c("Message seller", "ส่งข้อความถึงผู้ขาย")}</Button> : <a className="pbox-btn" href={`/marketplace/messages?thread=p:${pipelineId}`}><MessageSquare size={15} />{seller ? c("Message buyer", "ส่งข้อความถึงผู้ซื้อ") : c("Message seller", "ส่งข้อความถึงผู้ขาย")}</a>}
           {fullProfile ? <Button className="pbox-btn" data-primary onClick={()=>setFull(true)}>{seller?c("Open full profile", "เปิดโปรไฟล์ฉบับเต็ม"):c("Open full listing", "เปิดประกาศฉบับเต็ม")}</Button> : <a className="pbox-btn" data-primary href={seller?'/marketplace/my-contact':`/marketplace/browse?company=${data.listingId??''}`}>{seller?c("Open full profile", "เปิดโปรไฟล์ฉบับเต็ม"):c("Open full listing", "เปิดประกาศฉบับเต็ม")}</a>}
         </div>
       </footer>
@@ -117,8 +120,8 @@ export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className={full?'pbox full-profile':'pbox'} aria-describedby={undefined} onOpenAutoFocus={(e) => { e.preventDefault(); requestAnimationFrame(() => titleRef.current?.focus()); }} onCloseAutoFocus={e=>{e.preventDefault();requestAnimationFrame(()=>opener.current?.focus());}}>
-        {full?<FullProfileContent pipelineId={pipelineId} side={asSide} onClose={onClose} approvedAt={approvedAt} endAt={endAt}/>:<>{head}<div className="pbox-body">{body}</div>{foot}</>}
+      <DialogContent className={chat?'pbox pipeline-chat':full?'pbox full-profile':'pbox'} aria-labelledby={chat?'pipeline-chat-title':undefined} aria-describedby={undefined} onOpenAutoFocus={(e) => { e.preventDefault(); requestAnimationFrame(() => titleRef.current?.focus()); }} onCloseAutoFocus={e=>{e.preventDefault();requestAnimationFrame(()=>opener.current?.focus());}}>
+        {chat&&chatPipeline?<Suspense fallback={<DialogTitle id="pipeline-chat-title" className="p-5">{c('Loading…','กำลังโหลด…')}</DialogTitle>}><LockedDealChat p={chatPipeline} as={asSide} onClose={onClose}/></Suspense>:full?<FullProfileContent pipelineId={pipelineId} side={asSide} onClose={onClose} approvedAt={approvedAt} endAt={endAt}/>:<>{head}<div className="pbox-body">{body}</div>{foot}</>}
       </DialogContent>
     </Dialog>
   );

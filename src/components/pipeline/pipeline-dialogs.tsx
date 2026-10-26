@@ -550,8 +550,8 @@ export function CompareReports({ rows, onOpen, onClose }: { rows: PipelineRow[];
 }
 
 /* ---------------- investor profile ---------------- */
-export function InvestorProfile({ p, onClose, onReview, fullProfile=false }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReview?: () => void; fullProfile?:boolean }) {
-  return <ProfileBox pipelineId={p.id} asSide="seller" onClose={onClose} onReview={onReview} fullProfile={fullProfile} approvedAt={p.ndaApprovedAt} endAt={p.ndaExpiresAt} />;
+export function InvestorProfile({ p, onClose, onReview, fullProfile=false, chatPopup=false }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReview?: () => void; fullProfile?:boolean; chatPopup?:boolean }) {
+  return <ProfileBox pipelineId={p.id} asSide="seller" onClose={onClose} onReview={onReview} fullProfile={fullProfile} approvedAt={p.ndaApprovedAt} endAt={p.ndaExpiresAt} chatPipeline={chatPopup?p:undefined} />;
 }
 
 /* ---------------- NDA & LOI ---------------- */
@@ -742,8 +742,8 @@ export function LoiDialog({ p, seller, onClose }: { p: PipelineRow; seller: bool
 }
 
 /* ---------------- Seller profile (buyer) ---------------- */
-export function SellerProfile({ p, onClose, fullProfile=false }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReport?: () => void; onAsk?: () => void; fullProfile?:boolean }) {
-  return <ProfileBox pipelineId={p.id} asSide="buyer" onClose={onClose} fullProfile={fullProfile} approvedAt={p.ndaApprovedAt} endAt={p.ndaExpiresAt} />;
+export function SellerProfile({ p, onClose, fullProfile=false, chatPopup=false }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReport?: () => void; onAsk?: () => void; fullProfile?:boolean; chatPopup?:boolean }) {
+  return <ProfileBox pipelineId={p.id} asSide="buyer" onClose={onClose} fullProfile={fullProfile} approvedAt={p.ndaApprovedAt} endAt={p.ndaExpiresAt} chatPipeline={chatPopup?p:undefined} />;
 }
 
 /** Left/right arrow keys move between the enabled tabs of a tablist. */

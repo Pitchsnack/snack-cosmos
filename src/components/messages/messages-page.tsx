@@ -20,6 +20,8 @@ import { tr, useTranslation } from "@/i18n/language";
 import { Button } from "@/components/ui/button";
 import { adminHelpSummaries, setHelpDone, type HelpProfile } from "@/lib/admin-help.functions";
 import { HatMark } from "./hat-mark";
+import { DialogTitle } from "@/components/ui/dialog";
+import { draftKey, saveDraft, useChatDrafts, type ChatDraft } from "./chat-drafts";
 import { tf } from "@/components/advisor-browse/enquiry-dialogs";
 import { EnquiryCardView, EnquiryHeaderActions, ProposalCardView, enqStatusLabel } from "@/components/advisor-browse/enquiry-chat";
 import type { EnqMeta, EnquiryThread } from "@/lib/messages.functions";
@@ -250,20 +252,38 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
   );
 }
 
+/** The same Messages chat, with no conversation-navigation controls. */
+export function LockedDealChat({ p, as, onClose }: { p: PipelineRow; as: Side; onClose: () => void }) {
+  const c: Conv = { key: `p:${p.id}`, kind: 'p', p, adv: null, meta: null,
+    name: as === 'seller' ? p.parties.buyerOrg : p.parties.sellerCompany,
+    person: as === 'seller' ? p.parties.buyerName : p.parties.sellerName,
+    sub: p.counterparty.sub, codeName: p.parties.codeName, who: null,
+    unread: 0, last: null, startAt: p.ndaApprovedAt };
+  return <Chat c={c} as={as} panel={false} setPanel={() => {}} onBack={() => {}} hiddenMobile={false} popupClose={onClose} />;
+}
+
 type Item =
   | { kind: "day"; id: string; label: string }
   | { kind: "event"; id: string; text: string; link: string | null; open: Dialog }
   | { kind: "group"; id: string; sender: string; mine: boolean; msgs: ThreadMessage[] }
   | { kind: "card"; id: string; card: { t: "q"; x: EnquiryThread["enquiries"][number] } | { t: "r"; x: EnquiryThread["proposals"][number] } };
 
-function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile }: { c: Conv; as: Role; adminView?: boolean; panel: boolean; setPanel: (b: boolean) => void; onBack: () => void; hiddenMobile: boolean }) {
+function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile, popupClose }: { c: Conv; as: Role; adminView?: boolean; panel: boolean; setPanel: (b: boolean) => void; onBack: () => void; hiddenMobile: boolean; popupClose?: () => void }) {
+  const popup = !!popupClose;
+  const drafts = useChatDrafts();
+  const draftId = draftKey(as === "buyer" ? "buyer" : "seller", c.p?.id ?? c.key);
+  const [contact, setContact] = useState<Member | null>(null);
+  const contactOpener = useRef<HTMLElement | null>(null);
+  const atEnd = useRef(true);
+  const openContact = (m: Member, trigger: HTMLElement) => { contactOpener.current = trigger; setContact(m); };
+  const dismissContact = () => { setContact(null); contactOpener.current?.focus(); };
   const qc = useQueryClient();
   const mFn = useServerFn(threadMessages);
   const readFn = useServerFn(markThreadRead);
   const sendFn = useServerFn(sendMessage);
   const upFn = useServerFn(messageUploadUrl);
   const urlFn = useServerFn(messageFileUrl);
-  const { data } = useQuery({ queryKey: ["messages", "thread", c.key], queryFn: () => mFn({ data: { key: c.key } }), refetchInterval: adminView ? 5000 : 2500 });
+  const { data, error, isPending } = useQuery({ queryKey: ["messages", "thread", c.key], queryFn: () => mFn({ data: { key: c.key } }), refetchInterval: adminView ? 5000 : 2500 });
   const profile = adminView ? ((data as any)?.adminProfile as HelpProfile | null) ?? c.profile : null;
   const [dialog, setDialog] = useState<Dialog>(null);
   const [people, setPeople] = useState(false);
@@ -329,23 +349,24 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
 
   useEffect(() => {
     const el = scroller.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && (!popup || atEnd.current)) el.scrollTop = el.scrollHeight;
   }, [items.length, msgs.length, panel]);
 
   useEffect(() => {
-    if (!panel && !people) return;
+    if (!panel && !people && !contact) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || dialog) return;
-      if (people) { setPeople(false); peopleBtn.current?.focus(); return; }
+      if (contact) { e.preventDefault(); e.stopImmediatePropagation(); dismissContact(); return; }
+      if (people) { e.preventDefault(); e.stopImmediatePropagation(); setPeople(false); peopleBtn.current?.focus(); return; }
       setPanel(false); pipeBtn.current?.focus();
     };
     const onDown = (e: MouseEvent) => {
       if (people && !peopleBox.current?.contains(e.target as Node) && !peopleBtn.current?.contains(e.target as Node)) setPeople(false);
     };
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     window.addEventListener("mousedown", onDown);
-    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("mousedown", onDown); };
-  }, [panel, people, dialog]);
+    return () => { window.removeEventListener("keydown", onKey, true); window.removeEventListener("mousedown", onDown); };
+  }, [panel, people, dialog, contact]);
 
   const openFile = async (f: MsgFile) => {
     try {
@@ -357,6 +378,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
   };
 
   const send = async (body: string, files: File[]) => {
+    atEnd.current = true;
     const uploaded: MsgFile[] = [];
     for (const f of files) {
       const { path, token } = await upFn({ data: { key: c.key, name: f.name, size: f.size } });
@@ -381,9 +403,9 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
   const dates = adv ? advDates(adv) : p ? stepDates(p) : null;
   const step = dates ? (() => { const i = dates.findIndex((x) => !x); return i === -1 ? 7 : i; })() : p ? currentStep(p) : 0;
   const otherRole: Role | null = c.kind === "a" ? null : isE ? (c.enq?.isFirm ? c.enq.clientSide : "advisor") : isC ? (as === "advisor" ? meta?.withSide ?? "advisor" : "advisor") : seller ? "buyer" : "seller";
-  const placeholder = adminView && profile ? tr("Reply to {first name}").replace("{first name}", profile.first) : c.kind === "a" ? `${tr("Message")} ${tr("Help desk")}` : others.length >= 2 ? `Message ${c.name}` : `Message ${others[0]?.name ?? c.person ?? c.name}`;
+  const placeholder = adminView && profile ? tr("Reply to {first name}").replace("{first name}", profile.first) : c.kind === "a" ? `${tr("Message")} ${tr("Help desk")}` : others.length >= 2 ? `${tr("Message")} ${c.name}` : `${tr("Message")} ${others[0]?.name ?? c.person ?? c.name}`;
   const files = msgs.flatMap((m) => m.files.map((f) => ({ ...f, at: m.at }))).reverse();
-  const hasPanel = adminView || (c.kind !== "a" && !isE);
+  const hasPanel = !popup && (adminView || (c.kind !== "a" && !isE));
   const pipeHref = as === "advisor" ? `/advisor/pipeline?deal=${meta?.dealId}` : `/marketplace/pipeline?deal=${meta?.dealId ?? p?.id}`;
   const shownNames = others.slice(0, 3);
 
@@ -394,7 +416,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
       {shownNames.map((m, i) => (
         <span key={m.id}>
           {i > 0 && <span className="text-[#9CA3AF]">, </span>}
-          <Link to="/marketplace/my-contact" className="font-semibold text-[#2563EB] hover:underline">{m.name}</Link>
+          {popup ? <Button variant="unstyled" size="unstyled" onClick={e => openContact(m, e.currentTarget)} className="font-semibold text-link hover:underline">{m.name}</Button> : <Link to="/marketplace/my-contact" className="font-semibold text-link hover:underline">{m.name}</Link>}
         </span>
       ))}
       {others.length > 3 && <span className="text-[#9CA3AF]"> +{others.length - 3}</span>}
@@ -418,14 +440,15 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
   };
 
   return (
-    <div className={cn("relative flex min-w-0 flex-1", hiddenMobile && "max-[759px]:hidden")}>
-      <div className="relative flex min-w-0 flex-1 flex-col">
-        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-[#F0F1F4] px-7">
-          <Button variant="unstyled" size="unstyled" onClick={onBack} className="-ml-2 flex items-center text-[13px] font-medium text-[#2563EB] min-[760px]:hidden"><ChevronLeft className="h-4 w-4" />Messages</Button>
+    <div data-chat-popup={popup || undefined} data-chat-role={as} className={cn("relative flex min-h-0 min-w-0 flex-1", hiddenMobile && "max-[759px]:hidden")}>
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className={cn("chat-header flex h-16 shrink-0 items-center gap-3 border-b border-[#F0F1F4] px-7", popup && "pipeline-chat-header")}>
+          {popup && <span className="pipeline-chat-tile" data-side={as === "seller" ? "buyer" : "seller"}>{c.p?.counterparty.logoUrl ? <img src={c.p.counterparty.logoUrl} alt="" /> : initials(c.name)}</span>}
+          {!popup && <Button variant="unstyled" size="unstyled" onClick={onBack} className="-ml-2 flex items-center text-[13px] font-medium text-[#2563EB] min-[760px]:hidden"><ChevronLeft className="h-4 w-4" />Messages</Button>}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               {c.kind === "a" && !adminView && <HatMark width={20} />}
-              <span className="truncate text-[15px] font-semibold text-[#111827]">{c.name}</span>
+              {popup ? <DialogTitle id="pipeline-chat-title" className="pipeline-chat-name">{c.name}</DialogTitle> : <span className="truncate text-[15px] font-semibold text-[#111827]">{c.name}</span>}
               {otherRole && <RoleTag role={otherRole} />}
             </div>
             <div className="truncate text-[12.5px] text-[#6B7280]">{line2}</div>
@@ -438,7 +461,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
               onClick={() => setPeople(!people)}
               className={cn("inline-flex h-[30px] items-center gap-1.5 rounded-lg px-[9px] text-[13px] font-medium", people ? "bg-[#F2F3F6] text-[#111827]" : "text-[#6B7280] hover:bg-[#F7F8FA] hover:text-[#111827]")}
             >
-              <Users className="h-[15px] w-[15px]" /> {members.length}<span className="max-[759px]:hidden"> {members.length === 1 ? "person" : "people"}</span>
+              <Users className="h-[15px] w-[15px]" /> {members.length}<span className="max-[759px]:hidden"> {tr(members.length === 1 ? "person" : "people")}</span>
             </Button>
           )}
           {isE && enq && <EnquiryHeaderActions t={enq} />}
@@ -453,17 +476,23 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
               {adminView ? <Users className="h-[15px] w-[15px]" /> : <GitBranch className="h-[15px] w-[15px]" />} {adminView ? tr("Profile") : "Pipeline"}
             </Button>
           )}
+          {popupClose && <Button variant="ghost" size="icon" className="pbox-x shrink-0" aria-label={tr("Close")} title={tr("Close")} onClick={popupClose}><X size={18} /></Button>}
         </div>
         {people && (
-          <div ref={peopleBox} id="people-in-chat" role="dialog" aria-label="People in this chat" className="absolute right-7 top-[60px] z-20 w-[300px] max-w-[calc(100%-32px)] rounded-xl border border-[#E5E7EB] bg-white px-4 pb-3 pt-0.5 shadow-[0_12px_32px_rgba(16,24,40,.14)]">
-            <div className="mb-1 mt-3 text-[10.5px] font-bold uppercase tracking-[.07em] text-[#9CA3AF]">People in this chat · {members.length}</div>
-            <PeopleRows others={others} mine={mine} meId={data?.meId} as={as} />
-            <div className="mt-1 flex items-center gap-1.5 border-t border-[#F0F1F4] pt-2.5 text-[11.5px] text-[#6B7280]"><Lock className="h-3 w-3" />Only these people can read this chat.</div>
+          <div ref={peopleBox} id="people-in-chat" role="dialog" aria-label={tr("People in this chat")} className="absolute right-7 top-[60px] z-20 w-[300px] max-w-[calc(100%-32px)] rounded-xl border border-[#E5E7EB] bg-white px-4 pb-3 pt-0.5 shadow-[0_12px_32px_rgba(16,24,40,.14)]">
+            <div className="mb-1 mt-3 text-[10.5px] font-bold uppercase tracking-[.07em] text-[#9CA3AF]">{tr("People in this chat")} · {members.length}</div>
+            <PeopleRows others={others} mine={mine} meId={data?.meId} as={as} onContact={popup ? openContact : undefined} />
+            <div className="mt-1 flex items-center gap-1.5 border-t border-[#F0F1F4] pt-2.5 text-[11.5px] text-[#6B7280]"><Lock className="h-3 w-3" />{tr("Only these people can read this chat.")}</div>
           </div>
         )}
-        <div ref={scroller} className="flex-1 overflow-y-auto px-7 pb-5 pt-3">
+        {contact && <div className="chat-contact" role="dialog" aria-label={contact.name}>
+          <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><b>{contact.name}</b><p>{[contact.title, contact.org].filter(Boolean).join(' · ')}</p><RoleTag role={contact.role} /></div><Button variant="ghost" size="icon" className="pbox-x" aria-label={tr('Close')} onClick={dismissContact}><X size={18} /></Button></div>
+        </div>}
+        <div ref={scroller} className="chat-scroll min-h-0 flex-1 overflow-y-auto px-7 pb-5 pt-3" onScroll={e => { const el = e.currentTarget; atEnd.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48; }}>
+          {isPending && <p>{tr('Loading…')}</p>}
+          {error && <p role="alert" className="text-destructive">{tr('Private profile unavailable.')}</p>}
           {items.map((it) => {
-            if (it.kind === "day") return <div key={it.id} className="py-3 text-center text-[11.5px] font-medium text-[#9CA3AF]">{it.label}</div>;
+            if (it.kind === "day") return <div key={it.id} className="py-3 text-center text-[11.5px] font-medium text-[#9CA3AF]">{tr(it.label)}</div>;
             if (it.kind === "card" && enq)
               return it.card.t === "q"
                 ? <EnquiryCardView key={it.id} t={enq} card={it.card.x} seen={!!it.card.x.readAt} />
@@ -478,7 +507,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
             if (it.kind === "event")
               return (
                 <div key={it.id} className="py-1.5 text-center text-[12px] text-[#9CA3AF]">
-                  {it.text}{it.link && <> · <Button variant="unstyled" size="unstyled" onClick={() => setDialog(it.open)} className="font-medium text-[#2563EB] hover:underline">{it.link}</Button></>}
+                  {tr(it.text)}{it.link && <> · <Button variant="unstyled" size="unstyled" onClick={() => setDialog(it.open)} className="font-medium text-[#2563EB] hover:underline">{tr(it.link)}</Button></>}
                 </div>
               );
             const last = it.msgs[it.msgs.length - 1];
@@ -490,7 +519,7 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
                 <div key={it.id} className="my-2 flex flex-col items-end gap-1">
                   {!it.mine && who && <div className="px-1 text-[12px] leading-[18px] text-[#6B7280]"><span className="font-semibold text-[#111827]">{who.name}</span>{who.title && ` · ${who.title}`}</div>}
                   {it.msgs.map((m) => <Bubble key={m.id} m={m} cls={BUBBLE[as]} onFile={openFile} />)}
-                  <div className="flex flex-wrap items-center gap-1 text-[11px] text-[#9CA3AF]">{adminView && <>{profile?.advisor ? profile.advisor : <><HatMark width={13} />{tr("Help desk")}</>} · </>}{hm(last.at)}{adminView && <> · {(data as any)?.adminNames?.[last.senderId] || "—"}</>}{adminView ? status.replace("Seen", tr("Seen")).replace("Sent", tr("Sent")) : status}</div>
+                  <div className="flex flex-wrap items-center gap-1 text-[11px] text-[#9CA3AF]">{adminView && <>{profile?.advisor ? profile.advisor : <><HatMark width={13} />{tr("Help desk")}</>} · </>}{hm(last.at)}{adminView && <> · {(data as any)?.adminNames?.[last.senderId] || "—"}</>}{status.replace("Seen", tr("Seen")).replace("Sent", tr("Sent"))}</div>
                 </div>
               );
             const help = c.kind === "a" && !adminView;
@@ -520,11 +549,12 @@ function Chat({ c, as, adminView = false, panel, setPanel, onBack, hiddenMobile 
         {data?.closed && isE ? (
           <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{enq?.closedTpl ? tf(enq.closedTpl, enq.closedVars) : ""}</div>
         ) : data?.closed ? (
-          <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{data.endedNote ? tr("This conversation is closed because {organisation} withdrew from the deal on {date}.").replace("{organisation}", data.endedNote.org).replace("{date}", data.endedNote.date) : isC ? "This conversation is closed because the advisor NDA ended." : "This conversation is closed because the NDA ended."}</div>
+          <div className="px-6 pb-5 pt-2.5 text-center text-[13px] text-[#9CA3AF]">{data.endedNote ? tr("This conversation is closed because {organisation} withdrew from the deal on {date}.").replace("{organisation}", data.endedNote.org).replace("{date}", data.endedNote.date) : isC ? "This conversation is closed because the advisor NDA ended." : tr("This conversation is closed because the NDA ended.")}</div>
         ) : (
           <>
             {adminView && profile && <div className="px-6 pt-2 text-[12px] text-muted-foreground">{profile.advisor ? tr("Replying as {advisor}, {first name}’s advisor").replace("{advisor}", profile.advisor).replace("{first name}", profile.first) : <span className="inline-flex flex-wrap items-center gap-1">{tr("Replying as")} <HatMark width={13} /><b>{tr("Help desk")}</b> · {tr("{first name} won’t see your name").replace("{first name}", profile.first)}</span>}</div>}
-            <Composer placeholder={placeholder} as={as} onSend={send} />
+            {data && <Composer placeholder={placeholder} as={as} onSend={send} autoFocus={popup} draft={popup ? drafts?.get(draftId) : undefined} onDraft={popup && drafts ? d => saveDraft(drafts, draftId, d) : undefined} />}
+            {popup && c.kind === 'p' && <div className="chat-confidential"><Lock size={12} /><span>{tr("Messages are confidential under your NDA and stored by PitchSnack. Advisors on this deal can’t read them.")}</span></div>}
           </>
         )}
       </div>
@@ -666,10 +696,10 @@ function Bubble({ m, cls, onFile }: { m: ThreadMessage; cls: string; onFile: (f:
 }
 
 function RoleTag({ role }: { role: Role }) {
-  return <span className={cn("inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-[9.5px] font-bold uppercase tracking-[.06em]", TAG[role])}>{role}</span>;
+  return <span className={cn("inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-[9.5px] font-bold uppercase tracking-[.06em]", TAG[role])}>{tr(cap(role))}</span>;
 }
 
-function PeopleRows({ others, mine, meId, as }: { others: Member[]; mine: Member[]; meId?: string; as: Role }) {
+function PeopleRows({ others, mine, meId, as, onContact }: { others: Member[]; mine: Member[]; meId?: string; as: Role; onContact?: (m: Member, trigger: HTMLElement) => void }) {
   const me = mine.find((m) => m.id === meId);
   const rest = mine.filter((m) => m.id !== meId);
   const list = [...others.map((m) => ({ m, other: true })), ...(me ? [{ m: me, other: false }] : []), ...rest.map((m) => ({ m, other: false }))];
@@ -680,10 +710,10 @@ function PeopleRows({ others, mine, meId, as }: { others: Member[]; mine: Member
         <div key={m.id} className="flex items-center gap-2.5 py-2">
           <span className={cn("grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full text-[11px] font-bold", m.team ? "bg-[#F3F4F6] dark:bg-[#2A3142]" : TAG[m.role])}>{m.team ? <HatMark width={16} /> : initials(m.name)}</span>
           <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-1.5"><span className="truncate text-[13px] font-semibold text-[#111827]">{m.team ? tr("PitchSnack team") : m.name}</span>{other && <RoleTag role={m.role} />}</span>
+            <span className="flex items-center gap-1.5"><span className="truncate text-[13px] font-semibold text-[#111827]">{onContact && !m.team ? <Button variant="unstyled" size="unstyled" onClick={e => onContact(m, e.currentTarget)} className="text-link">{m.name}</Button> : m.team ? tr("PitchSnack team") : m.name}</span>{other && <RoleTag role={m.role} />}</span>
             <span className="block truncate text-[11.5px] text-[#6B7280]">{[m.title, m.org].filter(Boolean).join(" · ")}</span>
           </span>
-          {m.id === meId && <span className={cn("rounded px-1.5 py-0.5 text-[10.5px] font-bold", TAG[as])}>You</span>}
+          {m.id === meId && <span className={cn("rounded px-1.5 py-0.5 text-[10.5px] font-bold", TAG[as])}>{tr("You")}</span>}
         </div>
       ))}
     </div>
@@ -694,13 +724,15 @@ function Cap({ children }: { children: React.ReactNode }) {
   return <div className="mb-2 mt-[22px] text-[10.5px] font-bold uppercase tracking-[.07em] text-[#9CA3AF]">{children}</div>;
 }
 
-function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; onSend: (body: string, files: File[]) => Promise<void> }) {
-  const [text, setText] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
+function Composer({ placeholder, as, onSend, autoFocus=false, draft, onDraft }: { placeholder: string; as: Role; onSend: (body: string, files: File[]) => Promise<void>; autoFocus?: boolean; draft?: ChatDraft; onDraft?: (d: ChatDraft) => void }) {
+  const [text, setText] = useState(draft?.text ?? "");
+  const [files, setFiles] = useState<File[]>(draft?.files ?? []);
   const [busy, setBusy] = useState(false);
   const ta = useRef<HTMLTextAreaElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   const empty = !text.trim() && !files.length;
+  useEffect(() => { onDraft?.({ text, files }); }, [text, files]);
+  useEffect(() => { if (autoFocus) ta.current?.focus(); }, [autoFocus]);
 
   useEffect(() => {
     const el = ta.current;
@@ -727,7 +759,7 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
   };
 
   return (
-    <div className="px-6 pb-5 pt-2.5">
+    <div className="chat-composer shrink-0 px-6 pb-5 pt-2.5">
       <div className="rounded-2xl border border-[#E5E7EB] p-1.5 focus-within:border-[#C7CBD4]">
         {files.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-1.5 pb-1.5 pt-1">
@@ -740,7 +772,7 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
           </div>
         )}
         <div className="flex items-end gap-1">
-          <Button variant="unstyled" size="unstyled" aria-label="Attach file" onClick={() => picker.current?.click()} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9CA3AF] hover:bg-[#F3F4F6]"><Paperclip className="h-4 w-4" /></Button>
+          <Button variant="unstyled" size="unstyled" aria-label={tr("Attach file")} onClick={() => picker.current?.click()} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9CA3AF] hover:bg-[#F3F4F6]"><Paperclip className="h-4 w-4" /></Button>
           <input
             ref={picker}
             type="file"
@@ -757,6 +789,7 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
           />
           <textarea
             ref={ta}
+            aria-label={placeholder}
             rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -770,7 +803,7 @@ function Composer({ placeholder, as, onSend }: { placeholder: string; as: Role; 
             className="max-h-[120px] min-h-8 flex-1 resize-none bg-transparent py-1.5 text-[13.5px] outline-none placeholder:text-[#9CA3AF]"
           />
           <Button variant="unstyled" size="unstyled"
-            aria-label="Send"
+            aria-label={tr("Send")}
             disabled={empty || busy}
             onClick={submit}
             className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", empty ? "bg-[#E5E7EB] text-white" : SEND[as])}

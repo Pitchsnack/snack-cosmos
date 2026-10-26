@@ -4,6 +4,17 @@ import { TH_ADVISORS } from "./th-advisors";
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
+  "People in this chat": "ผู้เข้าร่วมบทสนทนานี้",
+  "Only these people can read this chat.": "เฉพาะบุคคลเหล่านี้เท่านั้นที่อ่านบทสนทนานี้ได้",
+  "person": "คน",
+  "people": "คน",
+  "Attach file": "แนบไฟล์",
+  "This conversation is closed because the NDA ended.": "บทสนทนานี้ปิดแล้ว เนื่องจาก NDA สิ้นสุดลง",
+  "Messages are confidential under your NDA and stored by PitchSnack. Advisors on this deal can’t read them.": "ข้อความเป็นความลับภายใต้ NDA ของท่านและจัดเก็บโดย PitchSnack ที่ปรึกษาในดีลนี้ไม่สามารถอ่านข้อความได้",
+  "You approved the NDA": "ท่านอนุมัติ NDA แล้ว",
+  "You shared the financial report": "ท่านแชร์รายงานทางการเงินแล้ว",
+  "Financial report shared": "แชร์รายงานทางการเงินแล้ว",
+  "Letter of intent received": "ได้รับหนังสือแสดงเจตจำนงแล้ว",
   "Seller": "ผู้ขาย",
   "Buyer": "ผู้ซื้อ",
   "Advisor": "ที่ปรึกษา",
