@@ -551,7 +551,7 @@ export function CompareReports({ rows, onOpen, onClose }: { rows: PipelineRow[];
 
 /* ---------------- investor profile ---------------- */
 export function InvestorProfile({ p, onClose, onReview }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReview?: () => void }) {
-  return <ProfileBox pipelineId={p.id} onClose={onClose} onReview={onReview} />;
+  return <ProfileBox pipelineId={p.id} asSide="seller" onClose={onClose} onReview={onReview} />;
 }
 
 /* ---------------- NDA & LOI ---------------- */
@@ -743,7 +743,7 @@ export function LoiDialog({ p, seller, onClose }: { p: PipelineRow; seller: bool
 
 /* ---------------- Seller profile (buyer) ---------------- */
 export function SellerProfile({ p, onClose }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReport?: () => void; onAsk?: () => void }) {
-  return <ProfileBox pipelineId={p.id} onClose={onClose} />;
+  return <ProfileBox pipelineId={p.id} asSide="buyer" onClose={onClose} />;
 }
 
 /** Left/right arrow keys move between the enabled tabs of a tablist. */
