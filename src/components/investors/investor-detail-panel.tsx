@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 import { PairedSection } from "@/components/shared/paired-section";
+import { CompanyProfileIdentity } from "@/components/shared/company-profile-parts";
 
 function monogram(name: string | null | undefined) {
   if (!name) return "";
@@ -195,7 +196,7 @@ export function InvestorDetailPanel({
       {buyer?.topBar}
       {/* Header */}
       {!sv?.hideHeader && <header className={cn("flex items-start justify-between gap-4", compact && "pt-1", sv && "flex-wrap")}>
-        <div className={cn("flex items-start gap-4", sv && "min-w-0 flex-1 flex-col sm:flex-row")}>
+        {sv ? <CompanyProfileIdentity name={i.investor_name} logo={i.logo_signed_url} meta={<>{i.country}{i.country && i.investor_type && <span aria-hidden> · </span>}{i.investor_type}</>} line={sv.ndaLine} /> : <div className={cn("flex items-start gap-4", sv && "min-w-0 flex-1 flex-col sm:flex-row")}>
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {i.logo_signed_url ? (
               <img src={i.logo_signed_url} alt="" className="h-full w-full object-contain" />
@@ -244,7 +245,7 @@ export function InvestorDetailPanel({
               </>}
             </div>}
           </div>
-        </div>
+        </div>}
 
         <div className="flex flex-col items-end gap-2">
           {sv?.action}
@@ -669,7 +670,7 @@ export function Section({
 }
 
 
-function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
+export function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
   const base =
     tone === "primary"
       ? "bg-primary/5 text-foreground/85 border-primary/20"
