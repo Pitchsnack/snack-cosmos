@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { descriptionChanged } from './buyer-description';
 import {
   AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, sortActsFor, descriptionLeaks, regError, ticketColumns, yearError,
 } from "@/lib/investor-bands";
@@ -273,7 +274,7 @@ const Patch = z.object({
   aum_exact_usd: z.number().min(0).max(1e13).nullable().optional(),
   registration_no: txt(50),
   address_line1: txt(120), address_line2: txt(120), address_city_district: txt(80), address_province_state: txt(80), postal_code: txt(12),
-  description: z.string().trim().max(140).optional(),
+  description: z.string().trim().optional(),
   deal_types: arr(12),
   acts_for_types: arr(7),
 });
@@ -294,7 +295,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     const problem =
       (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
       (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(data.website_url ?? "") && "Enter a valid website address, e.g. www.yourfirm.com") ||
-      (data.description && (descriptionError(data.description) ||
+      (descriptionChanged(data.description, r.p.description) && data.description && (descriptionError(data.description) ||
         (descriptionLeaks(data.description, data.investor_name, data.website_url ?? "").length ? "Your description mentions names, websites or contact details." : null))) ||
       (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? ""));
     if (!r.directory && problem) throw new Error(problem);
@@ -413,7 +414,7 @@ const Wizard = z.object({
   revenue_min_band: z.enum(REV_KEYS).nullable().optional(),
   deal_types: arr(12), preferred_stages: arr(12), geography: arr(12), preferred_industries: arr(40),
   sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable().optional(),
-  description: z.string().trim().max(140).optional(),
+  description: z.string().trim().optional(),
   answered: z.array(z.string().max(20)).max(20).optional(),
   pe_ticked: z.boolean().optional(),
   acts_for_types: arr(7),
@@ -426,7 +427,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     const r = await resolveBuyer(context.userId, data.investor_id);
     const { sb, p, investorId } = r;
     const { data: cur } = await sb.from("investors").select("investor_name, website_url, wizard").eq("id", investorId).single();
-    if (data.description && p.status === "live") {
+    if (descriptionChanged(data.description, p.description) && data.description && p.status === "live") {
       const bad = descriptionError(data.description) || descriptionLeaks(data.description, data.investor_name ?? cur.investor_name ?? "", data.website_url ?? cur.website_url ?? "").length;
       if (bad) throw new Error("Description not saved: it needs a fix.");
     }
