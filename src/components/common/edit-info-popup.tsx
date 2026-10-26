@@ -271,7 +271,11 @@ export function TabRow<T extends string>({ tabs, value, onChange, label, idBase,
   };
   const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    listRef.current?.querySelector<HTMLElement>(`[data-tab="${value}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const list = listRef.current, el = list?.querySelector<HTMLElement>(`[data-tab="${value}"]`);
+    if (!list || !el) return;
+    const l = el.offsetLeft - list.offsetLeft, r = l + el.offsetWidth;
+    if (l < list.scrollLeft) list.scrollLeft = l - 8;
+    else if (r > list.scrollLeft + list.clientWidth) list.scrollLeft = r - list.clientWidth + 8;
   }, [value]);
   return (
     <div data-sticky-tabs className="edit-folder-row sticky top-0 z-10 -mx-6 mb-5">
