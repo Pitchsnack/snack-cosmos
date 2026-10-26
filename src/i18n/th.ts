@@ -4,6 +4,13 @@ import { TH_ADVISORS } from "./th-advisors";
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
+  "Description & Mandate": "คำอธิบายและนโยบายการลงทุน",
+  "Investment Mandate": "นโยบายการลงทุน",
+  "Fund's AUM (Assets under management)": "AUM ของกองทุน (มูลค่าสินทรัพย์ภายใต้การบริหาร)",
+  "Min. target revenue (The minimum company revenue you would consider acquiring)": "รายได้ขั้นต่ำของบริษัทเป้าหมาย (รายได้ขั้นต่ำของบริษัทที่ท่านจะพิจารณาเข้าซื้อกิจการ)",
+  "Team members": "สมาชิกในทีม",
+  "Add team member": "เพิ่มสมาชิกในทีม",
+
   "People in this chat": "ผู้เข้าร่วมบทสนทนานี้",
   "Only these people can read this chat.": "เฉพาะบุคคลเหล่านี้เท่านั้นที่อ่านบทสนทนานี้ได้",
   "person": "คน",
