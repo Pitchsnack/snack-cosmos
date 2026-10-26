@@ -5802,6 +5802,7 @@ export type Database = {
       startup_founders: {
         Row: {
           bio: string | null
+          bio_story: Json | null
           created_at: string
           display_order: number
           full_name: string
@@ -5815,6 +5816,7 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          bio_story?: Json | null
           created_at?: string
           display_order?: number
           full_name: string
@@ -5828,6 +5830,7 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          bio_story?: Json | null
           created_at?: string
           display_order?: number
           full_name?: string

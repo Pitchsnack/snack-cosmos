@@ -432,6 +432,7 @@ function sectionTab(k: string): ["public" | "private", string] {
   if (k === "tags" || k === "product-tags" || k === "market-tags" || k === "sector") return ["private", "market"];
   if (k === "address" || k === "registered-name") return ["private", "address"];
   if (k === "licenses") return ["private", "licenses"];
+  if (k === "founders" || k === "founders-add") return ["private", "owner"];
   return ["private", "about"];
 }
 
@@ -459,7 +460,7 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
     else if (k === "terms") openEdit(current.id, "public", "deal", "deal");
     else if (k === "hidden") openEdit(current.id, "public", "description", "headline");
     else if (k === "logo") openEdit(current.id, "private", "images", "media");
-    else if (k === "people") openEdit(current.id, "private", "about", "founders");
+    else if (k === "people") openEdit(current.id, "private", "owner", "founders");
     else openEdit(current.id, "private", "about", "description");
   };
 

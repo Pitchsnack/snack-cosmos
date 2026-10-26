@@ -109,6 +109,8 @@ export function buildStartupFormSnapshot(input: StartupFormSnapshotInput): strin
       position: s(f.position),
       linkedin_url: s(f.linkedin_url),
       bio: s(f.bio),
+      bio_story: f.bio_story ?? null,
+      photo_url: s(f.photo_url),
     })),
     media: {
       logo: slotMeta(input.media.logo),

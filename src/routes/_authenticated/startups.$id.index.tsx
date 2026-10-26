@@ -206,7 +206,7 @@ function StartupDetailPage() {
                   <div key={f.id} className="rounded-md border border-border bg-background p-4">
                     <div className="font-medium">{f.full_name}</div>
                     {f.position && <div className="text-xs text-muted-foreground">{f.position}</div>}
-                    {f.bio && <p className="mt-2 text-sm">{f.bio}</p>}
+                    {f.bio && <p className="mt-2 whitespace-pre-line text-sm">{f.bio}</p>}
                     {f.linkedin_url && (
                       <a href={f.linkedin_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-accent hover:underline">
                         <Linkedin className="h-3 w-3" /> LinkedIn

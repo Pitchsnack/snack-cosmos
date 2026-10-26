@@ -1,0 +1,2 @@
+ALTER TABLE public.startup_founders ADD COLUMN IF NOT EXISTS bio_story jsonb;
+COMMENT ON COLUMN public.startup_founders.bio_story IS 'Founder story editor mode, saved language and nine plain-text parts; existing bio remains the display text. Existing founder grants and RLS apply unchanged.';
