@@ -269,17 +269,24 @@ export function TabRow<T extends string>({ tabs, value, onChange, label, idBase,
     onChange(next);
     requestAnimationFrame(() => edit?.body?.scrollTo({ top: 0 }));
   };
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const list = listRef.current, el = list?.querySelector<HTMLElement>(`[data-tab="${value}"]`);
+    if (!list || !el) return;
+    const l = el.offsetLeft - list.offsetLeft, r = l + el.offsetWidth;
+    if (l < list.scrollLeft) list.scrollLeft = l - 8;
+    else if (r > list.scrollLeft + list.clientWidth) list.scrollLeft = r - list.clientWidth + 8;
+  }, [value]);
   return (
-    <div data-sticky-tabs className="sticky top-0 z-10 -mx-6 mb-5 bg-card px-6">
-      <div role="tablist" aria-label={label} onKeyDown={(e) => onTabKeys(e, tabs.map((t) => t.key), value, change)}
-        className="flex gap-[22px] overflow-x-auto border-b border-[#E6E8EC] [scrollbar-width:none] max-sm:gap-[18px] dark:border-border">
+    <div data-sticky-tabs className="edit-folder-row sticky top-0 z-10 -mx-6 mb-5">
+      <div ref={listRef} role="tablist" aria-label={label} onKeyDown={(e) => onTabKeys(e, tabs.map((t) => t.key), value, change)}
+        className="edit-folder-list">
         {tabs.map((t) => {
           const on = t.key === value;
           return (
             <button key={t.key} type="button" role="tab" data-tab={t.key} id={`${idBase}-tab-${t.key}`} aria-selected={on} tabIndex={on ? 0 : -1}
               aria-controls={`${idBase}-panel`} onClick={() => change(t.key)}
-              className={cn("-mb-px inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 text-[14px]",
-                on ? "border-[#151A28] font-semibold text-[#151A28] dark:border-foreground dark:text-foreground" : "border-transparent font-medium text-[#6A7181] dark:text-muted-foreground")}>
+              className="edit-folder-tab">
                {t.icon}{t.label}
                {t.error && <span aria-label="Required field missing" className="h-[7px] w-[7px] rounded-full bg-destructive" />}
               {!!t.count && <MissingCount n={t.count} />}
