@@ -5,10 +5,11 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
 import { usePersona } from "@/hooks/use-marketplace";
 
-type Search = { firm?: string; new?: string; section?: string; add?: "1" };
+type Search = { firm?: string; new?: string; section?: string; tab?:string; add?: "1" };
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/edit")({
   validateSearch: (s: Record<string, unknown>): Search => ({
+    ...(typeof s.tab === "string" ? {tab:s.tab} : {}),
     ...(typeof s.firm === "string" ? { firm: s.firm } : {}),
     ...(s.new ? { new: "1" } : {}),
     ...(typeof s.section === "string" && /^[a-z-]{2,30}$/.test(s.section) ? { section: s.section } : {}),
@@ -42,7 +43,7 @@ function EditPage() {
   // Edit profile now opens as a pop-up over My Company.
   const toPopup = !blockNew && !!session?.user && (persona !== "advisor" || !firms.isLoading);
   useEffect(() => {
-    if (toPopup) void navigate({ to: "/marketplace/my-company", search: { edit: "profile", ...(search.new ? {new:"1"} : {}), ...(search.section ? { section: search.section } : {}), ...(search.firm ? { firm: search.firm } : {}), ...(search.add ? { add: "1" } : {}) } as never, replace: true });
+    if (toPopup) void navigate({ to: "/marketplace/my-company", search: { edit: "profile", ...(search.new ? {new:"1"} : {}), ...(search.section ? { section: search.section } : {}), ...(search.tab ? {tab:search.tab} : {}), ...(search.firm ? { firm: search.firm } : {}), ...(search.add ? { add: "1" } : {}) } as never, replace: true });
   }, [toPopup]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }

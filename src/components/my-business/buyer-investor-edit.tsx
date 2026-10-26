@@ -10,7 +10,7 @@ import { CompanySizeField } from "@/components/investors/company-size-field";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import {
   AUM_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
@@ -170,6 +170,8 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
 }
 
 function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
+  const incoming = useSearch({strict:false}) as {tab?:string};
+  section = section ?? (incoming.tab === "mandate" ? "mandate" : incoming.tab);
   const {data:session} = useSessionContext();
   const admin = session?.user?.accountRole === "admin";
   const create = useServerFn(createInvestor);
@@ -950,20 +952,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
         </S>
 
-        {/* Listing view */}
-        <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Listing view · sellers see this before an NDA</h3>
-          <S cur={setup ? undefined : sec} id="description" className="space-y-1.5">
-          <Label>Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span><Tag s={src.description} /></Label>
-          <Textarea id="f-description" value={f.description} onChange={(e) => setF((o) => ({ ...o, description: e.target.value.slice(0, 140) }))} rows={3} maxLength={140}
-            placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans" className={errs.description ? "border-[#B42318]" : ""} />
-          <div className="flex justify-between text-[12px]">
-            <span className="text-[#B42318]">{errs.description && errs.description !== "leak" ? errs.description : ""}</span>
-            <span className="text-muted-foreground">{f.description.length} / 140</span>
-          </div>
-          </S>
-          {leaks.length > 0 && <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Your description mentions <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
-        </div>
+        <BuyerDescriptionEditor value={f.description} onChange={(description)=>setF((o)=>({...o,description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />
 
         {/* Portfolio Startups */}
         <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
