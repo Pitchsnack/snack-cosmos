@@ -138,7 +138,7 @@ export function NdaButton({ className, listingId, onRequested }: { className?: s
           invalidate();
         } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); qc.invalidateQueries({ queryKey: ["plan-strip"] }); qc.invalidateQueries({ queryKey: ["invitations"] }); }
       }}
-      className={cn(planLock && "opacity-70", "h-[34px] rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
+      className={cn(planLock && "opacity-70", "h-[34px] whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60", className)}
     >
       {locked ? t("Available after verification") : planLock ? <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />{t(planLock === "Renew to request" ? "Renew to request" : "Connect seller")}</span> : t("Connect seller")}
     </Button>
