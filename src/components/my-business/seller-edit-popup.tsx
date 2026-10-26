@@ -44,7 +44,8 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
   const { row, isLoading: rowLoading } = useHiddenProfile(id);
   const { data: facts } = useEntryFacts(id);
   const actions = useHiddenProfileActions();
-  const [view, tab] = viewAndTab(s.view, s.tab, fallbackView);
+  const founderSection = s.section === "founders" || s.section === "founders-add";
+  const [view, tab] = viewAndTab(founderSection ? "private" : s.view, founderSection || s.tab === "people" ? "owner" : s.tab, fallbackView);
   const last = useRef<Record<View, string>>({ public: "identity", private: "images" });
   last.current[view] = tab;
 

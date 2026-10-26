@@ -80,6 +80,7 @@ import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapsho
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
 import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
+import { composeFounderBio, initialFounderStory } from "@/lib/founder-story";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -205,9 +206,9 @@ interface Props {
   popup?: StartupPopup;
 }
 
-export type PrivateTab = "images" | "about" | "address" | "market" | "licenses" | "admin";
+export type PrivateTab = "images" | "about" | "address" | "market" | "licenses" | "owner" | "admin";
 export const PUBLIC_TABS: PublicTab[] = ["identity", "deal"];
-export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "address", "market", "licenses"];
+export const PRIVATE_TABS: PrivateTab[] = ["images", "about", "address", "market", "licenses", "owner"];
 export type StartupPopup = {
   view: "public" | "private";
   tab: string;
@@ -259,9 +260,9 @@ export function StartupForm({
   const editCtx = useEditInfo();
   const [localTab, setLocalTab] = useState<PrivateTab>(startup ? "images" : "about");
   const pView = popup?.view ?? "private";
-  const pTab = (popup ? popup.tab : localTab) as string;
+  const pTab = section === "founders" || section === "founders-add" || (popup?.tab === "people") ? "owner" : (popup ? popup.tab : localTab) as string;
   const navTab = (view: "public" | "private", tab: string) => (popup ? popup.onNav(view, tab) : setLocalTab(tab as PrivateTab));
-  useOpenAtSection(section, true, section === "founders-add" ? { focusSelector: "button" } : undefined);
+  useOpenAtSection(section === "founders-add" ? "founders" : section, true, section === "founders-add" ? { focusSelector: "input[data-founder-name]:last-of-type" } : undefined);
   const secOn = (id: string) => section === id || (id === "founders" && section === "founders-add");
   const isEdit = !!startup;
   const isMyWorkspace = workspace === "my-startups" || redirectAfterCreate === "my-startups";
@@ -467,7 +468,7 @@ export function StartupForm({
   // Founders
   const [founders, setFounders] = useState<FounderDraft[]>(
     startup?.founders.map((f) => ({
-      full_name: f.full_name, position: f.position, linkedin_url: f.linkedin_url, bio: f.bio,
+      full_name: f.full_name, position: f.position, linkedin_url: f.linkedin_url, bio: f.bio, bio_story: f.bio_story, photo_url: f.photo_url,
     })) ?? [],
   );
 
@@ -608,7 +609,11 @@ export function StartupForm({
     regulatoryLicenses,
     isoStandards: isoStandards as ISOStandard[],
     investorIds,
-    founders: founders.filter((f) => f.full_name.trim()),
+    founders: founders.filter((f) => f.full_name.trim()).map((f, display_order) => {
+      const lang = th ? "th" : "en";
+      const story = {...initialFounderStory(f.bio, f.bio_story, lang, yearFounded, t(lastYearRevenue)), lang} as ReturnType<typeof initialFounderStory>;
+      return {...f, display_order, bio_story:story, bio:story.mode === "lines" ? composeFounderBio(story) : f.bio};
+    }),
   });
 
   const createM = useMutation({
@@ -1505,7 +1510,7 @@ export function StartupForm({
         <Label className={miss(isStrEmpty(longDescription)) ? MISSING_LABEL : undefined}>Long Description</Label>
         <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)}
           placeholder={miss(isStrEmpty(longDescription)) ? missingPh("Long Description") : undefined}
-          className={miss(isStrEmpty(longDescription)) ? MISSING_INPUT : undefined} />
+          className={`startup-long-description ${miss(isStrEmpty(longDescription)) ? MISSING_INPUT : ""}`} />
       </EditSec>
 
   </>);
@@ -1623,7 +1628,7 @@ export function StartupForm({
         <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
       )}
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
-        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} />
+        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={t(lastYearRevenue)} addOnOpen={section === "founders-add"} />
       </EditSec>
 
   </>);
@@ -1770,12 +1775,13 @@ export function StartupForm({
   const privateCounts: Record<PrivateTab, number> = {
     address: [registeredName, addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
     images: attachmentMissing(media),
-    about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(shortDescription), has(longDescription), founders.some((f) => f.full_name.trim())].filter((x) => !x).length,
+    about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(shortDescription), has(longDescription)].filter((x) => !x).length,
+    owner: founders.some((f) => f.full_name.trim()) ? 0 : 1,
     market: (industries.length ? 0 : 1) + (productTags.length ? 0 : 1),
     licenses: 0,
     admin: 0,
   };
-  const privTotal = privateCounts.images + privateCounts.about + privateCounts.address + privateCounts.market;
+  const privTotal = privateCounts.images + privateCounts.about + privateCounts.address + privateCounts.market + privateCounts.owner;
   const pubTotal = pd.counts.identity + pd.counts.deal;
   const privTabs = [
     { key: "images" as const, label: tr("Images & Logo", "รูปภาพและโลโก้"), count: privateCounts.images },
@@ -1783,6 +1789,7 @@ export function StartupForm({
     { key: "address" as const, label: tr("Address", "ที่อยู่"), count: privateCounts.address },
     { key: "market" as const, label: tr("Industry & Market", "อุตสาหกรรมและตลาด"), count: privateCounts.market },
     { key: "licenses" as const, label: tr("Licenses", "ใบอนุญาต") },
+    { key: "owner" as const, label: tr("About Owner", "เกี่ยวกับเจ้าของ"), count: privateCounts.owner },
     ...(ctAdmin && workspace === "startups" ? [{key:"admin" as const,label:tr("Admin settings", "การตั้งค่าผู้ดูแล"),icon:<Shield className="h-3.5 w-3.5" />,error:createAttempted && (!tenantId || !owningAgentUserId || !owningAiAgentId)}]:[]),
   ];
   const pubTabs = [
@@ -1822,7 +1829,8 @@ export function StartupForm({
                 <AttachmentCard value={media} onChange={setMedia} name={startupName} sectorLine={sectorLine} />
               </EditSec>
             )}
-            {curPriv === "about" && (<><TabHead title={tr("Company Info", "ข้อมูลบริษัท")}>{enrichBtn}</TabHead>{aboutJsx}{peopleJsx}</>)}
+            {curPriv === "about" && (<><TabHead title={tr("Company Info", "ข้อมูลบริษัท")}>{enrichBtn}</TabHead>{aboutJsx}</>)}
+            {curPriv === "owner" && (<><TabHead title={tr("Owner Info", "ข้อมูลเจ้าของ")} />{peopleJsx}</>)}
             {curPriv === "admin" && (<><TabHead title={tr("Admin settings", "การตั้งค่าผู้ดูแล")} /><p className="text-sm text-muted-foreground">Only Admin sees this tab.</p>{adminJsx}</>)}
             {curPriv === "address" && (<><TabHead title={tr("Company Address", "ที่อยู่บริษัท")}>{enrichBtn}</TabHead>{addressJsx}</>)}
             {curPriv === "market" && (<><TabHead title={tr("Market Target", "ตลาดเป้าหมาย")}>{enrichBtn}</TabHead>{marketJsx}</>)}
