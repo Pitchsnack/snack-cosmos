@@ -1,4 +1,5 @@
 import { priceFor, thbOf } from "@/lib/asking-price";
+import { dealCompanyName } from "@/lib/pipeline-company";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -57,6 +58,8 @@ export type PipelineRow = {
   status: string;
   hiddenProfileId: string;
   startupId: string;
+  /** Own organisation for this deal, independent of counterparty NDA visibility. */
+  ownCompanyName?: string | null;
   buyerMessage: string | null;
   ndaRequestedAt: string;
   ndaApprovedAt: string | null;
@@ -331,6 +334,7 @@ export const listPipeline = createServerFn({ method: "GET" })
     stIds.forEach((id, i) => { dk[id] = dkList[i]; });
     items.forEach((it, i) => {
       const r = rows[i];
+      it.ownCompanyName = dealCompanyName(data.as === "seller", stMap[r.startup_id]?.startup_name, bvMap[r.buyer_user_id]?.company_name);
       const mine = (shares ?? []).filter((x: any) => x.pipeline_id === r.id);
       const act = mine.find((x: any) => !x.revoked_at);
       const d = dk[r.startup_id];
