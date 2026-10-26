@@ -104,6 +104,16 @@ export function RailTip({ label, side = "right", disabled, children }: { label: 
       {children}
       {pos && typeof document !== "undefined" && createPortal(
         <div
+          ref={(el) => {
+            if (!el || side !== "bottom") return;
+            const w = el.offsetWidth;
+            const vw = document.documentElement.clientWidth;
+            const left = Math.max(12, Math.min(pos.x - w / 2, vw - 12 - w));
+            el.style.left = `${left}px`;
+            el.style.transform = "none";
+            const arrow = el.firstElementChild as HTMLElement | null;
+            if (arrow) arrow.style.left = `${Math.max(10, Math.min(pos.x - left, w - 10))}px`;
+          }}
           role="presentation"
           className="pointer-events-none fixed z-[48] whitespace-nowrap rounded-[8px] bg-[#151A28] px-[10px] py-[6px] text-[12.5px] font-semibold leading-[1.25] text-white shadow-[0_6px_18px_rgba(15,23,42,.22)]"
           style={side === "right"
