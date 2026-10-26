@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 import { PairedSection } from "@/components/shared/paired-section";
+import { CompanyProfileIdentity } from "@/components/shared/company-profile-parts";
 
 function monogram(name: string | null | undefined) {
   if (!name) return "";
@@ -105,6 +106,7 @@ export function InvestorDetailPanel({
     mediaAdd?: React.ReactNode;
     afterPortfolio?: React.ReactNode;
     footer?: React.ReactNode;
+    label?: (text: string) => string;
     /** Edit link for a section heading (Buyer › My Company only). */
     /** Seller's view of a buyer (after an approved NDA): NDA line, header action, revenue section, no overview, wrapping facts. */
     seller?: { ndaLine: React.ReactNode; action?: React.ReactNode; revenueTitle: string; aumTitle: string; ticketTitle: string; hideHeader?: boolean };
@@ -175,6 +177,7 @@ export function InvestorDetailPanel({
   const ticket =
     i.ticket_size || [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null;
   const sv = buyer?.seller;
+  const label = buyer?.label ?? ((text: string) => text);
   const overview = sv ? null : i.long_description || i.bio || null;
   const about = i.short_description;
 
@@ -195,7 +198,7 @@ export function InvestorDetailPanel({
       {buyer?.topBar}
       {/* Header */}
       {!sv?.hideHeader && <header className={cn("flex items-start justify-between gap-4", compact && "pt-1", sv && "flex-wrap")}>
-        <div className={cn("flex items-start gap-4", sv && "min-w-0 flex-1 flex-col sm:flex-row")}>
+        {sv ? <CompanyProfileIdentity name={i.investor_name} logo={i.logo_signed_url} meta={<>{i.country}{i.country && i.investor_type && <span aria-hidden> · </span>}{i.investor_type}</>} line={sv.ndaLine} /> : <div className={cn("flex items-start gap-4", sv && "min-w-0 flex-1 flex-col sm:flex-row")}>
           <div className="flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/30">
             {i.logo_signed_url ? (
               <img src={i.logo_signed_url} alt="" className="h-full w-full object-contain" />
@@ -229,7 +232,7 @@ export function InvestorDetailPanel({
               {i.country && i.investor_type ? <span aria-hidden>·</span> : null}
               {i.investor_type && <span>{i.investor_type}</span>}
             </div>
-            {sv ? <div className="mt-[2px] text-[14px] leading-[1.5] text-muted-foreground">{sv.ndaLine}</div> : <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {buyer ? buyer.chips : <>
               {i.status && (
                 <Badge variant="outline" className="text-[10px]">
@@ -242,9 +245,9 @@ export function InvestorDetailPanel({
                 </Badge>
               )}
               </>}
-            </div>}
+            </div>
           </div>
-        </div>
+        </div>}
 
         <div className="flex flex-col items-end gap-2">
           {sv?.action}
@@ -384,7 +387,7 @@ export function InvestorDetailPanel({
                 >
                   <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">
-                    Website <span aria-hidden>→</span>
+                    {label('Website')} <span aria-hidden>→</span>
                   </span>
                 </a>
               )}
@@ -421,7 +424,7 @@ export function InvestorDetailPanel({
             return (
               <section
                 className={cn(
-                  "grid border-t border-border/50 py-[11.2px]",
+                  "profile-investor-figures grid border-t border-border/50 py-[11.2px]",
                   "max-[760px]:grid-cols-1 max-[760px]:divide-y max-[760px]:divide-border/50 max-[760px]:gap-0",
                   cols.length === 3 && "min-[760px]:grid-cols-[1fr_1px_1fr_1px_1fr]",
                   cols.length === 2 && "min-[760px]:grid-cols-[1fr_1px_1fr]",
@@ -486,13 +489,13 @@ export function InvestorDetailPanel({
                 <PairedSection
                   left={{
                     icon: Layers,
-                    title: "Investment focus",
+                    title: label("Investment focus"),
                     content: <ChipRow tags={focus} tone="primary" />,
                     action: buyer?.sectionEdit?.("focus"),
                   }}
                   right={{
                     icon: Layers,
-                    title: "Preferred stages",
+                    title: label("Preferred stages"),
                     content: <ChipRow tags={stages} tone="primary" />,
                     action: buyer?.sectionEdit?.("stages"),
                   }}
@@ -502,14 +505,14 @@ export function InvestorDetailPanel({
 
             if (hasFocus) {
               return (
-                <Section icon={Layers} title="Investment focus" right={buyer?.sectionEdit?.("focus")}>
+                <Section icon={Layers} title={label("Investment focus")} right={buyer?.sectionEdit?.("focus")}>
                   <ChipRow tags={focus} tone="primary" />
                 </Section>
               );
             }
 
             return (
-              <Section icon={Layers} title="Preferred stages" right={buyer?.sectionEdit?.("stages")}>
+              <Section icon={Layers} title={label("Preferred stages")} right={buyer?.sectionEdit?.("stages")}>
                 <ChipRow tags={stages} tone="primary" />
               </Section>
             );
@@ -528,13 +531,13 @@ export function InvestorDetailPanel({
                 <PairedSection
                   left={{
                     icon: Building2,
-                    title: "Preferred industries",
+                    title: label("Preferred industries"),
                     content: <ChipRow tags={industries} tone="muted" />,
                     action: buyer?.sectionEdit?.("industries"),
                   }}
                   right={{
                     icon: Tag,
-                    title: "Keywords",
+                    title: label("Keywords"),
                     content: <ChipRow tags={keywords} tone="muted" />,
                     action: buyer?.sectionEdit?.("keywords"),
                   }}
@@ -544,14 +547,14 @@ export function InvestorDetailPanel({
 
             if (hasIndustries) {
               return (
-                <Section icon={Building2} title="Preferred industries" right={buyer?.sectionEdit?.("industries")}>
+                <Section icon={Building2} title={label("Preferred industries")} right={buyer?.sectionEdit?.("industries")}>
                   <ChipRow tags={industries} tone="muted" />
                 </Section>
               );
             }
 
             return (
-              <Section icon={Tag} title="Keywords" right={buyer?.sectionEdit?.("keywords")}>
+              <Section icon={Tag} title={label("Keywords")} right={buyer?.sectionEdit?.("keywords")}>
                 <ChipRow tags={keywords} tone="muted" />
               </Section>
             );
@@ -560,7 +563,7 @@ export function InvestorDetailPanel({
           {/* Portfolio startups */}
           <Section
             icon={Building2}
-            title={`Portfolio startups${linked.length > 0 ? ` (${linked.length})` : ""}`}
+            title={`${label('Portfolio startups')}${linked.length > 0 ? ` (${linked.length})` : ""}`}
             right={
               buyer ? buyer.sectionEdit?.("portfolio") : linked.length > 0 ? (
                 <Link
@@ -575,7 +578,7 @@ export function InvestorDetailPanel({
             }
           >
             {linked.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No startups linked yet.</p>
+              <p className="text-sm text-muted-foreground">{label('No startups linked yet.')}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {linked.map((s) => (
@@ -669,7 +672,7 @@ export function Section({
 }
 
 
-function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
+export function ChipRow({ tags, tone }: { tags: string[]; tone: "primary" | "muted" }) {
   const base =
     tone === "primary"
       ? "bg-primary/5 text-foreground/85 border-primary/20"

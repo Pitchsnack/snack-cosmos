@@ -438,8 +438,9 @@ export const invitationPrivateProfile=createServerFn({method:"GET"}).middleware(
  const [{data:hp},{data:buyerPublication}]=await Promise.all([sb.from("hidden_profiles").select("approval_status,live").eq("id",p.hidden_profile_id).maybeSingle(),sb.from("buyer_profiles").select("status").eq("user_id",p.buyer_user_id).maybeSingle()]);
  const {isBuyerVisible}=await import("./hidden-profile");if(!isBuyerVisible(hp)||buyerPublication?.status!=="live")throw new Error("Profile is no longer published");
  const {hubNdaActive}=await import("./reports-hub");if(!hubNdaActive(p))throw new Error("An approved valid NDA is required");
- if(data.as==="buyer"){const {loadBuyerFavourites}=await import("./favourites.functions");const row=(await loadBuyerFavourites(context.userId)).find(r=>r.id===p.hidden_profile_id&&r.pipelineId===p.id);return {buyer:row??null,seller:null};}
- const {data:bp}=await sb.from("buyer_profiles").select("investor_id").eq("user_id",p.buyer_user_id).maybeSingle();const {loadSellerFavourites}=await import("./investor-browse.functions");const row=(await loadSellerFavourites(context.userId)).find(r=>r.id===bp?.investor_id);return {buyer:null,seller:row??null};
+ const nda={approvedAt:p.nda_approved_at as string,endAt:p.nda_expires_at as string|null};
+ if(data.as==="buyer"){const {loadBuyerFavourites}=await import("./favourites.functions");const row=(await loadBuyerFavourites(context.userId)).find(r=>r.id===p.hidden_profile_id&&r.pipelineId===p.id);return {buyer:row??null,seller:null,nda};}
+ const {data:bp}=await sb.from("buyer_profiles").select("investor_id").eq("user_id",p.buyer_user_id).maybeSingle();const {loadSellerFavourites}=await import("./investor-browse.functions");const row=(await loadSellerFavourites(context.userId)).find(r=>r.id===bp?.investor_id);return {buyer:null,seller:row??null,nda};
 });
 
 async function myOrgName(userId: string): Promise<string | null> {

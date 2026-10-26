@@ -1,22 +1,26 @@
 import { useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, Linkedin, Lock, LockOpen, Mail, MessageSquare, Phone, User, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useTranslation } from "@/i18n/language";
 import { getProfileBox, type ProfileBox as Box } from "@/lib/profile-box.functions";
+import { Button } from '@/components/ui/button';
+import { FullProfileContent } from './full-profile-content';
 
 const initials = (s: string) => s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 
 /** Pipeline › Investor profile (seller) / Seller profile (buyer): read-only box about the other side of the deal. */
-export function ProfileBox({ pipelineId, asSide, onClose, onReview }: { pipelineId: string; asSide: "seller" | "buyer"; onClose: () => void; onReview?: () => void }) {
+export function ProfileBox({ pipelineId, asSide, onClose, onReview, fullProfile=false, approvedAt, endAt }: { pipelineId: string; asSide: "seller" | "buyer"; onClose: () => void; onReview?: () => void; fullProfile?: boolean; approvedAt?:string|null; endAt?:string|null }) {
   const get = useServerFn(getProfileBox);
   const { language } = useTranslation();
   const th = language === "th";
   const c = (en: string, thai: string) => (th ? thai : en);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [badLogo, setBadLogo] = useState(false);
+  const [full,setFull]=useState(false);
+  const opener=useRef<HTMLElement|null>(null);
+  if (!opener.current && typeof document!=='undefined' && document.activeElement instanceof HTMLElement) opener.current=document.activeElement;
   const { data, error } = useQuery({ queryKey: ["pipeline", "profile-box", pipelineId, asSide], queryFn: () => get({ data: { id: pipelineId, as: asSide } }), staleTime: 0 });
   const rowLabel = (k: string) => ({
     "Ticket size": c("Ticket size", "ขนาดเงินลงทุน"), Sectors: c("Sectors", "กลุ่มอุตสาหกรรม"), "Deal types": c("Deal types", "ประเภทดีล"),
@@ -76,9 +80,7 @@ export function ProfileBox({ pipelineId, asSide, onClose, onReview }: { pipeline
         <p className="pbox-line"><LockOpen size={14} className="pbox-okicon" />{seller ? c("Shared because you approved the NDA.", "แสดงเพราะท่านอนุมัติ NDA แล้ว") : c("Shared because your NDA is approved.", "แสดงเพราะ NDA ของท่านได้รับอนุมัติแล้ว")}</p>
         <div className="pbox-buttons">
           <a className="pbox-btn" href={`/marketplace/messages?thread=p:${pipelineId}`}><MessageSquare size={15} />{seller ? c("Message buyer", "ส่งข้อความถึงผู้ซื้อ") : c("Message seller", "ส่งข้อความถึงผู้ขาย")}</a>
-          {seller
-            ? <Link className="pbox-btn" data-primary to="/marketplace/my-contact">{c("Open full profile", "เปิดโปรไฟล์ฉบับเต็ม")}</Link>
-            : <Link className="pbox-btn" data-primary to="/marketplace/browse" search={{ company: data.listingId ?? undefined } as never}>{c("Open full listing", "เปิดประกาศฉบับเต็ม")}</Link>}
+          {fullProfile ? <Button className="pbox-btn" data-primary onClick={()=>setFull(true)}>{seller?c("Open full profile", "เปิดโปรไฟล์ฉบับเต็ม"):c("Open full listing", "เปิดประกาศฉบับเต็ม")}</Button> : <a className="pbox-btn" data-primary href={seller?'/marketplace/my-contact':`/marketplace/browse?company=${data.listingId??''}`}>{seller?c("Open full profile", "เปิดโปรไฟล์ฉบับเต็ม"):c("Open full listing", "เปิดประกาศฉบับเต็ม")}</a>}
         </div>
       </footer>
     );
@@ -115,10 +117,8 @@ export function ProfileBox({ pipelineId, asSide, onClose, onReview }: { pipeline
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="pbox" onOpenAutoFocus={(e) => { e.preventDefault(); requestAnimationFrame(() => titleRef.current?.focus()); }}>
-        {head}
-        <div className="pbox-body">{body}</div>
-        {foot}
+      <DialogContent className={full?'pbox full-profile':'pbox'} aria-describedby={undefined} onOpenAutoFocus={(e) => { e.preventDefault(); requestAnimationFrame(() => titleRef.current?.focus()); }} onCloseAutoFocus={e=>{e.preventDefault();requestAnimationFrame(()=>opener.current?.focus());}}>
+        {full?<FullProfileContent pipelineId={pipelineId} side={asSide} onClose={onClose} approvedAt={approvedAt} endAt={endAt}/>:<>{head}<div className="pbox-body">{body}</div>{foot}</>}
       </DialogContent>
     </Dialog>
   );
