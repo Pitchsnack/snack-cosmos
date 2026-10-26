@@ -226,6 +226,7 @@ const TH_BASE: Record<string, string> = {
   "In my watchlist": "อยู่ในรายการโปรด",
   "In my watchlist because of your NDA": "อยู่ในรายการโปรดเพราะ NDA ของคุณ",
   "Request NDA": "ขอ NDA",
+  "Connect seller": "เชื่อมต่อผู้ขาย",
   "Available after verification": "ใช้ได้หลังการยืนยันตัวตน",
   "Submit for verification on My Profile first": "กรุณายืนยันตัวตนที่หน้าโปรไฟล์ของฉันก่อน",
   "Deal terms": "เงื่อนไขดีล",

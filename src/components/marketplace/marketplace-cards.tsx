@@ -135,7 +135,7 @@ function NdaButton({ nda }: { nda: MarketplaceListing["nda"] }) {
   const locked = nda !== "approved" && !data?.verified;
   return (
     <button type="button" disabled={nda === "requested" || locked} title={locked ? "Submit for verification on My Profile first" : undefined} className="h-[34px] rounded-md bg-accent text-sm font-medium text-accent-foreground hover:bg-accent/90 disabled:opacity-60">
-      {nda === "approved" ? "Full profile" : nda === "requested" ? "Requested" : locked ? "Available after verification" : "Request NDA"}
+      {nda === "approved" ? "Full profile" : nda === "requested" ? "Requested" : locked ? "Available after verification" : "Connect seller"}
     </button>
   );
 }
