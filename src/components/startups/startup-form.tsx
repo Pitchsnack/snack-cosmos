@@ -49,7 +49,6 @@ import {
   type SlotState,
 } from "@/components/media/entity-media-editor";
 import { FounderEditor, type FounderDraft } from "./founder-editor";
-import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { CreateInvestorDialog } from "@/components/relationships/create-investor-dialog";
 import { WorkspaceConflictNotice } from "@/components/workspace/workspace-conflict-notice";
 import { investorStartupLinksAdapter } from "@/adapters/investorStartupLinksAdapter";
@@ -1626,40 +1625,6 @@ export function StartupForm({
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
         <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} />
       </EditSec>
-
-
-      {/* Investor Relationships (V3) — replaces the legacy InvestorPicker */}
-      <RelationshipLinksEditor
-        mode="investors"
-        title="Investor Relationships"
-        rows={investorLinks.map((l): RelationshipRow => ({
-          id: l.id,
-          refId: l.investorId,
-          name: l.investorName,
-          subtitle: l.investorType,
-          industry: null,
-          relationshipType: l.relationshipType,
-          status: l.status,
-        }))}
-        onChange={(next) =>
-          setInvestorLinks(
-            next.map((r): StartupInvestorLinkView => ({
-              id: r.id,
-              investorId: r.refId,
-              investorName: r.name,
-              investorType: r.subtitle,
-              country: null,
-              relationshipType: r.relationshipType,
-              status: r.status,
-            })),
-          )
-        }
-        onPromotePending={(row) => {
-          setCreateInvestorRowId(row.id);
-          setCreateInvestorName(row.name);
-        }}
-        promoteLabel="Create investor"
-      />
 
   </>);
 
