@@ -1,4 +1,5 @@
 # Decisions
+- Shared Pipeline card company chips use an own-organisation DTO sourced from each deal's startup or linked buyer firm; counterparty privacy fields and page-selected organisations are not chip sources, so pending/ended cards retain correct identity without changing NDA gates.
 - Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor adapters; watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.
 - Seller Connect flight is browser-only presentation using the stored invitation ID, shared Pipeline opening signal and public investor cover markers; invitation writes and authorization remain in the existing server function.
 - Pending contact presentation uses the existing seller Connect, buyer verification and session DTOs with one shared focusable tooltip button; status is derived server-side from own approval records and request authorization is unchanged.

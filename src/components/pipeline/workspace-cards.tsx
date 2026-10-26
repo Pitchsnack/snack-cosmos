@@ -1,5 +1,6 @@
 import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
 import { DealAgreements } from './deal-agreements';
+import { DealCompanyChip } from './deal-company-chip';
 import {PipelineReportsButton} from '@/components/reports/reports-hub';
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -193,7 +194,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
     <div id={`deal-${p.id}`} className={cn("overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-card transition-shadow hover:border-[#D9DCE2]", open && "shadow-[0_6px_20px_rgba(16,24,40,.06)]")}>
       <div role="button" tabIndex={0} onClick={onToggle} aria-expanded={open}
         onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onToggle(); } }}
-        className="grid w-full cursor-pointer grid-cols-[40px_1fr_auto] items-center gap-[14px] px-5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2563EB]">
+        className="grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-[14px] px-5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2563EB]">
         <div className="[&>*]:!h-10 [&>*]:!w-10 [&>*]:!text-[14px]">
           {wd
             ? <span className="grid place-items-center rounded-full bg-gradient-to-b from-[#A3A9B6] to-[#7C8496] font-bold text-white">{p.counterparty.name.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase()}</span>
@@ -205,8 +206,11 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
             {wd && <WithdrawnPill t={t} />}
 
           </div>
-          {!wd && pendingNda && <span className="hub-pill" data-tone="muted">{t("Step")} 1 · NDA</span>}
-          {!wd && p.ndaApprovedAt && (!p.ndaExpiresAt || Date.parse(p.ndaExpiresAt)>Date.now()) && <div className="mt-2 flex flex-wrap items-center gap-2"><span className="hub-pill" data-tone="muted">{t('Step')} {cur+1} · {t(STEPS[cur])}</span><PipelineReportsButton pipelineId={p.id} seller={seller}/></div>}
+          <div className="deal-header-chips">
+            <span className="hub-pill" data-tone="muted">{t('Step')} {cur+1} · {t(STEPS[cur])}</span>
+            <DealCompanyChip name={p.ownCompanyName} />
+            {!wd && p.ndaApprovedAt && (!p.ndaExpiresAt || Date.parse(p.ndaExpiresAt)>Date.now()) && <PipelineReportsButton pipelineId={p.id} seller={seller}/>}
+          </div>
           <div className="truncate text-[12.5px] text-[#6B7280]">
             {[p.counterparty.sub, p.loiAmount ? `${seller ? t("offer") : t("your offer")} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
             {" · "}
