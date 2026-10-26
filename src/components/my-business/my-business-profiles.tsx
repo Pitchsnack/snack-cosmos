@@ -296,8 +296,8 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
-        <FolderTab side="left" active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title={tr("Listing view","มุมมองรายการ")} sub={tr("Buyer preview","ตัวอย่างสำหรับผู้ซื้อ")} open={selected} tone="indigo" onClick={() => pick("public")} />
-        <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title={tr("Exclusive view","มุมมองพิเศษ")} sub={tr("Shared after NDA","แชร์หลัง NDA")} open={selected} tone="green" onClick={() => pick("private")} />
+        <FolderTab side="left" active={v === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title={tr("Listing view")} sub={tr("Buyer preview")} open={selected} tone="indigo" onClick={() => pick("public")} />
+        <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title={tr("Exclusive view")} sub={tr("Shared after NDA")} open={selected} tone="green" onClick={() => pick("private")} />
       </div>
       {v === "public" ? (
         <div role="button" tabIndex={0} onClick={() => pick("public")} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) pick("public"); }} className={cn("cursor-pointer overflow-hidden rounded-b-[14px] rounded-t-none border bg-card transition-shadow hover:shadow-md [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
@@ -329,9 +329,9 @@ function KindPill({ kind, row }: { kind: View; row?: HiddenProfileRow | null }) 
 
 function KindLabel({ kind }: { kind: View }) {
   return kind === "public" ? (
-    <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">{tr("Listing view · Buyer preview","มุมมองรายการ · ตัวอย่างสำหรับผู้ซื้อ")}</span>
+    <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">{tr("Listing view · Buyer preview")}</span>
   ) : (
-    <span className="inline-flex rounded-full bg-green-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-green-800 dark:bg-green-950/50 dark:text-green-400">{tr("Exclusive view · Shared after NDA","มุมมองพิเศษ · แชร์หลัง NDA")}</span>
+    <span className="inline-flex rounded-full bg-green-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-green-800 dark:bg-green-950/50 dark:text-green-400">{tr("Exclusive view · Shared after NDA")}</span>
   );
 }
 
