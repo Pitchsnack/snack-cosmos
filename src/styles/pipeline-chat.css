@@ -26,7 +26,7 @@
 .pipeline-chat [class*="border-[#"], .pipeline-chat [class*="divide-[#"] > * { border-color: var(--pb-line); }
 .pipeline-chat [class*="hover:bg-[#"]:hover { background: var(--pb-hover); }
 .pipeline-chat [class*="bg-[#FEF3DE]"] { background: var(--help-soft); color: var(--help-ink); }
-.pipeline-chat [class*="bg-[#EEF0FF]"] { background: var(--profile-soft); color: var(--profile); }
+.pipeline-chat [class*="bg-[#EEF0FF]"] { background: var(--hub-buyer-soft); color: var(--hub-buyer); }
 .pipeline-chat [class*="bg-[#F6A823]"] { background: var(--plan-seller); color: var(--accent-foreground); }
 .pipeline-chat [class*="bg-[#4338CA]"] { background: var(--plan-buyer); color: var(--primary-foreground); }
 .pipeline-chat #people-in-chat { top: 76px; right: 16px; background: var(--pb-bg); border-color: var(--pb-line); }
