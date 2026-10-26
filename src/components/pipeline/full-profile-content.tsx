@@ -19,7 +19,7 @@ export function FullProfileContent({pipelineId,side,onClose,approvedAt,endAt}:{p
   const buyerLogo=useMediaUrl(buyer?.priv?.logoPath??null);
   const name=seller?.priv?.investor_name??buyer?.priv?.companyName??t('Profile');
   const date=(v:string)=>new Date(v).toLocaleDateString(language==='th'?'th-TH':'en-GB',{day:'numeric',month:'short',year:'numeric'}).replace('Sept','Sep');
-  useEffect(()=>{if(!isPending)title.current?.focus();},[isPending]);
+  useEffect(()=>{const timer=window.setTimeout(()=>title.current?.focus(),120);return ()=>window.clearTimeout(timer);},[isPending]);
   const ref=seller?.refNo??buyer?.listing.refNo;
   const nda=p?<><LockOpen size={15}/><span><b>{language==='th'?'อนุมัติ NDA แล้ว':'NDA approved'}</b> <span className="full-profile-nowrap">{date(approvedAt??p.ndaApprovedAt)}</span><span aria-hidden> · </span><span className="full-profile-nowrap">{language==='th'?'มีผลถึง':'valid until'} {endAt===null?'—':date(endAt??p.ndaValidUntil)}</span>{ref&&<><span aria-hidden> · </span><span className="full-profile-nowrap">{ref}</span></>}</span></>:null;
   const meta=seller?.priv?[seller.priv.country,seller.priv.investor_type].filter(Boolean).join(' · '):buyer?[buyer.listing.sector,buyer.listing.location].filter(Boolean).join(' · '):'';
