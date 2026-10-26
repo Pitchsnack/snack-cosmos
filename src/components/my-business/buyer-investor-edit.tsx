@@ -1,7 +1,9 @@
+import { BuyerDescriptionEditor } from "./buyer-description-editor";
+import { descriptionChanged } from "@/lib/buyer-description";
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { tr } from "@/i18n/language";
-import { CompanyTypeField, companyTypeForRelation } from "@/components/common/company-type-field";
+import { companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { CompanySizeField } from "@/components/investors/company-size-field";
@@ -70,7 +72,7 @@ const INVESTOR_INDUSTRIES = ["Sector Agnostic", ...INDUSTRIES];
 
 function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button
+    <Button variant="unstyled" size="unstyled"
       type="button"
       onClick={onClick}
       className={`px-3 py-1 rounded-full text-xs border transition-colors ${
@@ -80,7 +82,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
       }`}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -226,10 +228,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const [focus, setFocus] = useState(inv.investment_focus);
   const [stages, setStages] = useState(inv.preferred_stages);
   const showsFund = !individual && rel !== "agent";
-  const buyerMissing = {media: mediaMissing(inv),about:[!individual && !!yearError(f.year_founded),!f.investor_name.trim(),!f.website_url.trim()].filter(Boolean).length,address:0,people:!individual && !!regError(f.registration_no,f.country) ? 1 : 0};
+  const buyerMissing = {media: mediaMissing(inv),about:[!individual && !!yearError(f.year_founded),!f.investor_name.trim(),!f.website_url.trim(),!individual && !!regError(f.registration_no,f.country)].filter(Boolean).length,address:0,people:0};
   // Fund falls back to Investor Classification when the form hides the band.
   type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate" | "admin";
-  const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "mandate" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
+  const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "description" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
   const [tab, setTab] = useState<Tab>(onCreated ? "about" : section ? tabFor(section) : initialView === "public" ? "description" : "media");
   const [view, setView] = useState<"public" | "private">(initialView ?? (section && ["description","mandate"].includes(tabFor(section)) ? "public" : "private"));
   const sec = section === "fund" && !showsFund ? "classification" : section;
@@ -315,16 +317,16 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       ["year_founded", individual ? null : yearError(f.year_founded)],
       ["investor_name", f.investor_name.trim().length < 2 ? "Add your firm's name." : null],
       ["website_url", /^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(f.website_url.trim()) ? null : "Enter a valid website address, e.g. www.yourfirm.com"],
-      ["description", f.description.trim() ? descriptionError(f.description) || (leaks.length ? "leak" : null) : null],
+      ["description", descriptionChanged(f.description, data.buyer.description) && f.description.trim() ? descriptionError(f.description) || (leaks.length ? "leak" : null) : null],
       ["registration_no", individual ? null : regError(f.registration_no, f.country)],
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
     if (!directory && aBad) { setAddrShow(true); setErrs({ address: aBad }); setView("private");setTab("address"); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
-    const bad = checks.find(([, m]) => m);
-    if (!directory && bad) {
+    const bad = checks.find(([key, m]) => key === "description" && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([, m]) => m);
+    if ((!directory || bad?.[0] === "registration_no") && bad) {
       setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
-      const target = bad[0] === "registration_no" ? "people" : bad[0] === "description" ? "description" : "about";
+      const target = bad[0] === "registration_no" ? "about" : bad[0] === "description" ? "description" : "about";
       setView(target === "description" ? "public" : "private"); setTab(target);
       setTimeout(()=>document.getElementById(`f-${bad[0]}`)?.focus(),60);
       return;
@@ -337,7 +339,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       if (onCreated) {
         const result = await create({data:{tenantId:tenant,investorName:f.investor_name.trim(),owningAgentUserId:human,owningAiAgentId:ai,websiteUrl:t(f.website_url),linkedinUrl:t(f.linkedin_url),country:t(f.country),investorType:t(f.investor_type),yearFounded:f.year_founded ? Number(f.year_founded) : null,firmName:t(f.firm_name),email:t(f.email),address:addr,bio:t(bio),startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : []),portfolioInvestorIds:portfolioInvestors.flatMap(x=>x.refId ? [x.refId] : []),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,shortDescription:t(f.short_description),longDescription:t(longDescription),legalName:t(legalName),status:directoryStatus,visibility:directoryVisibility,companySizeBand:(f.company_size_band || null) as "1-10" | null,preferredIndustries:industries,preferredStages:stages,keywords,investmentFocus:focus,aumBand:t(f.aum_band),ticketBand:t(f.ticket_band)}});
         const uploaded = await uploadPending(media,({kind,ext})=>getUrl({data:{kind,ext,investor_id:result.id}}),supabase.storage.from("startup-media"));
-        await save({data:{investor_id:result.id,investor_name:f.investor_name.trim(),investor_type:t(f.investor_type),year_founded:f.year_founded ? Number(f.year_founded) : null,company_size_band:(f.company_size_band || null) as "1-10" | null,country:t(f.country),city:t(f.city),email:t(f.email),website_url:t(f.website_url),linkedin_url:t(f.linkedin_url),firm_name:t(f.firm_name),short_description:t(f.short_description),aum:t(f.aum),min_ticket_size:t(f.min_ticket_size),max_ticket_size:t(f.max_ticket_size),...(f.aum_band ? {aum_band:f.aum_band as never} : {}),...(f.ticket_band ? {ticket_band:f.ticket_band as never} : {}),aum_exact_usd:f.aum_exact.trim() ? Number(f.aum_exact.replace(/[^\d.]/g,"")) : null,revenue_min_band:(f.rev_band || null) as never,registration_no:t(f.registration_no),description:f.description,deal_types:deals,people,portfolio_extra:portfolio,keywords,preferred_stages:stages,preferred_industries:industries,investment_focus:focus,logo_path:uploaded.logoPath,media:uploaded.media,address_line1:t(addr.street),address_line2:t(addr.unit),address_city_district:t(addr.district),address_province_state:t(addr.province),postal_code:t(addr.postal)}});
+        await save({data:{investor_id:result.id,investor_name:f.investor_name.trim(),investor_type:t(f.investor_type),year_founded:f.year_founded ? Number(f.year_founded) : null,company_size_band:(f.company_size_band || null) as "1-10" | null,country:t(f.country),city:t(f.city),email:t(f.email),website_url:t(f.website_url),linkedin_url:t(f.linkedin_url),firm_name:t(f.firm_name),short_description:t(f.short_description),aum:t(f.aum),min_ticket_size:t(f.min_ticket_size),max_ticket_size:t(f.max_ticket_size),...(f.aum_band ? {aum_band:f.aum_band as never} : {}),...(f.ticket_band ? {ticket_band:f.ticket_band as never} : {}),revenue_min_band:(f.rev_band || null) as never,registration_no:t(f.registration_no),description:f.description,deal_types:deals,people,portfolio_extra:portfolio,keywords,preferred_stages:stages,preferred_industries:industries,investment_focus:focus,logo_path:uploaded.logoPath,media:uploaded.media,address_line1:t(addr.street),address_line2:t(addr.unit),address_city_district:t(addr.district),address_province_state:t(addr.province),postal_code:t(addr.postal)}});
         if(companyType) await updateDirectory({data:{id:result.id,companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"}});
         await qc.invalidateQueries({queryKey:["investors"]});pop?.setDirty(false);toast.success(`${f.investor_name.trim()} created`);onCreated(result.id);return;
       }
@@ -360,9 +362,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         ...(directory && !f.aum_band && !inv.aum_band ? {} : {aum_band: individual || rel === "agent" ? null : (f.aum_band || null) as never}),
         ...(directory && !f.ticket_band && !inv.ticket_band ? {} : {ticket_band: (f.ticket_band || null) as never}),
         revenue_min_band: (f.rev_band || null) as never,
-        aum_exact_usd: f.aum_exact.trim() && Number.isFinite(exact) ? exact : null,
+        
         registration_no: individual ? null : t(f.registration_no),
-        description: f.description.trim(), deal_types: deals,
+        ...(descriptionChanged(f.description, data.buyer.description) ? {description: f.description.trim()} : {}), deal_types: deals,
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
@@ -407,7 +409,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       <form noValidate={!!pop} id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {pop && !setup ? <>
           <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Listing view"),icon:<Eye />,count:0},{key:"private",label:tr("Exclusive view"),icon:<Lock />,count:buyerMissing.about+buyerMissing.media+buyerMissing.people}]} /></EditInfoTabsSlot>
-          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Public Description")},{key:"mandate",label:tr("Mandate")}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Decision Makers"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
+          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Description & Mandate")}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Team"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
           {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -445,7 +447,19 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               className={errs.investor_name && !f.investor_name.trim() ? "creation-invalid" : ""} />
             {!f.investor_name.trim() && <Err k="investor_name" />}
           </div>
-          {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
+          {!individual && (
+            <div className="space-y-1.5">
+              <Label>{tr("Registered Number")}{f.country === "Thailand" && req}<Tag s={src.registration_no} /></Label>
+              <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
+                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
+                inputMode={f.country === "Thailand" ? "numeric" : undefined}
+                onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
+                onBlur={() => setErrs((o) => ({...o, registration_no: regError(f.registration_no, f.country) ?? ""}))} className={errs.registration_no ? "border-destructive" : ""} />
+              <Err k="registration_no" />
+            </div>
+          )}
+        </div>
+<CompactFields two={individual}>          {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
             <Label>Investor Classification<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
@@ -457,14 +471,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               </SelectContent>
             </Select>
           </S>}
-        </div>
         {agent && <S cur={setup ? undefined : sec} id="classification">
           <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>Acts for<Tag s={src.investor_type} /></>} />
         </S>}
 
-<CompactFields two={individual}>        <>
-          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onReset={()=>{setCompanyType(companyTypeForRelation(rel) ?? "");setCompanyTypeReset(true);setCompanyTypeDirty(true);}} onChange={(v)=>{setCompanyType(v);setCompanyTypeReset(false);setCompanyTypeDirty(true);}} />
-        </>
         {!individual && (
           <>
             <S id="size" cur={sec}><CompanySizeField value={f.company_size_band} onChange={(v) => setF((o) => ({ ...o, company_size_band: v }))} /></S>
@@ -541,7 +551,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         {/* About */}
         <div className="space-y-1.5">
           <Label>About Company</Label>
-          <Textarea value={f.short_description} onChange={set("short_description")} rows={3} maxLength={2000}
+          <Textarea value={f.short_description} onChange={set("short_description")} rows={3} maxLength={2000} className="startup-long-description"
             placeholder="Brief description of the company" />
         </div>
 
@@ -561,71 +571,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
             show={(k) => (addrShow && addrErr ? (addrErr as Record<string, string | null>)[k] ?? null : null)} onBlur={() => {}} />
         </div>
-
-</div>}
-          {tab === "mandate" && <div className="space-y-4"><TabHead title={tr("Mandate")} />        {/* Fund & ticket — US$ bands */}
-        {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
-        {showsFund && (
-          <S cur={setup ? undefined : sec} id="fund"><div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>{corp ? "Group revenue band" : "Fund's AUM band"}<Tag s={src.aum_band} /></Label>
-              <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
-                <SelectContent>
-                  {!inv.aum_band && <SelectItem value="none">Not set</SelectItem>}
-                  {AUM_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <p className="text-[12px] text-muted-foreground">Sellers see this band on your card.</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label>{corp ? "Exact group revenue (US$)" : "Exact AUM (US$)"} <span className="text-[#9CA3AF] font-normal">optional</span></Label>
-              <Input inputMode="numeric" value={f.aum_exact} placeholder="e.g. 120,000,000"
-                onChange={(e) => { const d = e.target.value.replace(/[^\d]/g, ""); setF((o) => ({ ...o, aum_exact: d ? Number(d).toLocaleString("en-US") : "" })); }} />
-              <p className="text-[12px] text-muted-foreground">Private. Only sellers who approve your NDA see it.</p>
-            </div>
-          </div></S>
-        )}
-        <S cur={setup ? undefined : sec} id="mandate" className="space-y-1.5">
-          <Label>Average investment per deal<Tag s={src.ticket_band} /></Label>
-          <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
-            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Not set</SelectItem>
-              {TICKET_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size. Sellers see this range on your card and filter Browse investors by it.</p>
-        </S>
-        {/* Buying Requirement */}
-        <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
-          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
-          <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
-          <Label>Min. target revenue<Tag s={src.revenue_min_band} /></Label>
-          <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
-            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Not set</SelectItem>
-              {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
-          </S>
-        </div>
-        <S cur={setup ? undefined : sec} id="focus" className="space-y-1.5">
-          <Label>Investment Focus<Tag s={src.deal_types} /></Label>
-          <div className="flex flex-wrap gap-2">
-            {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{d}</Pill>)}
-          </div>
-        </S>
-
-        {/* Geography */}
-        <S cur={setup ? undefined : sec} id="geography" className="space-y-1.5">
-          <Label>Geography<Tag s={src.geography} /></Label>
-          <div className="flex flex-wrap gap-2">
-            {allGeo.map((g) => <Pill key={g} active={focus.includes(g)} onClick={() => setFocus(toggle(focus, g, 10))}>{g}</Pill>)}
-          </div>
-        </S>
 
 </div>}
           {tab === "industries" && <div className="space-y-4"><TabHead title={tr("Industries & Portfolio")} />        {/* Tags */}
@@ -670,38 +615,71 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>
 
 </div>}
-          {tab === "description" && <div className="space-y-4"><TabHead title={tr("Public Description")} />        {/* Listing view */}
-        <div className="space-y-1.5 rounded-lg border border-[#CFD2FB] bg-[#EEF0FF]/50 p-4 dark:border-[#2E3570] dark:bg-[#1B2140]/50">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Listing view · sellers see this before an NDA</h3>
-          <S cur={setup ? undefined : sec} id="description" className="space-y-1.5">
-          <Label>Description <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span><Tag s={src.description} /></Label>
-          <Textarea id="f-description" value={f.description} onChange={(e) => setF((o) => ({ ...o, description: e.target.value.slice(0, 140) }))} rows={3} maxLength={140}
-            placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans" className={errs.description ? "border-[#B42318]" : ""} />
-          <div className="flex justify-between text-[12px]">
-            <span className="text-[#B42318]">{errs.description && errs.description !== "leak" ? errs.description : ""}</span>
-            <span className="text-muted-foreground">{f.description.length} / 140</span>
-          </div>
-          </S>
-          {leaks.length > 0 && <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Your description mentions <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
-        </div>
+          {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate"><BuyerDescriptionEditor value={f.description} onChange={(description) => setF((o) => ({...o, description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+        {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
+<div className="buyer-mandate-money">        {showsFund && (
+          <S cur={setup ? undefined : sec} id="fund">
+            <div className="space-y-1.5">
+              <Label>{corp ? tr("Group revenue band") : tr("Fund's AUM (Assets under management)")}<Tag s={src.aum_band} /></Label>
+              <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                <SelectContent>
+                  {!inv.aum_band && <SelectItem value="none">Not set</SelectItem>}
+                  {AUM_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+                </SelectContent>
+              </Select>
 
-</div>}
-          {tab === "people" && <div className="space-y-4"><TabHead title={tr("Decision Makers")} />        {/* For verification */}
+            </div>
+          </S>
+        )}
+        <S cur={setup ? undefined : sec} id="mandate" className="space-y-1.5">
+          <Label>{tr("Average investment per deal")}<Tag s={src.ticket_band} /></Label>
+          <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
+            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {TICKET_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+        </S>
+</div>        {/* Buying Requirement */}
+        <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
+          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
+          <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
+          <Label>{tr("Min. target revenue (The minimum company revenue you would consider acquiring)")}<Tag s={src.revenue_min_band} /></Label>
+          <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
+            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Not set</SelectItem>
+              {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          </S>
+        </div>
+        <S cur={setup ? undefined : sec} id="focus" className="buyer-mandate-divider space-y-1.5">
+          <Label>{tr("Investment Focus")}<Tag s={src.deal_types} /></Label>
+          <div className="flex flex-wrap gap-2">
+            {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{d}</Pill>)}
+          </div>
+        </S>
+
+        {/* Geography */}
+        <S cur={setup ? undefined : sec} id="geography" className="buyer-mandate-divider space-y-1.5">
+          <Label>{tr("Geography")}<Tag s={src.geography} /></Label>
+          <div className="flex flex-wrap gap-2">
+            {allGeo.map((g) => <Pill key={g} active={focus.includes(g)} onClick={() => setFocus(toggle(focus, g, 10))}>{g}</Pill>)}
+          </div>
+        </S>
+
+</section>
+ </div>}
+          {tab === "people" && <div className="space-y-4"><TabHead title={tr("Team")} />        {/* For verification */}
         <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">For verification · also visible to Admin</h3>
-          {!individual && (
-            <div className="space-y-1.5">
-              <Label>{f.country === "Thailand" ? <>Company Registration Number (เลขทะเบียนนิติบุคคล){req}</> : <>Company registration number <span className="font-normal text-[#9CA3AF]">optional</span></>}<Tag s={src.registration_no} /></Label>
-              <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
-                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
-                inputMode={f.country === "Thailand" ? "numeric" : undefined}
-                onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
-                className={errs.registration_no ? "border-[#B42318]" : ""} />
-              <Err k="registration_no" />
-            </div>
-          )}
           <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
-            <Label>Decision makers</Label>
+            <Label>{tr(pop ? "Team members" : "Decision makers")}</Label>
             <div className="space-y-2">
               {people.map((p, i) => (
                 <div key={i} data-row className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
@@ -715,7 +693,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={() => setPeople((o) => [...o, { name: "", role: "", email: "", phone: "" }])}>
-                <Plus className="mr-1 h-4 w-4" />Add decision maker
+                <Plus className="mr-1 h-4 w-4" />{tr(pop ? "Add team member" : "Add decision maker")}
               </Button>
             </div>
           </S>
@@ -781,7 +759,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>}
 
         <div className="grid grid-cols-[220px_1fr] gap-4">
-          <CompanyTypeField value={companyType || companyTypeForRelation(rel)} source={onCreated ? "" : (inv as { company_type_source?: string }).company_type_source ?? "account"} admin={admin} onReset={()=>{setCompanyType(companyTypeForRelation(rel) ?? "");setCompanyTypeReset(true);setCompanyTypeDirty(true);}} onChange={(v)=>{setCompanyType(v);setCompanyTypeReset(false);setCompanyTypeDirty(true);}} />
+
         </div>
         {!individual && (
           <div className="grid grid-cols-[220px_1fr] gap-4">
@@ -931,7 +909,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         {/* About */}
         <div className="space-y-1.5">
           <Label>About Company</Label>
-          <Textarea value={f.short_description} onChange={set("short_description")} rows={3} maxLength={2000}
+          <Textarea value={f.short_description} onChange={set("short_description")} rows={3} maxLength={2000} className="startup-long-description"
             placeholder="Brief description of the company" />
         </div>
 
@@ -1013,7 +991,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             </div>
           )}
           <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
-            <Label>Decision makers</Label>
+            <Label>{tr(pop ? "Team members" : "Decision makers")}</Label>
             <div className="space-y-2">
               {people.map((p, i) => (
                 <div key={i} data-row className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
@@ -1027,7 +1005,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={() => setPeople((o) => [...o, { name: "", role: "", email: "", phone: "" }])}>
-                <Plus className="mr-1 h-4 w-4" />Add decision maker
+                <Plus className="mr-1 h-4 w-4" />{tr(pop ? "Add team member" : "Add decision maker")}
               </Button>
             </div>
           </S>
