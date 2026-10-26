@@ -1,4 +1,5 @@
 import { tr, useTranslation } from "@/i18n/language";
+import { descriptionWords, singleLineDescription } from '@/lib/buyer-description';
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -485,14 +486,15 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     desc: { req: false, t: tr("How would you describe your firm to sellers?"), h: tr("In one line. Sellers read it before any NDA, so leave out names, websites and contact details."),
       body: (
         <div>
-          <label className={lbl} htmlFor="w-desc">{tr("Description")} <span className="font-normal text-[#9CA3AF]">10 to 140 characters</span></label>
-          <textarea id="w-desc" rows={3} maxLength={140} autoFocus value={tr(a.desc)} placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans"
+          <label className={lbl} htmlFor="w-desc">{tr("Description")} <span className="font-normal text-muted-foreground">{L('(1–2 sentences)', '(1–2 ประโยค)')}</span></label>
+          <textarea id="w-desc" rows={3} autoFocus value={a.desc} placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans"
             onBlur={() => setTouched((t) => ({ ...t, desc: true }))}
-            onChange={(e) => set({ desc: e.target.value }, { description: e.target.value })}
+            onChange={(e) => {const desc = singleLineDescription(e.target.value);set({ desc }, { description: desc });}}
+            onKeyDown={(e) => {if (e.key === 'Enter') e.preventDefault();}}
             className={`w-full rounded-[12px] border border-[#DCDFE5] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#1E2A4A] focus:shadow-[0_0_0_3px_rgba(30,42,74,.12)] dark:border-border dark:bg-background ${(touched.desc || forced.desc) && descErr ? errCls : ""}`} />
           <div className="mt-1 flex justify-between text-[12.5px]">
-            <span className="text-[#B42318]">{(touched.desc || forced.desc) && descErr}</span>
-            <span className="text-[#6B7280]">{a.desc.length} / 140</span>
+            <span className="text-destructive">{((touched.desc || forced.desc) || descErr !== 'Write at least 10 characters.') && descErr ? tr(descErr) : ''}</span>
+            <span className="text-muted-foreground">{descriptionWords(a.desc)} / 25 {L('words','คำ')}</span>
           </div>
           {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
           <div className="mt-5 rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">

@@ -74,6 +74,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <Button variant="unstyled" size="unstyled"
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={`px-3 py-1 rounded-full text-xs border transition-colors ${
         active
@@ -349,7 +350,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         ({ kind, ext }) => getUrl({ data: { kind, ext, investor_id: inv.id } }),
         supabase.storage.from("startup-media"),
       );
-      const exact = Number(f.aum_exact.replace(/[^\d.]/g, ""));
       await save({ data: {
         investor_name: f.investor_name.trim(), investor_type: t(typeOf), ...(agent ? { acts_for_types: actsFor } : {}), year_founded: yr && Number.isFinite(yr) ? yr : null,
         company_size_band: individual ? null : ((f.company_size_band || null) as "1-10" | null),
@@ -433,7 +433,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
 </div>}
           {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>        {/* Row 1: Year Founded | Company Name | Investor Classification */}
-        <div className={agent ? "grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-3"}>
+        <div className={individual ? "grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-3"}>
           <div className="space-y-1.5">
             <Label>Year Founded{!individual && req}<Tag s={src.year_founded} /></Label>
             <Input id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
@@ -455,7 +455,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                 inputMode={f.country === "Thailand" ? "numeric" : undefined}
                 onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
                 onBlur={() => setErrs((o) => ({...o, registration_no: regError(f.registration_no, f.country) ?? ""}))} className={errs.registration_no ? "border-destructive" : ""} />
-              <Err k="registration_no" />
+              {errs.registration_no && <p className="text-[13px] text-destructive">{tr(errs.registration_no)}</p>}
             </div>
           )}
         </div>
@@ -620,7 +620,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
             <div className="space-y-1.5">
-              <Label>{corp ? tr("Group revenue band") : tr("Fund's AUM (Assets under management)")}<Tag s={src.aum_band} /></Label>
+              <Label>{corp ? tr("Group revenue band") : <>{tr("Fund's AUM")} <span className="buyer-label-explanation">{tr("(Assets under management)")}</span></>}<Tag s={src.aum_band} /></Label>
               <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
                 <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
                 <SelectContent>
@@ -645,9 +645,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>
 </div>        {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
-          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
+          <div className="text-xs font-bold uppercase text-muted-foreground">{tr("Buying Requirement")}</div>
           <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
-          <Label>{tr("Min. target revenue (The minimum company revenue you would consider acquiring)")}<Tag s={src.revenue_min_band} /></Label>
+          <Label>{tr("Min. target revenue")} <span className="buyer-label-explanation">{tr("(The minimum company revenue you would consider acquiring)")}</span><Tag s={src.revenue_min_band} /></Label>
           <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
             <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
             <SelectContent>

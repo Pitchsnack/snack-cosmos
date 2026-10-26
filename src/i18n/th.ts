@@ -5,6 +5,17 @@ import { TH_ADVISORS } from "./th-advisors";
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
   "Description & Mandate": "คำอธิบายและนโยบายการลงทุน",
+  "Registered Number": "เลขทะเบียนนิติบุคคล",
+  "Team": "ทีมงาน",
+  "Investment Focus": "แนวทางการลงทุน",
+  "Average investment per deal": "เงินลงทุนเฉลี่ยต่อดีล",
+  "Fund's AUM": "AUM ของกองทุน",
+  "(Assets under management)": "(มูลค่าสินทรัพย์ภายใต้การบริหาร)",
+  "(The minimum company revenue you would consider acquiring)": "(รายได้ขั้นต่ำของบริษัทที่ท่านจะพิจารณาเข้าซื้อกิจการ)",
+  "Keep it to 2 sentences.": "โปรดเขียนไม่เกิน 2 ประโยค",
+  "Keep it to 25 words.": "โปรดเขียนไม่เกิน 25 คำ",
+  "Write at least 10 characters.": "โปรดเขียนอย่างน้อย 10 ตัวอักษร",
+  "The registration number has 13 digits.": "เลขทะเบียนนิติบุคคลต้องมี 13 หลัก",
   "Investment Mandate": "นโยบายการลงทุน",
   "Fund's AUM (Assets under management)": "AUM ของกองทุน (มูลค่าสินทรัพย์ภายใต้การบริหาร)",
   "Min. target revenue (The minimum company revenue you would consider acquiring)": "รายได้ขั้นต่ำของบริษัทเป้าหมาย (รายได้ขั้นต่ำของบริษัทที่ท่านจะพิจารณาเข้าซื้อกิจการ)",
