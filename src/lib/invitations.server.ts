@@ -68,7 +68,7 @@ export async function invitedListingIds(userId: string) {
 }
 
 /** Bell items for every seller user of the listing's company. */
-export async function notifySellers(startupId: string, title: string, message: string, link = "/marketplace/pipeline") {
+export async function notifySellers(startupId: string, title: string, message: string, link = "/marketplace/pipeline/invitations?view=sent") {
   const sb = await admin();
   const [{ data: su }, { data: own }] = await Promise.all([
     sb.from("startup_users").select("user_id").eq("startup_id", startupId),
