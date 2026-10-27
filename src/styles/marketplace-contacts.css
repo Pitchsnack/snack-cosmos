@@ -38,6 +38,8 @@
 .mc-panel .standard-card-name {max-height:none;overflow:visible}
 .mc-panel .standard-card-subtitle {white-space:normal}
 .mc-own-avatar {background:var(--contacts-selected);color:var(--contacts-icon)}
+.mc-panel .standard-card-toggle {height:44px}
+html[lang=th] .marketplace-contacts .standard-card-caption {font-size:12px;letter-spacing:0}
 html[lang=th] .mc-caption,html[lang=th] .mc-table-scroll th{font-size:12px;letter-spacing:0}html[lang=th] .mc-type{line-break:strict}
 @media(max-width:1179px){.mc-split{grid-template-columns:minmax(0,1fr)}.mc-panel{position:static}}
 @media(max-width:720px){.marketplace-contacts{padding:20px 16px}.mc-own-grid{grid-template-columns:1fr 1fr;gap:14px 20px}.mc-own-grid>div:first-child{grid-column:1/-1}.mc-filters>div{flex-basis:100%}.mc-filters select{max-width:100%;flex:1}.mc-panel{padding:16px}}
