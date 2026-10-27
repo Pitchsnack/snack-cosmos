@@ -30,7 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { ContactsPage } from "./contacts.index";
+import { Suspense } from "react";
+import { ContactsPage } from "@/components/contacts/admin-contacts-page";
 
 export const Route = createFileRoute("/_authenticated/connections")({
   head: () => ({
@@ -41,6 +42,8 @@ export const Route = createFileRoute("/_authenticated/connections")({
         content:
           "Manage your investors, master agents, and partner connections in SnackPortal2.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { property: "og:title", content: "Connections — SnackPortal2" },
       {
         property: "og:description",
@@ -79,7 +82,7 @@ function ConnectionsTabsPage() {
           );
         })}
       </div>
-      {tab === "connections" ? <ConnectionsPage /> : <ContactsPage />}
+      {tab === "connections" ? <ConnectionsPage /> : <Suspense fallback={<div>Loading…</div>}><ContactsPage /></Suspense>}
     </div>
   );
 }
