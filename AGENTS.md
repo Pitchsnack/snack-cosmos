@@ -56,4 +56,4 @@
 - Shared editor layouts use EditInfoPopup, CompactFields and common/business-address; directory create rows own transient highlighting/focus so editor state never changes permissions or saving rules.
 
 - Buyer description counts and grandfathering use the browser-safe buyer-description helper in existing form/server validators; editor previews adapt unsaved public-only values into StandardInvestorCard, preserving existing persistence and authorization.
-- Admin Contacts (/contacts, /connections My Contacts tab, name-card Quick Add) is a personal address book in user_contacts via user-contacts.functions.ts; RLS limits every row to its owner. My Connections is still sample data.
+- Admin Contacts (/contacts) merges live platform members (listPlatformContacts: Admin+Control only, read-only) with the personal address book in user_contacts (owner RLS) via user-contacts.functions.ts. My Connections is still sample data.
