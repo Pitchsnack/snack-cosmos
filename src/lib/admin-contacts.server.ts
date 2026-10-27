@@ -1,4 +1,4 @@
-import { CONTACT_ROLES, type AdminContact } from "./admin-contacts";
+import { CONTACT_ROLES, activeContactNda, type AdminContact } from "./admin-contacts";
 
 /** Stable pagination avoids the Data API limit silently hiding older accounts. */
 export async function contactRows(sb: any, table: string, columns: string, key = "id") {
@@ -14,17 +14,26 @@ export async function contactRows(sb: any, table: string, columns: string, key =
 }
 
 export async function loadAdminContacts(sb: any): Promise<AdminContact[]> {
-  const [users, profiles, buyers, investors, firms, startups, hidden, members, owners] = await Promise.all([
+  const [users, profiles, buyers, investors, firms, startups, hidden, members, owners, pipelines] = await Promise.all([
     contactRows(sb, "users", "id,first_name,last_name,email,account_role,status,created_at"),
     contactRows(sb, "user_profiles", "user_id,title,organisation,phone,linkedin,website,city,country", "user_id"),
-    contactRows(sb, "buyer_profiles", "user_id,investor_id,legal_name,ref_no,approval_status", "user_id"),
+    contactRows(sb, "buyer_profiles", "user_id,investor_id,legal_name,ref_no,approval_status,status", "user_id"),
     contactRows(sb, "investors", "id,investor_name"),
-    contactRows(sb, "advisor_firms", "id,owner_user_id,name,ref_no,status,phone,website,city,country"),
+    contactRows(sb, "advisor_firms", "id,owner_user_id,name,ref_no,status,advisor_verification,phone,website,city,country"),
     contactRows(sb, "startups", "id,created_by,startup_name,city,region,website_url"),
     contactRows(sb, "hidden_profiles", "id,startup_id,ref_no,approval_status"),
     contactRows(sb, "startup_users", "id,user_id,startup_id"),
     contactRows(sb, "startup_ownership", "id,owning_agent_user_id,startup_id"),
+    contactRows(sb, 'deal_pipelines', 'id,startup_id,buyer_user_id,status,nda_approved_at,nda_expires_at'),
   ]);
+  const lastSignIn = new Map<string, string>();
+  for (let page = 1; ; page++) {
+    const {data, error} = await sb.auth.admin.listUsers({page, perPage: 1000});
+    if (error) throw new Error('Unable to load sign-ins');
+    for (const u of data.users) if (u.last_sign_in_at) lastSignIn.set(u.id, u.last_sign_in_at);
+    if (data.users.length < 1000) break;
+  }
+  const active = pipelines.filter(p => activeContactNda(p));
   const ps = new Map(profiles.map(p => [p.user_id, p]));
   const inv = new Map(investors.map(i => [i.id, i]));
   const hp = new Map(hidden.map(h => [h.startup_id, h]));
@@ -35,13 +44,15 @@ export async function loadAdminContacts(sb: any): Promise<AdminContact[]> {
     const myStartups = startups.filter(s => startupIds.has(s.id) || s.created_by === u.id);
     const organisations: AdminContact["organisations"] = u.account_role === "buyer" ? buyers.filter(b => b.user_id === u.id).map(b => ({
       id: b.investor_id || b.user_id, name: inv.get(b.investor_id)?.investor_name || b.legal_name || p?.organisation || "—",
-      ref: b.ref_no, kind: "buyer", status: b.approval_status || "draft",
-    })) : u.account_role === "advisor" ? myFirms.map(f => ({ id: f.id, name: f.name, ref: f.ref_no, kind: "advisor", status: f.status })) : myStartups.map(s => ({
+      ref: b.ref_no, kind: "buyer", status: b.status === 'live' && b.approval_status === 'approved' ? 'live' : b.approval_status === 'pending' ? 'in_review' : 'draft',
+    })) : u.account_role === "advisor" ? myFirms.map(f => ({ id: f.id, name: f.name, ref: f.ref_no, kind: "advisor", status: f.advisor_verification || 'unverified' })) : myStartups.map(s => ({
       id: s.id, name: s.startup_name, ref: hp.get(s.id)?.ref_no || null, kind: "seller", status: hp.get(s.id)?.approval_status || "draft",
     }));
     return {
       id: u.id, name: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email,
       role: u.account_role, title: p?.title || null, email: u.email, status: u.status, joined: u.created_at,
+      lastActive: lastSignIn.get(u.id) || null,
+      connections: u.account_role === 'advisor' ? 0 : new Set(active.filter(d => u.account_role === 'buyer' ? d.buyer_user_id === u.id : myStartups.some(s => s.id === d.startup_id)).map(d => d.id)).size,
       phone: p?.phone || (u.account_role === "advisor" ? myFirms[0]?.phone : null) || null,
       linkedin: p?.linkedin || null, website: p?.website || (u.account_role === "advisor" ? myFirms[0]?.website : u.account_role === "seller" ? myStartups[0]?.website_url : null) || null,
       location: [p?.city || (u.account_role === "advisor" ? myFirms[0]?.city : u.account_role === "seller" ? myStartups[0]?.city : null), p?.country || (u.account_role === "advisor" ? myFirms[0]?.country : u.account_role === "seller" ? myStartups[0]?.region : null)].filter(Boolean).join(", ") || null,

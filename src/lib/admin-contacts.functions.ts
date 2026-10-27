@@ -13,6 +13,19 @@ export const listAdminContacts = createServerFn({ method: "GET" }).middleware([r
   return loadAdminContacts(supabaseAdmin);
 });
 
+export const getAdminContactCards = createServerFn({method: 'GET'}).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({contactId: z.string().uuid()}).parse(d))
+  .handler(async ({context, data}) => {
+    const {requireHelpAdmin} = await import('./admin-help.server');
+    await requireHelpAdmin(context);
+    const {supabaseAdmin} = await import('@/integrations/supabase/client.server');
+    const {loadAdminContacts} = await import('./admin-contacts.server');
+    const contact = (await loadAdminContacts(supabaseAdmin)).find(c => c.id === data.contactId);
+    if (!contact) throw new Error('Contact not found');
+    const {loadAdminContactCards} = await import('./admin-contact-cards.server');
+    return loadAdminContactCards(supabaseAdmin, contact);
+  });
+
 export const listAdminContactNotes = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ contactId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }): Promise<AdminContactNote[]> => {

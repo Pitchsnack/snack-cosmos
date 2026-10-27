@@ -29,13 +29,13 @@ export function scheduleCardRows(el: Element | null) {
 }
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, textRow, more, selected, onOpen, className, sourceType, tag }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, textRow, more, selected, onOpen, className, sourceType, tag }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
   fit: StandardFigure; textRow: StandardFigure; more?: ReactNode; selected?: boolean; onOpen?: () => void;
   focusRow?: StandardFigure; descriptionContent?: ReactNode;
-  className?: string; sourceType?: string; tag?: ReactNode;
+  className?: string; sourceType?: string; tag?: ReactNode; hideStatus?: boolean;
 }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -87,9 +87,9 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
     <div className="standard-card-cover" data-connect-cover={refNo} data-connect-type={sourceType}>
       {cover(<>
         <div ref={coverFit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
-        <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`)} title={statusTip}>
+        {!hideStatus && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`)} title={statusTip}>
           <StatusIcon aria-hidden /><span>{t(statusLabel)}</span>{newDays != null && <span className="standard-card-new">{t('NEW')}</span>}
-        </span>
+        </span>}
         <div ref={coverFit.right} className="standard-card-tools">{managed && <ManagedBadge size="sm" hatOnly={coverFit.level >= 1} />}{topRight}</div>
         {!!badges?.length && <div className="standard-card-badges">{badges.map((b) => <span key={b.label} className="standard-card-badge">{b.financial ? <FileText aria-hidden /> : <CircleCheck aria-hidden />}{t(b.label)}</span>)}</div>}
       </>)}

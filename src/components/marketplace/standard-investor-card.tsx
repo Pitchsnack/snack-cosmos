@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
 import { BuyerCover, type CardInvestor } from '@/components/marketplace/buyer-browse-card';
-import { StandardBrowseCard, StandardCardChips, StandardCardSection } from './standard-browse-card';
+import { StandardBrowseCard, StandardCardChips, StandardCardSection, type StandardFigure } from './standard-browse-card';
 import { bandOf, INDIVIDUAL_TYPE, typeName } from '@/lib/investor-bands';
 import { isCorporateBuyer } from '@/lib/investor-browse';
 import { cardNdaStatus } from '@/lib/standard-card';
 import type { SellerFavPrivate } from '@/lib/investor-browse.functions';
 
-export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent }: {
+export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent, hideStatus, exactFigures }: {
   i: CardInvestor & { managed?: boolean; coverUrl?: string | null; status?: string; newDays?: number | null };
-  privateData?: SellerFavPrivate | null; onClick?: () => void; selected?: boolean; topRight?: ReactNode; className?: string; tag?: ReactNode;
+  privateData?: Omit<SellerFavPrivate, 'ndaApprovedAt' | 'ndaValidUntil'> | null; onClick?: () => void; selected?: boolean; topRight?: ReactNode; className?: string; tag?: ReactNode;
+  hideStatus?: boolean; exactFigures?: {figures: StandardFigure[]; fit: StandardFigure};
   descriptionContent?: ReactNode;
 }) {
   const p = privateData;
@@ -25,9 +26,9 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   const initials = name?.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return <StandardBrowseCard title={name || typeName(type, i.actsFor)} subtitle={name ? typeName(type, p?.acts_for_types ?? i.actsFor) : undefined}
     refNo={i.refNo} place={p?.country ?? i.country} description={p ? p.short_description || p.long_description : i.description}
-    status={cardNdaStatus(i.status)} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={className} sourceType={i.type ?? i.codeName} tag={tag}
+    status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={className} sourceType={i.type ?? i.codeName} tag={tag}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}
     badges={[...(i.verified ? [{ label: 'Verified investor' }] : []), ...(i.proofOfFunds ? [{ label: 'Proof of funds' }] : [])]}
-    descriptionContent={descriptionContent} figures={figures} fit={band('Min. target revenue', p?.revenue_min_band ?? i.revBand)} focusRow={{label:'Investment Focus',value:i.dealTypes.join(' · ')}} textRow={{ label: 'Geography', value: geography }}
+    descriptionContent={descriptionContent} figures={exactFigures?.figures ?? figures} fit={exactFigures?.fit ?? band('Min. target revenue', p?.revenue_min_band ?? i.revBand)} focusRow={{label:'Investment Focus',value:i.dealTypes.join(' · ')}} textRow={{ label: 'Geography', value: geography }}
     more={<>{(p?.city ?? i.city) && <StandardCardSection label="Based in">{p?.city ?? i.city}</StandardCardSection>}{!!(sectors.length || stages.length || i.dealTypes.length) && <StandardCardSection label="Focus"><StandardCardChips values={[...sectors, ...stages, ...i.dealTypes]} /></StandardCardSection>}</>} />;
 }
