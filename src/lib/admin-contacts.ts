@@ -10,7 +10,7 @@ export type AdminContact = {
 export const CONTACT_STATUSES = ['Live', 'In review', 'Draft', 'Verified', 'Checking', 'No profile yet'] as const;
 export function contactProfileStatus(c: Pick<AdminContact, 'organisations'>): string {
   if (!c.organisations.length) return 'No profile yet';
-  const states = c.organisations.map(o => o.kind === 'advisor' ? o.status === 'verified' ? 'Verified' : ['pending', 'more_info'].includes(o.status) ? 'Checking' : 'Draft' : ['live', 'live_edits_pending', 'approved'].includes(o.status) ? 'Live' : ['in_review', 'pending'].includes(o.status) ? 'In review' : 'Draft');
+  const states: string[] = c.organisations.map(o => o.kind === 'advisor' ? o.status === 'verified' ? 'Verified' : ['pending', 'more_info'].includes(o.status) ? 'Checking' : 'Draft' : ['live', 'live_edits_pending', 'approved'].includes(o.status) ? 'Live' : ['in_review', 'pending'].includes(o.status) ? 'In review' : 'Draft');
   return ['Live', 'Verified', 'In review', 'Checking', 'Draft'].find(s => states.includes(s)) || 'Draft';
 }
 export function activeContactNda(p: {status: string; nda_approved_at: string | null; nda_expires_at?: string | null}, now = Date.now()) {
