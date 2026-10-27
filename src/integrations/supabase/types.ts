@@ -127,6 +127,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_contact_notes: {
+        Row: {
+          author_user_id: string
+          body: string
+          contact_user_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_user_id: string
+          body: string
+          contact_user_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          contact_user_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_contact_notes_author_user_id_fkey"
+            columns: ["author_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_contact_notes_contact_user_id_fkey"
+            columns: ["contact_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advisor_conversations: {
         Row: {
           client_org_id: string
