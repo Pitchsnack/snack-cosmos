@@ -1,0 +1,25 @@
+import {describe,test,expect} from 'bun:test';
+import {activeAdvisorContact,filterMarketplaceContacts,investorClassification,basedIn,contactTitle,contactPlace} from '../../src/lib/marketplace-contacts';
+import {activeContactNda} from '../../src/lib/admin-contacts';
+const now=Date.parse('2026-10-27T15:33:00Z');const a={advisor_nda_id:'nda',deal_id:'deal',firm_profile_id:'firm'},n={id:'nda',deal_id:'deal',firm_profile_id:'firm',signed_at:'2026-10-26',expires_at:'2026-10-28'},d={status:'active'};
+const b={name:'Buyer',company:'Firm',email:'buyer@example.test',contactRole:'buyer' as const,companyType:'Family Office',connectedAt:'2026-10-26'};
+describe('Marketplace contacts privacy and rules',()=>{
+ test('both parties available only with matching active advisor NDA',()=>expect(activeAdvisorContact(a,n,d,now)).toBe(true));
+ test('expired advisor NDA never grants contact access',()=>expect(activeAdvisorContact(a,{...n,expires_at:new Date(now).toISOString()},d,now)).toBe(false));
+ test('unsigned advisor NDA never grants contact access',()=>expect(activeAdvisorContact(a,{...n,signed_at:null},d,now)).toBe(false));
+ test('different firm NDA never grants contact access',()=>expect(activeAdvisorContact(a,{...n,firm_profile_id:'other'},d,now)).toBe(false));
+ test('different deal NDA never grants contact access',()=>expect(activeAdvisorContact(a,{...n,deal_id:'other'},d,now)).toBe(false));
+ test('ended deal removes advisor contacts',()=>expect(activeAdvisorContact(a,n,{...d,ended_at:'2026-10-26'},now)).toBe(false));
+ test('revoked and declined deals remove contacts',()=>{for(const status of ['ended','revoked','withdrawn','declined'])expect(activeAdvisorContact(a,n,{status},now)).toBe(false);});
+ test('expired buyer seller NDA removes contacts',()=>expect(activeContactNda({status:'active',nda_approved_at:'2026-10-26',nda_expires_at:'2026-10-27'},now)).toBe(false));
+ test('unapproved buyer seller NDA removes contacts',()=>expect(activeContactNda({status:'active',nda_approved_at:null},now)).toBe(false));
+ test('search finds investor types in both languages',()=>{for(const q of ['Family office','สำนักงานครอบครัว'])expect(filterMarketplaceContacts([b],'all',q,'','connected')).toEqual([b]);});
+ test('search matches partial email case insensitively',()=>expect(filterMarketplaceContacts([b],'all','BUYER@','','connected')).toEqual([b]));
+ test('type filter excludes advisors and combines with role tabs',()=>{const ad={...b,contactRole:'advisor' as const,companyType:null};expect(filterMarketplaceContacts([b,ad],'all','','Family Office','connected')).toEqual([b]);expect(filterMarketplaceContacts([b],'seller','','Family Office','connected')).toEqual([]);});
+ test('recent connection is newest first',()=>{const older={...b,name:'Older',connectedAt:'2026-10-25'};expect(filterMarketplaceContacts([older,b],'all','','','connected').map(c=>c.name)).toEqual(['Buyer','Older']);});
+ test('classification uses stored represented types in canonical order',()=>expect(investorClassification('Authorised representative / adviser',['Private Equity','Family Office'])).toBe('Family Office'));
+ test('unknown profile locations remain as typed',()=>expect(basedIn('Custom City','Custom Country','th')).toBe('Custom City Custom Country'));
+ test('same city and country is shown once',()=>expect(basedIn('Hong Kong','Hong Kong','th')).toBe('ฮ่องกง'));
+ test('known title matches case and surrounding spaces; unknown preserved',()=>{expect(contactTitle(' CEO ','th')).toBe('ประธานเจ้าหน้าที่บริหาร');expect(contactTitle('Chief Snack Officer','th')).toBe('Chief Snack Officer');});
+ test('province list mappings remain correctly aligned',()=>{expect(contactPlace('Chiang Rai','th')).toBe('เชียงราย');expect(contactPlace('Phra Nakhon Si Ayutthaya','th')).toBe('พระนครศรีอยุธยา');expect(contactPlace('Yasothon','th')).toBe('ยโสธร');});
+});

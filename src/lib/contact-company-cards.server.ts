@@ -27,7 +27,7 @@ export async function loadContactCompanyCards(sb: any, contact: {id:string; orga
       ]);
       if (error || !s) throw new Error('Unable to load company card');
       const snapshot = h?.live || h || {};
-      const l = buildPublicListing(s, {...snapshot, ref_no: o.ref, live: !!h?.live, published_at: h?.published_at}, !!fin?.length);
+      const l = buildPublicListing(s, {...snapshot, ref_no: o.ref || h?.ref_no, live: !!h?.live, published_at: h?.published_at}, !!fin?.length);
       const {managedStartupIds} = await import('./managed.server');
       l.managed = (await managedStartupIds(sb, [o.id])).has(o.id);
       l.certified = !!s.registration_verified_at;
@@ -42,14 +42,14 @@ export async function loadContactCompanyCards(sb: any, contact: {id:string; orga
     }
     const [{data: i, error}, {data: b}, {data: verification}] = await Promise.all([
       sb.from('investors').select('investor_name,investor_type,country,address_city_district,address_province_state,website_url,linkedin_url,email,year_founded,aum,aum_exact_usd,min_ticket_size,max_ticket_size,revenue_min_m,revenue_max_m,short_description,long_description,keywords,investment_focus,preferred_stages,preferred_industries,logo_url,aum_band,ticket_band,revenue_min_band,acts_for_types,media').eq('id', o.id).single(),
-      sb.from('buyer_profiles').select('buyer_relation,deal_types,pof_verified_at').eq('user_id', contact.id).maybeSingle(),
+      sb.from('buyer_profiles').select('buyer_relation,deal_types,pof_verified_at,ref_no').eq('investor_id', o.id).maybeSingle(),
       sb.from('investor_profile_verifications').select('status').eq('investor_id', o.id).maybeSingle(),
     ]);
     if (error || !i) { console.error('Admin buyer card query failed', error?.code); throw new Error('Unable to load company card'); }
     i.city = i.address_province_state || i.address_city_district || null;
     const privateData = {...i, acts_for_types: i.acts_for_types || [], keywords: i.keywords || [], investment_focus: i.investment_focus || [], preferred_stages: i.preferred_stages || [], preferred_industries: i.preferred_industries || [],
       logo_signed_url: await signed(i.logo_url), media: await Promise.all((i.media || []).sort((a: any, b: any) => a.slot - b.slot).map(async (m: any) => ({slot: m.slot, image_signed_url: await signed(m.image_path)}))), people: [], linked_startups: []};
-    const card = {refNo: o.ref || '', codeName: '', name: i.investor_name, type: i.investor_type, city: i.city, country: i.country, description: i.short_description, sectors: i.preferred_industries || [], stages: i.preferred_stages || [], dealTypes: b?.deal_types || [], geography: (i.investment_focus || []).join(' · '), verified: verification?.status === 'verified', proofOfFunds: !!b?.pof_verified_at, ticketLabel: null, aumLabel: null, revLabel: null, relation: b?.buyer_relation, actsFor: i.acts_for_types || []};
+    const card = {refNo: o.ref || b?.ref_no || '', codeName: '', name: i.investor_name, type: i.investor_type, city: i.city, country: i.country, description: i.short_description, sectors: i.preferred_industries || [], stages: i.preferred_stages || [], dealTypes: b?.deal_types || [], geography: (i.investment_focus || []).join(' · '), verified: verification?.status === 'verified', proofOfFunds: !!b?.pof_verified_at, ticketLabel: null, aumLabel: null, revLabel: null, relation: b?.buyer_relation, actsFor: i.acts_for_types || []};
     const {managedInvestorIds} = await import('./managed.server');
     const money = (v: string | null) => v || null;
     return {kind: 'buyer' as const, id: o.id, card: {...card, managed: (await managedInvestorIds(sb, [o.id])).has(o.id)}, privateData,

@@ -4,6 +4,8 @@ import { StandardBrowseCard, StandardCardChips, StandardCardSection, type Standa
 import { bandOf, INDIVIDUAL_TYPE, typeName } from '@/lib/investor-bands';
 import { isCorporateBuyer } from '@/lib/investor-browse';
 import { cardNdaStatus } from '@/lib/standard-card';
+import { useTranslation } from '@/i18n/language';
+import { contactPlace, cardValue } from '@/lib/marketplace-contacts';
 import type { SellerFavPrivate } from '@/lib/investor-browse.functions';
 
 export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent, hideStatus, exactFigures }: {
@@ -12,6 +14,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   hideStatus?: boolean; exactFigures?: {figures: StandardFigure[]; fit: StandardFigure};
   descriptionContent?: ReactNode;
 }) {
+  const {language}=useTranslation();
   const p = privateData;
   const name = p?.investor_name;
   const type = p?.investor_type ?? i.type;
@@ -24,11 +27,11 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   if (!individual) figures.push(band(isCorporateBuyer(type) ? 'Group revenue' : 'AUM', p?.aum_band ?? i.aumBand));
   const photo = p?.media.find((m) => m.image_signed_url)?.image_signed_url;
   const initials = name?.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-  return <StandardBrowseCard title={name || typeName(type, i.actsFor)} subtitle={name ? typeName(type, p?.acts_for_types ?? i.actsFor) : undefined}
-    refNo={i.refNo} place={p?.country ?? i.country} description={p ? p.short_description || p.long_description : i.description}
+  return <StandardBrowseCard title={name || cardValue(typeName(type, i.actsFor),language) || ''} subtitle={name ? cardValue(typeName(type, p?.acts_for_types ?? i.actsFor),language) || undefined : undefined}
+    refNo={i.refNo} place={contactPlace(p?.city || i.city || p?.country || i.country,language)} description={p ? p.short_description || p.long_description : i.description}
     status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={className} sourceType={i.type ?? i.codeName} tag={tag}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}
     badges={[...(i.verified ? [{ label: 'Verified investor' }] : []), ...(i.proofOfFunds ? [{ label: 'Proof of funds' }] : [])]}
-    descriptionContent={descriptionContent} figures={exactFigures?.figures ?? figures} fit={exactFigures?.fit ?? band('Min. target revenue', p?.revenue_min_band ?? i.revBand)} focusRow={{label:'Investment Focus',value:i.dealTypes.join(' · ')}} textRow={{ label: 'Geography', value: geography }}
-    more={<>{(p?.city ?? i.city) && <StandardCardSection label="Based in">{p?.city ?? i.city}</StandardCardSection>}{!!(sectors.length || stages.length || i.dealTypes.length) && <StandardCardSection label="Focus"><StandardCardChips values={[...sectors, ...stages, ...i.dealTypes]} /></StandardCardSection>}</>} />;
+    descriptionContent={descriptionContent} figures={exactFigures?.figures ?? figures} fit={exactFigures?.fit ?? band('Min. target revenue', p?.revenue_min_band ?? i.revBand)} focusRow={{label:'Investment Focus',value:cardValue(i.dealTypes.join(' · '),language)}} textRow={{ label: 'Geography', value: cardValue(geography,language) }}
+    more={<>{(p?.city ?? i.city) && <StandardCardSection label="Based in">{contactPlace(p?.city ?? i.city,language)}</StandardCardSection>}{!!(sectors.length || stages.length || i.dealTypes.length) && <StandardCardSection label="Focus"><StandardCardChips values={[...sectors, ...stages, ...i.dealTypes]} /></StandardCardSection>}</>} />;
 }

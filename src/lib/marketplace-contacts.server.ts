@@ -73,11 +73,6 @@ export async function loadMarketplaceContacts(data: {as: ContactView}, context: 
     const {data:invs}=invIds.length?await sb.from('investors').select('id,investor_name,investor_type,acts_for_types').in('id',invIds):{data:[]};
     const buyerOf=Object.fromEntries((bps||[]).map((b:any)=>[b.user_id,{...b,investor:(invs||[]).find((i:any)=>i.id===b.investor_id)}]));
     const { users, profs } = await people(sb, [...new Set([...personIds, context.userId])]);
-    const { data: bvs } = data.as === "seller" && personIds.length
-      ? await (await import("./profile-verification.server")).verificationsByUsers(sb, personIds, "user_id, company_name, buyer_type").then((mp: Map<string, any>) => ({ data: [...mp.values()] }))
-      : { data: [] };
-    const bvMap = Object.fromEntries((bvs ?? []).map((b: any) => [b.user_id, b]));
-
     const seen = new Set<string>();
     const contacts: ContactPerson[] = [];
     const pidOf = new Map<ContactPerson, string>();
@@ -162,11 +157,7 @@ export async function loadMarketplaceContacts(data: {as: ContactView}, context: 
         }
       }
     }
-    for(const c of contacts) {
-      if(!c.personId)continue;
-      const {data:auth,error}=await sb.auth.admin.getUserById(c.personId);
-      if(!error)c.lastActive=auth?.user?.last_sign_in_at||null;
-    }
+    await Promise.all(contacts.map(async c=>{if(!c.personId)return;const {data:auth,error}=await sb.auth.admin.getUserById(c.personId);if(!error)c.lastActive=auth?.user?.last_sign_in_at||null;}));
     // Admins of a managed company: one "PitchSnack team" row, never their own details.
     const team = await (await import("@/lib/managed.server")).adminUserIds(sb, [...pidOf.values()]);
     for (const c of contacts) {
