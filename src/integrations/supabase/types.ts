@@ -6607,6 +6607,78 @@ export type Database = {
         }
         Relationships: []
       }
+      user_contacts: {
+        Row: {
+          company: string | null
+          contact_type: string
+          created_at: string
+          department: string | null
+          email: string | null
+          event: string | null
+          full_name: string
+          id: string
+          last_contacted_at: string | null
+          location: string | null
+          next_action: string | null
+          next_action_at: string | null
+          notes: string | null
+          owner_user_id: string
+          phone: string | null
+          position: string | null
+          source: string
+          status: string
+          tags: string[]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          company?: string | null
+          contact_type?: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          event?: string | null
+          full_name: string
+          id?: string
+          last_contacted_at?: string | null
+          location?: string | null
+          next_action?: string | null
+          next_action_at?: string | null
+          notes?: string | null
+          owner_user_id?: string
+          phone?: string | null
+          position?: string | null
+          source?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          company?: string | null
+          contact_type?: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          event?: string | null
+          full_name?: string
+          id?: string
+          last_contacted_at?: string | null
+          location?: string | null
+          next_action?: string | null
+          next_action_at?: string | null
+          notes?: string | null
+          owner_user_id?: string
+          phone?: string | null
+          position?: string | null
+          source?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           bio: string | null
