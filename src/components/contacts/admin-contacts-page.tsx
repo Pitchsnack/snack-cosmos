@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listAdminContacts, listAdminContactNotes, addAdminContactNote, getAdminContactCards } from "@/lib/admin-contacts.functions";
 import { filterAdminContacts, contactProfileStatus, contactActiveAge, CONTACT_STATUSES, type AdminContact } from "@/lib/admin-contacts";
 import { useTranslation } from "@/i18n/language";
-import { cn } from "@/lib/utils";
 import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
 import { StandardInvestorCard } from "@/components/marketplace/standard-investor-card";
 import { FirmCard } from "@/components/advisor/advisor-firm-card";
@@ -56,14 +55,15 @@ export function ContactsPage() {
     <div className="flex flex-wrap gap-2 border-b border-border pb-2" role="tablist" aria-label={txt("Contact roles", "ประเภทผู้ติดต่อ")}>
       {roles.map(r => <Button key={r} role="tab" aria-selected={role === r} className="contact-tab" variant={role === r ? "secondary" : "ghost"} onClick={() => setRole(r)}>{roleName(r)}</Button>)}
     </div>
-    <div ref={split} className="contact-split">
-      <section className="min-w-0 space-y-3" aria-label={txt("Contact list", "รายชื่อผู้ติดต่อ")}>
         <div className="contact-filters flex flex-wrap items-center gap-2">
           <div className="relative min-w-[180px] flex-1"><Search className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground" /><Input aria-label={txt("Search contacts", "ค้นหาผู้ติดต่อ")} placeholder={txt("Search name, company or email", "ค้นหาชื่อ บริษัท หรืออีเมล")} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" /></div>
           <Select value={type} onValueChange={setType}><SelectTrigger aria-label={txt("Contact type", "ประเภทผู้ติดต่อ")}><SelectValue /></SelectTrigger><SelectContent>{roles.map(r => <SelectItem key={r} value={r}>{r === 'all' ? txt('All types', 'ทุกประเภท') : roleName(r)}</SelectItem>)}</SelectContent></Select>
           <Select value={status} onValueChange={setStatus}><SelectTrigger aria-label={t("Status")}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{txt("All statuses", "ทุกสถานะ")}</SelectItem>{CONTACT_STATUSES.map(s => <SelectItem key={s} value={s}>{statusText(s, language)}</SelectItem>)}</SelectContent></Select>
           <Select value={sort} onValueChange={setSort}><SelectTrigger aria-label={txt("Sort contacts", "เรียงผู้ติดต่อ")}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="recent">{txt("Newest joined", "สมัครล่าสุด")}</SelectItem><SelectItem value="active">{txt("Last active", "ใช้งานล่าสุด")}</SelectItem><SelectItem value="name">{txt("Name A–Z", "ชื่อ A–Z")}</SelectItem><SelectItem value="company">{t("Company")}</SelectItem></SelectContent></Select>
         </div>
+    <div ref={split} className="contact-split">
+      <section className="min-w-0 space-y-3" aria-label={txt("Contact list", "รายชื่อผู้ติดต่อ")}>
+
         <div ref={scroll} className="contact-table-scroll" aria-label={txt('Scrollable contacts', 'รายชื่อผู้ติดต่อแบบเลื่อน')}>
           <div className="contact-table" role="table">
             <div className="contact-table-head contact-columns" role="row">{['Contact','Company','Role','Status','Connections','Last active'].map(label => <span role="columnheader" key={label}>{txt(label, ({Contact:'ผู้ติดต่อ',Company:'บริษัท',Role:'บทบาท',Status:'สถานะ',Connections:'การเชื่อมต่อ','Last active':'ใช้งานล่าสุด'} as Record<string,string>)[label])}</span>)}</div>
