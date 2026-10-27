@@ -12,9 +12,9 @@
 .mc-tabs-line {border-bottom:1px solid var(--contacts-line);padding-bottom:16px}
 .mc-tabs {display:inline-flex;flex-wrap:wrap;max-width:100%;gap:4px;padding:4px;border:1px solid var(--contacts-line);border-radius:12px;background:var(--card);box-shadow:var(--mc-tab-shadow)}
 .mc-tab {display:flex;align-items:center;gap:7px;height:36px;padding:0 12px 0 14px;border:0;border-radius:9px;font-size:15px;white-space:nowrap;background:transparent;color:var(--contacts-icon)}
-.mc-tab:hover {background:var(--contacts-hover);color:var(--contacts-ink)} .mc-tab[aria-selected=true] {background:var(--contacts-selected);color:var(--contacts-ink);font-weight:600}
+.mc-tab:hover {background:var(--contacts-hover);color:var(--contacts-ink)} .mc-tab[aria-selected=true] {background:var(--plan-seller);color:var(--help-ink);font-weight:600}
 .mc-tab span {display:grid;place-items:center;height:20px;min-width:22px;padding:0 7px;border-radius:999px;background:var(--mc-count);color:var(--contacts-icon);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
-.mc-tab:hover span,.mc-tab[aria-selected=true] span {background:var(--card)}
+.mc-tab:hover span,.mc-tab[aria-selected=true] span {background:var(--card)} .mc-tab[aria-selected=true] span {color:var(--help-ink)}
 .mc-split {display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px;align-items:start;margin-top:20px}.mc-closed {grid-template-columns:minmax(0,1fr)}
 .mc-filters {display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}.mc-filters>div {flex:1 1 280px;min-width:280px}.mc-filters>select{flex:none}.mc-filters input,.mc-filters select {height:40px;border:1px solid var(--contacts-control-line);border-radius:9px;background:var(--card);color:var(--contacts-ink);font-size:14px}.mc-filters input::placeholder{font-size:14px}.mc-filters select {max-width:250px;min-width:0;padding:0 10px}
 .mc-table-scroll {overflow:auto;box-sizing:border-box;width:100%;max-height:max(360px,calc(100dvh - 120px));min-height:360px;border:1px solid var(--contacts-line);border-radius:12px;background:var(--card);overscroll-behavior:contain}
