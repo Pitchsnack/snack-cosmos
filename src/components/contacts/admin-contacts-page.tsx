@@ -37,7 +37,7 @@ export function ContactsPage() {
   const roleName = (r: string) => r === "all" ? t("All") : t(r === "buyer" ? "Buyer" : r === "seller" ? "Seller" : "Advisor");
   const initials = (name: string) => name.split(/\s+/).slice(0, 2).map(n => n[0]).join("").toUpperCase();
   return <div className="space-y-5">
-    <h1 className="text-2xl font-semibold">{t("My Contacts")}</h1>
+    <h1 className="text-2xl font-semibold">{txt("My Contacts", "ผู้ติดต่อของฉัน")}</h1>
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {roles.map(r => <Button key={r} variant="outline" onClick={() => setRole(r)} className={cn("h-auto justify-start gap-3 rounded-lg p-4 text-left", role === r && "border-primary bg-accent")}>
         <Users className="size-5 shrink-0 text-primary" /><span className="min-w-0"><span className="block text-sm text-muted-foreground">{r === "all" ? txt("Total contacts", "ผู้ติดต่อทั้งหมด") : roleName(r)}</span><span className="block text-2xl font-semibold">{r === "all" ? contacts.length : contacts.filter(c => c.role === r).length}</span></span>
@@ -49,7 +49,7 @@ export function ContactsPage() {
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
       <section className="min-w-0 space-y-3" aria-label={txt("Contact list", "รายชื่อผู้ติดต่อ")}>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground" /><Input aria-label={txt("Search contacts", "ค้นหาผู้ติดต่อ")} placeholder={txt("Search contacts…", "ค้นหาผู้ติดต่อ…")} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" /></div>
+          <div className="relative min-w-[180px] flex-1"><Search className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground" /><Input aria-label={txt("Search contacts", "ค้นหาผู้ติดต่อ")} placeholder={txt("Search contacts…", "ค้นหาผู้ติดต่อ…")} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" /></div>
           <Select value={status} onValueChange={setStatus}><SelectTrigger className="w-36" aria-label={t("Status")}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{txt("All statuses", "ทุกสถานะ")}</SelectItem>{[...new Set(contacts.map(c => c.status))].sort().map(s => <SelectItem key={s} value={s}>{t(s)}</SelectItem>)}</SelectContent></Select>
           <Select value={sort} onValueChange={setSort}><SelectTrigger className="w-40" aria-label={txt("Sort contacts", "เรียงผู้ติดต่อ")}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="recent">{txt("Newest joined", "สมัครล่าสุด")}</SelectItem><SelectItem value="name">{t("Name")}</SelectItem><SelectItem value="company">{t("Company")}</SelectItem></SelectContent></Select>
         </div>
