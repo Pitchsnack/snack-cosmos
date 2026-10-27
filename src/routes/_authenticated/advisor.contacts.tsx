@@ -1,0 +1,3 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { MarketplaceContactsPage } from '@/components/contacts/marketplace-contacts-page';
+export const Route=createFileRoute('/_authenticated/advisor/contacts')({head:()=>({meta:[{title:'Advisor Contacts — PitchSnack'},{name:'description',content:'The people on your active advisor NDA deals on PitchSnack.'},{property:'og:title',content:'Advisor Contacts — PitchSnack'},{property:'og:description',content:'The people on your active advisor NDA deals on PitchSnack.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:()=> <MarketplaceContactsPage as="advisor"/>});
