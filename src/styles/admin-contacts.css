@@ -1,0 +1,54 @@
+:root {
+  --contacts-selected: #EEF0F4; --contacts-selected-border: #C9CED6; --contacts-ink: #151A28;
+  --contacts-icon: #4B5563; --contacts-hover: #F5F6F8; --contacts-head: #FAFAFB;
+  --contacts-hint: #9CA3AF; --contacts-line: #E6E8EC; --contacts-control-line: #DCDFE5;
+  --contacts-seller-ink: #8A4B06; --contacts-seller-bg: #FEF3DE;
+  --contacts-buyer-ink: #4338CA; --contacts-buyer-bg: #EEF0FF;
+  --contacts-advisor-ink: #0F766E; --contacts-advisor-bg: #E0F5F2;
+  --contacts-live: #15803D; --contacts-checking: #1D4ED8;
+}
+.dark {
+  --contacts-selected: #303640; --contacts-selected-border: #586170; --contacts-ink: #EDF0F5;
+  --contacts-icon: #C5CBD4; --contacts-hover: #2B3039; --contacts-head: #242932;
+  --contacts-hint: #A8B0BE; --contacts-line: #414854; --contacts-control-line: #4C5461;
+  --contacts-seller-ink: #F1CA8B; --contacts-seller-bg: #49391F;
+  --contacts-buyer-ink: #C4CAFF; --contacts-buyer-bg: #323653;
+  --contacts-advisor-ink: #9CDED3; --contacts-advisor-bg: #203F3C;
+  --contacts-live: #8BDDAD; --contacts-checking: #9BC3FF;
+}
+.admin-contacts .contact-tile[aria-pressed=true], .admin-contacts .contact-tab[aria-selected=true] { background:var(--contacts-selected); border-color:var(--contacts-selected-border); color:var(--contacts-ink); }
+.admin-contacts .contact-tile[aria-pressed=true] span {color:var(--contacts-ink)}
+.admin-contacts .contact-tile svg {color:var(--contacts-icon)}
+.admin-contacts .contact-tile:hover, .admin-contacts .contact-tab:hover, .admin-contacts button:hover {background-color:var(--contacts-hover)}
+.contact-split {display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,400px);gap:16px;align-items:start}
+.contact-filters input,.contact-filters [data-slot=select-trigger] {height:40px;border:1px solid var(--contacts-control-line);border-radius:9px}
+.contact-filters [data-slot=select-trigger] {width:auto;min-width:110px}
+.contact-table-scroll {height:max(360px,calc(var(--contacts-height,600px) - 52px));overflow:auto;border:1px solid var(--contacts-line);border-radius:8px;background:var(--card)}
+.contact-table {min-width:690px;width:100%}
+.contact-columns {display:grid;grid-template-columns:minmax(135px,1.35fr) minmax(120px,1.2fr) 70px 100px 85px 95px;gap:10px;align-items:center;padding:14px 12px}
+.contact-table-head {position:sticky;top:0;z-index:2;background:var(--contacts-head);border-bottom:1px solid var(--contacts-line);font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--contacts-hint);white-space:nowrap}
+.contact-row {width:100%;height:auto;text-align:left;border-bottom:1px solid var(--contacts-line);font-size:13px;font-weight:400;white-space:normal;background:transparent;color:var(--foreground)}
+.contact-row:hover,.contact-row[aria-pressed=true] {background:var(--contacts-hover)}
+.contact-avatar {display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:50%;background:var(--contacts-selected);color:var(--contacts-icon);font-size:12px;font-weight:700}
+.contact-role {display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.contact-role-seller {background:var(--contacts-seller-bg);color:var(--contacts-seller-ink)}
+.contact-role-buyer {background:var(--contacts-buyer-bg);color:var(--contacts-buyer-ink)}
+.contact-role-advisor {background:var(--contacts-advisor-bg);color:var(--contacts-advisor-ink)}
+.contact-status {display:flex;align-items:center;gap:6px;color:var(--muted-foreground);font-size:12px}
+.contact-status i {width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.contact-live {color:var(--contacts-live)} .contact-checking {color:var(--contacts-checking)}
+.contact-panel {max-height:var(--contacts-height,600px);overflow:auto;overscroll-behavior:contain}
+.contact-role-line {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.contact-more-info {height:34px;padding:0 12px;font-size:13.5px;margin-left:auto}
+.contact-note-input {min-height:128px;height:128px;width:100%;resize:vertical;font-size:14.5px;line-height:1.5;padding:12px 14px}
+.contact-note-save {height:38px;padding:0 16px;font-size:14px}
+.contact-note-body {font-size:14.5px;line-height:1.5} .contact-note-meta {font-size:12.5px}
+.contact-company-cards .standard-card-ref {max-width:100%;float:none;text-align:right}
+.contact-company-cards .standard-card-name {height:auto;min-height:43.2px}
+.contact-company-cards .standard-card-private-name h3,.contact-company-cards .standard-card-subtitle {white-space:normal;overflow-wrap:anywhere}
+.contact-company-cards .standard-card-value,.contact-company-cards .standard-card-text-row dd {white-space:normal;overflow-wrap:anywhere}
+.contact-company-cards .standard-card-logo {width:60px;height:60px}
+.contact-company-cards h3 {color:var(--foreground)}
+.contact-company-cards h3:hover {color:var(--foreground)}
+@media(max-width:1199px) {.contact-split {grid-template-columns:minmax(0,1fr)} .contact-panel {max-height:700px}}
+@media(max-width:639px) {.contact-split {gap:16px} .contact-panel {padding:16px;max-height:calc(100dvh - 32px)} .contact-table-scroll {height:360px} .contact-filters > div:first-child {flex-basis:100%}}
