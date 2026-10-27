@@ -6,6 +6,8 @@
  * backend can replace `mockAdapter` without touching the page.
  */
 
+import { createUserContact } from "@/lib/user-contacts.functions";
+
 export interface ExtractedContact {
   firstName?: string;
   lastName?: string;
@@ -168,7 +170,6 @@ const mockAdapter: QuickAddAdapter = {
   },
 
   async saveContact({ contact: c, event }) {
-    const { createUserContact } = await import("@/lib/user-contacts.functions");
     const name = (c.fullName || [c.firstName, c.lastName].filter(Boolean).join(" ")).trim();
     const row = await createUserContact({
       data: {
