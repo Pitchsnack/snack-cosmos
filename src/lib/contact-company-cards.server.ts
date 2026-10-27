@@ -56,7 +56,7 @@ export async function loadContactCompanyCards(sb: any, contact: {id:string; orga
     const usdRange = (lo: unknown, hi?: unknown) => { const a = short(lo), b = short(hi); return a && b ? `US$${a} – ${b}` : a || b ? `US$${a || b}` : null; };
     const money = (v: string | null) => v == null || v === '' ? null : Number.isFinite(Number(v)) ? `US$ ${Number(v).toLocaleString('en-US')}` : v;
     return {kind: 'buyer' as const, id: o.id, card: {...card, managed: (await managedInvestorIds(sb, [o.id])).has(o.id)}, privateData,
-      exactFigures: {figures: [{label: 'Ticket size', value: usdRange(i.min_ticket_size, i.max_ticket_size) ?? [i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(' – ') || null}, ...(b?.buyer_relation === 'individual' || b?.buyer_relation === 'agent' ? [] : [{label: isCorporateBuyer(i.investor_type) ? 'Group revenue' : 'AUM', value: i.aum_exact_usd == null ? (usdRange(i.aum) ?? money(i.aum)) : usdRange(i.aum_exact_usd)}])], fit: {label: 'Min. target revenue', value: i.revenue_min_m == null ? null : `฿ ${Math.round(Number(i.revenue_min_m) * 1e6).toLocaleString('en-US')}`}},
+      exactFigures: {figures: [{label: 'Ticket size', value: usdRange(i.min_ticket_size, i.max_ticket_size) ?? ([i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(' – ') || null)}, ...(b?.buyer_relation === 'individual' || b?.buyer_relation === 'agent' ? [] : [{label: isCorporateBuyer(i.investor_type) ? 'Group revenue' : 'AUM', value: i.aum_exact_usd == null ? (usdRange(i.aum) ?? money(i.aum)) : usdRange(i.aum_exact_usd)}])], fit: {label: 'Min. target revenue', value: i.revenue_min_m == null ? null : `฿ ${Math.round(Number(i.revenue_min_m) * 1e6).toLocaleString('en-US')}`}},
     };
   }));
 }
