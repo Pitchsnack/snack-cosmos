@@ -41,11 +41,12 @@ export async function loadAdminContactCards(sb: any, contact: import('./admin-co
       }};
     }
     const [{data: i, error}, {data: b}, {data: verification}] = await Promise.all([
-      sb.from('investors').select('investor_name,investor_type,country,city,website_url,linkedin_url,email,year_founded,aum,min_ticket_size,max_ticket_size,revenue_min_m,revenue_max_m,short_description,long_description,keywords,investment_focus,preferred_stages,preferred_industries,logo_url,aum_band,ticket_band,revenue_min_band,acts_for_types,media').eq('id', o.id).single(),
+      sb.from('investors').select('investor_name,investor_type,country,address_city_district,address_province_state,website_url,linkedin_url,email,year_founded,aum,aum_exact_usd,min_ticket_size,max_ticket_size,revenue_min_m,revenue_max_m,short_description,long_description,keywords,investment_focus,preferred_stages,preferred_industries,logo_url,aum_band,ticket_band,revenue_min_band,acts_for_types,media').eq('id', o.id).single(),
       sb.from('buyer_profiles').select('buyer_relation,deal_types,pof_verified_at').eq('user_id', contact.id).maybeSingle(),
       sb.from('investor_profile_verifications').select('status').eq('investor_id', o.id).maybeSingle(),
     ]);
-    if (error || !i) throw new Error('Unable to load company card');
+    if (error || !i) { console.error('Admin buyer card query failed', error?.code); throw new Error('Unable to load company card'); }
+    i.city = i.address_province_state || i.address_city_district || null;
     const privateData = {...i, acts_for_types: i.acts_for_types || [], keywords: i.keywords || [], investment_focus: i.investment_focus || [], preferred_stages: i.preferred_stages || [], preferred_industries: i.preferred_industries || [],
       logo_signed_url: await signed(i.logo_url), media: await Promise.all((i.media || []).sort((a: any, b: any) => a.slot - b.slot).map(async (m: any) => ({slot: m.slot, image_signed_url: await signed(m.image_path)}))), people: [], linked_startups: []};
     const card = {refNo: o.ref || '', codeName: '', name: i.investor_name, type: i.investor_type, city: i.city, country: i.country, description: i.short_description, sectors: i.preferred_industries || [], stages: i.preferred_stages || [], dealTypes: b?.deal_types || [], geography: (i.investment_focus || []).join(' · '), verified: verification?.status === 'verified', proofOfFunds: !!b?.pof_verified_at, ticketLabel: null, aumLabel: null, revLabel: null, relation: b?.buyer_relation, actsFor: i.acts_for_types || []};
