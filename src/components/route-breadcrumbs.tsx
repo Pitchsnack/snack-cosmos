@@ -101,7 +101,7 @@ function resolveLabel(pathTemplate: string) {
 export function RouteBreadcrumbs({ className, placement }: { className?: string; placement?: "row" | "bar" }) {
   const {language,t}=useTranslation();
   const pipelineTh:Record<string,string>={Pipeline:"ไปป์ไลน์","NDA Invitations":"คำเชิญ NDA","All deals":"ดีลทั้งหมด","Deal watchlist":"ดีลที่ติดตาม","Deal status":"สถานะดีล",History:"ประวัติ",Reports:"รายงาน"};
-  const crumb=(label:string)=>language==="th"?label === "Pipeline" ? t(label) : pipelineTh[label]??t(label):label;
+  const crumb=(label:string)=>language==="th" ? (label === "Pipeline" ? t(label) : pipelineTh[label]??t(label)) : label;
   const matches = useRouterState({ select: (s) => s.matches as AnyRouteMatch[] });
   const isMarketplace = useIsMarketplace();
   const { persona } = usePersona();

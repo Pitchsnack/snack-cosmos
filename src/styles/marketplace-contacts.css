@@ -28,6 +28,16 @@
 .mc-panel {position:sticky;top:16px;max-height:calc(100dvh - 32px);overflow:scroll;scrollbar-gutter:stable;padding:22px;border:1px solid var(--contacts-line);border-radius:14px;background:var(--card);min-width:0;overscroll-behavior:contain}.mc-panel h2{font-size:20px;font-weight:600;overflow-wrap:break-word}.mc-panel header .mc-role{font-size:14px}.mc-panel section{margin-top:18px;padding-top:18px;border-top:1px solid var(--contacts-line)}.mc-panel h3{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;margin-bottom:12px}.mc-panel h3 svg{width:16px;height:16px}.mc-panel dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:12px 16px;font-size:14px}.mc-panel dl>div{display:contents}.mc-panel dt{display:flex;align-items:flex-start;gap:7px;color:var(--mc-title)}.mc-panel dt svg{width:15px;height:15px;flex:none;margin-top:3px}.mc-panel dd{min-width:0;overflow-wrap:anywhere}.mc-panel dd a:hover{text-decoration:underline}.mc-bio{margin-top:14px;font-size:14px;line-height:1.55;color:var(--mc-bio);white-space:pre-line}
 .mc-table-scroll::-webkit-scrollbar,.mc-panel::-webkit-scrollbar {width:10px;height:10px}.mc-table-scroll::-webkit-scrollbar-track,.mc-panel::-webkit-scrollbar-track{background:var(--mc-scroll-track)}.mc-panel::-webkit-scrollbar-track{margin:12px 0}.mc-table-scroll::-webkit-scrollbar-thumb,.mc-panel::-webkit-scrollbar-thumb{background:var(--mc-scroll-thumb);border:2px solid var(--mc-scroll-track);border-radius:999px}.mc-table-scroll::-webkit-scrollbar-thumb:hover,.mc-panel::-webkit-scrollbar-thumb:hover{background:var(--contacts-hint)}.mc-table-scroll::-webkit-scrollbar-corner,.mc-panel::-webkit-scrollbar-corner{background:var(--mc-scroll-track)}
 @supports not selector(::-webkit-scrollbar){.mc-table-scroll,.mc-panel{scrollbar-width:thin;scrollbar-color:var(--mc-scroll-thumb) var(--mc-scroll-track)}}
+.mc-panel .standard-card dl {display:block;font-size:inherit}
+.mc-panel .standard-card dt {display:block;color:var(--standard-muted)}
+.mc-panel .standard-card dd {overflow-wrap:normal}
+.mc-panel .standard-card-cell {height:auto;min-height:74px}
+.mc-panel .standard-card-cell dt {white-space:normal;overflow:visible}
+.mc-panel .standard-card-value {white-space:normal;overflow-wrap:normal;word-break:normal}
+.mc-panel .standard-card-text-row {display:flex;height:auto;min-height:38px}
+.mc-panel .standard-card-name {max-height:none;overflow:visible}
+.mc-panel .standard-card-subtitle {white-space:normal}
+.mc-own-avatar {background:var(--contacts-selected);color:var(--contacts-icon)}
 html[lang=th] .mc-caption,html[lang=th] .mc-table-scroll th{font-size:12px;letter-spacing:0}html[lang=th] .mc-type{line-break:strict}
 @media(max-width:1179px){.mc-split{grid-template-columns:minmax(0,1fr)}.mc-panel{position:static}}
 @media(max-width:720px){.marketplace-contacts{padding:20px 16px}.mc-own-grid{grid-template-columns:1fr 1fr;gap:14px 20px}.mc-own-grid>div:first-child{grid-column:1/-1}.mc-filters>div{flex-basis:100%}.mc-filters select{max-width:100%;flex:1}.mc-panel{padding:16px}}
