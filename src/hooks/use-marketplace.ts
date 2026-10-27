@@ -25,6 +25,7 @@ export function useIsMarketplace() {
     pathname === "/my-reports" ||
     pathname.startsWith("/my-reports/") ||
     pathname === "/advisor/pipeline" ||
+    pathname === "/advisor/contacts" ||
     pathname === "/advisor/messages"
   );
 }

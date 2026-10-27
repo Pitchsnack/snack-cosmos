@@ -63,6 +63,7 @@ import { Route as AuthenticatedAdminAccessCodesRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin/plans'
+import { Route as AuthenticatedAdvisorContactsRouteImport } from './routes/_authenticated/advisor.contacts'
 import { Route as AuthenticatedAdvisorMessagesRouteImport } from './routes/_authenticated/advisor.messages'
 import { Route as AuthenticatedAdvisorPipelineRouteImport } from './routes/_authenticated/advisor.pipeline'
 import { Route as AuthenticatedAdvisorsIndexRouteImport } from './routes/_authenticated/advisors.index'
@@ -422,6 +423,12 @@ const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
   path: '/admin/plans',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdvisorContactsRoute =
+  AuthenticatedAdvisorContactsRouteImport.update({
+    id: '/advisor/contacts',
+    path: '/advisor/contacts',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdvisorMessagesRoute =
   AuthenticatedAdvisorMessagesRouteImport.update({
     id: '/advisor/messages',
@@ -876,6 +883,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/advisor/contacts': typeof AuthenticatedAdvisorContactsRoute
   '/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
   '/advisor/pipeline': typeof AuthenticatedAdvisorPipelineRoute
   '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
@@ -993,6 +1001,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/advisor/contacts': typeof AuthenticatedAdvisorContactsRoute
   '/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
   '/advisor/pipeline': typeof AuthenticatedAdvisorPipelineRoute
   '/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
@@ -1112,6 +1121,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/_authenticated/advisor/contacts': typeof AuthenticatedAdvisorContactsRoute
   '/_authenticated/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
   '/_authenticated/advisor/pipeline': typeof AuthenticatedAdvisorPipelineRoute
   '/_authenticated/contacts/quick-add': typeof AuthenticatedContactsQuickAddRoute
@@ -1237,6 +1247,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/messages'
     | '/admin/plans'
+    | '/advisor/contacts'
     | '/advisor/messages'
     | '/advisor/pipeline'
     | '/contacts/quick-add'
@@ -1354,6 +1365,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/messages'
     | '/admin/plans'
+    | '/advisor/contacts'
     | '/advisor/messages'
     | '/advisor/pipeline'
     | '/contacts/quick-add'
@@ -1472,6 +1484,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/messages'
     | '/_authenticated/admin/plans'
+    | '/_authenticated/advisor/contacts'
     | '/_authenticated/advisor/messages'
     | '/_authenticated/advisor/pipeline'
     | '/_authenticated/contacts/quick-add'
@@ -1947,6 +1960,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/plans'
       fullPath: '/admin/plans'
       preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/advisor/contacts': {
+      id: '/_authenticated/advisor/contacts'
+      path: '/advisor/contacts'
+      fullPath: '/advisor/contacts'
+      preLoaderRoute: typeof AuthenticatedAdvisorContactsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/advisor/messages': {
@@ -2733,6 +2753,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
+  AuthenticatedAdvisorContactsRoute: typeof AuthenticatedAdvisorContactsRoute
   AuthenticatedAdvisorMessagesRoute: typeof AuthenticatedAdvisorMessagesRoute
   AuthenticatedAdvisorPipelineRoute: typeof AuthenticatedAdvisorPipelineRoute
   AuthenticatedGlobalStartupsIdRoute: typeof AuthenticatedGlobalStartupsIdRoute
@@ -2786,6 +2807,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
+  AuthenticatedAdvisorContactsRoute: AuthenticatedAdvisorContactsRoute,
   AuthenticatedAdvisorMessagesRoute: AuthenticatedAdvisorMessagesRoute,
   AuthenticatedAdvisorPipelineRoute: AuthenticatedAdvisorPipelineRoute,
   AuthenticatedGlobalStartupsIdRoute: AuthenticatedGlobalStartupsIdRoute,

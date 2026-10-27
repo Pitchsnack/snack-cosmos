@@ -426,7 +426,7 @@ export function marketplaceMenu(persona: Persona) {
         ]
       : [{ to: "/marketplace/browse", label: "Browse investors", icon: LayoutGrid }, { to: "/marketplace/advisors", label: "Browse advisors", icon: Briefcase }, { to: "/marketplace/favourites", label: "My watchlist", icon: Star }];
   const workspace: MenuItem[] =
-    advisor ? [{ to: "/marketplace/my-company", label: "My Company", icon: Building2, exact: false }, { to: "/advisor/pipeline", label: "My Pipeline", icon: GitBranch }, { to: "/advisor/messages", label: "Messages", icon: MessageSquare }, { to: "/marketplace/my-contact", label: "Contacts", icon: Contact }] : persona === "seller"
+    advisor ? [{ to: "/marketplace/my-company", label: "My Company", icon: Building2, exact: false }, { to: "/advisor/pipeline", label: "My Pipeline", icon: GitBranch }, { to: "/advisor/contacts", label: "Contacts", icon: Contact }, { to: "/advisor/messages", label: "Messages", icon: MessageSquare }] : persona === "seller"
       ? [
           { to: "/my-startups", label: "My Company", icon: Building2, exact: false },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },

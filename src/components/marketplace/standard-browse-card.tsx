@@ -5,6 +5,7 @@ import { ManagedBadge, useCoverFit } from '@/components/common/managed-badge';
 import { useTranslation } from '@/i18n/language';
 import { cn } from '@/lib/utils';
 import type { CardNdaStatus } from '@/lib/standard-card';
+import { cardValue } from '@/lib/marketplace-contacts';
 
 const pending = new Set<HTMLElement>();
 let frame = 0;
@@ -121,5 +122,6 @@ export function StandardCardSection({ label, children }: { label: string; childr
   return <section><h4 className="standard-card-caption">{t(label)}</h4>{children}</section>;
 }
 export function StandardCardChips({ values, market }: { values: string[]; market?: boolean }) {
-  return <div className="standard-card-chips">{values.filter(Boolean).map((v, index) => <span key={`${v}-${index}`} className={cn('standard-card-chip', market && 'standard-card-market')}>{v}</span>)}</div>;
+  const {language}=useTranslation();
+  return <div className="standard-card-chips">{values.filter(Boolean).map((v, index) => <span key={`${v}-${index}`} className={cn('standard-card-chip', market && 'standard-card-market')}>{cardValue(v,language)}</span>)}</div>;
 }
