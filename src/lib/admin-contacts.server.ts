@@ -7,7 +7,7 @@ export async function contactRows(sb: any, table: string, columns: string, key =
     let query = sb.from(table).select(columns).order(key, { ascending: true });
     if (table === "users") query = query.in("account_role", [...CONTACT_ROLES]);
     const { data, error } = await query.range(offset, offset + 999);
-    if (error) throw new Error("Unable to load contacts");
+    if (error) { console.error("Admin contacts query failed", table, error.code, error.message); throw new Error("Unable to load contacts"); }
     rows.push(...(data ?? []));
     if ((data ?? []).length < 1000) return rows;
   }
