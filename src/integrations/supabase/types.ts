@@ -127,6 +127,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_contact_notes: {
+        Row: {
+          author_user_id: string
+          body: string
+          contact_user_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_user_id: string
+          body: string
+          contact_user_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          contact_user_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_contact_notes_author_user_id_fkey"
+            columns: ["author_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_contact_notes_contact_user_id_fkey"
+            columns: ["contact_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advisor_conversations: {
         Row: {
           client_org_id: string
@@ -6604,6 +6643,78 @@ export type Database = {
           tenant_name?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      user_contacts: {
+        Row: {
+          company: string | null
+          contact_type: string
+          created_at: string
+          department: string | null
+          email: string | null
+          event: string | null
+          full_name: string
+          id: string
+          last_contacted_at: string | null
+          location: string | null
+          next_action: string | null
+          next_action_at: string | null
+          notes: string | null
+          owner_user_id: string
+          phone: string | null
+          position: string | null
+          source: string
+          status: string
+          tags: string[]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          company?: string | null
+          contact_type?: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          event?: string | null
+          full_name: string
+          id?: string
+          last_contacted_at?: string | null
+          location?: string | null
+          next_action?: string | null
+          next_action_at?: string | null
+          notes?: string | null
+          owner_user_id?: string
+          phone?: string | null
+          position?: string | null
+          source?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          company?: string | null
+          contact_type?: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          event?: string | null
+          full_name?: string
+          id?: string
+          last_contacted_at?: string | null
+          location?: string | null
+          next_action?: string | null
+          next_action_at?: string | null
+          notes?: string | null
+          owner_user_id?: string
+          phone?: string | null
+          position?: string | null
+          source?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

@@ -1,4 +1,5 @@
 # Decisions
+- Admin contacts use a dedicated Control+Admin-authorized directory and separate admin_contact_notes, keyed by user ID; shared presentation serves both Admin entry points while marketplace NDA contacts remain unchanged.
 - Seller founders use a browser-safe structured story helper and the existing founder bio plus nullable bio_story; existing startup authorization/saving and bio display gates remain authoritative.
 - Pipeline chat uses the Messages Chat in a lazy locked presentation inside the existing ProfileBox dialog; Pipeline-parent in-memory drafts preserve unsent content without new storage or authorization paths.
 - Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, the seller InvestorDetailPanel body and shared company identity/section/pill parts; only All deals/watchlist opt in so other profile viewers stay unchanged.
