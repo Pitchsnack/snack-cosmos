@@ -18,7 +18,7 @@ export async function loadAdminContacts(sb: any): Promise<AdminContact[]> {
     contactRows(sb, "users", "id,first_name,last_name,email,account_role,status,created_at"),
     contactRows(sb, "user_profiles", "user_id,title,organisation,phone,linkedin,website,city,country", "user_id"),
     contactRows(sb, "buyer_profiles", "user_id,investor_id,legal_name,ref_no,approval_status", "user_id"),
-    contactRows(sb, "investors", "id,investor_name,ref_no"),
+    contactRows(sb, "investors", "id,investor_name"),
     contactRows(sb, "advisor_firms", "id,owner_user_id,name,ref_no,status,phone,website,city,country"),
     contactRows(sb, "startups", "id,created_by,startup_name,city,region,website_url"),
     contactRows(sb, "hidden_profiles", "id,startup_id,ref_no,approval_status"),
@@ -35,7 +35,7 @@ export async function loadAdminContacts(sb: any): Promise<AdminContact[]> {
     const myStartups = startups.filter(s => startupIds.has(s.id) || s.created_by === u.id);
     const organisations: AdminContact["organisations"] = u.account_role === "buyer" ? buyers.filter(b => b.user_id === u.id).map(b => ({
       id: b.investor_id || b.user_id, name: inv.get(b.investor_id)?.investor_name || b.legal_name || p?.organisation || "—",
-      ref: inv.get(b.investor_id)?.ref_no || b.ref_no, kind: "buyer", status: b.approval_status || "draft",
+      ref: b.ref_no, kind: "buyer", status: b.approval_status || "draft",
     })) : u.account_role === "advisor" ? myFirms.map(f => ({ id: f.id, name: f.name, ref: f.ref_no, kind: "advisor", status: f.status })) : myStartups.map(s => ({
       id: s.id, name: s.startup_name, ref: hp.get(s.id)?.ref_no || null, kind: "seller", status: hp.get(s.id)?.approval_status || "draft",
     }));
