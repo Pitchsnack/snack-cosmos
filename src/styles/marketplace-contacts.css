@@ -1,5 +1,5 @@
-:root {--mc-count:#E8EAEE;--mc-row-line:#F0F1F4;--mc-scroll-track:#F1F3F6;--mc-scroll-thumb:#C2C8D2;--mc-tab-hover:#F3F4F6;--mc-bio:#434A5C;--mc-title:#6B7280}
-.dark {--mc-count:#414854;--mc-row-line:#353C46;--mc-scroll-track:#242932;--mc-scroll-thumb:#667080;--mc-tab-hover:#2B3039;--mc-bio:#D4DAE4;--mc-title:#A8B0BE}
+:root {--mc-count:#E8EAEE;--mc-row-line:#F0F1F4;--mc-scroll-track:#F1F3F6;--mc-scroll-thumb:#C2C8D2;--mc-scroll-hover:#9CA3AF;--mc-tab-hover:#F3F4F6;--mc-bio:#434A5C;--mc-title:#6B7280}
+.dark {--mc-count:#414854;--mc-row-line:#353C46;--mc-scroll-track:#242932;--mc-scroll-thumb:#667080;--mc-scroll-hover:#8A93A3;--mc-tab-hover:#2B3039;--mc-bio:#D4DAE4;--mc-title:#A8B0BE}
 .marketplace-contacts {max-width:1120px;width:100%;margin:auto;padding:24px 32px;color:var(--contacts-ink)}
 .mc-own {margin:20px 0;padding:14px 20px 16px;border:1px solid var(--contacts-line);border-radius:14px;background:var(--card)}
 .mc-own-head {display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -46,3 +46,4 @@ html[lang=th] .mc-caption,html[lang=th] .mc-table-scroll th{font-size:12px;lette
 
 .mc-panel .standard-card-ref{float:none;display:block;margin:3px 0 0;padding:0;text-align:left}
 .mc-footer-end{white-space:nowrap}
+.mc-panel::-webkit-scrollbar-thumb:hover{background:var(--mc-scroll-hover)}
