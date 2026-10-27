@@ -53,7 +53,7 @@ export async function loadAdminContactCards(sb: any, contact: import('./admin-co
     const {managedInvestorIds} = await import('./managed.server');
     const money = (v: string | null) => v || null;
     return {kind: 'buyer' as const, id: o.id, card: {...card, managed: (await managedInvestorIds(sb, [o.id])).has(o.id)}, privateData,
-      exactFigures: {figures: [{label: 'Ticket size', value: [money(i.min_ticket_size), money(i.max_ticket_size)].filter(Boolean).join(' – ') || null}, ...(b?.buyer_relation === 'individual' || b?.buyer_relation === 'agent' ? [] : [{label: isCorporateBuyer(i.investor_type) ? 'Group revenue' : 'AUM', value: money(i.aum)}])], fit: {label: 'Min. target revenue', value: i.revenue_min_m == null ? null : `฿ ${Math.round(Number(i.revenue_min_m) * 1e6).toLocaleString('en-US')}`}},
+      exactFigures: {figures: [{label: 'Ticket size', value: [money(i.min_ticket_size), money(i.max_ticket_size)].filter(Boolean).join(' – ') || null}, ...(b?.buyer_relation === 'individual' || b?.buyer_relation === 'agent' ? [] : [{label: isCorporateBuyer(i.investor_type) ? 'Group revenue' : 'AUM', value: i.aum_exact_usd == null ? money(i.aum) : `US$ ${Number(i.aum_exact_usd).toLocaleString('en-US')}`}])], fit: {label: 'Min. target revenue', value: i.revenue_min_m == null ? null : `฿ ${Math.round(Number(i.revenue_min_m) * 1e6).toLocaleString('en-US')}`}},
     };
   }));
 }

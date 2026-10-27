@@ -18,14 +18,14 @@ export function StandardListingCard({ l, deal, privateData, publicOnly, status, 
   const logo = useMediaUrl(p?.logoPath ?? null);
   const exact = !!p || (!publicOnly && status === 'approved');
   const price = cardAskingPrice(deal, exact, language === 'th');
-  const year = p?.fy != null ? String(p.fy).slice(-2) : '25';
+  const year = p?.fy != null ? String(p.fy).slice(-2) : p ? null : '25';
   const date = l.publishedAt ? new Date(l.publishedAt).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   const initials = p?.companyName.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return <StandardBrowseCard title={p?.companyName || l.headline} subtitle={p ? l.headline : undefined} refNo={l.refNo} place={l.location?.replace(/, Thailand$/, '')}
     description={p ? p.description : l.description} status={cardNdaStatus(status)} hideStatus={hideStatus} newDays={l.newDays} managed={l.managed} topRight={topRight} tag={tag} selected={selected} onOpen={onSelect} className={className}
     cover={(children) => p ? <div className="standard-card-private-cover">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : <div className="standard-card-logo">{logo ? <img src={logo} alt="" /> : initials}</div>}{children}</div> : <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId}>{children}</SectorArt>}
     badges={[...(l.certified ? [{ label: 'Certified' }] : []), ...(l.verified ? [{ label: 'Verified company' }] : []), ...(l.hasFinancials ? [{ label: 'Verified financials', financial: true }] : [])]}
-    figures={[{ label: `${t('Revenue')} FY${year}`, value: p ? (p.revenue != null ? fmtThb(p.revenue) : null) : publicRevenueLabel(l.revenueBand), second: t(p ? 'Exact' : 'Range') }, { label: 'Deal type', value: deal?.dealType ? t(deal.dealType) : null }]}
+    figures={[{ label: `${t('Revenue')}${year ? ` FY${year}` : ''}`, value: p ? (p.revenue != null ? fmtThb(p.revenue) : null) : publicRevenueLabel(l.revenueBand), second: t(p ? 'Exact' : 'Range') }, { label: 'Deal type', value: deal?.dealType ? t(deal.dealType) : null }]}
     fit={{ label: 'Asking price', value: price, second: price ? t(exact ? (p ? 'Exact' : 'NDA approved') : 'Range') : null }} textRow={{ label: 'Sector', value: l.sector }}
     more={<>
       {!!l.highlights?.length && <StandardCardSection label="Highlights"><ul className="standard-card-highlights">{l.highlights.filter((v) => v.trim()).map((h, index) => <li key={index}><Check aria-hidden /><span>{h}</span></li>)}</ul></StandardCardSection>}
