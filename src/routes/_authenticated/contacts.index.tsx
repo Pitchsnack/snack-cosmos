@@ -59,7 +59,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listUserContacts, updateUserContact, type UserContact } from "@/lib/user-contacts.functions";
+import { listUserContacts, listPlatformContacts, updateUserContact, type UserContact, type PlatformMember } from "@/lib/user-contacts.functions";
 import { AddContactDialog } from "@/components/contacts/add-contact-dialog";
 
 export const Route = createFileRoute("/_authenticated/contacts/")({
@@ -120,6 +120,7 @@ interface Contact {
   lastActivity: { when: string; subject: string };
   nextAction: { title: string; date: string };
   connectionId?: string;
+  memberRole?: "Seller" | "Buyer" | "Advisor";
 }
 
 function initialsOf(name: string) {
@@ -152,6 +153,21 @@ function toContact(u: UserContact): Contact {
     nextAction: { title: u.nextAction ?? "None set", date: u.nextActionAt ? fmtDate(u.nextActionAt) : "—" },
   };
 }
+
+function memberToContact(m: PlatformMember): Contact {
+  return {
+    id: `m:${m.id}`, name: m.fullName, role: m.memberRole, initials: initialsOf(m.fullName),
+    avatarTone: "bg-muted text-foreground", company: m.company ?? "—",
+    companyInitial: (m.company ?? "?")[0]!.toUpperCase(), companyTone: "bg-muted text-muted-foreground",
+    type: "PitchSnack Connection", status: m.status === "Suspended" || m.status === "Locked" ? "Do Not Contact" : "Active",
+    lastContact: "—", email: m.email ?? "—", phone: "—", location: m.location || "—",
+    source: "PitchSnack Connection", connectedDate: fmtDate(m.joinedAt), tags: [m.memberRole],
+    note: { text: "", author: "", date: "—" }, lastActivity: { when: "No activity yet", subject: "—" },
+    nextAction: { title: "None set", date: "—" }, memberRole: m.memberRole,
+  };
+}
+const ROLE_PILLS = ["All", "Sellers", "Buyers", "Advisors", "External"] as const;
+type RolePill = (typeof ROLE_PILLS)[number];
 
 const TABS = ["All", "PitchSnack Connections", "My Contacts", "Lists"] as const;
 type TabKey = (typeof TABS)[number];
@@ -227,7 +243,13 @@ export function ContactsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const fetchContacts = useServerFn(listUserContacts);
   const { data: rows, isLoading } = useQuery({ queryKey: ["user-contacts"], queryFn: () => fetchContacts() });
-  const CONTACTS = useMemo(() => (rows ?? []).map(toContact), [rows]);
+  const fetchMembers = useServerFn(listPlatformContacts);
+  const { data: members } = useQuery({ queryKey: ["platform-contacts"], queryFn: () => fetchMembers() });
+  const [rolePill, setRolePill] = useState<RolePill>("All");
+  const CONTACTS = useMemo(
+    () => [...(members ?? []).map(memberToContact), ...(rows ?? []).map(toContact)],
+    [rows, members],
+  );
   const qc = useQueryClient();
   const updateFn = useServerFn(updateUserContact);
   const setDnc = useMutation({
@@ -249,6 +271,8 @@ export function ContactsPage() {
       if (tab === "PitchSnack Connections" && c.type !== "PitchSnack Connection") return false;
       if (tab === "My Contacts" && c.type !== "My Contact") return false;
       if (tab === "Lists") return false;
+      if (rolePill === "External" && c.memberRole) return false;
+      if (rolePill !== "All" && rolePill !== "External" && c.memberRole !== rolePill.slice(0, -1)) return false;
       if (type !== "all" && c.type !== type) return false;
       if (status !== "all" && c.status !== status) return false;
       if (!q) return true;
@@ -260,7 +284,7 @@ export function ContactsPage() {
         c.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [CONTACTS, tab, search, type, status]);
+  }, [CONTACTS, tab, search, type, status, rolePill]);
 
   const selected = useMemo(
     () => CONTACTS.find((c) => c.id === selectedId) ?? null,
@@ -400,6 +424,14 @@ export function ContactsPage() {
             </div>
           </div>
 
+          <div className="flex flex-wrap gap-1.5">
+            {ROLE_PILLS.map((r) => (
+              <Button key={r} size="sm" variant={rolePill === r ? "default" : "outline"} className="h-7 rounded-full px-3 text-xs" onClick={() => setRolePill(r)}>
+                {r}
+              </Button>
+            ))}
+          </div>
+
           <div className="rounded-xl border border-border bg-card shadow-sm">
             {tab === "Lists" ? (
               <div className="p-12 text-center text-sm text-muted-foreground">
@@ -523,7 +555,7 @@ export function ContactsPage() {
                                 <DropdownMenuItem>Draft email</DropdownMenuItem>
                                 <DropdownMenuItem>Add to list</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-rose-600" onSelect={() => setDnc.mutate(c.id)}>
+                                <DropdownMenuItem className="text-rose-600" disabled={!!c.memberRole} onSelect={() => setDnc.mutate(c.id)}>
                                   Mark Do Not Contact
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -646,7 +678,7 @@ export function ContactsPage() {
                     <DropdownMenuItem>Add to list</DropdownMenuItem>
                     <DropdownMenuItem>Share contact</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-rose-600" onSelect={() => setDnc.mutate(selected.id)}>
+                    <DropdownMenuItem className="text-rose-600" disabled={!!selected.memberRole} onSelect={() => setDnc.mutate(selected.id)}>
                       Mark Do Not Contact
                     </DropdownMenuItem>
                   </DropdownMenuContent>

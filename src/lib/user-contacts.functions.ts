@@ -89,3 +89,39 @@ export const deleteUserContact = createServerFn({ method: "POST" })
     if (error) throw new Error("Could not delete contact");
     return { ok: true };
   });
+
+/** Live platform members (Sellers, Buyers, Advisors) for the Admin Contacts directory. Admin + Control only. */
+export type PlatformMember = {
+  id: string; fullName: string; email: string | null; memberRole: "Seller" | "Buyer" | "Advisor";
+  company: string | null; location: string | null; status: string | null; joinedAt: string;
+};
+
+export const listPlatformContacts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const [{ data: control }, { data: me }] = await Promise.all([
+      context.supabase.rpc("is_control", { _user_id: context.userId }),
+      context.supabase.from("users").select("account_role").eq("id", context.userId).maybeSingle(),
+    ]);
+    if (!control || me?.account_role !== "admin") return [] as PlatformMember[];
+    const { supabaseAdmin: sb } = await import("@/integrations/supabase/client.server");
+    const { data: users } = await sb.from("users").select("id,email,first_name,last_name,account_role,status,created_at")
+      .in("account_role", ["seller", "buyer", "advisor"]).limit(2000);
+    const ids = (users ?? []).map((u: any) => u.id);
+    if (!ids.length) return [] as PlatformMember[];
+    const [su, bp, af] = await Promise.all([
+      sb.from("startup_users").select("user_id, startups(startup_name,city,address_province_state)").in("user_id", ids),
+      sb.from("buyer_profiles").select("user_id,legal_name,show_name,code_name,city,country").in("user_id", ids),
+      sb.from("advisor_firms").select("owner_user_id,name,city,country").in("owner_user_id", ids),
+    ]);
+    const co = new Map<string, { c: string | null; l: string | null }>();
+    for (const r of (su.data ?? []) as any[]) if (!co.has(r.user_id) && r.startups) co.set(r.user_id, { c: r.startups.startup_name, l: r.startups.city ?? r.startups.address_province_state });
+    for (const r of (bp.data ?? []) as any[]) co.set(r.user_id, { c: r.legal_name ?? r.show_name ?? r.code_name, l: [r.city, r.country].filter(Boolean).join(", ") || null });
+    for (const r of (af.data ?? []) as any[]) co.set(r.owner_user_id, { c: r.name, l: [r.city, r.country].filter(Boolean).join(", ") || null });
+    const roleName = { seller: "Seller", buyer: "Buyer", advisor: "Advisor" } as const;
+    return (users ?? []).map((u: any): PlatformMember => ({
+      id: u.id, email: u.email, fullName: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email || "Member",
+      memberRole: roleName[u.account_role as keyof typeof roleName], company: co.get(u.id)?.c ?? null,
+      location: co.get(u.id)?.l ?? null, status: u.status, joinedAt: u.created_at,
+    }));
+  });
