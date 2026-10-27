@@ -57,9 +57,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { listUserContacts, listPlatformContacts, updateUserContact, type UserContact, type PlatformMember } from "@/lib/user-contacts.functions";
 import { AddContactDialog } from "@/components/contacts/add-contact-dialog";
 
 export const Route = createFileRoute("/_authenticated/contacts/")({
@@ -89,8 +86,7 @@ type ContactSource =
   | "My Contact"
   | "Imported"
   | "Referral"
-  | "Introduction"
-  | "Name Card";
+  | "Introduction";
 type ContactStatus = "Active" | "Warm" | "Cold" | "Follow-Up Due" | "Do Not Contact";
 type ContactType = "PitchSnack Connection" | "My Contact";
 
@@ -120,54 +116,195 @@ interface Contact {
   lastActivity: { when: string; subject: string };
   nextAction: { title: string; date: string };
   connectionId?: string;
-  memberRole?: "Seller" | "Buyer" | "Advisor";
 }
 
-function initialsOf(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("") || "?";
-}
-function fmtDate(iso: string | null) {
-  return iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
-}
-function toContact(u: UserContact): Contact {
-  return {
-    id: u.id,
-    name: u.fullName,
-    role: [u.position, u.department].filter(Boolean).join(" · "),
-    initials: initialsOf(u.fullName),
-    avatarTone: "bg-muted text-foreground",
-    company: u.company ?? "—",
-    companyInitial: (u.company ?? "?")[0]!.toUpperCase(),
-    companyTone: "bg-muted text-muted-foreground",
-    type: u.contactType,
-    status: u.status,
-    lastContact: u.lastContactedAt ? fmtDate(u.lastContactedAt) : "—",
-    email: u.email ?? "—",
-    phone: u.phone ?? "—",
-    location: u.location ?? "—",
-    source: u.source as ContactSource,
-    connectedDate: fmtDate(u.createdAt),
-    tags: u.tags,
-    note: { text: u.notes ?? "", author: "You", date: fmtDate(u.updatedAt) },
-    lastActivity: { when: u.lastContactedAt ? fmtDate(u.lastContactedAt) : "No activity yet", subject: "—" },
-    nextAction: { title: u.nextAction ?? "None set", date: u.nextActionAt ? fmtDate(u.nextActionAt) : "—" },
-  };
-}
-
-function memberToContact(m: PlatformMember): Contact {
-  return {
-    id: `m:${m.id}`, name: m.fullName, role: m.memberRole, initials: initialsOf(m.fullName),
-    avatarTone: "bg-muted text-foreground", company: m.company ?? "—",
-    companyInitial: (m.company ?? "?")[0]!.toUpperCase(), companyTone: "bg-muted text-muted-foreground",
-    type: "PitchSnack Connection", status: m.status === "Suspended" || m.status === "Locked" ? "Do Not Contact" : "Active",
-    lastContact: "—", email: m.email ?? "—", phone: "—", location: m.location || "—",
-    source: "PitchSnack Connection", connectedDate: fmtDate(m.joinedAt), tags: [m.memberRole],
-    note: { text: "", author: "", date: "—" }, lastActivity: { when: "No activity yet", subject: "—" },
-    nextAction: { title: "None set", date: "—" }, memberRole: m.memberRole,
-  };
-}
-const ROLE_PILLS = ["All", "Sellers", "Buyers", "Advisors", "External"] as const;
-type RolePill = (typeof ROLE_PILLS)[number];
+const CONTACTS: Contact[] = [
+  {
+    id: "c1",
+    name: "Emily Chen",
+    role: "VP of Marketing",
+    initials: "EC",
+    avatarTone: "bg-rose-200 text-rose-900",
+    company: "SnackMagic",
+    companyInitial: "S",
+    companyTone: "bg-fuchsia-100 text-fuchsia-700",
+    type: "PitchSnack Connection",
+    status: "Active",
+    lastContact: "2d ago",
+    email: "emily.chen@snackmagic.com",
+    phone: "(415) 555-0198",
+    location: "San Francisco, CA, USA",
+    source: "PitchSnack Connection",
+    connectedDate: "Jan 15, 2024",
+    tags: ["Marketing", "SaaS", "Enterprise"],
+    note: {
+      text: "Great conversation about SnackMagic's Q2 campaigns and their expansion into retail partnerships. Interested in exploring co-marketing opportunities.",
+      author: "Jordan Lee",
+      date: "May 12, 2024",
+    },
+    lastActivity: { when: "2 days ago", subject: "Re: Partnership Opportunities" },
+    nextAction: { title: "Follow up on campaign idea", date: "May 22, 2024" },
+    connectionId: "2",
+  },
+  {
+    id: "c2",
+    name: "Michael Patel",
+    role: "Founder & CEO",
+    initials: "MP",
+    avatarTone: "bg-slate-300 text-slate-900",
+    company: "Nourish Co.",
+    companyInitial: "N",
+    companyTone: "bg-emerald-100 text-emerald-700",
+    type: "My Contact",
+    status: "Active",
+    lastContact: "5d ago",
+    email: "michael@nourish.co",
+    phone: "(212) 555-0142",
+    location: "New York, NY, USA",
+    source: "My Contact",
+    connectedDate: "Feb 03, 2024",
+    tags: ["Founder", "FoodTech"],
+    note: {
+      text: "Discussed potential co-investment in the seed round. Michael is open to intros with mission-aligned funds.",
+      author: "Jordan Lee",
+      date: "May 08, 2024",
+    },
+    lastActivity: { when: "5 days ago", subject: "Intro call notes" },
+    nextAction: { title: "Send Startup traction update", date: "May 25, 2024" },
+  },
+  {
+    id: "c3",
+    name: "Sarah Johnson",
+    role: "Director of Sales",
+    initials: "SJ",
+    avatarTone: "bg-amber-200 text-amber-900",
+    company: "Retailive",
+    companyInitial: "r",
+    companyTone: "bg-slate-900 text-white",
+    type: "PitchSnack Connection",
+    status: "Active",
+    lastContact: "1w ago",
+    email: "sarah.j@retailive.com",
+    phone: "(646) 555-0133",
+    location: "Brooklyn, NY, USA",
+    source: "PitchSnack Connection",
+    connectedDate: "Mar 21, 2024",
+    tags: ["Sales", "Retail"],
+    note: {
+      text: "Introduced Sarah to two of our portfolio founders. Awaiting her feedback on the shortlist.",
+      author: "Jordan Lee",
+      date: "May 02, 2024",
+    },
+    lastActivity: { when: "1 week ago", subject: "Shortlist follow-up" },
+    nextAction: { title: "Request an introduction", date: "May 27, 2024" },
+    connectionId: "3",
+  },
+  {
+    id: "c4",
+    name: "David Kim",
+    role: "Head of Partnerships",
+    initials: "DK",
+    avatarTone: "bg-blue-200 text-blue-900",
+    company: "BiteBox",
+    companyInitial: "B",
+    companyTone: "bg-blue-100 text-blue-700",
+    type: "My Contact",
+    status: "Cold",
+    lastContact: "2w ago",
+    email: "david.kim@bitebox.io",
+    phone: "(415) 555-0187",
+    location: "Palo Alto, CA, USA",
+    source: "Imported",
+    connectedDate: "Nov 08, 2023",
+    tags: ["Partnerships"],
+    note: {
+      text: "Went quiet after Q1. Try a lightweight re-engagement email in June.",
+      author: "Jordan Lee",
+      date: "Apr 18, 2024",
+    },
+    lastActivity: { when: "2 weeks ago", subject: "Q2 partnership check-in" },
+    nextAction: { title: "Reply to Investor questions", date: "Jun 05, 2024" },
+  },
+  {
+    id: "c5",
+    name: "Jessica Martinez",
+    role: "Marketing Manager",
+    initials: "JM",
+    avatarTone: "bg-pink-200 text-pink-900",
+    company: "Munchly",
+    companyInitial: "M",
+    companyTone: "bg-orange-100 text-orange-700",
+    type: "My Contact",
+    status: "Active",
+    lastContact: "2w ago",
+    email: "jessica@munchly.com",
+    phone: "(312) 555-0121",
+    location: "Chicago, IL, USA",
+    source: "Referral",
+    connectedDate: "Apr 02, 2024",
+    tags: ["Marketing", "DTC"],
+    note: {
+      text: "Referred by Emily Chen. Interested in a joint webinar in Q3.",
+      author: "Jordan Lee",
+      date: "Apr 28, 2024",
+    },
+    lastActivity: { when: "2 weeks ago", subject: "Webinar planning" },
+    nextAction: { title: "Draft webinar outline", date: "Jun 01, 2024" },
+  },
+  {
+    id: "c6",
+    name: "Daniel Roberts",
+    role: "Investor",
+    initials: "DR",
+    avatarTone: "bg-stone-300 text-stone-900",
+    company: "Vertex Ventures",
+    companyInitial: "V",
+    companyTone: "bg-violet-100 text-violet-700",
+    type: "PitchSnack Connection",
+    status: "Warm",
+    lastContact: "3w ago",
+    email: "daniel@vertexvc.com",
+    phone: "(650) 555-0164",
+    location: "Menlo Park, CA, USA",
+    source: "PitchSnack Connection",
+    connectedDate: "Dec 12, 2023",
+    tags: ["Seed Investor", "SaaS"],
+    note: {
+      text: "Passed on the current round but keen to see the Series A deck. Follow up mid-June.",
+      author: "Jordan Lee",
+      date: "Apr 22, 2024",
+    },
+    lastActivity: { when: "3 weeks ago", subject: "Series A intro" },
+    nextAction: { title: "Send Startup traction update", date: "Jun 15, 2024" },
+    connectionId: "4",
+  },
+  {
+    id: "c7",
+    name: "Lisa Wang",
+    role: "Community Lead",
+    initials: "LW",
+    avatarTone: "bg-purple-200 text-purple-900",
+    company: "SnackVerse",
+    companyInitial: "S",
+    companyTone: "bg-pink-100 text-pink-700",
+    type: "My Contact",
+    status: "Cold",
+    lastContact: "1mo ago",
+    email: "lisa.wang@snackverse.io",
+    phone: "(206) 555-0155",
+    location: "Seattle, WA, USA",
+    source: "Imported",
+    connectedDate: "Sep 30, 2023",
+    tags: ["Community"],
+    note: {
+      text: "Historical import. No recent engagement — consider archiving if no reply in Q2.",
+      author: "Jordan Lee",
+      date: "Mar 15, 2024",
+    },
+    lastActivity: { when: "1 month ago", subject: "Newsletter opt-in" },
+    nextAction: { title: "Send re-engagement email", date: "Jun 20, 2024" },
+  },
+];
 
 const TABS = ["All", "PitchSnack Connections", "My Contacts", "Lists"] as const;
 type TabKey = (typeof TABS)[number];
@@ -217,7 +354,7 @@ function SummaryCard({
   icon: typeof Users;
   label: string;
   value: string;
-  delta?: string;
+  delta: string;
 }) {
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -228,7 +365,12 @@ function SummaryCard({
         <div className="text-sm text-muted-foreground">{label}</div>
         <div className="flex items-baseline gap-2">
           <div className="text-2xl font-semibold tracking-tight">{value}</div>
+          <div className="flex items-center gap-0.5 text-xs font-medium text-emerald-600">
+            <TrendingUp className="h-3 w-3" />
+            {delta}
+          </div>
         </div>
+        <div className="text-xs text-muted-foreground">vs last 30 days</div>
       </div>
     </div>
   );
@@ -240,28 +382,7 @@ export function ContactsPage() {
   const [type, setType] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
   const [sort, setSort] = useState("recent");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const fetchContacts = useServerFn(listUserContacts);
-  const { data: rows, isLoading } = useQuery({ queryKey: ["user-contacts"], queryFn: () => fetchContacts() });
-  const fetchMembers = useServerFn(listPlatformContacts);
-  const { data: members } = useQuery({ queryKey: ["platform-contacts"], queryFn: () => fetchMembers() });
-  const [rolePill, setRolePill] = useState<RolePill>("All");
-  const CONTACTS = useMemo(
-    () => [...(members ?? []).map(memberToContact), ...(rows ?? []).map(toContact)],
-    [rows, members],
-  );
-  const qc = useQueryClient();
-  const updateFn = useServerFn(updateUserContact);
-  const setDnc = useMutation({
-    mutationFn: (id: string) => updateFn({ data: { id, status: "Do Not Contact" } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["user-contacts"] }); toast.success("Marked Do Not Contact"); },
-    onError: () => toast.error("Could not update contact"),
-  });
-  const counts = {
-    total: CONTACTS.length,
-    ps: CONTACTS.filter((c) => c.type === "PitchSnack Connection").length,
-    mine: CONTACTS.filter((c) => c.type === "My Contact").length,
-  };
+  const [selectedId, setSelectedId] = useState<string | null>("c1");
   const [copied, setCopied] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -271,8 +392,6 @@ export function ContactsPage() {
       if (tab === "PitchSnack Connections" && c.type !== "PitchSnack Connection") return false;
       if (tab === "My Contacts" && c.type !== "My Contact") return false;
       if (tab === "Lists") return false;
-      if (rolePill === "External" && c.memberRole) return false;
-      if (rolePill !== "All" && rolePill !== "External" && c.memberRole !== rolePill.slice(0, -1)) return false;
       if (type !== "all" && c.type !== type) return false;
       if (status !== "all" && c.status !== status) return false;
       if (!q) return true;
@@ -284,11 +403,11 @@ export function ContactsPage() {
         c.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [CONTACTS, tab, search, type, status, rolePill]);
+  }, [tab, search, type, status]);
 
   const selected = useMemo(
     () => CONTACTS.find((c) => c.id === selectedId) ?? null,
-    [CONTACTS, selectedId],
+    [selectedId],
   );
 
   const copy = (label: string, value: string) => {
@@ -341,10 +460,15 @@ export function ContactsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard icon={Users} label="Total Contacts" value={String(counts.total)} />
-        <SummaryCard icon={Building2} label="PitchSnack Connections" value={String(counts.ps)} />
-        <SummaryCard icon={UserIcon} label="My Contacts" value={String(counts.mine)} />
-        <SummaryCard icon={ListIcon} label="Lists" value="0" />
+        <SummaryCard icon={Users} label="Total Contacts" value="1,248" delta="12%" />
+        <SummaryCard
+          icon={Building2}
+          label="PitchSnack Connections"
+          value="312"
+          delta="8%"
+        />
+        <SummaryCard icon={UserIcon} label="My Contacts" value="936" delta="15%" />
+        <SummaryCard icon={ListIcon} label="Lists" value="24" delta="4%" />
       </div>
 
       {/* Tabs */}
@@ -424,14 +548,6 @@ export function ContactsPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            {ROLE_PILLS.map((r) => (
-              <Button key={r} size="sm" variant={rolePill === r ? "default" : "outline"} className="h-7 rounded-full px-3 text-xs" onClick={() => setRolePill(r)}>
-                {r}
-              </Button>
-            ))}
-          </div>
-
           <div className="rounded-xl border border-border bg-card shadow-sm">
             {tab === "Lists" ? (
               <div className="p-12 text-center text-sm text-muted-foreground">
@@ -458,11 +574,9 @@ export function ContactsPage() {
                         colSpan={6}
                         className="py-12 text-center text-sm text-muted-foreground"
                       >
-                        {isLoading
-                          ? "Loading contacts…"
-                          : search
+                        {search
                           ? "No contacts match your search"
-                          : "No contacts yet — add your first contact"}
+                          : "No contacts yet"}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -555,7 +669,7 @@ export function ContactsPage() {
                                 <DropdownMenuItem>Draft email</DropdownMenuItem>
                                 <DropdownMenuItem>Add to list</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-rose-600" disabled={!!c.memberRole} onSelect={() => setDnc.mutate(c.id)}>
+                                <DropdownMenuItem className="text-rose-600">
                                   Mark Do Not Contact
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -571,9 +685,33 @@ export function ContactsPage() {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
               <div className="text-sm text-muted-foreground">
-                Showing {filtered.length} of {CONTACTS.length}
+                Showing 1–{filtered.length} of 1,248
               </div>
-
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                {[1, 2, 3].map((n) => (
+                  <Button
+                    key={n}
+                    variant={n === 1 ? "default" : "outline"}
+                    size="sm"
+                    className={cn(
+                      "h-8 w-8 p-0",
+                      n === 1 && "bg-primary text-primary-foreground hover:bg-primary/90",
+                    )}
+                  >
+                    {n}
+                  </Button>
+                ))}
+                <span className="px-1 text-sm text-muted-foreground">…</span>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                  50
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -678,7 +816,7 @@ export function ContactsPage() {
                     <DropdownMenuItem>Add to list</DropdownMenuItem>
                     <DropdownMenuItem>Share contact</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-rose-600" disabled={!!selected.memberRole} onSelect={() => setDnc.mutate(selected.id)}>
+                    <DropdownMenuItem className="text-rose-600">
                       Mark Do Not Contact
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -765,7 +903,7 @@ export function ContactsPage() {
                     View all
                   </button>
                 </div>
-                {selected.note.text ? (<div className="rounded-lg border border-border bg-muted/20 p-3">
+                <div className="rounded-lg border border-border bg-muted/20 p-3">
                   <p className="line-clamp-3 text-sm text-foreground/90">
                     {selected.note.text}
                   </p>
@@ -781,7 +919,7 @@ export function ContactsPage() {
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                </div>) : (<div className="text-sm text-muted-foreground">No notes yet.</div>)}
+                </div>
               </div>
 
               {/* Last contact + Next action */}

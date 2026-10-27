@@ -34,13 +34,6 @@ import {
   Link2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { createUserContact, type UserContactInput } from "@/lib/user-contacts.functions";
-
-const TYPE_MAP = { pitchsnack: "PitchSnack Connection", my: "My Contact" } as const;
-const STATUS_MAP = { active: "Active", warm: "Warm", cold: "Cold", "follow-up": "Follow-Up Due", dnc: "Do Not Contact" } as const;
-const SOURCE_MAP = { pitchsnack: "PitchSnack Connection", my: "My Contact", imported: "Imported", referral: "Referral", introduction: "Introduction" } as const;
 
 interface AddContactDialogProps {
   open: boolean;
@@ -54,40 +47,23 @@ function FieldIcon({ Icon }: { Icon: typeof UserIcon }) {
 }
 
 export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) {
-  const empty = { fullName: "", email: "", phone: "", position: "", department: "", company: "", website: "", location: "", type: "my", status: "active", source: "my", tags: "", notes: "" };
-  const [f, setF] = useState(empty);
-  const fullName = f.fullName;
-  const workEmail = f.email;
-  const set = (k: keyof typeof empty) => (e: { target: { value: string } }) => setF((s) => ({ ...s, [k]: e.target.value }));
-  const qc = useQueryClient();
-  const create = useServerFn(createUserContact);
-  const save = useMutation({
-    mutationFn: (data: UserContactInput) => create({ data }),
-    onSuccess: (c) => {
-      qc.invalidateQueries({ queryKey: ["user-contacts"] });
-      toast.success(`${c.fullName} added to your contacts`);
-      reset();
-      onOpenChange(false);
-    },
-    onError: () => toast.error("Could not save contact. Check the email address and try again."),
-  });
+  const [fullName, setFullName] = useState("");
+  const [workEmail, setWorkEmail] = useState("");
 
-  const reset = () => setF(empty);
+  const reset = () => {
+    setFullName("");
+    setWorkEmail("");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !workEmail.trim()) {
-      toast.error("Full name and work email are required");
+      toast.error("Full Name and Work Email are required");
       return;
     }
-    save.mutate({
-      fullName: f.fullName, email: f.email, phone: f.phone, position: f.position, department: f.department,
-      company: f.company, website: f.website, location: f.location,
-      contactType: TYPE_MAP[f.type as keyof typeof TYPE_MAP], status: STATUS_MAP[f.status as keyof typeof STATUS_MAP],
-      source: SOURCE_MAP[f.source as keyof typeof SOURCE_MAP],
-      tags: f.tags.split(",").map((x) => x.trim()).filter(Boolean),
-      notes: f.notes,
-    });
+    toast.success(`${fullName} added to your contacts`);
+    reset();
+    onOpenChange(false);
   };
 
   return (
@@ -121,7 +97,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                   <Input
                     id="ac-name"
                     value={fullName}
-                    onChange={set("fullName")}
+                    onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter full name"
                     className="pl-9"
                     maxLength={100}
@@ -139,7 +115,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                     id="ac-email"
                     type="email"
                     value={workEmail}
-                    onChange={set("email")}
+                    onChange={(e) => setWorkEmail(e.target.value)}
                     placeholder="Enter work email"
                     className="pl-9"
                     maxLength={255}
@@ -155,14 +131,14 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                 <Label htmlFor="ac-phone">Phone Number</Label>
                 <div className="relative">
                   <FieldIcon Icon={Phone} />
-                  <Input id="ac-phone" value={f.phone} onChange={set("phone")} placeholder="Enter phone number" className="pl-9" maxLength={40} />
+                  <Input id="ac-phone" placeholder="Enter phone number" className="pl-9" maxLength={40} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="ac-position">Position</Label>
                 <div className="relative">
                   <FieldIcon Icon={Briefcase} />
-                  <Input id="ac-position" value={f.position} onChange={set("position")} placeholder="Enter position" className="pl-9" maxLength={120} />
+                  <Input id="ac-position" placeholder="Enter position" className="pl-9" maxLength={120} />
                 </div>
               </div>
             </div>
@@ -173,7 +149,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                 <Label htmlFor="ac-role">Role or Department</Label>
                 <div className="relative">
                   <FieldIcon Icon={UsersIcon} />
-                  <Input id="ac-role" value={f.department} onChange={set("department")} placeholder="Enter role or department" className="pl-9" maxLength={120} />
+                  <Input id="ac-role" placeholder="Enter role or department" className="pl-9" maxLength={120} />
                 </div>
               </div>
             </div>
@@ -188,14 +164,14 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                 <Label htmlFor="ac-org">Organisation Name</Label>
                 <div className="relative">
                   <FieldIcon Icon={Building2} />
-                  <Input id="ac-org" value={f.company} onChange={set("company")} placeholder="Enter organisation name" className="pl-9" maxLength={160} />
+                  <Input id="ac-org" placeholder="Enter organisation name" className="pl-9" maxLength={160} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="ac-website">Website</Label>
                 <div className="relative">
                   <FieldIcon Icon={Globe} />
-                  <Input id="ac-website" value={f.website} onChange={set("website")} placeholder="Enter website URL" className="pl-9" maxLength={255} />
+                  <Input id="ac-website" placeholder="Enter website URL" className="pl-9" maxLength={255} />
                 </div>
               </div>
             </div>
@@ -206,7 +182,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                 <Label htmlFor="ac-location">Location</Label>
                 <div className="relative">
                   <FieldIcon Icon={MapPin} />
-                  <Input id="ac-location" value={f.location} onChange={set("location")} placeholder="Enter location" className="pl-9" maxLength={160} />
+                  <Input id="ac-location" placeholder="Enter location" className="pl-9" maxLength={160} />
                 </div>
               </div>
             </div>
@@ -215,7 +191,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <Label>Contact Type</Label>
-                <Select value={f.type} onValueChange={(v) => setF((s) => ({ ...s, type: v }))}>
+                <Select>
                   <SelectTrigger>
                     <div className="flex items-center gap-2">
                       <UserIcon className="h-4 w-4 text-muted-foreground" />
@@ -230,7 +206,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
               </div>
               <div className="space-y-1.5">
                 <Label>Status</Label>
-                <Select value={f.status} onValueChange={(v) => setF((s) => ({ ...s, status: v }))}>
+                <Select>
                   <SelectTrigger>
                     <div className="flex items-center gap-2">
                       <Circle className="h-4 w-4 text-muted-foreground" />
@@ -248,7 +224,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
               </div>
               <div className="space-y-1.5">
                 <Label>Source</Label>
-                <Select value={f.source} onValueChange={(v) => setF((s) => ({ ...s, source: v }))}>
+                <Select>
                   <SelectTrigger>
                     <div className="flex items-center gap-2">
                       <Link2 className="h-4 w-4 text-muted-foreground" />
@@ -271,9 +247,9 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
               <Label htmlFor="ac-tags">Tags</Label>
               <div className="relative">
                 <FieldIcon Icon={TagIcon} />
-                <Input id="ac-tags" value={f.tags} onChange={set("tags")} placeholder="Add tags..." className="pl-9" maxLength={255} />
+                <Input id="ac-tags" placeholder="Add tags..." className="pl-9" maxLength={255} />
               </div>
-              <p className="text-xs text-muted-foreground">Separate tags with commas</p>
+              <p className="text-xs text-muted-foreground">Press Enter to add multiple tags</p>
             </div>
 
             {/* Notes */}
@@ -283,8 +259,6 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
                 <StickyNote className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Textarea
                   id="ac-notes"
-                  value={f.notes}
-                  onChange={set("notes")}
                   placeholder="Add notes about this contact..."
                   className="min-h-[110px] pl-9"
                   maxLength={1000}
@@ -297,7 +271,7 @@ export function AddContactDialog({ open, onOpenChange }: AddContactDialogProps) 
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={save.isPending}>
+            <Button type="submit" className="bg-orange-500 text-white hover:bg-orange-600">
               <CheckCircle2 className="mr-1.5 h-4 w-4" />
               Add Contact
             </Button>
