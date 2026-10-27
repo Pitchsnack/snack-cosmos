@@ -541,31 +541,7 @@ export function ContactsPage() {
               <div className="text-sm text-muted-foreground">
                 Showing {filtered.length} of {CONTACTS.length}
               </div>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" className="h-8 w-8">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {[1, 2, 3].map((n) => (
-                  <Button
-                    key={n}
-                    variant={n === 1 ? "default" : "outline"}
-                    size="sm"
-                    className={cn(
-                      "h-8 w-8 p-0",
-                      n === 1 && "bg-primary text-primary-foreground hover:bg-primary/90",
-                    )}
-                  >
-                    {n}
-                  </Button>
-                ))}
-                <span className="px-1 text-sm text-muted-foreground">…</span>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                  50
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+
             </div>
           </div>
         </div>
