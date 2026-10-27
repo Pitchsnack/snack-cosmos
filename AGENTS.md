@@ -1,5 +1,5 @@
 # Decisions
-- Marketplace Contacts shares three-role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
+- Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
 - Admin contacts use a dedicated Control+Admin-authorized directory and separate admin_contact_notes, keyed by user ID; lazy company DTOs adapt shared cards without viewer controls, and profile/status/sign-in/NDA projections serve both Admin entry points without changing marketplace privacy.
 - Seller founders use a browser-safe structured story helper and the existing founder bio plus nullable bio_story; existing startup authorization/saving and bio display gates remain authoritative.
 - Pipeline chat uses the Messages Chat in a lazy locked presentation inside the existing ProfileBox dialog; Pipeline-parent in-memory drafts preserve unsent content without new storage or authorization paths.
