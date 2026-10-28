@@ -33,7 +33,7 @@ function items(defs: { code: string; label: string; isTotal?: boolean; section?:
     .filter((r) => r.amount != null);
 }
 
-/** Withdraws percent changes year on year so stored rows match the old import. */
+/** Works out year-on-year percent changes so stored rows match the old import. */
 function withChanges(stmts: StoreData["statements"]) {
   const sorted = stmts.slice().sort((a, b) => a.fiscal_year - b.fiscal_year);
   for (let i = 1; i < sorted.length; i++) {
