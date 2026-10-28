@@ -66,8 +66,16 @@ export const submitListing = createServerFn({ method: "POST" })
     if (hp.approval_status === "in_review") throw new Error("Already in review");
     const { data: st } = await sb.from("startups").select("startup_name").eq("id", data.startupId).maybeSingle();
     if (!st?.startup_name?.trim()) throw new Error("Add the company name before you submit.");
+    // One-step approval: the seller suggests a listing name and headline (120 cap).
+    if (!hp.suggested_listing_name?.trim()) throw new Error("Write a listing name.");
+    if (!hp.suggested_headline?.trim()) throw new Error("Write a headline.");
+    if (hp.suggested_listing_name.trim().length > 120 || hp.suggested_headline.trim().length > 120) throw new Error("Keep it to 120 characters.");
     const snapshot = await buildSnapshot(sb, data.startupId, hp);
     if (snapshot.identity_flags.length) throw new Error("Identity check isn't clean yet");
+    // The identity check also reads the suggested listing name and headline.
+    const { runIdentityCheck } = await import("@/lib/hidden-profile");
+    const extra = runIdentityCheck({ headline: hp.suggested_listing_name, description: hp.suggested_headline } as any, { ...st, people: [], customers: [] } as any);
+    if (extra.length) throw new Error(`Identity check: mentions ${extra.map((f) => f.term).join(", ")}`);
     const version = (hp.version ?? 0) + 1;
     const { error: e2 } = await sb.from("listing_submissions").insert({
       hidden_profile_id: hp.id, startup_id: hp.startup_id, tenant_id: hp.tenant_id, version, snapshot, submitted_by: context.userId,
@@ -221,12 +229,13 @@ export const pendingApprovalsCount = createServerFn({ method: "GET" })
     const { data: isAdmin } = await (context.supabase as any).rpc("is_control", { _user_id: context.userId });
     if (!isAdmin) return 0;
     const sb = await admin();
+    // One-step approval: one count for Sellers + Buyers + Advisors waiting.
+    // Buyer profile and verification move together, so they count once.
+    // Paid reports have their own menu item and count (paidReportsCount).
     const { count: a } = await sb.from("hidden_profiles").select("id", { count: "exact", head: true }).eq("approval_status", "in_review");
-    const { count: b } = await sb.from("investor_profile_verifications").select("id", { count: "exact", head: true }).eq("status", "pending");
-    const { count: c } = await sb.from("report_orders").select("id", { count: "exact", head: true }).in("status", ["paid", "generated"]);
     const { count: d } = await sb.from("buyer_profiles").select("user_id", { count: "exact", head: true }).eq("approval_status", "in_review");
     const { count: e } = await sb.from("advisor_firms").select("id", { count: "exact", head: true }).eq("advisor_verification", "pending");
-    return (a ?? 0) + (b ?? 0) + (c ?? 0) + (d ?? 0) + (e ?? 0);
+    return (a ?? 0) + (d ?? 0) + (e ?? 0);
   });
 
 export const getListingReview = createServerFn({ method: "GET" })
