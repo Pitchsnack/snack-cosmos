@@ -150,7 +150,8 @@ export const listPublicBuyers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const sb = await admin();
-    const { data: rows } = await sb.from("buyer_profiles").select("*").eq("status", "live").order("live_since", { ascending: false }).limit(200);
+    // One-step approval: only verified AND approved profiles are public.
+    const { data: rows } = await sb.from("buyer_profiles").select("*").eq("status", "live").eq("approval_status", "approved").order("live_since", { ascending: false }).limit(200);
     const ids = (rows ?? []).map((r: any) => r.user_id);
     const { data: bvs } = ids.length
       ? await (await import("./profile-verification.server")).verificationsByUsers(sb, ids, "user_id, company_name, buyer_type, status").then((mp: Map<string, any>) => ({ data: [...mp.values()] }))
