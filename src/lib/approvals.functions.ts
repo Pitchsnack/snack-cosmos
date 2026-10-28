@@ -133,15 +133,18 @@ export const resumeListing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { listingId: string }) => d)
   .handler(async ({ data, context }) => {
-    const { data: p } = await context.supabase.from("hidden_profiles").select("id,approval_status,live_snapshot").eq("id", data.listingId).eq("user_id", context.userId).maybeSingle();
+    const sb = context.supabase as any;
+    const { data: p } = await sb.from("hidden_profiles").select("id, startup_id, tenant_id, version, approval_status, live_snapshot").eq("id", data.listingId).eq("user_id", context.userId).maybeSingle();
     if (!p) throw new Error("Listing not found");
     if (p.approval_status !== "unpublished" || !p.live_snapshot) throw new Error("This listing can't go live again from here. Register your company instead.");
     const pub = ((p.live_snapshot as { public?: Record<string, unknown> }).public ?? {}) as Record<string, unknown>;
-    const { error } = await context.supabase.from("hidden_profiles").update({
+    const { error } = await sb.from("hidden_profiles").update({
       status: "live", approval_status: "live", live: pub, visibility: "Tenant",
     }).eq("id", p.id);
     if (error) throw new Error(error.message);
-    await log(context.supabase, "listing", p.id, context.userId, "listing_resumed", {});
+    const sbAdmin = await admin();
+    await sbAdmin.from("startups").update({ visibility: "Tenant" }).eq("id", p.startup_id).eq("visibility", "Private");
+    await logEvent({ item_type: "listing", item_id: p.id, startup_id: p.startup_id, subject_user_id: context.userId, version: p.version, action: "publish", actor_id: context.userId });
     return { ok: true };
   });
 
