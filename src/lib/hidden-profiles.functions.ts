@@ -123,6 +123,9 @@ const DraftSchema = z.object({
   product_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   market_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   cover_image_url: z.string().max(500).nullable().optional(),
+  // One-step approval: the seller's suggested listing name and headline.
+  suggested_listing_name: z.string().trim().max(120, "Keep it to 120 characters.").nullable().optional(),
+  suggested_headline: z.string().trim().max(120, "Keep it to 120 characters.").nullable().optional(),
 });
 
 function draftError(msg: string) {
