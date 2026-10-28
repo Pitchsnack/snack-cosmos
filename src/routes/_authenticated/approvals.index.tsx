@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -12,8 +12,7 @@ import { SectorArt } from "@/components/hidden-profile/bits";
 import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
 import { adminInvitations } from "@/lib/invitations.functions";
-import { useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
-import { PaidReports, HistoryTab, Tile, isOverdue } from "@/components/reports/approvals-report-tabs";
+import { HistoryTab } from "@/components/reports/approvals-report-tabs";
 import { useAdvisorQueue } from "@/components/reports/advisor-approvals";
 import { businessDays } from "@/components/advisor/advisor-verification";
 import { OneStepApprovals, useOneStepApprovals } from "@/components/approvals/one-step-approvals";
@@ -24,12 +23,13 @@ export const Route = createFileRoute("/_authenticated/approvals/")({
       { title: "Approvals — Pitchsnack Admin" },
       { name: "description", content: "Review seller listings and buyer verifications waiting for Admin approval." },
       {property:'og:title',content:'Approvals — PitchSnack Admin'},
-      {property:'og:description',content:'Review listings, buyer verifications and paid reports.'},
+      {property:'og:description',content:'Review seller listings, buyers and advisors.'},
       {property:'og:type',content:'website'},
       {name:'twitter:card',content:'summary'},
     ],
   }),
   validateSearch: z.object({ tab: z.enum(["listings", "buyers", "advisors", "reports", "invitations", "contacts", "history"]).optional(), adv: z.string().optional(),company:z.string().uuid().optional() }),
+  beforeLoad: ({ search }) => { if ((search as any).tab === "reports") throw redirect({ to: "/admin/paid-reports" }); },
   component: ApprovalsPage,
 });
 
@@ -80,11 +80,6 @@ function ApprovalsPage() {
     .filter((b) => !q || `${b.company_name} ${b.work_email}`.toLowerCase().includes(q.toLowerCase()));
   const oldest = Math.max(0, ...[...(data?.listings ?? []), ...(data?.buyers ?? [])].map((x: any) => days(x.submitted_at)));
   const names = (data?.names ?? {}) as Record<string, string>;
-  const { data: od } = useAllReportOrders();
-  const orders = (od?.orders ?? []) as ReportOrder[];
-  const overdueOrders = orders.filter(isOverdue);
-  const reportsWaiting = orders.filter((o) => o.status !== "delivered").length;
-  const deliveredWeek = orders.filter((o) => o.delivered_at && Date.now() - +new Date(o.delivered_at) < 7 * 86_400_000).length;
   const listingsWaiting = (data?.listings ?? []).filter((x: any) => x.approval_status === "in_review").length;
   const profilesWaiting = (((data as any)?.profiles ?? []) as any[]).filter((p: any) => p.approval_status === "in_review").length;
   const buyersWaiting = (data?.buyers ?? []).filter((b: any) => b.status === "pending").length;
@@ -99,18 +94,17 @@ function ApprovalsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Approvals &amp; alerts</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Approvals</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} seller listings · {buyersWaiting + profilesWaiting} buyers · {advPending} advisors · <b className="text-foreground">{reportsWaiting} paid reports</b> · {overdueOrders.length} overdue</p>
+          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} seller listings · {buyersWaiting + profilesWaiting} buyers · {advPending} advisors</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => toast.info("Alert settings are coming soon.")}>Alert settings</Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {([
           ["listings", "#F6A823", "Seller listings", listingsWaiting, `oldest ${oldest} day${oldest === 1 ? "" : "s"}`],
           ["buyers", "#4338CA", "Buyer profiles", profilesWaiting, "to publish"],
           ["buyers", "#6D28D9", "Buyer verifications", buyersWaiting, "pending"],
           ["advisors", "#0F766E", "Advisor verifications", advPending, `oldest ${advOldest} day${advOldest === 1 ? "" : "s"}`],
-          ["reports", "#9CA3AF", "Paid reports", reportsWaiting, overdueOrders.length ? `${overdueOrders.length} overdue` : "seller asked"],
         ] as const).map(([k, c, label, n, sub]) => (
           <button key={label} type="button" onClick={() => navigate({ search: { tab: k } })}
             className="rounded-xl border border-border bg-card px-3.5 py-3 text-left transition-colors hover:border-[#CBD2DC]">
@@ -122,7 +116,7 @@ function ApprovalsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {([["listings", "Sellers", oneStep.data?.sellers.length ?? 0], ["buyers", "Buyers", oneStep.data?.buyers.length ?? 0], ["advisors", "Advisors", oneStep.data?.advisors.length ?? 0], ["reports", "Paid reports", reportsWaiting], ["invitations", "Invitations", null], ["history", "History", null]] as const).map(([k, label, n]) => (
+        {([["listings", "Sellers", oneStep.data?.sellers.length ?? 0], ["buyers", "Buyers", oneStep.data?.buyers.length ?? 0], ["advisors", "Advisors", oneStep.data?.advisors.length ?? 0], ["invitations", "Invitations", null], ["history", "History", null]] as const).map(([k, label, n]) => (
           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => navigate({ search: { tab: k } })}
             className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold", tab === k ? "border-[#F6A823] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
             {label}{n !== null && <span className={cn("rounded-full px-[7px] py-px text-[10.5px] font-bold", tab === k ? "bg-[#FEF3DE] text-[#8A4B06]" : "bg-muted text-muted-foreground")}>{n}</span>}
@@ -136,8 +130,6 @@ function ApprovalsPage() {
         <OneStepApprovals key="buyers" kind="buyer" />
       ) : tab === "advisors" ? (
         <OneStepApprovals key="advisors" kind="advisor" openId={s.adv} onOpen={(id) => navigate({ search: { tab: "advisors", adv: id } })} />
-      ) : tab === "reports" ? (
-        <PaidReports orders={s.company?orders.filter(o=>o.startup_id===s.company):orders} />
       ) : (tab === "invitations" || tab === "contacts") ? (
         <InvitationsTab />
       ) : error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : (

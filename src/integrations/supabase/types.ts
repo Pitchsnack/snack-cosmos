@@ -2082,6 +2082,7 @@ export type Database = {
           registration_number: string
           result: string
           source: string | null
+          startup_id: string | null
         }
         Insert: {
           action: string
@@ -2095,6 +2096,7 @@ export type Database = {
           registration_number: string
           result: string
           source?: string | null
+          startup_id?: string | null
         }
         Update: {
           action?: string
@@ -2108,6 +2110,7 @@ export type Database = {
           registration_number?: string
           result?: string
           source?: string | null
+          startup_id?: string | null
         }
         Relationships: []
       }
@@ -7714,6 +7717,10 @@ export type Database = {
           _year: number
         }
         Returns: undefined
+      }
+      dbd_link_startup: {
+        Args: { _actor: string; _sid: string }
+        Returns: Json
       }
       dbd_locked_startup: { Args: { _sid: string }; Returns: boolean }
       dbd_materialize: {
