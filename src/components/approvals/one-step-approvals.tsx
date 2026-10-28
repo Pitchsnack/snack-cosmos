@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { DECISION_REASONS, decideOneStep, listOneStepApprovals, markReviewCheck } from "@/lib/approvals-one-step.functions";
 import type { OneStepItem, OneStepKind, ReviewRow } from "@/lib/one-step.server";
 import { cn } from "@/lib/utils";
+import { DbdStorePanel } from "./dbd-store-panel";
 
 /**
  * Admin › Approvals: the one-step review. One decision verifies the company
@@ -190,6 +191,7 @@ function ReviewPanel({ item, onDone }: { item: OneStepItem; onDone: () => void }
         {/* 4 · verification rows */}
         {!!r.verification.length && (
           <section>
+            {!r.individual && <DbdStorePanel reg={r.dbd?.registrationNo ?? null} initial={r.dbd} onChanged={() => void qc.invalidateQueries({ queryKey: KEY })} />}
             <h3 className="mb-2.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.07em] text-muted-foreground"><FileCheck2 className="h-3.5 w-3.5" />Registration check{r.registrationNo ? ` · ${r.registrationNo}` : ""}</h3>
             <div className="overflow-hidden rounded-[10px] border border-border">
               {r.verification.map((v, i) => (
