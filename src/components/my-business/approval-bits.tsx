@@ -61,7 +61,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
     code_name: (profile as any).suggested_listing_name ?? pub.code_name,
     headline: (profile as any).suggested_headline ?? pub.headline,
   }, facts);
-  const identityWords = [...new Set(findings.map((f) => f.match))];
+  const identityWords = [...new Set(findings.map((f) => f.term))];
   const asking = profile.asking_price_thb ?? profile.asking_price;
   const reviewData: ReviewCompanyData = {
     suggestedName: (profile as any).suggested_listing_name ?? null,

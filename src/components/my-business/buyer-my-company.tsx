@@ -501,7 +501,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       ["Headline", (p as any).suggested_headline ?? ""],
       ["Description", (p.description ?? "").slice(0, 400)],
     ],
-    identityWords: leaks.words,
+    identityWords: leaks,
     identityApplies: true,
     exclusiveRows: [
       { label: "Firm name", value: org.name ?? "", note: null },
@@ -542,7 +542,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         {state === "live"
           ? <span>Live in Browse investors since {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas} NDA{org.ndas === 1 ? "" : "s"} · {org.lois} LOI{org.lois === 1 ? "" : "s"}</span>
           : state === "pending"
-            ? <span>Submitted on {p.submitted_at ? fmtDate(p.submitted_at) : "—"} · sellers can't find you yet</span>
+            ? <span>Submitted on {(p as any).submitted_at ? fmtDate((p as any).submitted_at) : "—"} · sellers can't find you yet</span>
           : state === "changes" || state === "declined"
             ? <span>Fix what PitchSnack asked with Edit information, then register again.</span>
           : state === "paused"
