@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { factsFromData, manualToData, normReg } from "./dbd-store.server";
+import { factsFromData, manualToData, normReg } from "../../src/lib/dbd-store.server";
 
 describe("DBD store", () => {
   it("keys records by a 13-digit registration number only", () => {
