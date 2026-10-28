@@ -21,6 +21,10 @@ import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-bus
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuyerBrowseCard, BuyerCover, TypeIcon, type CardPart } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
+import { registerBuyerCompany } from "@/lib/approvals-one-step.functions";
+import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
+import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
+import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
