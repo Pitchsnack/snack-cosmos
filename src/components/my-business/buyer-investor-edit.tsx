@@ -647,7 +647,20 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>
 
 </div>}
-          {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate"><BuyerDescriptionEditor value={f.description} onChange={(description) => setF((o) => ({...o, description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+          {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{tr("Listing name — your suggestion", "ชื่อประกาศ — ข้อเสนอของท่าน")}</Label>
+              <Input value={f.suggested_listing_name} onChange={set("suggested_listing_name")} maxLength={120} placeholder={data.buyer.ref_no || ""} />
+              <p className="text-[12.5px] text-muted-foreground">{tr("PitchSnack may adjust it to reduce duplication.", "PitchSnack อาจปรับชื่อเพื่อลดความซ้ำ")}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{tr("Headline — your suggestion", "หัวข้อประกาศ — ข้อเสนอของท่าน")}</Label>
+              <Input value={f.suggested_headline} onChange={set("suggested_headline")} maxLength={120} />
+              <p className="text-[12.5px] text-muted-foreground">{tr("One short line sellers see on your card.", "ประโยคสั้น ๆ ที่ผู้ขายเห็นบนการ์ดของท่าน")}</p>
+            </div>
+          </div>
+          <BuyerDescriptionEditor value={f.description} onChange={(description) => setF((o) => ({...o, description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
