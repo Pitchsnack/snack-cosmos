@@ -125,7 +125,7 @@ const STARTUP_MENU_ORDER = [
 const CONTROL_SUBMENUS: { id: string; label: string; icon: typeof Building2; items: string[] }[] = [
   { id: "insights", label: "Insights", icon: Gauge, items: ["Dashboard", "Analytics"] },
   { id: "approvals", label: "Approvals", icon: ShieldCheck, items: ["Report approval", "User approval", "Access codes"] },
-  { id: "network", label: "Network", icon: NetworkIcon, items: ["My Connections", "Contacts"] },
+  { id: "network", label: "Network", icon: Network, items: ["My Connections", "Contacts"] },
   {
     id: "directory",
     label: "Directory",
@@ -384,8 +384,6 @@ function SidebarBody({
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 {showLabels && <span className="whitespace-pre">{t(item.label)}{item.label === "Investors Directory" ? "\n" : ""}</span>}
-                {showLabels && item.label === "Approvals" && <ApprovalsBadge />}
-                {showLabels && item.path === "/admin/paid-reports" && <PaidReportsBadge />}
                 {showLabels && item.path === "/admin/messages" && <AdminMessagesBadge />}
               </Link>
             );
