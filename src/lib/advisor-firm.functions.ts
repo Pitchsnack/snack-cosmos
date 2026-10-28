@@ -65,6 +65,8 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     addrProvince: r.addr_province, addrPostal: r.addr_postal,
     website: r.website, email: r.email, phone: r.phone,
     status: r.status, liveSince: r.live_since, verifiedAt: r.verified_at, updatedAt: r.updated_at,
+    suggestedListingName: r.suggested_listing_name ?? null, suggestedHeadline: r.suggested_headline ?? null,
+    publishedListingName: r.published_listing_name ?? null, publishedHeadline: r.published_headline ?? null,
     verification: { state: r.advisor_verification ?? "unverified", note: r.more_info_note ?? null, fields: r.more_info_fields ?? [], reason: r.decline_reason ?? null, declineNote: r.decline_note ?? null },
     setupAnswered: r.setup_answered ?? [], setupDoneAt: r.setup_done_at ?? null, wizard: r.wizard_state ?? {},
     team: mine(kids.team).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ id: t.id, name: t.name, role: t.role, email: t.email })),
@@ -224,7 +226,11 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
 /** Save profile (Review & complete) and Save changes (Edit profile). Both mark the setup as done. */
 export const saveAdvisorFirm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => DraftFirmInput.parse(d))
+  .inputValidator((d) => DraftFirmInput.extend({
+    // One-step approval: the advisor's suggested listing name and headline.
+    suggested_listing_name: z.string().trim().max(200).nullable().optional(),
+    suggested_headline: z.string().trim().max(300).nullable().optional(),
+  }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
     await requireAdvisor(sb, context.userId);
@@ -247,6 +253,8 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       registration_no: data.registrationNo ?? null, addr_street: data.addrStreet, addr_unit: data.addrUnit,
       addr_district: thai ? data.addrDistrict : data.city, addr_province: data.addrProvince,
       addr_postal: data.addrPostal, website: data.website, email: data.email, phone: data.phone,
+      ...(data.suggested_listing_name !== undefined ? { suggested_listing_name: data.suggested_listing_name || null } : {}),
+      ...(data.suggested_headline !== undefined ? { suggested_headline: data.suggested_headline || null } : {}),
       ...(CompleteFirmInput.safeParse(data).success ? { setup_done_at: new Date().toISOString() } : {}),
     };
     if (data.id) { const { data: ctl0 } = await sb.rpc("is_control", { _user_id: context.userId }); if (ctl0) delete (row as Record<string, unknown>).setup_done_at; }
