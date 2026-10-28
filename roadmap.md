@@ -25,3 +25,5 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 
 - [x] DBD fetch-once shared store (items 1–9)
 - [ ] DBD CSV export/import (section 2.3) — later step, per Dan
+
+- [x] Admin › Paid reports menu page (one row per company, store-first, bulk, side panel, Admin view)
