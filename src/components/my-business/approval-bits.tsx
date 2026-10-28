@@ -5,13 +5,12 @@ import { Clock, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { resumeListing, submitListing, unpublishListing } from "@/lib/approvals.functions";
-import { getMyStartup } from "@/lib/startups.functions";
-import { findIdentityWords, type HiddenDraft, type LivePayload } from "@/lib/hidden-profile";
+import { getStartup } from "@/lib/startups.functions";
+import { runIdentityCheck, type EntryFacts, type HiddenDraft, type HiddenProfileRow } from "@/lib/hidden-profile";
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
 import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
 import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
 import { cn } from "@/lib/utils";
-import type { HiddenProfile } from "@/hooks/use-my-hidden-profile";
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
