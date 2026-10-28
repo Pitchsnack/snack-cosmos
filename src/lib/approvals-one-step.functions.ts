@@ -58,7 +58,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     const { data: sts } = stIds.length
       ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number").in("id", stIds)
       : { data: [] };
-    const stBy = new Map((sts ?? []).map((s: any) => [s.id, s]));
+    const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
     const { data: founders } = stIds.length
       ? await sb.from("startup_founders").select("startup_id, full_name, role_title, bio, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
       : { data: [] };
@@ -73,7 +73,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     const { data: invs } = invIds.length
       ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code").in("id", invIds)
       : { data: [] };
-    const invBy = new Map((invs ?? []).map((i: any) => [i.id, i]));
+    const invBy = new Map<string, any>((invs ?? []).map((i: any) => [i.id, i]));
     const verByUser = await (await import("./profile-verification.server")).verificationsByUsers(sb, (bps ?? []).map((b: any) => b.user_id), "id, status, review_checks");
 
     // ---- advisors: firms waiting or sent back
@@ -86,7 +86,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     for (const b of bps ?? []) uids.add(b.user_id);
     for (const f of firms ?? []) if (f.owner_user_id) uids.add(f.owner_user_id);
     const { data: us } = uids.size ? await sb.from("users").select("id, first_name, last_name, email").in("id", [...uids]) : { data: [] };
-    const uBy = new Map((us ?? []).map((u: any) => [u.id, u]));
+    const uBy = new Map<string, any>((us ?? []).map((u: any) => [u.id, u]));
 
     const sellers: OneStepItem[] = [];
     for (const hp of hps ?? []) {

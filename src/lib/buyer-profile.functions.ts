@@ -166,5 +166,5 @@ export const listPublicBuyers = createServerFn({ method: "GET" })
       const bv = (byId.get(r.user_id) as any) ?? null;
       const t = r.investor_id ? typeById.get(r.investor_id) ?? null : bv?.buyer_type ?? null;
       return toPublic(r, { ...(bv ?? {}), buyer_type: t });
-    }).filter((b) => b.verified);
+    }).filter((b: any) => b.verified);
   });
