@@ -59,6 +59,9 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       newDays: newCardDays(bp?.live_since ?? bp?.decided_at ?? null),
       refNo: bp?.ref_no || `INV-${String(h % 10000).padStart(4, "0")}`,
       codeName,
+      // One-step approval: Admin's published name and headline lead the card.
+      publishedListingName: (bp?.published_listing_name ?? null) as string | null,
+      publishedHeadline: (bp?.published_headline ?? null) as string | null,
       // Never the firm's name before an approved NDA.
       name: null,
       type,
