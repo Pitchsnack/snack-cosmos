@@ -20,6 +20,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfile }) {
   const submit = useServerFn(submitListing);
   const unpublish = useServerFn(unpublishListing);
   const resume = useServerFn(resumeListing);
+  const getStartup = useServerFn(getMyStartup);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [sentOpen, setSentOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -40,14 +41,17 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfile }) {
     onSuccess: () => { toast.success("Live again in Browse listings."); done(); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const st = profile.startup_id
-    ? useQuery({ queryKey: ["review-startup", profile.startup_id], queryFn: () => useServerFn(getMyStartup)({ data: { id: profile.startup_id } }), enabled: reviewOpen })
-    : { data: null as any };
+  const st = useQuery({
+    queryKey: ["review-startup", profile.startup_id],
+    queryFn: () => getStartup({ data: { id: profile.startup_id } }),
+    enabled: reviewOpen && !!profile.startup_id,
+  });
 
   const a = profile.approval_status ?? "draft";
   const live = (profile.live ?? null) as LivePayload | null;
-  const pub: HiddenDraft = { ...(live?.public ?? {}), ...(profile as any).suggested_headline != null ? {} : {} } as HiddenDraft;
-  const company = st.data?.name ?? "";
+  const pub = ((live?.public ?? {}) ?? {}) as HiddenDraft;
+  const s = st.data as any;
+  const company = s?.startup_name ?? "";
   const identityWords = findIdentityWords({
     name: (profile as any).suggested_listing_name ?? "",
     headline: (profile as any).suggested_headline ?? "",
@@ -71,12 +75,12 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfile }) {
     identityApplies: true,
     exclusiveRows: [
       { label: "Company name", value: company, note: null },
-      { label: "Registration Number", value: st.data?.registration_no ?? "", note: null },
-      { label: "Registered address", value: [st.data?.address_district, st.data?.address_province].filter(Boolean).join(", "), note: null },
-      { label: "Year founded", value: st.data?.year_founded != null ? String(st.data.year_founded) : "", note: null },
-      { label: "Website", value: st.data?.website ?? "", note: "Not shown publicly" },
-      { label: "Contact number", value: (st.data as any)?.contact_number ?? "", note: "Not shown publicly" },
-      { label: "Registration check", value: st.data?.registration_verified_at ? "Verified with the Department of Business Development" : "", note: st.data?.registration_verified_at ? null : "PitchSnack checks this with the Department of Business Development" },
+      { label: "Registration Number", value: s?.registered_number ?? "", note: null },
+      { label: "Registered address", value: [s?.address_city_district, s?.address_province_state].filter(Boolean).join(", "), note: null },
+      { label: "Year founded", value: s?.year_founded != null ? String(s.year_founded) : "", note: null },
+      { label: "Website", value: s?.website_url ?? "", note: "Not shown publicly" },
+      { label: "Contact number", value: s?.contact_number ?? "", note: "Not shown publicly" },
+      { label: "Registration check", value: s?.registration_verified_at ? "Verified with the Department of Business Development" : "", note: s?.registration_verified_at ? null : "PitchSnack checks this with the Department of Business Development" },
     ],
   };
 
