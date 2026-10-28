@@ -397,30 +397,127 @@ function SidebarBody({
             return <div className="space-y-1">{visibleItems.map((it, i) => renderItem(it, i))}</div>;
           }
 
-          const remaining = [...visibleItems];
-          const groups = CONTROL_NAV_GROUPS.map((group) => {
-            const items: NavItem[] = [];
-            for (const label of group.labels) {
-              const i = remaining.findIndex((it) => it.label === label);
-              if (i !== -1) items.push(...remaining.splice(i, 1));
-            }
-            return { title: group.title, items };
-          }).filter((g) => g.items.length > 0);
-
-          if (remaining.length > 0) groups.push({ title: "Other", items: remaining });
+          const byLabel = new Map(visibleItems.map((it) => [it.label, it]));
+          const take = (labels: string[]) =>
+            labels.map((l) => byLabel.get(l)).filter((x): x is NavItem => !!x);
+          const isCurrent = (item: NavItem) => {
+            if (item.path === "/global-startups")
+              return (
+                pathname === "/global-startups" ||
+                (pathname.startsWith("/global-startups/") && !pathname.startsWith("/global-startups/browse"))
+              );
+            return item.exact
+              ? pathname === item.path
+              : pathname === item.path || pathname.startsWith(`${item.path}/`);
+          };
+          const headingClass =
+            "px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40";
+          const sections = CONTROL_SECTIONS.map((s) => ({ title: s.title, items: take(s.labels) })).filter(
+            (s) => s.items.length > 0,
+          );
+          const soonItems = take(COMING_SOON_LABELS);
+          const placed = new Set([
+            ...CONTROL_SUBMENUS.flatMap((s) => s.items),
+            ...CONTROL_SECTIONS.flatMap((s) => s.labels),
+            ...COMING_SOON_LABELS,
+          ]);
+          const leftovers = visibleItems.filter((it) => !placed.has(it.label));
+          const approvalTotalBadge =
+            approvalTotal > 0 ? <AdminSubCount count={approvalTotal} /> : undefined;
+          const approvalRailBadge =
+            approvalTotal > 0 ? (
+              <span
+                data-mkt-badge
+                data-rail
+                className="absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-accent px-1 text-[9px] font-bold leading-none text-accent-foreground"
+              >
+                {approvalTotal > 9 ? "9+" : approvalTotal}
+              </span>
+            ) : undefined;
 
           return (
             <div className="space-y-5">
-              {groups.map((group) => (
+              <div className="space-y-1">
+                {showLabels && <div className={headingClass}>{t("User Workflow")}</div>}
+                {CONTROL_SUBMENUS.map((sub) => {
+                  const items = take(sub.items);
+                  if (items.length === 0) return null;
+                  const active = items.some(isCurrent);
+                  return (
+                    <WorkspaceSubmenu
+                      key={sub.id}
+                      id={`admin-${sub.id}`}
+                      toggleOnly
+                      label={t(sub.label)}
+                      heading={t(sub.label)}
+                      groupLabel={`${sub.label} pages`}
+                      icon={sub.icon}
+                      destination={items[0].path}
+                      active={active}
+                      collapsed={!showLabels}
+                      badge={sub.id === "approvals" ? approvalTotalBadge : undefined}
+                      railBadge={sub.id === "approvals" ? approvalRailBadge : undefined}
+                      items={items.map((it) => ({
+                        to: it.path,
+                        label: t(it.label),
+                        current: isCurrent(it),
+                        suffix:
+                          it.label === "Report approval" ? (
+                            <AdminSubCount count={approvalReportCount} />
+                          ) : it.label === "User approval" ? (
+                            <AdminSubCount count={approvalUserCount} />
+                          ) : undefined,
+                      }))}
+                    />
+                  );
+                })}
+              </div>
+              {sections.map((group) => (
                 <div key={group.title} className="space-y-1">
-                  {showLabels && (
-                    <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                      {t(group.title)}
-                    </div>
-                  )}
-                  {group.items.map((it, i) => renderItem(it, i, group.title === "Coming Soon"))}
+                  {showLabels && <div className={headingClass}>{t(group.title)}</div>}
+                  {group.items.map((it, i) => renderItem(it, i))}
                 </div>
               ))}
+              {leftovers.length > 0 && (
+                <div className="space-y-1">{leftovers.map((it, i) => renderItem(it, i))}</div>
+              )}
+              {showLabels && soonItems.length > 0 && (
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    aria-expanded={soonOpen}
+                    aria-controls="admin-coming-soon"
+                    onClick={() => setSoonOpen((o) => !o)}
+                    className={cn(
+                      headingClass,
+                      "flex w-full cursor-pointer items-center justify-between rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                  >
+                    {t("Coming Soon")}
+                    <ChevronRight
+                      className={cn("h-3.5 w-3.5 transition-transform", soonOpen && "rotate-90")}
+                    />
+                  </button>
+                  {soonOpen && (
+                    <div id="admin-coming-soon" className="space-y-1">
+                      {soonItems.map((item, idx) => (
+                        <div
+                          key={`${item.label}-${idx}`}
+                          className="flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 opacity-50"
+                        >
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="flex flex-1 items-center justify-between">
+                            {t(item.label)}
+                            <span className="text-[9px] uppercase tracking-wider text-sidebar-foreground/40">
+                              {t("Soon")}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })()}
