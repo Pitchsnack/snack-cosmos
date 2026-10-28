@@ -55,6 +55,8 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: "ok" | "amb
 
 export type CardInvestor = {
   refNo: string; codeName: string; name: string | null; type: string | null;
+  /** One-step approval: Admin's published name and headline lead the card once live. */
+  publishedListingName?: string | null; publishedHeadline?: string | null;
   city: string | null; country: string | null; description: string | null;
   sectors: string[]; stages: string[]; dealTypes: string[]; geography: string | null;
   verified: boolean; proofOfFunds: boolean;
