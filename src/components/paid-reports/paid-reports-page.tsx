@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { Loader2, RefreshCw, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +17,7 @@ import { listPaidReports, linkStoredDbd, viewStoredDbd } from "@/lib/paid-report
 import { extractDbd, deleteDbd } from "@/lib/dbd-store.functions";
 import { authoriseSeller, finaliseAuthorise } from "@/lib/report-orders.functions";
 import {
-  ORDERABLE, PAID_NAMES, PAID_ORDER, PAID_SHORT, nextStep, readyOrders, waitingChip, hasData, allDone,
+  ORDERABLE, PAID_NAMES, PAID_ORDER, PAID_SHORT, nextStep, readyOrders, waitingChip, hasData,
   type PaidCompany, type PaidOrder, type PaidSort, type PaidTile,
 } from "@/lib/paid-reports";
 import type { HubKey } from "@/lib/reports-hub";
@@ -489,4 +489,3 @@ function ConfirmBox({ confirm, onClose, onGo }: { confirm: Confirm | null; onClo
   );
 }
 
-export { allDone, X };

@@ -178,7 +178,7 @@ export const viewStoredDbd = createServerFn({ method: "GET" })
         ["Registered capital", info.registered_capital_thb != null ? `฿${Number(info.registered_capital_thb).toLocaleString("en-US")}` : info.registered_capital_th_raw ?? "—"],
         ["Registered date", info.registration_date ?? info.registration_date_th_raw ?? "—"],
         ["Directors", (d.directors ?? []).length ? `${(d.directors ?? []).length}${info.authorized_signatory_th ? ` · ${info.authorized_signatory_th}` : ""}` : "—"],
-        ["Shareholders", "Not in DBD data · analyst report"],
+        ["Shareholders", "—"],
         ["Fiscal years filed", years.length ? `${years.length} · FY${years[0]}–${years[years.length - 1]}` : "—"],
         ["TSIC", tsic ?? "—"],
       ] as [string, string][],
