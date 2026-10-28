@@ -12,3 +12,12 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 - [x] H. Sidebar red badge on My Company while changes requested/declined
 - [x] I. Approval decision emails + Thai translations for all new strings
 - [ ] J. Final reply: name/headline columns per role, Certified storage, DBD fields available, live sellers/advisors lacking certification/verification, anything not built
+
+## Shared DBD store — approved 28 October 2026
+
+- [ ] Pre-migration: list shared registration numbers and conflicting company-info/financial-statement rows; wait for Dan's resolution before migration, merging or deletion.
+- [ ] Implement successful fetch-once store and linked read-only data with Control Admin-only mutation enforcement.
+- [ ] Implement logged retries, atomic failed-refresh preservation and replacement confirmations.
+- [ ] Link verification source/date to approval history and synchronise legacy company fields from the store.
+- [ ] Update Generate/Extract data and seller Ready to order states without changing prices or running waiting orders.
+- [ ] Validate rules and report stored registrations, links and produced seller reports.
