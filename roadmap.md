@@ -15,7 +15,8 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 
 ## Shared DBD store — approved 28 October 2026
 
-- [ ] Pre-migration: list shared registration numbers and conflicting company-info/financial-statement rows; wait for Dan's resolution before migration, merging or deletion.
+- [x] Pre-migration audit: shared registrations are 0105561234567 (ADV-1008 Rita Test Advisory / INV-1012 Rita Test Capital) and 0105567088689 (PS-1006 pml / Petmyli without a listing reference); no conflicting company-info or registration/year financial-statement duplicates found.
+- [ ] BLOCKED: wait for Dan's decision on both shared registrations before migration, merging or deletion.
 - [ ] Implement successful fetch-once store and linked read-only data with Control Admin-only mutation enforcement.
 - [ ] Implement logged retries, atomic failed-refresh preservation and replacement confirmations.
 - [ ] Link verification source/date to approval history and synchronise legacy company fields from the store.
