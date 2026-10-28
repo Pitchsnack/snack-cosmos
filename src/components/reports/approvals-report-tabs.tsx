@@ -7,11 +7,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Lock, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
-import { autoEnrichFinancials, clearStartupFinancials, saveStartupFinancials } from "@/lib/financials-edit.functions";
+import { generateFromStore } from "@/lib/dbd-store.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { authoriseSeller, finaliseAuthorise, listReportEvents, markReportGenerated, undoAuthorise } from "@/lib/report-orders.functions";
+import { authoriseSeller, finaliseAuthorise, listReportEvents, undoAuthorise } from "@/lib/report-orders.functions";
 import { cn } from "@/lib/utils";
 import { Pill, dayMonth, dayMonthTime, hpOf, kindLabel, money, type ReportOrder } from "./report-order-bits";
 
@@ -48,14 +48,11 @@ export const businessDaysSince = (d: string) => {
 export const isOverdue = (o: ReportOrder) => o.status !== "delivered" && businessDaysSince(o.paid_at) > 2;
 export const overdueBy = (o: ReportOrder) => Math.max(1, businessDaysSince(o.paid_at) - 2);
 
-type GenState = "running" | "failed";
+type GenState = "running" | "failed" | "needs";
 
 export function PaidReports({ orders }: { orders: ReportOrder[] }) {
   const qc = useQueryClient();
-  const enrich = useServerFn(autoEnrichFinancials);
-  const clear = useServerFn(clearStartupFinancials);
-  const save = useServerFn(saveStartupFinancials);
-  const genFn = useServerFn(markReportGenerated);
+  const genFn2 = useServerFn(generateFromStore);
   const authFn = useServerFn(authoriseSeller);
   const undoFn = useServerFn(undoAuthorise);
   const finFn = useServerFn(finaliseAuthorise);
@@ -93,22 +90,24 @@ export function PaidReports({ orders }: { orders: ReportOrder[] }) {
   const rows = show === "waiting" ? waiting : show === "authorised" ? authorised : [...waiting, ...authorised];
   const overdue = waiting.filter(isOverdue);
 
+  // Generate uses the stored DBD data only — it never fetches again and never deletes.
   const generate = async (o: ReportOrder) => {
+    const extract = gen[o.id] === "needs";
     setGen((g) => ({ ...g, [o.id]: "running" }));
     try {
-      const r = await enrich({ data: { startupId: o.startup_id } });
-      if (r.status !== "ok" || !r.years?.length) throw new Error(r.message ?? "No data");
-      await clear({ data: { startupId: o.startup_id } });
-      await save({ data: { startupId: o.startup_id, years: r.years, ...(r.profile ? { profile: r.profile } : {}),
-        provenance: { source: "DBD_DATA_WAREHOUSE", sourceReference: r.sourceReference ?? null, matchedRegisteredNumber: r.matchedRegisteredNumber ?? null,
-          matchedRegisteredName: r.matchedRegisteredName ?? null, retrievedAt: r.retrievedAt ?? null } } as any });
-      const years = (r.years as any[]).map((y) => Number(y?.fiscalYear ?? y?.fiscal_year ?? y?.year)).filter(Boolean);
-      await genFn({ data: { orderId: o.id, years, regNo: r.matchedRegisteredNumber ?? null } });
+      const r = await genFn2({ data: { startupId: o.startup_id, extract } });
+      if (!r.ok) {
+        if ("needsExtract" in r && r.needsExtract) { setGen((g) => ({ ...g, [o.id]: "needs" })); return; }
+        toast.error(r.error);
+        setGen((g) => ({ ...g, [o.id]: "failed" }));
+        return;
+      }
       setGen((g) => { const n = { ...g }; delete n[o.id]; return n; });
       await qc.invalidateQueries({ queryKey: ["report-orders"] });
       setFocusId(o.id);
       toast.success(`Report ready for ${o.startups?.startup_name ?? "this company"}. Authorise the seller when you're happy with it.`);
-    } catch {
+    } catch (e) {
+      toast.error((e as Error).message);
       setGen((g) => ({ ...g, [o.id]: "failed" }));
     }
   };
@@ -136,7 +135,7 @@ export function PaidReports({ orders }: { orders: ReportOrder[] }) {
     const base = "h-8 rounded-lg px-3 text-[13px] font-semibold";
     if (o.status === "delivered") return <Button data-row-action={o.id} size="sm" variant="outline" className={base} onClick={() => setViewing(o)}>View report</Button>;
     if (o.ready_at && g !== "running") return <Button data-row-action={o.id} size="sm" className={cn(base, "bg-[#111827] text-white hover:bg-[#111827]/90")} onClick={() => authorise(o)}>Authorise seller</Button>;
-    return <Button data-row-action={o.id} size="sm" variant="outline" className={base} disabled={g === "running"} onClick={() => generate(o)}>{g === "failed" ? "Try again" : "Generate report"}</Button>;
+    return <Button data-row-action={o.id} size="sm" variant="outline" className={base} disabled={g === "running"} onClick={() => generate(o)}>{g === "needs" ? "Extract data" : g === "failed" ? "Try again" : "Generate report"}</Button>;
   };
 
   return (
@@ -182,6 +181,7 @@ export function PaidReports({ orders }: { orders: ReportOrder[] }) {
                   </td>
                   <td className="px-5 py-3">
                     {g === "running" ? <span className="inline-flex items-center gap-1.5 text-[#B45309]"><Loader2 className="h-3.5 w-3.5 animate-spin" />Generating…</span>
+                      : g === "needs" ? <span className="text-[#B45309]">No DBD data stored yet · Extract data first</span>
                       : g === "failed" ? <span className="text-[#B91C1C]">✗ Couldn't generate</span>
                       : o.ready_at ? <span className="font-semibold text-[#047857]">✓ Ready · {dayMonth(o.ready_at)}</span>
                       : <span className="text-[#9CA3AF]">✗ Not generated yet</span>}
