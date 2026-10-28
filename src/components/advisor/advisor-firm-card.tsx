@@ -132,7 +132,8 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, foot,
       <div className={cn("space-y-2.5 p-4", foot && "flex-1")}>
         <div>
           <div className="flex items-start justify-between gap-3">
-            <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name.trim() || tr("New firm profile")}</h3>
+            <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.publishedListingName?.trim() || f.name.trim() || tr("New firm profile")}</h3>
+            {f.publishedHeadline?.trim() && <p className="mt-0.5 min-w-0 text-[13px] font-semibold leading-snug text-[#374151] dark:text-foreground/85">{f.publishedHeadline}</p>}
             <span className="shrink-0 whitespace-nowrap pt-0.5 text-[13px] text-[#6B7280]">
               {f.refNo}{f.city && <> · <span className="font-medium text-[#4B5563]">{f.city}</span></>}
             </span>
