@@ -8,7 +8,7 @@ import { EditInfoPopup } from "@/components/common/edit-info-popup";
 import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, Check, ChevronDown, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Star, X } from "lucide-react";
+import { BadgeCheck, Check, ChevronDown, Clock, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Send, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
