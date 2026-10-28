@@ -608,6 +608,8 @@ export type Database = {
           phone: string | null
           prepared_at: string | null
           prepared_by: string | null
+          published_headline: string | null
+          published_listing_name: string | null
           ref_no: string
           registration_no: string | null
           review_checklist: string[]
@@ -620,6 +622,8 @@ export type Database = {
           setup_done_at: string | null
           setup_reached: string | null
           status: string
+          suggested_headline: string | null
+          suggested_listing_name: string | null
           team_size: number | null
           thai_name: string | null
           updated_at: string
@@ -676,6 +680,8 @@ export type Database = {
           phone?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
+          published_headline?: string | null
+          published_listing_name?: string | null
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
@@ -688,6 +694,8 @@ export type Database = {
           setup_done_at?: string | null
           setup_reached?: string | null
           status?: string
+          suggested_headline?: string | null
+          suggested_listing_name?: string | null
           team_size?: number | null
           thai_name?: string | null
           updated_at?: string
@@ -744,6 +752,8 @@ export type Database = {
           phone?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
+          published_headline?: string | null
+          published_listing_name?: string | null
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
@@ -756,6 +766,8 @@ export type Database = {
           setup_done_at?: string | null
           setup_reached?: string | null
           status?: string
+          suggested_headline?: string | null
+          suggested_listing_name?: string | null
           team_size?: number | null
           thai_name?: string | null
           updated_at?: string
@@ -1009,6 +1021,45 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_notices: {
+        Row: {
+          banner_step: string | null
+          created_at: string
+          decided_at: string | null
+          item_id: string
+          item_type: string
+          popup_seen_at: string | null
+          red_open: boolean
+          updated_at: string
+          user_id: string
+          yellow_folded: boolean
+        }
+        Insert: {
+          banner_step?: string | null
+          created_at?: string
+          decided_at?: string | null
+          item_id: string
+          item_type: string
+          popup_seen_at?: string | null
+          red_open?: boolean
+          updated_at?: string
+          user_id: string
+          yellow_folded?: boolean
+        }
+        Update: {
+          banner_step?: string | null
+          created_at?: string
+          decided_at?: string | null
+          item_id?: string
+          item_type?: string
+          popup_seen_at?: string | null
+          red_open?: boolean
+          updated_at?: string
+          user_id?: string
+          yellow_folded?: boolean
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1062,6 +1113,7 @@ export type Database = {
           buyer_relation: string | null
           city: string | null
           code_name: string
+          contact_number: string | null
           country: string | null
           created_at: string
           deal_types: string[]
@@ -1069,6 +1121,7 @@ export type Database = {
           decided_by: string | null
           decision_note: string | null
           decision_process: string | null
+          decision_reasons: string[]
           description: string | null
           geography: string | null
           headline: string | null
@@ -1082,12 +1135,17 @@ export type Database = {
           portfolio: Json
           private_description: string | null
           profile_views_month: number
+          published_headline: string | null
+          published_listing_name: string | null
           ref_no: string
+          revenue_band: string | null
           sectors: string[]
           show_name: boolean
           stages: string[]
           status: string
           submitted_at: string | null
+          suggested_headline: string | null
+          suggested_listing_name: string | null
           target_size: string | null
           ticket_exact: string | null
           ticket_max: number | null
@@ -1104,6 +1162,7 @@ export type Database = {
           buyer_relation?: string | null
           city?: string | null
           code_name: string
+          contact_number?: string | null
           country?: string | null
           created_at?: string
           deal_types?: string[]
@@ -1111,6 +1170,7 @@ export type Database = {
           decided_by?: string | null
           decision_note?: string | null
           decision_process?: string | null
+          decision_reasons?: string[]
           description?: string | null
           geography?: string | null
           headline?: string | null
@@ -1124,12 +1184,17 @@ export type Database = {
           portfolio?: Json
           private_description?: string | null
           profile_views_month?: number
+          published_headline?: string | null
+          published_listing_name?: string | null
           ref_no?: string
+          revenue_band?: string | null
           sectors?: string[]
           show_name?: boolean
           stages?: string[]
           status?: string
           submitted_at?: string | null
+          suggested_headline?: string | null
+          suggested_listing_name?: string | null
           target_size?: string | null
           ticket_exact?: string | null
           ticket_max?: number | null
@@ -1146,6 +1211,7 @@ export type Database = {
           buyer_relation?: string | null
           city?: string | null
           code_name?: string
+          contact_number?: string | null
           country?: string | null
           created_at?: string
           deal_types?: string[]
@@ -1153,6 +1219,7 @@ export type Database = {
           decided_by?: string | null
           decision_note?: string | null
           decision_process?: string | null
+          decision_reasons?: string[]
           description?: string | null
           geography?: string | null
           headline?: string | null
@@ -1166,12 +1233,17 @@ export type Database = {
           portfolio?: Json
           private_description?: string | null
           profile_views_month?: number
+          published_headline?: string | null
+          published_listing_name?: string | null
           ref_no?: string
+          revenue_band?: string | null
           sectors?: string[]
           show_name?: boolean
           stages?: string[]
           status?: string
           submitted_at?: string | null
+          suggested_headline?: string | null
+          suggested_listing_name?: string | null
           target_size?: string | null
           ticket_exact?: string | null
           ticket_max?: number | null
@@ -3259,15 +3331,19 @@ export type Database = {
           public_image_id: string | null
           published_at: string | null
           published_by: string | null
+          published_headline: string | null
           reason: string | null
           ref_no: string
           region: string | null
+          review_checks: string[]
           stake_pct: number | null
           startup_id: string
           status: string
           structure: string | null
           submitted_at: string | null
           submitted_by: string | null
+          suggested_headline: string | null
+          suggested_listing_name: string | null
           tenant_id: string
           unpublished_at: string | null
           updated_at: string
@@ -3316,15 +3392,19 @@ export type Database = {
           public_image_id?: string | null
           published_at?: string | null
           published_by?: string | null
+          published_headline?: string | null
           reason?: string | null
           ref_no?: string
           region?: string | null
+          review_checks?: string[]
           stake_pct?: number | null
           startup_id: string
           status?: string
           structure?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
+          suggested_headline?: string | null
+          suggested_listing_name?: string | null
           tenant_id: string
           unpublished_at?: string | null
           updated_at?: string
@@ -3373,15 +3453,19 @@ export type Database = {
           public_image_id?: string | null
           published_at?: string | null
           published_by?: string | null
+          published_headline?: string | null
           reason?: string | null
           ref_no?: string
           region?: string | null
+          review_checks?: string[]
           stake_pct?: number | null
           startup_id?: string
           status?: string
           structure?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
+          suggested_headline?: string | null
+          suggested_listing_name?: string | null
           tenant_id?: string
           unpublished_at?: string | null
           updated_at?: string
@@ -3715,12 +3799,14 @@ export type Database = {
           created_at: string
           decided_at: string | null
           decision_note: string | null
+          decision_reasons: string[]
           documents: string[]
           email_domain_match: boolean | null
           id: string
           investor_id: string
           linkedin: string | null
           registration_no: string | null
+          review_checks: string[]
           status: string
           submitted_at: string | null
           updated_at: string
@@ -3735,12 +3821,14 @@ export type Database = {
           created_at?: string
           decided_at?: string | null
           decision_note?: string | null
+          decision_reasons?: string[]
           documents?: string[]
           email_domain_match?: boolean | null
           id?: string
           investor_id: string
           linkedin?: string | null
           registration_no?: string | null
+          review_checks?: string[]
           status?: string
           submitted_at?: string | null
           updated_at?: string
@@ -3755,12 +3843,14 @@ export type Database = {
           created_at?: string
           decided_at?: string | null
           decision_note?: string | null
+          decision_reasons?: string[]
           documents?: string[]
           email_domain_match?: boolean | null
           id?: string
           investor_id?: string
           linkedin?: string | null
           registration_no?: string | null
+          review_checks?: string[]
           status?: string
           submitted_at?: string | null
           updated_at?: string
@@ -6219,6 +6309,7 @@ export type Database = {
           company_size: string | null
           company_type: string | null
           company_type_source: string
+          contact_number: string | null
           created_at: string
           created_by: string | null
           email: string | null
@@ -6279,6 +6370,7 @@ export type Database = {
           company_size?: string | null
           company_type?: string | null
           company_type_source?: string
+          contact_number?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -6339,6 +6431,7 @@ export type Database = {
           company_size?: string | null
           company_type?: string | null
           company_type_source?: string
+          contact_number?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
