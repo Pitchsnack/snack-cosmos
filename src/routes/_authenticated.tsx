@@ -1,4 +1,6 @@
 import { FreePlanBars } from "@/components/free-plan-bars";
+import { ApprovalBanners } from "@/components/approval/approval-banners";
+import { ApprovedPopup } from "@/components/approval/approved-popup";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/app-sidebar";
