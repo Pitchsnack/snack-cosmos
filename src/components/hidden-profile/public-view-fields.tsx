@@ -202,7 +202,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
           <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={refNo} />
           <div className="min-w-0 space-y-[22px]">
             <EditSec id="codename" tone="seller" active={section === "codename"}>
-              {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <ListingNameRow name={d.code_name.trim()} refNo={refNo} />}
+              {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
               <FieldRow label={tr("Headline", "หัวข้อประกาศ")} htmlFor="hp-headline" missing={!d.headline.trim()} right={`${d.headline.length}/120`} suggest={ideas.headlineIdea ? () => set("headline", ideas.headlineIdea) : undefined}>
@@ -378,6 +378,24 @@ function ListingNameRow({ name, refNo }: { name: string; refNo?: string }) {
       <div className={LABEL}>{tr("Listing name", "ชื่อประกาศ")}</div>
       <div className="mt-[6px] text-[15px] font-semibold text-[#151A28] dark:text-foreground">{name || ref}</div>
       {!name && <p className="mt-1 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr(`PitchSnack names your listing. Until then, buyers see ${ref}.`, `PitchSnack จะตั้งชื่อประกาศให้ท่าน ระหว่างนี้ผู้ซื้อจะเห็น ${ref}`)}</p>}
+    </div>
+  );
+}
+
+/** Sellers suggest a listing name; Admin may adjust it before publishing. */
+function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string }) {
+  const tr = useTr();
+  const { d, setD } = pd;
+  const published = d.code_name.trim();
+  const val = d.suggested_listing_name ?? "";
+  return (
+    <div className="space-y-4">
+      {published ? <ListingNameRow name={published} refNo={refNo} /> : null}
+      <FieldRow label={tr("Listing name — your suggestion", "ชื่อประกาศ — ข้อเสนอของท่าน")} htmlFor="hp-suggested-name" right={`${val.length}/120`}>
+        <Input id="hp-suggested-name" maxLength={120} value={val} placeholder={refNo || ""}
+          onChange={(e) => setD((p) => ({ ...p, suggested_listing_name: e.target.value }))} className={BOX} />
+        <p className="mt-1 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr("PitchSnack may adjust it to reduce duplication and make your listing easier to distinguish.", "PitchSnack อาจปรับชื่อเพื่อลดความซ้ำและทำให้ประกาศของท่านโดดเด่นขึ้น")}</p>
+      </FieldRow>
     </div>
   );
 }
