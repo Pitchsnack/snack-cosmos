@@ -10,6 +10,7 @@ import { findIdentityWords, type HiddenDraft, type LivePayload } from "@/lib/hid
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
 import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
 import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
+import { cn } from "@/lib/utils";
 import type { HiddenProfile } from "@/hooks/use-my-hidden-profile";
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
