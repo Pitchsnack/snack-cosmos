@@ -28,8 +28,6 @@
 - Sellers edit only own businesses via is_startup_member policies; a guard trigger preserves tenant/visibility.
 - Buyer identity: buyer_profiles.buyer_relation is who the buyer is; a representative's types live in investors.acts_for_types and every display/filter uses typeName/actsForText/sortActsFor in investor-bands.ts.
 - One SetSectorPicker (common/set-sector-picker.tsx) everywhere — seller single radio, buyer/advisor up to 5 with Sector agnostic; buyers store agnostic as the "Sector Agnostic" entry in preferred_industries (advisors: sector_agnostic).
-- Advisor verification lives on advisor_firms (advisor_verification + verified_*/more_info_*/decline_*); DB triggers make the firm-side moves and block non-Admin writes, Admin acts only via advisor-admin.functions.ts. Ownerless firms come only from admin_create_ownerless_advisor_firm (createAdvisorFirmForAdmin); a trigger blocks verified/live without an owner unless run_by is pitchsnack, so every owner_user_id reader must allow null.
-- Advisor saving uses shared structural and complete schemas; server-read status chooses Draft validation so browser flags cannot weaken live checks, and Admin save invalidates both Directory and edit caches for read-back.
 - saveMyBuyerInvestor/resolveBuyer: Admin (stored role + can_manage_investor, as Edit Investor) may edit any Directory investor; buyer-side fields go to the linked buyer's row (bpUser), never the caller's.
 - Roles/plans: account_role checked in plan-access.server.ts + role_is() policies; plan values from plans, counts in plan_usage.
 - Seller Connect: listing_invitations (one open per listing+investor) via invitations.functions.ts only; status derived server-side; contact_requests deprecated.
