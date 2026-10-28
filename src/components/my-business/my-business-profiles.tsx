@@ -507,9 +507,7 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
           />
         </>
       )}
-      {!adminReview && (
-        <PanelFooter s={current} onItem={(k) => (k === "private" ? openEdit(current.id, "private", "images") : onItem(k as ItemKey))} />
-      )}
+      {!adminReview && <PanelFooter s={current} />}
     </div>
   ) : null;
 
@@ -538,7 +536,7 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
   );
 }
 
-function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) => void }) {
+function PanelFooter({ s }: { s: StartupListItem }) {
   const { row } = useHiddenProfile(s.id);
   if (!row) return null;
   return <ApprovalFooter profile={row} />;

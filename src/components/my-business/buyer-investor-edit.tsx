@@ -3,6 +3,7 @@ import { descriptionChanged } from "@/lib/buyer-description";
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { tr } from "@/i18n/language";
+import { REVENUE_BANDS } from "@/lib/revenue-bands";
 import { companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
@@ -212,6 +213,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
+    // One-step approval: the buyer's suggestion plus verification details.
+    suggested_listing_name: (data.buyer as any).suggested_listing_name ?? "",
+    suggested_headline: (data.buyer as any).suggested_headline ?? "",
+    revenue_band: (data.buyer as any).revenue_band ?? "",
+    contact_number: (data.buyer as any).contact_number ?? "",
   });
   const [addr, setAddrS] = useState<Addr>({ street: inv.address_line1 ?? "", unit: inv.address_line2 ?? "", district: inv.address_city_district ?? "", province: inv.address_province_state ?? "", postal: inv.postal_code ?? "" });
   const [addrDirty, setAddrDirty] = useState(false);
@@ -370,6 +376,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
+        suggested_listing_name: t(f.suggested_listing_name) || null,
+        suggested_headline: t(f.suggested_headline) || null,
+        revenue_band: (f.revenue_band || null) as never,
+        contact_number: t(f.contact_number) || null,
         investor_id: inv.id,
       } });
       if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,bio:bio || null,...(portfolioInvestorsDirty ? {portfolioInvestorIds:portfolioInvestors.flatMap(x=>x.refId ? [x.refId] : [])} : {}),...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
@@ -550,6 +560,26 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           />
         </div>
 
+        {/* Row 4: Contact number | Revenue — what PitchSnack checks */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>{tr("Contact number")}</Label>
+            <Input value={f.contact_number} onChange={set("contact_number")} placeholder="+66 …" maxLength={40} />
+            <p className="text-[12.5px] text-muted-foreground">{tr("Not shown publicly. PitchSnack uses it to reach you about verification.")}</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{tr("Revenue (yearly)")}</Label>
+            <Select value={f.revenue_band || ""} onValueChange={(v) => setF((o) => ({ ...o, revenue_band: v === "__clear__" ? "" : v }))}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={tr("Select a range")} /></SelectTrigger>
+              <SelectContent>
+                {f.revenue_band && <SelectItem value="__clear__" className="text-muted-foreground">{tr("Clear selection")}</SelectItem>}
+                {REVENUE_BANDS.map(([k, label]) => <SelectItem key={k} value={k}>{tr(label)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-[12.5px] text-muted-foreground">{tr("Not shown publicly. PitchSnack checks it against your registration data.")}</p>
+          </div>
+        </div>
+
         {/* About */}
         <div className="space-y-1.5">
           <Label>About Company</Label>
@@ -617,7 +647,20 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </S>
 
 </div>}
-          {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate"><BuyerDescriptionEditor value={f.description} onChange={(description) => setF((o) => ({...o, description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+          {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{tr("Listing name — your suggestion")}</Label>
+              <Input value={f.suggested_listing_name} onChange={set("suggested_listing_name")} maxLength={120} placeholder={data.buyer.ref_no || ""} />
+              <p className="text-[12.5px] text-muted-foreground">{tr("PitchSnack may adjust it to reduce duplication.")}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{tr("Headline — your suggestion")}</Label>
+              <Input value={f.suggested_headline} onChange={set("suggested_headline")} maxLength={120} />
+              <p className="text-[12.5px] text-muted-foreground">{tr("One short line sellers see on your card.")}</p>
+            </div>
+          </div>
+          <BuyerDescriptionEditor value={f.description} onChange={(description) => setF((o) => ({...o, description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">

@@ -6,13 +6,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Building2, Check, ChevronDown, ExternalLink, FileText, Info, LayoutList, MapPin, MoreVertical, Navigation, Pencil,
-  Flag, Loader2, Plus, RefreshCw, Search, ShieldCheck, Star, X,
+  Building2, Check, ChevronDown, Clock, ExternalLink, FileText, Info, LayoutList, MapPin, MoreVertical, Navigation, Pencil,
+  Flag, Loader2, Plus, RefreshCw, Search, Send, ShieldCheck, Star, X,
 } from "lucide-react";
+import { registerAdvisorFirm } from "@/lib/approvals-one-step.functions";
+import { descriptionLeaks } from "@/lib/investor-bands";
+import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
+import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
+import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -333,6 +338,39 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
   const svcBtn = useRef<HTMLButtonElement>(null);
   const addrBtn = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState(false);
+  // One-step approval: Register your company opens the review pop-up.
+  const registerFn = useServerFn(registerAdvisorFirm);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [sentOpen, setSentOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [failures, setFailures] = useState<string[]>([]);
+  const reg = useMutation({
+    mutationFn: () => registerFn({ data: { firmId: f.id } }),
+    onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); void qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
+    onError: (e: Error) => setFailures([e.message]),
+  });
+  const reviewData: ReviewCompanyData = {
+    suggestedName: f.suggestedListingName ?? null,
+    suggestedHeadline: f.suggestedHeadline ?? null,
+    listingRows: [
+      ["Firm type", f.firmType || ""],
+      ["Services", f.services.join(", ")],
+      ["Sectors", f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ")],
+      ["Headline", f.suggestedHeadline ?? ""],
+      ["Description", (f.description ?? "").slice(0, 400)],
+    ],
+    identityWords: descriptionLeaks(`${f.suggestedListingName ?? ""} ${f.suggestedHeadline ?? ""} ${f.description ?? ""}`, f.name ?? "", f.website ?? ""),
+    identityApplies: true,
+    exclusiveRows: [
+      { label: "Firm name", value: f.name ?? "", note: null },
+      { label: "Registration Number", value: f.registrationNo ?? "", note: null },
+      { label: "Registered address", value: fullAddress(f), note: null },
+      { label: "Year founded", value: f.yearFounded != null ? String(f.yearFounded) : "", note: null },
+      { label: "Website", value: f.website ?? "", note: "Not shown publicly" },
+      { label: "Email", value: f.email ?? "", note: "Not shown publicly" },
+      { label: "Contact number", value: f.phone ?? "", note: "Not shown publicly" },
+    ],
+  };
   const checklist = firmChecklist(f);
   const complete = checklist.every((i) => i.done);
   const declined = f.verification?.state === "declined";
@@ -530,23 +568,43 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
         ) : f.status === "live" ? (
           <>
             <span>Live in Browse advisors since {fmtDate(f.liveSince)}{views != null && ` · ${views} profile ${views === 1 ? "view" : "views"} this week`}</span>
-            <Button variant="outline" size="sm" disabled={busy} onClick={() => changeStatus("paused")}>Pause listing</Button>
+            <span className="flex flex-col items-end gap-1">
+              <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>Remove your company profile from listing</Button>
+              <span className="text-[12.5px] text-muted-foreground">Your profile becomes private, and new sellers and buyers can't contact you.</span>
+            </span>
           </>
-        ) : f.status === "draft" ? (
+        ) : f.verification?.state === "pending" ? (
           <>
-            <span>Publish your profile so sellers and buyers can find you in Browse advisors.{!complete && <> <span className="text-muted-foreground">Finish the checklist first.</span></>}</span>
-            <Button size="sm" disabled={busy || !complete || declined} title={declined ? DECLINED_TIP : complete ? undefined : "Complete the checklist first"} onClick={() => changeStatus("live")} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Publish</Button>
+            <span>Submitted · sellers and buyers can't find you yet</span>
+            <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />Pending approval</span>
+          </>
+        ) : f.verification?.state === "more_info" || f.verification?.state === "declined" ? (
+          <>
+            <span>Fix what PitchSnack asked with Edit information, then register again.</span>
+            <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />Register your company</Button>
+          </>
+        ) : f.status === "paused" ? (
+          <>
+            <span>Hidden from Browse advisors since {fmtDate(f.updatedAt)}.</span>
+            <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#1E2A4A]/90" disabled={busy} onClick={() => changeStatus("live")}>List my company so that sellers and buyers can contact me</Button>
           </>
         ) : (
           <>
-            <span>Paused. Sellers and buyers can't see your profile.</span>
-            <Button variant="outline" size="sm" disabled={busy || !complete || declined} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Make live again</Button>
+            <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your firm and publishes your profile together.{!complete && <> <span className="text-muted-foreground">Finish the checklist first.</span></>}</span>
+            <Button size="sm" disabled={!complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => { setFailures([]); setReviewOpen(true); }} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><Send className="mr-1.5 h-4 w-4" />Register your company</Button>
           </>
         )}
       </div>
 
       <ServicesDialog f={f} open={svcOpen} onOpenChange={(o) => { setSvcOpen(o); if (!o) setTimeout(() => svcBtn.current?.focus(), 0); }} />
       <AddressDialog f={f} open={addrOpen} onOpenChange={(o) => { setAddrOpen(o); if (!o) setTimeout(() => addrBtn.current?.focus(), 0); }} />
+      {!client && <>
+        <ReviewCompanyDialog open={reviewOpen} role="advisor" data={reviewData} failures={failures} submitting={reg.isPending}
+          onEdit={() => { setReviewOpen(false); edit("firm"); }} onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
+        <SentForApprovalDialog open={sentOpen} role="advisor" onClose={() => setSentOpen(false)} />
+        <WithdrawDialog open={withdrawOpen} role="advisor" busy={busy} onClose={() => setWithdrawOpen(false)}
+          onConfirm={() => { setWithdrawOpen(false); void changeStatus("paused"); }} />
+      </>}
     </div>
   );
 }

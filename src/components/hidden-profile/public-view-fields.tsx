@@ -40,8 +40,8 @@ type NameState = "idle" | "checking" | "available" | "taken";
 export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts | undefined, source: ListingSource | undefined) {
   // Only Admin sets or changes a listing name; sellers see it read-only (or the ref).
   const canName = usePermissions().isControl;
-  const base = useMemo(() => pickDraft(row ?? {}), [row?.id, row?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [d, setD] = useState<HiddenDraft>(base);
+  const base = useMemo(() => ({ ...pickDraft(row ?? {}), suggested_listing_name: ((row as any)?.suggested_listing_name ?? "") as string }) as HiddenDraft & { suggested_listing_name: string }, [row?.id, row?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [d, setD] = useState<HiddenDraft & { suggested_listing_name: string }>(base);
   const [baseline, setBaseline] = useState(() => JSON.stringify(base));
   useEffect(() => { setD(base); setBaseline(JSON.stringify(base)); }, [base]);
   const opts = useMemo(() => ({ guard: facts ? identityTerms(facts) : [] }), [facts]);
@@ -111,7 +111,8 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
   };
   const dirty = !!row && JSON.stringify(d) !== baseline;
   const changedFromRow = !!row && JSON.stringify(pickDraft(row)) !== JSON.stringify(d);
-  const payload = { ...d, highlights: d.highlights.map((h) => h.trim()), handover_months: d.owner_stays === "yes" ? (d.handover_months ?? 6) : null };
+  // The seller's headline doubles as their suggested headline; the name suggestion is its own field.
+  const payload = { ...d, highlights: d.highlights.map((h) => h.trim()), handover_months: d.owner_stays === "yes" ? (d.handover_months ?? 6) : null, suggested_listing_name: (d.suggested_listing_name ?? "").trim() || null, suggested_headline: d.headline.trim() || null };
   return {
     d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea }, moreNames: () => setSeed((s) => s + 1),
     fillAll, findings, counts, dirty, changedFromRow, payload, nameState, nameTaken: canName && nameState === "taken", canName,
@@ -201,7 +202,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
           <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={refNo} />
           <div className="min-w-0 space-y-[22px]">
             <EditSec id="codename" tone="seller" active={section === "codename"}>
-              {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <ListingNameRow name={d.code_name.trim()} refNo={refNo} />}
+              {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
               <FieldRow label={tr("Headline", "หัวข้อประกาศ")} htmlFor="hp-headline" missing={!d.headline.trim()} right={`${d.headline.length}/120`} suggest={ideas.headlineIdea ? () => set("headline", ideas.headlineIdea) : undefined}>
@@ -377,6 +378,24 @@ function ListingNameRow({ name, refNo }: { name: string; refNo?: string }) {
       <div className={LABEL}>{tr("Listing name", "ชื่อประกาศ")}</div>
       <div className="mt-[6px] text-[15px] font-semibold text-[#151A28] dark:text-foreground">{name || ref}</div>
       {!name && <p className="mt-1 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr(`PitchSnack names your listing. Until then, buyers see ${ref}.`, `PitchSnack จะตั้งชื่อประกาศให้ท่าน ระหว่างนี้ผู้ซื้อจะเห็น ${ref}`)}</p>}
+    </div>
+  );
+}
+
+/** Sellers suggest a listing name; Admin may adjust it before publishing. */
+function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string }) {
+  const tr = useTr();
+  const { d, setD } = pd;
+  const published = d.code_name.trim();
+  const val = d.suggested_listing_name ?? "";
+  return (
+    <div className="space-y-4">
+      {published ? <ListingNameRow name={published} refNo={refNo} /> : null}
+      <FieldRow label={tr("Listing name — your suggestion", "ชื่อประกาศ — ข้อเสนอของท่าน")} htmlFor="hp-suggested-name" right={`${val.length}/120`}>
+        <Input id="hp-suggested-name" maxLength={120} value={val} placeholder={refNo || ""}
+          onChange={(e) => setD((p) => ({ ...p, suggested_listing_name: e.target.value }))} className={BOX} />
+        <p className="mt-1 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr("PitchSnack may adjust it to reduce duplication and make your listing easier to distinguish.", "PitchSnack อาจปรับชื่อเพื่อลดความซ้ำและทำให้ประกาศของท่านโดดเด่นขึ้น")}</p>
+      </FieldRow>
     </div>
   );
 }

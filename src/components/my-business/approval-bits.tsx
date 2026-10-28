@@ -5,23 +5,22 @@ import { Clock, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { resumeListing, submitListing, unpublishListing } from "@/lib/approvals.functions";
-import { getMyStartup } from "@/lib/startups.functions";
-import { findIdentityWords, type HiddenDraft, type LivePayload } from "@/lib/hidden-profile";
+import { getStartup } from "@/lib/startups.functions";
+import { runIdentityCheck, type EntryFacts, type HiddenDraft, type HiddenProfileRow } from "@/lib/hidden-profile";
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
 import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
 import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
 import { cn } from "@/lib/utils";
-import type { HiddenProfile } from "@/hooks/use-my-hidden-profile";
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
 /** Per-listing footer: state note on the left, the one-step action on the right. */
-export function ApprovalFooter({ profile }: { profile: HiddenProfile }) {
+export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
   const qc = useQueryClient();
   const submit = useServerFn(submitListing);
   const unpublish = useServerFn(unpublishListing);
   const resume = useServerFn(resumeListing);
-  const getStartup = useServerFn(getMyStartup);
+  const loadStartup = useServerFn(getStartup);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [sentOpen, setSentOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -44,38 +43,41 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfile }) {
   });
   const st = useQuery({
     queryKey: ["review-startup", profile.startup_id],
-    queryFn: () => getStartup({ data: { id: profile.startup_id } }),
+    queryFn: () => loadStartup({ data: { id: profile.startup_id } }),
     enabled: reviewOpen && !!profile.startup_id,
   });
 
   const a = profile.approval_status ?? "draft";
-  const live = (profile.live ?? null) as LivePayload | null;
-  const pub = ((live?.public ?? {}) ?? {}) as HiddenDraft;
+  const pub = profile as HiddenDraft;
   const s = st.data as any;
-  const company = s?.startup_name ?? "";
-  const identityWords = findIdentityWords({
-    name: (profile as any).suggested_listing_name ?? "",
-    headline: (profile as any).suggested_headline ?? "",
-    description: pub.description ?? "",
-    highlights: pub.highlights ?? "",
-    customerProfile: pub.customerProfile ?? "",
-  }, company);
+  const facts: EntryFacts = {
+    startup_name: s?.startup_name ?? "",
+    registered_name: s?.registered_name ?? null,
+    website_url: s?.website_url ?? null,
+    city: s?.city ?? null,
+  };
+  const findings = runIdentityCheck({
+    ...pub,
+    code_name: (profile as any).suggested_listing_name ?? pub.code_name,
+    headline: (profile as any).suggested_headline ?? pub.headline,
+  }, facts);
+  const identityWords = [...new Set(findings.map((f) => f.term))];
+  const asking = profile.asking_price_thb ?? profile.asking_price;
   const reviewData: ReviewCompanyData = {
     suggestedName: (profile as any).suggested_listing_name ?? null,
     suggestedHeadline: (profile as any).suggested_headline ?? null,
     listingRows: [
-      ["Sector", pub.sector ?? ""],
-      ["Revenue range", pub.revenueRange ?? ""],
-      ["Profit range", pub.profitRange ?? ""],
-      ["Asking price", pub.askingPrice ?? ""],
-      ["Location", pub.location ?? ""],
+      ["Sector", s?.sector ?? ""],
+      ["Revenue", s?.last_year_revenue ?? ""],
+      ["Asking price", asking != null ? `฿${Number(asking).toLocaleString()}` : ""],
+      ["Location", s?.city ?? ""],
       ["Headline", (profile as any).suggested_headline ?? ""],
       ["Description", (pub.description ?? "").slice(0, 400)],
     ],
     identityWords,
     identityApplies: true,
     exclusiveRows: [
-      { label: "Company name", value: company, note: null },
+      { label: "Company name", value: s?.startup_name ?? "", note: null },
       { label: "Registration Number", value: s?.registered_number ?? "", note: null },
       { label: "Registered address", value: [s?.address_city_district, s?.address_province_state].filter(Boolean).join(", "), note: null },
       { label: "Year founded", value: s?.year_founded != null ? String(s.year_founded) : "", note: null },
@@ -121,7 +123,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfile }) {
 
 // ---- status pill helpers (used by the My Company cards) ----
 
-export function approvalOf(row: HiddenProfile | null | undefined): string {
+export function approvalOf(row: HiddenProfileRow | null | undefined): string {
   if (!row) return "missing";
   if (row.status === "live" && row.has_unpublished_changes) return "live_edits_pending";
   return row.approval_status ?? "draft";
@@ -138,7 +140,7 @@ export const APPROVAL_TONE: Record<string, string> = {
   live_edits_pending: "text-amber-700 dark:text-amber-400", missing: "text-muted-foreground",
 };
 
-export function ApprovedChip({ row }: { row: HiddenProfile | null | undefined }) {
+export function ApprovedChip({ row }: { row: HiddenProfileRow | null | undefined }) {
   const ap = approvalOf(row);
   return <span className={cn("text-[11px] font-semibold", APPROVAL_TONE[ap])}>{APPROVAL_LABEL[ap]}</span>;
 }

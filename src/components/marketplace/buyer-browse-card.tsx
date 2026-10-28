@@ -55,6 +55,8 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: "ok" | "amb
 
 export type CardInvestor = {
   refNo: string; codeName: string; name: string | null; type: string | null;
+  /** One-step approval: Admin's published name and headline lead the card once live. */
+  publishedListingName?: string | null; publishedHeadline?: string | null;
   city: string | null; country: string | null; description: string | null;
   sectors: string[]; stages: string[]; dealTypes: string[]; geography: string | null;
   verified: boolean; proofOfFunds: boolean;
@@ -163,9 +165,11 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
   return (
     <>
       <div className="flex items-baseline justify-between gap-3">
-        <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{typeName(i.type, i.actsFor)}</div>
+        <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{i.publishedListingName ?? typeName(i.type, i.actsFor)}</div>
         <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}{i.country && <><span className="mx-1.5 text-[#D1D5DB]">·</span><span className="font-medium text-[#4B5563] dark:text-foreground/80">{i.country}</span></>}</div>
       </div>
+      {i.publishedHeadline && <div className="mt-0.5 text-[13.5px] font-semibold leading-snug text-[#374151] dark:text-foreground/85">{i.publishedHeadline}</div>}
+      {i.publishedListingName && <div className="mt-0.5 text-[12.5px] text-muted-foreground">{typeName(i.type, i.actsFor)}</div>}
       {(i.verified || i.proofOfFunds) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Verified investor</Pill>}

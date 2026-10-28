@@ -60,15 +60,8 @@ export type OneStepItem = {
 
 /* ------------------------------------------------------------- helpers */
 
-export const REVENUE_BANDS: [string, string, number, number][] = [
-  ["rv_lt100", "Below ฿100M", 0, 100],
-  ["rv_100_300", "฿100M – 300M", 100, 300],
-  ["rv_300_800", "฿300M – 800M", 300, 800],
-  ["rv_800_1500", "฿800M – 1.5B", 800, 1500],
-  ["rv_1500", "฿1.5B and above", 1500, Number.MAX_SAFE_INTEGER],
-];
-export const revenueBandLabel = (key: string | null | undefined) =>
-  REVENUE_BANDS.find((b) => b[0] === key)?.[1] ?? null;
+export { REVENUE_BANDS, revenueBandLabel } from "@/lib/revenue-bands";
+import { REVENUE_BANDS, revenueBandLabel } from "@/lib/revenue-bands";
 
 /** Case/punctuation/space-insensitive compare, Thai-aware. */
 export const normText = (s: string | null | undefined) =>

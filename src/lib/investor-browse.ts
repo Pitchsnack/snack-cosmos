@@ -15,6 +15,9 @@ export type PublicInvestor = {
   refNo: string;
   /** Seller-facing title before an NDA: the investor type ("Investor" when unset). */
   codeName: string;
+  /** One-step approval: Admin's published listing name and headline lead the card once live. */
+  publishedListingName?: string | null;
+  publishedHeadline?: string | null;
   /** Always null before an approved NDA. */
   name: string | null;
   type: string | null;
