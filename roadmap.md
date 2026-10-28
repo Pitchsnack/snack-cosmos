@@ -22,3 +22,6 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 - [ ] Link verification source/date to approval history and synchronise legacy company fields from the store.
 - [ ] Update Generate/Extract data and seller Ready to order states without changing prices or running waiting orders.
 - [ ] Validate rules and report stored registrations, links and produced seller reports.
+
+- [x] DBD fetch-once shared store (items 1–9)
+- [ ] DBD CSV export/import (section 2.3) — later step, per Dan
