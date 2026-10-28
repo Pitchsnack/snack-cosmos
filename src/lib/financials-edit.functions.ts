@@ -105,8 +105,42 @@ export const autoEnrichFinancials = createServerFn({ method: "POST" })
       };
     }
 
-    const { lookupDbdFinancials } = await import("@/lib/financials/dbd-provider.server");
-    const outcome = await lookupDbdFinancials({ registeredNumber, registeredName });
+    // Fetch once: read the shared store. Only a Control Admin can fill it (Extract data);
+    // nothing here scrapes DBD again once data is stored.
+    const store = await import("@/lib/dbd-store.server");
+    const reg = store.normReg(registeredNumber);
+    if (!reg) return { status: "missing_identity", message: "Add the 13-digit Registered Number before getting financials." };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sbAdmin = supabaseAdmin as any;
+    let { data: stored } = await sbAdmin.from("dbd_company_records").select("data, retrieved_at, source").eq("registration_number", reg).maybeSingle();
+    if (!stored) {
+      const { data: isCtl } = await supabase.rpc("is_control", { _user_id: context.userId });
+      if (!isCtl) return { status: "unavailable", message: "PitchSnack fetches the DBD data when it reviews your company. Nothing has been changed." };
+      const { lookupDbdFinancials } = await import("@/lib/financials/dbd-provider.server");
+      const outcome = await lookupDbdFinancials({ registeredNumber: reg });
+      if (outcome.status !== "ok" && outcome.status !== "no_financials") {
+        await sbAdmin.from("dbd_fetch_logs").insert({ registration_number: reg, action: "extract", result: outcome.status === "not_found" ? "not_found" : "failed", error: outcome.status, actor_id: context.userId, source: "dbd" });
+        return { status: outcome.status === "not_found" ? "not_found" : "unavailable", message: "Unable to retrieve data from DBD at this time. Existing data has not been changed." } as AutoEnrichFinancialsResult;
+      }
+      const { data: res, error: rpcErr } = await sbAdmin.rpc("dbd_store_save", { _actor: context.userId, _reg: reg, _action: "extract", _source: "dbd", _source_note: "DBD Data Warehouse", _data: store.outcomeToData(outcome), _raw: outcome, _actor_name: null });
+      if (rpcErr) throw new Error(rpcErr.message);
+      await store.produceSellerReports(context, sbAdmin, (res?.startup_ids ?? []) as string[], context.userId);
+      ({ data: stored } = await sbAdmin.from("dbd_company_records").select("data, retrieved_at, source").eq("registration_number", reg).maybeSingle());
+    }
+    const toMap = (rows: any[], key = "amount") => Object.fromEntries((rows ?? []).filter((r) => r[key] != null).map((r) => [r.item_code ?? r.ratio_code, Number(r[key])]));
+    const sts = (stored?.data?.statements ?? []) as any[];
+    const info = stored?.data?.info ?? {};
+    if (!sts.length) return { status: "no_financials", matchedBy: "registered_number", matchedRegisteredNumber: reg, matchedRegisteredName: info.legal_name_th ?? info.legal_name_en ?? null, companyInfoSaved: true, message: "The company is stored, but no financial statements are available." } as AutoEnrichFinancialsResult;
+    return {
+      status: "ok", matchedBy: "registered_number", matchedRegisteredNumber: reg, matchedRegisteredName: info.legal_name_th ?? info.legal_name_en ?? null,
+      sourceReference: sts[0]?.source_reference ?? null, retrievedAt: stored!.retrieved_at, companyInfoSaved: true, warnings: [],
+      years: sts.slice().sort((a, b) => a.fiscal_year - b.fiscal_year).map((st) => ({
+        fiscalYear: st.fiscal_year, currency: st.currency ?? "THB", sourceName: stored!.source === "manual" ? "MANUAL" : "DBD_DATA_WAREHOUSE",
+        income: toMap(st.income), position: toMap(st.position), cashFlow: toMap(st.cash_flow), ratios: toMap(st.ratios, "value"),
+      })),
+    } as AutoEnrichFinancialsResult;
+    // eslint-disable-next-line no-unreachable
+    const outcome: any = { status: "not_found" };
 
     switch (outcome.status) {
       case "not_configured":
@@ -232,6 +266,18 @@ async function persistCompanyInfo(
   }
 }
 
+/** Registration number when the startup's data lives in the shared DBD store. */
+async function lockedStartup(startupId: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const sb = supabaseAdmin as any;
+  const { data: st } = await sb.from("startups").select("registered_number").eq("id", startupId).maybeSingle();
+  const { normReg } = await import("@/lib/dbd-store.server");
+  const reg = normReg(st?.registered_number);
+  if (!reg) return null;
+  const { data } = await sb.from("dbd_company_records").select("registration_number").eq("registration_number", reg).maybeSingle();
+  return data ? reg : null;
+}
+
 /** Keeps only known codes with a real numeric value; unknown/absent stay out. */
 function pick(
   source: Record<string, number>,
@@ -254,6 +300,8 @@ export const clearStartupFinancials = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ startupId: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabase } = context;
+    // Stored DBD data is never deleted from here (only Delete DBD data, by a Control Admin).
+    if (await lockedStartup(data.startupId)) return { ok: true, kept: true };
     for (const table of [
       "income_statement_items",
       "financial_position_items",
@@ -313,6 +361,34 @@ export const saveStartupFinancials = createServerFn({ method: "POST" })
     if (sErr) throw new Error(sErr.message);
     if (!startup) throw new Error("Startup not found");
     const tenantId = startup.tenant_id as string;
+
+    // Stored DBD data: only a Control Admin may change figures, and each change is
+    // saved as an analyst edit on top of the stored data (kept through a Refresh).
+    const lockedReg = await lockedStartup(startupId);
+    if (lockedReg) {
+      const { data: isCtl } = await supabase.rpc("is_control", { _user_id: context.userId });
+      if (!isCtl) throw new Error("Stored DBD data is read-only. Only a Control Admin can change it.");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const sbA = supabaseAdmin as any;
+      const cur = async (table: string, col = "amount", codeCol = "item_code") => {
+        const { data: rows } = await sbA.from(table).select(`fiscal_year, ${codeCol}, ${col}`).eq("startup_id", startupId);
+        return new Map((rows ?? []).map((r: any) => [`${r.fiscal_year}:${r[codeCol]}`, r[col] == null ? null : Number(r[col])]));
+      };
+      const maps = { income: await cur("income_statement_items"), position: await cur("financial_position_items"), cashFlow: await cur("cash_flow_items"), ratios: await cur("financial_ratios", "value", "ratio_code") };
+      const stmt = { income: "income", position: "position", cashFlow: "cash_flow", ratios: "ratio" } as const;
+      for (const y of data.years) {
+        for (const k of ["income", "position", "cashFlow", "ratios"] as const) {
+          for (const [code, v] of Object.entries(y[k] ?? {})) {
+            const key = `${y.fiscalYear}:${code}`;
+            if (!maps[k].has(key)) continue; // only lines that exist in the stored data
+            if ((maps[k].get(key) ?? null) === (v ?? null)) continue;
+            const r = await sbA.rpc("dbd_apply_edit", { _actor: context.userId, _reg: lockedReg, _year: y.fiscalYear, _statement: stmt[k], _code: code, _amount: v ?? null, _note: null });
+            if (r.error) throw new Error(r.error.message);
+          }
+        }
+      }
+      return { ok: true, years: data.years.map((y) => y.fiscalYear).sort((a, b) => a - b) };
+    }
 
     // Company Profile block lives on the startup record itself.
     if (data.profile) {
