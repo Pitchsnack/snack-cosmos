@@ -13,10 +13,10 @@ import { assignApproval, listApprovals } from "@/lib/approvals.functions";
 import { cn } from "@/lib/utils";
 import { adminInvitations } from "@/lib/invitations.functions";
 import { useAllReportOrders, type ReportOrder } from "@/components/reports/report-order-bits";
-import { ApprovalsSplit, listingItems, profileItems, verificationItems } from "@/components/reports/approvals-split";
 import { PaidReports, HistoryTab, Tile, isOverdue } from "@/components/reports/approvals-report-tabs";
-import { AdvisorApprovals, useAdvisorQueue } from "@/components/reports/advisor-approvals";
+import { useAdvisorQueue } from "@/components/reports/advisor-approvals";
 import { businessDays } from "@/components/advisor/advisor-verification";
+import { OneStepApprovals, useOneStepApprovals } from "@/components/approvals/one-step-approvals";
 
 export const Route = createFileRoute("/_authenticated/approvals/")({
   head: () => ({
@@ -121,7 +121,7 @@ function ApprovalsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {([["listings", "Sellers", data?.listings.length ?? 0], ["buyers", "Buyers", (data?.buyers.length ?? 0) + profilesWaiting], ["advisors", "Advisors", advPending], ["reports", "Paid reports", reportsWaiting], ["invitations", "Invitations", null], ["history", "History", null]] as const).map(([k, label, n]) => (
+        {([["listings", "Sellers", oneStep.data?.sellers.length ?? 0], ["buyers", "Buyers", oneStep.data?.buyers.length ?? 0], ["advisors", "Advisors", oneStep.data?.advisors.length ?? 0], ["reports", "Paid reports", reportsWaiting], ["invitations", "Invitations", null], ["history", "History", null]] as const).map(([k, label, n]) => (
           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => navigate({ search: { tab: k } })}
             className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold", tab === k ? "border-[#F6A823] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
             {label}{n !== null && <span className={cn("rounded-full px-[7px] py-px text-[10.5px] font-bold", tab === k ? "bg-[#FEF3DE] text-[#8A4B06]" : "bg-muted text-muted-foreground")}>{n}</span>}
@@ -129,19 +129,17 @@ function ApprovalsPage() {
         ))}
       </div>
 
-      {error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : tab === "listings" ? (
-        <ApprovalsSplit key="sellers" empty="No seller listings waiting."
-          groups={[["Waiting for review", listingItems(((data?.listings ?? []) as any[]).filter((x) => x.approval_status === "in_review"), names, (data?.emails ?? {}) as Record<string, string>)]]} />
+      {tab === "listings" ? (
+        <OneStepApprovals key="sellers" kind="seller" />
       ) : tab === "buyers" ? (
-        <ApprovalsSplit key="buyers" empty="No buyers waiting."
-          groups={[["Profiles to publish", profileItems(((data as any)?.profiles ?? []) as any[], names)], ["Buyer verifications", verificationItems(((data?.buyers ?? []) as any[]).filter((b) => b.status === "pending"), names)]]} />
+        <OneStepApprovals key="buyers" kind="buyer" />
       ) : tab === "advisors" ? (
-        <AdvisorApprovals openId={s.adv} onOpen={(id) => navigate({ search: { tab: "advisors", adv: id } })} />
+        <OneStepApprovals key="advisors" kind="advisor" openId={s.adv} onOpen={(id) => navigate({ search: { tab: "advisors", adv: id } })} />
       ) : tab === "reports" ? (
         <PaidReports orders={s.company?orders.filter(o=>o.startup_id===s.company):orders} />
       ) : (tab === "invitations" || tab === "contacts") ? (
         <InvitationsTab />
-      ) : (
+      ) : error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : (
         <HistoryTab approvalEvents={(data?.history ?? []) as any[]} startupInfo={(data as any)?.startupInfo ?? {}} buyerInfo={(data as any)?.buyerInfo ?? {}} names={names} />
       )}
     </div>
