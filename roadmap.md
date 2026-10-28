@@ -1,75 +1,29 @@
-# Roadmap — Control setup wizards (brief 2)
-- [x] October 27 Contacts tabs-only white box: shared seller/buyer/advisor EN/TH, 36px grey tabs, content-width frame and 16px divider gap; signed-in all 12 combinations at 1440/390 stay on one line without page overflow, exact colours/spacing and keyboard selection checked, screenshots reviewed, 36 existing Contacts tests pass and build OK. No other page controls or data changed.
-- [x] October 27 Marketplace Contacts dropdown labels shortened: type filter reads Investor/Seller/Type (นักลงทุน/ผู้ขาย/ประเภท) and sort reads Recently (ล่าสุด); seller EN/TH and buyer EN checked signed-in at 1440, no clipping or runtime errors, build OK.
+# Roadmap — One-step approval (sellers, buyers, advisors)
 
-- [x] October 27 Marketplace Contacts: shared seller/buyer/advisor split table/panel, lazy real Exclusive cards, bilingual type/search/sort, own title, active NDA server gates, advisor menu at /advisor/contacts, Thai labels/titles/places/Buddhist dates. Signed-in Control seller/buyer populated cards, keyboard open/close/Esc/Show more, type/search/empty/counts, EN/TH 1440/1280/390 no page overflow, Thai dark and advisor empty/menu verified; Admin contacts retained; 46 tests pass, build OK. No real records modified. Populated advisor Contacts and expired-NDA UI removal not live-tested: this account has no active advisor NDA; privacy predicates covered by tests. Mac/Safari scrollbar appearance not tested in Linux Chromium; no long contact list available for scroll-position stress check.
-- [x] October 27 Admin contacts eight fixes: profile statuses, actual last sign-in, valid NDA counts, six-column sticky independently scrolling list, type/status/search/sort, grey states, lazy authorized Exclusive company cards and public advisor card, header More info and 128px notes. Live Admin at 1440/390: buyer Show more/no NDA pill, advisor card, PS-1024 Draft, status/search and role filters, list position retained on select/close, TH dark phone panel/no page overflow; 24 tests pass, build OK. More Filters omitted because no prior filters exist. No real notes/deals edited; note-save persistence and ordinary-account live denial not re-exercised (existing paths unchanged).
-- [x] October 27 Admin contacts: real 7 buyer/16 seller/1 advisor accounts with unpublished profiles, deduplicated company links, split view, role/status/search/sort/pagination and separate Admin-only notes; both Admin entry points verified, labelled test note saved/reopened, Users link, EN/TH desktop/phone and no overflow/runtime errors. Eight security/data tests pass, build OK. Named lovable-reply-admin-contacts.md was unavailable; implemented the agreed conversation scope. Marketplace NDA contacts and mock My Connections remain unchanged; dark mode and ordinary-account live denial not separately exercised.
-- [x] October 26 buyer editor implementation: Description & Mandate with real shared live card, 25-word/two-sentence shared validation and unchanged-description grandfathering, mandate cleanup with exact AUM omitted from writes, About Company registration/264px text and Team, Investment Focus on both shared investor renderers, legacy tab forwarding. 23 tests pass, build OK; authenticated unsaved Admin Add form checked at 1440×960/390, dropdown/focus preview, identity/word/sentence messages, About/Team, TH desktop/dark phone and no page overflow. No records or database schema changed.
-- [ ] October 26 buyer end-to-end coverage: save/reopen, ordinary buyer error-focus, Thai registration submission and populated Browse/watchlist matrix need an explicitly approved test buyer (question skipped). Admin Add checks made no writes; current Browse session did not display investor cards. Screenshots remain under /tmp/browser/buyer-editor.
-- [x] About Owner: seller founders, section Edit/Add and shared checklist/footer target owner; count moved without total change, structured EN/TH story and nullable bio_story, legacy bios preserved, 264px description and pre-line displays. Six story tests plus four privacy tests pass; authenticated Control seller save/reopen, mode/parts read-back, Add focus, Admin last tab/no Auto Enrich, EN light/dark at 1440/1024/390 and TH desktop/dark phone checked. Five screenshots delivered. Ordinary seller accounts, photo upload and one-save changed Company + Owner fields not separately exercised; existing authorization and photo flow unchanged.
-- [x] Pipeline locked chat pop-up: shared Messages Chat, existing privacy/read polling, side/deal drafts; 17 tests pass. Control seller/buyer EN-light/TH-dark 1440/1024/390 and short-window sizing, focus/trap/return, contact/people Escape priority, backdrop/close and populated buyer watchlist checked; Enter send reads back in Messages (one labelled check message retained). Four screenshots delivered. Ordinary distinct accounts, incoming polling/Seen and ended-NDA live fixtures remain unverified; existing membership/closed rules unchanged. Contact cards show only the name/title/organisation provided by Messages (its DTO has no email/phone).
-- [x] Pipeline full-profile pop-ups: shared investor card and listing parts, selected-deal NDA gate and stored dates; 13 privacy/workspace tests pass; authenticated Control seller/buyer EN/TH light/dark at 1440/1024/390 verified, single dialog, keyboard focus/return and scroll; top/end screenshots delivered. Ordinary accounts and populated Deal watchlist not separately exercised; no real deals changed.
-- [x] Reports chip-row correction: all three measure 22px at Control Seller/Buyer 1440/390; white surface, exact border/ink, no shadow, 12px/600 text, 14px icon and 10px padding verified; hover verified. Existing Seller Reports destination and Buyer Reports pop-up checked, no runtime errors; four screenshots delivered.
-- [x] Deal company chips: shared seller/buyer label after Step on All deals, Deal watchlist and History; 12 tests pass, authenticated Control seller/buyer 1440/1024/390 EN/TH light/dark, long-name wrapping, buyer Step 1 and label click checked; no runtime errors. Seller Step 1, populated History/watchlist and ordinary-account live checks remain unverified because suitable rows/sessions were unavailable; no real deals or stars changed.
-- [x] Standard Browse/watchlist: shared six-part card, fixed closed sizes, figures, status and independent expansion across seller/buyer/advisor Grid and Split lists; all measured closed cards 507.1875px at 1440/390.
-- [x] Standard watchlist tabs, public price ranges, Thai wording and authenticated Control seller/buyer/advisor checks at 1440/390; zero overflow/runtime errors; nine card/flight and seven pending-contact tests pass. Ordinary-account checks not separately exercised; existing actions/panels/List rows retained.
-- [x] Advisor checkpoint: name-only Add, new/existing ⋮ Edit, Draft incomplete Save/read-back, 1440/390 screenshots; six refreshed captures in Files. Test Draft ADV-1009 retained.
-- [x] Edit information backend: ownerless advisor drafts (Admin only), Admin buyer saves via saveMyBuyerInvestor, Directory Add advisor + Edit pop-up
-- [x] October 25 editor layout continuation: shared address/rows, buyer/advisor tabs, seller Address, Admin directory/add hosts, valuation and old-link redirects; removed duplicate public listing editor and full-page buyer/advisor edit branch.
-- [ ] Final Done when coverage: ordinary seller/buyer/advisor save and wizard completion require suitable approved account sessions; startup create/highlight and full section-link/EN-TH matrix not end-to-end verified. Resize across the existing sidebar breakpoint remounts pages and resets local editor state (outside the editor-only change).
-- [x] Directory editor field preservation and Admin settings: portfolio notes preserved, linked startup/investor holdings and Bio retained; Admin investor create/save/read-back and advisor Draft save/read-back checked. Clearly labelled investor test record retained; no financial sample data.
-- [ ] Unified editing checks: required-field errors, authenticated role saves/read-back, wizard regressions, 1440/390 EN/TH and dark-mode screenshots
-- [x] Seller Connect flight: stored-ID dismissal hook, public source covers, amber landing/no count change, Sent deep link; 19 rules pass; authenticated existing-invitation View verified; EN/TH 1440/1024/390, inline/rail and reduced motion checked without sending invitations
-- [ ] Seller Connect send-to-Done/Escape/close live check: requires a suitable test invitation recipient; no new real invitation or request quota was consumed
-- [x] Pending contact presentation: seller/buyer/advisor existing shared actions use server-derived first-check states; 16 rules/regression tests pass; shared tooltip hover/focus/click/Escape/scroll/reduced motion and 1440/1024/390 containment, EN-light/TH-dark checked; verified buyer normal actions remain
-- [ ] Pending contact full role matrix and approval transitions: no pending-account session tested; existing advisor marketplace action is Request NDA (coming-soon), not Send contact request, and cards currently have no outbound advisor action; preserved existing UI and behavior instead of inventing a contact flow
-- [x] My Company submenu: shared Pipeline presentation, My Profile moved, empty Advisor Account removed; existing pages/Admin preserved; signed-in seller/buyer/advisor EN-light/TH-dark at 1440/1024/390, navigation/folding, phone closure, rail keyboard/exclusive flyouts verified; 24 existing Pipeline tests pass
-- [x] Updated agreement brief: show from valid NDA approval; unsigned LOI tile; 24 tests passed; live buyer/seller EN/TH, 1440/1280/1024, more/less and NDA dialog verified without changing legal records; both watchlists currently empty
-- [x] Add live NDA/LOI box on seller/buyer All deals and Deal watchlist; 21 date/workspace tests pass; isolated EN seller/TH buyer display, more/less and existing-dialog callbacks checked at 1440/1280/1024; reference interactions checked; build OK
-- [ ] Live signed-LOI agreement box, route-persistence and document-opening end-to-end: database has five active deals and zero accepted LOIs; no real legal agreement changed for testing
-- [x] Pipeline sub-menu: six seller/buyer pages, persistent deal stars and shared counts
-- [x] Pipeline NDA Invitations: Received/Sent, sign/review actions and reused profile pop-up
-- [x] Pipeline: status/reports/history, legacy destinations, EN-light/TH-dark signed-in checks at 1440/1024/390; star/unstar persistence and approved profile dialogs
-- [x] Pipeline › Reports rebuilt per lovable-pipeline-reports.md: deal selector + My reports layout (buyer pop-up content, seller per-buyer with one-buyer "Who can see" card); verified buyer/seller, EN/TH, dark, 1280/390, keyboard, Expand; live share/decline/stop-share mutations still unverified (real deals)
-- [ ] Pipeline live NDA approval/decline and report sharing mutation checks: require permission to change real deals; full EN-dark/TH-light keyboard matrix remains unverified
-- [x] Test new advisor signup and setup with approved email; draft saved unpublished; EN/TH layout checked (advisor content remains English in TH mode)
-- [x] My reports consolidation: seven reports, existing viewers/offers, Seller menu and legacy redirects
-- [x] My reports consolidation: valuation access/sharing and dynamic counts
-- [x] My reports consolidation: Control seller role-gate cause fixed; live seven-row/empty/redirect/Admin checks, EN/TH and 1440/390
-- [x] Reports: six-type data, atomic buyer access, requests and shareholder record
-- [x] Reports: buyer pop-up and Pipeline controls; seller My reports and buyer page
-- [x] Reports: Admin Directory pop-up and read-only audience; financial generation/authorisation
-- [ ] Reports: Shareholders/Credit analyst completion requires real source records; no extraction/check-recording service exists
-- [x] Reports: request/shared/authorised notifications and 28 passing rule/email tests; signed-in Admin 1440/390 checks
-- [ ] Reports: buyer/seller live share/order and English/Thai checks require suitable approved test accounts
-- [ ] Reports: paid buyer checkout requires connected payment provider; Credit price is not configured
-- [x] Tools offers: shared close button, backdrop/Escape return and financials/valuation history grouping
-- [x] Tools offers: navigation tests and English/Thai light/dark screen checks at 1440/1024/390
-- [x] Company verification: data/access and atomic buyer allowances
-- [x] Company verification: shared report, sample, badges, seller and buyer screens, Thai
-- [ ] Company verification payments and transfer submission: no payment provider/bank setup
-- [ ] Company verification buyer consumption/real certified report end-to-end: needs an approved buyer testing account and completed analyst checks
-- [x] Company verification: My Financials link and remove Company Info
-- [x] Company verification: rules tests and offer/sample 1440/1024/390 English/Thai checks
-- [x] Sidebar Share and hover upgrade cards; bilingual plan request dialog
-- [x] Share invitation email, protected sending and email-bound signup access
-- [x] Sidebar sharing rules tests; seller live invitation/Help desk request checks
-- [ ] New-recipient delivery and full invited signup: needs a recipient approved for live email testing
-- [x] Admin Analytics: real-data readers, sign-in days and retention
-- [x] Admin Analytics: Overview, People, Activity, person panel and CSV
-- [x] Admin Analytics: rules tests and signed-in screen checks
-- [ ] Analytics historical renewals / repeated firm publications: prior records were not retained; cannot reconstruct truthfully
-- [x] Remove Listing name step from seller wizard (0 rows needed the reached update)
-- [x] + Add My Business: server Draft, open setup; /my-startups/new redirects
-- [x] Buyer + advisor Logo and photos steps; advisor single Review row; brief Thai
-- [x] Advisor Photos box (My Company, Browse advisors, Admin directory); card in Edit profile
-- [x] Advisor media max 3 check; "New business" on screens; Submit refuses no name
-- [ ] Control extra investor profiles: own Review & complete / verification / publish / Approvals (needs Dan's OK on data change)
-- [ ] On-screen tests (seller, buyer, advisor, Control) + screenshots + delete test data
-- [x] Fix 3: verification per investor profile + switch-over
-- [ ] Empty business name fallback in emails/notifications
-- [ ] Admin add/remove advisor photos (check storage rules)
-- [ ] On-screen tests seller/buyer/advisor/Control + screenshots + delete test data
-- [ ] Confirm buyer profile save on screen
-- [ ] Test new-seller sign-up + wizard buttons (code given by Dan)
+Brief: `lovable-one-step-approval_2.md` + reference HTML. Build in one go; Dan checks himself (no tests/screenshots requested).
+
+## Explore
+- [ ] Map buyer approval + verification flow
+- [ ] Map seller listing approval + advisor verification
+- [ ] Map Admin Approvals UI, menu, emails, banners, i18n, DBD data
+
+## Build
+- [ ] 1. DB migration: suggested/published listing name + headline (startups, buyer_profiles/investors, advisor_firms); buyer revenue band; contact number (buyers/sellers); approval_events logging; per-user banner/approved-pop-up state
+- [ ] 2. Server: one-step Register your company submit per role; merged buyer decide (publish+verify in one transaction); seller decide certifies company+owner; advisor decide verifies+publishes; Browse/Connect/invite/NDA server gates require verified+published
+- [ ] 3. My Company footers per state (Draft/Pending/Changes/Not approved/Live/Paused), status pills, remove state notices, remove Withdraw-while-pending, remove Exclusive-view Submit for verification
+- [ ] 4. "Review your company data" pop-up (880px, 3 numbered sections, tick box, fail line)
+- [ ] 5. "Sent for approval" pop-up (520px, 3-step tracker)
+- [ ] 6. Banners: yellow (pending, foldable, per-role rows), red (changes/declined, reason pills, note, sidebar badge), green (2 steps, per-user stored); mount under breadcrumb on every user page
+- [ ] 7. Sidebar status chip states; Browse locked Connect buttons + tooltips; My Profile verification status-only + Open My Company
+- [ ] 8. Admin Approvals: Sellers/Buyers/Advisors/History tabs, counts, Paid reports as own menu item, queue items, review layout (header, directory bar, sent-back note, listing name/headline table, verification table with DBD compare + Mark checked, visual-check box, preview cards, footer), decision pop-ups
+- [ ] 9. Withdraw pop-up (live state); Pause/Resume renamed, no Admin step
+- [ ] 10. Approved pop-up (once per user) + three decision emails per role
+- [ ] 11. Data: PML VENTURES (INV-1008) + LINE MAN Wongnai (INV-1015) → Pending approval, out of Browse, no email; list live-but-unverified sellers/advisors in reply
+- [ ] 12. Thai: all new texts via t(), Buddhist-year dates, IBM Plex Sans Thai Looped, three seller-specific texts
+
+## Reply must list
+- Column holding each of the 4 listing name/headline values per role
+- Where Certified is stored today
+- Which DBD fields exist
+- Live sellers/advisors not certified/verified
+- Anything not built as written
