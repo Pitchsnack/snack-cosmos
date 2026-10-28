@@ -806,6 +806,13 @@
       "when": 1793206136663,
       "tag": "0114_dbd_fetch_once_store",
       "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1793213559370,
+      "tag": "0115_dbd_link_startup",
+      "breakpoints": true
     }
   ]
 }
