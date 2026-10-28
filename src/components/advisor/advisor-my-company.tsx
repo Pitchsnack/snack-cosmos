@@ -530,17 +530,30 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
         ) : f.status === "live" ? (
           <>
             <span>Live in Browse advisors since {fmtDate(f.liveSince)}{views != null && ` · ${views} profile ${views === 1 ? "view" : "views"} this week`}</span>
-            <Button variant="outline" size="sm" disabled={busy} onClick={() => changeStatus("paused")}>Pause listing</Button>
+            <span className="flex flex-col items-end gap-1">
+              <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>Remove your company profile from listing</Button>
+              <span className="text-[12.5px] text-muted-foreground">Your profile becomes private, and new sellers and buyers can't contact you.</span>
+            </span>
           </>
-        ) : f.status === "draft" ? (
+        ) : f.verification?.state === "pending" ? (
           <>
-            <span>Publish your profile so sellers and buyers can find you in Browse advisors.{!complete && <> <span className="text-muted-foreground">Finish the checklist first.</span></>}</span>
-            <Button size="sm" disabled={busy || !complete || declined} title={declined ? DECLINED_TIP : complete ? undefined : "Complete the checklist first"} onClick={() => changeStatus("live")} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Publish</Button>
+            <span>Submitted · sellers and buyers can't find you yet</span>
+            <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />Pending approval</span>
+          </>
+        ) : f.verification?.state === "more_info" || f.verification?.state === "declined" ? (
+          <>
+            <span>Fix what PitchSnack asked with Edit information, then register again.</span>
+            <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />Register your company</Button>
+          </>
+        ) : f.status === "paused" ? (
+          <>
+            <span>Hidden from Browse advisors since {fmtDate(f.updatedAt)}.</span>
+            <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#1E2A4A]/90" disabled={busy} onClick={() => changeStatus("live")}>List my company so that sellers and buyers can contact me</Button>
           </>
         ) : (
           <>
-            <span>Paused. Sellers and buyers can't see your profile.</span>
-            <Button variant="outline" size="sm" disabled={busy || !complete || declined} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Make live again</Button>
+            <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your firm and publishes your profile together.{!complete && <> <span className="text-muted-foreground">Finish the checklist first.</span></>}</span>
+            <Button size="sm" disabled={!complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => { setFailures([]); setReviewOpen(true); }} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><Send className="mr-1.5 h-4 w-4" />Register your company</Button>
           </>
         )}
       </div>
