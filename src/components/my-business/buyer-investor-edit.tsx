@@ -572,7 +572,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={tr("Select a range")} /></SelectTrigger>
               <SelectContent>
                 {f.revenue_band && <SelectItem value="__clear__" className="text-muted-foreground">{tr("Clear selection")}</SelectItem>}
-                {REVENUE_BANDS.map(([k, label]) => <SelectItem key={k} value={k}>{lang === "th" ? (REVENUE_BAND_TH[k] ?? label) : label}</SelectItem>)}
+                {REVENUE_BANDS.map(([k, label]) => <SelectItem key={k} value={k}>{tr(label, REVENUE_BAND_TH[k])}</SelectItem>)}
               </SelectContent>
             </Select>
             <p className="text-[12.5px] text-muted-foreground">{tr("Not shown publicly. PitchSnack checks it against your registration data.")}</p>
