@@ -30,6 +30,8 @@ function AuthenticatedLayout() {
   return (
     <AppSidebar>
       <FreePlanBars />
+      <ApprovalBanners />
+      <ApprovedPopup />
       <Outlet />
     </AppSidebar>
   );
