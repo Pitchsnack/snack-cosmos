@@ -1,6 +1,7 @@
 .pipeline-parent {width:100%;height:40px;display:flex;gap:12px;justify-content:flex-start;padding:0 12px;color:var(--sidebar-foreground);font-size:14px;background:transparent;border-radius:8px;}
 .pipeline-parent[data-active] {background:var(--role-accent);color:var(--role-on)}
 .company-parent[data-current]{background:transparent;color:var(--sidebar-foreground);font-weight:600}.company-parent[data-current]>svg:first-child{color:var(--role-pill-fg)}.company-submenu .pipeline-sub-link{height:34px;padding-top:0;padding-bottom:0}.company-flyout .pipeline-fly-heading{text-transform:uppercase;letter-spacing:0}
+.pipeline-parent[data-current]:not(.company-parent){background:transparent;color:var(--sidebar-foreground);font-weight:600}.pipeline-parent[data-current]:not(.company-parent)>svg:first-child{color:var(--role-pill-fg)}
 .pipeline-parent.is-rail{justify-content:center;padding:0;position:relative}
 .pipeline-chevron{color:var(--muted-foreground);transition:transform .18s}.pipeline-chevron.is-open{transform:rotate(180deg)}
 .pipeline-sub-links{margin:2px 0 4px 21px;padding:2px 0 2px 9px;border-left:1px solid var(--sidebar-border);display:flex;flex-direction:column;gap:2px}
