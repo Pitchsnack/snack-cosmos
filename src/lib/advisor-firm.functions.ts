@@ -423,11 +423,10 @@ export const enrichAdvisorFirm = createServerFn({ method: "POST" })
     }
     if (f.country === "Thailand" && /^\d{13}$/.test(f.registration_no ?? "") && (!f.legal_name || !f.thai_name)) {
       try {
-        const { lookupDbdFinancials } = await import("@/lib/financials/dbd-provider.server");
-        const r: any = await lookupDbdFinancials({ registeredNumber: f.registration_no });
-        const c = r?.company;
-        const en = c?.companyInfo?.legalNameEn ?? null;
-        const th = c?.companyInfo?.legalNameTh ?? c?.registeredName ?? null;
+        // Fetch once: names come from the shared DBD store only; nothing is fetched here.
+        const { data: rec } = await (supabaseAdmin as any).from("dbd_company_records").select("data").eq("registration_number", f.registration_no).maybeSingle();
+        const en = rec?.data?.info?.legal_name_en ?? null;
+        const th = rec?.data?.info?.legal_name_th ?? null;
         if (!f.legal_name && (en || th)) { patch.legal_name = en || th; out.legalName = en || th; }
         if (!f.thai_name && th) { patch.thai_name = th; out.thaiName = th; }
       } catch { /* registry unavailable */ }

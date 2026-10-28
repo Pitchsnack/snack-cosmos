@@ -235,18 +235,21 @@ export const checkAdvisorDbd = createServerFn({ method: "POST" })
     const { data: f } = await sb.from("advisor_firms").select("id, country, registration_no").eq("id", data.id).single();
     if (f.country && f.country !== "Thailand") return { status: "abroad" as const };
     if (!/^\d{13}$/.test(f.registration_no ?? "")) return { status: "not_found" as const };
-    try {
-      const { lookupDbdFinancials } = await import("@/lib/financials/dbd-provider.server");
-      const r: any = await lookupDbdFinancials({ registeredNumber: f.registration_no });
-      const c = r?.company;
-      if (!c) return { status: r?.status === "not_found" ? ("not_found" as const) : ("unavailable" as const) };
-      const ci = c.companyInfo ?? {};
-      await sb.from("advisor_firms").update({
-        dbd_name: ci.legalNameEn || ci.legalNameTh || c.registeredName, dbd_status: ci.legalEntityStatusTh ?? c.profile?.status ?? null,
-        dbd_registered_on: ci.registrationDate ?? null, dbd_capital: ci.registeredCapitalThb ?? null, dbd_checked_at: new Date().toISOString(),
-      }).eq("id", f.id);
-      return { status: "ok" as const };
-    } catch { return { status: "unavailable" as const }; }
+    // Fetch once into the shared store; a stored record is never fetched again here.
+    const { data: rec } = await sb.from("dbd_company_records").select("registration_number").eq("registration_number", f.registration_no).maybeSingle();
+    if (rec) return { status: "ok" as const };
+    const { extractDbd } = await import("./dbd-store.functions");
+    void extractDbd;
+    const { lookupDbdFinancials } = await import("@/lib/financials/dbd-provider.server");
+    const r: any = await lookupDbdFinancials({ registeredNumber: f.registration_no }).catch(() => ({ status: "unavailable" }));
+    if (r?.status !== "ok" && r?.status !== "no_financials") {
+      await sb.from("dbd_fetch_logs").insert({ registration_number: f.registration_no, action: "extract", result: r?.status === "not_found" ? "not_found" : "failed", error: r?.status ?? "unavailable", actor_id: context.userId, source: "dbd" });
+      return { status: r?.status === "not_found" ? ("not_found" as const) : ("unavailable" as const) };
+    }
+    const { outcomeToData } = await import("./dbd-store.server");
+    const { error } = await sb.rpc("dbd_store_save", { _actor: context.userId, _reg: f.registration_no, _action: "extract", _source: "dbd", _source_note: "DBD Data Warehouse", _data: outcomeToData(r), _raw: r, _actor_name: null });
+    if (error) return { status: "unavailable" as const };
+    return { status: "ok" as const };
   });
 
 /** Advisor history rows for Approvals › History. */
