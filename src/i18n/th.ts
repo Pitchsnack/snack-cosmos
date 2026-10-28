@@ -157,7 +157,7 @@ const TH_BASE: Record<string, string> = {
   "My Startups": "สตาร์ทอัพของฉัน",
 
   // Sidebar group titles
-  "User Workflow": "งานประจวัน",
+  "User Workflow": "งานประจำวัน",
   "Control Database": "ฐานข้อมูลส่วนกลาง",
   "Coming Soon": "เร็ว ๆ นี้",
   Administration: "การบริหารจัดการ",

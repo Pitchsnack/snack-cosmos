@@ -115,50 +115,41 @@ const STARTUP_MENU_ORDER = [
 ];
 
 
-// CONTROL sidebar grouping (navigation UX only — no route/permission changes).
-const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
+// CONTROL sidebar (navigation UX only — no route/permission changes).
+// Insights, Approvals, Network and Directory open sub-menus via the shared
+// Pipeline WorkspaceSubmenu; Coming soon folds at the end.
+const CONTROL_SUBMENUS: { id: string; label: string; icon: typeof Building2; items: string[] }[] = [
+  { id: "insights", label: "Insights", icon: Gauge, items: ["Dashboard", "Analytics"] },
+  { id: "approvals", label: "Approvals", icon: ShieldCheck, items: ["Report approval", "User approval", "Access codes"] },
+  { id: "network", label: "Network", icon: NetworkIcon, items: ["My Connections", "Contacts"] },
   {
-    title: "User Workflow",
-    labels: [
-      "Dashboard",
-      "My Connections",
-      "Contacts",
-      "Deals",
-      "Shared Deals",
-    ],
-  },
-  {
-    title: "Control Database",
-    labels: [
-      "AI Agents",
+    id: "directory",
+    label: "Directory",
+    icon: Library,
+    items: [
       "Control Data Intelligence",
       "Global Startups",
       "Browse Global Catalogue",
       "Startups Directory",
-      "Approvals",
-      "Messages",
       "Investors Directory",
       "Advisors Directory",
-      "Industry Map",
     ],
   },
-  { title: "Communications", labels: ["Email alerts"] },
-  { title: "Coming Soon", labels: ["Documents"] },
-  {
-    title: "Administration",
-    labels: [
-      "Default Intake Queue",
-      "Tenants",
-      "Users",
-      "Analytics",
-      "Plans",
-      "Access Management",
-      "Peer Comparables",
-      "Audit Logs",
-      "Security",
-    ],
-  },
-  { title: "Account & Activity", labels: ["Notifications", "Startup Activity", "Preferences"] },
+];
+const CONTROL_SECTIONS: { title: string; labels: string[] }[] = [
+  { title: "Data", labels: ["Peer Comparables"] },
+  { title: "Communications", labels: ["Messages", "Email alerts", "Notifications"] },
+  { title: "Administration", labels: ["Tenants", "Users", "Plans", "Access Management", "Audit Logs", "Security"] },
+];
+const COMING_SOON_LABELS = [
+  "Deals",
+  "Shared Deals",
+  "AI Agents",
+  "Industry Map",
+  "Documents",
+  "Default Intake Queue",
+  "Startup Activity",
+  "Preferences",
 ];
 
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
