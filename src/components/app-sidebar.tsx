@@ -4,6 +4,7 @@ import { KeyRound,
   Building2,
   ScrollText,
   ChevronLeft,
+  ChevronRight,
   Menu,
   X,
   Users as UsersIcon,
@@ -29,6 +30,8 @@ import { KeyRound,
   Layers,
   Bot,
   Tag,
+  Gauge,
+  Library,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -43,7 +46,8 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useEffectivePermissions } from "@/hooks/use-effective-permissions";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
-import { ApprovalsBadge, AdminMessagesBadge, PaidReportsBadge } from "@/components/menu-count-badge";
+import { AdminMessagesBadge, AdminSubCount, useAdminApprovalCounts } from "@/components/menu-count-badge";
+import { WorkspaceSubmenu } from "@/components/marketplace/workspace-submenu";
 import { Receipt } from "lucide-react";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import logoBlack from "@/assets/pitchsnack-black.png";
@@ -158,8 +162,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/tenants", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
-  { label: "Approvals", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
-  { label: "Paid reports", icon: Receipt, path: "/admin/paid-reports", exact: false, controlOnly: true },
+  { label: "User approval", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
+  { label: "Report approval", icon: Receipt, path: "/admin/paid-reports", exact: false, controlOnly: true },
   { label: "Messages", icon: MessagesSquare, path: "/admin/messages", exact: false, controlOnly: true },
   { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
 
