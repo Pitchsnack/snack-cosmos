@@ -322,6 +322,15 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           limitMsg="Pick up to 5 sectors, or Sector agnostic."
           agnostic={{ on: f.sectorAgnostic, onToggle: (on) => set("sectorAgnostic", on), line: "I work with companies in every industry",
             summary: <>Sellers and buyers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} /></F>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <F label="Listing name — your suggestion" hint={`${f.suggestedListingName.length} / 120`} htmlFor="fe-sug-name">
+            <Input id="fe-sug-name" maxLength={120} value={f.suggestedListingName} onChange={(e) => set("suggestedListingName", e.target.value)} placeholder={f.name || ""} />
+          </F>
+          <F label="Headline — your suggestion" hint={`${f.suggestedHeadline.length} / 120`} htmlFor="fe-sug-head">
+            <Input id="fe-sug-head" maxLength={120} value={f.suggestedHeadline} onChange={(e) => set("suggestedHeadline", e.target.value)} />
+          </F>
+        </div>
+        <p className="-mt-2 text-[12.5px] text-muted-foreground">PitchSnack may adjust them to reduce duplication and make your listing easier to distinguish.</p>
         <F label="Description" req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${f.description.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} value={f.description} onBlur={blur("desc")} onChange={(e) => set("description", e.target.value)} />
         </F>
