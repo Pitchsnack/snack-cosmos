@@ -3,6 +3,7 @@ import { descriptionChanged } from "@/lib/buyer-description";
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { tr } from "@/i18n/language";
+import { REVENUE_BANDS, REVENUE_BAND_TH } from "@/lib/revenue-bands";
 import { companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
