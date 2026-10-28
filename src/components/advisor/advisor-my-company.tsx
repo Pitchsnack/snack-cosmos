@@ -333,6 +333,39 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
   const svcBtn = useRef<HTMLButtonElement>(null);
   const addrBtn = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState(false);
+  // One-step approval: Register your company opens the review pop-up.
+  const registerFn = useServerFn(registerAdvisorFirm);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [sentOpen, setSentOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [failures, setFailures] = useState<string[]>([]);
+  const reg = useMutation({
+    mutationFn: () => registerFn({ data: { firmId: f.id } }),
+    onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); void qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
+    onError: (e: Error) => setFailures([e.message]),
+  });
+  const reviewData: ReviewCompanyData = {
+    suggestedName: f.suggestedListingName ?? null,
+    suggestedHeadline: f.suggestedHeadline ?? null,
+    listingRows: [
+      ["Firm type", f.firmType || ""],
+      ["Services", f.services.join(", ")],
+      ["Sectors", f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ")],
+      ["Headline", f.suggestedHeadline ?? ""],
+      ["Description", (f.description ?? "").slice(0, 400)],
+    ],
+    identityWords: descriptionLeaks(`${f.suggestedListingName ?? ""} ${f.suggestedHeadline ?? ""} ${f.description ?? ""}`, f.name ?? "", f.website ?? ""),
+    identityApplies: true,
+    exclusiveRows: [
+      { label: "Firm name", value: f.name ?? "", note: null },
+      { label: "Registration Number", value: f.registrationNo ?? "", note: null },
+      { label: "Registered address", value: fullAddress(f), note: null },
+      { label: "Year founded", value: f.yearFounded != null ? String(f.yearFounded) : "", note: null },
+      { label: "Website", value: f.website ?? "", note: "Not shown publicly" },
+      { label: "Email", value: f.email ?? "", note: "Not shown publicly" },
+      { label: "Contact number", value: f.phone ?? "", note: "Not shown publicly" },
+    ],
+  };
   const checklist = firmChecklist(f);
   const complete = checklist.every((i) => i.done);
   const declined = f.verification?.state === "declined";
