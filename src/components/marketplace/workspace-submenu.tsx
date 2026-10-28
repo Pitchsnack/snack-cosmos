@@ -13,12 +13,14 @@ type Props = {
   destination: string; active: boolean; items: SubmenuItem[]; collapsed?: boolean;
   tooltip?: string; badge?: ReactNode; railBadge?: ReactNode; company?: boolean;
   focusSelector?: string;
+  /** Admin menu: the row has no page of its own — a click only opens or folds the sub-menu. */
+  toggleOnly?: boolean;
 };
 
 /** Shared Pipeline/My Company navigation, including inline, drawer and rail states. */
 export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, destination, active,
   items, collapsed = false, tooltip = label, badge, railBadge, company = false,
-  focusSelector = '[data-pipeline-title]',
+  focusSelector = '[data-pipeline-title]', toggleOnly = false,
 }: Props) {
   const path = useRouterState({ select: s => s.location.pathname });
   const { persona } = usePersona();
@@ -130,9 +132,11 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
   </Popover>;
   return <div ref={root} className={company ? 'company-submenu' : undefined}>
     <Button variant="ghost" className={`pipeline-parent${company ? ' company-parent' : ''}`}
-      data-active={active && !open || undefined} data-current={company && active && open || undefined}
+      data-active={active && !open || undefined}
+      data-current={(company || toggleOnly) && active && open || undefined}
       aria-expanded={open} aria-controls={groupId}
       onClick={() => {
+        if (toggleOnly) { setOpen(!open); return; }
         if (active) setOpen(!open);
         else { setOpen(true); void navigate({ to: destination }); }
       }}>{content}</Button>{open && links()}
