@@ -294,6 +294,11 @@ function SidebarBody({
 
   const isStartupUser = roles.includes("STARTUP_USER");
   const useControlGroups = isControl && !showSkeleton && !isStartupUser;
+  // Coming soon folds again whenever another Admin page opens.
+  const [soonOpen, setSoonOpen] = useState(false);
+  useEffect(() => { setSoonOpen(false); }, [pathname]);
+  const { user: approvalUserCount, reports: approvalReportCount, total: approvalTotal } =
+    useAdminApprovalCounts(useControlGroups);
 
 
   const visibleItems = (() => {

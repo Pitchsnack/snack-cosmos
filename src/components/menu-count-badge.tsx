@@ -58,11 +58,11 @@ export function PaidReportsBadge() {
 }
 
 /** Admin menu: User approval + Report approval counts for the Approvals row and its sub-rows. */
-export function useAdminApprovalCounts() {
+export function useAdminApprovalCounts(enabled = true) {
   const userFn = useServerFn(pendingApprovalsCount);
   const reportsFn = useServerFn(paidReportsCount);
-  const { data: user = 0 } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => userFn(), staleTime: 60_000 });
-  const { data: reports = 0 } = useQuery({ queryKey: ["paid-reports-count"], queryFn: () => reportsFn(), staleTime: 60_000 });
+  const { data: user = 0 } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => userFn(), staleTime: 60_000, enabled });
+  const { data: reports = 0 } = useQuery({ queryKey: ["paid-reports-count"], queryFn: () => reportsFn(), staleTime: 60_000, enabled });
   return { user, reports, total: user + reports };
 }
 
