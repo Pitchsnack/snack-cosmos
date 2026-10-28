@@ -1,29 +1,14 @@
-# Roadmap — One-step approval (sellers, buyers, advisors)
+# One-step approval — roadmap
 
-Brief: `lovable-one-step-approval_2.md` + reference HTML. Build in one go; Dan checks himself (no tests/screenshots requested).
+Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accounts, no screenshots (user's instruction).
 
-## Explore
-- [ ] Map buyer approval + verification flow
-- [ ] Map seller listing approval + advisor verification
-- [ ] Map Admin Approvals UI, menu, emails, banners, i18n, DBD data
-
-## Build
-- [ ] 1. DB migration: suggested/published listing name + headline (startups, buyer_profiles/investors, advisor_firms); buyer revenue band; contact number (buyers/sellers); approval_events logging; per-user banner/approved-pop-up state
-- [ ] 2. Server: one-step Register your company submit per role; merged buyer decide (publish+verify in one transaction); seller decide certifies company+owner; advisor decide verifies+publishes; Browse/Connect/invite/NDA server gates require verified+published
-- [ ] 3. My Company footers per state (Draft/Pending/Changes/Not approved/Live/Paused), status pills, remove state notices, remove Withdraw-while-pending, remove Exclusive-view Submit for verification
-- [ ] 4. "Review your company data" pop-up (880px, 3 numbered sections, tick box, fail line)
-- [ ] 5. "Sent for approval" pop-up (520px, 3-step tracker)
-- [ ] 6. Banners: yellow (pending, foldable, per-role rows), red (changes/declined, reason pills, note, sidebar badge), green (2 steps, per-user stored); mount under breadcrumb on every user page
-- [ ] 7. Sidebar status chip states; Browse locked Connect buttons + tooltips; My Profile verification status-only + Open My Company
-- [ ] 8. Admin Approvals: Sellers/Buyers/Advisors/History tabs, counts, Paid reports as own menu item, queue items, review layout (header, directory bar, sent-back note, listing name/headline table, verification table with DBD compare + Mark checked, visual-check box, preview cards, footer), decision pop-ups
-- [ ] 9. Withdraw pop-up (live state); Pause/Resume renamed, no Admin step
-- [ ] 10. Approved pop-up (once per user) + three decision emails per role
-- [ ] 11. Data: PML VENTURES (INV-1008) + LINE MAN Wongnai (INV-1015) → Pending approval, out of Browse, no email; list live-but-unverified sellers/advisors in reply
-- [ ] 12. Thai: all new texts via t(), Buddhist-year dates, IBM Plex Sans Thai Looped, three seller-specific texts
-
-## Reply must list
-- Column holding each of the 4 listing name/headline values per role
-- Where Certified is stored today
-- Which DBD fields exist
-- Live sellers/advisors not certified/verified
-- Anything not built as written
+- [x] A. Data: migration 0113 (suggested/published name+headline per role, revenue band, contact number, decision reasons, review checks, approval_notices)
+- [x] B. Server: approval-notices fns, one-step.server review data, approvals-one-step fns (listOneStepApprovals, decideOneStep, markReviewCheck, paidReportsCount, registerBuyerCompany, registerAdvisorFirm), submitListing suggestion checks, verified-only browse filters, resumeListing
+- [x] C. Shared UI: approval-banners.css, yellow/red/green banners, sidebar badge, Sent for approval, Withdraw, Approved pop-up, Review your company data; mounted in _authenticated
+- [x] D. My Company footers: seller (approval-bits), buyer (buyer-my-company), advisor (advisor-my-company)
+- [ ] E. Edit information: suggested name/headline fields (120 chars) in seller/buyer/advisor forms; buyer revenue band + contact number fields
+- [ ] F. Admin Approvals one-step review UI (listOneStepApprovals, decideOneStep with editable name/headline, markReviewCheck, paid reports count)
+- [ ] G. Browse cards show published name/headline; My Company card title = published name once live
+- [ ] H. Sidebar red badge on My Company while changes requested/declined
+- [ ] I. Approval decision emails + Thai translations for all new strings
+- [ ] J. Final reply: name/headline columns per role, Certified storage, DBD fields available, live sellers/advisors lacking certification/verification, anything not built
