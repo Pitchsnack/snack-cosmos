@@ -153,9 +153,6 @@ export const viewStoredDbd = createServerFn({ method: "GET" })
     if (!r) return null;
     const d = r.data ?? {};
     const info = d.info ?? {};
-    const raw = (await sb.from("dbd_company_records").select("raw_payload").eq("registration_number", reg).maybeSingle()).data?.raw_payload;
-    const ci = raw?.company?.companyInfo ?? {};
-    const signers = Array.isArray(ci.directors) ? null : null;
     const [sts, advs, invs] = await Promise.all([
       sb.from("startups").select("startup_name, registered_number, hidden_profiles(ref_no)").not("registered_number", "is", null),
       sb.from("advisor_firms").select("ref_no, name, registration_no").not("registration_no", "is", null),
@@ -181,7 +178,6 @@ export const viewStoredDbd = createServerFn({ method: "GET" })
         ["Fiscal years filed", years.length ? `${years.length} · FY${years[0]}–${years[years.length - 1]}` : "—"],
         ["TSIC", tsic ?? "—"],
       ] as [string, string][],
-      _signers: signers,
     };
   });
 
