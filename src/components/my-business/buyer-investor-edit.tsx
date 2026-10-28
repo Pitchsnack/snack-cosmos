@@ -212,6 +212,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
+    // One-step approval: the buyer's suggestion plus verification details.
+    suggested_listing_name: (data.buyer as any).suggested_listing_name ?? "",
+    suggested_headline: (data.buyer as any).suggested_headline ?? "",
+    revenue_band: (data.buyer as any).revenue_band ?? "",
+    contact_number: (data.buyer as any).contact_number ?? "",
   });
   const [addr, setAddrS] = useState<Addr>({ street: inv.address_line1 ?? "", unit: inv.address_line2 ?? "", district: inv.address_city_district ?? "", province: inv.address_province_state ?? "", postal: inv.postal_code ?? "" });
   const [addrDirty, setAddrDirty] = useState(false);
