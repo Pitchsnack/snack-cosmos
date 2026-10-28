@@ -25,6 +25,7 @@ const TILE_COLOURS = ["#2563EB", "#0F766E", "#B45309", "#7C3AED", "#BE123C", "#0
 const PILL = {
   ready: { bg: "#ECFDF3", fg: "#15803D", dot: "#16A34A", label: "Ready" },
   preparing: { bg: "#FFFBEB", fg: "#B45309", dot: "#F59E0B", label: "Being prepared" },
+  orderable: { bg: "#EFF6FF", fg: "#1D4ED8", dot: "#3B82F6", label: "Ready to order" },
   none: { bg: "#F3F4F6", fg: "#4B5563", dot: "#C4C9D2", label: "Not ordered" },
 } as const;
 
@@ -53,6 +54,7 @@ function subtitle(c: MyReportCompany, kind: Kind) {
   const s = c[kind];
   if (s.status === "ready") return `${c.name} · ${REPORT[kind]} delivered ${dayMonth(s.at)}`;
   if (s.status === "preparing") return `${c.name} · ${REPORT[kind]} ordered ${dayMonth(s.at)}, being prepared`;
+  if (s.status === "orderable") return `${c.name} · ${REPORT[kind]} ready to order`;
   return `${c.name} · ${REPORT[kind]} not ordered yet`;
 }
 

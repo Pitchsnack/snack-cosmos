@@ -23,6 +23,7 @@ export type ReviewRow = {
 
 export type OneStepReview = {
   registrationNo: string | null;
+  dbd: StoreState;
   individual: boolean;
   listingRows: [string, string][]; // Listing view rows (label, value)
   identityWords: string[]; // identity check findings ([] = clean; null row for advisors)
@@ -91,60 +92,15 @@ export async function checkWebsite(url: string | null | undefined): Promise<"wor
   }
 }
 
-type DbdFacts = {
-  nameTh: string | null; nameEn: string | null; address: string | null;
-  registeredOn: string | null; directors: string[]; revenueM: number | null; revenueYear: number | null;
-};
+type DbdFacts = import("./dbd-store.server").DbdFacts & { manual?: boolean };
+type StoreState = import("./dbd-store.server").DbdStoreState;
 
-/** Seller DBD facts from the imported company_info_th + directors (My Financials import). */
-async function dbdForStartup(sb: any, startupId: string | null): Promise<DbdFacts | null> {
-  if (!startupId) return null;
-  const { data: ci } = await sb.from("company_info_th").select("*").eq("startup_id", startupId).maybeSingle();
-  if (!ci) return null;
-  const { data: dirs } = await sb.from("company_director_th").select("director_name_th").eq("startup_id", startupId).eq("is_active", true).order("display_order");
-  // Latest filed revenue, when the accounts were imported with the company data.
-  const { data: fin } = await sb.from("financial_statements").select("id, fiscal_year").eq("startup_id", startupId).order("fiscal_year", { ascending: false }).limit(1);
-  let revenueM: number | null = null, revenueYear: number | null = fin?.[0]?.fiscal_year ?? null;
-  if (fin?.[0]) {
-    const { data: items } = await sb.from("income_statement_items").select("name, amount").eq("statement_id", fin[0].id);
-    const rev = (items ?? []).find((i: any) => /revenue|sales|รายได้/i.test(String(i.name ?? "")));
-    if (rev?.amount != null && Number.isFinite(Number(rev.amount))) revenueM = Number(rev.amount) / 1_000_000;
-  }
-  return {
-    nameTh: ci.legal_name_th ?? null, nameEn: ci.legal_name_en ?? null,
-    address: ci.head_office_address_th ?? null, registeredOn: ci.registration_date ?? null,
-    directors: (dirs ?? []).map((d: any) => d.director_name_th).filter(Boolean),
-    revenueM, revenueYear,
-  };
-}
-
-/** Buyer/advisor DBD facts from a live lookup by 13-digit registration number. */
-async function dbdForRegistration(regNo: string | null | undefined): Promise<DbdFacts | null> {
-  if (!/^\d{13}$/.test(regNo ?? "")) return null;
-  try {
-    const { lookupDbdFinancials } = await import("@/lib/financials/dbd-provider.server");
-    const r: any = await lookupDbdFinancials({ registeredNumber: regNo });
-    const c = r?.company;
-    if (!c) return null;
-    const ci = c.companyInfo ?? {};
-    // Filed revenue: latest statement's revenue-like income line, when DBD published it.
-    let revenueM: number | null = null, revenueYear: number | null = null;
-    const stmts = Array.isArray(r.statements) ? r.statements : [];
-    const latest = stmts.slice().sort((a: any, b: any) => (b.fiscalYear ?? 0) - (a.fiscalYear ?? 0))[0];
-    if (latest) {
-      revenueYear = latest.fiscalYear ?? null;
-      const entry = Object.entries(latest.income ?? {}).find(([k]) => /revenue|sales/i.test(k));
-      if (entry && Number.isFinite(Number(entry[1]))) revenueM = Number(entry[1]) / 1_000_000;
-    }
-    return {
-      nameTh: ci.legalNameTh ?? null, nameEn: ci.legalNameEn ?? c.registeredName ?? null,
-      address: ci.headOfficeAddressTh ?? null, registeredOn: ci.registrationDate ?? c.profile?.registeredDate ?? null,
-      directors: Array.isArray(ci.directors) ? ci.directors.filter(Boolean) : [],
-      revenueM, revenueYear,
-    };
-  } catch {
-    return null;
-  }
+/** Reads the shared DBD store only — opening a review never fetches from DBD. */
+async function dbdFromStore(sb: any, reg: string | null | undefined): Promise<{ facts: DbdFacts | null; state: StoreState }> {
+  const { storeState, factsFromData } = await import("./dbd-store.server");
+  const { state, data } = await storeState(sb, reg);
+  const f = data ? factsFromData(data) : null;
+  return { facts: f ? { ...f, manual: state.source === "manual" } : null, state };
 }
 
 const yearOf = (iso: string | null | undefined) => {
@@ -162,7 +118,7 @@ function nameRow(label: string, from: string | null, dbd: DbdFacts | null, check
   const found = dbd ? [dbd.nameEn, dbd.nameTh].filter(Boolean).join(" / ") || null : null;
   const match = dbd && (sameText(from, dbd.nameEn) || sameText(from, dbd.nameTh));
   return {
-    key: "name", label, from, found: found ?? "Check by hand", source: dbd ? "DBD register" : null,
+    key: "name", label, from, found: found ?? "Check by hand", source: dbd ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !from ? "not_given" : !dbd ? "by_hand" : match ? "match" : "differs",
     resultLabel: !from ? "Not given" : !dbd ? "By hand" : match ? "Matches" : "Differs",
     link: null, checked,
@@ -171,7 +127,7 @@ function nameRow(label: string, from: string | null, dbd: DbdFacts | null, check
 
 function addressRow(from: string | null, dbd: DbdFacts | null, checked: boolean): ReviewRow {
   return {
-    key: "address", label: "Address", from, found: dbd?.address ?? "Check by hand", source: dbd?.address ? "DBD register" : null,
+    key: "address", label: "Address", from, found: dbd?.address ?? "Check by hand", source: dbd?.address ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !from ? "not_given" : !dbd?.address ? "by_hand" : sameText(from, dbd.address) ? "match" : "differs",
     resultLabel: !from ? "Not given" : !dbd?.address ? "By hand" : sameText(from, dbd.address) ? "Matches" : "Differs",
     link: null, checked,
@@ -186,7 +142,7 @@ function yearRow(from: string | null, storyYear: string | null, dbd: DbdFacts | 
   const match = regYear != null && userYear != null && regYear === userYear && (storyY == null || storyY === regYear);
   return {
     key: "year", label: "Year founded", from: both, found: dbd?.registeredOn ? `Registered on ${dbd.registeredOn}` : "Check by hand",
-    source: dbd?.registeredOn ? "DBD register" : null,
+    source: dbd?.registeredOn ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !from ? "not_given" : regYear == null ? "by_hand" : match ? "match" : "differs",
     resultLabel: !from ? "Not given" : regYear == null ? "By hand" : match ? "Matches" : "Differs",
     link: null, checked,
@@ -198,7 +154,7 @@ function directorRow(label: string, person: string | null, who: string, dbd: Dbd
   return {
     key: "director", label, from: person ? `${person}, ${who}` : null,
     found: dbd?.directors.length ? `Directors: ${dbd.directors.join(", ")}` : "Check by hand",
-    source: dbd?.directors.length ? "DBD register" : null,
+    source: dbd?.directors.length ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !person ? "not_given" : !dbd?.directors.length ? "by_hand" : isDir ? "match" : "differs",
     resultLabel: !person ? "Not given" : !dbd?.directors.length ? "By hand" : isDir ? "Is a director" : "Not a director",
     link: null, checked,
@@ -217,7 +173,7 @@ function revenueRow(bandKey: string | null, bandYear: string, storySales: string
   const inRange = dbd.revenueM >= band[2] && dbd.revenueM < band[3];
   return {
     key: "revenue", label: "Revenue", from,
-    found: `${fmtM(dbd.revenueM)} in the ${dbd.revenueYear ?? bandYear} accounts filed with DBD`, source: "DBD financial statements",
+    found: `${fmtM(dbd.revenueM)} in the ${dbd.revenueYear ?? bandYear} accounts ${dbd.manual ? "entered by hand" : "filed with DBD"}`, source: dbd.manual ? "Entered by hand" : "DBD financial statements",
     result: inRange ? "match" : "differs",
     resultLabel: inRange ? "In the range" : dbd.revenueM < band[2] ? "Below the range" : "Above the range",
     link: null, checked,
@@ -245,7 +201,7 @@ const byHandId = (key: string, label: string, from: string | null, note: string,
 /* ------------------------------------------------------------- sellers */
 
 export async function sellerReview(sb: any, hp: any, st: any, founder: any, checked: string[]): Promise<OneStepReview> {
-  const dbd = await dbdForStartup(sb, hp.startup_id);
+  const { facts: dbd, state: dbdState } = await dbdFromStore(sb, st?.registered_number);
   const web = await checkWebsite(st?.website_url);
   const has = (k: string) => checked.includes(k);
   const year = String(new Date().getFullYear() - 1);
@@ -253,6 +209,7 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
   const storySales = founder?.bio_story?.sales ?? null;
   return {
     registrationNo: st?.registered_number ?? null,
+    dbd: dbdState,
     individual: false,
     listingRows: [
       ["Reference", [hp.ref_no, hp.sector ?? st?.sector, st?.city].filter(Boolean).join(" · ")],
@@ -312,7 +269,7 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
 
 export async function buyerReview(sb: any, p: any, inv: any, user: any, checked: string[]): Promise<OneStepReview> {
   const individual = p.buyer_relation === "individual";
-  const dbd = individual ? null : await dbdForRegistration(inv?.registration_no);
+  const { facts: dbd, state: dbdState } = individual ? { facts: null, state: (await dbdFromStore(sb, null)).state } : await dbdFromStore(sb, inv?.registration_no);
   const web = await checkWebsite(inv?.website_url);
   const has = (k: string) => checked.includes(k);
   const year = String(new Date().getFullYear() - 1);
@@ -338,6 +295,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
       ];
   return {
     registrationNo: individual ? null : inv?.registration_no ?? null,
+    dbd: dbdState,
     individual,
     listingRows: [
       ["Reference", [p.ref_no, inv?.investor_type, inv?.country ?? p.country].filter(Boolean).join(" · ")],
@@ -394,9 +352,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
 /* ------------------------------------------------------------- advisors */
 
 export async function advisorReview(sb: any, f: any, owner: any, checked: string[]): Promise<OneStepReview> {
-  const dbd = f.dbd_checked_at
-    ? { nameTh: null, nameEn: f.dbd_name ?? null, address: null, registeredOn: f.dbd_registered_on ?? null, directors: [] as string[], revenueM: null, revenueYear: null }
-    : await dbdForRegistration(f.registration_no);
+  const { facts: dbd, state: dbdState } = await dbdFromStore(sb, f.registration_no);
   const web = await checkWebsite(f.website);
   const has = (k: string) => checked.includes(k);
   const person = [owner?.first_name, owner?.last_name].filter(Boolean).join(" ") || owner?.email || null;
@@ -404,6 +360,7 @@ export async function advisorReview(sb: any, f: any, owner: any, checked: string
   const deal = f.deal_size_band ?? (f.deal_min_usd_m != null && f.deal_max_usd_m != null ? `US$${f.deal_min_usd_m}M – ${f.deal_max_usd_m}M` : null);
   return {
     registrationNo: f.registration_no ?? null,
+    dbd: dbdState,
     individual: false,
     listingRows: [
       ["Reference", [f.ref_no, f.firm_type, f.city ?? f.country].filter(Boolean).join(" · ")],

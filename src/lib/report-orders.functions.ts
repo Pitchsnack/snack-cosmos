@@ -69,6 +69,16 @@ export const createMyReportOrder = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await sb.from("report_order_events").insert({ order_id: row.id, event: "paid", actor_id: ctx.userId,
       note: `${row.method} · ${row.payment_ref} · due ${fmtD(due)}` });
+    // Already produced from stored DBD data: the order goes straight to Authorise seller.
+    const { producedKeys } = await import("./dbd-store.server");
+    const made = await producedKeys(sb, data.startupId);
+    const needs: Record<string, string[]> = { financials: ["statements"], pnl: ["pnl"], risk: ["risk"], valuation: ["valuation"], bundle: ["statements", "valuation"] };
+    if (needs[data.kind]?.every((k) => made.has(k))) {
+      const at = new Date().toISOString();
+      await sb.from("report_orders").update({ status: "generated", generated_at: at }).eq("id", row.id).eq("status", "paid");
+      await sb.from("report_order_events").insert({ order_id: row.id, event: "generated", actor_id: ctx.userId, note: "Already produced from stored DBD data · waiting for Authorise seller" });
+      return { ...row, status: "generated", generated_at: at };
+    }
     const { data: admins } = await sb.from("user_roles").select("user_id, roles!inner(role_code)").eq("roles.role_code", "CONTROL");
     for (const a of admins ?? []) await sb.from("notifications").insert({ user_id: a.user_id, notification_type: "approval",
       title: "Paid report waiting", message: `Order ${row.ref} paid — due ${fmtD(due)}` });

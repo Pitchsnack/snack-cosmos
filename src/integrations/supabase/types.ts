@@ -976,11 +976,55 @@ export type Database = {
           },
         ]
       }
+      analyst_statement_edits: {
+        Row: {
+          created_at: string
+          edited_amount: number | null
+          edited_by: string | null
+          fiscal_year: number
+          id: string
+          item_code: string
+          note: string | null
+          original_amount: number | null
+          registration_number: string
+          statement: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          edited_amount?: number | null
+          edited_by?: string | null
+          fiscal_year: number
+          id?: string
+          item_code: string
+          note?: string | null
+          original_amount?: number | null
+          registration_number: string
+          statement: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          edited_amount?: number | null
+          edited_by?: string | null
+          fiscal_year?: number
+          id?: string
+          item_code?: string
+          note?: string | null
+          original_amount?: number | null
+          registration_number?: string
+          statement?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       approval_events: {
         Row: {
           action: string
           actor_id: string
           created_at: string
+          dbd_retrieved_at: string | null
+          dbd_source: string | null
           fields: string[]
           id: string
           item_id: string
@@ -995,6 +1039,8 @@ export type Database = {
           action: string
           actor_id: string
           created_at?: string
+          dbd_retrieved_at?: string | null
+          dbd_source?: string | null
           fields?: string[]
           id?: string
           item_id: string
@@ -1009,6 +1055,8 @@ export type Database = {
           action?: string
           actor_id?: string
           created_at?: string
+          dbd_retrieved_at?: string | null
+          dbd_source?: string | null
           fields?: string[]
           id?: string
           item_id?: string
@@ -1979,6 +2027,87 @@ export type Database = {
           seller_user_id?: string
           startup_id?: string
           status?: string
+        }
+        Relationships: []
+      }
+      dbd_company_records: {
+        Row: {
+          created_at: string
+          data: Json
+          entered_by_name: string | null
+          raw_payload: Json | null
+          registration_number: string
+          retrieved_at: string
+          retrieved_by: string | null
+          source: string
+          source_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          entered_by_name?: string | null
+          raw_payload?: Json | null
+          registration_number: string
+          retrieved_at?: string
+          retrieved_by?: string | null
+          source?: string
+          source_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          entered_by_name?: string | null
+          raw_payload?: Json | null
+          registration_number?: string
+          retrieved_at?: string
+          retrieved_by?: string | null
+          source?: string
+          source_note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dbd_fetch_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          new_retrieved_at: string | null
+          note: string | null
+          old_retrieved_at: string | null
+          registration_number: string
+          result: string
+          source: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          new_retrieved_at?: string | null
+          note?: string | null
+          old_retrieved_at?: string | null
+          registration_number: string
+          result: string
+          source?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          new_retrieved_at?: string | null
+          note?: string | null
+          old_retrieved_at?: string | null
+          registration_number?: string
+          result?: string
+          source?: string | null
         }
         Relationships: []
       }
@@ -3122,6 +3251,7 @@ export type Database = {
           id: string
           matched_registered_name: string | null
           matched_registered_number: string | null
+          registration_number: string | null
           retrieved_at: string | null
           source_date: string | null
           source_name: string | null
@@ -3139,6 +3269,7 @@ export type Database = {
           id?: string
           matched_registered_name?: string | null
           matched_registered_number?: string | null
+          registration_number?: string | null
           retrieved_at?: string | null
           source_date?: string | null
           source_name?: string | null
@@ -3156,6 +3287,7 @@ export type Database = {
           id?: string
           matched_registered_name?: string | null
           matched_registered_number?: string | null
+          registration_number?: string | null
           retrieved_at?: string | null
           source_date?: string | null
           source_name?: string | null
@@ -7571,6 +7703,42 @@ export type Database = {
       }
       company_type_for_relation: { Args: { _rel: string }; Returns: string }
       current_term_start: { Args: { _uid: string }; Returns: string }
+      dbd_apply_edit: {
+        Args: {
+          _actor: string
+          _amount: number
+          _code: string
+          _note: string
+          _reg: string
+          _statement: string
+          _year: number
+        }
+        Returns: undefined
+      }
+      dbd_locked_startup: { Args: { _sid: string }; Returns: boolean }
+      dbd_materialize: {
+        Args: { _data: Json; _reg: string; _sid: string }
+        Returns: undefined
+      }
+      dbd_norm_reg: { Args: { _s: string }; Returns: string }
+      dbd_snapshot_startup: { Args: { _sid: string }; Returns: Json }
+      dbd_store_delete: {
+        Args: { _actor: string; _reg: string }
+        Returns: Json
+      }
+      dbd_store_save: {
+        Args: {
+          _action: string
+          _actor: string
+          _actor_name: string
+          _data: Json
+          _raw: Json
+          _reg: string
+          _source: string
+          _source_note: string
+        }
+        Returns: Json
+      }
       fn_import_global_startup: {
         Args: {
           _global_id: string

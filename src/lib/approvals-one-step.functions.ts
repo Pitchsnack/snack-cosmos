@@ -28,6 +28,14 @@ async function logEvent(e: Record<string, unknown>) {
   const sb = await admin();
   await sb.from("approval_events").insert(e);
 }
+/** Fetch source + date of the stored DBD data, written onto Verify and publish. */
+async function dbdStamp(reg: string | null | undefined) {
+  const { normReg } = await import("./dbd-store.server");
+  const r = normReg(reg);
+  if (!r) return { dbd_source: null, dbd_retrieved_at: null };
+  const { data } = await (await admin()).from("dbd_company_records").select("source, retrieved_at").eq("registration_number", r).maybeSingle();
+  return { dbd_source: data?.source ?? null, dbd_retrieved_at: data?.retrieved_at ?? null };
+}
 async function notify(userId: string | null | undefined, title: string, message: string, link?: string) {
   if (!userId) return;
   const sb = await admin();
@@ -191,7 +199,8 @@ export const decideOneStep = createServerFn({ method: "POST" })
         }
         await sb.from("user_verifications").upsert({ user_id: p.user_id, verified_at: now, verified_by: context.userId });
         await resetApprovalNotice(sb, p.user_id, "buyer_profile", p.user_id, now);
-        await logEvent({ item_type: "buyer_profile", item_id: p.user_id, subject_user_id: p.user_id, action: "approve", actor_id: context.userId, note: null, reasons: [] });
+        await logEvent({ item_type: "buyer_profile", item_id: p.user_id, subject_user_id: p.user_id, action: "approve", actor_id: context.userId, note: null, reasons: [],
+          ...(await dbdStamp(p.investor_id ? (await sb.from("investors").select("registration_no").eq("id", p.investor_id).maybeSingle()).data?.registration_no : null)) });
         await notify(p.user_id, "Your profile is approved", "Sellers can now find you in Browse investors, and you can sign NDAs.", "/marketplace/my-company");
         const { sendAlert } = await import("./email-alerts.server");
         const { bandText } = await import("@/lib/investor-bands");
@@ -257,7 +266,8 @@ export const decideOneStep = createServerFn({ method: "POST" })
           await sb.from("startups").update({ visibility: "Tenant", registration_verified_at: now }).eq("id", hp.startup_id);
         }
         await resetApprovalNotice(sb, hp.submitted_by, "listing", hp.id, now);
-        await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: hp.submitted_by, version: hp.version, action: "approve", actor_id: context.userId });
+        await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: hp.submitted_by, version: hp.version, action: "approve", actor_id: context.userId,
+          ...(await dbdStamp(hp.startup_id ? (await sb.from("startups").select("registered_number").eq("id", hp.startup_id).maybeSingle()).data?.registered_number : null)) });
         await notify(hp.submitted_by, "Your listing is approved", "Buyers can now find it in Browse listings, and you can connect with buyers.", "/my-startups");
         const { sendAlert, sellerTeam } = await import("./email-alerts.server");
         await sendAlert({
@@ -307,7 +317,7 @@ export const decideOneStep = createServerFn({ method: "POST" })
       }).eq("id", f.id);
       if (error) throw new Error(error.message);
       await resetApprovalNotice(sb, f.owner_user_id, "advisor", f.id, now);
-      await logEvent({ item_type: "advisor", item_id: f.id, subject_user_id: f.owner_user_id, action: "approve", actor_id: context.userId });
+      await logEvent({ item_type: "advisor", item_id: f.id, subject_user_id: f.owner_user_id, action: "approve", actor_id: context.userId, ...(await dbdStamp(f.registration_no)) });
       await notify(f.owner_user_id, "Your profile is approved", "Sellers and buyers can now find you in Browse advisors.", "/marketplace/my-company");
       if (f.owner_user_id) {
         const { sendAlert } = await import("./email-alerts.server");

@@ -7,7 +7,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * one status per report, plus the per-user page settings (last picked company,
  * share panel closed). Only companies the caller owns or belongs to count.
  */
-export type ReportStatus = { status: "ready" | "preparing" | "none"; at: string | null; ref: string | null };
+export type ReportStatus = { status: "ready" | "preparing" | "orderable" | "none"; at: string | null; ref: string | null };
 export type MyReportCompany = {
   id: string;
   name: string;
@@ -28,12 +28,13 @@ async function myCompanyIds(sb: any, userId: string) {
   return [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))];
 }
 
-function statusFor(orders: any[], kind: "financials" | "valuation" | "risk"): ReportStatus {
+function statusFor(orders: any[], kind: "financials" | "valuation" | "risk", produced: Set<string> = new Set()): ReportStatus {
   const mine = orders.filter((o) => o.kind === kind || (o.kind === "bundle" && kind !== "risk"));
   const done = mine.filter((o) => o.status === "delivered").sort((a, b) => String(b.delivered_at).localeCompare(String(a.delivered_at)))[0];
   if (done) return { status: "ready", at: done.delivered_at, ref: done.ref ?? null };
   const open = mine.sort((a, b) => String(b.paid_at).localeCompare(String(a.paid_at)))[0];
   if (open) return { status: "preparing", at: open.paid_at ?? open.created_at ?? null, ref: open.ref ?? null };
+  if (produced.has(kind === "financials" ? "statements" : kind)) return { status: "orderable", at: null, ref: null };
   return { status: "none", at: null, ref: null };
 }
 
@@ -48,6 +49,9 @@ export const getMyReportsState = createServerFn({ method: "GET" })
     const { data: orders } = ids.length
       ? await sb.from("report_orders").select("startup_id, kind, status, paid_at, created_at, delivered_at, ref").in("startup_id", ids).not("status", "in", "(cancelled,refunded)")
       : { data: [] };
+    const { data: made } = ids.length
+      ? await sb.from("company_report_records").select("company_id, report_key").in("company_id", ids).in("status", ["generated", "ready"])
+      : { data: [] };
     const paths = (sts ?? []).map((s: any) => s.logo_url).filter((p: any): p is string => !!p && !/^https?:\/\//.test(p));
     const signed: Record<string, string> = {};
     if (paths.length) {
@@ -56,13 +60,14 @@ export const getMyReportsState = createServerFn({ method: "GET" })
     }
     const companies: MyReportCompany[] = (sts ?? []).map((s: any) => {
       const o = (orders ?? []).filter((x: any) => x.startup_id === s.id);
+      const produced = new Set<string>((made ?? []).filter((m: any) => m.company_id === s.id).map((m: any) => m.report_key));
       return {
         id: s.id,
         name: s.startup_name ?? "Company",
         logoUrl: s.logo_url ? signed[s.logo_url] ?? (/^https?:\/\//.test(s.logo_url) ? s.logo_url : null) : null,
-        financials: statusFor(o, "financials"),
-        valuation: statusFor(o, "valuation"),
-        risk: statusFor(o, "risk"),
+        financials: statusFor(o, "financials", produced),
+        valuation: statusFor(o, "valuation", produced),
+        risk: statusFor(o, "risk", produced),
       };
     });
     const { data: pref } = await context.supabase.from("seller_report_prefs").select("last_company_id, share_panel_hidden").eq("user_id", context.userId).maybeSingle();
