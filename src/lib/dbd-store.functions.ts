@@ -130,3 +130,37 @@ export const saveAnalystEdit = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/**
+ * Paid report "Generate": uses the stored data only (never scrapes it again, never
+ * deletes it). With nothing stored yet, the Admin is asked to Extract data first.
+ */
+export const generateFromStore = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ startupId: z.string().uuid(), extract: z.boolean().default(false) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const sb = await control(ctx);
+    const { normReg, produceSellerReports } = await import("./dbd-store.server");
+    const { data: st } = await sb.from("startups").select("registered_number").eq("id", data.startupId).maybeSingle();
+    const reg = normReg(st?.registered_number);
+    if (!reg) return { ok: false as const, error: "Add the 13-digit registration number first." };
+    const { data: rec } = await sb.from("dbd_company_records").select("registration_number").eq("registration_number", reg).maybeSingle();
+    if (!rec) {
+      if (!data.extract) return { ok: false as const, needsExtract: true as const, error: "No DBD data is stored for this company yet." };
+      const { lookupDbdFinancials } = await import("./financials/dbd-provider.server");
+      const outcome: any = await lookupDbdFinancials({ registeredNumber: reg }).catch((e: any) => ({ status: "unavailable", detail: String(e?.message ?? e) }));
+      if (outcome.status !== "ok" && outcome.status !== "no_financials") {
+        const error = FAIL[outcome.status] ?? "DBD did not answer";
+        await sb.from("dbd_fetch_logs").insert({ registration_number: reg, action: "extract", result: outcome.status === "not_found" ? "not_found" : "failed", error, actor_id: ctx.userId, source: "dbd" });
+        return { ok: false as const, error };
+      }
+      const { outcomeToData } = await import("./dbd-store.server");
+      const { error } = await sb.rpc("dbd_store_save", { _actor: ctx.userId, _reg: reg, _action: "extract", _source: "dbd", _source_note: "DBD Data Warehouse", _data: outcomeToData(outcome), _raw: outcome, _actor_name: await actorName(sb, ctx.userId) });
+      if (error) throw new Error(error.message);
+    }
+    await produceSellerReports(context, sb, [data.startupId], ctx.userId);
+    const { data: fs } = await sb.from("financial_statements").select("id").eq("startup_id", data.startupId).limit(1);
+    if (!fs?.length) return { ok: false as const, error: "The stored data has no financial statements to build the report from." };
+    return { ok: true as const };
+  });
