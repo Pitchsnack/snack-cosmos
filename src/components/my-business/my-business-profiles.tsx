@@ -23,7 +23,7 @@ import { buildPublicListing, provinceOnly, type ListingSource } from "@/lib/publ
 import { TagChips } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { runIdentityCheck } from "@/lib/hidden-profile";
-import { ApprovalFooter, ApprovalNotice, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
+import { ApprovalFooter, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
 import { SectionEditLink } from "@/components/common/edit-section";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
@@ -476,9 +476,6 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
       onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })} />
   ) : current && sel ? (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm" style={{ overflow: "visible" }}>
-      {!adminReview && (
-        <PanelNotice s={current} onEditPublic={() => openEdit(current.id, "public", "identity")} />
-      )}
       {sel.view === "public" ? (
         <PublicPanel key={current.id} s={current} pill={pill} />
       ) : (
@@ -541,29 +538,10 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
   );
 }
 
-function PanelNotice({ s, onEditPublic }: { s: StartupListItem; onEditPublic: () => void }) {
-  const { row } = useHiddenProfile(s.id);
-  return <ApprovalNotice row={row} onEditPublic={onEditPublic} />;
-}
-
 function PanelFooter({ s, onItem }: { s: StartupListItem; onItem: (k: string) => void }) {
-  const openEdit = useOpenSellerEdit();
   const { row } = useHiddenProfile(s.id);
-  const { data: facts } = useEntryFacts(s.id);
-  const { items } = useCompleteness(s);
-  const actions = useHiddenProfileActions();
-  const missing = items.filter((i) => i.required && !i.done).map((i) => ({ key: i.key, label: i.label }));
-  const flagged = row && facts ? runIdentityCheck(row as HiddenDraft, facts).length : 0;
-  return (
-    <ApprovalFooter
-      startupId={s.id}
-      row={row}
-      missing={missing}
-      flagged={flagged}
-      onItem={onItem}
-      onCreate={() => openEdit(s.id, "public", "identity")}
-    />
-  );
+  if (!row) return null;
+  return <ApprovalFooter profile={row} />;
 }
 
 function PrivateKindPill({ id }: { id: string }) {

@@ -138,6 +138,9 @@ export type AdvisorFirm = {
   addrStreet: string | null; addrUnit: string | null; addrDistrict: string | null;
   addrProvince: string | null; addrPostal: string | null;
   website: string | null; email: string | null; phone: string | null;
+  /** One-step approval: the advisor's suggestion and Admin's published version. */
+  suggestedListingName?: string | null; suggestedHeadline?: string | null;
+  publishedListingName?: string | null; publishedHeadline?: string | null;
   status: FirmStatus; liveSince: string | null; verifiedAt: string | null; updatedAt: string;
   verification?: { state: string; note: string | null; fields: string[]; reason: string | null; declineNote: string | null };
   setupAnswered: string[]; setupDoneAt: string | null; wizard: WizardState;

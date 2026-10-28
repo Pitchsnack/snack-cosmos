@@ -66,8 +66,16 @@ export const submitListing = createServerFn({ method: "POST" })
     if (hp.approval_status === "in_review") throw new Error("Already in review");
     const { data: st } = await sb.from("startups").select("startup_name").eq("id", data.startupId).maybeSingle();
     if (!st?.startup_name?.trim()) throw new Error("Add the company name before you submit.");
+    // One-step approval: the seller suggests a listing name and headline (120 cap).
+    if (!hp.suggested_listing_name?.trim()) throw new Error("Write a listing name.");
+    if (!hp.suggested_headline?.trim()) throw new Error("Write a headline.");
+    if (hp.suggested_listing_name.trim().length > 120 || hp.suggested_headline.trim().length > 120) throw new Error("Keep it to 120 characters.");
     const snapshot = await buildSnapshot(sb, data.startupId, hp);
     if (snapshot.identity_flags.length) throw new Error("Identity check isn't clean yet");
+    // The identity check also reads the suggested listing name and headline.
+    const { runIdentityCheck } = await import("@/lib/hidden-profile");
+    const extra = runIdentityCheck({ headline: hp.suggested_listing_name, description: hp.suggested_headline } as any, { ...st, people: [], customers: [] } as any);
+    if (extra.length) throw new Error(`Identity check: mentions ${extra.map((f) => f.term).join(", ")}`);
     const version = (hp.version ?? 0) + 1;
     const { error: e2 } = await sb.from("listing_submissions").insert({
       hidden_profile_id: hp.id, startup_id: hp.startup_id, tenant_id: hp.tenant_id, version, snapshot, submitted_by: context.userId,
@@ -116,6 +124,27 @@ export const unpublishListing = createServerFn({ method: "POST" })
 
     await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: context.userId, version: hp.version, action: "unpublish", actor_id: context.userId });
     await notify(context.userId, hp.tenant_id, "Listing unpublished", `${hp.code_name || hp.ref_no} is no longer visible to buyers.`);
+    return { ok: true };
+  });
+
+/** User resumes a paused (unpublished) listing at once — no Admin step. The
+ *  live snapshot from the last approval is restored as-is. */
+export const resumeListing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { listingId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const { data: p } = await sb.from("hidden_profiles").select("id, startup_id, tenant_id, version, approval_status, live_snapshot").eq("id", data.listingId).eq("user_id", context.userId).maybeSingle();
+    if (!p) throw new Error("Listing not found");
+    if (p.approval_status !== "unpublished" || !p.live_snapshot) throw new Error("This listing can't go live again from here. Register your company instead.");
+    const pub = ((p.live_snapshot as { public?: Record<string, unknown> }).public ?? {}) as Record<string, unknown>;
+    const { error } = await sb.from("hidden_profiles").update({
+      status: "live", approval_status: "live", live: pub, visibility: "Tenant",
+    }).eq("id", p.id);
+    if (error) throw new Error(error.message);
+    const sbAdmin = await admin();
+    await sbAdmin.from("startups").update({ visibility: "Tenant" }).eq("id", p.startup_id).eq("visibility", "Private");
+    await logEvent({ item_type: "listing", item_id: p.id, startup_id: p.startup_id, subject_user_id: context.userId, version: p.version, action: "publish", actor_id: context.userId });
     return { ok: true };
   });
 
@@ -221,12 +250,13 @@ export const pendingApprovalsCount = createServerFn({ method: "GET" })
     const { data: isAdmin } = await (context.supabase as any).rpc("is_control", { _user_id: context.userId });
     if (!isAdmin) return 0;
     const sb = await admin();
+    // One-step approval: one count for Sellers + Buyers + Advisors waiting.
+    // Buyer profile and verification move together, so they count once.
+    // Paid reports have their own menu item and count (paidReportsCount).
     const { count: a } = await sb.from("hidden_profiles").select("id", { count: "exact", head: true }).eq("approval_status", "in_review");
-    const { count: b } = await sb.from("investor_profile_verifications").select("id", { count: "exact", head: true }).eq("status", "pending");
-    const { count: c } = await sb.from("report_orders").select("id", { count: "exact", head: true }).in("status", ["paid", "generated"]);
     const { count: d } = await sb.from("buyer_profiles").select("user_id", { count: "exact", head: true }).eq("approval_status", "in_review");
     const { count: e } = await sb.from("advisor_firms").select("id", { count: "exact", head: true }).eq("advisor_verification", "pending");
-    return (a ?? 0) + (b ?? 0) + (c ?? 0) + (d ?? 0) + (e ?? 0);
+    return (a ?? 0) + (d ?? 0) + (e ?? 0);
   });
 
 export const getListingReview = createServerFn({ method: "GET" })

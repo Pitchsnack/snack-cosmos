@@ -47,7 +47,7 @@ export const getMyBuyerProfile = createServerFn({ method: "GET" })
       type: inv ? inv.investor_type ?? null : bv?.buyer_type ?? null,
       website: inv ? inv.website_url ?? null : bv?.website ?? null,
       registrationNo: inv ? inv.registration_no ?? null : bv?.registration_no ?? null,
-      verified: bv?.status === "approved",
+      verified: bv?.status === "verified",
       ndas: (deals ?? []).filter((d: any) => d.nda_approved_at).length,
       lois: (deals ?? []).filter((d: any) => d.loi_sent_at).length,
     };
@@ -140,7 +140,7 @@ export function toPublic(p: BuyerProfile, bv: { company_name?: string | null; bu
     ticket: ticketRange(p.ticket_min, p.ticket_max),
     aum: aumRange(p.aum_value),
     sectors: p.sectors, stages: p.stages, dealTypes: p.deal_types,
-    verified: bv?.status === "approved",
+    verified: bv?.status === "verified",
     proofOfFunds: !!p.pof_verified_at,
     status: p.status, liveSince: p.live_since,
   };
@@ -150,7 +150,8 @@ export const listPublicBuyers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const sb = await admin();
-    const { data: rows } = await sb.from("buyer_profiles").select("*").eq("status", "live").order("live_since", { ascending: false }).limit(200);
+    // One-step approval: only verified AND approved profiles are public.
+    const { data: rows } = await sb.from("buyer_profiles").select("*").eq("status", "live").eq("approval_status", "approved").order("live_since", { ascending: false }).limit(200);
     const ids = (rows ?? []).map((r: any) => r.user_id);
     const { data: bvs } = ids.length
       ? await (await import("./profile-verification.server")).verificationsByUsers(sb, ids, "user_id, company_name, buyer_type, status").then((mp: Map<string, any>) => ({ data: [...mp.values()] }))
@@ -165,5 +166,5 @@ export const listPublicBuyers = createServerFn({ method: "GET" })
       const bv = (byId.get(r.user_id) as any) ?? null;
       const t = r.investor_id ? typeById.get(r.investor_id) ?? null : bv?.buyer_type ?? null;
       return toPublic(r, { ...(bv ?? {}), buyer_type: t });
-    });
+    }).filter((b: any) => b.verified);
   });

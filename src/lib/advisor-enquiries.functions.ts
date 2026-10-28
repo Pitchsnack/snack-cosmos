@@ -46,7 +46,8 @@ export const browseAdvisors = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { sb, statesFor, people, orgInfo } = await srv();
     const w = await whoAmI(sb, context.userId, data.side);
-    const { data: live } = await sb.from("advisor_firms").select("id").eq("status", "live");
+    // One-step approval: only verified firms show in Browse advisors.
+    const { data: live } = await sb.from("advisor_firms").select("id").eq("status", "live").eq("advisor_verification", "verified");
     const ids = (live ?? []).map((r: any) => r.id);
     const { loadFirmCards } = await import("@/lib/advisor-firm.functions");
     const { data: owners } = ids.length ? await sb.from("advisor_firms").select("id, owner_user_id").in("id", ids) : { data: [] };

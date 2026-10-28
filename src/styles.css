@@ -16,6 +16,7 @@
 @import "./styles/profile-box.css";
 @import "./styles/pipeline-chat.css";
 @import "./styles/standard-browse-card.css";
+@import "./styles/approval-banners.css";
 @source "../src";
 @import "tw-animate-css";
 

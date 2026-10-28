@@ -8,7 +8,7 @@ import { EditInfoPopup } from "@/components/common/edit-info-popup";
 import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, Check, ChevronDown, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Star, X } from "lucide-react";
+import { BadgeCheck, Check, ChevronDown, Clock, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Send, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,10 @@ import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-bus
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuyerBrowseCard, BuyerCover, TypeIcon, type CardPart } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
+import { registerBuyerCompany } from "@/lib/approvals-one-step.functions";
+import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
+import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
+import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
 import {
   aumRange, buyerCompleteness, ticketRange, typeTone,
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
@@ -456,13 +460,10 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const list = useServerFn(setBuyerListing);
   const listing = useMutation({
     mutationFn: (status: "live" | "paused") => list({ data: { status } }),
-    onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Your profile is live in Browse investors." : "Listing paused. Your profile is hidden from Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); },
+    onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Live again in Browse investors." : "Paused. Sellers can't find you in Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const wd = useServerFn(withdrawBuyerProfile);
-  const withdraw = useMutation({ mutationFn: () => wd(), onSuccess: () => { toast.success("Review withdrawn."); void qc.invalidateQueries({ queryKey: KEY }); }, onError: (e: Error) => toast.error(e.message) });
   const appr = (p as any).approval_status as string | undefined;
-  const inReview = p.status !== "live" && appr === "in_review";
   const tone = typeTone(org.type);
   const { iv, inv, props } = useOwnCard(p, org);
   const managedIds = useManagedIds("investor", [iv?.id]);
@@ -475,6 +476,46 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
+  // One-step approval: Register your company opens the review pop-up.
+  const registerFn = useServerFn(registerBuyerCompany);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [sentOpen, setSentOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [failures, setFailures] = useState<string[]>([]);
+  const reg = useMutation({
+    mutationFn: () => registerFn(),
+    onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
+    onError: (e: Error) => setFailures([e.message]),
+  });
+  const state = p.status === "live" ? "live" : p.status === "paused" ? "paused" : appr === "in_review" ? "pending" : appr === "changes_requested" ? "changes" : appr === "declined" ? "declined" : "draft";
+  // Review your company data pop-up: what sellers see + what PitchSnack checks.
+  const invRow = inv.data?.investor as any;
+  const reviewData: ReviewCompanyData = {
+    suggestedName: (p as any).suggested_listing_name ?? null,
+    suggestedHeadline: (p as any).suggested_headline ?? null,
+    listingRows: [
+      ["Type", org.type || ""],
+      ["Industries", Array.isArray(invRow?.industries) ? invRow.industries.join(", ") : ""],
+      ["Ticket size", invRow?.ticket_min != null || invRow?.ticket_max != null ? `฿${Number(invRow?.ticket_min ?? 0).toLocaleString()} – ฿${Number(invRow?.ticket_max ?? 0).toLocaleString()}` : ""],
+      ["Country", invRow?.country ?? ""],
+      ["Headline", (p as any).suggested_headline ?? ""],
+      ["Description", (p.description ?? "").slice(0, 400)],
+    ],
+    identityWords: leaks.words,
+    identityApplies: true,
+    exclusiveRows: [
+      { label: "Firm name", value: org.name ?? "", note: null },
+      { label: "Company type", value: org.type ?? "", note: null },
+      { label: "Registration Number", value: invRow?.registration_no ?? "", note: null },
+      { label: "Registered address", value: [invRow?.city, invRow?.country].filter(Boolean).join(", "), note: null },
+      { label: "Year founded", value: invRow?.year_founded != null ? String(invRow.year_founded) : "", note: null },
+      { label: "Revenue", value: (p as any).revenue_band ?? "", note: null },
+      { label: "Your name", value: invRow?.investor_name ?? "", note: "Not shown publicly" },
+      { label: "Website", value: org.website ?? "", note: "Not shown publicly" },
+      { label: "Email", value: invRow?.email ?? "", note: "Not shown publicly" },
+      { label: "Contact number", value: (p as any).contact_number ?? "", note: "Not shown publicly" },
+    ],
+  };
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
@@ -498,25 +539,33 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
-        {p.status === "live"
+        {state === "live"
           ? <span>Live in Browse investors since {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas} NDA{org.ndas === 1 ? "" : "s"} · {org.lois} LOI{org.lois === 1 ? "" : "s"}</span>
-          : inReview
-            ? <span>Admin is reviewing your profile. It goes live in Browse investors once approved.</span>
-          : (appr === "changes_requested" || appr === "declined") && p.status === "draft"
-            ? <span><b className="font-semibold">Admin note:</b> {(p as any).decision_note || "—"}</span>
-          : p.status === "paused"
+          : state === "pending"
+            ? <span>Submitted on {p.submitted_at ? fmtDate(p.submitted_at) : "—"} · sellers can't find you yet</span>
+          : state === "changes" || state === "declined"
+            ? <span>Fix what PitchSnack asked with Edit information, then register again.</span>
+          : state === "paused"
             ? <span>Hidden from Browse investors since {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
             : !setupDone && iv
               ? <span>Finish setting up your profile to publish it.</span>
-              : <span>Everything is ready. Submit your profile for Admin review so sellers can find you in Browse investors.</span>}
-        {p.status === "live"
-          ? <Button variant="outline" size="sm" disabled={listing.isPending} onClick={() => listing.mutate("paused")}>Pause listing</Button>
-          : inReview
-            ? <Button variant="outline" size="sm" disabled={withdraw.isPending} onClick={() => withdraw.mutate()}>Withdraw</Button>
-          : p.status === "draft" && !setupDone && iv
+              : <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your firm and publishes your profile together.</span>}
+        {state === "live"
+          ? <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>Remove your company profile from listing</Button>
+          : state === "pending"
+            ? <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />Pending approval</span>
+          : state === "paused"
+            ? <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>List my company so that sellers can contact me</Button>
+          : state === "draft" && !setupDone && iv
             ? <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => openWizard()}>Finish setup to publish</Button>
-            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>{p.status === "paused" && appr === "approved" ? "Resume listing" : appr === "changes_requested" || appr === "declined" ? "Resubmit for approval" : "Submit for approval"}</Button>}
+            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />Register your company</Button>}
       </div>
+      <ReviewCompanyDialog open={reviewOpen} role="buyer" data={reviewData} failures={failures} submitting={reg.isPending}
+        onEdit={() => { setReviewOpen(false); openProfileEdit({ section: "description", from: "public" }); }}
+        onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
+      <SentForApprovalDialog open={sentOpen} role="buyer" onClose={() => setSentOpen(false)} />
+      <WithdrawDialog open={withdrawOpen} role="buyer" busy={listing.isPending} onClose={() => setWithdrawOpen(false)}
+        onConfirm={() => listing.mutate("paused", { onSuccess: () => setWithdrawOpen(false) })} />
     </div>
   );
 }
