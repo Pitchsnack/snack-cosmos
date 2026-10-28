@@ -117,3 +117,27 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfile }) {
     </div>
   );
 }
+
+// ---- status pill helpers (used by the My Company cards) ----
+
+export function approvalOf(row: HiddenProfile | null | undefined): string {
+  if (!row) return "missing";
+  if (row.status === "live" && row.has_unpublished_changes) return "live_edits_pending";
+  return row.approval_status ?? "draft";
+}
+
+export const APPROVAL_LABEL: Record<string, string> = {
+  draft: "Draft", in_review: "Pending approval", changes_requested: "Changes requested",
+  rejected: "Not approved", live: "Live", unpublished: "Paused", live_edits_pending: "Live · edits pending", missing: "Preview",
+};
+
+export const APPROVAL_TONE: Record<string, string> = {
+  draft: "text-muted-foreground", in_review: "text-[#1D4ED8]", changes_requested: "text-amber-700 dark:text-amber-400",
+  rejected: "text-red-700 dark:text-red-400", live: "text-emerald-700 dark:text-emerald-400", unpublished: "text-muted-foreground",
+  live_edits_pending: "text-amber-700 dark:text-amber-400", missing: "text-muted-foreground",
+};
+
+export function ApprovedChip({ row }: { row: HiddenProfile | null | undefined }) {
+  const ap = approvalOf(row);
+  return <span className={cn("text-[11px] font-semibold", APPROVAL_TONE[ap])}>{APPROVAL_LABEL[ap]}</span>;
+}
