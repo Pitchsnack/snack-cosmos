@@ -127,6 +127,24 @@ export const unpublishListing = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** User resumes a paused (unpublished) listing at once — no Admin step. The
+ *  live snapshot from the last approval is restored as-is. */
+export const resumeListing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { listingId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { data: p } = await context.supabase.from("hidden_profiles").select("id,approval_status,live_snapshot").eq("id", data.listingId).eq("user_id", context.userId).maybeSingle();
+    if (!p) throw new Error("Listing not found");
+    if (p.approval_status !== "unpublished" || !p.live_snapshot) throw new Error("This listing can't go live again from here. Register your company instead.");
+    const pub = ((p.live_snapshot as { public?: Record<string, unknown> }).public ?? {}) as Record<string, unknown>;
+    const { error } = await context.supabase.from("hidden_profiles").update({
+      status: "live", approval_status: "live", live: pub, visibility: "Tenant",
+    }).eq("id", p.id);
+    if (error) throw new Error(error.message);
+    await log(context.supabase, "listing", p.id, context.userId, "listing_resumed", {});
+    return { ok: true };
+  });
+
 /** Snapshot preview for the seller's confirmation dialog. */
 export const getSubmissionPreview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
