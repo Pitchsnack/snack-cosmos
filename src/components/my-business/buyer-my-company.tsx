@@ -456,13 +456,10 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const list = useServerFn(setBuyerListing);
   const listing = useMutation({
     mutationFn: (status: "live" | "paused") => list({ data: { status } }),
-    onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Your profile is live in Browse investors." : "Listing paused. Your profile is hidden from Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); },
+    onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Live again in Browse investors." : "Paused. Sellers can't find you in Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const wd = useServerFn(withdrawBuyerProfile);
-  const withdraw = useMutation({ mutationFn: () => wd(), onSuccess: () => { toast.success("Review withdrawn."); void qc.invalidateQueries({ queryKey: KEY }); }, onError: (e: Error) => toast.error(e.message) });
   const appr = (p as any).approval_status as string | undefined;
-  const inReview = p.status !== "live" && appr === "in_review";
   const tone = typeTone(org.type);
   const { iv, inv, props } = useOwnCard(p, org);
   const managedIds = useManagedIds("investor", [iv?.id]);
@@ -475,6 +472,18 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
+  // One-step approval: Register your company opens the review pop-up.
+  const registerFn = useServerFn(registerBuyerCompany);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [sentOpen, setSentOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [failures, setFailures] = useState<string[]>([]);
+  const reg = useMutation({
+    mutationFn: () => registerFn(),
+    onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
+    onError: (e: Error) => setFailures([e.message]),
+  });
+  const state = p.status === "live" ? "live" : p.status === "paused" ? "paused" : appr === "in_review" ? "pending" : appr === "changes_requested" ? "changes" : appr === "declined" ? "declined" : "draft";
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
