@@ -40,8 +40,8 @@ type NameState = "idle" | "checking" | "available" | "taken";
 export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts | undefined, source: ListingSource | undefined) {
   // Only Admin sets or changes a listing name; sellers see it read-only (or the ref).
   const canName = usePermissions().isControl;
-  const base = useMemo(() => pickDraft(row ?? {}), [row?.id, row?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [d, setD] = useState<HiddenDraft>(base);
+  const base = useMemo(() => ({ ...pickDraft(row ?? {}), suggested_listing_name: ((row as any)?.suggested_listing_name ?? "") as string }) as HiddenDraft & { suggested_listing_name: string }, [row?.id, row?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [d, setD] = useState<HiddenDraft & { suggested_listing_name: string }>(base);
   const [baseline, setBaseline] = useState(() => JSON.stringify(base));
   useEffect(() => { setD(base); setBaseline(JSON.stringify(base)); }, [base]);
   const opts = useMemo(() => ({ guard: facts ? identityTerms(facts) : [] }), [facts]);
@@ -111,7 +111,8 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
   };
   const dirty = !!row && JSON.stringify(d) !== baseline;
   const changedFromRow = !!row && JSON.stringify(pickDraft(row)) !== JSON.stringify(d);
-  const payload = { ...d, highlights: d.highlights.map((h) => h.trim()), handover_months: d.owner_stays === "yes" ? (d.handover_months ?? 6) : null };
+  // The seller's headline doubles as their suggested headline; the name suggestion is its own field.
+  const payload = { ...d, highlights: d.highlights.map((h) => h.trim()), handover_months: d.owner_stays === "yes" ? (d.handover_months ?? 6) : null, suggested_listing_name: (d.suggested_listing_name ?? "").trim() || null, suggested_headline: d.headline.trim() || null };
   return {
     d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea }, moreNames: () => setSeed((s) => s + 1),
     fillAll, findings, counts, dirty, changedFromRow, payload, nameState, nameTaken: canName && nameState === "taken", canName,
