@@ -21,6 +21,7 @@ async function control(ctx: Ctx) {
   return supabaseAdmin as any;
 }
 const norm = (s: unknown) => { const d = String(s ?? "").replace(/\D/g, ""); return /^\d{13}$/.test(d) ? d : null; };
+const PRICES = catalog.prices as Record<string, number>;
 const one = (x: any) => (Array.isArray(x) ? x[0] : x);
 
 async function loadCompanies(sb: any): Promise<PaidCompany[]> {
@@ -102,7 +103,10 @@ export const listPaidReports = createServerFn({ method: "GET" })
     const total = list.length;
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
     const page = Math.min(data.page, pages);
-    return { rows: list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), total, page, pages, counts };
+    const { data: plan } = await sb.from("plans").select("verification_price_thb").eq("role", "seller").eq("status", "live").eq("verification_mode", "paid").order("sort").limit(1);
+    const vp = Number(plan?.[0]?.verification_price_thb);
+    const prices: Record<string, number | null> = { verification: vp > 0 ? vp : null, shareholders: PRICES.shareholders ?? null, statements: PRICES.financials ?? null, valuation: PRICES.valuation ?? null, pnl: PRICES.financials ?? null, risk: PRICES.risk ?? null, credit: null };
+    return { rows: list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), total, page, pages, counts, prices };
   });
 
 /** One company (side panel / Admin view refresh). */
@@ -181,4 +185,3 @@ export const viewStoredDbd = createServerFn({ method: "GET" })
     };
   });
 
-export const PRICES = catalog.prices as Record<string, number>;
