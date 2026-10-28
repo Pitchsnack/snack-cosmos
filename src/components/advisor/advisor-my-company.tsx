@@ -6,13 +6,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Building2, Check, ChevronDown, ExternalLink, FileText, Info, LayoutList, MapPin, MoreVertical, Navigation, Pencil,
-  Flag, Loader2, Plus, RefreshCw, Search, ShieldCheck, Star, X,
+  Building2, Check, ChevronDown, Clock, ExternalLink, FileText, Info, LayoutList, MapPin, MoreVertical, Navigation, Pencil,
+  Flag, Loader2, Plus, RefreshCw, Search, Send, ShieldCheck, Star, X,
 } from "lucide-react";
+import { registerAdvisorFirm } from "@/lib/approvals-one-step.functions";
+import { descriptionLeaks } from "@/lib/investor-bands";
+import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
+import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
+import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -593,6 +598,13 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
 
       <ServicesDialog f={f} open={svcOpen} onOpenChange={(o) => { setSvcOpen(o); if (!o) setTimeout(() => svcBtn.current?.focus(), 0); }} />
       <AddressDialog f={f} open={addrOpen} onOpenChange={(o) => { setAddrOpen(o); if (!o) setTimeout(() => addrBtn.current?.focus(), 0); }} />
+      {!client && <>
+        <ReviewCompanyDialog open={reviewOpen} role="advisor" data={reviewData} failures={failures} submitting={reg.isPending}
+          onEdit={() => { setReviewOpen(false); edit("firm"); }} onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
+        <SentForApprovalDialog open={sentOpen} role="advisor" onClose={() => setSentOpen(false)} />
+        <WithdrawDialog open={withdrawOpen} role="advisor" busy={busy} onClose={() => setWithdrawOpen(false)}
+          onConfirm={() => { setWithdrawOpen(false); void changeStatus("paused"); }} />
+      </>}
     </div>
   );
 }
