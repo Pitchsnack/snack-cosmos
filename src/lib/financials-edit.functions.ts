@@ -141,61 +141,6 @@ export const autoEnrichFinancials = createServerFn({ method: "POST" })
     } as AutoEnrichFinancialsResult;
   });
 
-/**
- * Company Info is stored immediately by the same Auto Enrich action — it is a
- * factual company record rather than a reviewable financial figure. A failed
- * write never blocks the financial proposal and never deletes existing rows.
- */
-async function persistCompanyInfo(
-  supabase: unknown,
-  startupId: string,
-  startup: { tenant_id?: unknown },
-  info: import("@/lib/financials/dbd-company-info").DbdCompanyInfoTh | undefined,
-) {
-  if (!info) return;
-  const tenantId = (startup as { tenant_id?: string }).tenant_id;
-  if (!tenantId) return;
-  try {
-    const { writeCompanyInfoTh } = await import("@/lib/financials/company-info-persist.server");
-    await writeCompanyInfoTh(supabase as never, {
-      startupId,
-      tenantId,
-      preferExisting: true,
-      retrievedAt: new Date().toISOString(),
-      info: {
-        legalNameTh: info.legalNameTh,
-        legalNameEn: info.legalNameEn,
-        registrationNumber: info.registrationNumber,
-        legalEntityTypeTh: info.legalEntityTypeTh,
-        legalEntityStatusTh: info.legalEntityStatusTh,
-        registrationDateThRaw: info.registrationDateThRaw,
-        registeredCapitalThRaw: info.registeredCapitalThRaw,
-        previousRegistrationNumber: info.previousRegistrationNumber,
-        businessGroupTh: info.businessGroupTh,
-        businessSize: info.businessSize,
-        headOfficeAddressTh: info.headOfficeAddressTh,
-        website: info.website,
-        authorizedSignatoryTh: info.authorizedSignatoryTh,
-        submissionYearsBe: info.submissionYearsBe,
-        directors: info.directors.map((nameTh, i) => ({ displayOrder: i + 1, nameTh })),
-        registeredBusiness: info.registeredBusiness ?? {
-          code: null,
-          descriptionTh: null,
-          objectiveTh: null,
-        },
-        latestBusiness: info.latestBusiness ?? {
-          code: null,
-          descriptionTh: null,
-          objectiveTh: null,
-          financialYearBe: null,
-        },
-      },
-    });
-  } catch {
-    // Company Info is best-effort; existing rows stay untouched on failure.
-  }
-}
-
 /** Registration number when the startup's data lives in the shared DBD store. */
 async function lockedStartup(startupId: string): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -206,19 +151,6 @@ async function lockedStartup(startupId: string): Promise<string | null> {
   if (!reg) return null;
   const { data } = await sb.from("dbd_company_records").select("registration_number").eq("registration_number", reg).maybeSingle();
   return data ? reg : null;
-}
-
-/** Keeps only known codes with a real numeric value; unknown/absent stay out. */
-function pick(
-  source: Record<string, number>,
-  rows: { code: string }[],
-): Record<string, number | null> {
-  const out: Record<string, number | null> = {};
-  for (const row of rows) {
-    const v = source[row.code];
-    if (typeof v === "number" && Number.isFinite(v)) out[row.code] = v;
-  }
-  return out;
 }
 
 /* ------------------------------------------------------------------ */
