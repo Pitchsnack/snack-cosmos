@@ -4,6 +4,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { messagesBadgeCount } from "@/lib/messages.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { pendingApprovalsCount } from "@/lib/approvals.functions";
+import { paidReportsCount } from "@/lib/paid-reports.functions";
 import { pipelineBadgeCount } from "@/lib/pipeline.functions";
 import { advisorPipelineCount } from "@/lib/advisor-pipeline.functions";
 import { invitationsBadgeCount } from "@/lib/invitations.functions";
@@ -44,6 +45,14 @@ function CountPill({ count, collapsed }: { count: number; collapsed?: boolean })
 export function ApprovalsBadge() {
   const fn = useServerFn(pendingApprovalsCount);
   const { data } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => fn(), staleTime: 60_000 });
+  if (!data) return null;
+  return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data}</span>;
+}
+
+/** Admin › Paid reports — companies with at least one order not yet authorised. */
+export function PaidReportsBadge() {
+  const fn = useServerFn(paidReportsCount);
+  const { data } = useQuery({ queryKey: ["paid-reports-count"], queryFn: () => fn(), staleTime: 60_000 });
   if (!data) return null;
   return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data}</span>;
 }

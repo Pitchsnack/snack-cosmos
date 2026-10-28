@@ -62,6 +62,7 @@ import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedAdminAccessCodesRouteImport } from './routes/_authenticated/admin/access-codes'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
+import { Route as AuthenticatedAdminPaidReportsRouteImport } from './routes/_authenticated/admin.paid-reports'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin/plans'
 import { Route as AuthenticatedAdvisorContactsRouteImport } from './routes/_authenticated/advisor.contacts'
 import { Route as AuthenticatedAdvisorMessagesRouteImport } from './routes/_authenticated/advisor.messages'
@@ -416,6 +417,12 @@ const AuthenticatedAdminMessagesRoute =
   AuthenticatedAdminMessagesRouteImport.update({
     id: '/admin/messages',
     path: '/admin/messages',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminPaidReportsRoute =
+  AuthenticatedAdminPaidReportsRouteImport.update({
+    id: '/admin/paid-reports',
+    path: '/admin/paid-reports',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
@@ -882,6 +889,7 @@ export interface FileRoutesByFullPath {
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
+  '/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/advisor/contacts': typeof AuthenticatedAdvisorContactsRoute
   '/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
@@ -1000,6 +1008,7 @@ export interface FileRoutesByTo {
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
+  '/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/advisor/contacts': typeof AuthenticatedAdvisorContactsRoute
   '/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
@@ -1120,6 +1129,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
+  '/_authenticated/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/advisor/contacts': typeof AuthenticatedAdvisorContactsRoute
   '/_authenticated/advisor/messages': typeof AuthenticatedAdvisorMessagesRoute
@@ -1246,6 +1256,7 @@ export interface FileRouteTypes {
     | '/admin/access-codes'
     | '/admin/analytics'
     | '/admin/messages'
+    | '/admin/paid-reports'
     | '/admin/plans'
     | '/advisor/contacts'
     | '/advisor/messages'
@@ -1364,6 +1375,7 @@ export interface FileRouteTypes {
     | '/admin/access-codes'
     | '/admin/analytics'
     | '/admin/messages'
+    | '/admin/paid-reports'
     | '/admin/plans'
     | '/advisor/contacts'
     | '/advisor/messages'
@@ -1483,6 +1495,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/access-codes'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/messages'
+    | '/_authenticated/admin/paid-reports'
     | '/_authenticated/admin/plans'
     | '/_authenticated/advisor/contacts'
     | '/_authenticated/advisor/messages'
@@ -1953,6 +1966,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/messages'
       fullPath: '/admin/messages'
       preLoaderRoute: typeof AuthenticatedAdminMessagesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/paid-reports': {
+      id: '/_authenticated/admin/paid-reports'
+      path: '/admin/paid-reports'
+      fullPath: '/admin/paid-reports'
+      preLoaderRoute: typeof AuthenticatedAdminPaidReportsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin/plans': {
@@ -2752,6 +2772,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminAccessCodesRoute: typeof AuthenticatedAdminAccessCodesRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
+  AuthenticatedAdminPaidReportsRoute: typeof AuthenticatedAdminPaidReportsRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdvisorContactsRoute: typeof AuthenticatedAdvisorContactsRoute
   AuthenticatedAdvisorMessagesRoute: typeof AuthenticatedAdvisorMessagesRoute
@@ -2806,6 +2827,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminAccessCodesRoute: AuthenticatedAdminAccessCodesRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
+  AuthenticatedAdminPaidReportsRoute: AuthenticatedAdminPaidReportsRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdvisorContactsRoute: AuthenticatedAdvisorContactsRoute,
   AuthenticatedAdvisorMessagesRoute: AuthenticatedAdvisorMessagesRoute,
