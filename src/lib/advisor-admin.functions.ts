@@ -238,8 +238,6 @@ export const checkAdvisorDbd = createServerFn({ method: "POST" })
     // Fetch once into the shared store; a stored record is never fetched again here.
     const { data: rec } = await sb.from("dbd_company_records").select("registration_number").eq("registration_number", f.registration_no).maybeSingle();
     if (rec) return { status: "ok" as const };
-    const { extractDbd } = await import("./dbd-store.functions");
-    void extractDbd;
     const { lookupDbdFinancials } = await import("@/lib/financials/dbd-provider.server");
     const r: any = await lookupDbdFinancials({ registeredNumber: f.registration_no }).catch(() => ({ status: "unavailable" }));
     if (r?.status !== "ok" && r?.status !== "no_financials") {
