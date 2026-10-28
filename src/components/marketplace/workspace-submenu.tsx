@@ -118,7 +118,8 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
         aria-controls={flyId} data-keep-sidebar>{content}</Button>
     </PopoverTrigger></RailTip>
     <PopoverContent side="right" align="start" sideOffset={12} collisionPadding={8}
-      className={`pipeline-flyout${company ? ' company-flyout' : ''}`} data-mkt-view={persona}
+      className={`pipeline-flyout${company ? ' company-flyout' : ''}`}
+      data-mkt-view={toggleOnly ? undefined : persona}
       ref={flyEl}
       onPointerLeave={() => { if (flightClosePending.current && !flyEl.current?.contains(document.activeElement)) setFly(false); }}
       onBlurCapture={event => { if (flightClosePending.current && !event.currentTarget.contains(event.relatedTarget as Node | null) && !event.currentTarget.matches(':hover')) setFly(false); }}
