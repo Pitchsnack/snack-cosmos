@@ -507,6 +507,7 @@ const ProfileFields = {
   companyType: z.enum(["SME", "Corporate Enterprise", "Individual"]).nullable().optional(),
   companyTypeReset: z.boolean().optional(),
   businessAddress: z.string().max(1000).nullable().optional(),
+  contactNumber: z.string().trim().max(60).nullable().optional(),
   address: z.object({
     street: z.string().max(120), unit: z.string().max(120), district: z.string().max(80), province: z.string().max(80), postal: z.string().max(12),
   }).optional(),
@@ -691,6 +692,7 @@ export const createStartup = createServerFn({ method: "POST" })
         logo_url: emptyToNull(data.logoPath),
         company_type: "SME",
         business_address: emptyToNull(data.businessAddress),
+        contact_number: emptyToNull(data.contactNumber),
         ...addrCols(data.address),
         registered_name: emptyToNull(data.registeredName),
         registered_number: emptyToNull(data.registeredNumber),
@@ -813,6 +815,7 @@ export const updateStartup = createServerFn({ method: "POST" })
       }
     }
     if (data.businessAddress !== undefined) patch.business_address = emptyToNull(data.businessAddress);
+    if (data.contactNumber !== undefined) patch.contact_number = emptyToNull(data.contactNumber);
     if (data.address) Object.assign(patch, addrCols(data.address));
     if (data.registeredName !== undefined) patch.registered_name = emptyToNull(data.registeredName);
     if (data.registeredNumber !== undefined) patch.registered_number = emptyToNull(data.registeredNumber);
