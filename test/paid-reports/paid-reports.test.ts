@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inTile, keysOfKind, nextStep, waitingChip, matchesSearch, PAID_SHORT, type PaidCompany, type PaidOrder } from "@/lib/paid-reports";
+import { inTile, keysOfKind, nextStep, waitingChip, matchesSearch, PAID_SHORT, type PaidCompany, type PaidOrder } from "../../src/lib/paid-reports";
 
 const now = new Date("2026-10-29T03:00:00Z"); // Thursday
 const order = (p: Partial<PaidOrder>): PaidOrder => ({ id: "o", ref: "RO-1046", kind: "financials", key: "statements", status: "paid", paidAt: now.toISOString(), amount: 10000, method: "Manual", generatedAt: null, deliveredAt: null, shares: 0, ...p });
