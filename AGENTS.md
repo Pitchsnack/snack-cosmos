@@ -58,3 +58,5 @@
 - Shared editor layouts use EditInfoPopup, CompactFields and common/business-address; directory create rows own transient highlighting/focus so editor state never changes permissions or saving rules.
 
 - Buyer description counts and grandfathering use the browser-safe buyer-description helper in existing form/server validators; editor previews adapt unsaved public-only values into StandardInvestorCard, preserving existing persistence and authorization.
+
+- DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
