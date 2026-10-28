@@ -41,12 +41,12 @@ function CountPill({ count, collapsed }: { count: number; collapsed?: boolean })
   );
 }
 
-/** Admin › Approvals — pending listings, buyer verifications and paid reports. */
+/** Admin › Approvals — pending listings, buyer verifications and advisor profiles. */
 export function ApprovalsBadge() {
   const fn = useServerFn(pendingApprovalsCount);
   const { data } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => fn(), staleTime: 60_000 });
   if (!data) return null;
-  return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data}</span>;
+  return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data > 9 ? "9+" : data}</span>;
 }
 
 /** Admin › Paid reports — companies with at least one order not yet authorised. */
@@ -54,7 +54,22 @@ export function PaidReportsBadge() {
   const fn = useServerFn(paidReportsCount);
   const { data } = useQuery({ queryKey: ["paid-reports-count"], queryFn: () => fn(), staleTime: 60_000 });
   if (!data) return null;
-  return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data}</span>;
+  return <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">{data > 9 ? "9+" : data}</span>;
+}
+
+/** Admin menu: User approval + Report approval counts for the Approvals row and its sub-rows. */
+export function useAdminApprovalCounts(enabled = true) {
+  const userFn = useServerFn(pendingApprovalsCount);
+  const reportsFn = useServerFn(paidReportsCount);
+  const { data: user = 0 } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => userFn(), staleTime: 60_000, enabled });
+  const { data: reports = 0 } = useQuery({ queryKey: ["paid-reports-count"], queryFn: () => reportsFn(), staleTime: 60_000, enabled });
+  return { user, reports, total: user + reports };
+}
+
+/** Count pill for the Admin sub-menu rows: amber, white on the open page, "9+" above 9, hidden at 0. */
+export function AdminSubCount({ count }: { count: number }) {
+  if (!count) return null;
+  return <span className="pipeline-count-pill">{count > 9 ? "9+" : count}</span>;
 }
 
 /** Marketplace › Pipeline — Pending approval count + Tracking count on My Pipeline. */

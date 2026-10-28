@@ -164,6 +164,12 @@ const TH_BASE: Record<string, string> = {
   Other: "อื่น ๆ",
   Soon: "เร็ว ๆ นี้",
   Navigation: "เมนูนำทาง",
+  Insights: "ข้อมูลเชิงลึก",
+  Network: "เครือข่าย",
+  Directory: "ไดเรกทอรี",
+  "Report approval": "อนุมัติรายงาน",
+  "User approval": "อนุมัติผู้ใช้",
+  Data: "ข้อมูล",
 
   // Common actions
   Save: "บันทึก",

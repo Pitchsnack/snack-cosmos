@@ -4,6 +4,7 @@ import { KeyRound,
   Building2,
   ScrollText,
   ChevronLeft,
+  ChevronRight,
   Menu,
   X,
   Users as UsersIcon,
@@ -29,6 +30,8 @@ import { KeyRound,
   Layers,
   Bot,
   Tag,
+  Gauge,
+  Library,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -43,7 +46,8 @@ import { useSessionContext } from "@/hooks/use-session-context";
 import { useEffectivePermissions } from "@/hooks/use-effective-permissions";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
-import { ApprovalsBadge, AdminMessagesBadge, PaidReportsBadge } from "@/components/menu-count-badge";
+import { AdminMessagesBadge, AdminSubCount, useAdminApprovalCounts } from "@/components/menu-count-badge";
+import { WorkspaceSubmenu } from "@/components/marketplace/workspace-submenu";
 import { Receipt } from "lucide-react";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import logoBlack from "@/assets/pitchsnack-black.png";
@@ -115,50 +119,41 @@ const STARTUP_MENU_ORDER = [
 ];
 
 
-// CONTROL sidebar grouping (navigation UX only — no route/permission changes).
-const CONTROL_NAV_GROUPS: { title: string; labels: string[] }[] = [
+// CONTROL sidebar (navigation UX only — no route/permission changes).
+// Insights, Approvals, Network and Directory open sub-menus via the shared
+// Pipeline WorkspaceSubmenu; Coming soon folds at the end.
+const CONTROL_SUBMENUS: { id: string; label: string; icon: typeof Building2; items: string[] }[] = [
+  { id: "insights", label: "Insights", icon: Gauge, items: ["Dashboard", "Analytics"] },
+  { id: "approvals", label: "Approvals", icon: ShieldCheck, items: ["Report approval", "User approval", "Access codes"] },
+  { id: "network", label: "Network", icon: Network, items: ["My Connections", "Contacts"] },
   {
-    title: "User Workflow",
-    labels: [
-      "Dashboard",
-      "My Connections",
-      "Contacts",
-      "Deals",
-      "Shared Deals",
-    ],
-  },
-  {
-    title: "Control Database",
-    labels: [
-      "AI Agents",
+    id: "directory",
+    label: "Directory",
+    icon: Library,
+    items: [
       "Control Data Intelligence",
       "Global Startups",
       "Browse Global Catalogue",
       "Startups Directory",
-      "Approvals",
-      "Messages",
       "Investors Directory",
       "Advisors Directory",
-      "Industry Map",
     ],
   },
-  { title: "Communications", labels: ["Email alerts"] },
-  { title: "Coming Soon", labels: ["Documents"] },
-  {
-    title: "Administration",
-    labels: [
-      "Default Intake Queue",
-      "Tenants",
-      "Users",
-      "Analytics",
-      "Plans",
-      "Access Management",
-      "Peer Comparables",
-      "Audit Logs",
-      "Security",
-    ],
-  },
-  { title: "Account & Activity", labels: ["Notifications", "Startup Activity", "Preferences"] },
+];
+const CONTROL_SECTIONS: { title: string; labels: string[] }[] = [
+  { title: "Data", labels: ["Peer Comparables"] },
+  { title: "Communications", labels: ["Messages", "Email alerts", "Notifications"] },
+  { title: "Administration", labels: ["Tenants", "Users", "Plans", "Access Management", "Audit Logs", "Security"] },
+];
+const COMING_SOON_LABELS = [
+  "Deals",
+  "Shared Deals",
+  "AI Agents",
+  "Industry Map",
+  "Documents",
+  "Default Intake Queue",
+  "Startup Activity",
+  "Preferences",
 ];
 
 // Role-aware nav per PRD 3 §17. Items without dedicated routes are
@@ -167,8 +162,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", exact: false },
   { label: "Tenants", icon: Building2, path: "/tenants", exact: true, perm: "tenants.read" },
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
-  { label: "Approvals", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
-  { label: "Paid reports", icon: Receipt, path: "/admin/paid-reports", exact: false, controlOnly: true },
+  { label: "User approval", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
+  { label: "Report approval", icon: Receipt, path: "/admin/paid-reports", exact: false, controlOnly: true },
   { label: "Messages", icon: MessagesSquare, path: "/admin/messages", exact: false, controlOnly: true },
   { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
 
@@ -299,6 +294,11 @@ function SidebarBody({
 
   const isStartupUser = roles.includes("STARTUP_USER");
   const useControlGroups = isControl && !showSkeleton && !isStartupUser;
+  // Coming soon folds again whenever another Admin page opens.
+  const [soonOpen, setSoonOpen] = useState(false);
+  useEffect(() => { setSoonOpen(false); }, [pathname]);
+  const { user: approvalUserCount, reports: approvalReportCount, total: approvalTotal } =
+    useAdminApprovalCounts(useControlGroups);
 
 
   const visibleItems = (() => {
@@ -389,8 +389,6 @@ function SidebarBody({
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 {showLabels && <span className="whitespace-pre">{t(item.label)}{item.label === "Investors Directory" ? "\n" : ""}</span>}
-                {showLabels && item.label === "Approvals" && <ApprovalsBadge />}
-                {showLabels && item.path === "/admin/paid-reports" && <PaidReportsBadge />}
                 {showLabels && item.path === "/admin/messages" && <AdminMessagesBadge />}
               </Link>
             );
@@ -404,30 +402,127 @@ function SidebarBody({
             return <div className="space-y-1">{visibleItems.map((it, i) => renderItem(it, i))}</div>;
           }
 
-          const remaining = [...visibleItems];
-          const groups = CONTROL_NAV_GROUPS.map((group) => {
-            const items: NavItem[] = [];
-            for (const label of group.labels) {
-              const i = remaining.findIndex((it) => it.label === label);
-              if (i !== -1) items.push(...remaining.splice(i, 1));
-            }
-            return { title: group.title, items };
-          }).filter((g) => g.items.length > 0);
-
-          if (remaining.length > 0) groups.push({ title: "Other", items: remaining });
+          const byLabel = new Map(visibleItems.map((it) => [it.label, it]));
+          const take = (labels: string[]) =>
+            labels.map((l) => byLabel.get(l)).filter((x): x is NavItem => !!x);
+          const isCurrent = (item: NavItem) => {
+            if (item.path === "/global-startups")
+              return (
+                pathname === "/global-startups" ||
+                (pathname.startsWith("/global-startups/") && !pathname.startsWith("/global-startups/browse"))
+              );
+            return item.exact
+              ? pathname === item.path
+              : pathname === item.path || pathname.startsWith(`${item.path}/`);
+          };
+          const headingClass =
+            "px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40";
+          const sections = CONTROL_SECTIONS.map((s) => ({ title: s.title, items: take(s.labels) })).filter(
+            (s) => s.items.length > 0,
+          );
+          const soonItems = take(COMING_SOON_LABELS);
+          const placed = new Set([
+            ...CONTROL_SUBMENUS.flatMap((s) => s.items),
+            ...CONTROL_SECTIONS.flatMap((s) => s.labels),
+            ...COMING_SOON_LABELS,
+          ]);
+          const leftovers = visibleItems.filter((it) => !placed.has(it.label));
+          const approvalTotalBadge =
+            approvalTotal > 0 ? <AdminSubCount count={approvalTotal} /> : undefined;
+          const approvalRailBadge =
+            approvalTotal > 0 ? (
+              <span
+                data-mkt-badge
+                data-rail
+                className="absolute -right-0.5 top-0 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-accent px-1 text-[9px] font-bold leading-none text-accent-foreground"
+              >
+                {approvalTotal > 9 ? "9+" : approvalTotal}
+              </span>
+            ) : undefined;
 
           return (
             <div className="space-y-5">
-              {groups.map((group) => (
+              <div className="space-y-1">
+                {showLabels && <div className={headingClass}>{t("User Workflow")}</div>}
+                {CONTROL_SUBMENUS.map((sub) => {
+                  const items = take(sub.items);
+                  if (items.length === 0) return null;
+                  const active = items.some(isCurrent);
+                  return (
+                    <WorkspaceSubmenu
+                      key={sub.id}
+                      id={`admin-${sub.id}`}
+                      toggleOnly
+                      label={t(sub.label)}
+                      heading={t(sub.label)}
+                      groupLabel={`${sub.label} pages`}
+                      icon={sub.icon}
+                      destination={items[0].path}
+                      active={active}
+                      collapsed={!showLabels}
+                      badge={sub.id === "approvals" ? approvalTotalBadge : undefined}
+                      railBadge={sub.id === "approvals" ? approvalRailBadge : undefined}
+                      items={items.map((it) => ({
+                        to: it.path,
+                        label: t(it.label),
+                        current: isCurrent(it),
+                        suffix:
+                          it.label === "Report approval" ? (
+                            <AdminSubCount count={approvalReportCount} />
+                          ) : it.label === "User approval" ? (
+                            <AdminSubCount count={approvalUserCount} />
+                          ) : undefined,
+                      }))}
+                    />
+                  );
+                })}
+              </div>
+              {sections.map((group) => (
                 <div key={group.title} className="space-y-1">
-                  {showLabels && (
-                    <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                      {t(group.title)}
-                    </div>
-                  )}
-                  {group.items.map((it, i) => renderItem(it, i, group.title === "Coming Soon"))}
+                  {showLabels && <div className={headingClass}>{t(group.title)}</div>}
+                  {group.items.map((it, i) => renderItem(it, i))}
                 </div>
               ))}
+              {leftovers.length > 0 && (
+                <div className="space-y-1">{leftovers.map((it, i) => renderItem(it, i))}</div>
+              )}
+              {showLabels && soonItems.length > 0 && (
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    aria-expanded={soonOpen}
+                    aria-controls="admin-coming-soon"
+                    onClick={() => setSoonOpen((o) => !o)}
+                    className={cn(
+                      headingClass,
+                      "flex w-full cursor-pointer items-center justify-between rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                  >
+                    {t("Coming Soon")}
+                    <ChevronRight
+                      className={cn("h-3.5 w-3.5 transition-transform", soonOpen && "rotate-90")}
+                    />
+                  </button>
+                  {soonOpen && (
+                    <div id="admin-coming-soon" className="space-y-1">
+                      {soonItems.map((item, idx) => (
+                        <div
+                          key={`${item.label}-${idx}`}
+                          className="flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 opacity-50"
+                        >
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="flex flex-1 items-center justify-between">
+                            {t(item.label)}
+                            <span className="text-[9px] uppercase tracking-wider text-sidebar-foreground/40">
+                              {t("Soon")}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })()}

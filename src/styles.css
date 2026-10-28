@@ -362,7 +362,14 @@
   z-index: 20;
 }
 
-/* Marketplace menu: one menu, role colour from data-mkt-view (seller amber, buyer indigo). */
+/* Marketplace menu: one menu, role colour from data-mkt-view (seller amber, buyer indigo).
+   The :root defaults let the shared sub-menu styles work in the Admin menu (amber). */
+:root {
+  --role-accent: #f6a823; --role-on: #0e162f; --role-pill-bg: #fef3de; --role-pill-fg: #8a4b06; --role-badge-fg: #0e162f;
+}
+.dark {
+  --role-pill-bg: rgba(246, 168, 35, 0.16); --role-pill-fg: #f6a823;
+}
 [data-mkt-view="seller"] {
   --role-accent: #f6a823; --role-on: #0e162f; --role-pill-bg: #fef3de; --role-pill-fg: #8a4b06; --role-badge-fg: #0e162f;
 }
