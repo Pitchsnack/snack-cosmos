@@ -134,7 +134,7 @@ function AccessCodesPage() {
     </div>
 
     <div className="overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white">
-      <div className="hidden md:grid grid-cols-[1fr_112px_124px_100px_112px_132px_16px] gap-3 bg-[#FAFAFB] px-4 py-[9px] text-[10.5px] font-bold uppercase tracking-[.06em] text-[#9CA3AF]"><span>Client</span><span>Code</span><span>Role · free plan</span><span>Accounts</span><span>Works until</span><span>Status</span><span /></div>
+      <div className="hidden md:grid grid-cols-[1fr_112px_124px_100px_112px_112px_132px_16px] gap-3 bg-[#FAFAFB] px-4 py-[9px] text-[10.5px] font-bold uppercase tracking-[.06em] text-[#9CA3AF]"><span>Client</span><span>Code</span><span>Role · free plan</span><span>Accounts</span><span>Works until</span><span>Last visit</span><span>Status</span><span /></div>
       {q.isLoading && <p className="px-4 py-6 text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="px-4 py-6 text-sm text-destructive">{(q.error as Error).message}</p>}
       {d && !shown.length && <p className="px-4 py-6 text-sm text-muted-foreground">No codes here yet.</p>}
@@ -145,7 +145,7 @@ function AccessCodesPage() {
         const devs = devices.filter((x) => x.code_id === c.id); const visits = devs.reduce((n, x) => n + x.visits, 0);
         const last = devs.map((x) => x.last_seen_at).sort().pop();
         return <div key={c.id} className="border-t border-[#F0F1F4] first:border-t-0">
-          <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : c.id)} className={`grid w-full grid-cols-[1fr_auto] md:grid-cols-[1fr_112px_124px_100px_112px_132px_16px] items-center gap-3 px-4 py-3 text-left text-[13px] hover:bg-[#FAFAFB] ${isOpen ? 'bg-[#F7F8FC]' : fresh === c.id ? 'bg-[#F2F4FF]' : ''}`}>
+          <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : c.id)} className={`grid w-full grid-cols-[1fr_auto] md:grid-cols-[1fr_112px_124px_100px_112px_112px_132px_16px] items-center gap-3 px-4 py-3 text-left text-[13px] hover:bg-[#FAFAFB] ${isOpen ? 'bg-[#F7F8FC]' : fresh === c.id ? 'bg-[#F2F4FF]' : ''}`}>
             <span className="flex min-w-0 items-center gap-[11px]"><span className={`grid size-[34px] shrink-0 place-items-center rounded-[9px] text-xs font-bold ${ROLE_COL[c.role]}`}>{initials(c.client_name)}</span>
               <span className="min-w-0"><span className={`block truncate text-[13.5px] font-semibold ${gone ? 'text-[#6B7280]' : 'text-[#111827]'}`}>{c.client_name}</span><span className="block truncate text-xs text-[#6B7280]">{c.invite_email ?? 'No invitation email'}</span></span></span>
             <span className={`hidden md:block text-[12.5px] font-medium tracking-[.04em] ${gone ? 'text-[#6B7280]' : ''}`} style={mono}>{c.code}</span>
@@ -154,6 +154,7 @@ function AccessCodesPage() {
             <span className="hidden md:block"><span className="tabular-nums">{used.length} of {c.max_accounts}</span>{full && <span className="ml-1 text-[11px] font-bold text-[#B45309]">Full</span>}
               <span className="mt-[5px] block h-1.5 overflow-hidden rounded-full bg-[#EEF0F4]"><span className={`block h-full rounded-full ${full ? 'bg-[#D97706]' : 'bg-[#192957]'}`} style={{ width: `${Math.min(100, (used.length / c.max_accounts) * 100)}%` }} /></span></span>
             <span className="hidden md:block">{s === 'off' ? <><span className="font-medium">Off</span><span className="block text-[11.5px] text-[#6B7280]">since {dateEn(c.switched_off_at!)}</span></> : c.ends_on ? <><span className="font-medium tabular-nums">{dateEn(c.ends_on)}</span><span className="block text-[11.5px] text-[#6B7280]">{dl! < 0 ? 'Ended' : dl === 0 ? 'today' : dl === 1 ? 'in 1 day' : `in ${dl} days`}</span></> : <span className="text-[#6B7280]">No end date</span>}</span>
+            <span className="hidden md:block">{last ? <><span className="font-medium">{whenText(last).split(", ")[0]}</span><span className="block text-[11.5px] text-[#6B7280]">{whenText(last).split(", ").slice(1).join(", ")}</span></> : <span className="text-[#6B7280]">Not opened yet</span>}</span>
             <span className="hidden md:block"><Pill s={s} c={c} /></span>
             {isOpen ? <ChevronDown className="size-4 text-[#9CA3AF]" /> : <ChevronRight className="size-4 text-[#9CA3AF]" />}
           </button>
