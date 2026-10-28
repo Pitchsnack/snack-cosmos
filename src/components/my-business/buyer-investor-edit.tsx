@@ -375,6 +375,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
+        suggested_listing_name: t(f.suggested_listing_name) || null,
+        suggested_headline: t(f.suggested_headline) || null,
+        revenue_band: (f.revenue_band || null) as never,
+        contact_number: t(f.contact_number) || null,
         investor_id: inv.id,
       } });
       if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,bio:bio || null,...(portfolioInvestorsDirty ? {portfolioInvestorIds:portfolioInvestors.flatMap(x=>x.refId ? [x.refId] : [])} : {}),...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
@@ -553,6 +557,26 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             onChange={(v) => setF((o) => ({ ...o, linkedin_url: v }))}
             placeholder="https://www.linkedin.com/company/…"
           />
+        </div>
+
+        {/* Row 4: Contact number | Revenue — what PitchSnack checks */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>{tr("Contact number")}</Label>
+            <Input value={f.contact_number} onChange={set("contact_number")} placeholder="+66 …" maxLength={40} />
+            <p className="text-[12.5px] text-muted-foreground">{tr("Not shown publicly. PitchSnack uses it to reach you about verification.")}</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{tr("Revenue (yearly)")}</Label>
+            <Select value={f.revenue_band || ""} onValueChange={(v) => setF((o) => ({ ...o, revenue_band: v === "__clear__" ? "" : v }))}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={tr("Select a range")} /></SelectTrigger>
+              <SelectContent>
+                {f.revenue_band && <SelectItem value="__clear__" className="text-muted-foreground">{tr("Clear selection")}</SelectItem>}
+                {REVENUE_BANDS.map(([k, label]) => <SelectItem key={k} value={k}>{lang === "th" ? (REVENUE_BAND_TH[k] ?? label) : label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-[12.5px] text-muted-foreground">{tr("Not shown publicly. PitchSnack checks it against your registration data.")}</p>
+          </div>
         </div>
 
         {/* About */}
