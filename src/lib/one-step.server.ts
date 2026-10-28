@@ -61,7 +61,7 @@ export type OneStepItem = {
 /* ------------------------------------------------------------- helpers */
 
 export { REVENUE_BANDS, revenueBandLabel } from "@/lib/revenue-bands";
-import { REVENUE_BANDS } from "@/lib/revenue-bands";
+import { REVENUE_BANDS, revenueBandLabel } from "@/lib/revenue-bands";
 
 /** Case/punctuation/space-insensitive compare, Thai-aware. */
 export const normText = (s: string | null | undefined) =>
