@@ -7,3 +7,4 @@ export function approvalDate(iso: string | null | undefined, lang: Language): st
   const day = iso.slice(0, 10);
   return lang === "th" ? dateTh(day) : dateEn(day);
 }
+
