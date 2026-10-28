@@ -8,7 +8,7 @@
 - Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor adapters; watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.
 - Seller Connect flight is browser-only presentation using the stored invitation ID, shared Pipeline opening signal and public investor cover markers; invitation writes and authorization remain in the existing server function.
 - Pending contact presentation uses the existing seller Connect, buyer verification and session DTOs with one shared focusable tooltip button; status is derived server-side from own approval records and request authorization is unchanged.
-- Marketplace My Company and Pipeline share WorkspaceSubmenu for inline/rail/drawer interactions and exclusive flyouts; page destinations stay in their wrappers so existing pages and the Admin menu remain unchanged.
+- Marketplace My Company, Pipeline and the Admin menu share WorkspaceSubmenu (Admin: toggleOnly rows never navigate); role colour vars default to amber at :root so the shared styles work outside the Marketplace.
 - Live agreement cards use a browser-safe Bangkok calendar-day helper and a Pipeline-parent context for midnight updates and reload-only expansion reset; existing document dialogs and stored legal end dates remain authoritative.
 
 - Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
