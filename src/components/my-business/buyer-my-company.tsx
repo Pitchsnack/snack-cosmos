@@ -507,25 +507,33 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
-        {p.status === "live"
+        {state === "live"
           ? <span>Live in Browse investors since {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas} NDA{org.ndas === 1 ? "" : "s"} · {org.lois} LOI{org.lois === 1 ? "" : "s"}</span>
-          : inReview
-            ? <span>Admin is reviewing your profile. It goes live in Browse investors once approved.</span>
-          : (appr === "changes_requested" || appr === "declined") && p.status === "draft"
-            ? <span><b className="font-semibold">Admin note:</b> {(p as any).decision_note || "—"}</span>
-          : p.status === "paused"
+          : state === "pending"
+            ? <span>Submitted on {p.submitted_at ? fmtDate(p.submitted_at) : "—"} · sellers can't find you yet</span>
+          : state === "changes" || state === "declined"
+            ? <span>Fix what PitchSnack asked with Edit information, then register again.</span>
+          : state === "paused"
             ? <span>Hidden from Browse investors since {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
             : !setupDone && iv
               ? <span>Finish setting up your profile to publish it.</span>
-              : <span>Everything is ready. Submit your profile for Admin review so sellers can find you in Browse investors.</span>}
-        {p.status === "live"
-          ? <Button variant="outline" size="sm" disabled={listing.isPending} onClick={() => listing.mutate("paused")}>Pause listing</Button>
-          : inReview
-            ? <Button variant="outline" size="sm" disabled={withdraw.isPending} onClick={() => withdraw.mutate()}>Withdraw</Button>
-          : p.status === "draft" && !setupDone && iv
+              : <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your firm and publishes your profile together.</span>}
+        {state === "live"
+          ? <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>Remove your company profile from listing</Button>
+          : state === "pending"
+            ? <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />Pending approval</span>
+          : state === "paused"
+            ? <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>List my company so that sellers can contact me</Button>
+          : state === "draft" && !setupDone && iv
             ? <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => openWizard()}>Finish setup to publish</Button>
-            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>{p.status === "paused" && appr === "approved" ? "Resume listing" : appr === "changes_requested" || appr === "declined" ? "Resubmit for approval" : "Submit for approval"}</Button>}
+            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />Register your company</Button>}
       </div>
+      <ReviewCompanyDialog open={reviewOpen} role="buyer" data={reviewData} failures={failures} submitting={reg.isPending}
+        onEdit={() => { setReviewOpen(false); openProfileEdit({ section: "description", from: "public" }); }}
+        onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
+      <SentForApprovalDialog open={sentOpen} role="buyer" onClose={() => setSentOpen(false)} />
+      <WithdrawDialog open={withdrawOpen} role="buyer" busy={listing.isPending} onClose={() => setWithdrawOpen(false)}
+        onConfirm={() => listing.mutate("paused", { onSuccess: () => setWithdrawOpen(false) })} />
     </div>
   );
 }
