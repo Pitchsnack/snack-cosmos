@@ -91,6 +91,7 @@ function ApprovalsPage() {
   const advQ = useAdvisorQueue();
   const advPending = advQ.pending.length;
   const advOldest = Math.max(0, ...advQ.pending.map((f) => businessDays(f.v.requestedAt)));
+  const oneStep = useOneStepApprovals();
 
   return (
     <div className="space-y-5" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
