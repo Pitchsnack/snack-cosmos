@@ -484,6 +484,34 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
     onError: (e: Error) => setFailures([e.message]),
   });
   const state = p.status === "live" ? "live" : p.status === "paused" ? "paused" : appr === "in_review" ? "pending" : appr === "changes_requested" ? "changes" : appr === "declined" ? "declined" : "draft";
+  // Review your company data pop-up: what sellers see + what PitchSnack checks.
+  const invRow = inv.data?.investor as any;
+  const reviewData: ReviewCompanyData = {
+    suggestedName: (p as any).suggested_listing_name ?? null,
+    suggestedHeadline: (p as any).suggested_headline ?? null,
+    listingRows: [
+      ["Type", org.type || ""],
+      ["Industries", Array.isArray(invRow?.industries) ? invRow.industries.join(", ") : ""],
+      ["Ticket size", invRow?.ticket_min != null || invRow?.ticket_max != null ? `฿${Number(invRow?.ticket_min ?? 0).toLocaleString()} – ฿${Number(invRow?.ticket_max ?? 0).toLocaleString()}` : ""],
+      ["Country", invRow?.country ?? ""],
+      ["Headline", (p as any).suggested_headline ?? ""],
+      ["Description", (p.description ?? "").slice(0, 400)],
+    ],
+    identityWords: leaks.words,
+    identityApplies: true,
+    exclusiveRows: [
+      { label: "Firm name", value: org.name ?? "", note: null },
+      { label: "Company type", value: org.type ?? "", note: null },
+      { label: "Registration Number", value: invRow?.registration_no ?? "", note: null },
+      { label: "Registered address", value: [invRow?.city, invRow?.country].filter(Boolean).join(", "), note: null },
+      { label: "Year founded", value: invRow?.year_founded != null ? String(invRow.year_founded) : "", note: null },
+      { label: "Revenue", value: (p as any).revenue_band ?? "", note: null },
+      { label: "Your name", value: invRow?.investor_name ?? "", note: "Not shown publicly" },
+      { label: "Website", value: org.website ?? "", note: "Not shown publicly" },
+      { label: "Email", value: invRow?.email ?? "", note: "Not shown publicly" },
+      { label: "Contact number", value: (p as any).contact_number ?? "", note: "Not shown publicly" },
+    ],
+  };
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
