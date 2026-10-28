@@ -21,12 +21,12 @@ function hash(s: string) {
 
 /** Admin-approved, live buyers as public investor cards. `onlyIds` narrows to given investor ids. */
 export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<PublicInvestor & { userId: string; liveSince: string | null }>> {
-  let bq = sb.from("buyer_profiles").select("*").eq("status", "live").not("investor_id", "is", null);
+  // One-step approval: only verified AND published profiles show in Browse investors.
+  let bq = sb.from("buyer_profiles").select("*").eq("status", "live").eq("approval_status", "approved").not("investor_id", "is", null);
   if (onlyIds) { if (!onlyIds.length) return []; bq = bq.in("investor_id", onlyIds); }
   const { data: buyers } = await bq.limit(500);
   const userIds = (buyers ?? []).map((b: any) => b.user_id as string);
   if (!userIds.length) return [];
-  // Admin approval (status "live") is what publishes; verification only adds the badge.
   const buyerByInv = new Map<string, any>((buyers ?? []).map((b: any) => [b.investor_id, b]));
   const ids = [...buyerByInv.keys()];
   if (!ids.length) return [];
@@ -39,7 +39,8 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
   const { data: vrows } = await sb.rpc("investor_is_verified", { _ids: ids });
   const verifiedIds = new Set(((vrows ?? []) as any[]).filter((v) => v.verified).map((v) => v.investor_id));
   const managed = await (await import("@/lib/managed.server")).managedInvestorIds(sb, (rows ?? []).map((r: any) => r.id));
-  return (rows ?? []).map((r: any) => {
+  // Unverified profiles never reach Browse, even if a stale row is live.
+  return (rows ?? []).filter((r: any) => verifiedIds.has(r.id)).map((r: any) => {
     const bp = buyerByInv.get(r.id);
     const h = hash(r.id);
     const type = r.investor_type ?? null;
