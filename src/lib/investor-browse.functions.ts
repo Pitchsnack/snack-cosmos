@@ -98,7 +98,9 @@ export const listBrowseInvestors = createServerFn({ method: "GET" })
       loadPublicInvestors(await admin()),
       import("./cover-urls.server").then((m) => m.investorCoverResolver()),
     ]);
-    return Promise.all(list.map(async ({ userId: _u, liveSince: _l, ...i }) => ({ ...(i as PublicInvestor), coverUrl: await cover(i.type) })));
+    // One-step approval: Browse investors shows only verified AND approved profiles.
+    // (The watchlist reuses loadPublicInvestors and keeps saved investors regardless.)
+    return Promise.all(list.filter((i) => i.verified).map(async ({ userId: _u, liveSince: _l, ...i }) => ({ ...(i as PublicInvestor), coverUrl: await cover(i.type) })));
   });
 
 export type SellerFavStatus = "approved" | "requested" | "saved";
