@@ -180,7 +180,7 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
     const label = card.client
       ? (n ? c(`Applications · ${n} to check`, `ใบสมัคร · รอตรวจ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`))
       : (n ? c(`Applications · ${n} new`, `ใบสมัคร · ใหม่ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`));
-    buttons.push(<Link key="apps" to="/marketplace/pipeline/invitations" search={{ tab: "applications" } as never} className="bw-btn bw-navy"><Users className="h-4 w-4" />{label}</Link>);
+    buttons.push(<Link key="apps" to="/marketplace/pipeline/invitations" search={{ view: "applications" }} className="bw-btn bw-navy"><Users className="h-4 w-4" />{label}</Link>);
   } else if (persona === "seller") {
     if (mode === "applications" && card.myApp) buttons.push(<div key="st" className="flex-[2] min-w-0"><AppState card={card} /></div>);
     else if (card.myApp) buttons.push(<span key="ap" className="bw-btn bw-applied"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>);
