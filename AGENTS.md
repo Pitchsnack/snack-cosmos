@@ -59,6 +59,4 @@
 
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
 - Subdirectories have their own AGENTS.md; read it before changing files there.
-- Admin Paid reports uses paid-reports.functions.ts and paid-reports.ts for ordered and linked zero-order companies; no-orders presentation never stores readiness or unlocks seller access; linking uses dbd_link_startup only.
 
-- Startups Directory list reads rows with deferMedia and fills card images via signStartupListMedia (RLS re-read) + useListMedia's browser cache; other listStartups callers still get signed URLs inline.
