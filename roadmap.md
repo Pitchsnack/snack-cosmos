@@ -1,9 +1,9 @@
 # One-step approval — roadmap
 
 ## Paid reports — no-orders queue
-- [ ] Include successful linked DBD companies with zero orders in the server directory and sixth queue.
-- [ ] Add row, panel and seven-report Admin presentation without mutations or access changes.
-- [ ] Check the queue and report today's real company names and references.
+- [x] Include successful linked DBD companies with zero orders in the server directory and sixth queue.
+- [x] Add row, panel and seven-report Admin presentation without mutations or access changes.
+- [x] Check the queue and report today's real company names and references.
 
 ## Second pass — 29 October 2026
 - [x] Fix company-name, revenue and date comparisons; website checks safely fall back to manual review (automatic reachability blocked pending destination-pinned egress).
