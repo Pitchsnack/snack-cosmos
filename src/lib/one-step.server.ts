@@ -63,6 +63,12 @@ export type OneStepItem = {
 
 export { REVENUE_BANDS, revenueBandLabel } from "@/lib/revenue-bands";
 import { REVENUE_BANDS, revenueBandLabel } from "@/lib/revenue-bands";
+import { handoverLine } from "@/lib/hidden-profile";
+import { PRICE_BANDS, bandOf, thbOf } from "@/lib/asking-price";
+
+/** The stored band key as the buyer-facing range text, or the amount's own range. */
+const priceLabel = (hp: any) =>
+  (PRICE_BANDS.find((b) => b.key === hp?.asking_price_band) ?? bandOf(thbOf(hp)))?.label ?? null;
 
 /** Case/punctuation/space-insensitive compare, Thai-aware. */
 export const normText = (s: string | null | undefined) =>
@@ -212,15 +218,15 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
     dbd: dbdState,
     individual: false,
     listingRows: [
-      ["Reference", [hp.ref_no, hp.sector ?? st?.sector, st?.city].filter(Boolean).join(" · ")],
+      ["Reference", [hp.ref_no, st?.sector, st?.city].filter(Boolean).join(" · ")],
       ["Description", hp.description ?? "Not added"],
       ["Highlights", (hp.highlights ?? []).filter(Boolean).join(" · ") || "Not added"],
       ["Customer profile", hp.customers_summary ?? "Not added"],
       [`Revenue FY${String(year).slice(2)}`, st?.last_year_revenue ?? "Not added"],
-      ["Asking price", hp.asking_price_band ?? (hp.asking_price_thb ? fmtM(Number(hp.asking_price_thb) / 1_000_000) : "Not added")],
+      ["Asking price", priceLabel(hp) ?? "Not added"],
       ["Deal type", hp.deal_type ?? "Not added"],
-      ["Owner handover", hp.owner_stays === "stays" ? (hp.handover_months ? `${hp.handover_months} months` : "Stays") : hp.owner_stays === "leaves" ? "Owner leaves at completion" : "Not added"],
-      ["Sector", hp.sector ?? st?.sector ?? "Not added"],
+      ["Owner handover", handoverLine(hp.owner_stays, hp.handover_months) ?? "Not added"],
+      ["Sector", st?.sector ?? "Not added"],
     ],
     identityWords: Array.isArray(hp.__identityFlags) ? hp.__identityFlags : [],
     identityApplies: true,
@@ -249,18 +255,18 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
     directory: "Startups Directory",
     directoryId: hp.startup_id ?? null,
     card: {
-      ref: hp.ref_no, type: hp.sector ?? st?.sector ?? null, place: st?.city ?? null,
+      ref: hp.ref_no, type: st?.sector ?? null, place: st?.city ?? null,
       description: hp.description ?? null,
       figs: [
         [`Revenue FY${String(year).slice(2)}`, st?.last_year_revenue ?? "Not stated"],
-        ["Asking price", hp.asking_price_band ?? "Not stated"],
+        ["Asking price", priceLabel(hp) ?? "Not stated"],
         ["Deal type", hp.deal_type ?? "Not stated"],
-        ["Owner handover", hp.owner_stays === "stays" ? (hp.handover_months ? `${hp.handover_months} months` : "Stays") : hp.owner_stays === "leaves" ? "Owner leaves at completion" : "Not stated"],
+        ["Owner handover", handoverLine(hp.owner_stays, hp.handover_months) ?? "Not stated"],
       ],
       realName: st?.startup_name ?? null, website: st?.website_url ?? null, address: st?.business_address ?? null,
       founded: st?.year_founded ? String(st.year_founded) : null,
       contact: founder ? [founder.full_name, founder.role_title].filter(Boolean).join(" · ") : null,
-      sector: hp.sector ?? st?.sector ?? null, city: st?.city ?? null,
+      sector: st?.sector ?? null, city: st?.city ?? null,
     },
   };
 }

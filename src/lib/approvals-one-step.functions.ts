@@ -60,7 +60,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
 
     // ---- sellers: hidden_profiles waiting or sent back
     const { data: hps } = await sb.from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, sector, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks")
+      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     const stIds = [...new Set((hps ?? []).map((h: any) => h.startup_id).filter(Boolean))];
     const { data: sts } = stIds.length
@@ -102,7 +102,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
       const review = await sellerReview(sb, hp, st, founderBy.get(hp.startup_id), (hp.review_checks ?? []) as string[]);
       sellers.push({
         kind: "seller", id: hp.id, ref: hp.ref_no, name: st?.startup_name ?? hp.code_name ?? hp.ref_no,
-        type: hp.sector ?? st?.sector ?? null, place: st?.city ?? null,
+        type: st?.sector ?? null, place: st?.city ?? null,
         person: fullName(uBy.get(hp.submitted_by)), submittedAt: hp.submitted_at,
         sentBackAt: hp.approval_status === "changes_requested" ? hp.decided_at : null,
         chip: hp.approval_status === "changes_requested" ? "sent_back" : "waiting",
