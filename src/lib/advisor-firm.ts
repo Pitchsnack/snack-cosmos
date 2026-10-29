@@ -127,6 +127,8 @@ export type FirmReview = { id: string; role: "seller" | "buyer"; detail: string 
 export type AdvisorFirm = {
   /** Browse advisors only: a PitchSnack private client. */
   managed?: boolean;
+  /** Own-company review only; omitted from public firm projections. */
+  ownerReviewName?: string | null;
   id: string; refNo: string; name: string; firmType: string; logoPath: string | null; logoUrl: string | null; logoSource: "upload" | "enrich" | null;
   /** Up to 3 photos (slot 1–3), shown after the NDA-free card. */
   media?: { slot: number; path: string; url: string | null }[];

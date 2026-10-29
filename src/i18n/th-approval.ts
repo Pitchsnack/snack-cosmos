@@ -63,9 +63,10 @@ export const TH_APPROVAL: Record<string, string> = {
   "Submitted on {date}": "ส่งเมื่อ {date}",
   "Submitted {date}": "ส่งเมื่อ {date}",
   "Sent on {date}.": "ส่งเมื่อ {date}",
-  "Sent back {date} · sent back {date}": "ส่งกลับเมื่อ {date}",
+  "Sent back {date}": "ส่งกลับเมื่อ {date}",
   "submitted {date} by {name}": "ส่งเมื่อ {date} โดย {name}",
-  "waiting {n} day · waiting {n} days": "รอ {n} วัน",
+  "waiting {n} day": "รอ {n} วัน",
+  "waiting {n} days": "รอ {n} วัน",
   "Step {n}:": "ขั้นที่ {n}:",
   "Live since {date}": "เผยแพร่ตั้งแต่ {date}",
   "Live in Browse investors since {date}": "แสดงใน ดูรายชื่อนักลงทุน ตั้งแต่ {date}",
@@ -679,4 +680,5 @@ export const TH_APPROVAL: Record<string, string> = {
   "Below ฿100M": "ต่ำกว่า ฿100 ล้าน",
   "Under ฿50M": "ต่ำกว่า ฿50 ล้าน",
   "Revenue FY{year}": "รายได้ปี {year}"
+  " that your account is approved.": " เมื่อบัญชีของท่านได้รับอนุมัติแล้ว",
 };

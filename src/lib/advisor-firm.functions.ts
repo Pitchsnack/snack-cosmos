@@ -54,6 +54,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
   const feeDetails: Record<string, FeeDetail> = {};
   for (const f of mine(kids.fees)) { feeDetails[f.service] = rowToFee(f); if ((r.services ?? []).includes(f.service)) fees[f.service] = f.fee; }
   return {
+    ownerReviewName: r.__ownerReviewName ?? undefined,
     id: r.id, refNo: r.ref_no, name: r.name ?? "", firmType: r.firm_type ?? "", logoPath: r.logo_path, logoUrl: r.logo_path ? urls.get(r.logo_path) ?? null : null,
     logoSource: r.logo_source ?? null,
     media: (Array.isArray(r.media) ? r.media : []).map((m: any) => ({ slot: m.slot, path: m.image_path, url: urls.get(m.image_path) ?? null })),
@@ -83,6 +84,8 @@ export const listMyAdvisorFirms = createServerFn({ method: "GET" })
     const { data: rows, error } = await sb.from("advisor_firms").select("*").eq("owner_user_id", context.userId).order("created_at");
     if (error) throw new Error(error.message);
     if (!rows?.length) return [];
+    const { data: owner } = await sb.from("users").select("first_name,last_name").eq("id", context.userId).maybeSingle();
+    for (const row of rows) row.__ownerReviewName = [owner?.first_name, owner?.last_name].filter(Boolean).join(" ") || null;
     const ids = rows.map((r: any) => r.id);
     const [fees, team, creds, docs, reviews] = await Promise.all([
       sb.from("advisor_firm_fees").select("*").in("firm_id", ids),
