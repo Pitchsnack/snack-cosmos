@@ -1,6 +1,6 @@
 import { useTranslation } from "@/i18n/language";
 import { approvalDate } from "@/lib/approval-date";
-import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
+import { useOpenSellerEdit } from "@/components/my-business/seller-edit-popup";
 import { handoverLine } from "@/lib/hidden-profile";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +21,7 @@ const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("en
 /** Per-listing footer: state note on the left, the one-step action on the right. */
 export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
   const { t, language } = useTranslation();
-  const openEdit = useOpenProfileEdit();
+  const openEdit = useOpenSellerEdit();
   const qc = useQueryClient();
   const submit = useServerFn(submitListing);
   const unpublish = useServerFn(unpublishListing);
@@ -123,7 +123,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
               : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{t("Register your company")}</Button>}
       </span>
       <ReviewCompanyDialog open={reviewOpen} role="seller" data={reviewData} failures={failures} submitting={doSubmit.isPending}
-        onEdit={(section) => { setReviewOpen(false); openEdit({ startup: profile.startup_id, section: section === "company" ? "about" : "description" }); }} onSubmit={() => doSubmit.mutate()} onClose={() => setReviewOpen(false)} />
+        onEdit={(section) => { setReviewOpen(false); openEdit(profile.startup_id, section === "company" ? "private" : "public", section === "company" ? "about" : "description"); }} onSubmit={() => doSubmit.mutate()} onClose={() => setReviewOpen(false)} />
       <SentForApprovalDialog open={sentOpen} role="seller" onClose={() => setSentOpen(false)} />
       <WithdrawDialog open={withdrawOpen} role="seller" busy={doUnpublish.isPending} onClose={() => setWithdrawOpen(false)}
         onConfirm={() => doUnpublish.mutate(undefined, { onSuccess: () => setWithdrawOpen(false) })} />

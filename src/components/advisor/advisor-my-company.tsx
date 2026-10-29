@@ -597,7 +597,7 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
       <AddressDialog f={f} open={addrOpen} onOpenChange={(o) => { setAddrOpen(o); if (!o) setTimeout(() => addrBtn.current?.focus(), 0); }} />
       {!client && <>
         <ReviewCompanyDialog open={reviewOpen} role="advisor" data={reviewData} failures={failures} submitting={reg.isPending}
-          onEdit={(section) => { setReviewOpen(false); edit("firm"); }} onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
+          onEdit={(section) => { setReviewOpen(false); edit(section === "company" ? "company" : "firm"); }} onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
         <SentForApprovalDialog open={sentOpen} role="advisor" onClose={() => setSentOpen(false)} />
         <WithdrawDialog open={withdrawOpen} role="advisor" busy={busy} onClose={() => setWithdrawOpen(false)}
           onConfirm={() => { setWithdrawOpen(false); void changeStatus("paused"); }} />

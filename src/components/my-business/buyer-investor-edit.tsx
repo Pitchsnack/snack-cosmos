@@ -2,7 +2,7 @@ import { BuyerDescriptionEditor } from "./buyer-description-editor";
 import { descriptionChanged } from "@/lib/buyer-description";
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
-import { tr } from "@/i18n/language";
+import { tr, useTranslation } from "@/i18n/language";
 import { REVENUE_BANDS } from "@/lib/revenue-bands";
 import { companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
@@ -19,7 +19,7 @@ import {
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Eye, Lock, Shield, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Eye, Lock, Shield, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,6 +174,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const incoming = useSearch({strict:false}) as {tab?:string};
   section = section ?? (incoming.tab === "mandate" ? "mandate" : incoming.tab);
   const {data:session} = useSessionContext();
+  const {language} = useTranslation();
   const admin = session?.user?.accountRole === "admin";
   const create = useServerFn(createInvestor);
   const updateDirectory = useServerFn(updateInvestor);
@@ -563,12 +564,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         {/* Row 4: Contact number | Revenue — what PitchSnack checks */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>{tr("Contact number")}</Label>
+            <Label>{tr("Contact number")} <span className="text-[10px] text-link border border-dashed border-link rounded px-1">{tr("New")}</span></Label>
             <Input value={f.contact_number} onChange={set("contact_number")} placeholder="+66 …" maxLength={40} />
-            <p className="text-[12.5px] text-muted-foreground">{tr("Not shown publicly. PitchSnack uses it to reach you about verification.")}</p>
           </div>
           <div className="space-y-1.5">
-            <Label>{tr("Revenue (yearly)")}</Label>
+            <Label>{tr("Revenue in {year} (THB)").replace("{year}", String(new Date().getFullYear()-1+(language === "th" ? 543 : 0)))} <span className="text-[10px] text-link border border-dashed border-link rounded px-1">{tr("New")}</span></Label>
             <Select value={f.revenue_band || ""} onValueChange={(v) => setF((o) => ({ ...o, revenue_band: v === "__clear__" ? "" : v }))}>
               <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={tr("Select a range")} /></SelectTrigger>
               <SelectContent>
@@ -576,7 +576,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                 {REVENUE_BANDS.map(([k, label]) => <SelectItem key={k} value={k}>{tr(label)}</SelectItem>)}
               </SelectContent>
             </Select>
-            <p className="text-[12.5px] text-muted-foreground">{tr("Not shown publicly. PitchSnack checks it against your registration data.")}</p>
           </div>
         </div>
 
@@ -598,8 +597,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec={sec === "address" ? "address" : "country"}>
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
           <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
-            title={individual ? tr("Address") : tr("Business address")}
-            note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+            title={individual ? tr("Address") : tr("Registered address")}
+            note={tr("PitchSnack checks your registered address.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
             show={(k) => (addrShow && addrErr ? (addrErr as Record<string, string | null>)[k] ?? null : null)} onBlur={() => {}} />
         </div>
@@ -650,16 +649,15 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>{tr("Listing name — your suggestion")}</Label>
+              <Label>{tr("Listing name")}</Label>
               <Input value={f.suggested_listing_name} onChange={set("suggested_listing_name")} maxLength={120} placeholder={data.buyer.ref_no || ""} />
-              <p className="text-[12.5px] text-muted-foreground">{tr("PitchSnack may adjust it to reduce duplication.")}</p>
             </div>
             <div className="space-y-1.5">
-              <Label>{tr("Headline — your suggestion")}</Label>
+              <Label>{tr("Headline")}</Label>
               <Input value={f.suggested_headline} onChange={set("suggested_headline")} maxLength={120} />
-              <p className="text-[12.5px] text-muted-foreground">{tr("One short line sellers see on your card.")}</p>
             </div>
           </div>
+          <p className="flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
           <BuyerDescriptionEditor value={f.description} onChange={(description) => setF((o) => ({...o, description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
@@ -723,6 +721,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           {tab === "people" && <div className="space-y-4"><TabHead title={tr("Team")} />        {/* For verification */}
         <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">For verification · also visible to Admin</h3>
+          <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your company's list of directors.")}</p>
           <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
             <Label>{tr(pop ? "Team members" : "Decision makers")}</Label>
             <div className="space-y-2">
@@ -890,8 +889,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
           <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
-            title={individual ? tr("Address") : tr("Business address")}
-            note={tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+            title={individual ? tr("Address") : tr("Registered address")}
+            note={tr("PitchSnack checks your registered address.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}
             show={(k) => (addrShow && addrErr ? (addrErr as Record<string, string | null>)[k] ?? null : null)} onBlur={() => {}} />
         </div>
@@ -1022,6 +1021,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               <Err k="registration_no" />
             </div>
           )}
+          <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your company's list of directors.")}</p>
           <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
             <Label>{tr(pop ? "Team members" : "Decision makers")}</Label>
             <div className="space-y-2">
