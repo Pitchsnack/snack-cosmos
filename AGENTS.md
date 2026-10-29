@@ -61,4 +61,3 @@
 - Subdirectories have their own AGENTS.md; read it before changing files there.
 - Admin › Paid reports (/admin/paid-reports) lists one row per company via paid-reports.functions.ts with browser-safe rules in paid-reports.ts; Use stored data links via dbd_link_startup (no fetch), so the DBD store stays the only data source.
 
-- One-step reviews compare user-entered identities and bands against the shared DBD store; website reachability fails closed to a saved manual check until destination-pinned public egress is available, preventing DNS-rebinding SSRF.
