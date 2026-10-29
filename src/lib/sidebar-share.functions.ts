@@ -27,7 +27,7 @@ export const sendShareInvite=createServerFn({method:'POST'}).middleware([require
  const {roleOf}=await import('./plan-access.server'); const role=await roleOf(context.userId);if(!canShare(role))throw new Error('Not available');
  const {supabaseAdmin}=await import('@/integrations/supabase/client.server');const sb=supabaseAdmin as any;
  // A short burst guard prevents accidental automated sends, not a daily invitation allowance.
- const {count}=await sb.from('share_invitations').select('id',{count:'exact',head:true}).eq('sender_user_id',context.userId).gte('sent_at',new Date(Date.now()-60000).toISOString());if((count??0)>=5)throw new Error('Please wait before sending again');
+ const {count}=await sb.from('share_invitations').select('id',{count:'exact',head:true}).eq('sender_user_id',context.userId).is('buy_order_id',null).gte('sent_at',new Date(Date.now()-60000).toISOString());if((count??0)>=5)throw new Error('Please wait before sending again');
  const {data:existing,error:lookupError}=await sb.from('users').select('id').ilike('email',data.email.replace(/[\\%_]/g,'\\$&')).limit(1);if(lookupError)throw new Error('Invitation unavailable');if(existing?.length)return {ok:true};
  // Check Auth too: unconfirmed accounts may not have a public user row yet.
  const {data:found,error:authError}=await sb.rpc('share_email_has_account',{_email:data.email});if(authError)throw new Error('Invitation unavailable');if(found)return {ok:true};
