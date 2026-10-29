@@ -330,13 +330,15 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       ["description", descriptionChanged(f.description, data.buyer.description) && f.description.trim() ? descriptionError(f.description) || (leaks.length ? "leak" : null) : null],
       ["registration_no", individual ? null : regError(f.registration_no, f.country)],
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
+      ["suggested_listing_name", setup && !f.suggested_listing_name.trim() ? "Write a listing name." : null],
+      ["suggested_headline", setup && !f.suggested_headline.trim() ? "Write a headline." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
     if (!directory && aBad) { setAddrShow(true); setErrs({ address: aBad }); setView("private");setTab("address"); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
     const bad = checks.find(([key, m]) => key === "description" && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([, m]) => m);
     if ((!directory || bad?.[0] === "registration_no") && bad) {
       setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
-      const target = bad[0] === "registration_no" ? "about" : bad[0] === "description" ? "description" : "about";
+      const target = bad[0] === "registration_no" ? "about" : (bad[0] === "description" || bad[0].startsWith("suggested_")) ? "description" : "about";
       setView(target === "description" ? "public" : "private"); setTab(target);
       setTimeout(()=>document.getElementById(`f-${bad[0]}`)?.focus(),60);
       return;
@@ -649,12 +651,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>{tr("Listing name")}</Label>
-              <Input value={f.suggested_listing_name} onChange={set("suggested_listing_name")} maxLength={120} placeholder={data.buyer.ref_no || ""} />
+              <Label htmlFor="f-suggested_listing_name">{tr("Listing name")}{setup && " *"}</Label>
+              <Input id="f-suggested_listing_name" value={f.suggested_listing_name} onChange={set("suggested_listing_name")} maxLength={120} placeholder={data.buyer.ref_no || ""} aria-invalid={!!errs.suggested_listing_name} />
+              {errs.suggested_listing_name && <p className="text-[12.5px] text-destructive">{tr(errs.suggested_listing_name)}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>{tr("Headline")}</Label>
-              <Input value={f.suggested_headline} onChange={set("suggested_headline")} maxLength={120} />
+              <Label htmlFor="f-suggested_headline">{tr("Headline")}{setup && " *"}</Label>
+              <Input id="f-suggested_headline" value={f.suggested_headline} onChange={set("suggested_headline")} maxLength={120} aria-invalid={!!errs.suggested_headline} />
+              {errs.suggested_headline && <p className="text-[12.5px] text-destructive">{tr(errs.suggested_headline)}</p>}
             </div>
           </div>
           <p className="flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
