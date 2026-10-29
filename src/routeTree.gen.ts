@@ -84,6 +84,7 @@ import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authent
 import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace.index'
 import { Route as AuthenticatedMarketplaceAdvisorsRouteImport } from './routes/_authenticated/marketplace.advisors'
 import { Route as AuthenticatedMarketplaceBrowseRouteImport } from './routes/_authenticated/marketplace.browse'
+import { Route as AuthenticatedMarketplaceBusinessesWantedRouteImport } from './routes/_authenticated/marketplace.businesses-wanted'
 import { Route as AuthenticatedMarketplaceFavouritesRouteImport } from './routes/_authenticated/marketplace.favourites'
 import { Route as AuthenticatedMarketplaceInvitationsRouteImport } from './routes/_authenticated/marketplace.invitations'
 import { Route as AuthenticatedMarketplaceMessagesRouteImport } from './routes/_authenticated/marketplace.messages'
@@ -547,6 +548,12 @@ const AuthenticatedMarketplaceBrowseRoute =
     path: '/browse',
     getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
+const AuthenticatedMarketplaceBusinessesWantedRoute =
+  AuthenticatedMarketplaceBusinessesWantedRouteImport.update({
+    id: '/businesses-wanted',
+    path: '/businesses-wanted',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
 const AuthenticatedMarketplaceFavouritesRoute =
   AuthenticatedMarketplaceFavouritesRouteImport.update({
     id: '/favourites',
@@ -904,6 +911,7 @@ export interface FileRoutesByFullPath {
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
+  '/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
   '/marketplace/favourites': typeof AuthenticatedMarketplaceFavouritesRoute
   '/marketplace/invitations': typeof AuthenticatedMarketplaceInvitationsRoute
   '/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
@@ -1021,6 +1029,7 @@ export interface FileRoutesByTo {
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
+  '/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
   '/marketplace/favourites': typeof AuthenticatedMarketplaceFavouritesRoute
   '/marketplace/invitations': typeof AuthenticatedMarketplaceInvitationsRoute
   '/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
@@ -1144,6 +1153,7 @@ export interface FileRoutesById {
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
   '/_authenticated/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/_authenticated/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
+  '/_authenticated/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
   '/_authenticated/marketplace/favourites': typeof AuthenticatedMarketplaceFavouritesRoute
   '/_authenticated/marketplace/invitations': typeof AuthenticatedMarketplaceInvitationsRoute
   '/_authenticated/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
@@ -1271,6 +1281,7 @@ export interface FileRouteTypes {
     | '/investors/new'
     | '/marketplace/advisors'
     | '/marketplace/browse'
+    | '/marketplace/businesses-wanted'
     | '/marketplace/favourites'
     | '/marketplace/invitations'
     | '/marketplace/messages'
@@ -1388,6 +1399,7 @@ export interface FileRouteTypes {
     | '/investors/new'
     | '/marketplace/advisors'
     | '/marketplace/browse'
+    | '/marketplace/businesses-wanted'
     | '/marketplace/favourites'
     | '/marketplace/invitations'
     | '/marketplace/messages'
@@ -1510,6 +1522,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investors/new'
     | '/_authenticated/marketplace/advisors'
     | '/_authenticated/marketplace/browse'
+    | '/_authenticated/marketplace/businesses-wanted'
     | '/_authenticated/marketplace/favourites'
     | '/_authenticated/marketplace/invitations'
     | '/_authenticated/marketplace/messages'
@@ -2122,6 +2135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketplaceBrowseRouteImport
       parentRoute: typeof AuthenticatedMarketplaceRoute
     }
+    '/_authenticated/marketplace/businesses-wanted': {
+      id: '/_authenticated/marketplace/businesses-wanted'
+      path: '/businesses-wanted'
+      fullPath: '/marketplace/businesses-wanted'
+      preLoaderRoute: typeof AuthenticatedMarketplaceBusinessesWantedRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
     '/_authenticated/marketplace/favourites': {
       id: '/_authenticated/marketplace/favourites'
       path: '/favourites'
@@ -2603,6 +2623,7 @@ const AuthenticatedMarketplacePipelineRouteWithChildren =
 interface AuthenticatedMarketplaceRouteChildren {
   AuthenticatedMarketplaceAdvisorsRoute: typeof AuthenticatedMarketplaceAdvisorsRoute
   AuthenticatedMarketplaceBrowseRoute: typeof AuthenticatedMarketplaceBrowseRoute
+  AuthenticatedMarketplaceBusinessesWantedRoute: typeof AuthenticatedMarketplaceBusinessesWantedRoute
   AuthenticatedMarketplaceFavouritesRoute: typeof AuthenticatedMarketplaceFavouritesRoute
   AuthenticatedMarketplaceInvitationsRoute: typeof AuthenticatedMarketplaceInvitationsRoute
   AuthenticatedMarketplaceMessagesRoute: typeof AuthenticatedMarketplaceMessagesRoute
@@ -2618,6 +2639,8 @@ const AuthenticatedMarketplaceRouteChildren: AuthenticatedMarketplaceRouteChildr
     AuthenticatedMarketplaceAdvisorsRoute:
       AuthenticatedMarketplaceAdvisorsRoute,
     AuthenticatedMarketplaceBrowseRoute: AuthenticatedMarketplaceBrowseRoute,
+    AuthenticatedMarketplaceBusinessesWantedRoute:
+      AuthenticatedMarketplaceBusinessesWantedRoute,
     AuthenticatedMarketplaceFavouritesRoute:
       AuthenticatedMarketplaceFavouritesRoute,
     AuthenticatedMarketplaceInvitationsRoute:
