@@ -435,20 +435,15 @@ export function StartupDetailPanel({
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-[40vh] p-8">
-        <HatSkeleton lines={5} headMessage="Loading startup…" />
-      </div>
-    );
-  }
-  if (error || !data) {
+  if (error) {
     return (
       <div className="p-8 text-center text-sm text-destructive">
         Failed to load: {(error as Error)?.message ?? "Not found"}
       </div>
     );
   }
+  // Still checking the session or loading: stay blank (no error before the query has failed).
+  if (!data) return <div className="min-h-[40vh]" aria-hidden="true" />;
 
   const s = data;
 

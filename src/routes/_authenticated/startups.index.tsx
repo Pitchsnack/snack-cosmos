@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupEditPopup } from "@/components/startups/startup-edit-popup";
@@ -169,7 +168,7 @@ function StartupsPageInner() {
     return isPublicationPreview ? listPreviewPublishedRefs() : [];
   }, [previewVersion]);
 
-  const { data, isLoading, isFetching, refetch } = useStartups({
+  const { data, isFetching, refetch } = useStartups({
     search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
     sector: s.sector, businessModel: s.bmodel,
     companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
