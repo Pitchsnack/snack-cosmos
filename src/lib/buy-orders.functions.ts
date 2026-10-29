@@ -69,8 +69,8 @@ async function viewerRole(userId: string) {
   return (await import("@/lib/plan-access.server")).roleOf(userId);
 }
 
-function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; views: Map<string, number>; apps: Map<string, number>; mine: Set<string>; myApps: Map<string, any>; isAdmin: boolean; writers: Map<string, string> }): BoCard {
-  const { typeName, sortActsFor } = require_bands;
+function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; views: Map<string, number>; apps: Map<string, number>; mine: Set<string>; myApps: Map<string, any>; isAdmin: boolean; writers: Map<string, string> }, bands: any): BoCard {
+  const { typeName, sortActsFor } = bands;
   const i = ctx.inv.get(r.investor_profile_id) ?? {};
   const b = ctx.bp.get(r.investor_profile_id) ?? null;
   const actsFor = b?.buyer_relation === "agent" ? sortActsFor(i.acts_for_types ?? []) : [];
@@ -95,10 +95,9 @@ function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; view
     client: ctx.isAdmin ? { name: i.investor_name ?? i.firm_name ?? null, ref: b?.ref_no ?? null, writer: ctx.writers.get(r.written_by_user_id) ?? null } : null,
   };
 }
-let require_bands: any;
 
 async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, sellerListingId: string | null): Promise<BoCard[]> {
-  require_bands = await import("@/lib/investor-bands");
+  const bands = await import("@/lib/investor-bands");
   const ids = rows.map((r) => r.id);
   const invIds = [...new Set(rows.map((r) => r.investor_profile_id))];
   const writerIds = [...new Set(rows.map((r) => r.written_by_user_id))];
@@ -117,7 +116,7 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
     inv: new Map((invs ?? []).map((x: any) => [x.id, x])), bp: new Map((bps ?? []).map((x: any) => [x.investor_id, x])),
     views: count(vs ?? []), apps: count(aps ?? []), mine: new Set(mine), myApps, isAdmin,
     writers: new Map((ws ?? []).map((w: any) => [w.id, w.full_name || w.email])),
-  }));
+  }, bands));
 }
 
 /** Businesses Wanted: posted and closed buy orders of both kinds, as the cards show them. */
