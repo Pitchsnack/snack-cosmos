@@ -1,3 +1,4 @@
+import { adminWaitingCount } from "@/lib/buy-orders.functions";
 import { useState, useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { KeyRound,
@@ -48,7 +49,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { Permission } from "@/lib/permissions";
 import { AdminMessagesBadge, AdminSubCount, useAdminApprovalCounts } from "@/components/menu-count-badge";
 import { WorkspaceSubmenu } from "@/components/marketplace/workspace-submenu";
-import { Receipt } from "lucide-react";
+import { Receipt, Megaphone } from "lucide-react";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { useIsMarketplace, usePersona, rememberAdminPath } from "@/hooks/use-marketplace";
@@ -71,6 +72,7 @@ type NavPath =
   | "/users"
   | "/admin/plans"
   | "/admin/access-codes"
+  | "/admin/advertisement"
   | "/access-management"
   | "/peer-comparables"
   | "/security"
@@ -124,7 +126,7 @@ const STARTUP_MENU_ORDER = [
 // Pipeline WorkspaceSubmenu; Coming soon folds at the end.
 const CONTROL_SUBMENUS: { id: string; label: string; icon: typeof Building2; items: string[] }[] = [
   { id: "insights", label: "Insights", icon: Gauge, items: ["Dashboard", "Analytics"] },
-  { id: "approvals", label: "Approvals", icon: ShieldCheck, items: ["Report approval", "User approval", "Access codes"] },
+  { id: "approvals", label: "Approvals", icon: ShieldCheck, items: ["Report approval", "User approval", "Advertisement", "Access codes"] },
   { id: "network", label: "Network", icon: Network, items: ["My Connections", "Contacts"] },
   {
     id: "directory",
@@ -164,6 +166,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Startups Directory", icon: Rocket, path: "/startups", exact: false, perm: "startups.read" },
   { label: "User approval", icon: ShieldCheck, path: "/approvals", exact: false, controlOnly: true },
   { label: "Report approval", icon: Receipt, path: "/admin/paid-reports", exact: false, controlOnly: true },
+  { label: "Advertisement", icon: Megaphone, path: "/admin/advertisement", exact: false, controlOnly: true },
   { label: "Messages", icon: MessagesSquare, path: "/admin/messages", exact: false, controlOnly: true },
   { label: "Industry Map", icon: Network, path: "/industry-map", exact: false, perm: "startups.read" },
 
@@ -471,6 +474,8 @@ function SidebarBody({
                             <AdminSubCount count={approvalReportCount} />
                           ) : it.label === "User approval" ? (
                             <AdminSubCount count={approvalUserCount} />
+                          ) : it.label === "Advertisement" ? (
+                            <AdvertisementSubCount />
                           ) : undefined,
                       }))}
                     />
@@ -732,3 +737,9 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   );
 }
 
+
+function AdvertisementSubCount() {
+  const fn = useServerFn(adminWaitingCount);
+  const { data } = useQuery({ queryKey: ["buy-orders", "admin-waiting"], queryFn: () => fn(), staleTime: 60_000 });
+  return <span className="ml-auto inline-flex items-center gap-1"><span className="hub-new">NEW</span><AdminSubCount count={data?.n ?? 0} /></span>;
+}

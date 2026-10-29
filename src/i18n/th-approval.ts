@@ -192,6 +192,7 @@ export const TH_APPROVAL: Record<string, string> = {
   "Browse advisors": "ดูรายชื่อที่ปรึกษา",
   "Browse marketplace": "ดูมาร์เก็ตเพลส",
   "My watchlist": "รายการที่ติดตาม",
+  "Advertisement": "ประกาศ",
   "My Company": "บริษัทของฉัน",
   "Company profile": "โปรไฟล์บริษัท",
   "My Profile": "โปรไฟล์ของฉัน",
