@@ -24,7 +24,7 @@ export function keysOfKind(kind: string): HubKey[] {
   return (PAID_ORDER as string[]).includes(kind) ? [kind as HubKey] : [];
 }
 
-export type PaidTile = "needs" | "ready" | "overdue" | "authorised" | "all";
+export type PaidTile = "needs" | "ready" | "overdue" | "authorised" | "no_orders" | "all";
 export type PaidSort = "waiting" | "newest" | "az";
 export type OrderStatus = "paid" | "generated" | "delivered";
 
@@ -45,6 +45,9 @@ export type PaidCompany = {
   startupId: string; name: string; ref: string | null; reg: string | null;
   orders: PaidOrder[]; dbd: DbdCell; latestPaid: string; oldestOpen: string | null;
   produced: HubKey[];
+  /** Includes cancelled/refunded orders; zero-orders eligibility is not based on active orders. */
+  totalOrders?: number;
+  awaitingUserApproval?: boolean;
 };
 
 export const businessDaysSince = (d: string, now = new Date()) => {
@@ -57,6 +60,7 @@ export const orderOverdueBy = (o: Pick<PaidOrder, "status" | "paidAt">, now = ne
   o.status === "delivered" ? 0 : Math.max(0, businessDaysSince(o.paidAt, now) - 2);
 
 export const hasData = (c: PaidCompany) => c.dbd.state === "linked";
+export const noOrders = (c: PaidCompany) => hasData(c) && (c.totalOrders ?? c.orders.length) === 0;
 export const allDone = (c: PaidCompany) => c.orders.length > 0 && c.orders.every((o) => o.status === "delivered");
 export const readyOrders = (c: PaidCompany) => (hasData(c) ? c.orders.filter((o) => o.status === "generated") : []);
 export const overdueDays = (c: PaidCompany, now = new Date()) => Math.max(0, ...c.orders.map((o) => orderOverdueBy(o, now)));
@@ -67,12 +71,14 @@ export function inTile(c: PaidCompany, t: PaidTile, now = new Date()) {
     case "ready": return hasData(c) && c.orders.some((o) => o.status === "generated");
     case "overdue": return overdueDays(c, now) > 0;
     case "authorised": return allDone(c);
+    case "no_orders": return noOrders(c);
     default: return true;
   }
 }
 
 export type NextStep = { kind: "use" | "extract" | "authorise" | "view" | "open"; n?: number };
 export function nextStep(c: PaidCompany): NextStep {
+  if (noOrders(c)) return { kind: "view" };
   if (!hasData(c) && c.dbd.state === "stored") return { kind: "use" };
   if (!hasData(c)) return { kind: "extract" };
   const r = readyOrders(c).length;
@@ -81,6 +87,7 @@ export function nextStep(c: PaidCompany): NextStep {
 }
 
 export function waitingChip(c: PaidCompany, now = new Date()): { tone: "red" | "grey" | "green"; text: string } {
+  if (noOrders(c)) return { tone: "grey", text: "No orders" };
   if (allDone(c)) return { tone: "green", text: "Done" };
   const od = overdueDays(c, now);
   if (od) return { tone: "red", text: `Overdue ${od} day${od === 1 ? "" : "s"}` };
@@ -99,9 +106,12 @@ export function matchesSearch(c: PaidCompany, q: string) {
 export function sortCompanies(list: PaidCompany[], sort: PaidSort) {
   const l = list.slice();
   if (sort === "az") return l.sort((a, b) => a.name.localeCompare(b.name));
-  if (sort === "newest") return l.sort((a, b) => b.latestPaid.localeCompare(a.latestPaid));
+  if (sort === "newest") return l.sort((a, b) => (b.latestPaid || b.dbd.at || "").localeCompare(a.latestPaid || a.dbd.at || "") || a.startupId.localeCompare(b.startupId));
   // Waiting longest first; companies with nothing open go last.
-  return l.sort((a, b) => (a.oldestOpen ?? "9999").localeCompare(b.oldestOpen ?? "9999") || a.name.localeCompare(b.name));
+  return l.sort((a, b) => {
+    if (noOrders(a) && noOrders(b)) return (b.dbd.at ?? "").localeCompare(a.dbd.at ?? "") || a.startupId.localeCompare(b.startupId);
+    return (a.oldestOpen ?? "9999").localeCompare(b.oldestOpen ?? "9999") || a.name.localeCompare(b.name) || a.startupId.localeCompare(b.startupId);
+  });
 }
 
 export const PAGE_SIZE = 25;
@@ -117,6 +127,6 @@ export function adminViewStatus(c: PaidCompany, key: HubKey): AdminViewStatus {
     if (o.status === "generated") return { tone: "amber", text: "Ready to authorise" };
     return { tone: "red", text: "Waiting for data" };
   }
-  if (hasData(c) && c.produced.includes(key)) return { tone: "grey", text: "Ready · not ordered" };
+  if (noOrders(c) || hasData(c) && c.produced.includes(key)) return { tone: "grey", text: "Ready · not ordered" };
   return { tone: "grey", text: "No data yet" };
 }

@@ -83,7 +83,21 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
 export async function hubContent(ctx:any,mode:HubMode,cid:string,pipelineId:string|undefined,key:HubKey,allowUngenerated=false):Promise<HubContent>{
   const data=await hubData(ctx,mode,cid,pipelineId);const row=data.rows.find(r=>r.key===key);if(!row)throw new Error('Report unavailable');
   if(mode!=='admin'&&(row.status!=='ready'||(mode==='buyer'&&!['shared','yours'].includes(row.buyerState))))throw new Error('Open or order this report first');
-  if(mode==='admin'&&!allowUngenerated&&!row.generatedAt)throw new Error('No report has been generated yet');
+  if(mode==='admin'&&!allowUngenerated&&!row.generatedAt){
+    // Stored-data Admin preview is read-only; it never grants seller readiness or fabricates analyst content.
+    const {sb}=await hubScope(ctx,mode,cid,pipelineId);
+    const [companies,infos,filings,orders]=await Promise.all([
+      getRows(sb.from('startups').select('registered_number').eq('id',cid)),
+      getRows(sb.from('company_info_th').select('registration_number').eq('startup_id',cid)),
+      getRows(sb.from('financial_statements').select('registration_number').eq('startup_id',cid)),
+      getRows(sb.from('report_orders').select('id').eq('startup_id',cid).limit(1)),
+    ]);
+    const norm=(value:unknown)=>String(value??'').replace(/\D/g,'');
+    const reg=norm(companies[0]?.registered_number);
+    const linked=reg.length===13&&[...infos,...filings].some(r=>norm(r.registration_number)===reg);
+    const stored=linked&&!orders.length?await getRows(sb.from('dbd_company_records').select('registration_number').eq('registration_number',reg)):[];
+    if(!stored.length)throw new Error('No report has been generated yet');
+  }
   const {sb}=await hubScope(ctx,mode,cid,pipelineId);
   if(key==='verification'){
     const {verificationState}=await import('./company-verification.server');const state=await verificationState(sb,ctx.userId,cid,pipelineId,mode==='buyer'&&['shared','yours'].includes(row.buyerState));

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getReportsHub } from "@/lib/reports-hub.functions";
 import { CompanyVerificationPage } from "@/components/company-verification/page";
 import { HubReport } from "@/components/reports/hub-report";
-import { PAID_NAMES, PAID_ORDER, adminViewStatus, hasData, type PaidCompany, type PaidOrder } from "@/lib/paid-reports";
+import { PAID_NAMES, PAID_ORDER, adminViewStatus, hasData, noOrders, type PaidCompany, type PaidOrder } from "@/lib/paid-reports";
 import type { HubKey } from "@/lib/reports-hub";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ const dm = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", {
 const tone = { red: "text-destructive", amber: "text-[#B45309]", green: "text-[#15803D]", grey: "text-muted-foreground" };
 
 function firstKey(c: PaidCompany): HubKey {
+  if (noOrders(c)) return "verification";
   const ready = c.orders.find((o) => hasData(c) && o.status !== "paid");
   return ready?.key ?? c.orders[0]?.key ?? "statements";
 }

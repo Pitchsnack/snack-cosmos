@@ -1,11 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { inTile, keysOfKind, nextStep, waitingChip, matchesSearch, PAID_SHORT, type PaidCompany, type PaidOrder } from "../../src/lib/paid-reports";
+import { inTile, keysOfKind, nextStep, waitingChip, matchesSearch, sortCompanies, readyOrders, PAID_SHORT, PAGE_SIZE, type PaidCompany, type PaidOrder } from "../../src/lib/paid-reports";
 
 const now = new Date("2026-10-29T03:00:00Z"); // Thursday
 const order = (p: Partial<PaidOrder>): PaidOrder => ({ id: "o", ref: "RO-1046", kind: "financials", key: "statements", status: "paid", paidAt: now.toISOString(), amount: 10000, method: "Manual", generatedAt: null, deliveredAt: null, shares: 0, ...p });
 const co = (p: Partial<PaidCompany>): PaidCompany => ({ startupId: "s", name: "Sell2 LP", ref: "PS-1026", reg: "0105500010000", orders: [order({})], dbd: { state: "none", how: null, at: null, usedBy: [] }, latestPaid: now.toISOString(), oldestOpen: now.toISOString(), produced: [], ...p });
 
 describe("paid reports rules", () => {
+  const storedWithoutOrders = () => co({ orders: [], totalOrders: 0, latestPaid: "", oldestOpen: null, dbd: { state: "linked", how: "extracted", at: now.toISOString(), usedBy: [] } });
+  it("linked stored data with zero orders is in no-orders and all, not authorised or waiting", () => {
+    const c = storedWithoutOrders();
+    expect(inTile(c, "no_orders", now)).toBe(true); expect(inTile(c, "all", now)).toBe(true);
+    for (const t of ["needs", "ready", "overdue", "authorised"] as const) expect(inTile(c, t, now)).toBe(false);
+  });
+  it("orders in any status exclude the no-orders queue", () => {
+    expect(inTile({ ...storedWithoutOrders(), totalOrders: 1 }, "no_orders", now)).toBe(false);
+  });
+  it("unlinked stored records are not data-ready no-orders companies", () => {
+    const c = storedWithoutOrders(); expect(inTile({ ...c, dbd: { ...c.dbd, state: "stored" } }, "no_orders", now)).toBe(false);
+  });
+  it("no-orders companies have no authorisable orders and only view as their next action", () => {
+    const c = storedWithoutOrders(); expect(readyOrders(c)).toEqual([]); expect(nextStep(c).kind).toBe("view");
+  });
+  it("waiting sort uses newest stored DBD date first for zero-order companies", () => {
+    const older = { ...storedWithoutOrders(), startupId: "old", dbd: { ...storedWithoutOrders().dbd, at: "2026-10-28T03:00:00Z" } };
+    const newer = { ...storedWithoutOrders(), startupId: "new" };
+    expect(sortCompanies([older, newer], "waiting").map(c => c.startupId)).toEqual(["new", "old"]);
+  });
+  it("a newly generated order moves the company from no-orders to ready", () => {
+    const c = { ...storedWithoutOrders(), totalOrders: 1, orders: [order({ status: "generated" })] };
+    expect(inTile(c, "no_orders", now)).toBe(false); expect(inTile(c, "ready", now)).toBe(true);
+  });
+  it("server pages remain 25 companies", () => { expect(PAGE_SIZE).toBe(25); });
   it("Credit risk is never an order", () => { expect(keysOfKind("credit")).toEqual([]); });
   it("financials order is Financial statements, short name Financials", () => { expect(keysOfKind("financials")).toEqual(["statements"]); expect(PAID_SHORT.statements).toBe("Financials"); });
   it("nothing stored → Extract data, in Needs DBD data", () => { const c = co({}); expect(nextStep(c).kind).toBe("extract"); expect(inTile(c, "needs", now)).toBe(true); });
