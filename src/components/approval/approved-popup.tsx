@@ -32,10 +32,10 @@ export function ApprovedPopup() {
   const start = () => { seen(); navigate({ to: "/marketplace/browse" }); };
   const title = notice.role === "seller" ? t("Your listing is approved") : t("Your profile is approved");
   const body = notice.role === "seller"
-    ? t("Admin verified your company and published your listing. Buyers can now find it in Browse listings, and you can connect with buyers.")
+    ? t("Admin verified your company and published your listing. Buyers can now find it as {listing name} ({ref}) in Browse listings, and you can connect with buyers.")
     : notice.role === "advisor"
-      ? t("Admin verified your firm and published your profile. Sellers and buyers can now find you in Browse advisors.")
-      : t("Admin verified your account and published your investor profile. Sellers can now find your firm in Browse investors, and you can request NDAs.");
+      ? t("Admin verified your firm and published your profile. Sellers and buyers can now find {listing name} in Browse advisors.")
+      : t("Admin verified your account and published your investor profile. Sellers can now find your firm as {listing name} ({ref}) in Browse investors, and you can request NDAs.");
   const rows: [string, string][] = [
     [t("Listing name"), notice.publishedName ?? "—"],
     [t("Headline"), notice.publishedHeadline ?? "—"],
@@ -47,7 +47,7 @@ export function ApprovedPopup() {
         <div className="ap-sent-top" style={{ textAlign: "left", padding: "26px 30px 10px" }}>
           <div className="ap-sent-ic" style={{ margin: "0 0 14px" }}><Check className="h-7 w-7" strokeWidth={2.6} /></div>
           <h2>{title}</h2>
-          <p>{body}</p>
+          <p>{body.replace("{listing name}", notice.publishedName ?? "—").replace("{ref}", notice.ref ?? "—")}{notice.adminRewrote && <> {t("PitchSnack rewrote your listing name and headline.")}</>}</p>
         </div>
         <div className="px-[30px]">
           <div className="ap-rows">

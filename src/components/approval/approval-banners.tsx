@@ -228,8 +228,8 @@ export function ApprovalBanners() {
 /** The red sidebar badge: a pulsing "!" on My Company while changes are needed. */
 export function ApprovalSidebarBadge() {
   const { notice, isAdmin } = useApprovalNotice();
+  const { t } = useTranslation();
   if (isAdmin || !notice) return null;
   if (notice.state !== "changes_requested" && notice.state !== "declined") return null;
-  const { t } = useTranslation();
   return <span className="ap-urg" role="status" aria-label={t("Needs updating")}>!</span>;
 }
