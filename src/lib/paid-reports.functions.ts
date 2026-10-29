@@ -4,13 +4,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import catalog from "@/config/report-catalog.json";
 import {
   inTile, keysOfKind, matchesSearch, sortCompanies, PAGE_SIZE, PAID_ORDER,
-  type DbdCell, type PaidCompany, type PaidOrder, type PaidTile, type OrderStatus,
+  noOrders, type DbdCell, type PaidCompany, type PaidOrder, type PaidTile, type OrderStatus,
 } from "./paid-reports";
 import type { HubKey } from "./reports-hub";
 
 /**
  * Admin › Paid reports. Control Admin only. One row per company with paid
- * report_orders; filter, search, sort and page happen here on the server.
+ * report_orders or linked stored data with zero orders; filtering and paging are server-side.
  * Nothing here fetches from DBD — Use stored data links, Extract uses extractDbd.
  */
 type Ctx = { supabase: any; userId: string };
@@ -24,14 +24,33 @@ const norm = (s: unknown) => { const d = String(s ?? "").replace(/\D/g, ""); ret
 const PRICES = catalog.prices as Record<string, number>;
 const one = (x: any) => (Array.isArray(x) ? x[0] : x);
 
+/** Read through the Data API row cap; the UI still returns only 25 companies. */
+async function readAll(makeQuery: () => any): Promise<any[]> {
+  const out: any[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await makeQuery().range(offset, offset + 999);
+    if (error) throw new Error("Paid reports could not be loaded");
+    out.push(...(data ?? []));
+    if ((data ?? []).length < 1000) return out;
+  }
+}
+
 async function loadCompanies(sb: any): Promise<PaidCompany[]> {
-  const { data: orders } = await sb.from("report_orders")
+  const [rows, startups, stored, everyOrder] = await Promise.all([
+    readAll(() => sb.from("report_orders")
     .select("id, ref, kind, status, paid_at, amount, method, generated_at, delivered_at, startup_id, startups!inner(id, startup_name, registered_number, hidden_profiles(ref_no))")
-    .in("status", ["paid", "generated", "delivered"]).neq("kind", "credit").order("paid_at", { ascending: true });
-  const rows = (orders ?? []) as any[];
-  const ids = [...new Set(rows.map((o) => o.startup_id))];
+    .in("status", ["paid", "generated", "delivered"]).neq("kind", "credit").order("paid_at", { ascending: true }).order("id")),
+    readAll(() => sb.from("startups").select("id, startup_name, registered_number, hidden_profiles(ref_no, approval_status)").not("registered_number", "is", null).order("id")),
+    readAll(() => sb.from("dbd_company_records").select("registration_number, source, retrieved_at").order("registration_number")),
+    readAll(() => sb.from("report_orders").select("id, startup_id").order("id")),
+  ]);
+  const orderCounts = new Map<string, number>();
+  for (const o of everyOrder) orderCounts.set(o.startup_id, (orderCounts.get(o.startup_id) ?? 0) + 1);
+  const storedRegs = new Set(stored.map((r) => r.registration_number));
+  const candidates = startups.filter((s) => !orderCounts.has(s.id) && storedRegs.has(norm(s.registered_number)));
+  const ids = [...new Set([...rows.map((o) => o.startup_id), ...candidates.map((s) => s.id)])];
   if (!ids.length) return [];
-  const regs = [...new Set(rows.map((o) => norm(o.startups?.registered_number)).filter(Boolean))] as string[];
+  const regs = [...new Set([...rows.map((o) => norm(o.startups?.registered_number)), ...candidates.map((s) => norm(s.registered_number))].filter(Boolean))] as string[];
   const [recs, cis, fss, logs, shares, records, sts, advs, invs] = await Promise.all([
     regs.length ? sb.from("dbd_company_records").select("registration_number, source, retrieved_at").in("registration_number", regs) : { data: [] },
     sb.from("company_info_th").select("startup_id, registration_number").in("startup_id", ids),
@@ -39,7 +58,7 @@ async function loadCompanies(sb: any): Promise<PaidCompany[]> {
     regs.length ? sb.from("dbd_fetch_logs").select("registration_number, action, startup_id, created_at").eq("result", "ok").in("registration_number", regs).order("created_at", { ascending: false }) : { data: [] },
     sb.from("report_shares").select("business_id, report_keys, financials, valuation").in("business_id", ids).is("revoked_at", null),
     sb.from("company_report_records").select("company_id, report_key, status").in("company_id", ids).in("status", ["generated", "ready"]),
-    sb.from("startups").select("id, registered_number, hidden_profiles(ref_no)").not("registered_number", "is", null),
+    { data: startups },
     sb.from("advisor_firms").select("ref_no, name, registration_no").not("registration_no", "is", null),
     sb.from("investors").select("investor_name, registration_no").not("registration_no", "is", null),
   ]);
@@ -47,12 +66,13 @@ async function loadCompanies(sb: any): Promise<PaidCompany[]> {
   const linked = new Set<string>();
   for (const r of [...(cis.data ?? []), ...(fss.data ?? [])]) linked.add(`${r.startup_id}:${norm(r.registration_number) ?? ""}`);
   const usedBy = new Map<string, Set<string>>();
-  const use = (reg: string | null, who: string | null | undefined) => { if (!reg || !who || !rec.has(reg)) return; if (!usedBy.has(reg)) usedBy.set(reg, new Set()); usedBy.get(reg)!.add(who); };
+  for (const result of [recs, cis, fss, logs, shares, records, sts, advs, invs]) if (result.error) throw new Error("Paid reports could not be loaded");
+  const use = (reg: string | null, who: string | null | undefined) => { if (!reg || !who || !rec.has(reg)) return; const refs = usedBy.get(reg) ?? new Set<string>(); refs.add(who); usedBy.set(reg, refs); };
   for (const s of sts.data ?? []) use(norm(s.registered_number), one(s.hidden_profiles)?.ref_no ?? null);
   for (const a of advs.data ?? []) use(norm(a.registration_no), a.ref_no ?? a.name);
   for (const i of invs.data ?? []) use(norm(i.registration_no), i.investor_name);
   const produced = new Map<string, Set<HubKey>>();
-  for (const r of records.data ?? []) { if (!produced.has(r.company_id)) produced.set(r.company_id, new Set()); produced.get(r.company_id)!.add(r.report_key); }
+  for (const r of records.data ?? []) { const keys = produced.get(r.company_id) ?? new Set<HubKey>(); keys.add(r.report_key); produced.set(r.company_id, keys); }
 
   const by = new Map<string, PaidCompany>();
   for (const o of rows) {
@@ -66,7 +86,7 @@ async function loadCompanies(sb: any): Promise<PaidCompany[]> {
       const last = myLogs.find((l) => ["extract", "refresh", "manual_save"].includes(l.action) || (l.action === "link_existing" && (l.startup_id === o.startup_id || !l.startup_id)));
       const how: DbdCell["how"] = !r ? null : r.source === "manual" ? "manual" : last?.action === "refresh" ? "refreshed" : last?.action === "link_existing" && last.startup_id === o.startup_id ? "linked" : "extracted";
       const dbd: DbdCell = { state: !reg ? "no_number" : !r ? "none" : isLinked ? "linked" : "stored", how, at: r?.retrieved_at ?? null, usedBy: [...(usedBy.get(reg ?? "") ?? [])] };
-      c = { startupId: o.startup_id, name: st?.startup_name ?? "—", ref: one(st?.hidden_profiles)?.ref_no ?? null, reg, orders: [], dbd, latestPaid: o.paid_at, oldestOpen: null, produced: [...(produced.get(o.startup_id) ?? [])] };
+      c = { startupId: o.startup_id, name: st?.startup_name ?? "—", ref: one(st?.hidden_profiles)?.ref_no ?? null, reg, orders: [], dbd, latestPaid: o.paid_at, oldestOpen: null, produced: [...(produced.get(o.startup_id) ?? [])], totalOrders: orderCounts.get(o.startup_id) ?? 0 };
       by.set(o.startup_id, c);
     }
     const sh = (shares.data ?? []).filter((s: any) => s.business_id === o.startup_id);
@@ -78,12 +98,20 @@ async function loadCompanies(sb: any): Promise<PaidCompany[]> {
     if (o.paid_at > c.latestPaid) c.latestPaid = o.paid_at;
     if (o.status !== "delivered" && (!c.oldestOpen || o.paid_at < c.oldestOpen)) c.oldestOpen = o.paid_at;
   }
+  for (const s of candidates) {
+    const reg = norm(s.registered_number);
+    const r = reg ? rec.get(reg) : null;
+    if (!reg || !r || !linked.has(`${s.id}:${reg}`)) continue;
+    const last = (logs.data ?? []).find((l: any) => l.registration_number === reg && (["extract", "refresh", "manual_save"].includes(l.action) || l.action === "link_existing" && (!l.startup_id || l.startup_id === s.id)));
+    const how: DbdCell["how"] = r.source === "manual" ? "manual" : last?.action === "refresh" ? "refreshed" : last?.action === "link_existing" && last.startup_id === s.id ? "linked" : "extracted";
+    by.set(s.id, { startupId: s.id, name: s.startup_name ?? "—", ref: one(s.hidden_profiles)?.ref_no ?? null, reg, orders: [], totalOrders: 0, awaitingUserApproval: one(s.hidden_profiles)?.approval_status === "in_review", dbd: { state: "linked", how, at: r.retrieved_at, usedBy: [...(usedBy.get(reg) ?? [])] }, latestPaid: "", oldestOpen: null, produced: [...(produced.get(s.id) ?? [])] });
+  }
   for (const c of by.values()) c.orders.sort((a, b) => PAID_ORDER.indexOf(a.key) - PAID_ORDER.indexOf(b.key));
-  return [...by.values()].filter((c) => c.orders.length);
+  return [...by.values()].filter((c) => c.orders.length || noOrders(c));
 }
 
 const ListIn = z.object({
-  tile: z.enum(["needs", "ready", "overdue", "authorised", "all"]).default("needs"),
+  tile: z.enum(["needs", "ready", "overdue", "authorised", "no_orders", "all"]).default("needs"),
   q: z.string().max(120).default(""),
   report: z.enum(["all", "verification", "shareholders", "statements", "valuation", "pnl", "risk"]).default("all"),
   sort: z.enum(["waiting", "newest", "az"]).default("waiting"),
@@ -97,8 +125,8 @@ export const listPaidReports = createServerFn({ method: "GET" })
     const sb = await control(context as Ctx);
     const all = await loadCompanies(sb);
     const now = new Date();
-    const counts = Object.fromEntries((["needs", "ready", "overdue", "authorised", "all"] as PaidTile[]).map((t) => [t, all.filter((c) => inTile(c, t, now)).length])) as Record<PaidTile, number>;
-    let list = all.filter((c) => inTile(c, data.tile, now) && matchesSearch(c, data.q) && (data.report === "all" || c.orders.some((o) => o.key === data.report)));
+    const counts = Object.fromEntries((["needs", "ready", "overdue", "authorised", "no_orders", "all"] as PaidTile[]).map((t) => [t, all.filter((c) => inTile(c, t, now)).length])) as Record<PaidTile, number>;
+    let list = all.filter((c) => inTile(c, data.tile, now) && matchesSearch(c, data.q) && (data.report === "all" || noOrders(c) || c.orders.some((o) => o.key === data.report)));
     list = sortCompanies(list, data.sort);
     const total = list.length;
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
