@@ -211,3 +211,46 @@
 .bw-viewlink { margin-top: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: #192957; }
 .dark .bw-viewlink { color: #A5B4FC; }
 .bw-listing-view { margin-top: 8px; border: 1px solid #EEF0F3; border-radius: 12px; padding: 12px; max-width: 520px; }
+
+/* Stage 3: writer states, form, My advertisements, Admin */
+.bw-st-violet { background: #F3F0FF; color: #5B21B6; }
+.bw-st-red { background: #FEF2F2; color: #991B1B; }
+.dark .bw-st-violet { background: rgba(124,58,237,.16); color: #C4B5FD; }
+.dark .bw-st-red { background: rgba(220,38,38,.16); color: #FCA5A5; }
+.bw-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.bw-form .bw-span2 { grid-column: 1 / -1; }
+@media (max-width: 640px) { .bw-form { grid-template-columns: 1fr; } }
+.bw-form label.bw-lab { font-size: 13.5px; font-weight: 600; display: block; margin-bottom: 5px; }
+.bw-form label.bw-lab em { font-style: normal; font-weight: 400; color: #6B7280; }
+.bw-in { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #DCDFE5; background: hsl(var(--background)); font-size: 14px; }
+.bw-in[aria-invalid="true"] { border-color: #B42318; }
+.dark .bw-in { border-color: hsl(var(--border)); }
+.bw-hint { font-size: 12px; color: #6B7280; margin-top: 4px; }
+.bw-err { font-size: 12.5px; color: #B42318; margin-top: 4px; }
+.bw-chipt { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #DCDFE5; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.bw-chipt[aria-pressed="true"] { background: var(--role-tint, #EEF0FF); border-color: var(--role-accent, #4338CA); font-weight: 600; }
+.bw-period { height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #DCDFE5; font-size: 13.5px; }
+.bw-period[aria-checked="true"] { border: 1.5px solid #1E2A4A; background: #F3F5F9; font-weight: 600; }
+.dark .bw-period[aria-checked="true"] { background: rgba(255,255,255,.06); border-color: #A5B4FC; }
+.bw-preview-panel { background: #F3F4F6; border-radius: 16px; padding: 18px; }
+.dark .bw-preview-panel { background: rgba(255,255,255,.04); }
+.bw-tiles6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+@media (max-width: 1180px) { .bw-tiles6 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .bw-tiles6 { grid-template-columns: repeat(2, 1fr); } }
+.bw-tile6 { text-align: left; background: hsl(var(--card)); border: 1px solid #E6E8EC; border-radius: 12px; padding: 12px 14px; }
+.bw-tile6[aria-pressed="true"] { border: 1.5px solid #1E2A4A; background: #F3F5F9; }
+.dark .bw-tile6 { border-color: hsl(var(--border)); } .dark .bw-tile6[aria-pressed="true"] { background: rgba(255,255,255,.06); border-color: #A5B4FC; }
+.bw-tile6 small { font-size: 12px; color: #6B7280; display: block; } .bw-tile6 b { font-size: 22px; font-weight: 700; }
+.bw-arow { display: grid; grid-template-columns: minmax(0,2.4fr) 1.2fr .8fr 1fr .9fr auto; gap: 12px; align-items: center; padding: 10px 14px; border-top: 1px solid #EEF0F3; cursor: pointer; }
+.bw-arow.bw-wait { background: #F8FAFF; } .dark .bw-arow.bw-wait { background: rgba(67,56,202,.08); } .dark .bw-arow { border-color: hsl(var(--border)); }
+.bw-ahead { cursor: default; font-size: 11px; font-weight: 700; letter-spacing: .06em; color: #6B7280; text-transform: uppercase; border-top: 0; }
+@media (max-width: 760px) { .bw-arow { grid-template-columns: 1fr; } .bw-ahead { display: none; } }
+.bw-spill { height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.bw-s-wait { background: #F3F0FF; color: #5B21B6; } .bw-s-back { background: #FEF2F2; color: #991B1B; } .bw-s-soon { background: #FEF3C7; color: #92400E; }
+.bw-s-open { background: #ECFDF3; color: #166534; } .bw-s-closed { background: #F3F4F6; color: #4B5563; } .bw-s-ext { background: #EFF6FF; color: #1D4ED8; }
+.bw-pager button { min-width: 32px; height: 32px; border-radius: 8px; font-size: 13px; }
+.bw-pager button[aria-current="page"] { background: #192957; color: #fff; }
+.bw-num5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.bw-num5 > div { background: #F3F4F6; border-radius: 10px; padding: 8px 10px; } .dark .bw-num5 > div { background: rgba(255,255,255,.05); }
+.bw-num5 small { font-size: 11.5px; color: #6B7280; display: block; } .bw-num5 b { font-size: 18px; }
+select.bw-in { height: 42px; padding-top: 0; padding-bottom: 0; line-height: 1.2; }

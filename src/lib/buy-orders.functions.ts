@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { effectiveStatus, isOpen, type BoAppStatus, type BoKind, type BoStatus } from "@/lib/buy-orders";
+import { addMonths, bkkToday, checkDraft, draftRow, effectiveStatus, isOpen, PERIODS, type BoAppStatus, type BoDraft, type BoKind, type BoStatus } from "@/lib/buy-orders";
 
 /**
  * Businesses Wanted. Every read and write goes through here with the service client,
@@ -27,8 +27,10 @@ export type BoCard = {
   myApp: { status: BoAppStatus; appliedAt: string } | null;
   /** The buy order's own side only: applications in all, and waiting for a decision. */
   appsTotal: number | null; appsNew: number | null;
+  /** The writer's side only (section 9.2). */
+  sentToAdminAt: string | null; adminNote: string | null; extendedCount: number;
   /** Admins only. */
-  client: { name: string | null; ref: string | null; writer: string | null } | null;
+  client: { id: string; name: string | null; ref: string | null; writer: string | null } | null;
 };
 
 export type ApplyContext = {
@@ -96,7 +98,8 @@ function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; view
     yours: ctx.mine.has(r.investor_profile_id),
     myApp: a ? { status: a.status, appliedAt: a.applied_at } : null,
     appsTotal: own ? ctx.apps.get(r.id) ?? 0 : null, appsNew: own ? ctx.appsNew.get(r.id) ?? 0 : null,
-    client: ctx.isAdmin ? { name: i.investor_name ?? i.firm_name ?? null, ref: b?.ref_no ?? null, writer: ctx.writers.get(r.written_by_user_id) ?? null } : null,
+    sentToAdminAt: own || ctx.isAdmin ? r.sent_to_admin_at : null, adminNote: own || ctx.isAdmin ? r.admin_note : null, extendedCount: r.extended_count ?? 0,
+    client: ctx.isAdmin ? { id: r.investor_profile_id, name: i.investor_name ?? i.firm_name ?? null, ref: b?.ref_no ?? null, writer: ctx.writers.get(r.written_by_user_id) ?? null } : null,
   };
 }
 
@@ -111,7 +114,7 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
     ids.length ? sb.from("buy_order_views").select("buy_order_id").in("buy_order_id", ids) : { data: [] },
     ids.length ? sb.from("buy_order_applications").select("buy_order_id, business_id, status, applied_at").in("buy_order_id", ids) : { data: [] },
     myInvestorIds(sb, userId),
-    isAdmin && writerIds.length ? sb.from("users").select("id, full_name, email").in("id", writerIds) : { data: [] },
+    isAdmin && writerIds.length ? sb.from("users").select("id, first_name, last_name, email").in("id", writerIds) : { data: [] },
   ]);
   const count = (list: any[]) => { const m = new Map<string, number>(); for (const x of list) m.set(x.buy_order_id, (m.get(x.buy_order_id) ?? 0) + 1); return m; };
   const myApps = new Map<string, any>();
@@ -119,7 +122,7 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
   return rows.map((r) => toCard(r, {
     inv: new Map((invs ?? []).map((x: any) => [x.id, x])), bp: new Map((bps ?? []).map((x: any) => [x.investor_id, x])),
     views: count(vs ?? []), apps: count(aps ?? []), appsNew: count((aps ?? []).filter((x: any) => x.status === "new")), mine: new Set(mine), myApps, isAdmin,
-    writers: new Map((ws ?? []).map((w: any) => [w.id, w.full_name || w.email])),
+    writers: new Map((ws ?? []).map((w: any) => [w.id, [w.first_name, w.last_name].filter(Boolean).join(" ") || w.email])),
   }, bands));
 }
 
@@ -214,9 +217,10 @@ async function isOwnSide(sb: any, userId: string, role: string | null, bo: any) 
   return (await myInvestorIds(sb, userId)).includes(bo.investor_profile_id);
 }
 
-async function reviewRows(sb: any, userId: string, role: string | null): Promise<AppRow[]> {
+async function reviewRows(sb: any, userId: string, role: string | null, onlyId?: string): Promise<AppRow[]> {
   let q = sb.from("buy_orders").select("id, ref, name_on_card, kind, investor_profile_id, sector, location, target_revenue, deal_types").in("status", ["posted", "closed"]);
-  if (role === "admin") q = q.eq("kind", "sealed");
+  if (onlyId) q = q.eq("id", onlyId);
+  else if (role === "admin") q = q.eq("kind", "sealed");
   else {
     const mine = await myInvestorIds(sb, userId);
     if (!mine.length) return [];
@@ -351,4 +355,262 @@ export const decideApplication = createServerFn({ method: "POST" })
     await (await import("./invitations.server")).notifySellers(hp.startup_id, "New NDA request", "Open Pipeline › NDA Invitations to review and approve the NDA.", "/marketplace/pipeline/invitations").catch(() => {});
     await sb.from("buy_order_applications").update({ status: "nda_requested", decided_at: now, decided_by_user_id: context.userId, nda_request_id: pipelineId }).eq("id", app.id);
     return { ok: true };
+  });
+
+// ---------- Stage 3: the writer's side (My advertisements) ----------
+
+const draftSchema = z.object({
+  clientId: z.string().uuid().nullable().optional(), sector: z.string().max(80), name: z.string().max(60), description: z.string().max(400),
+  location: z.string().max(40), cities: z.string().max(200), propertySize: z.string().max(40), factorySize: z.string().max(40),
+  products: z.string().max(500), targetRevenue: z.string().max(40), priceRange: z.string().max(40), dealTypes: z.array(z.string().max(60)).max(5),
+  mustHave: z.string().max(2000), niceToHave: z.string().max(2000), profit: z.string().max(200), timing: z.string().max(200),
+  periodMonths: z.number().int(),
+});
+
+/** Live investor profiles PitchSnack manages: the clients a Sealed buy order can be for. Admins only. */
+async function managedClients(sb: any) {
+  const ctl = await (await import("@/lib/managed.server")).controlTenantId(sb);
+  if (!ctl) return [];
+  const { data: invs } = await sb.from("investors").select("id, investor_name, firm_name").eq("tenant_id", ctl);
+  const ids = (invs ?? []).map((i: any) => i.id);
+  const managed = await (await import("@/lib/managed.server")).managedInvestorIds(sb, ids);
+  const { data: bps } = ids.length ? await sb.from("buyer_profiles").select("investor_id, ref_no, approval_status").in("investor_id", [...managed]) : { data: [] };
+  const live = new Map((bps ?? []).filter((b: any) => b.approval_status === "approved").map((b: any) => [b.investor_id, b.ref_no]));
+  return (invs ?? []).filter((i: any) => live.has(i.id)).map((i: any) => ({ id: i.id as string, name: (i.investor_name ?? i.firm_name ?? "—") as string, ref: (live.get(i.id) ?? null) as string | null }))
+    .sort((a: any, b: any) => a.name.localeCompare(b.name));
+}
+
+export type BoClient = { id: string; name: string; ref: string | null; buyerType: string; country: string | null };
+
+/** My advertisements: the buyer's own Advertisements, or (admins, Buyer tab) every Sealed one, in every status. */
+export const myBuyOrders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ control: boolean; cards: BoCard[]; clients: BoClient[]; me: { buyerType: string; country: string | null } | null }> => {
+    const role = await viewerRole(context.userId);
+    if (role !== "buyer" && role !== "admin") throw new Error("This page isn't available for your account");
+    const sb = await admin();
+    const bands = await import("@/lib/investor-bands");
+    if (role === "admin") {
+      const { data } = await sb.from("buy_orders").select("*").eq("kind", "sealed").order("created_at", { ascending: false });
+      const list = await managedClients(sb);
+      const { data: invs } = list.length ? await sb.from("investors").select("id, investor_type, country").in("id", list.map((c: any) => c.id)) : { data: [] };
+      const by = new Map((invs ?? []).map((i: any) => [i.id, i]));
+      return {
+        control: true, cards: await cardsFor(sb, data ?? [], context.userId, true, null), me: null,
+        clients: list.map((c: any) => ({ ...c, buyerType: bands.typeName((by.get(c.id) as any)?.investor_type ?? null, []), country: (by.get(c.id) as any)?.country ?? null })),
+      };
+    }
+    const mine = await myInvestorIds(sb, context.userId);
+    const { data } = mine.length ? await sb.from("buy_orders").select("*").eq("kind", "advertisement").in("investor_profile_id", mine).order("created_at", { ascending: false }) : { data: [] };
+    let me = null;
+    if (mine[0]) {
+      const [{ data: i }, { data: b }] = await Promise.all([
+        sb.from("investors").select("investor_type, country, acts_for_types").eq("id", mine[0]).maybeSingle(),
+        sb.from("buyer_profiles").select("buyer_relation").eq("investor_id", mine[0]).limit(1).maybeSingle(),
+      ]);
+      me = { buyerType: bands.typeName(i?.investor_type ?? null, b?.buyer_relation === "agent" ? bands.sortActsFor(i?.acts_for_types ?? []) : []), country: i?.country ?? null };
+    }
+    return { control: false, cards: await cardsFor(sb, data ?? [], context.userId, false, null), clients: [], me };
+  });
+
+/** Save draft, or send to Admin. New: draft; edited: keeps its status unless sent. */
+export const saveBuyOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id?: string | null; draft: BoDraft; send: boolean }) =>
+    z.object({ id: z.string().uuid().nullable().optional(), draft: draftSchema, send: z.boolean() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const role = await viewerRole(context.userId);
+    if (role !== "buyer" && role !== "admin") throw new Error("Not allowed");
+    const sb = await admin();
+    const sealed = role === "admin";
+    const errs = checkDraft(data.draft as BoDraft, sealed);
+    if (Object.keys(errs).length) throw new Error("Check the highlighted fields.");
+    let investorId: string;
+    if (sealed) {
+      const ok = (await managedClients(sb)).some((c: any) => c.id === data.draft.clientId);
+      if (!ok) throw new Error("Pick a buyer PitchSnack looks after.");
+      investorId = data.draft.clientId!;
+    } else {
+      const mine = await myInvestorIds(sb, context.userId);
+      if (!mine[0]) throw new Error("Set up your buyer profile first.");
+      investorId = mine[0];
+    }
+    const now = new Date().toISOString();
+    const row: any = { ...draftRow(data.draft as BoDraft), investor_profile_id: investorId, updated_at: now };
+    if (data.send) { row.status = "waiting"; row.sent_to_admin_at = now; }
+    if (data.id) {
+      const { data: bo } = await sb.from("buy_orders").select("id, kind, status, investor_profile_id").eq("id", data.id).maybeSingle();
+      if (!bo || !(await isOwnSide(sb, context.userId, role, bo)) || !["draft", "sent_back"].includes(bo.status)) throw new Error(BO_CHANGED);
+      if (!sealed) row.investor_profile_id = bo.investor_profile_id;
+      const { data: done, error } = await sb.from("buy_orders").update(row).eq("id", bo.id).in("status", ["draft", "sent_back"]).select("id");
+      if (error) throw new Error(error.message);
+      if (!done?.length) throw new Error(BO_CHANGED);
+      return { id: bo.id as string };
+    }
+    const { data: made, error } = await sb.from("buy_orders").insert({ ...row, kind: sealed ? "sealed" : "advertisement", status: data.send ? "waiting" : "draft", written_by_user_id: context.userId }).select("id").single();
+    if (error) throw new Error(error.message);
+    return { id: made.id as string };
+  });
+
+/** Send to Admin as it is (the card's button). */
+export const sendBuyOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const role = await viewerRole(context.userId);
+    const sb = await admin();
+    const { data: bo } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
+    if (!bo || !(await isOwnSide(sb, context.userId, role, bo))) throw new Error("Not allowed");
+    if (!["draft", "sent_back"].includes(bo.status)) throw new Error(BO_CHANGED);
+    const d = rowToDraft(bo);
+    if (Object.keys(checkDraft(d, bo.kind === "sealed")).length) throw new Error("Open Edit and fill in the highlighted fields first.");
+    const { data: done } = await sb.from("buy_orders").update({ status: "waiting", sent_to_admin_at: new Date().toISOString() }).eq("id", bo.id).in("status", ["draft", "sent_back"]).select("id");
+    if (!done?.length) throw new Error(BO_CHANGED);
+    return { ok: true };
+  });
+
+function rowToDraft(r: any): BoDraft {
+  return {
+    clientId: r.investor_profile_id, sector: r.sector ?? "", name: r.name_on_card ?? "", description: r.description ?? "", location: r.location ?? "Thailand",
+    cities: r.cities === "Any" ? "" : r.cities ?? "", propertySize: r.property_size ?? "Any", factorySize: r.factory_size ?? "Any", products: r.products ?? "",
+    targetRevenue: r.target_revenue ?? "", priceRange: r.price_range ?? "", dealTypes: r.deal_types ?? [], mustHave: (r.must_have ?? []).join("\n"),
+    niceToHave: (r.nice_to_have ?? []).join("\n"), profit: r.profit ?? "", timing: r.timing ?? "", periodMonths: r.period_months ?? 3,
+  };
+}
+
+// ---------- Stage 3: Admin › Approvals › Advertisement ----------
+
+async function requireControlAdmin(context: { supabase: any; userId: string }) {
+  await (await import("@/lib/profile-handover.server")).requireControlAdmin(context);
+}
+
+export type AdminBoRow = BoCard & { writerKind: "control" | "buyer"; company: string | null; ndaRequested: number; notAFit: number };
+export type AdminBoFilter = { tile?: "all" | "waiting" | "open" | "closing" | "closed" | "applicants"; q?: string; kind?: "sealed" | "advertisement" | null; sector?: string | null; sort?: "closes" | "newest" | "most" | "mostNew"; page?: number; size?: number };
+
+export const adminBuyOrders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: AdminBoFilter) => z.object({
+    tile: z.enum(["all", "waiting", "open", "closing", "closed", "applicants"]).optional(), q: z.string().max(100).optional(),
+    kind: z.enum(["sealed", "advertisement"]).nullable().optional(), sector: z.string().max(80).nullable().optional(),
+    sort: z.enum(["closes", "newest", "most", "mostNew"]).optional(), page: z.number().int().min(1).optional(), size: z.number().int().min(5).max(50).optional(),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireControlAdmin(context);
+    const sb = await admin();
+    const { data: rows } = await sb.from("buy_orders").select("*").neq("status", "draft");
+    const cards = await cardsFor(sb, rows ?? [], context.userId, true, null);
+    const { data: aps } = (rows ?? []).length ? await sb.from("buy_order_applications").select("buy_order_id, status").in("buy_order_id", (rows ?? []).map((r: any) => r.id)) : { data: [] };
+    const invIds = [...new Set((rows ?? []).map((r: any) => r.investor_profile_id))];
+    const { data: invs } = invIds.length ? await sb.from("investors").select("id, investor_name, legal_name, firm_name").in("id", invIds) : { data: [] };
+    const company = new Map<string, string | null>((invs ?? []).map((i: any) => [i.id, i.legal_name ?? i.firm_name ?? i.investor_name ?? null]));
+    const rowBy = new Map((rows ?? []).map((r: any) => [r.id, r]));
+    const today = bkkToday();
+    const in30 = new Date(Date.parse(today) + 30 * 86400_000).toISOString().slice(0, 10);
+    const all: AdminBoRow[] = cards.map((c) => ({
+      ...c, writerKind: c.kind === "sealed" ? "control" : "buyer", company: company.get((rowBy.get(c.id) as any).investor_profile_id) ?? null,
+      appsTotal: c.applied, appsNew: (aps ?? []).filter((a: any) => a.buy_order_id === c.id && a.status === "new").length,
+      ndaRequested: (aps ?? []).filter((a: any) => a.buy_order_id === c.id && a.status === "nda_requested").length,
+      notAFit: (aps ?? []).filter((a: any) => a.buy_order_id === c.id && a.status === "not_a_fit").length,
+    }));
+    const closing = (c: AdminBoRow) => c.status === "posted" && !!c.closesOn && c.closesOn <= in30;
+    const tiles = {
+      all: all.length, waiting: all.filter((c) => c.status === "waiting").length, open: all.filter((c) => c.status === "posted").length,
+      closing: all.filter(closing).length, closed: all.filter((c) => c.status === "closed").length,
+      applicants: all.reduce((n, c) => n + c.applied, 0), applicantsNew: all.reduce((n, c) => n + (c.appsNew ?? 0), 0),
+    };
+    let list = all;
+    const t = data.tile ?? "all";
+    if (t === "waiting") list = list.filter((c) => c.status === "waiting");
+    if (t === "open") list = list.filter((c) => c.status === "posted");
+    if (t === "closing") list = list.filter(closing);
+    if (t === "closed") list = list.filter((c) => c.status === "closed");
+    if (t === "applicants") list = list.filter((c) => (c.appsNew ?? 0) > 0);
+    if (data.kind) list = list.filter((c) => c.kind === data.kind);
+    if (data.sector) list = list.filter((c) => c.sector === data.sector);
+    const q = (data.q ?? "").trim().toLowerCase();
+    if (q) list = list.filter((c) => [c.name, c.ref, c.client?.name, c.client?.ref, c.company, c.client?.writer].some((v) => (v ?? "").toLowerCase().includes(q)));
+    const rank = (c: AdminBoRow) => (c.status === "waiting" ? 0 : c.status === "sent_back" ? 1 : c.status === "posted" ? 2 : 3);
+    const sort = data.sort ?? "closes";
+    list = [...list].sort((a, b) => {
+      if (sort === "newest") return (b.postedAt ?? "").localeCompare(a.postedAt ?? "");
+      if (sort === "most") return b.applied - a.applied;
+      if (sort === "mostNew") return (b.appsNew ?? 0) - (a.appsNew ?? 0);
+      const r = rank(a) - rank(b);
+      if (r) return r;
+      if (a.status === "closed") return (b.closesOn ?? "").localeCompare(a.closesOn ?? "");
+      if (a.status === "posted") return (a.closesOn ?? "").localeCompare(b.closesOn ?? "");
+      return (a.sentToAdminAt ?? "").localeCompare(b.sentToAdminAt ?? "");
+    });
+    const size = data.size ?? 25;
+    const page = Math.max(1, Math.min(data.page ?? 1, Math.max(1, Math.ceil(list.length / size))));
+    return { tiles, total: list.length, page, size, rows: list.slice((page - 1) * size, page * size) };
+  });
+
+export const adminWaitingCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    if ((await viewerRole(context.userId)) !== "admin") return { n: 0 };
+    const { count } = await (await admin()).from("buy_orders").select("id", { count: "exact", head: true }).eq("status", "waiting");
+    return { n: count ?? 0 };
+  });
+
+/** Post buy order or Send back, with Admin's edits (section 11.5). */
+export const adminDecideBuyOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; action: "post" | "send_back"; draft: BoDraft; note?: string }) =>
+    z.object({ id: z.string().uuid(), action: z.enum(["post", "send_back"]), draft: draftSchema, note: z.string().trim().max(1000).optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireControlAdmin(context);
+    const sb = await admin();
+    const { data: bo } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
+    if (!bo || bo.status !== "waiting") throw new Error(BO_CHANGED);
+    // Admin edits only these; the rest stays as written.
+    const merged: BoDraft = { ...rowToDraft(bo), ...pick(data.draft as BoDraft, ["name", "description", "targetRevenue", "priceRange", "location", "cities", "propertySize", "factorySize", "mustHave", "periodMonths"]) };
+    if (Object.keys(checkDraft(merged, false)).length) throw new Error("Check the highlighted fields.");
+    const now = new Date();
+    const { investor_profile_id: _i, ...cols } = { ...draftRow(merged), investor_profile_id: null };
+    let upd: any = { ...cols, updated_at: now.toISOString() };
+    if (data.action === "send_back") {
+      if (!data.note) throw new Error("Write a note first.");
+      upd = { ...upd, status: "sent_back", admin_note: data.note, sent_back_at: now.toISOString() };
+    } else {
+      upd = { ...upd, status: "posted", posted_at: now.toISOString(), posted_by_user_id: context.userId, closes_on: addMonths(bkkToday(now.getTime()), merged.periodMonths), closed_at: null };
+    }
+    const { data: done, error } = await sb.from("buy_orders").update(upd).eq("id", bo.id).eq("status", "waiting").select("id");
+    if (error) throw new Error(error.message);
+    if (!done?.length) throw new Error(BO_CHANGED);
+    return { ok: true };
+  });
+
+function pick<T extends object>(o: T, keys: (keyof T)[]): Partial<T> { const r: Partial<T> = {}; for (const k of keys) r[k] = o[k]; return r; }
+
+/** Extend (posted) or Reopen (closed), section 11.6. */
+export const adminExtendBuyOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; months: number }) => z.object({ id: z.string().uuid(), months: z.number().int() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireControlAdmin(context);
+    if (!(PERIODS as readonly number[]).includes(data.months)) throw new Error("Pick a period.");
+    const sb = await admin();
+    const { data: bo } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
+    if (!bo) throw new Error(BO_CHANGED);
+    const st = effectiveStatus(bo.status, bo.closes_on);
+    let upd: any;
+    if (st === "posted") upd = { closes_on: addMonths(bo.closes_on, data.months) };
+    else if (st === "closed") upd = { status: "posted", closes_on: addMonths(bkkToday(), data.months), closed_at: null };
+    else throw new Error(BO_CHANGED);
+    const { error } = await sb.from("buy_orders").update({ ...upd, extended_count: (bo.extended_count ?? 0) + 1, updated_at: new Date().toISOString() }).eq("id", bo.id).eq("updated_at", bo.updated_at);
+    if (error) throw new Error(error.message);
+    return { closesOn: upd.closes_on as string };
+  });
+
+/** Applicants of one buy order, read-only (section 11.7). */
+export const adminBuyOrderApplicants = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireControlAdmin(context);
+    const sb = await admin();
+    const rows = await reviewRows(sb, context.userId, "admin", data.id);
+    return { rows };
   });

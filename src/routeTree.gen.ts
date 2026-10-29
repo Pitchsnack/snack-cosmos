@@ -60,6 +60,7 @@ import { Route as AuthenticatedVerificationRouteImport } from './routes/_authent
 import { Route as HandoverTokenRouteImport } from './routes/handover.$token'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedAdminAccessCodesRouteImport } from './routes/_authenticated/admin/access-codes'
+import { Route as AuthenticatedAdminAdvertisementRouteImport } from './routes/_authenticated/admin/advertisement'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
 import { Route as AuthenticatedAdminPaidReportsRouteImport } from './routes/_authenticated/admin.paid-reports'
@@ -82,6 +83,7 @@ import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInvestorsInvestorImagesRouteImport } from './routes/_authenticated/investors.investor-images'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
 import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace.index'
+import { Route as AuthenticatedMarketplaceAdvertisementRouteImport } from './routes/_authenticated/marketplace.advertisement'
 import { Route as AuthenticatedMarketplaceAdvisorsRouteImport } from './routes/_authenticated/marketplace.advisors'
 import { Route as AuthenticatedMarketplaceBrowseRouteImport } from './routes/_authenticated/marketplace.browse'
 import { Route as AuthenticatedMarketplaceBusinessesWantedRouteImport } from './routes/_authenticated/marketplace.businesses-wanted'
@@ -408,6 +410,12 @@ const AuthenticatedAdminAccessCodesRoute =
     path: '/admin/access-codes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminAdvertisementRoute =
+  AuthenticatedAdminAdvertisementRouteImport.update({
+    id: '/admin/advertisement',
+    path: '/admin/advertisement',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminAnalyticsRoute =
   AuthenticatedAdminAnalyticsRouteImport.update({
     id: '/admin/analytics',
@@ -534,6 +542,12 @@ const AuthenticatedMarketplaceIndexRoute =
   AuthenticatedMarketplaceIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
+const AuthenticatedMarketplaceAdvertisementRoute =
+  AuthenticatedMarketplaceAdvertisementRouteImport.update({
+    id: '/advertisement',
+    path: '/advertisement',
     getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
 const AuthenticatedMarketplaceAdvisorsRoute =
@@ -894,6 +908,7 @@ export interface FileRoutesByFullPath {
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
+  '/admin/advertisement': typeof AuthenticatedAdminAdvertisementRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
@@ -909,6 +924,7 @@ export interface FileRoutesByFullPath {
   '/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/marketplace/advertisement': typeof AuthenticatedMarketplaceAdvertisementRoute
   '/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -1014,6 +1030,7 @@ export interface FileRoutesByTo {
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
+  '/admin/advertisement': typeof AuthenticatedAdminAdvertisementRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
@@ -1027,6 +1044,7 @@ export interface FileRoutesByTo {
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/marketplace/advertisement': typeof AuthenticatedMarketplaceAdvertisementRoute
   '/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -1136,6 +1154,7 @@ export interface FileRoutesById {
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/_authenticated/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
+  '/_authenticated/admin/advertisement': typeof AuthenticatedAdminAdvertisementRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/_authenticated/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
@@ -1151,6 +1170,7 @@ export interface FileRoutesById {
   '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/_authenticated/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/_authenticated/marketplace/advertisement': typeof AuthenticatedMarketplaceAdvertisementRoute
   '/_authenticated/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/_authenticated/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/_authenticated/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -1264,6 +1284,7 @@ export interface FileRouteTypes {
     | '/handover/$token'
     | '/sp2-gateway/'
     | '/admin/access-codes'
+    | '/admin/advertisement'
     | '/admin/analytics'
     | '/admin/messages'
     | '/admin/paid-reports'
@@ -1279,6 +1300,7 @@ export interface FileRouteTypes {
     | '/investors/$id'
     | '/investors/investor-images'
     | '/investors/new'
+    | '/marketplace/advertisement'
     | '/marketplace/advisors'
     | '/marketplace/browse'
     | '/marketplace/businesses-wanted'
@@ -1384,6 +1406,7 @@ export interface FileRouteTypes {
     | '/handover/$token'
     | '/sp2-gateway'
     | '/admin/access-codes'
+    | '/admin/advertisement'
     | '/admin/analytics'
     | '/admin/messages'
     | '/admin/paid-reports'
@@ -1397,6 +1420,7 @@ export interface FileRouteTypes {
     | '/global-startups/browse'
     | '/investors/investor-images'
     | '/investors/new'
+    | '/marketplace/advertisement'
     | '/marketplace/advisors'
     | '/marketplace/browse'
     | '/marketplace/businesses-wanted'
@@ -1505,6 +1529,7 @@ export interface FileRouteTypes {
     | '/handover/$token'
     | '/sp2-gateway/'
     | '/_authenticated/admin/access-codes'
+    | '/_authenticated/admin/advertisement'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/messages'
     | '/_authenticated/admin/paid-reports'
@@ -1520,6 +1545,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investors/$id'
     | '/_authenticated/investors/investor-images'
     | '/_authenticated/investors/new'
+    | '/_authenticated/marketplace/advertisement'
     | '/_authenticated/marketplace/advisors'
     | '/_authenticated/marketplace/browse'
     | '/_authenticated/marketplace/businesses-wanted'
@@ -1967,6 +1993,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAccessCodesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/advertisement': {
+      id: '/_authenticated/admin/advertisement'
+      path: '/admin/advertisement'
+      fullPath: '/admin/advertisement'
+      preLoaderRoute: typeof AuthenticatedAdminAdvertisementRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/analytics': {
       id: '/_authenticated/admin/analytics'
       path: '/admin/analytics'
@@ -2119,6 +2152,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/marketplace/'
       preLoaderRoute: typeof AuthenticatedMarketplaceIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
+    '/_authenticated/marketplace/advertisement': {
+      id: '/_authenticated/marketplace/advertisement'
+      path: '/advertisement'
+      fullPath: '/marketplace/advertisement'
+      preLoaderRoute: typeof AuthenticatedMarketplaceAdvertisementRouteImport
       parentRoute: typeof AuthenticatedMarketplaceRoute
     }
     '/_authenticated/marketplace/advisors': {
@@ -2621,6 +2661,7 @@ const AuthenticatedMarketplacePipelineRouteWithChildren =
   )
 
 interface AuthenticatedMarketplaceRouteChildren {
+  AuthenticatedMarketplaceAdvertisementRoute: typeof AuthenticatedMarketplaceAdvertisementRoute
   AuthenticatedMarketplaceAdvisorsRoute: typeof AuthenticatedMarketplaceAdvisorsRoute
   AuthenticatedMarketplaceBrowseRoute: typeof AuthenticatedMarketplaceBrowseRoute
   AuthenticatedMarketplaceBusinessesWantedRoute: typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -2636,6 +2677,8 @@ interface AuthenticatedMarketplaceRouteChildren {
 
 const AuthenticatedMarketplaceRouteChildren: AuthenticatedMarketplaceRouteChildren =
   {
+    AuthenticatedMarketplaceAdvertisementRoute:
+      AuthenticatedMarketplaceAdvertisementRoute,
     AuthenticatedMarketplaceAdvisorsRoute:
       AuthenticatedMarketplaceAdvisorsRoute,
     AuthenticatedMarketplaceBrowseRoute: AuthenticatedMarketplaceBrowseRoute,
@@ -2793,6 +2836,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedVerificationRoute: typeof AuthenticatedVerificationRoute
   AuthenticatedAdminAccessCodesRoute: typeof AuthenticatedAdminAccessCodesRoute
+  AuthenticatedAdminAdvertisementRoute: typeof AuthenticatedAdminAdvertisementRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
   AuthenticatedAdminPaidReportsRoute: typeof AuthenticatedAdminPaidReportsRoute
@@ -2848,6 +2892,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedVerificationRoute: AuthenticatedVerificationRoute,
   AuthenticatedAdminAccessCodesRoute: AuthenticatedAdminAccessCodesRoute,
+  AuthenticatedAdminAdvertisementRoute: AuthenticatedAdminAdvertisementRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
   AuthenticatedAdminPaidReportsRoute: AuthenticatedAdminPaidReportsRoute,

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
+import { Undo2, Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
 import { boSector, closesInDays, coverOf, fmtDay, isNew } from "@/lib/buy-orders";
 import type { ApplyContext, BoCard } from "@/lib/buy-orders.functions";
@@ -149,11 +149,11 @@ export function ShareButton({ narrow, onShare }: { narrow?: boolean; onShare: ()
   );
 }
 
-export type CardMode = "browse" | "applications" | "preview";
+export type CardMode = "browse" | "applications" | "preview" | "mine";
 
-export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedWithYou, onDetails, onApply, onShare }: {
+export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedWithYou, onDetails, onApply, onShare, onEdit, onSend, busy }: {
   card: BoCard; persona: "seller" | "buyer" | "advisor"; applyCtx?: ApplyContext; mode?: CardMode; sharedWithYou?: boolean;
-  onDetails: () => void; onApply: () => void; onShare: () => void;
+  onDetails: () => void; onApply: () => void; onShare: () => void; onEdit?: () => void; onSend?: () => void; busy?: boolean;
 }) {
   const { c, th } = useBw();
   const sectorName = useSectorName();
@@ -175,7 +175,16 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
 
   const canShare = posted && !card.yours && !card.client && mode !== "preview";
   const buttons: ReactNode[] = [];
-  if (card.appsTotal != null) {
+  const unposted = card.status === "draft" || card.status === "waiting" || card.status === "sent_back";
+  let stateBox: ReactNode = null;
+  if (unposted) {
+    if (card.status === "waiting") stateBox = <div className="bw-state bw-st-violet"><Clock className="h-4 w-4 shrink-0" /><span><b>{c("Waiting for Admin", "รอแอดมินตรวจ")}</b> {c(`since ${fmtDay(card.sentToAdminAt, false, false)}. Admin checks it, edits it and posts it.`, `ตั้งแต่ ${fmtDay(card.sentToAdminAt, true, false)} แอดมินจะตรวจ แก้ไข และลงประกาศ`)}</span></div>;
+    if (card.status === "sent_back") stateBox = <div className="bw-state bw-st-red"><Undo2 className="h-4 w-4 shrink-0" /><span><b>{c("Sent back by Admin:", "แอดมินส่งกลับ:")}</b> {card.adminNote}</span></div>;
+    if (card.status !== "waiting" && onEdit) {
+      buttons.push(<button key="ed" type="button" className="bw-btn bw-outline" onClick={onEdit}>{c("Edit", "แก้ไข")}</button>);
+      buttons.push(<button key="sd" type="button" className="bw-btn bw-navy" disabled={busy} onClick={onSend}><Send className="h-4 w-4" />{card.status === "sent_back" ? c("Send to Admin again", "ส่งให้แอดมินอีกครั้ง") : c("Send to Admin", "ส่งให้แอดมิน")}</button>);
+    }
+  } else if (card.appsTotal != null) {
     const n = card.appsNew ?? 0;
     const label = card.client
       ? (n ? c(`Applications · ${n} to check`, `ใบสมัคร · รอตรวจ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`))
@@ -235,6 +244,7 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
           </button>
         </div>
       </div>
+      {stateBox && <div className="px-4 pb-2">{stateBox}</div>}
       <div className="bw-buttons">{buttons}</div>
       <span className="sr-only">{sectorName(card.sector)}</span>
     </article>

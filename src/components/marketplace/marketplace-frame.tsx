@@ -1,6 +1,6 @@
 import { PipelineSubmenu } from "@/components/pipeline/submenu";
 import { CompanySubmenu } from "@/components/marketplace/company-submenu";
-import { BellRing, BadgeCheck } from "lucide-react";
+import { BellRing, BadgeCheck, Megaphone } from "lucide-react";
 import {FileText} from 'lucide-react';
 import {hubIsNew} from '@/lib/reports-hub';
 import { VerificationSidebarChip, VerificationMenuStatus, useVerificationSidebar } from '@/components/company-verification/sidebar';
@@ -436,6 +436,7 @@ export function marketplaceMenu(persona: Persona) {
         ]
       : [
           { to: "/marketplace/my-company", label: "My Company", icon: Building2 },
+          { to: "/marketplace/advertisement", label: "Advertisement", icon: Megaphone },
           { to: "/marketplace/pipeline", label: "Pipeline", icon: GitBranch },
           { to: "/marketplace/my-contact", label: "Contacts", icon: Contact },
           { to: "/marketplace/messages", label: "Messages", icon: MessageSquare },
@@ -528,6 +529,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
       <it.icon className="h-4 w-4 shrink-0" />
       <span className="min-w-0">{it.to === '/my-reports' ? vc('My reports','รายงานของฉัน') : it.to === '/my-verification' ? vc(it.label) : t(it.label)}</span>
       {it.to === '/my-reports' && hubIsNew() && <span className="hub-new">NEW</span>}
+      {it.to === '/marketplace/advertisement' && <span className="hub-new ml-auto">{vc('NEW','ใหม่')}</span>}
       {it.to === '/my-verification' && <VerificationMenuStatus state={verification.data} />}
       {it.to === "/marketplace/pipeline" && <PipelineCountBadge />}
       {it.to === "/marketplace/invitations" && <InvitationsCountBadge />}

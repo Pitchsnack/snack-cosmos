@@ -169,3 +169,42 @@ export function fmtDay(v: string | null | undefined, th = false, withYear = true
   const mon = (th ? MON_TH : MON_EN)[m - 1];
   return withYear ? `${d} ${mon} ${th ? y + 543 : y}` : `${d} ${mon}`;
 }
+
+// ---------- the buy order form (shared by the browser and the server) ----------
+export type BoDraft = {
+  clientId?: string | null; sector: string; name: string; description: string; location: string; cities: string;
+  propertySize: string; factorySize: string; products: string; targetRevenue: string; priceRange: string;
+  dealTypes: string[]; mustHave: string; niceToHave: string; profit: string; timing: string; periodMonths: number;
+};
+export type BoField = keyof BoDraft;
+export const emptyDraft = (): BoDraft => ({
+  clientId: null, sector: "", name: "", description: "", location: "Thailand", cities: "", propertySize: "Any", factorySize: "Any",
+  products: "", targetRevenue: "", priceRange: "", dealTypes: BO_DEAL_TYPES.slice(0, 2) as unknown as string[], mustHave: "", niceToHave: "",
+  profit: "", timing: "", periodMonths: 3,
+});
+export const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 20);
+/** The form's checks (section 10.1). Returns the fields in error, in form order. */
+export function checkDraft(d: BoDraft, needClient: boolean): Partial<Record<BoField, "pick" | "description" | "deal" | "long">> {
+  const e: Partial<Record<BoField, "pick" | "description" | "deal" | "long">> = {};
+  if (needClient && !d.clientId) e.clientId = "pick";
+  if (!boSector(d.sector)) e.sector = "pick";
+  if (d.name.trim().length > 40) e.name = "long";
+  const n = d.description.trim().length;
+  if (n < 10 || n > 280) e.description = "description";
+  if (!(BO_LOCATIONS as readonly string[]).includes(d.location)) e.location = "pick";
+  if (!(PROPERTY_SIZES as readonly string[]).includes(d.propertySize)) e.propertySize = "pick";
+  if (!(FACTORY_SIZES as readonly string[]).includes(d.factorySize)) e.factorySize = "pick";
+  if (!BO_RANGES.some((r) => r.label === d.targetRevenue)) e.targetRevenue = "pick";
+  if (!BO_RANGES.some((r) => r.label === d.priceRange)) e.priceRange = "pick";
+  if (!d.dealTypes.length || d.dealTypes.some((x) => !(BO_DEAL_TYPES as readonly string[]).includes(x))) e.dealTypes = "deal";
+  if (!(PERIODS as readonly number[]).includes(d.periodMonths)) e.periodMonths = "pick";
+  return e;
+}
+/** The row's columns from a checked draft. */
+export const draftRow = (d: BoDraft) => ({
+  sector: d.sector, name_on_card: d.name.trim() || d.sector, description: d.description.trim(), location: d.location,
+  cities: d.cities.trim() || "Any", property_size: d.propertySize, factory_size: d.factorySize, products: d.products.trim() || null,
+  target_revenue: d.targetRevenue, price_range: d.priceRange, deal_types: d.dealTypes, must_have: lines(d.mustHave), nice_to_have: lines(d.niceToHave),
+  profit: d.profit.trim() || null, timing: d.timing.trim() || null, period_months: d.periodMonths,
+});
+export const periodLabel = (m: number, th = false) => (m === 12 ? (th ? "รายปี" : "Annual") : th ? `${m} เดือน` : `${m} months`);
