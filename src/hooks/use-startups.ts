@@ -22,6 +22,8 @@ export interface UseStartupsParams {
   scope?: "workspace" | "directory";
   /** Preview-only, session-scoped refs allowed into the preview Directory. */
   allowPrivateRefs?: string[];
+  /** Rows first; signed card media is filled in later by useListMedia. */
+  deferMedia?: boolean;
 }
 
 export function useStartups(params: UseStartupsParams = {}) {
@@ -32,5 +34,6 @@ export function useStartups(params: UseStartupsParams = {}) {
     queryFn: () => fn({ data: params }),
     enabled,
     staleTime: 60_000,
+    meta: params.deferMedia ? { pageLoading: true } : undefined,
   });
 }
