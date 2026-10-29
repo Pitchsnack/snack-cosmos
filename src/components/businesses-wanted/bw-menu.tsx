@@ -38,7 +38,7 @@ export function BusinessesWantedRow({ collapsed }: { collapsed?: boolean }) {
       <span className="min-w-0">{label}</span>
       {n > 0
         ? <span className="bw-menu-new" style={active ? { background: "#fff" } : undefined} title={c("Buy orders posted in the last 7 days", "ประกาศซื้อที่ลงใน 7 วันที่ผ่านมา")}>{c(`${n} new`, `ใหม่ ${n}`)}</span>
-        : <span className="hub-new ml-auto">{c("NEW", "ใหม่")}</span>}
+        : <span className="hub-new ml-auto" style={active ? { color: "currentColor", borderColor: "currentColor" } : undefined}>{c("NEW", "ใหม่")}</span>}
     </Link>
   );
 }
