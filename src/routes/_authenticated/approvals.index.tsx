@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "@/i18n/language";
+import { approvalDate } from "@/lib/approval-date";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -47,6 +49,7 @@ const ACTION: Record<string, string> = {
 };
 
 function ApprovalsPage() {
+  const { t, language } = useTranslation();
   const s = Route.useSearch();
   const tab = s.tab ?? "listings";
   const navigate = Route.useNavigate();
@@ -89,38 +92,22 @@ function ApprovalsPage() {
   const oneStep = useOneStepApprovals();
 
   return (
-    <div className="space-y-5" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+    <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Approvals &amp; alerts</div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Approvals</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Everything that needs an admin: {listingsWaiting} seller listings · {buyersWaiting + profilesWaiting} buyers · {advPending} advisors</p>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> {t("Approvals & alerts")}</div>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{t("Approvals")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("Sellers, buyers and advisors waiting for a decision.")}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => toast.info("Alert settings are coming soon.")}>Alert settings</Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {([
-          ["listings", "#F6A823", "Seller listings", listingsWaiting, `oldest ${oldest} day${oldest === 1 ? "" : "s"}`],
-          ["buyers", "#4338CA", "Buyer profiles", profilesWaiting, "to publish"],
-          ["buyers", "#6D28D9", "Buyer verifications", buyersWaiting, "pending"],
-          ["advisors", "#0F766E", "Advisor verifications", advPending, `oldest ${advOldest} day${advOldest === 1 ? "" : "s"}`],
-        ] as const).map(([k, c, label, n, sub]) => (
-          <button key={label} type="button" onClick={() => navigate({ search: { tab: k } })}
-            className="rounded-xl border border-border bg-card px-3.5 py-3 text-left transition-colors hover:border-[#CBD2DC]">
-            <small className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground"><i className="inline-block h-2 w-2 rounded-full" style={{ background: c }} />{label}</small>
-            <b className="mt-0.5 block text-[22px] font-semibold">{n}</b>
-            <span className="text-[11.5px] text-muted-foreground">{sub}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="flex gap-1 border-b border-border">
+      <div role="tablist" className="flex flex-wrap gap-1 border-b border-border">
         {([["listings", "Sellers", oneStep.data?.sellers.length ?? 0], ["buyers", "Buyers", oneStep.data?.buyers.length ?? 0], ["advisors", "Advisors", oneStep.data?.advisors.length ?? 0], ["invitations", "Invitations", null], ["history", "History", null]] as const).map(([k, label, n]) => (
-          <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => navigate({ search: { tab: k } })}
-            className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold", tab === k ? "border-[#F6A823] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
-            {label}{n !== null && <span className={cn("rounded-full px-[7px] py-px text-[10.5px] font-bold", tab === k ? "bg-[#FEF3DE] text-[#8A4B06]" : "bg-muted text-muted-foreground")}>{n}</span>}
-          </button>
+          <Button variant="unstyled" size="unstyled" key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => navigate({ search: { tab: k } })}
+            className={cn("-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold", tab === k ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+            {t(label)}{n !== null && <span className={cn("rounded-full px-[7px] py-px text-[10.5px] font-bold", tab === k ? "bg-help-soft text-help-ink" : "bg-muted text-muted-foreground")}>{n}</span>}
+          </Button>
         ))}
       </div>
 
@@ -133,7 +120,11 @@ function ApprovalsPage() {
       ) : (tab === "invitations" || tab === "contacts") ? (
         <InvitationsTab />
       ) : error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : (
-        <HistoryTab approvalEvents={(data?.history ?? []) as any[]} startupInfo={(data as any)?.startupInfo ?? {}} buyerInfo={(data as any)?.buyerInfo ?? {}} names={names} />
+        <div className="overflow-x-auto border border-border bg-card rounded-lg"><table className="os-history"><thead><tr>{["When", "Decision", "Listing / Buyer / Advisor", "By"].map(label => <th key={label}>{t(label)}</th>)}</tr></thead><tbody>{(data?.history ?? []).filter((e: any) => ["approve", "reject", "decline", "request_changes"].includes(e.action)).map((e: any) => {
+          const kind = e.item_type === "listing" ? "seller" : e.item_type === "advisor" ? "advisor" : "buyer";
+          const info = kind === "seller" ? (data as any)?.startupInfo?.[e.startup_id] : kind === "buyer" ? (data as any)?.buyerInfo?.[e.item_id] : null;
+          return <tr key={e.id}><td>{approvalDate(e.created_at, language)}</td><td>{t(e.action === "approve" ? "Verified and published" : e.action === "request_changes" ? "Changes requested" : "Declined")}</td><td>{info?.name ?? info?.startup_name ?? info?.company_name ?? e.subject_name ?? e.item_id}{info?.ref_no ? ` (${info.ref_no})` : ""}</td><td>{names[e.actor_id] ?? e.actor_name ?? "—"}</td></tr>;
+        })}</tbody></table></div>
       )}
     </div>
   );
