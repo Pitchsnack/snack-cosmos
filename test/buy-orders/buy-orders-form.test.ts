@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, checkDraft, draftRow, emptyDraft } from "./buy-orders";
+import { addMonths, checkDraft, draftRow, emptyDraft } from "@/lib/buy-orders";
 
 const ok = { ...emptyDraft(), sector: "Packaging", description: "A regional buyer wants a plant.", targetRevenue: "฿50M – 250M", priceRange: "฿100M – 500M" };
 
